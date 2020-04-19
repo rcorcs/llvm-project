@@ -156,11 +156,11 @@ template <> struct GraphTraits<ControlDependenceNode *> {
     return N->end();
   }
 
-  static nodes_iterator nodes_begin(ControlDependenceNode *N) {
+  static nodes_iterator nodes_begin(NodeRef N) {
     return df_begin(getEntryNode(N));
   }
 
-  static nodes_iterator nodes_end(ControlDependenceNode *N) {
+  static nodes_iterator nodes_end(NodeRef N) {
     return df_end(getEntryNode(N));
   }
 };
@@ -179,8 +179,8 @@ public:
 
   void graphForFunction(Function &F, PostDominatorTree &pdt);
 
-  ControlDependenceNode *getRoot()             { return root; }
-  const ControlDependenceNode *getRoot() const { return root; }
+  ControlDependenceNode *getEntry()             { return root; }
+  const ControlDependenceNode *getEntry() const { return root; }
   ControlDependenceNode *operator[](const BasicBlock *BB)             { return getNode(BB); }
   const ControlDependenceNode *operator[](const BasicBlock *BB) const { return getNode(BB); }
   ControlDependenceNode *getNode(const BasicBlock *BB) { 
@@ -253,7 +253,7 @@ private:
 template <> struct GraphTraits<ControlDependenceGraph *>
   : public GraphTraits<ControlDependenceNode *> {
   static NodeRef getEntryNode(ControlDependenceGraph *CD) {
-    return CD->getRoot();
+    return CD->getEntry();
   }
 
   static nodes_iterator nodes_begin(ControlDependenceGraph *CD) {

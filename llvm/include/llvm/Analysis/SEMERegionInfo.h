@@ -118,6 +118,7 @@ class SEMERegionInfoBase {
   using BlockT = typename Tr::BlockT;
   using RegionT = typename Tr::RegionT;
 
+  using FuncT = typename Tr::FuncT;
   using ControlDepGraphT = typename Tr::ControlDepGraphT;
   using CDGNodeT = typename Tr::CDGNodeT;
   using DomTreeNodeT = typename Tr::DomTreeNodeT;
@@ -132,11 +133,18 @@ class SEMERegionInfoBase {
   /// Map every BB to the smallest region, that contains BB.
   BBtoRegionMap BBtoRegion;
 
-  RegionT *buildRegionFromCDGNode(CDGNodeT *Node, Function &F, ControlDepGraphT &CDG);
+  RegionT *buildRegionFromCDGNode(CDGNodeT *Node, FuncT &F, ControlDepGraphT &CDG);
   unsigned countCFGEntries(BlockT *Root, ControlDepGraphT &CDG, std::set<CDGNodeT *> &D);
   void collectDescendants(CDGNodeT *Root, CDGNodeT *Src, std::set<CDGNodeT *> &D);
   CDGNodeT * searchLeftmostBlock(CDGNodeT *Root);
-  RegionT *buildRegionsTree(CDGNodeT *N, ControlDepGraphT &CDG, Function &F);
+
+
+  void addRegion(RegionT *R) {
+    Regions.push_back(R);
+    EntryBBMap[R->getEntry()].insert(R);
+    //for (BlockT *BB : R->blocks()) {}
+  }
+
 
 public:
 
@@ -146,7 +154,7 @@ public:
   std::vector<RegionT *> Regions;
   std::map<BlockT *, std::set<RegionT *> > EntryBBMap;
   
-  void buildRHG(Function &F, ControlDepGraphT &CDG);
+  void buildRegionsTree(FuncT &F, ControlDepGraphT &CDG);
 
   /// Get the smallest region that contains a BasicBlock.
   ///
@@ -168,13 +176,15 @@ public:
   /// region containing BB.
   RegionT *operator[](BlockT *BB) const;
 
+  
+
   RegionT *getTopLevelRegion() const { return TopLevelRegion; }
 };
 
 class SEMERegionInfo : public SEMERegionInfoBase<SEMERegionTraits<Function>> {
 public:
 //SEMERegionInfo(const Function &F, const ControlDependenceGraph &CDG);
-
+/*
 void dotGraph() {
   errs() << "digraph {\n";
   for (SEMERegion *R : Regions) {
@@ -196,8 +206,82 @@ void dotGraph() {
   
   errs() << "}\n";
 }
-
+*/
 };
+
+template <> struct GraphTraits<SEMERegion *> {
+  using NodeRef = SEMERegion *;
+  using ChildIteratorType = SEMERegion::iterator;
+  using nodes_iterator = df_iterator<SEMERegion *>;
+
+  static NodeRef getEntryNode(SEMERegion *N) { return N; }
+
+  static inline ChildIteratorType child_begin(NodeRef N) {
+    return N->begin();
+  }
+
+  static inline ChildIteratorType child_end(NodeRef N) {
+    return N->end();
+  }
+
+  static nodes_iterator nodes_begin(SEMERegion *N) {
+    return df_begin(getEntryNode(N));
+  }
+
+  static nodes_iterator nodes_end(SEMERegion *N) {
+    return df_end(getEntryNode(N));
+  }
+};
+
+
+template <> struct GraphTraits<SEMERegionInfo *> {
+  using NodeRef = std::add_pointer_t<SEMERegion>;
+  using ChildIteratorType = SEMERegion::iterator;
+  using nodes_iterator = df_iterator<SEMERegion *>;
+
+  static NodeRef getEntryNode(SEMERegionInfo *G) { return G->getTopLevelRegion(); }
+
+  static inline ChildIteratorType child_begin(NodeRef N) {
+    return N->begin();
+  }
+
+  static inline ChildIteratorType child_end(NodeRef N) {
+    return N->end();
+  }
+
+  static nodes_iterator nodes_begin(SEMERegionInfo *G) {
+    return df_begin(getEntryNode(G));
+  }
+
+  static nodes_iterator nodes_end(SEMERegionInfo *G) {
+    return df_end(getEntryNode(G));
+  }
+};
+
+template <> struct DOTGraphTraits<SEMERegionInfo *>
+  : public DefaultDOTGraphTraits {
+  DOTGraphTraits(bool isSimple = false) : DefaultDOTGraphTraits(isSimple) {}
+
+  static std::string getGraphName(SEMERegionInfo *Graph) {
+    return "SEME Region Hierarchy Graph";
+  }
+
+  std::string getNodeLabel(SEMERegion *Node, SEMERegionInfo *Graph) {
+    std::string Label = "";
+    Label = Node->getEntry()->getName().str() + std::string(" [entry]\\n");
+    for (BasicBlock *BB : Node->blocks()) {
+      if (BB!=Node->getEntry()) {
+        Label +=  BB->getName().str() + std::string("\\n");
+      }
+    }
+    return Label;
+  }
+
+  static std::string getEdgeSourceLabel(SEMERegion *Node, SEMERegion::iterator I) {
+      return "";
+  }
+};
+
 
 class SEMERegionInfoPass : public FunctionPass {
 public:
@@ -208,14 +292,20 @@ public:
     AU.setPreservesAll();
   }
   virtual bool runOnFunction(Function &F);
+
+  SEMERegionInfo &getSEMERegionInfo() { return SRI; }
+  const SEMERegionInfo &getCDG() const { return SRI; }
+private:
+  SEMERegionInfo SRI;
 };
+
+
+//////////////// Implementation ///////////////////////
 
 //build region tree using a postorder traversal
 template <class Tr>
-typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::CDGNodeT *Root, typename Tr::ControlDepGraphT &CDG, Function &F) {
-
+void SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::FuncT &F, typename Tr::ControlDepGraphT &CDG) {
   std::set<CDGNodeT *> Visited;
-
   auto RecursivePostOrder = [&](auto&& self, CDGNodeT *Node) -> RegionT* {
     if (Visited.count(Node)) return nullptr;
     Visited.insert(Node);
@@ -229,6 +319,7 @@ typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::CDGN
   
     RegionT *R = buildRegionFromCDGNode(Node, F, CDG);
     if (R) {
+      addRegion(R);
       for (RegionT *CR : Children) R->addSubRegion(CR);
     } else {
       if (Children.size()>1) errs() << "ERROR: Too Many Children!\n";
@@ -239,7 +330,9 @@ typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::CDGN
     return R;
   };
 
-  return RecursivePostOrder(RecursivePostOrder,Root);
+  using CDGPtrT = std::add_pointer_t<ControlDepGraphT>;
+  CDGNodeT *EntryNode = GraphTraits<CDGPtrT>::getEntryNode(&CDG);
+  TopLevelRegion = RecursivePostOrder(RecursivePostOrder,EntryNode);
 }
 
 template <class Tr>
@@ -297,16 +390,20 @@ unsigned SEMERegionInfoBase<Tr>::countCFGEntries(BlockT *Root, ControlDepGraphT 
 }
 
 template <class Tr>
-typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionFromCDGNode(CDGNodeT *Node, Function &F, ControlDepGraphT &CDG) {
+typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionFromCDGNode(CDGNodeT *Node, FuncT &F, ControlDepGraphT &CDG) {
+  using CDGPtrT = std::add_pointer_t<ControlDepGraphT>;
+  using FuncPtrT = std::add_pointer_t<FuncT>;
+
   //skip leaves (non-internal nodes)
   if (Node->getNumChildren()==0) return nullptr;
 
   std::set<CDGNodeT *> D;
-  collectDescendants(CDG.getRoot(),Node,D);
+  collectDescendants(GraphTraits<CDGPtrT>::getEntryNode(&CDG),Node,D);
   D.insert(Node);
-  unsigned NumEntries = countCFGEntries(&F.getEntryBlock(), CDG, D);
+  unsigned NumEntries = countCFGEntries(GraphTraits<FuncPtrT>::getEntryNode(&F), CDG, D);
   //skip regions with multi-entries
   if (NumEntries>1) return nullptr;
+
   RegionT *R = new RegionT;
 
   CDGNodeT *EntryNode = searchLeftmostBlock(Node);
@@ -314,7 +411,7 @@ typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionFromCDGNode(CDGNodeT *N
   R->addBasicBlock(EntryNode->getBlock());
 
   for (auto *ReachedNode : D) {
-    if (ReachedNode->getBlock()) R->addBasicBlock(ReachedNode->getBlock());
+    if (ReachedNode->getBlock() && ReachedNode!=EntryNode) R->addBasicBlock(ReachedNode->getBlock());
   }
   bool Found = false;
   for (RegionT *Other : EntryBBMap[R->getEntry()]) {
@@ -330,15 +427,7 @@ typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionFromCDGNode(CDGNodeT *N
     return nullptr;
   }
 
-  Regions.push_back(R);
-  EntryBBMap[R->getEntry()].insert(R);
-
   return R;
-}
-
-template <class Tr>
-void SEMERegionInfoBase<Tr>::buildRHG(Function &F, ControlDepGraphT &CDG) {
-  TopLevelRegion = buildRegionsTree(CDG.getRoot(), CDG, F);
 }
 
 } // namespace llvm

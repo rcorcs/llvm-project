@@ -14,6 +14,8 @@
 
 using namespace llvm;
 
+namespace llvm {
+
 SEMERegionInfoPass::SEMERegionInfoPass() : FunctionPass(ID) {
   initializeSEMERegionInfoPassPass(*PassRegistry::getPassRegistry());
 }
@@ -21,12 +23,35 @@ SEMERegionInfoPass::SEMERegionInfoPass() : FunctionPass(ID) {
 bool SEMERegionInfoPass::runOnFunction(Function &F) {
   PostDominatorTree &PDT = getAnalysis<PostDominatorTreeWrapperPass>().getPostDomTree();
   ControlDependenceGraph CDG(F,PDT);
-  SEMERegionInfo SRI;
-  SRI.buildRHG(F, CDG);
-  SRI.dotGraph();
+  SRI.buildRegionsTree(F, CDG);
   return false;
 }
 
+}
+
+namespace {
+
+struct SEMERegionInfoPassGraphTraits {
+  static SEMERegionInfo *getGraph(SEMERegionInfoPass *SRIP) {
+    return &SRIP->getSEMERegionInfo();
+  }
+};
+
+struct SEMERegionInfoPrinter
+  : public DOTGraphTraitsPrinter<SEMERegionInfoPass, false, SEMERegionInfo*, SEMERegionInfoPassGraphTraits> {
+  static char ID;
+  SEMERegionInfoPrinter() :
+    DOTGraphTraitsPrinter<SEMERegionInfoPass, false, SEMERegionInfo*, SEMERegionInfoPassGraphTraits>("rhg", ID) {
+    initializeSEMERegionInfoPrinterPass(*PassRegistry::getPassRegistry());
+  }
+};
+
+}
+
+char SEMERegionInfoPrinter::ID = 0;
+INITIALIZE_PASS(SEMERegionInfoPrinter, "dot-rhg",
+	        "Print the SEME region hierarchy graph as a 'dot' file",
+                true, true)
 
 char SEMERegionInfoPass::ID = 0;
 INITIALIZE_PASS(SEMERegionInfoPass, "rhg",
