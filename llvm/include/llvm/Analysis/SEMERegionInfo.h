@@ -283,10 +283,10 @@ template <> struct DOTGraphTraits<SEMERegionInfo *>
 };
 
 
-class SEMERegionInfoPass : public FunctionPass {
+class SEMERegionLegacyPass : public FunctionPass {
 public:
   static char ID;
-  SEMERegionInfoPass();
+  SEMERegionLegacyPass();
   virtual void getAnalysisUsage(AnalysisUsage &AU) const {
     AU.addRequired<ControlDependenceGraphPass>();
     AU.setPreservesAll();
@@ -294,11 +294,25 @@ public:
   virtual bool runOnFunction(Function &F);
 
   SEMERegionInfo &getSEMERegionInfo() { return SRI; }
-  const SEMERegionInfo &getCDG() const { return SRI; }
+  const SEMERegionInfo &getSEMERegionInfo() const { return SRI; }
 private:
   SEMERegionInfo SRI;
 };
 
+/// Analysis pass which computes \c BlockFrequencyInfo.
+class SEMERegionAnalysis
+    : public AnalysisInfoMixin<SEMERegionAnalysis> {
+  friend AnalysisInfoMixin<SEMERegionAnalysis>;
+
+  static AnalysisKey Key;
+
+public:
+  /// Provide the result type for this analysis pass.
+  using Result = SEMERegionInfo;
+
+  /// Run the analysis pass over a function and produce BFI.
+  Result run(Function &F, FunctionAnalysisManager &AM);
+};
 
 //////////////// Implementation ///////////////////////
 

@@ -33,6 +33,7 @@
 #include "llvm/Analysis/BlockFrequencyInfo.h"
 #include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/Analysis/CFG.h"
+#include "llvm/Analysis/SEMERegionInfo.h"
 #include "llvm/Analysis/OptimizationRemarkEmitter.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/ProfileSummaryInfo.h"
@@ -172,6 +173,7 @@ public:
   }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.addRequired<SEMERegionLegacyPass>();
     AU.addRequired<BlockFrequencyInfoWrapperPass>();
     AU.addRequired<ProfileSummaryInfoWrapperPass>();
     AU.addRequired<TargetTransformInfoWrapperPass>();
@@ -645,6 +647,11 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
   return Changed;
 }
 
+bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
+  errs() << "Running SEME-based code splitting\n";
+  return false;
+}
+
 bool HotColdSplittingBase::run(Module &M) {
   bool Changed = false;
   bool HasProfileSummary = (M.getProfileSummary(/* IsCS */ false) != nullptr);
@@ -687,6 +694,9 @@ bool HotColdSplittingLegacyPass::runOnModule(Module &M) {
   auto GBFI = [this](Function &F) {
     return &this->getAnalysis<BlockFrequencyInfoWrapperPass>(F).getBFI();
   };
+  auto GSRI = [this](Function &F) {
+    return &this->getAnalysis<SEMERegionLegacyPass>(F).getSEMERegionInfo();
+  };
   std::unique_ptr<OptimizationRemarkEmitter> ORE;
   std::function<OptimizationRemarkEmitter &(Function &)> GetORE =
       [&ORE](Function &F) -> OptimizationRemarkEmitter & {
@@ -699,7 +709,9 @@ bool HotColdSplittingLegacyPass::runOnModule(Module &M) {
     return nullptr;
   };
 
-  return HotColdSplitting(PSI, GBFI, GTTI, &GetORE, LookupAC).run(M);
+  //TODO: select between default or SEME-based code splitting
+  //return HotColdSplitting(PSI, GBFI, GTTI, &GetORE, LookupAC).run(M);
+  return SEMEHotColdSplitting(PSI, GBFI, GSRI, GTTI, &GetORE, LookupAC).run(M);
 }
 
 PreservedAnalyses
@@ -712,6 +724,10 @@ HotColdSplittingPass::run(Module &M, ModuleAnalysisManager &AM) {
 
   auto GBFI = [&FAM](Function &F) {
     return &FAM.getResult<BlockFrequencyAnalysis>(F);
+  };
+
+  auto GSRI = [&FAM](Function &F) {
+    return &FAM.getResult<SEMERegionAnalysis>(F);
   };
 
   std::function<TargetTransformInfo &(Function &)> GTTI =
@@ -728,7 +744,9 @@ HotColdSplittingPass::run(Module &M, ModuleAnalysisManager &AM) {
 
   ProfileSummaryInfo *PSI = &AM.getResult<ProfileSummaryAnalysis>(M);
 
-  if (HotColdSplitting(PSI, GBFI, GTTI, &GetORE, LookupAC).run(M))
+  //TODO: select between default or SEME-based code splitting
+  //if (HotColdSplitting(PSI, GBFI, GTTI, &GetORE, LookupAC).run(M))
+  if (SEMEHotColdSplitting(PSI, GBFI, GSRI, GTTI, &GetORE, LookupAC).run(M))
     return PreservedAnalyses::none();
   return PreservedAnalyses::all();
 }

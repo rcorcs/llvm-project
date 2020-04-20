@@ -381,13 +381,12 @@ INITIALIZE_PASS(ControlDependencePrinter, "dot-cdg",
 	        "Print the control dependency graph as a 'dot' file",
                 true, true)
 
-/*
-AnalysisKey ControlDependenceGraphAnalysis::Key;
 
-ControlDependenceGraph ControlDependenceGraphAnalysis::run(Function &F,
+AnalysisKey ControlDependenceAnalysis::Key;
+ControlDependenceGraph ControlDependenceAnalysis::run(Function &F,
                                                  FunctionAnalysisManager &AM) {
   auto &PDT = AM.getResult<PostDominatorTreeAnalysis>(F);
   ControlDependenceGraph CDG(F,PDT);
   return CDG;
 }
-*/
+

@@ -19,6 +19,7 @@ namespace llvm {
 class Module;
 class ProfileSummaryInfo;
 class BlockFrequencyInfo;
+class SEMERegionInfo;
 class TargetTransformInfo;
 class OptimizationRemarkEmitter;
 class AssumptionCache;
@@ -69,6 +70,24 @@ public:
 protected:
   virtual bool outlineColdRegions(Function &F, bool HasProfileSummary);
 };
+
+class SEMEHotColdSplitting : public HotColdSplittingBase {
+public:
+  SEMEHotColdSplitting(ProfileSummaryInfo *ProfSI,
+                   function_ref<BlockFrequencyInfo *(Function &)> GBFI,
+                   function_ref<SEMERegionInfo *(Function &)> GSRI,
+                   function_ref<TargetTransformInfo &(Function &)> GTTI,
+                   std::function<OptimizationRemarkEmitter &(Function &)> *GORE,
+                   function_ref<AssumptionCache *(Function &)> LAC)
+      : HotColdSplittingBase(ProfSI,GBFI,GTTI,GORE,LAC), GetSRI(GSRI) {}
+
+protected:
+  virtual bool outlineColdRegions(Function &F, bool HasProfileSummary);
+private:
+  function_ref<SEMERegionInfo  *(Function &)> GetSRI;
+
+};
+
 
 /// Pass to outline cold regions.
 class HotColdSplittingPass : public PassInfoMixin<HotColdSplittingPass> {

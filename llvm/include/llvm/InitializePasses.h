@@ -384,7 +384,7 @@ void initializeScalarizeMaskedMemIntrinPass(PassRegistry&);
 void initializeScalarizerLegacyPassPass(PassRegistry&);
 void initializeScavengerTestPass(PassRegistry&);
 void initializeScopedNoAliasAAWrapperPassPass(PassRegistry&);
-void initializeSEMERegionInfoPassPass(PassRegistry &);
+void initializeSEMERegionLegacyPassPass(PassRegistry &);
 void initializeSEMERegionInfoPrinterPass(PassRegistry &);
 void initializeSeparateConstOffsetFromGEPPass(PassRegistry&);
 void initializeShadowStackGCLoweringPass(PassRegistry&);

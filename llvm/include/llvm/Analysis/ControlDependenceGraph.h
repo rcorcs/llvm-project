@@ -210,11 +210,10 @@ public:
  }
 };
 
-/*
 /// Analysis pass which computes a \c ControlDependenceGraph.
-class ControlDependenceGraphAnalysis
-    : public AnalysisInfoMixin<ControlDependenceGraphAnalysis> {
-  friend AnalysisInfoMixin<ControlDependenceGraphAnalysis>;
+class ControlDependenceAnalysis
+    : public AnalysisInfoMixin<ControlDependenceAnalysis> {
+  friend AnalysisInfoMixin<ControlDependenceAnalysis>;
 
   static AnalysisKey Key;
 
@@ -225,7 +224,7 @@ public:
   /// Run the analysis pass over a function and produce a control dependence graph.
   Result run(Function &F, FunctionAnalysisManager &AM);
 };
-*/
+
 
 class ControlDependenceGraphPass : public FunctionPass {
 public:

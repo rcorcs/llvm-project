@@ -78,7 +78,7 @@ void llvm::initializeAnalysis(PassRegistry &Registry) {
   initializeRegionOnlyPrinterPass(Registry);
   initializeSCEVAAWrapperPassPass(Registry);
   initializeScalarEvolutionWrapperPassPass(Registry);
-  initializeSEMERegionInfoPassPass(Registry);
+  initializeSEMERegionLegacyPassPass(Registry);
   initializeSEMERegionInfoPrinterPass(Registry);
   initializeStackSafetyGlobalInfoWrapperPassPass(Registry);
   initializeStackSafetyInfoWrapperPassPass(Registry);
