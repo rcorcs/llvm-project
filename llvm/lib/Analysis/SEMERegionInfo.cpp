@@ -21,8 +21,7 @@ SEMERegionInfoPass::SEMERegionInfoPass() : FunctionPass(ID) {
 }
 
 bool SEMERegionInfoPass::runOnFunction(Function &F) {
-  PostDominatorTree &PDT = getAnalysis<PostDominatorTreeWrapperPass>().getPostDomTree();
-  ControlDependenceGraph CDG(F,PDT);
+  ControlDependenceGraph &CDG = getAnalysis<ControlDependenceGraphPass>().getCDG();
   SRI.buildRegionsTree(F, CDG);
   return false;
 }

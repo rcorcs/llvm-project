@@ -288,7 +288,7 @@ public:
   static char ID;
   SEMERegionInfoPass();
   virtual void getAnalysisUsage(AnalysisUsage &AU) const {
-    AU.addRequired<PostDominatorTreeWrapperPass>();
+    AU.addRequired<ControlDependenceGraphPass>();
     AU.setPreservesAll();
   }
   virtual bool runOnFunction(Function &F);

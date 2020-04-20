@@ -30,9 +30,9 @@ class CodeExtractorAnalysisCache;
 /// A 0-sized SmallVector is slightly cheaper to move than a std::vector.
 using BlockSequence = SmallVector<BasicBlock *, 0>;
 
-class HotColdSplitting {
+class HotColdSplittingBase {
 public:
-  HotColdSplitting(ProfileSummaryInfo *ProfSI,
+  HotColdSplittingBase(ProfileSummaryInfo *ProfSI,
                    function_ref<BlockFrequencyInfo *(Function &)> GBFI,
                    function_ref<TargetTransformInfo &(Function &)> GTTI,
                    std::function<OptimizationRemarkEmitter &(Function &)> *GORE,
@@ -40,10 +40,10 @@ public:
       : PSI(ProfSI), GetBFI(GBFI), GetTTI(GTTI), GetORE(GORE), LookupAC(LAC) {}
   bool run(Module &M);
 
-private:
+protected:
   bool isFunctionCold(const Function &F) const;
   bool shouldOutlineFrom(const Function &F) const;
-  bool outlineColdRegions(Function &F, bool HasProfileSummary);
+  virtual bool outlineColdRegions(Function &F, bool HasProfileSummary) = 0;
   Function *extractColdRegion(const BlockSequence &Region,
                               const CodeExtractorAnalysisCache &CEAC,
                               DominatorTree &DT, BlockFrequencyInfo *BFI,
@@ -55,6 +55,19 @@ private:
   function_ref<TargetTransformInfo &(Function &)> GetTTI;
   std::function<OptimizationRemarkEmitter &(Function &)> *GetORE;
   function_ref<AssumptionCache *(Function &)> LookupAC;
+};
+
+class HotColdSplitting : public HotColdSplittingBase {
+public:
+  HotColdSplitting(ProfileSummaryInfo *ProfSI,
+                   function_ref<BlockFrequencyInfo *(Function &)> GBFI,
+                   function_ref<TargetTransformInfo &(Function &)> GTTI,
+                   std::function<OptimizationRemarkEmitter &(Function &)> *GORE,
+                   function_ref<AssumptionCache *(Function &)> LAC)
+      : HotColdSplittingBase(ProfSI,GBFI,GTTI,GORE,LAC) {}
+
+protected:
+  virtual bool outlineColdRegions(Function &F, bool HasProfileSummary);
 };
 
 /// Pass to outline cold regions.

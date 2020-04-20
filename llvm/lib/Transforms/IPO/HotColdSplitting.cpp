@@ -184,7 +184,7 @@ public:
 } // end anonymous namespace
 
 /// Check whether \p F is inherently cold.
-bool HotColdSplitting::isFunctionCold(const Function &F) const {
+bool HotColdSplittingBase::isFunctionCold(const Function &F) const {
   if (F.hasFnAttribute(Attribute::Cold))
     return true;
 
@@ -199,7 +199,7 @@ bool HotColdSplitting::isFunctionCold(const Function &F) const {
 
 // Returns false if the function should not be considered for hot-cold split
 // optimization.
-bool HotColdSplitting::shouldOutlineFrom(const Function &F) const {
+bool HotColdSplittingBase::shouldOutlineFrom(const Function &F) const {
   if (F.hasFnAttribute(Attribute::AlwaysInline))
     return false;
 
@@ -296,7 +296,7 @@ static int getOutliningPenalty(ArrayRef<BasicBlock *> Region,
   return Penalty;
 }
 
-Function *HotColdSplitting::extractColdRegion(
+Function *HotColdSplittingBase::extractColdRegion(
     const BlockSequence &Region, const CodeExtractorAnalysisCache &CEAC,
     DominatorTree &DT, BlockFrequencyInfo *BFI, TargetTransformInfo &TTI,
     OptimizationRemarkEmitter &ORE, AssumptionCache *AC, unsigned Count) {
@@ -645,7 +645,7 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
   return Changed;
 }
 
-bool HotColdSplitting::run(Module &M) {
+bool HotColdSplittingBase::run(Module &M) {
   bool Changed = false;
   bool HasProfileSummary = (M.getProfileSummary(/* IsCS */ false) != nullptr);
   for (auto It = M.begin(), End = M.end(); It != End; ++It) {
