@@ -680,9 +680,22 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
   if (HasProfileSummary)
     BFI = GetBFI(F);
 
+  TargetTransformInfo &TTI = GetTTI(F);
+  OptimizationRemarkEmitter &ORE = (*GetORE)(F);
+  AssumptionCache *AC = LookupAC(F);
+
+  // Calculate domtrees lazily. This reduces compile-time significantly.
+  std::unique_ptr<DominatorTree> DT;
+  if (!DT)
+    DT = std::make_unique<DominatorTree>(F);
+  //std::unique_ptr<PostDominatorTree> PDT;
+  //if (!PDT)
+  //  PDT = std::make_unique<PostDominatorTree>(F);
+
   errs() << "Computing Maximal Cold SEME Regions\n";
 
-  std::set<SEMERegion *> ColdRegions;
+  std::set<SEMERegion *> MaximalColdRegions;
+  std::map<SEMERegion *, bool> IsColdRegion;
   auto CollectColdRegions = [&](auto &&self, SEMERegion *Node) -> bool {
     bool IsCold = true;
     if (Node->empty()) {
@@ -700,21 +713,22 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
 	} else IsCold = false;
       }
       if (!IsCold) {
-        for (SEMERegion * ColdNode : ColdChildren) {
-           ColdRegions.insert(ColdNode);
+        for (SEMERegion * ColdRegion : ColdChildren) {
+           MaximalColdRegions.insert(ColdRegion);
 	}
       }
     }
+    IsColdRegion[Node] = IsCold;
     return IsCold;
   };
   if (CollectColdRegions(CollectColdRegions,SRI->getTopLevelRegion())) {
-      ColdRegions.insert(SRI->getTopLevelRegion());
+      MaximalColdRegions.insert(SRI->getTopLevelRegion());
   }
 
   auto DotPrinter = [&]() {
     errs() << "digraph {\n";
     for (SEMERegion *R : SRI->Regions) {
-      errs() << ((uintptr_t)R) << "[shape=\"box\", style=\"filled\", fillcolor=\"" << (ColdRegions.count(R)?"#7093f3":"#e97a5f") <<  "\" label=\"";
+      errs() << ((uintptr_t)R) << "[shape=\"box\", style=\"filled\", fillcolor=\"" << (IsColdRegion[R]?"#7093f3":"#e97a5f") <<  "\" label=\"";
       errs() << R->getEntry()->getName() << " [entry]\\n";
       for (BasicBlock *BB : R->blocks()) {
         if (BB!=R->getEntry()) {
@@ -732,6 +746,38 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
     errs() << "}\n";
   };
   DotPrinter();
+
+
+  // Outline single-entry cold regions, splitting up larger regions as needed.
+  unsigned OutlinedFunctionID = 1;
+  // Cache and recycle the CodeExtractor analysis to avoid O(n^2) compile-time.
+  CodeExtractorAnalysisCache CEAC(F);
+  for (SEMERegion *ColdRegion : MaximalColdRegions) {
+      errs() << "Trying to extraction Region: ";
+      errs() << ColdRegion->getEntry()->getName() << " ";
+      for (BasicBlock *BB : ColdRegion->blocks()) {
+        if (BB!=ColdRegion->getEntry()) {
+          errs() << BB->getName() << " ";
+        }
+      }
+      errs() << "\n";
+
+    BlockSequence Blocks(ColdRegion->blocks());
+    //for (BasicBlock *BB : ColdRegion->blocks())
+    LLVM_DEBUG({
+      dbgs() << "Hot/cold splitting attempting to outline these blocks:\n";
+      for (BasicBlock *BB : Blocks)
+        BB->dump();
+    });
+
+    Function *Outlined = extractColdRegion(Blocks, CEAC, *DT, BFI, TTI,
+                                           ORE, AC, OutlinedFunctionID);
+    if (Outlined) {
+      errs() << "Extracted Cold SEME Region to " << Outlined->getName() << "\n";
+      ++OutlinedFunctionID;
+      Changed = true;
+    }
+  }
 
   return Changed;
 }

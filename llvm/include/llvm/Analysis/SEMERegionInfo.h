@@ -145,7 +145,22 @@ class SEMERegionInfoBase {
     //for (BlockT *BB : R->blocks()) {}
   }
 
+  /// Wipe this region tree's state without releasing any resources.
+  ///
+  /// This is essentially a post-move helper only. It leaves the object in an
+  /// assignable and destroyable state, but otherwise invalid.
+  void wipe() {
+    TopLevelRegion = nullptr;
+    Regions.clear();
+    EntryBBMap.clear();
+    BBtoRegion.clear();
+  }
 
+  void releaseMemory() {
+    for (RegionT *R : Regions)
+      delete R;
+    wipe();
+  }
 public:
 
   SEMERegionInfoBase() {}
@@ -156,9 +171,7 @@ public:
       Regions(std::move(Arg.Regions)),
       EntryBBMap(std::move(Arg.EntryBBMap)) {
      errs() << "Reference copy\n";
-    //wipe
-    Arg.TopLevelRegion = nullptr;
-    Arg.Regions.clear();
+    Arg.wipe();
   }
 
   SEMERegionInfoBase &operator=(SEMERegionInfoBase &&RHS) {
@@ -167,16 +180,15 @@ public:
     BBtoRegion = std::move(RHS.BBtoRegion);
     Regions = std::move(RHS.Regions);
     EntryBBMap = std::move(RHS.EntryBBMap);
-    RHS.TopLevelRegion = nullptr;
-    RHS.Regions.clear();
+    RHS.wipe();
     return *this;
   }
 
+  SEMERegionInfoBase(const SEMERegionInfoBase &) = delete;
+  SEMERegionInfoBase &operator=(const SEMERegionInfoBase &) = delete;
+
   ~SEMERegionInfoBase() {
-    for (RegionT *R : Regions) delete R;
-    TopLevelRegion = nullptr;
-    Regions.clear();
-    EntryBBMap.clear();
+    releaseMemory();
   }
 
   std::vector<RegionT *> Regions;
@@ -204,7 +216,6 @@ public:
   /// region containing BB.
   RegionT *operator[](BlockT *BB) const;
 
-  
 
   RegionT *getTopLevelRegion() const { return TopLevelRegion; }
 };
@@ -310,7 +321,7 @@ public:
   virtual bool runOnFunction(Function &F);
 
   SEMERegionInfo &getSEMERegionInfo() { return SRI; }
-  const SEMERegionInfo &GetSEMERegionInfo() const { return SRI; }
+  const SEMERegionInfo &getSEMERegionInfo() const { return SRI; }
 private:
   SEMERegionInfo SRI;
 };
@@ -335,18 +346,17 @@ public:
 //build region tree using a postorder traversal
 template <class Tr>
 void SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::FuncT &F, typename Tr::ControlDepGraphT &CDG) {
-  Regions.clear();
-  EntryBBMap.clear();
+  releaseMemory();
 
   std::set<CDGNodeT *> Visited;
-  auto RecursivePostOrder = [&](auto&& self, CDGNodeT *Node) -> RegionT* {
+  auto RecursivePostOrder = [&](auto&& self, CDGNodeT *Node, std::vector<RegionT *> &Siblings) -> RegionT* {
     if (Visited.count(Node)) return nullptr;
     Visited.insert(Node);
     
     std::vector<RegionT *> Children;
   
     for (CDGNodeT *Child : *Node) {
-      RegionT *CR = self(self, Child);
+      RegionT *CR = self(self, Child, Children);
       if (CR) Children.push_back(CR);
     }
   
@@ -354,9 +364,7 @@ void SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::FuncT &F, typename Tr
     if (R) {
       for (RegionT *CR : Children) R->addSubRegion(CR);
     } else {
-      if (Children.size()>1) errs() << "ERROR: Too Many Children!\n";
-      else if (Children.size())
-        R = Children[0];
+      for (RegionT *CR : Children) Siblings.push_back(CR);
     }
   
     return R;
@@ -364,9 +372,13 @@ void SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::FuncT &F, typename Tr
 
   using CDGPtrT = std::add_pointer_t<ControlDepGraphT>;
   CDGNodeT *EntryNode = GraphTraits<CDGPtrT>::getEntryNode(&CDG);
-  errs() << "Computing RHG\n";
-  TopLevelRegion = RecursivePostOrder(RecursivePostOrder,EntryNode);
-  if (TopLevelRegion==nullptr) errs() << "No Root Node\n";
+  std::vector<RegionT *> ChildrenNodes;
+  TopLevelRegion = RecursivePostOrder(RecursivePostOrder,EntryNode,ChildrenNodes);
+  if (TopLevelRegion==nullptr) {
+    if (ChildrenNodes.size()==1) {
+    TopLevelRegion = ChildrenNodes[0];
+    } else errs() << "Wrong number of roots\n"; 
+  }
 }
 
 template <class Tr>
