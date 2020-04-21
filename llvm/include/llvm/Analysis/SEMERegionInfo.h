@@ -148,9 +148,37 @@ class SEMERegionInfoBase {
 
 public:
 
+  SEMERegionInfoBase() {}
+
+  SEMERegionInfoBase(SEMERegionInfoBase &&Arg)
+    : TopLevelRegion(std::move(Arg.TopLevelRegion)),
+      BBtoRegion(std::move(Arg.BBtoRegion)),
+      Regions(std::move(Arg.Regions)),
+      EntryBBMap(std::move(Arg.EntryBBMap)) {
+     errs() << "Reference copy\n";
+    //wipe
+    Arg.TopLevelRegion = nullptr;
+    Arg.Regions.clear();
+  }
+
+  SEMERegionInfoBase &operator=(SEMERegionInfoBase &&RHS) {
+     errs() << "assignment copy\n";
+    TopLevelRegion = std::move(RHS.TopLevelRegion);
+    BBtoRegion = std::move(RHS.BBtoRegion);
+    Regions = std::move(RHS.Regions);
+    EntryBBMap = std::move(RHS.EntryBBMap);
+    RHS.TopLevelRegion = nullptr;
+    RHS.Regions.clear();
+    return *this;
+  }
+
   ~SEMERegionInfoBase() {
     for (RegionT *R : Regions) delete R;
+    TopLevelRegion = nullptr;
+    Regions.clear();
+    EntryBBMap.clear();
   }
+
   std::vector<RegionT *> Regions;
   std::map<BlockT *, std::set<RegionT *> > EntryBBMap;
   
@@ -182,31 +210,19 @@ public:
 };
 
 class SEMERegionInfo : public SEMERegionInfoBase<SEMERegionTraits<Function>> {
+ using Base = SEMERegionInfoBase<SEMERegionTraits<Function>>;
 public:
-//SEMERegionInfo(const Function &F, const ControlDependenceGraph &CDG);
-/*
-void dotGraph() {
-  errs() << "digraph {\n";
-  for (SEMERegion *R : Regions) {
-    errs() << ((uintptr_t)R) << "[shape=\"box\", label=\"";
 
-    errs() << R->getEntry()->getName() << " [entry]\\n";
-    for (BasicBlock *BB : R->blocks()) {
-      if (BB!=R->getEntry()) {
-        errs() << BB->getName() << "\\n";
-      }
-    }
-    errs() << "\"];\n";
+  SEMERegionInfo() {}
+
+  SEMERegionInfo(SEMERegionInfo &&Arg) : Base(std::move(static_cast<Base &>(Arg))) {}
+
+  SEMERegionInfo &operator=(SEMERegionInfo &&RHS) {
+    Base::operator=(std::move(static_cast<Base &>(RHS)));
+    return *this;
   }
-  
-  for (SEMERegion *R : Regions) {
-    for (SEMERegion *Child : *R)
-    errs() << ((uintptr_t)R) << "->" << ((uintptr_t)Child) << ";\n";
-  }
-  
-  errs() << "}\n";
-}
-*/
+
+//SEMERegionInfo(const Function &F, const ControlDependenceGraph &CDG);
 };
 
 template <> struct GraphTraits<SEMERegion *> {
@@ -268,10 +284,10 @@ template <> struct DOTGraphTraits<SEMERegionInfo *>
 
   std::string getNodeLabel(SEMERegion *Node, SEMERegionInfo *Graph) {
     std::string Label = "";
-    Label = Node->getEntry()->getName().str() + std::string(" [entry]\\n");
+    Label = Node->getEntry()->getName().str() + std::string(" [entry]\n");
     for (BasicBlock *BB : Node->blocks()) {
       if (BB!=Node->getEntry()) {
-        Label +=  BB->getName().str() + std::string("\\n");
+        Label +=  BB->getName().str() + std::string("\n");
       }
     }
     return Label;
@@ -294,7 +310,7 @@ public:
   virtual bool runOnFunction(Function &F);
 
   SEMERegionInfo &getSEMERegionInfo() { return SRI; }
-  const SEMERegionInfo &getSEMERegionInfo() const { return SRI; }
+  const SEMERegionInfo &GetSEMERegionInfo() const { return SRI; }
 private:
   SEMERegionInfo SRI;
 };
@@ -319,6 +335,9 @@ public:
 //build region tree using a postorder traversal
 template <class Tr>
 void SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::FuncT &F, typename Tr::ControlDepGraphT &CDG) {
+  Regions.clear();
+  EntryBBMap.clear();
+
   std::set<CDGNodeT *> Visited;
   auto RecursivePostOrder = [&](auto&& self, CDGNodeT *Node) -> RegionT* {
     if (Visited.count(Node)) return nullptr;
@@ -333,7 +352,6 @@ void SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::FuncT &F, typename Tr
   
     RegionT *R = buildRegionFromCDGNode(Node, F, CDG);
     if (R) {
-      addRegion(R);
       for (RegionT *CR : Children) R->addSubRegion(CR);
     } else {
       if (Children.size()>1) errs() << "ERROR: Too Many Children!\n";
@@ -346,7 +364,9 @@ void SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::FuncT &F, typename Tr
 
   using CDGPtrT = std::add_pointer_t<ControlDepGraphT>;
   CDGNodeT *EntryNode = GraphTraits<CDGPtrT>::getEntryNode(&CDG);
+  errs() << "Computing RHG\n";
   TopLevelRegion = RecursivePostOrder(RecursivePostOrder,EntryNode);
+  if (TopLevelRegion==nullptr) errs() << "No Root Node\n";
 }
 
 template <class Tr>
@@ -439,9 +459,10 @@ typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionFromCDGNode(CDGNodeT *N
   if (Found) {
     delete R;
     return nullptr;
+  } else {
+    addRegion(R);
+    return R;
   }
-
-  return R;
 }
 
 } // namespace llvm

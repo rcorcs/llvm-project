@@ -21,6 +21,7 @@ SEMERegionLegacyPass::SEMERegionLegacyPass() : FunctionPass(ID) {
 }
 
 bool SEMERegionLegacyPass::runOnFunction(Function &F) {
+  errs() << "Legacy RHG: "<< F.getName() << "\n";
   ControlDependenceGraph &CDG = getAnalysis<ControlDependenceGraphPass>().getCDG();
   SRI.buildRegionsTree(F, CDG);
   return false;
@@ -29,6 +30,7 @@ bool SEMERegionLegacyPass::runOnFunction(Function &F) {
 AnalysisKey SEMERegionAnalysis::Key;
 SEMERegionInfo SEMERegionAnalysis::run(Function &F,
                                                FunctionAnalysisManager &AM) {
+  errs() << "RHG Analysis: "<< F.getName() << "\n";
   SEMERegionInfo SRI;
   ControlDependenceGraph &CDG = AM.getResult<ControlDependenceAnalysis>(F);
   SRI.buildRegionsTree(F, CDG);

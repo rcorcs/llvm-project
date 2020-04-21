@@ -647,9 +647,93 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
   return Changed;
 }
 
+
+
 bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
+
   errs() << "Running SEME-based code splitting\n";
-  return false;
+
+  bool Changed = false;
+
+  errs() << "Computing SEME Regions\n";
+  
+  SEMERegionInfo *SRI = GetSRI(F);
+
+  errs() << "Done\n";
+
+  /*
+  {
+    PostDominatorTree PDT;
+    PDT.recalculate(F);
+    ControlDependenceGraph CDG(F, PDT);
+    SEMERegionInfo SRI;
+    SRI.buildRegionsTree(F, CDG);
+    if (SRI.getTopLevelRegion()==nullptr) errs() << "No Top Level Region\n";
+    errs() << "Done Check\n";
+  }
+  */
+
+  // Calculate BFI lazily (it's only used to query ProfileSummaryInfo). This
+  // reduces compile-time significantly. TODO: When we *do* use BFI, we should
+  // be able to salvage its domtrees instead of recomputing them.
+  BlockFrequencyInfo *BFI = nullptr;
+  if (HasProfileSummary)
+    BFI = GetBFI(F);
+
+  errs() << "Computing Maximal Cold SEME Regions\n";
+
+  std::set<SEMERegion *> ColdRegions;
+  auto CollectColdRegions = [&](auto &&self, SEMERegion *Node) -> bool {
+    bool IsCold = true;
+    if (Node->empty()) {
+      for (BasicBlock *BB : Node->blocks()) {
+	bool BBCold = ((BFI && PSI->isColdBlock(BB, BFI)) ||
+                (EnableStaticAnalyis && unlikelyExecuted(*BB)));
+        IsCold = IsCold && BBCold;
+
+      }
+    } else {
+      std::set<SEMERegion *> ColdChildren;
+      for (SEMERegion *Child : *Node) {
+        if (self(self,Child)) {
+	  ColdChildren.insert(Child);
+	} else IsCold = false;
+      }
+      if (!IsCold) {
+        for (SEMERegion * ColdNode : ColdChildren) {
+           ColdRegions.insert(ColdNode);
+	}
+      }
+    }
+    return IsCold;
+  };
+  if (CollectColdRegions(CollectColdRegions,SRI->getTopLevelRegion())) {
+      ColdRegions.insert(SRI->getTopLevelRegion());
+  }
+
+  auto DotPrinter = [&]() {
+    errs() << "digraph {\n";
+    for (SEMERegion *R : SRI->Regions) {
+      errs() << ((uintptr_t)R) << "[shape=\"box\", style=\"filled\", fillcolor=\"" << (ColdRegions.count(R)?"#7093f3":"#e97a5f") <<  "\" label=\"";
+      errs() << R->getEntry()->getName() << " [entry]\\n";
+      for (BasicBlock *BB : R->blocks()) {
+        if (BB!=R->getEntry()) {
+          errs() << BB->getName() << "\\n";
+        }
+      }
+      errs() << "\"];\n";
+    }
+    
+    for (SEMERegion *R : SRI->Regions) {
+      for (SEMERegion *Child : *R)
+      errs() << ((uintptr_t)R) << "->" << ((uintptr_t)Child) << ";\n";
+    }
+    
+    errs() << "}\n";
+  };
+  DotPrinter();
+
+  return Changed;
 }
 
 bool HotColdSplittingBase::run(Module &M) {
@@ -691,10 +775,10 @@ bool HotColdSplittingLegacyPass::runOnModule(Module &M) {
   auto GTTI = [this](Function &F) -> TargetTransformInfo & {
     return this->getAnalysis<TargetTransformInfoWrapperPass>().getTTI(F);
   };
-  auto GBFI = [this](Function &F) {
+  auto GBFI = [this](Function &F) -> BlockFrequencyInfo * {
     return &this->getAnalysis<BlockFrequencyInfoWrapperPass>(F).getBFI();
   };
-  auto GSRI = [this](Function &F) {
+  auto GSRI = [this](Function &F) -> SEMERegionInfo * {
     return &this->getAnalysis<SEMERegionLegacyPass>(F).getSEMERegionInfo();
   };
   std::unique_ptr<OptimizationRemarkEmitter> ORE;
