@@ -135,7 +135,7 @@ class SEMERegionInfoBase {
   BBtoRegionMap BBtoRegion;
 
   RegionT *buildRegionFromCDGNode(CDGNodeT *Node, FuncT &F, ControlDepGraphT &CDG, DescendantTree<CDGNodeT *> &DTree);
-  unsigned countCFGEntries(BlockT *Root, ControlDepGraphT &CDG, std::set<CDGNodeT *> &Reachable);
+  unsigned countCFGEntries(ControlDepGraphT &CDG, std::set<CDGNodeT *> &Reachable);
   CDGNodeT * searchLeftmostBlock(CDGNodeT *Root);
 
   void addRegion(RegionT *R) {
@@ -485,28 +485,22 @@ typename Tr::CDGNodeT * SEMERegionInfoBase<Tr>::searchLeftmostBlock(typename Tr:
 }
 
 template <class Tr>
-unsigned SEMERegionInfoBase<Tr>::countCFGEntries(BlockT *Root, ControlDepGraphT &CDG, std::set<CDGNodeT *> &Reachable) {
-  std::set<BlockT *> Visited;
+unsigned SEMERegionInfoBase<Tr>::countCFGEntries(ControlDepGraphT &CDG, std::set<CDGNodeT *> &Reachable) {
   unsigned NumEntries = 0;
-  auto CountRecursively = [&](auto &&self, BlockT *BB) -> void {
-    if (Visited.count(BB)) return;
-    Visited.insert(BB);
-  
-    for (auto ItBB = succ_begin(BB), E = succ_end(BB); ItBB!=E; ItBB++) {
-      BlockT *SuccBB = *ItBB;
-      NumEntries += (Reachable.count(CDG.getNode(SuccBB)) && !Reachable.count(CDG.getNode(BB)));
-      self(self,SuccBB);
+
+  for (CDGNodeT *Node : Reachable) {
+    if (Node->getBlock()) {
+      for (auto It = pred_begin(Node->getBlock()), E = pred_end(Node->getBlock()); It!=E; It++) {
+        NumEntries += !Reachable.count(CDG.getNode(*It));
+      }
     }
-  };
-  CountRecursively(CountRecursively, Root);
+  }
+
   return NumEntries;
 }
 
 template <class Tr>
 typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionFromCDGNode(CDGNodeT *Node, FuncT &F, ControlDepGraphT &CDG, DescendantTree<CDGNodeT *> &DTree) {
-  using CDGPtrT = std::add_pointer_t<ControlDepGraphT>;
-  using FuncPtrT = std::add_pointer_t<FuncT>;
-
   //skip leaves (non-internal nodes)
   if (Node->getNumChildren()==0) return nullptr;
 
@@ -517,8 +511,7 @@ typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionFromCDGNode(CDGNodeT *N
   }
   Reachable.insert(Node);
 
-  unsigned NumEntries = countCFGEntries(GraphTraits<FuncPtrT>::getEntryNode(&F), CDG, Reachable);
-
+  unsigned NumEntries = countCFGEntries(CDG, Reachable);
   //skip regions with multi-entries
   if (NumEntries>1) return nullptr;
 
