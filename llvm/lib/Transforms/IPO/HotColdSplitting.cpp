@@ -86,6 +86,9 @@ static cl::opt<int>
                        cl::desc("Base penalty for splitting cold code (as a "
                                 "multiple of TCC_Basic)"));
 
+static cl::opt<bool> EnableSEMERegionSplit("hotcoldsplit-seme-region",
+                              cl::init(false), cl::Hidden);
+
 namespace {
 // Same as blockEndsInUnreachable in CodeGen/BranchFolding.cpp. Do not modify
 // this function unless you modify the MBB version as well.
@@ -173,7 +176,8 @@ public:
   }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
-    AU.addRequired<SEMERegionLegacyPass>();
+    if (EnableSEMERegionSplit)
+      AU.addRequired<SEMERegionLegacyPass>();
     AU.addRequired<BlockFrequencyInfoWrapperPass>();
     AU.addRequired<ProfileSummaryInfoWrapperPass>();
     AU.addRequired<TargetTransformInfoWrapperPass>();
@@ -839,9 +843,10 @@ bool HotColdSplittingLegacyPass::runOnModule(Module &M) {
     return nullptr;
   };
 
-  //TODO: select between default or SEME-based code splitting
-  //return HotColdSplitting(PSI, GBFI, GTTI, &GetORE, LookupAC).run(M);
-  return SEMEHotColdSplitting(PSI, GBFI, GSRI, GTTI, &GetORE, LookupAC).run(M);
+  if (EnableSEMERegionSplit)
+    return SEMEHotColdSplitting(PSI, GBFI, GSRI, GTTI, &GetORE, LookupAC).run(M);
+  else
+    return HotColdSplitting(PSI, GBFI, GTTI, &GetORE, LookupAC).run(M);
 }
 
 PreservedAnalyses
@@ -874,9 +879,13 @@ HotColdSplittingPass::run(Module &M, ModuleAnalysisManager &AM) {
 
   ProfileSummaryInfo *PSI = &AM.getResult<ProfileSummaryAnalysis>(M);
 
-  //TODO: select between default or SEME-based code splitting
-  //if (HotColdSplitting(PSI, GBFI, GTTI, &GetORE, LookupAC).run(M))
-  if (SEMEHotColdSplitting(PSI, GBFI, GSRI, GTTI, &GetORE, LookupAC).run(M))
+  bool Changed = false;
+  if (EnableSEMERegionSplit)
+    Changed = SEMEHotColdSplitting(PSI, GBFI, GSRI, GTTI, &GetORE, LookupAC).run(M);
+  else
+    Changed = HotColdSplitting(PSI, GBFI, GTTI, &GetORE, LookupAC).run(M);
+
+  if (Changed)
     return PreservedAnalyses::none();
   return PreservedAnalyses::all();
 }
