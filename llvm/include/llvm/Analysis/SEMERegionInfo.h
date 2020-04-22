@@ -137,6 +137,7 @@ class SEMERegionInfoBase {
   RegionT *buildRegionFromCDGNode(CDGNodeT *Node, FuncT &F, ControlDepGraphT &CDG, DescendantTree<CDGNodeT *> &DTree);
   unsigned countCFGEntries(ControlDepGraphT &CDG, std::set<CDGNodeT *> &Reachable);
   CDGNodeT * searchLeftmostBlock(CDGNodeT *Root);
+  std::set<CDGNodeT *> computeDescendants(CDGNodeT *Node, DescendantTree<CDGNodeT *> &DTree);
 
   void addRegion(RegionT *R) {
     Regions.push_back(R);
@@ -467,21 +468,11 @@ void SEMERegionInfoBase<Tr>::buildRegionsTree(typename Tr::FuncT &F, typename Tr
 }
 
 template <class Tr>
-typename Tr::CDGNodeT * SEMERegionInfoBase<Tr>::searchLeftmostBlock(typename Tr::CDGNodeT *Root) {
-  std::set<CDGNodeT *> Visited;
-  auto RecursiveSearch = [&](auto&& self, CDGNodeT *Node) -> CDGNodeT* {
-    if (Visited.count(Node)) return nullptr;
-       Visited.insert(Node);
-    
-    if (Node->getBlock()) return Node;
-
-    for (CDGNodeT *Child : *Node) {
-      CDGNodeT *FoundN = self(self,Child);
-      if (FoundN!=nullptr) return FoundN;
-    }
-    return nullptr;
-  };
-  return RecursiveSearch(RecursiveSearch,Root);
+typename Tr::CDGNodeT * SEMERegionInfoBase<Tr>::searchLeftmostBlock(CDGNodeT *Node) {
+  for (auto It = GraphTraits<CDGNodeT *>::nodes_begin(Node), E = GraphTraits<CDGNodeT *>::nodes_end(Node); It!=E; It++) {
+    if ( (*It)->getBlock() ) return (*It);
+  }
+  return nullptr;
 }
 
 template <class Tr>
@@ -500,15 +491,22 @@ unsigned SEMERegionInfoBase<Tr>::countCFGEntries(ControlDepGraphT &CDG, std::set
 }
 
 template <class Tr>
+std::set<typename Tr::CDGNodeT *> SEMERegionInfoBase<Tr>::computeDescendants(CDGNodeT *Node, DescendantTree<CDGNodeT *> &DTree) {
+  std::set<CDGNodeT *> Descendants;
+  auto &DN = DTree[Node];
+  for (auto It = GraphTraits< DescendantNode<CDGNodeT*>* >::nodes_begin(&DN), E = GraphTraits< DescendantNode<CDGNodeT*>* >::nodes_end(&DN); It!=E; It++) {
+    Descendants.insert( (*It)->item() );
+  }
+  return Descendants;
+}
+
+
+template <class Tr>
 typename Tr::RegionT *SEMERegionInfoBase<Tr>::buildRegionFromCDGNode(CDGNodeT *Node, FuncT &F, ControlDepGraphT &CDG, DescendantTree<CDGNodeT *> &DTree) {
   //skip leaves (non-internal nodes)
   if (Node->getNumChildren()==0) return nullptr;
 
-  std::set<CDGNodeT *> Reachable;
-  auto &DN = DTree[Node];
-  for (auto It = GraphTraits< DescendantNode<CDGNodeT*>* >::nodes_begin(&DN), E = GraphTraits< DescendantNode<CDGNodeT*>* >::nodes_end(&DN); It!=E; It++) {
-    Reachable.insert( (*It)->item() );
-  }
+  std::set<CDGNodeT *> Reachable = computeDescendants(Node, DTree);
   Reachable.insert(Node);
 
   unsigned NumEntries = countCFGEntries(CDG, Reachable);
