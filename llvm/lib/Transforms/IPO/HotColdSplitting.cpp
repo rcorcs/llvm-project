@@ -651,15 +651,15 @@ bool HotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
 
 bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummary) {
 
-  errs() << "Running SEME-based code splitting\n";
+  //errs() << "Running SEME-based code splitting\n";
 
   bool Changed = false;
 
-  errs() << "Computing SEME Regions\n";
+  //errs() << "Computing SEME Regions\n";
   
   SEMERegionInfo *SRI = GetSRI(F);
 
-  errs() << "Done\n";
+  //errs() << "Done\n";
 
   /*
   {
@@ -692,7 +692,7 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
   //if (!PDT)
   //  PDT = std::make_unique<PostDominatorTree>(F);
 
-  errs() << "Computing Maximal Cold SEME Regions\n";
+  //errs() << "Computing Maximal Cold SEME Regions\n";
 
   std::set<SEMERegion *> MaximalColdRegions;
   std::map<SEMERegion *, bool> IsColdRegion;
@@ -745,7 +745,7 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
     
     errs() << "}\n";
   };
-  DotPrinter();
+  //DotPrinter();
 
 
   // Outline single-entry cold regions, splitting up larger regions as needed.
@@ -753,14 +753,14 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
   // Cache and recycle the CodeExtractor analysis to avoid O(n^2) compile-time.
   CodeExtractorAnalysisCache CEAC(F);
   for (SEMERegion *ColdRegion : MaximalColdRegions) {
-      errs() << "Trying to extraction Region: ";
-      errs() << ColdRegion->getEntry()->getName() << " ";
-      for (BasicBlock *BB : ColdRegion->blocks()) {
-        if (BB!=ColdRegion->getEntry()) {
-          errs() << BB->getName() << " ";
-        }
-      }
-      errs() << "\n";
+      //errs() << "Trying to extraction Region: ";
+      //errs() << ColdRegion->getEntry()->getName() << " ";
+      //for (BasicBlock *BB : ColdRegion->blocks()) {
+      //  if (BB!=ColdRegion->getEntry()) {
+      //    errs() << BB->getName() << " ";
+      //  }
+      //}
+      //errs() << "\n";
 
     BlockSequence Blocks(ColdRegion->blocks());
     //for (BasicBlock *BB : ColdRegion->blocks())
@@ -773,7 +773,7 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
     Function *Outlined = extractColdRegion(Blocks, CEAC, *DT, BFI, TTI,
                                            ORE, AC, OutlinedFunctionID);
     if (Outlined) {
-      errs() << "Extracted Cold SEME Region to " << Outlined->getName() << "\n";
+      //errs() << "Extracted Cold SEME Region to " << Outlined->getName() << "\n";
       ++OutlinedFunctionID;
       Changed = true;
     }
