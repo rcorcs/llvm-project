@@ -692,34 +692,31 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
   std::unique_ptr<DominatorTree> DT;
   if (!DT)
     DT = std::make_unique<DominatorTree>(F);
-  //std::unique_ptr<PostDominatorTree> PDT;
-  //if (!PDT)
-  //  PDT = std::make_unique<PostDominatorTree>(F);
 
   //errs() << "Computing Maximal Cold SEME Regions\n";
+
+  std::map<BasicBlock *, bool> ValidColdBBs;
+  for (BasicBlock &BB : F) {
+    ValidColdBBs[&BB] = ((BFI && PSI->isColdBlock(&BB, BFI)) ||
+              (EnableStaticAnalyis && unlikelyExecuted(BB))) && mayExtractBlock(BB);
+  }
 
   std::set<SEMERegion *> MaximalColdRegions;
   std::map<SEMERegion *, bool> IsColdRegion;
   auto CollectColdRegions = [&](auto &&self, SEMERegion *Node) -> bool {
     bool IsCold = true;
-    if (Node->empty()) {
-      for (BasicBlock *BB : Node->blocks()) {
-	bool BBCold = ((BFI && PSI->isColdBlock(BB, BFI)) ||
-                (EnableStaticAnalyis && unlikelyExecuted(*BB)));
-        IsCold = IsCold && BBCold;
-
-      }
-    } else {
-      std::set<SEMERegion *> ColdChildren;
-      for (SEMERegion *Child : *Node) {
-        if (self(self,Child)) {
-	  ColdChildren.insert(Child);
-	} else IsCold = false;
-      }
-      if (!IsCold) {
-        for (SEMERegion * ColdRegion : ColdChildren) {
-           MaximalColdRegions.insert(ColdRegion);
-	}
+    for (BasicBlock *BB : Node->blocks()) {
+      IsCold = IsCold && ValidColdBBs[BB];
+    }
+    std::set<SEMERegion *> ColdChildren;
+    for (SEMERegion *Child : *Node) {
+      if (self(self,Child)) {
+        ColdChildren.insert(Child);
+      } else IsCold = false;
+    }
+    if (!IsCold) {
+      for (SEMERegion * ColdRegion : ColdChildren) {
+         MaximalColdRegions.insert(ColdRegion);
       }
     }
     IsColdRegion[Node] = IsCold;
