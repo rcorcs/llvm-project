@@ -160,6 +160,7 @@ void initializeForceFunctionAttrsLegacyPassPass(PassRegistry&);
 void initializeForwardControlFlowIntegrityPass(PassRegistry&);
 void initializeFuncletLayoutPass(PassRegistry&);
 void initializeFunctionImportLegacyPassPass(PassRegistry&);
+void initializeFunctionMergingPass(PassRegistry&);
 void initializeGCMachineCodeAnalysisPass(PassRegistry&);
 void initializeGCModuleInfoPass(PassRegistry&);
 void initializeGCOVProfilerLegacyPassPass(PassRegistry&);
