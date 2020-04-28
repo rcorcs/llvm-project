@@ -196,9 +196,6 @@ private:
   void linearize(Function *F, SmallVectorImpl<Value *> &FVec,
                           LinearizationKind LK = LinearizationKind::LK_Canonical);
 
-  static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallInst *CI1,
-                                const CallInst *CI2);
-  static bool matchLandingPad(LandingPadInst *LP1, LandingPadInst *LP2);
   static bool matchInstructions(Instruction *I1, Instruction *I2, const FunctionMergingOptions &Options = {});
 
   void replaceByCall(Function *F, FunctionMergeResult &MergedFunc, const FunctionMergingOptions &Options = {});

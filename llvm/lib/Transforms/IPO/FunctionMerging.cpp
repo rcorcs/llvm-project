@@ -322,7 +322,7 @@ bool FunctionMerger::areTypesEquivalent(Type *Ty1, Type *Ty2, const DataLayout *
  return CmpTypes(Ty1, Ty2, DL);
 }
 
-bool FunctionMerger::matchIntrinsicCalls(Intrinsic::ID ID, const CallInst *CI1,
+static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallInst *CI1,
                                 const CallInst *CI2) {
   Intrinsic::ID ID1;
   Intrinsic::ID ID2;
@@ -702,7 +702,8 @@ bool FunctionMerger::matchIntrinsicCalls(Intrinsic::ID ID, const CallInst *CI1,
   return false; // TODO: change to false by default
 }
 
-bool FunctionMerger::matchLandingPad(LandingPadInst *LP1, LandingPadInst *LP2) {
+//bool FunctionMerger::matchLandingPad(LandingPadInst *LP1, LandingPadInst *LP2) {
+static  bool matchLandingPad(LandingPadInst *LP1, LandingPadInst *LP2) {
   if (LP1->getType() != LP2->getType())
     return false;
   if (LP1->isCleanup() != LP2->isCleanup())
@@ -718,6 +719,124 @@ bool FunctionMerger::matchLandingPad(LandingPadInst *LP1, LandingPadInst *LP2) {
       return false;
   }
   return true;
+}
+
+bool matchLoadInsts(const LoadInst *LI1, const LoadInst *LI2) {
+  return LI1->isVolatile() == LI2->isVolatile() &&
+         LI1->getAlignment() == LI2->getAlignment() &&
+         LI1->getOrdering() == LI2->getOrdering();
+}
+
+bool matchStoreInsts(const StoreInst *SI1, const StoreInst *SI2) {
+  return SI1->isVolatile() == SI2->isVolatile() &&
+         SI1->getAlignment() == SI2->getAlignment() &&
+         SI1->getOrdering() == SI2->getOrdering();
+}
+
+bool matchAllocaInsts(const AllocaInst *AI1, const AllocaInst *AI2) {
+  if (AI1->getArraySize() != AI2->getArraySize() ||
+      AI1->getAlignment() != AI2->getAlignment())
+    return false;
+
+  /*
+  // If size is known, I2 can be seen as equivalent to I1 if it allocates
+  // the same or less memory.
+  if (DL->getTypeAllocSize(AI->getAllocatedType())
+        < DL->getTypeAllocSize(cast<AllocaInst>(I2)->getAllocatedType()))
+    return false;
+
+  */
+
+  return true;
+}
+
+bool matchGetElementPtrInsts(const GetElementPtrInst *GEP1, const GetElementPtrInst *GEP2) {
+  SmallVector<Value *, 8> Indices1(GEP1->idx_begin(), GEP1->idx_end());
+  SmallVector<Value *, 8> Indices2(GEP2->idx_begin(), GEP2->idx_end());
+  if (Indices1.size() != Indices2.size())
+    return false;
+
+  if (GEP1->isInBounds()!=GEP2->isInBounds())
+    return false;
+
+  /*
+  //TODO: some indices must be constant depending on the type being indexed.
+  //For simplicity, whenever a given index is constant, keep it constant.
+  //This simplification may degrade the merging quality.
+  for (unsigned i = 0; i < Indices1.size(); i++) {
+    if (isa<ConstantInt>(Indices1[i]) && isa<ConstantInt>(Indices2[i]) && Indices1[i] != Indices2[i])
+      return false; // if different constant values
+  }
+  */
+
+  Type *AggTy1 = GEP1->getSourceElementType();
+  Type *AggTy2 = GEP2->getSourceElementType();
+
+  //Assert(all_of(
+  //  Idxs, [](Value* V) { return V->getType()->isIntOrIntVectorTy(); }),
+  //  "GEP indexes must be integers", &GEP);
+  SmallVector<Value*, 16> Idxs1(GEP1->idx_begin(), GEP1->idx_end());
+  SmallVector<Value*, 16> Idxs2(GEP2->idx_begin(), GEP2->idx_end());
+  if (Idxs1.size()!=Idxs2.size()) return false;
+  //for (unsigned i = 0; i<Idxs1.size(); i++) {
+  //  if (Idxs1[i]!=Idxs2[i]) return false;
+  //}
+
+  return true;
+}
+
+bool matchSwitchInsts(const SwitchInst *SI1, const SwitchInst *SI2) {
+  if (SI1->getNumCases() == SI2->getNumCases()) {
+    auto CaseIt1 = SI1->case_begin(), CaseEnd1 = SI1->case_end();
+    auto CaseIt2 = SI2->case_begin(), CaseEnd2 = SI2->case_end();
+    do {
+      auto *Case1 = &*CaseIt1;
+      auto *Case2 = &*CaseIt2;
+      if (Case1 != Case2)
+        return false; // TODO: could allow permutation!
+      ++CaseIt1;
+      ++CaseIt2;
+    } while (CaseIt1 != CaseEnd1 && CaseIt2 != CaseEnd2);
+    return true;
+  }
+  return false;
+}
+
+bool matchCallInsts(const CallInst *CI1, const CallInst *CI2) {
+  if (CI1->isInlineAsm() || CI2->isInlineAsm())
+    return false;
+  if (CI1->getCalledFunction() != CI2->getCalledFunction())
+    return false;
+  if (Function *F = CI1->getCalledFunction()) {
+    if (Intrinsic::ID ID = (Intrinsic::ID)F->getIntrinsicID()) {
+
+      if (!matchIntrinsicCalls(ID, CI1, CI2))
+        return false;
+    }
+  }
+
+  return CI1->getCallingConv() ==
+         CI2->getCallingConv(); // &&
+                                // CI->getAttributes() ==
+                                // cast<CallInst>(I2)->getAttributes();
+}
+
+bool matchInvokeInsts(const InvokeInst *II1, const InvokeInst *II2) {
+    return II1->getCallingConv() == II2->getCallingConv() &&
+           matchLandingPad(II1->getLandingPadInst(), II2->getLandingPadInst());
+}
+
+bool matchInsertValueInsts(const InsertValueInst *IV1, const InsertValueInst *IV2) {
+    return IV1->getIndices() == IV2->getIndices();
+}
+
+bool matchExtractValueInsts(const ExtractValueInst *EV1, const ExtractValueInst *EV2) {
+    return EV1->getIndices() == EV2->getIndices();
+}
+
+bool matchFenceInsts(const FenceInst *FI1, const FenceInst *FI2) {
+    return FI1->getOrdering() == FI2->getOrdering() &&
+           FI1->getSyncScopeID() == FI2->getSyncScopeID();
 }
 
 bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2, const FunctionMergingOptions &Options) {
@@ -756,135 +875,19 @@ bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2, const F
   switch (I1->getOpcode()) {
   //case Instruction::Br: return false; //{ return (I1->getNumOperands()==1); }
 
-  case Instruction::Load: {
-    const LoadInst *LI = dyn_cast<LoadInst>(I1);
-    const LoadInst *LI2 = cast<LoadInst>(I2);
-    return LI->isVolatile() == LI2->isVolatile() &&
-           LI->getAlignment() == LI2->getAlignment() &&
-           LI->getOrdering() == LI2->getOrdering(); // &&
-    // LI->getSyncScopeID() == LI2->getSyncScopeID() &&
-    // LI->getMetadata(LLVMContext::MD_range)
-    //  == LI2->getMetadata(LLVMContext::MD_range);
-  }
-  case Instruction::Store: {
-    const StoreInst *SI = dyn_cast<StoreInst>(I1);
-    return SI->isVolatile() == cast<StoreInst>(I2)->isVolatile() &&
-           SI->getAlignment() == cast<StoreInst>(I2)->getAlignment() &&
-           SI->getOrdering() == cast<StoreInst>(I2)->getOrdering(); // &&
-    // SI->getSyncScopeID() == cast<StoreInst>(I2)->getSyncScopeID();
-  }
-  case Instruction::Alloca: {
-    const AllocaInst *AI = dyn_cast<AllocaInst>(I1);
-    if (AI->getArraySize() != cast<AllocaInst>(I2)->getArraySize() ||
-        AI->getAlignment() != cast<AllocaInst>(I2)->getAlignment())
-      return false;
+//#define MatchCaseInst(Kind, I1, I2) case Instruction::#Kind 
 
-    /*
-    // If size is known, I2 can be seen as equivalent to I1 if it allocates
-    // the same or less memory.
-    if (DL->getTypeAllocSize(AI->getAllocatedType())
-          < DL->getTypeAllocSize(cast<AllocaInst>(I2)->getAllocatedType()))
-      return false;
-
-    return true;
-    */
-    break;
-  }
-  case Instruction::GetElementPtr: {
-    GetElementPtrInst *GEP1 = dyn_cast<GetElementPtrInst>(I1);
-    GetElementPtrInst *GEP2 = dyn_cast<GetElementPtrInst>(I2);
-
-    SmallVector<Value *, 8> Indices1(GEP1->idx_begin(), GEP1->idx_end());
-    SmallVector<Value *, 8> Indices2(GEP2->idx_begin(), GEP2->idx_end());
-    if (Indices1.size() != Indices2.size())
-      return false;
-
-    if (GEP1->isInBounds()!=GEP2->isInBounds())
-      return false;
-
-    /*
-    //TODO: some indices must be constant depending on the type being indexed.
-    //For simplicity, whenever a given index is constant, keep it constant.
-    //This simplification may degrade the merging quality.
-    for (unsigned i = 0; i < Indices1.size(); i++) {
-      if (isa<ConstantInt>(Indices1[i]) && isa<ConstantInt>(Indices2[i]) && Indices1[i] != Indices2[i])
-        return false; // if different constant values
-    }
-    */
-
-    Type *AggTy1 = GEP1->getSourceElementType();
-    Type *AggTy2 = GEP2->getSourceElementType();
-
-    //Assert(all_of(
-    //  Idxs, [](Value* V) { return V->getType()->isIntOrIntVectorTy(); }),
-    //  "GEP indexes must be integers", &GEP);
-    SmallVector<Value*, 16> Idxs1(GEP1->idx_begin(), GEP1->idx_end());
-    SmallVector<Value*, 16> Idxs2(GEP2->idx_begin(), GEP2->idx_end());
-    if (Idxs1.size()!=Idxs2.size()) return false;
-    //for (unsigned i = 0; i<Idxs1.size(); i++) {
-    //  if (Idxs1[i]!=Idxs2[i]) return false;
-    //}
-
-    break;
-  }
-  case Instruction::Switch: {
-    SwitchInst *SI1 = dyn_cast<SwitchInst>(I1);
-    SwitchInst *SI2 = dyn_cast<SwitchInst>(I2);
-    if (SI1->getNumCases() == SI2->getNumCases()) {
-      auto CaseIt1 = SI1->case_begin(), CaseEnd1 = SI1->case_end();
-      auto CaseIt2 = SI2->case_begin(), CaseEnd2 = SI2->case_end();
-      do {
-        auto *Case1 = &*CaseIt1;
-        auto *Case2 = &*CaseIt2;
-        if (Case1 != Case2)
-          return false; // TODO: could allow permutation!
-        ++CaseIt1;
-        ++CaseIt2;
-      } while (CaseIt1 != CaseEnd1 && CaseIt2 != CaseEnd2);
-      return true;
-    }
-    return false;
-  }
-  case Instruction::Call: {
-    CallInst *CI1 = dyn_cast<CallInst>(I1);
-    CallInst *CI2 = dyn_cast<CallInst>(I2);
-    if (CI1->isInlineAsm() || CI2->isInlineAsm())
-      return false;
-    if (CI1->getCalledFunction() != CI2->getCalledFunction())
-      return false;
-    if (Function *F = CI1->getCalledFunction()) {
-      if (Intrinsic::ID ID = (Intrinsic::ID)F->getIntrinsicID()) {
-
-        if (!matchIntrinsicCalls(ID, CI1, CI2))
-          return false;
-      }
-    }
-
-    return CI1->getCallingConv() ==
-           CI2->getCallingConv(); // &&
-                                  // CI->getAttributes() ==
-                                  // cast<CallInst>(I2)->getAttributes();
-  }
-  case Instruction::Invoke: {
-    InvokeInst *CI1 = dyn_cast<InvokeInst>(I1);
-    InvokeInst *CI2 = dyn_cast<InvokeInst>(I2);
-    return CI1->getCallingConv() == CI2->getCallingConv() &&
-           matchLandingPad(CI1->getLandingPadInst(), CI2->getLandingPadInst());
-    // CI->getAttributes() == cast<InvokeInst>(I2)->getAttributes();
-  }
-  case Instruction::InsertValue: {
-    const InsertValueInst *IVI = dyn_cast<InsertValueInst>(I1);
-    return IVI->getIndices() == cast<InsertValueInst>(I2)->getIndices();
-  }
-  case Instruction::ExtractValue: {
-    const ExtractValueInst *EVI = dyn_cast<ExtractValueInst>(I1);
-    return EVI->getIndices() == cast<ExtractValueInst>(I2)->getIndices();
-  }
-  case Instruction::Fence: {
-    const FenceInst *FI = dyn_cast<FenceInst>(I1);
-    return FI->getOrdering() == cast<FenceInst>(I2)->getOrdering() &&
-           FI->getSyncScopeID() == cast<FenceInst>(I2)->getSyncScopeID();
-  }
+  case Instruction::Load: return matchLoadInsts(dyn_cast<LoadInst>(I1), dyn_cast<LoadInst>(I2));
+  case Instruction::Store: return matchStoreInsts(dyn_cast<StoreInst>(I1), dyn_cast<StoreInst>(I2));
+  case Instruction::Alloca: return matchAllocaInsts(dyn_cast<AllocaInst>(I1), dyn_cast<AllocaInst>(I2));
+  case Instruction::GetElementPtr: 
+    return matchGetElementPtrInsts(dyn_cast<GetElementPtrInst>(I1), dyn_cast<GetElementPtrInst>(I2));
+  case Instruction::Switch: return matchSwitchInsts(dyn_cast<SwitchInst>(I1), dyn_cast<SwitchInst>(I2));
+  case Instruction::Call: return matchCallInsts(dyn_cast<CallInst>(I1), dyn_cast<CallInst>(I2));
+  case Instruction::Invoke: return matchInvokeInsts(dyn_cast<InvokeInst>(I1), dyn_cast<InvokeInst>(I2));
+  case Instruction::InsertValue: return matchInsertValueInsts(dyn_cast<InsertValueInst>(I1), dyn_cast<InsertValueInst>(I2));
+  case Instruction::ExtractValue: return matchExtractValueInsts(dyn_cast<ExtractValueInst>(I1), dyn_cast<ExtractValueInst>(I2));
+  case Instruction::Fence: return matchFenceInsts(dyn_cast<FenceInst>(I1), dyn_cast<FenceInst>(I2));
   case Instruction::AtomicCmpXchg: {
     const AtomicCmpXchgInst *CXI = dyn_cast<AtomicCmpXchgInst>(I1);
     const AtomicCmpXchgInst *CXI2 = cast<AtomicCmpXchgInst>(I2);
