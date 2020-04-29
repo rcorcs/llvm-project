@@ -229,8 +229,8 @@ public:
 class ControlDependenceGraphPass : public FunctionPass {
 public:
   static char ID;
-  ControlDependenceGraphPass() : FunctionPass(ID) {}
-  virtual ~ControlDependenceGraphPass() { }
+  ControlDependenceGraphPass();
+  virtual ~ControlDependenceGraphPass() {}
   virtual void getAnalysisUsage(AnalysisUsage &AU) const {
     //AU.addRequired<PostDominatorTree>();
     AU.addRequired<PostDominatorTreeWrapperPass>();

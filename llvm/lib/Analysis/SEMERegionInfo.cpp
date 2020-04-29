@@ -65,6 +65,13 @@ INITIALIZE_PASS(SEMERegionInfoPrinter, "dot-rhg",
                 true, true)
 
 char SEMERegionLegacyPass::ID = 0;
-INITIALIZE_PASS(SEMERegionLegacyPass, "rhg",
-	        "Build SEME Region Info",
-                true, true)
+//INITIALIZE_PASS(SEMERegionLegacyPass, "rhg",
+//	        "Build SEME Region Info",
+//                true, true)
+
+INITIALIZE_PASS_BEGIN(SEMERegionLegacyPass, "rhg",
+                      "Build SEME Region Info", true, true)
+INITIALIZE_PASS_DEPENDENCY(ControlDependenceGraphPass)
+INITIALIZE_PASS_END(SEMERegionLegacyPass, "rhg",
+                      "Build SEME Region Info", true, true)
+

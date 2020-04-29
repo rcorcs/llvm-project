@@ -65,7 +65,9 @@ public:
                    function_ref<TargetTransformInfo &(Function &)> GTTI,
                    std::function<OptimizationRemarkEmitter &(Function &)> *GORE,
                    function_ref<AssumptionCache *(Function &)> LAC)
-      : HotColdSplittingBase(ProfSI,GBFI,GTTI,GORE,LAC) {}
+      : HotColdSplittingBase(ProfSI,GBFI,GTTI,GORE,LAC) {
+      errs() << "Running default Hot/Cold Splitting\n";
+      }
 
 protected:
   virtual bool outlineColdRegions(Function &F, bool HasProfileSummary);
@@ -79,7 +81,9 @@ public:
                    function_ref<TargetTransformInfo &(Function &)> GTTI,
                    std::function<OptimizationRemarkEmitter &(Function &)> *GORE,
                    function_ref<AssumptionCache *(Function &)> LAC)
-      : HotColdSplittingBase(ProfSI,GBFI,GTTI,GORE,LAC), GetSRI(GSRI) {}
+      : HotColdSplittingBase(ProfSI,GBFI,GTTI,GORE,LAC), GetSRI(GSRI) {
+      errs() << "Running SEME-based Hot/Cold Splitting\n";
+      }
 
 protected:
   virtual bool outlineColdRegions(Function &F, bool HasProfileSummary);

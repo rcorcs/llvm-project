@@ -90,6 +90,7 @@ void initializeBranchRelaxationPass(PassRegistry&);
 void initializeBreakCriticalEdgesPass(PassRegistry&);
 void initializeBreakFalseDepsPass(PassRegistry&);
 void initializeCanonicalizeAliasesLegacyPassPass(PassRegistry &);
+void initializeControlDependenceGraphPassPass(PassRegistry&);
 void initializeControlDependencePrinterPass(PassRegistry &);
 void initializeCFGOnlyPrinterLegacyPassPass(PassRegistry&);
 void initializeCFGOnlyViewerLegacyPassPass(PassRegistry&);

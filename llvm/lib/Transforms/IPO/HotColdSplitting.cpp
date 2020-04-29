@@ -87,7 +87,7 @@ static cl::opt<int>
                                 "multiple of TCC_Basic)"));
 
 static cl::opt<bool> EnableSEMERegionSplit("hotcoldsplit-seme-region",
-                              cl::init(false), cl::Hidden);
+                              cl::init(true), cl::Hidden);
 
 namespace {
 // Same as blockEndsInUnreachable in CodeGen/BranchFolding.cpp. Do not modify
@@ -176,8 +176,8 @@ public:
   }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
-    if (EnableSEMERegionSplit)
-      AU.addRequired<SEMERegionLegacyPass>();
+    //if (EnableSEMERegionSplit)
+    AU.addRequired<SEMERegionLegacyPass>();
     AU.addRequired<BlockFrequencyInfoWrapperPass>();
     AU.addRequired<ProfileSummaryInfoWrapperPass>();
     AU.addRequired<TargetTransformInfoWrapperPass>();
@@ -774,7 +774,7 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
     Function *Outlined = extractColdRegion(Blocks, CEAC, *DT, BFI, TTI,
                                            ORE, AC, OutlinedFunctionID);
     if (Outlined) {
-      //errs() << "Extracted Cold SEME Region to " << Outlined->getName() << "\n";
+      errs() << "Extracted Cold SEME Region to " << Outlined->getName() << "\n";
       ++OutlinedFunctionID;
       Changed = true;
     }
@@ -784,6 +784,7 @@ bool SEMEHotColdSplitting::outlineColdRegions(Function &F, bool HasProfileSummar
 }
 
 bool HotColdSplittingBase::run(Module &M) {
+  errs() << "Running Hot/Cold Splitting on Module\n";
   bool Changed = false;
   bool HasProfileSummary = (M.getProfileSummary(/* IsCS */ false) != nullptr);
   for (auto It = M.begin(), End = M.end(); It != End; ++It) {
@@ -892,6 +893,7 @@ INITIALIZE_PASS_BEGIN(HotColdSplittingLegacyPass, "hotcoldsplit",
                       "Hot Cold Splitting", false, false)
 INITIALIZE_PASS_DEPENDENCY(ProfileSummaryInfoWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(BlockFrequencyInfoWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(SEMERegionLegacyPass)
 INITIALIZE_PASS_END(HotColdSplittingLegacyPass, "hotcoldsplit",
                     "Hot Cold Splitting", false, false)
 

@@ -29,6 +29,10 @@ using namespace llvm;
 
 namespace llvm {
 
+ControlDependenceGraphPass::ControlDependenceGraphPass() : FunctionPass(ID) {
+  initializeControlDependenceGraphPassPass(*PassRegistry::getPassRegistry());
+}
+
 void ControlDependenceNode::addTrue(ControlDependenceNode *Child) {
   node_iterator CN = std::find(TrueChildren.begin(), TrueChildren.end(), Child); //TrueChildren.find(Child);
   if (CN == TrueChildren.end())
@@ -359,9 +363,13 @@ struct ControlDependencePrinter
 } // end anonymous namespace
 
 char ControlDependenceGraphPass::ID = 0;
-static RegisterPass<ControlDependenceGraphPass> CDGPass("function-control-deps",
-						  "Compute control dependency graphs",
-						  true, true);
+INITIALIZE_PASS_BEGIN(ControlDependenceGraphPass, "function-control-deps",
+	        "Print the control dependency graph as a 'dot' file",
+                true, true)
+INITIALIZE_PASS_DEPENDENCY(PostDominatorTreeWrapperPass)
+INITIALIZE_PASS_END(ControlDependenceGraphPass, "function-control-deps",
+	        "Print the control dependency graph as a 'dot' file",
+                true, true)
 /*
 char ControlDependenceGraphs::ID = 0;
 static RegisterPass<ControlDependenceGraphs> Graphs("module-control-deps",
