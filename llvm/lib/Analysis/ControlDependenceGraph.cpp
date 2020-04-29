@@ -243,11 +243,12 @@ void ControlDependenceGraphBase::insertRegions(PostDominatorTree &pdt) {
     }
   }
 
+  std::vector<ControlDependenceNode *> LazyPush;
+
   // Make sure that each node has at most one true or false edge
-  //for (std::set<ControlDependenceNode *>::iterator N = nodes.begin(), E = nodes.end();
-  //     N != E; ++N) {
-  //  ControlDependenceNode *node = *N;
-  for (ControlDependenceNode *node : nodes) {
+  for (auto N = nodes.begin(), E = nodes.end(); N != E; ++N) {
+    ControlDependenceNode *node = *N;
+  //for (ControlDependenceNode *node : nodes) {
     assert(node);
     if (node->isRegion())
       continue;
@@ -255,7 +256,8 @@ void ControlDependenceGraphBase::insertRegions(PostDominatorTree &pdt) {
     // Fix too many true nodes
     if (node->TrueChildren.size() > 1) {
       ControlDependenceNode *region = new ControlDependenceNode();
-      nodes.push_back(region);
+      //nodes.push_back(region);
+      LazyPush.push_back(region);
       for (ControlDependenceNode::node_iterator C = node->true_begin(), CE = node->true_end();
 	   C != CE; ++C) {
 	ControlDependenceNode *child = *C;
@@ -274,7 +276,8 @@ void ControlDependenceGraphBase::insertRegions(PostDominatorTree &pdt) {
     // Fix too many false nodes
     if (node->FalseChildren.size() > 1) {
       ControlDependenceNode *region = new ControlDependenceNode();
-      nodes.push_back(region);
+      //nodes.push_back(region);
+      LazyPush.push_back(region);
       for (ControlDependenceNode::node_iterator C = node->false_begin(), CE = node->false_end();
 	   C != CE; ++C) {
 	ControlDependenceNode *child = *C;
@@ -287,6 +290,8 @@ void ControlDependenceGraphBase::insertRegions(PostDominatorTree &pdt) {
       region->addParent(node);
     }
   }
+
+  for (ControlDependenceNode *node : LazyPush) nodes.push_back(node);
 }
 
 void ControlDependenceGraphBase::graphForFunction(Function &F, PostDominatorTree &pdt) {
