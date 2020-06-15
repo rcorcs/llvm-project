@@ -36,8 +36,10 @@
 //
 // This optimization was proposed in
 //
-// Function Merging by Sequence Alignment: An Interprocedural Code-Size
-// Optimization
+// Function Merging by Sequence Alignment (CGO'19)
+// Rodrigo C. O. Rocha, Pavlos Petoumenos, Zheng Wang, Murray Cole, Hugh Leather
+//
+// Effective Function Merging in the SSA Form (PLDI'20)
 // Rodrigo C. O. Rocha, Pavlos Petoumenos, Zheng Wang, Murray Cole, Hugh Leather
 //
 //===----------------------------------------------------------------------===//
