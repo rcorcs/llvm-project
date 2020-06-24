@@ -181,6 +181,9 @@ static cl::opt<bool>
                   cl::desc("Enable phi-node coalescing during SSA reconstruction"));
 
 
+static cl::opt<bool> ConservativeMode (
+    "func-merging-conservative", cl::init(false), cl::Hidden,
+    cl::desc("Enable conservative mode to avoid runtime overhead"));
 
 //////////////////////////// Tests
 
@@ -931,6 +934,41 @@ bool FunctionMerger::match(Value *V1, Value *V2) {
   return false;
 }
 
+
+bool FunctionMerger::matchWholeBlocks(Value *V1, Value *V2) {
+  if (isa<BasicBlock>(V1) && isa<BasicBlock>(V2)) {
+    BasicBlock *BB1 = dyn_cast<BasicBlock>(V1);
+    BasicBlock *BB2 = dyn_cast<BasicBlock>(V2);
+    if (BB1->isLandingPad() || BB2->isLandingPad()) {
+      LandingPadInst *LP1 = BB1->getLandingPadInst();
+      LandingPadInst *LP2 = BB2->getLandingPadInst();
+      if (LP1 == nullptr || LP2 == nullptr)
+        return false;
+      return matchLandingPad(LP1, LP2);
+    }
+    
+    auto It1 = BB1->begin();
+    auto It2 = BB2->begin();
+
+    while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
+    while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
+
+    while (It1!=BB1->end() && It2!=BB2->end()) {
+      Instruction *I1 = &*It1;
+      Instruction *I2 = &*It2;
+
+      if (!matchInstructions(I1,I2)) return false;
+
+      It1++;
+      It2++;
+    }
+
+    if (It1!=BB1->end() || It2!=BB2->end()) return false;
+    
+    return true;
+  }
+  return false;
+}
 
 static unsigned
 RandomLinearizationOfBlocks(BasicBlock *BB,
@@ -2053,14 +2091,86 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
   SmallVector<Value*,8> F1Vec;
   SmallVector<Value*,8> F2Vec;
-  linearize(F1, F1Vec);
-  linearize(F2, F2Vec);
+
+  errs() << "Linearization\n";
+  if (ConservativeMode) {
+    std::list<BasicBlock *> OrderedBBs;
+    CanonicalLinearizationOfBlocks(F1, OrderedBBs);
+    for (BasicBlock * BB : OrderedBBs) F1Vec.push_back(BB);
+
+    OrderedBBs.clear();
+    CanonicalLinearizationOfBlocks(F2, OrderedBBs);
+    for (BasicBlock * BB : OrderedBBs) F2Vec.push_back(BB);
+  } else {
+    linearize(F1, F1Vec);
+    linearize(F2, F2Vec);
+  }
 
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.startTimer();
 #endif
 
   AlignedSequence<Value*> AlignedSeq;
+  if (ConservativeMode) {
+      errs() << "Sequence Alignment\n";
+      NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::matchWholeBlocks);
+      AlignedSequence<Value*> AlignedBlocks = SA.getAlignment(F1Vec,F2Vec);
+      
+      errs() << "Expanding Alignment\n";
+      for (auto &Entry : AlignedBlocks) {
+        if (Entry.match()) {
+	  BasicBlock *BB1 = dyn_cast<BasicBlock>(Entry.get(0));
+	  BasicBlock *BB2 = dyn_cast<BasicBlock>(Entry.get(1));
+	  if (BB1==nullptr || BB2==nullptr) {
+             errs() << "WHY?\n";
+	     Entry.get(0)->dump();
+	     Entry.get(1)->dump();
+              return ErrorResponse;
+	  }
+          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,BB2,true));
+
+          auto It1 = BB1->begin();
+          auto It2 = BB2->begin();
+
+          while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
+          while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
+
+          while (It1!=BB1->end() && It2!=BB2->end()) {
+            Instruction *I1 = &*It1;
+            Instruction *I2 = &*It2;
+
+            if (!matchInstructions(I1,I2))
+              return ErrorResponse;
+
+            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,I2,true));
+
+            It1++;
+            It2++;
+          }
+
+          if (It1!=BB1->end() || It2!=BB2->end())
+            return ErrorResponse;
+	  
+        } else {
+	  if (Entry.get(0)) {
+	    BasicBlock *BB = dyn_cast<BasicBlock>(Entry.get(0));
+            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB,nullptr,false));
+	    for (Instruction &I : *BB) {
+	      if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
+              AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(&I,nullptr,false));
+	    }
+	  }
+	  if (Entry.get(1)) {
+	    BasicBlock *BB = dyn_cast<BasicBlock>(Entry.get(1));
+            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,BB,false));
+	    for (Instruction &I : *BB) {
+	      if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
+              AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,&I,false));
+	    }
+	  }
+        }
+      }
+  } else {
   /*
   switch (SAMethod) {
     case 2: {
@@ -2088,11 +2198,12 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     }
   }
   */
-
+  }
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.stopTimer();
 #endif
 
+  errs() << "Code Gen\n";
 //#ifdef ENABLE_DEBUG_CODE
   if (Verbose) {
     for (auto &Entry : AlignedSeq) {
