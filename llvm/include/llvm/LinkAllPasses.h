@@ -135,6 +135,7 @@ namespace {
       (void) llvm::createLoopSimplifyCFGPass();
       (void) llvm::createLoopStrengthReducePass();
       (void) llvm::createLoopRerollPass();
+      (void) llvm::createLoopSplittingPass();
       (void) llvm::createLoopUnrollPass();
       (void) llvm::createLoopUnrollAndJamPass();
       (void) llvm::createLoopUnswitchPass();

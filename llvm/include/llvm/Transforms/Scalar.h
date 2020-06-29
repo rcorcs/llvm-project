@@ -208,6 +208,13 @@ Pass *createLoopRerollPass();
 
 //===----------------------------------------------------------------------===//
 //
+// LoopSplitting - This pass is a loop splitting pass.
+//
+Pass *createLoopSplittingPass();
+
+
+//===----------------------------------------------------------------------===//
+//
 // LoopRotate - This pass is a simple loop rotating pass.
 //
 Pass *createLoopRotatePass(int MaxHeaderSize = -1);
