@@ -625,6 +625,13 @@ void PassManagerBuilder::populateModulePassManager(
     MPM.add(createArgumentPromotionPass()); // Scalarize uninlined fn args
 
   addExtensionsToPM(EP_CGSCCOptimizerLate, MPM);
+
+  MPM.add(createLoopSimplifyCFGPass());
+  MPM.add(createLoopSplittingPass());
+  MPM.add(createCFGSimplificationPass());
+  MPM.add(createInstructionCombiningPass());
+  MPM.add(createIndVarSimplifyPass());        // Canonicalize indvars
+
   addFunctionSimplificationPasses(MPM);
 
   // FIXME: This is a HACK! The inliner pass above implicitly creates a CGSCC

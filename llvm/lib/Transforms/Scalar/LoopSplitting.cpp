@@ -480,8 +480,11 @@ namespace {
             this->expander = new SCEVExpander(SE, DataLayout(F.getParent()), "name");
 
 	    errs() << "Running Loop Splitting\n";
+	    F.dump();
             while (true) {
+		errs() << "Collecting Candidates\n";
                 auto allComparisons = collectCandidateInstructions(LI);
+		errs() << "Splitting Info\n";
                 auto splitInfo = comparisonToSplitInfo(SE, LI, allComparisons);
                 if (splitInfo.size() == 0) break;
                 for (auto splitInfo : splitInfo) {
@@ -489,7 +492,7 @@ namespace {
                     auto loop = getLoop(splitInfo.comparison, LI, SE);
                     splitLoop(SE, &F, DT, loop, &LI, &splitInfo);
                 }
-                
+                break;
             }
 	    errs() << "Done Loop Splitting\n";
 
@@ -497,8 +500,11 @@ namespace {
         }
         
         void getAnalysisUsage(AnalysisUsage &AU) const override {
-            AU.setPreservesAll();
-            getLoopAnalysisUsage(AU);
+	    AU.addRequired<LoopInfoWrapperPass>();
+	    AU.addRequired<ScalarEvolutionWrapperPass>();
+	    AU.addRequired<DominatorTreeWrapperPass>();
+            //AU.setPreservesAll();
+            //getLoopAnalysisUsage(AU);
         }
         
 
