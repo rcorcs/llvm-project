@@ -92,6 +92,7 @@ void llvm::DeleteDeadBlock(BasicBlock *BB, DomTreeUpdater *DTU,
 
 void llvm::DeleteDeadBlocks(ArrayRef <BasicBlock *> BBs, DomTreeUpdater *DTU,
                             bool KeepOneInputPHIs) {
+  //errs() << "DeadBB 0\n";
 #ifndef NDEBUG
   // Make sure that all predecessors of each dead block is also dead.
   SmallPtrSet<BasicBlock *, 4> Dead(BBs.begin(), BBs.end());
@@ -101,17 +102,22 @@ void llvm::DeleteDeadBlocks(ArrayRef <BasicBlock *> BBs, DomTreeUpdater *DTU,
       assert(Dead.count(Pred) && "All predecessors must be dead!");
 #endif
 
+  //errs() << "DeadBB 1\n";
+	
   SmallVector<DominatorTree::UpdateType, 4> Updates;
   DetatchDeadBlocks(BBs, DTU ? &Updates : nullptr, KeepOneInputPHIs);
 
+  //errs() << "DeadBB 2\n";
   if (DTU)
     DTU->applyUpdatesPermissive(Updates);
 
+  //errs() << "DeadBB 3\n";
   for (BasicBlock *BB : BBs)
     if (DTU)
       DTU->deleteBB(BB);
     else
       BB->eraseFromParent();
+  //errs() << "DeadBB 4\n";
 }
 
 bool llvm::EliminateUnreachableBlocks(Function &F, DomTreeUpdater *DTU,

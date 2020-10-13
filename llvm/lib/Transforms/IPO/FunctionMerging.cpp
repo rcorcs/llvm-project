@@ -87,7 +87,7 @@
 
 #include "llvm/Analysis/Utils/Local.h"
 #include "llvm/Transforms/Utils/Local.h"
-
+  
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include "llvm/Transforms/Utils/FunctionComparator.h"
 #include "llvm/Transforms/Utils/Mem2Reg.h"
@@ -95,6 +95,13 @@
 
 #include "llvm/Bitcode/BitcodeWriter.h"
 #include "llvm/Transforms/IPO.h"
+
+
+#include "llvm/Transforms/Utils.h"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/InstCombine/InstCombine.h"
+
 
 #include <cstdlib>
 #include <fstream>
@@ -185,17 +192,57 @@ static cl::opt<bool> ConservativeMode (
     "func-merging-conservative", cl::init(false), cl::Hidden,
     cl::desc("Enable conservative mode to avoid runtime overhead"));
 
+static cl::opt<bool> MergeListNames (
+    "func-merging-list-merges", cl::init(false), cl::Hidden,
+    cl::desc("Run function merging using the list of function names"));
+
+static cl::opt<bool> GenTrainingData (
+    "func-merging-gen-training", cl::init(false), cl::Hidden,
+    cl::desc("Generate the training data"));
+
+static cl::opt<bool> GenTestingData (
+    "func-merging-gen-testing", cl::init(false), cl::Hidden,
+    cl::desc("Generate the testing data"));
+
+static cl::opt<bool> RunPrediction (
+    "func-merging-predict", cl::init(false), cl::Hidden,
+    cl::desc("Generate the testing data"));
+
+ 
+static cl::opt<std::string> OptBenchName (
+    "func-merging-bench-name", cl::init(""), cl::Hidden,
+    cl::desc("Generate the testing data"));
+
 //////////////////////////// Tests
 
 static cl::opt<bool> TestFM_CompilationCostModel("fm-built-size-cost",
                             cl::init(false), cl::Hidden, cl::desc(""));
 
-//#include "FMObjFileSize.hpp"
 
 #define OPTIMIZE_SALSSA_CODEGEN
 //#define DEBUG_OUTPUT_EACH_CHANGE
 
 //////////////////////////// Tests
+
+static Value *GetAnyValue(Type *Ty) {
+  switch (Ty->getTypeID()) {
+  case Type::IntegerTyID:
+  case Type::HalfTyID:
+  case Type::FloatTyID:
+  case Type::DoubleTyID:
+  case Type::X86_FP80TyID:
+  case Type::FP128TyID:
+  case Type::PPC_FP128TyID:
+  case Type::PointerTyID:
+  case Type::StructTyID:
+  case Type::ArrayTyID:
+  case Type::VectorTyID:
+  case Type::TokenTyID:
+    return Constant::getNullValue(Ty);
+  default:
+    return UndefValue::get(Ty);
+  }
+}
 
 static std::string GetValueName(const Value *V);
 
@@ -764,15 +811,13 @@ bool matchGetElementPtrInsts(const GetElementPtrInst *GEP1, const GetElementPtrI
   if (GEP1->isInBounds()!=GEP2->isInBounds())
     return false;
 
-  /*
   //TODO: some indices must be constant depending on the type being indexed.
   //For simplicity, whenever a given index is constant, keep it constant.
   //This simplification may degrade the merging quality.
   for (unsigned i = 0; i < Indices1.size(); i++) {
-    if (isa<ConstantInt>(Indices1[i]) && isa<ConstantInt>(Indices2[i]) && Indices1[i] != Indices2[i])
+    if ((isa<ConstantInt>(Indices1[i]) || isa<ConstantInt>(Indices2[i])) && Indices1[i] != Indices2[i])
       return false; // if different constant values
   }
-  */
 
   Type *AggTy1 = GEP1->getSourceElementType();
   Type *AggTy2 = GEP2->getSourceElementType();
@@ -1111,11 +1156,13 @@ public:
 
 
 #ifdef TIME_STEPS_DEBUG
+Timer TimeLin("Merge::Lin", "Merge::Lin");
 Timer TimeAlign("Merge::Align", "Merge::Align");
 Timer TimeParam("Merge::Param", "Merge::Param");
-Timer TimeCodeGen1("Merge::CodeGen1", "Merge::CodeGen1");
-Timer TimeCodeGen2("Merge::CodeGen2", "Merge::CodeGen2");
-Timer TimeCodeGenFix("Merge::CodeGenFix", "Merge::CodeGenFix");
+Timer TimeCodeGen("Merge::CodeGen", "Merge::CodeGen");
+Timer TimeSimplify("Merge::Simplify", "Merge::Simplify");
+
+Timer TimePredictionGains("FM::PredictionGains", "FM::PredictionGains");
 #endif
 
 
@@ -1126,7 +1173,8 @@ static bool validMergePair(Function *F1, Function *F2) {
   if (!HasWholeProgram && (F1->hasLinkOnceLinkage() ||
       F2->hasLinkOnceLinkage())) return false;
 
-  if (!F1->getSection().equals(F2->getSection())) return true;
+  if (!F1->getSection().equals(F2->getSection())) return false;
+
 //  if (F1->hasSection()!=F2->hasSection()) return false;
 //  if (F1->hasSection() && !F1->getSection().equals(F2->getSection())) return false;
 
@@ -1466,8 +1514,6 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
 
   std::vector<Instruction *> ListSelects;
 
-  bool RequiresFuncId = false;
-
   Value *RetUnifiedAddr = nullptr;
   Value *RetAddr1 = nullptr;
   Value *RetAddr2 = nullptr;
@@ -1612,7 +1658,7 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
         IRBuilder<> Builder(MergedBB);
         if (I1->getOpcode() == Instruction::Ret) {
           if (RequiresUnifiedReturn) {
-            NewI = Builder.CreateRet(UndefValue::get(ReturnType));
+            NewI = Builder.CreateRet(GetAnyValue(ReturnType));
           } else {
             if (I1->getNumOperands() >= I2->getNumOperands())
               I = I1;
@@ -1648,8 +1694,6 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
         }
       }
     } else {
-      RequiresFuncId = true;
-
       if (MergedBB != nullptr) {
 
         BasicBlock *NewBB1 = BasicBlock::Create(Context, "", MergedFunc);
@@ -1679,7 +1723,7 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
         Instruction *NewI = nullptr;
         if (I->getOpcode() == Instruction::Ret && !ReturnType->isVoidTy() &&
             I->getNumOperands() == 0) {
-          NewI = ReturnInst::Create(Context, UndefValue::get(ReturnType));
+          NewI = ReturnInst::Create(Context, GetAnyValue(ReturnType));
         } else
           NewI = I->clone();
 
@@ -1707,14 +1751,6 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
 
     }
   }
-
-#ifdef TIME_STEPS_DEBUG
-  TimeCodeGen1.stopTimer();
-#endif
-
-#ifdef TIME_STEPS_DEBUG
-  TimeCodeGen2.startTimer();
-#endif
 
   for (auto &Entry : AlignedSeq) {
     // mergable instructions
@@ -1765,7 +1801,6 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
 
             Value *V = V1; // first assume that V1==V2
             if (V1 != V2) {
-              RequiresFuncId = true;
               // create predicated select instruction
               if (V1 == ConstantInt::getTrue(Context) &&
                   V2 == ConstantInt::getFalse(Context)) {
@@ -1848,7 +1883,7 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
               }
               */
             } else
-              V1 = UndefValue::get(I2->getOperand(i)->getType());
+              V1 = GetAnyValue(I2->getOperand(i)->getType());
 
             Value *F2V = nullptr;
             Value *V2 = nullptr;
@@ -1866,7 +1901,7 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
               }
               */
             } else
-              V2 = UndefValue::get(I1->getOperand(i)->getType());
+              V2 = GetAnyValue(I1->getOperand(i)->getType());
 
             assert(V1 != nullptr && "Value should NOT be null!");
             assert(V2 != nullptr && "Value should NOT be null!");
@@ -1874,8 +1909,6 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
             Value *V = V1; // first assume that V1==V2
 
             if (V1 != V2) {
-              RequiresFuncId = true;
-
               //TODO: Create BasicBlock Select function
               if (isa<BasicBlock>(V1) && isa<BasicBlock>(V2)) {
                 auto CacheKey = std::pair<BasicBlock *, BasicBlock *>(
@@ -1977,8 +2010,6 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
       }
 
     } else {
-      RequiresFuncId = true;
-
       bool isFuncId1 = true;
       Value *V = nullptr;
       if (Entry.get(0)) {
@@ -2040,12 +2071,12 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
   }
 
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen2.stopTimer();
+  TimeCodeGen.stopTimer();
 #endif
 
 
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGenFix.startTimer();
+  TimeSimplify.startTimer();
 #endif
   DominatorTree DT(*MergedFunc);
   CodeGenerator<BlockListType>::removeRedundantInstructions(ListSelects, DT);
@@ -2053,10 +2084,10 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
   fixNotDominatedUses(MergedFunc, PreBB, DT);
 
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGenFix.stopTimer();
+  TimeSimplify.stopTimer();
 #endif
 
-  return RequiresFuncId;
+  return true;
 }
 
 static void simplifySelects(Function *F) {
@@ -2092,7 +2123,11 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   SmallVector<Value*,8> F1Vec;
   SmallVector<Value*,8> F2Vec;
 
-  errs() << "Linearization\n";
+#ifdef TIME_STEPS_DEBUG
+  TimeLin.startTimer();
+#endif
+
+  //errs() << "Here Lin 1\n";
   if (ConservativeMode) {
     std::list<BasicBlock *> OrderedBBs;
     CanonicalLinearizationOfBlocks(F1, OrderedBBs);
@@ -2105,6 +2140,11 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     linearize(F1, F1Vec);
     linearize(F2, F2Vec);
   }
+  //errs() << "Here Lin 2\n";
+
+#ifdef TIME_STEPS_DEBUG
+  TimeLin.stopTimer();
+#endif
 
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.startTimer();
@@ -2112,21 +2152,16 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
   AlignedSequence<Value*> AlignedSeq;
   if (ConservativeMode) {
-      errs() << "Sequence Alignment\n";
       NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::matchWholeBlocks);
       AlignedSequence<Value*> AlignedBlocks = SA.getAlignment(F1Vec,F2Vec);
       
-      errs() << "Expanding Alignment\n";
       for (auto &Entry : AlignedBlocks) {
         if (Entry.match()) {
 	  BasicBlock *BB1 = dyn_cast<BasicBlock>(Entry.get(0));
 	  BasicBlock *BB2 = dyn_cast<BasicBlock>(Entry.get(1));
-	  if (BB1==nullptr || BB2==nullptr) {
-             errs() << "WHY?\n";
-	     Entry.get(0)->dump();
-	     Entry.get(1)->dump();
-              return ErrorResponse;
-	  }
+	  //if (BB1==nullptr || BB2==nullptr) {
+          //    return ErrorResponse;
+	  //}
           AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,BB2,true));
 
           auto It1 = BB1->begin();
@@ -2139,8 +2174,8 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
             Instruction *I1 = &*It1;
             Instruction *I2 = &*It2;
 
-            if (!matchInstructions(I1,I2))
-              return ErrorResponse;
+            //if (!matchInstructions(I1,I2))
+            //  return ErrorResponse;
 
             AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,I2,true));
 
@@ -2175,10 +2210,12 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   switch (SAMethod) {
     case 2: {
 */
+      //errs() << "Here SA 1\n";
       //DiagonalWindowsSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match,256);
       NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
       AlignedSeq = SA.getAlignment(F1Vec,F2Vec);
 
+      //errs() << "Here SA 2\n";
 /*
       break;
     }
@@ -2203,7 +2240,6 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   TimeAlign.stopTimer();
 #endif
 
-  errs() << "Code Gen\n";
 //#ifdef ENABLE_DEBUG_CODE
   if (Verbose) {
     for (auto &Entry : AlignedSeq) {
@@ -2283,8 +2319,12 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     } else {
       ReturnType = RetType2;
     }
-  } else return ErrorResponse;
-
+  } else {
+#ifdef TIME_STEPS_DEBUG
+  TimeParam.stopTimer();
+#endif
+	  return ErrorResponse;
+  }
   FunctionType *FTy = FunctionType::get(ReturnType, ArrayRef<Type*>(Args), false);
 
   if (Name.empty()) {
@@ -2298,9 +2338,10 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   Name = Name + std::string("m.f");
 */
   Function *MergedFunc =
-    Function::Create(FTy, //GlobalValue::LinkageTypes::InternalLinkage,
-                          GlobalValue::LinkageTypes::PrivateLinkage,
+    Function::Create(FTy, GlobalValue::LinkageTypes::InternalLinkage,
+                          //GlobalValue::LinkageTypes::PrivateLinkage,
                        Twine(Name), M); // merged.function
+  //MergedFunc->setAttributes(F1->getAttributes());
 
   //errs() << "Initializing VMap\n";
   ValueToValueMapTy VMap;
@@ -2331,10 +2372,6 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
   Value *IsFunc1 = FuncId;
 
-#ifdef TIME_STEPS_DEBUG
-  TimeCodeGen1.startTimer();
-#endif
-
   //errs() << "Running code generator\n";
 
   auto Gen = [&](auto &CG) {
@@ -2361,8 +2398,8 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     Gen(CG);
   }
 
-  /*
-  if (!RequiresFuncId) {
+  
+  if (MergedFunc!=nullptr && FuncId->getNumUses()==0) {
     errs() << "Removing FuncId\n";
     
     MergedFunc = RemoveFuncIdArg(MergedFunc, ArgsList);
@@ -2374,9 +2411,8 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
       ParamMap2[kv.first] = kv.second - 1;
     }
     FuncId = nullptr;
-    
   }
-  */
+  
 
   FunctionMergeResult Result(F1, F2, MergedFunc, RequiresUnifiedReturn);
   Result.setArgumentMapping(F1, ParamMap1);
@@ -2415,13 +2451,13 @@ void FunctionMerger::replaceByCall(Function *F, FunctionMergeResult &MFR, const 
 
   for (unsigned i = 0; i < args.size(); i++) {
     if (args[i] == nullptr) {
-      args[i] = UndefValue::get(MergedF->getFunctionType()->getParamType(i));
+      args[i] = GetAnyValue(MergedF->getFunctionType()->getParamType(i));
     }
   }
 
   CallInst *CI =
       (CallInst *)Builder.CreateCall(MergedF, ArrayRef<Value *>(args));
-  CI->setTailCall();
+  //CI->setTailCall();
   CI->setCallingConv(MergedF->getCallingConv());
   CI->setAttributes(MergedF->getAttributes());
   CI->setIsNoInline();
@@ -2467,6 +2503,10 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR, con
     return false;
   
   for (CallBase *CI : Calls) {
+    InlineFunctionInfo IFI;
+    InlineFunction(*CI, IFI);
+    continue;
+
     IRBuilder<> Builder(CI);
 
     std::vector<Value *> args;
@@ -2484,7 +2524,7 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR, con
 
     for (unsigned i = 0; i < args.size(); i++) {
       if (args[i] == nullptr) {
-        args[i] = UndefValue::get(MergedF->getFunctionType()->getParamType(i));
+        args[i] = GetAnyValue(MergedF->getFunctionType()->getParamType(i));
       }
     }
 
@@ -2572,6 +2612,7 @@ void FunctionMerger::updateCallGraph(Function *F, FunctionMergeResult &MFR, Stri
     //bool CanErase = false; //replaceCallsWith(F, MFR, Options);
     bool CanErase = replaceCallsWith(F, MFR, Options);
     CanErase = CanErase && F->use_empty();
+    CanErase = CanErase && (!F->hasAddressTaken());
     CanErase = CanErase && (AlwaysPreserved.find(F->getName())==AlwaysPreserved.end());
     if (!HasWholeProgram) {
       //CanEraseF1 = CanEraseF1 && ShouldPreserveGV(F1);
@@ -2786,12 +2827,240 @@ size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
 
 #ifdef TIME_STEPS_DEBUG
 Timer TimePreProcess("Merge::Preprocess", "Merge::Preprocess");
-Timer TimeLin("Merge::Lin", "Merge::Lin");
 Timer TimeRank("Merge::Rank", "Merge::Rank");
 Timer TimeUpdate("Merge::Update", "Merge::Update");
+double AccumulatedUnprofitableMergeTime = 0;
+Timer TimeTotal("FM::Total", "FM::Total");
 #endif
+Timer TimePrediction("FM::Prediction", "FM::Prediction");
+
+struct MergeOrder {
+  std::string OutputName;
+  std::vector<std::string> FNames;
+  MergeOrder() {}
+  MergeOrder(std::string ON, std::vector<std::string> FNs) : OutputName(ON), FNames(FNs) {}
+};
+
+static bool runFMTest(Module &M, FunctionMerger &FM, TargetTransformInfo &TTI, FunctionMergingOptions Options = {}) {
+  std::vector< MergeOrder > Merges;
+
+  //Merges.push_back({"_ZN9flexarrayI6pointtE8doublingEb__merged", {"_ZN9flexarrayI6pointtE8doublingEb", "_ZN9flexarrayI11levelplacetE8doublingEb"}});
+  //Merges.push_back({"_ZN9flexarrayIP6regobjE8doublingEb__merged", {"_ZN9flexarrayIP6regobjE8doublingEb", "_ZN9flexarrayI11regboundobjE8doublingEb"}});
+  //Merges.push_back({"_ZN6wayobj9getxcoordEi__merged", {"_ZN6wayobj9getxcoordEi", "_ZN6wayobj9getycoordEi"}});
+
+  std::ifstream ifs("list-merges.txt");
+  while (ifs.good()) {
+    MergeOrder MO;
+    ifs >> MO.OutputName;
+    if (!ifs.good()) break;
+
+    std::string Name;
+    ifs >> Name;
+    while (ifs.good() && Name!=";") {
+      MO.FNames.push_back(Name);
+      Name = "";
+      ifs >> Name;
+    }
+    Merges.push_back(MO);
+  }
+
+
+  StringSet<> AlwaysPreserved;
+  AlwaysPreserved.insert("main");
+
+  unsigned TotalMerges = 0;
+  for (auto &Order : Merges) {
+    Function *F1 = M.getFunction(Order.FNames[0]);
+    Function *Merged = nullptr;
+    if (F1==nullptr) {
+	    errs() << "Invalid Function: Name Not Found: " << Order.FNames[0] << "\n";
+	    continue;
+    }
+    for (unsigned i = 1; i<Order.FNames.size(); i++) {
+      Function *F2 = M.getFunction(Order.FNames[i]);
+      if (F2==nullptr) {
+        errs() << "Invalid Function: Name Not Found: " << Order.FNames[i] << "\n";
+        continue;
+      }
+
+      if (Debug || Verbose) {
+        errs() << "Attempting: " << GetValueName(F1) << ", " << GetValueName(F2)
+               << "\n";
+      }
+
+      std::string Name = ".m.f." + std::to_string(TotalMerges);
+      FunctionMergeResult Result = FM.merge(F1,F2,Name,Options);
+
+      bool validFunction = true;
+
+      if (Result.getMergedFunction() != nullptr && verifyFunction(*Result.getMergedFunction())) {
+        if (Debug || Verbose) {
+          errs() << "Invalid Function: " << GetValueName(F1) << ", "
+                 << GetValueName(F2) << "\n";
+        }
+        if (Verbose) {
+          if (Result.getMergedFunction() != nullptr) {
+            Result.getMergedFunction()->dump();
+          }
+          errs() << "F1:\n";
+          F1->dump();
+          errs() << "F2:\n";
+          F2->dump();
+        }
+        Result.getMergedFunction()->eraseFromParent();
+        validFunction = false;
+      }
+
+      if (Result.getMergedFunction() && validFunction) {
+        if (!EnableSALSSA) {
+          DominatorTree MergedDT(*Result.getMergedFunction());
+          promoteMemoryToRegister(*Result.getMergedFunction(), MergedDT);
+        }
+
+        size_t SizeF1 = EstimateFunctionSize(F1, &TTI);
+        size_t SizeF2 = EstimateFunctionSize(F2, &TTI);
+
+        size_t SizeF12 = EstimateThunkOverhead(Result, AlwaysPreserved) +
+                           EstimateFunctionSize(Result.getMergedFunction(), &TTI);
+
+//#ifdef ENABLE_DEBUG_CODE
+        if (Verbose) {
+          errs() << "F1:\n";
+          F1->dump();
+          errs() << "F2:\n";
+          F2->dump();
+          errs() << "F1-F2:\n";
+          Result.getMergedFunction()->dump();
+        }
+//#endif
+
+        size_t SizeF1F2 = SizeF1+SizeF2;
+
+        if (Debug || Verbose) {
+          errs() << "Estimated Sizes: " << SizeF1 << " + " << SizeF2 << " <= " << SizeF12 << "? (" << (SizeF12 <
+            SizeF1F2 * ((100.0 + MergingOverheadThreshold) / 100.0)) << ") ";
+          errs() << "Reduction: "
+                 << (int)((1 - ((double)SizeF12) / (SizeF1 + SizeF2)) * 100)
+                 << "% "
+                 << " : " << GetValueName(F1)
+                 << "; " << GetValueName(F2) 
+                 << "\n";
+        }
+
+
+          TotalMerges++;
+          if (Debug || Verbose) {
+            errs() << "Merged: " << GetValueName(F1) << ", " << GetValueName(F2)
+                   << " = " << GetValueName(Result.getMergedFunction()) << "\n";
+          }
+
+
+
+          FM.updateCallGraph(Result, AlwaysPreserved, Options);
+
+         
+       
+          if (!EnableSALSSA) demoteRegToMem(*Result.getMergedFunction());
+
+
+	  F1 = Result.getMergedFunction();
+	  Merged = Result.getMergedFunction();
+      }
+    }
+
+    if(Merged) Merged->setName(Order.OutputName);
+  }
+
+  return true;
+}
+
+static void TmpLinearize(Function *F, SmallVectorImpl<Value *> &FVec) {
+  std::list<BasicBlock *> OrderedBBs;
+
+  unsigned FReserve = 0;
+  FReserve = CanonicalLinearizationOfBlocks(F, OrderedBBs);
+
+  FVec.reserve(FReserve + OrderedBBs.size());
+  for (BasicBlock *BB : OrderedBBs) {
+    FVec.push_back(BB);
+    for (Instruction &I : *BB) {
+      if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
+        FVec.push_back(&I);
+      }
+    }
+  }
+
+}
+
+static std::string GetTypeName(const Type *Ty) {
+  if (Ty==nullptr) return "";
+
+  if (const VectorType *VecTy = dyn_cast<VectorType>(Ty)) {
+    return (std::string("vec_") + std::to_string(VecTy->getNumElements()) + std::string(" ") + GetTypeName(VecTy->getElementType()) ) ;
+  }
+  if (const ArrayType *ArrTy = dyn_cast<ArrayType>(Ty)) {
+    return (std::string("arr_") + std::to_string(ArrTy->getNumElements()) + std::string(" ") + GetTypeName(ArrTy->getElementType()) ) ;
+  }
+  if (const PointerType *PtrTy = dyn_cast<PointerType>(Ty)) {
+    return ( std::string("ptr ") + GetTypeName(PtrTy->getElementType()) );
+  }
+  if (isa<StructType>(Ty)) {
+    return std::string("struct");
+  }
+  if (isa<FunctionType>(Ty)) {
+    return std::string("function");
+  }
+
+  if (Ty->isVoidTy() || Ty->isIntegerTy() || Ty->isFloatingPointTy()) {
+    std::string name;
+    raw_string_ostream namestream(name);
+    Ty->print(namestream, false, false);
+    return namestream.str();
+  } else return "";
+
+}
+
+
+static void WriteTrainingFile(Function *F1, Function *F2, bool Profitable, bool Append=true) {
+
+  SmallVector<Value*,8> F1Vec;
+  SmallVector<Value*,8> F2Vec;
+  TmpLinearize(F1,F1Vec);
+  TmpLinearize(F2,F2Vec);
+
+  std::ofstream out("../training.txt", Append ? (std::ofstream::out | std::ofstream::app) : std::ofstream::out );
+
+  out << "= " << ((int)Profitable) << "\n";
+  auto WriteFunc = [&](auto &Vec) {
+    for (Value *V : Vec) {
+      if (Instruction *I = dyn_cast<Instruction>(V)) {
+        out << I->getOpcodeName() << " ";
+        Type *Ty = I->getType();
+        if (StoreInst *SI = dyn_cast<StoreInst>(I)) {
+            Ty = SI->getValueOperand()->getType();
+        } else if (ReturnInst *RI = dyn_cast<ReturnInst>(I)) {
+            if (RI->getReturnValue()) Ty = RI->getReturnValue()->getType();
+        }
+   
+        out << GetTypeName(Ty) << "\n";
+      
+      } else out << "label\n";
+    }
+    out << "EOS\n";
+  };
+  WriteFunc(F1Vec);
+  WriteFunc(F2Vec);
+
+  out.close();
+}
+
+#include "FMObjFileSize.hpp"
 
 bool FunctionMerging::runOnModule(Module &M) {
+#ifdef TIME_STEPS_DEBUG
+  TimeTotal.startTimer();
+  AccumulatedUnprofitableMergeTime  = 0;
+#endif
 
   //errs() << "Running FMSA\n";
 
@@ -2822,6 +3091,8 @@ bool FunctionMerging::runOnModule(Module &M) {
   unsigned TotalBinOps = 0;
 
   FunctionMerger FM(&M,PSI,LookupBFI);
+
+  if (MergeListNames) return runFMTest(M, FM, TTI, Options);
 
   std::map<Function *, Fingerprint *> CachedFingerprints;
   std::map<Function *, unsigned> FuncSizes;
@@ -2875,8 +3146,9 @@ bool FunctionMerging::runOnModule(Module &M) {
   FunctionsToProcess.clear();
 
   Optional<size_t> SizeF1F2Opt;
+  Optional<size_t> SizeF12Opt;
   if (TestFM_CompilationCostModel) {
-    //SizeF1F2Opt = MeasureSize(M);
+    //SizeF1F2Opt = MeasureSize(M); //oracle
   }
 
   while (!WorkList.empty()) {
@@ -2936,6 +3208,10 @@ bool FunctionMerging::runOnModule(Module &M) {
         Rank.push_back(BestPair);
     }
 
+#ifdef TIME_STEPS_DEBUG
+    TimeRank.stopTimer();
+#endif
+
     unsigned MergingTrialsCount = 0;
 
     while (!Rank.empty()) {
@@ -2954,10 +3230,50 @@ bool FunctionMerging::runOnModule(Module &M) {
                << "\n";
       }
 
+      bool ProftablePrediction = true;
+      if (RunPrediction) {
+#ifdef TIME_STEPS_DEBUG
+        TimeTotal.stopTimer();
+#endif
+        TimePrediction.startTimer();
+
+        WriteTrainingFile(F1,F2, false, false);
+        std::string Cmd = std::string("python3 /home/rodrigo/ml/deepopt/repo/src/predict.py /home/rodrigo/ml/deepopt/testing.txt ") + OptBenchName + std::string(" ../training.txt > /tmp/prediction.txt");
+        bool BadMeasurement = std::system(Cmd.c_str());
+        if ( !BadMeasurement ) {
+        std::ifstream ifs("/tmp/prediction.txt");
+        if ( ifs.good() ) {
+          std::string Str;
+          ifs >> Str;
+          ProftablePrediction = std::stoul(Str,nullptr,0);
+  	errs() << "Prediction: " << ProftablePrediction << "\n";
+          ifs.close();
+        }
+        }
+  
+        TimePrediction.stopTimer();
+#ifdef TIME_STEPS_DEBUG
+        TimeTotal.startTimer();
+#endif
+      }
+
+      if (ProftablePrediction) {
+
+      //if (!ProftablePrediction)
+      //  TimePredictionGains.startTimer();
+      
+#ifdef TIME_STEPS_DEBUG
+      Timer TimeOneMerge("FM::OneMerge", "FM::OneMerge");
+      TimeOneMerge.startTimer();
+#endif
+
+      //errs() << "Here1\n";
       std::string Name = ".m.f." + std::to_string(TotalMerges);
       FunctionMergeResult Result = FM.merge(F1,F2,Name,Options);
+      //errs() << "Here2\n";
 
       bool validFunction = true;
+      bool Profitable = false;
 
       if (Result.getMergedFunction() != nullptr && verifyFunction(*Result.getMergedFunction())) {
         if (Debug || Verbose) {
@@ -3006,7 +3322,7 @@ bool FunctionMerging::runOnModule(Module &M) {
         unsigned SizeF1F2 = SizeF1+SizeF2;
 
         if (TestFM_CompilationCostModel) {
-/*
+	  /*
           std::vector<Function*> F1F2Arr;
           F1F2Arr.push_back(F1);
           F1F2Arr.push_back(F2);
@@ -3015,10 +3331,13 @@ bool FunctionMerging::runOnModule(Module &M) {
           std::vector<Function*> F12Arr;
           F12Arr.push_back(Result.getMergedFunction());
           Optional<size_t> SizeF12Opt = MeasureSize(F12Arr,M);
-*/
+          */
+          //Optional<size_t> SizeF1F2Opt = MeasureOriginalSize(M,Result,AlwaysPreserved,Options);
+          //Optional<size_t> SizeF12Opt = MeasureMergedSize(M,Result,AlwaysPreserved,Options);
 
-	  /*
-          Optional<size_t> SizeF12Opt = MeasureSize(M,Result,AlwaysPreserved,Options);
+	  
+	  /* oracle
+          SizeF12Opt = MeasureSize(M,Result,AlwaysPreserved,Options);
 	  
           if (SizeF1F2Opt.hasValue() && SizeF12Opt.hasValue() && SizeF1F2Opt.getValue() && SizeF12Opt.getValue()) {
             SizeF1F2 = SizeF1F2Opt.getValue();
@@ -3026,21 +3345,37 @@ bool FunctionMerging::runOnModule(Module &M) {
           } else {
             errs() << "Sizes: Could NOT Compute!\n";
             continue; //only accept compiled estimates
-          }*/
+          }
+	  */
+         
+	  //errs() << "Here 3\n";
+          if (!MeasureMergedSize(SizeF1F2,SizeF12,M,Result,AlwaysPreserved,Options)) continue;
         } 
+
+	Profitable = (SizeF12 <
+            SizeF1F2 * ((100.0 + MergingOverheadThreshold) / 100.0));
+
         if (Debug || Verbose) {
-          errs() << "Estimated Sizes: " << SizeF1 << " + " << SizeF2 << " <= " << SizeF12 << "? (" << (SizeF12 <
-            SizeF1F2 * ((100.0 + MergingOverheadThreshold) / 100.0)) << ") ";
-          errs() << "Reduction: "
-                 << (int)((1 - ((double)SizeF12) / (SizeF1 + SizeF2)) * 100)
-                 << "% "
+          errs() << "Estimated Sizes: " << SizeF1F2 << " <= " << SizeF12 << "? : " << Profitable 
+                 << ": Reduction: "
+                 << (int)(((((double)SizeF1F2) - (double)SizeF12) / ((double)SizeF1F2)) * 100.)
+                 << "% : "
                  << MergingTrialsCount << " : " << GetValueName(F1)
-                 << "; " << GetValueName(F2) << " | Score " << RankEntry.Score
+                 << "; " << GetValueName(F2) << " :  Score : " << RankEntry.Score
                  << "\n";
         }
 
-        if (SizeF12 <
-            SizeF1F2 * ((100.0 + MergingOverheadThreshold) / 100.0)) {
+	
+        if ((GenTestingData || GenTrainingData) && EnableSALSSA) {
+	   WriteTrainingFile(F1,F2, Profitable);
+        }
+
+        if (GenTrainingData && EnableSALSSA) {
+           Profitable = false;
+        }
+
+
+        if (Profitable) {
 
           //MergingDistance.push_back(MergingTrialsCount);
 
@@ -3108,18 +3443,33 @@ bool FunctionMerging::runOnModule(Module &M) {
 #endif
 
           if (TestFM_CompilationCostModel) {
-            //SizeF1F2Opt = MeasureSize(M);
+            //SizeF1F2Opt = SizeF12Opt; //oracle
           }
 
+          //if (!ProftablePrediction)
+          //  TimePredictionGains.stopTimer();
           break; // end exploration with F1
         } else {
           if (Result.getMergedFunction() != nullptr)
             Result.getMergedFunction()->eraseFromParent();
-        }
-      }
+        } //end profitable if-else
+      }//end if valid merge
 
-      if (MergingTrialsCount >= ExplorationThreshold) {
-        break;
+#ifdef TIME_STEPS_DEBUG
+      TimeOneMerge.stopTimer();
+      if (!Profitable) {
+       AccumulatedUnprofitableMergeTime +=  TimeOneMerge.getTotalTime().getWallTime();
+      }
+      TimeOneMerge.clear();
+#endif
+      //if (!ProftablePrediction)
+      //  TimePredictionGains.stopTimer();
+      }//end ProftablePrediction
+
+      if (!GenTrainingData) {
+        if (MergingTrialsCount >= ExplorationThreshold) {
+          break;
+        }
       }
     }
   }
@@ -3145,6 +3495,10 @@ bool FunctionMerging::runOnModule(Module &M) {
   }
 */
 
+#ifdef TIME_STEPS_DEBUG
+  TimeTotal.stopTimer();
+#endif
+ 
   if (Debug || Verbose) {
     errs() << "Total operand reordering: " << TotalOpReorder << "/"
            << TotalBinOps << " ("
@@ -3160,24 +3514,32 @@ bool FunctionMerging::runOnModule(Module &M) {
            << "\n";
   }
 
+  if (RunPrediction) {
+  errs() << "Timer:Prediction: " << TimePrediction.getTotalTime().getWallTime() << "\n";
+  TimePrediction.clear();
+  }
 #ifdef TIME_STEPS_DEBUG
+  errs() << "Timer:PredictionGains: " << TimePredictionGains.getTotalTime().getWallTime() << "\n";
+  TimePredictionGains.clear();
+
+  errs() << "Timer:Total: " << TimeTotal.getTotalTime().getWallTime() << "\n";
+  TimeTotal.clear();
+
+  errs() << "Timer:Unprofitable: " << AccumulatedUnprofitableMergeTime << "\n";
+
   errs() << "Timer:Align: " << TimeAlign.getTotalTime().getWallTime() << "\n";
   TimeAlign.clear();
 
   errs() << "Timer:Param: " << TimeParam.getTotalTime().getWallTime() << "\n";
   TimeParam.clear();
 
-  errs() << "Timer:CodeGen1: " << TimeCodeGen1.getTotalTime().getWallTime()
+  errs() << "Timer:CodeGen: " << TimeCodeGen.getTotalTime().getWallTime()
          << "\n";
-  TimeCodeGen1.clear();
+  TimeCodeGen.clear();
 
-  errs() << "Timer:CodeGen2: " << TimeCodeGen2.getTotalTime().getWallTime()
+  errs() << "Timer:Simplify: " << TimeSimplify.getTotalTime().getWallTime()
          << "\n";
-  TimeCodeGen2.clear();
-
-  errs() << "Timer:CodeGenFix: " << TimeCodeGenFix.getTotalTime().getWallTime()
-         << "\n";
-  TimeCodeGenFix.clear();
+  TimeSimplify.clear();
 
   errs() << "Timer:PreProcess: " << TimePreProcess.getTotalTime().getWallTime()
          << "\n";
@@ -3240,7 +3602,7 @@ Value *createCastIfNeeded(Value *V, Type *DstType, IRBuilder<> &Builder, Type *I
     assert(DstType->isStructTy());
     assert(OrigType->getStructNumElements() == DstType->getStructNumElements());
 
-    Result = UndefValue::get(DstType);
+    Result = GetAnyValue(DstType);
     for (unsigned int I = 0, E = OrigType->getStructNumElements(); I < E; ++I) {
       Value *ExtractedValue =
           Builder.CreateExtractValue(V, ArrayRef<unsigned int>(I));
@@ -3387,7 +3749,7 @@ static void fixNotDominatedUses(Function *F, BasicBlock *Entry, DominatorTree &D
           if (PredBB == SrcBB) {
             PHI->addIncoming(IV, PredBB);
           } else {
-            PHI->addIncoming(UndefValue::get(IV->getType()), PredBB);
+            PHI->addIncoming(GetAnyValue(IV->getType()), PredBB);
           }
         }
         Builder.CreateStore(PHI, Addr);
@@ -3403,7 +3765,7 @@ static void fixNotDominatedUses(Function *F, BasicBlock *Entry, DominatorTree &D
             if (PredBB == SrcBB) {
               PHI->addIncoming(IV, PredBB);
             } else {
-              PHI->addIncoming(UndefValue::get(IV->getType()), PredBB);
+              PHI->addIncoming(GetAnyValue(IV->getType()), PredBB);
             }
           }
           Builder.CreateStore(PHI, Addr);
@@ -3569,14 +3931,20 @@ static void MySimplifyCFG(Function &F) {
 }
 
 static void postProcessFunction(Function &F) {
-  //MySimplifyCFG(F);
-  //simplifyInstructions(F);
-  simplifyCFG(F);
+//  simplifyInstructions(F);
+//  simplifyCFG(F);
 
-  //for (BasicBlock &BB : F) {
-  //  SimplifyInstructionsInBlock(&BB);
-  //}
-  //simplifyCFG(F);
+  legacy::FunctionPassManager FPM(F.getParent());
+
+  //FPM.add(createPromoteMemoryToRegisterPass());
+  FPM.add(createCFGSimplificationPass());
+  FPM.add(createInstructionCombiningPass());
+  FPM.add(createCFGSimplificationPass());
+
+  FPM.doInitialization();
+  FPM.run(F);
+  FPM.doFinalization();
+
 }
 
 template<typename BlockListType>
@@ -3586,9 +3954,9 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
                     AlignedSequence<Value*> &AlignedSeq,
                     ValueToValueMapTy &VMap,
                     std::map<BasicBlock *, BasicBlock *> &BlocksF1,
-                    std::map<BasicBlock *, BasicBlock *> &BlocksF2) {
+                    std::map<BasicBlock *, BasicBlock *> &BlocksF2,
+		    std::map<Value *, BasicBlock *> &MaterialNodes) {
 
-  std::map<Value *, BasicBlock *> MaterialNodes;
 
   auto CloneInst = [](IRBuilder<> &Builder, Function *MF, Instruction *I) -> Instruction* {
     Instruction *NewI = nullptr;
@@ -3597,7 +3965,7 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
         NewI = Builder.CreateRetVoid();
       } else {
         NewI = Builder.CreateRet(
-            UndefValue::get(MF->getReturnType()));
+            GetAnyValue(MF->getReturnType()));
       }
     } else {
       //assert(I1->getNumOperands() == I2->getNumOperands() &&
@@ -3774,6 +4142,10 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                   ValueToValueMapTy &VMap,
                   const FunctionMergingOptions &Options) {
 
+#ifdef TIME_STEPS_DEBUG
+  TimeCodeGen.startTimer();
+#endif
+
   LLVMContext &Context = CodeGenerator<BlockListType>::getContext();
   Function *MergedFunc = CodeGenerator<BlockListType>::getMergedFunction();
   Value *IsFunc1 = CodeGenerator<BlockListType>::getFunctionIdentifier();
@@ -3809,7 +4181,9 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
   std::map<BasicBlock *, BasicBlock *> BlocksF1;
   std::map<BasicBlock *, BasicBlock *> BlocksF2;
 
-  CodeGen(Blocks1,Blocks2,EntryBB1,EntryBB2,MergedFunc,IsFunc1,PreBB,AlignedSeq,VMap,BlocksF1,BlocksF2);
+  std::map<Value *, BasicBlock *> MaterialNodes;
+
+  CodeGen(Blocks1,Blocks2,EntryBB1,EntryBB2,MergedFunc,IsFunc1,PreBB,AlignedSeq,VMap,BlocksF1,BlocksF2,MaterialNodes);
 
   //errs() << "CodeGen:\n";
   //MergedFunc->dump();
@@ -3824,6 +4198,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     CodeGenerator<BlockListType>::insert(dyn_cast<Instruction>(RetAddr1));
     CodeGenerator<BlockListType>::insert(dyn_cast<Instruction>(RetAddr2));
   }
+
+  //errs() << "LabelOperand Assignment:\n";
 
   std::set<BranchInst*> XorBrConds;
   //assigning label operands
@@ -3887,12 +4263,12 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                       "VMap);\n";
             //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
             return false;
           }
         } else {
-          V1 = UndefValue::get(I2->getOperand(i)->getType());
+          V1 = GetAnyValue(I2->getOperand(i)->getType());
         }
 
         Value *F2V = nullptr;
@@ -3908,13 +4284,13 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                       "VMap);\n";
             //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
             return false;
           }
 
         } else {
-          V2 = UndefValue::get(I1->getOperand(i)->getType());
+          V2 = GetAnyValue(I1->getOperand(i)->getType());
         }
 
         assert(V1 != nullptr && "Value should NOT be null!");
@@ -4033,18 +4409,24 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         if (Debug) errs() << "ERROR: Value should NOT be null\n";
         //MergedFunc->eraseFromParent();
 
+#ifdef TIME_STEPS_DEBUG
+        TimeCodeGen.stopTimer();
+#endif
         return false;
       }
       if (I2 != nullptr && !AssignLabelOperands(I2, BlocksF2)) {
         if (Debug) errs() << "ERROR: Value should NOT be null\n";
         //MergedFunc->eraseFromParent();
 
+#ifdef TIME_STEPS_DEBUG
+        TimeCodeGen.stopTimer();
+#endif
         return false;
       }
     }
   }
 
-  //errs() << "LabelOperand Assignment:\n";
+  //errs() << "Operand Assignment:\n";
   //MergedFunc->dump();
 
   DominatorTree DT(*MergedFunc);
@@ -4173,7 +4555,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
               if (OffendingInsts.count(IV)==0) { OffendingInsts.insert(IV); LinearOffendingInsts.push_back(IV); }
               //OffendingInsts.insert(IV);
             }
-          } else V = UndefValue::get(NewPHI->getType());
+          } else V = GetAnyValue(NewPHI->getType());
 
           //IRBuilder<> Builder(NewPredBB->getTerminator());
           //Value *CastedV = createCastIfNeeded(V, NewPHI->getType(), Builder, IntPtrTy);
@@ -4208,11 +4590,17 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
       if (BB1 != nullptr && !AssignPHIOperandsInBlock(BB1, AllPhis, BlocksF1)) {
           if (Debug) errs() << "ERROR: Value should NOT be null\n";
           //MergedFunc->eraseFromParent();
+#ifdef TIME_STEPS_DEBUG
+        TimeCodeGen.stopTimer();
+#endif
           return false;
       }
       if (BB2 != nullptr && !AssignPHIOperandsInBlock(BB2, AllPhis, BlocksF2)) {
           if (Debug) errs() << "ERROR: Value should NOT be null\n";
           //MergedFunc->eraseFromParent();
+#ifdef TIME_STEPS_DEBUG
+        TimeCodeGen.stopTimer();
+#endif
           return false;
       }
 
@@ -4264,7 +4652,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 	    }
             //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
             return false; // ErrorResponse;
           }
@@ -4289,12 +4677,12 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                         "VMap);\n";
               //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
               return false;
             }
           } else {
-            V1 = UndefValue::get(I2->getOperand(i)->getType());
+            V1 = GetAnyValue(I2->getOperand(i)->getType());
           }
 
           Value *V2 = nullptr;
@@ -4308,13 +4696,13 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                         "VMap);\n";
               //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
               return false;
             }
 
           } else {
-            V2 = UndefValue::get(I1->getOperand(i)->getType());
+            V2 = GetAnyValue(I1->getOperand(i)->getType());
           }
 
           assert(V1 != nullptr && "Value should NOT be null!");
@@ -4328,7 +4716,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 	    }
             //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
             return false; // ErrorResponse;
           }
@@ -4345,7 +4733,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         if (Debug) errs() << "ERROR: Value should NOT be null\n";
         //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
         return false;
       }
@@ -4353,7 +4741,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         if (Debug) errs() << "ERROR: Value should NOT be null\n";
         //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
         return false;
       }
@@ -4371,11 +4759,11 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
   }           
 
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen2.stopTimer();
+  TimeCodeGen.stopTimer();
 #endif
 
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGenFix.startTimer();
+  TimeSimplify.startTimer();
 #endif
 
   auto StoreInstIntoAddr = [](Instruction *IV, Value *Addr) {
@@ -4393,7 +4781,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
           if (PredBB == SrcBB) {
             PHI->addIncoming(IV, PredBB);
           } else {
-            PHI->addIncoming(UndefValue::get(IV->getType()), PredBB);
+            PHI->addIncoming(GetAnyValue(IV->getType()), PredBB);
           }
         }
         Builder.CreateStore(PHI, Addr);
@@ -4409,7 +4797,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
             if (PredBB == SrcBB) {
               PHI->addIncoming(IV, PredBB);
             } else {
-              PHI->addIncoming(UndefValue::get(IV->getType()), PredBB);
+              PHI->addIncoming(GetAnyValue(IV->getType()), PredBB);
             }
           }
           Builder.CreateStore(PHI, Addr);
@@ -4522,11 +4910,95 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     }
   };
 
+
+  /*
+  //simplification
+  if (MergedFunc!=nullptr) {
+    //MergedFunc->dump();
+    std::set<BasicBlock *> DeleteBlocks;
+  
+    auto FuseBBsForward = [&](BasicBlock *BB) {
+      BranchInst *Br = dyn_cast<BranchInst>(BB->getTerminator());
+      if (Br==nullptr) return;
+
+      if (!Br->isConditional() || Br->getSuccessor(0)==Br->getSuccessor(1)) {
+        BasicBlock *SuccBB = Br->getSuccessor(0);
+
+	if (SuccBB->hasAddressTaken()) return;
+	
+	std::set<BasicBlock*> Preds;
+	for (auto It = pred_begin(SuccBB), E = pred_end(SuccBB); It!=E; It++) {
+	  Preds.insert(*It);
+	}
+
+	if (Preds.size()!=1) return;
+
+	IRBuilder<> Builder(Br);
+	SuccBB->replaceAllUsesWith(BB);
+	SuccBB->replaceSuccessorsPhiUsesWith(BB);
+	
+	for (auto It = SuccBB->begin(), E = SuccBB->end(); It!=E; ) {
+	  Instruction *I = &*It;
+	  It++;
+
+	  I->removeFromParent();
+	  Builder.Insert(I);
+	}
+
+	Br->eraseFromParent();
+        DeleteBlocks.insert(SuccBB);
+      }
+    };
+
+    auto FuseBBsBackward = [](BasicBlock *SuccBB) -> bool {
+      if (SuccBB->hasAddressTaken()) return false;
+	
+      std::set<BasicBlock*> Preds;
+      for (auto It = pred_begin(SuccBB), E = pred_end(SuccBB); It!=E; It++) {
+        Preds.insert(*It);
+      }
+
+      if (Preds.size()!=1) return false;
+
+      BasicBlock *BB = *Preds.begin();
+
+      BranchInst *Br = dyn_cast<BranchInst>(BB->getTerminator());
+      if (Br==nullptr) return false;
+
+      if (!Br->isConditional() || Br->getSuccessor(0)==Br->getSuccessor(1)) {
+
+	IRBuilder<> Builder(Br);
+	SuccBB->replaceAllUsesWith(BB);
+	SuccBB->replaceSuccessorsPhiUsesWith(BB);
+	
+	for (auto It = SuccBB->begin(), E = SuccBB->end(); It!=E; ) {
+	  Instruction *I = &*It;
+	  It++;
+
+	  I->removeFromParent();
+	  Builder.Insert(I);
+	}
+
+	Br->eraseFromParent();
+	return true;
+      }
+      return false;
+    };
+
+    for (auto &Pair : MaterialNodes) if (!isa<BasicBlock>(Pair.first) && FuseBBsBackward(Pair.second)) DeleteBlocks.insert(Pair.second);
+    for (BasicBlock *BB : DeleteBlocks) BB->eraseFromParent();
+    //MergedFunc->dump();
+  }
+  */
+
   if (MergedFunc!=nullptr) {
     //errs() << "Allocas: " << Allocas.size() << " ";
     //errs() << "Offending: " << OffendingInsts.size() << " ";
-    if (Allocas.size()>1000 || OffendingInsts.size()>1000) {
+    if (Allocas.size()>750 || OffendingInsts.size()>750) {
       if (Debug) errs() << "Bailing out\n";
+#ifdef TIME_STEPS_DEBUG
+  TimeSimplify.stopTimer();
+#endif
       return false;
     } else {
       std::set<Instruction*> Visited;
@@ -4537,8 +5009,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         InstSet.insert(I);
 
       	//Create a coalescing group in InstSet
-        if (EnableSALSSACoalescing)
-      	  OptimizeCoalescing(I,InstSet,CoalescingCandidates,Visited);
+        //if (EnableSALSSACoalescing)
+      	//  OptimizeCoalescing(I,InstSet,CoalescingCandidates,Visited);
 
         for (Instruction *OtherI : InstSet)
       	  Visited.insert(OtherI);
@@ -4554,18 +5026,21 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
       DominatorTree DT(*MergedFunc);
       PromoteMemToReg(Allocas, DT, nullptr);
 
+
+      if (verifyFunction(*MergedFunc)) return false;
+
       //errs() << "Mem2Reg:\n";
       //MergedFunc->dump();
 
-      postProcessFunction(*MergedFunc);
       //errs() << "PostProcessing:\n";
+      postProcessFunction(*MergedFunc);
       //MergedFunc->dump();
       #endif
     }
   }
 
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGenFix.stopTimer();
+  TimeSimplify.stopTimer();
 #endif
 
   return MergedFunc!=nullptr;

@@ -113,6 +113,9 @@
 #include <string>
 #include <utility>
 
+#define RCORPrint(_T_)
+//#define RCORPrint(_T_) _T_
+
 using namespace llvm;
 
 namespace llvm {
@@ -564,23 +567,29 @@ static void forEachUser(const Value *User,
 }
 
 void Verifier::visitGlobalValue(const GlobalValue &GV) {
+  RCORPrint( errs() << "Visit GlobalValue:1: " << Broken << "\n" );
   Assert(!GV.isDeclaration() || GV.hasValidDeclarationLinkage(),
          "Global is external, but doesn't have external or weak linkage!", &GV);
 
+  RCORPrint( errs() << "Visit GlobalValue:2: " << Broken << "\n" );
   Assert(GV.getAlignment() <= Value::MaximumAlignment,
          "huge alignment values are unsupported", &GV);
+  RCORPrint( errs() << "Visit GlobalValue:3: " << Broken << "\n" );
   Assert(!GV.hasAppendingLinkage() || isa<GlobalVariable>(GV),
          "Only global variables can have appending linkage!", &GV);
 
+  RCORPrint( errs() << "Visit GlobalValue:4: " << Broken << "\n" );
   if (GV.hasAppendingLinkage()) {
     const GlobalVariable *GVar = dyn_cast<GlobalVariable>(&GV);
     Assert(GVar && GVar->getValueType()->isArrayTy(),
            "Only global arrays can have appending linkage!", GVar);
   }
 
+  RCORPrint( errs() << "Visit GlobalValue:5: " << Broken << "\n" );
   if (GV.isDeclarationForLinker())
     Assert(!GV.hasComdat(), "Declaration may not be in a Comdat!", &GV);
 
+  RCORPrint( errs() << "Visit GlobalValue:6: " << Broken << "\n" );
   if (GV.hasDLLImportStorageClass()) {
     Assert(!GV.isDSOLocal(),
            "GlobalValue with DLLImport Storage is dso_local!", &GV);
@@ -590,12 +599,14 @@ void Verifier::visitGlobalValue(const GlobalValue &GV) {
            "Global is marked as dllimport, but not external", &GV);
   }
 
+  RCORPrint( errs() << "Visit GlobalValue:7: " << Broken << "\n" );
   if (GV.isImplicitDSOLocal())
     Assert(GV.isDSOLocal(),
            "GlobalValue with local linkage or non-default "
            "visibility must be dso_local!",
            &GV);
 
+  RCORPrint( errs() << "Visit GlobalValue:8: " << Broken << "\n" );
   forEachUser(&GV, GlobalValueVisited, [&](const Value *V) -> bool {
     if (const Instruction *I = dyn_cast<Instruction>(V)) {
       if (!I->getParent() || !I->getParent()->getParent())
@@ -614,6 +625,8 @@ void Verifier::visitGlobalValue(const GlobalValue &GV) {
     }
     return true;
   });
+
+  RCORPrint( errs() << "Visit GlobalValue:-: " << Broken << "\n" );
 }
 
 void Verifier::visitGlobalVariable(const GlobalVariable &GV) {
@@ -1602,13 +1615,16 @@ void Verifier::verifyParameterAttrs(AttributeSet Attrs, Type *Ty,
   if (!Attrs.hasAttributes())
     return;
 
+  RCORPrint( errs() << "Visit Param Attrs:1: " << Broken << "\n" );
   verifyAttributeTypes(Attrs, /*IsFunction=*/false, V);
 
+  RCORPrint( errs() << "Visit Param Attrs:2: " << Broken << "\n" );
   if (Attrs.hasAttribute(Attribute::ImmArg)) {
     Assert(Attrs.getNumAttributes() == 1,
            "Attribute 'immarg' is incompatible with other attributes", V);
   }
 
+  RCORPrint( errs() << "Visit Param Attrs:3: " << Broken << "\n" );
   // Check for mutually incompatible attributes.  Only inreg is compatible with
   // sret.
   unsigned AttrCount = 0;
@@ -1621,59 +1637,69 @@ void Verifier::verifyParameterAttrs(AttributeSet Attrs, Type *Ty,
                          "and 'sret' are incompatible!",
          V);
 
+  RCORPrint( errs() << "Visit Param Attrs:4: " << Broken << "\n" );
   Assert(!(Attrs.hasAttribute(Attribute::InAlloca) &&
            Attrs.hasAttribute(Attribute::ReadOnly)),
          "Attributes "
          "'inalloca and readonly' are incompatible!",
          V);
 
+  RCORPrint( errs() << "Visit Param Attrs:5: " << Broken << "\n" );
   Assert(!(Attrs.hasAttribute(Attribute::StructRet) &&
            Attrs.hasAttribute(Attribute::Returned)),
          "Attributes "
          "'sret and returned' are incompatible!",
          V);
 
+  RCORPrint( errs() << "Visit Param Attrs:6: " << Broken << "\n" );
   Assert(!(Attrs.hasAttribute(Attribute::ZExt) &&
            Attrs.hasAttribute(Attribute::SExt)),
          "Attributes "
          "'zeroext and signext' are incompatible!",
          V);
 
+  RCORPrint( errs() << "Visit Param Attrs:7: " << Broken << "\n" );
   Assert(!(Attrs.hasAttribute(Attribute::ReadNone) &&
            Attrs.hasAttribute(Attribute::ReadOnly)),
          "Attributes "
          "'readnone and readonly' are incompatible!",
          V);
 
+  RCORPrint( errs() << "Visit Param Attrs:8: " << Broken << "\n" );
   Assert(!(Attrs.hasAttribute(Attribute::ReadNone) &&
            Attrs.hasAttribute(Attribute::WriteOnly)),
          "Attributes "
          "'readnone and writeonly' are incompatible!",
          V);
 
+  RCORPrint( errs() << "Visit Param Attrs:9: " << Broken << "\n" );
   Assert(!(Attrs.hasAttribute(Attribute::ReadOnly) &&
            Attrs.hasAttribute(Attribute::WriteOnly)),
          "Attributes "
          "'readonly and writeonly' are incompatible!",
          V);
 
+  RCORPrint( errs() << "Visit Param Attrs:10: " << Broken << "\n" );
   Assert(!(Attrs.hasAttribute(Attribute::NoInline) &&
            Attrs.hasAttribute(Attribute::AlwaysInline)),
          "Attributes "
          "'noinline and alwaysinline' are incompatible!",
          V);
 
+  RCORPrint( errs() << "Visit Param Attrs:11: " << Broken << "\n" );
   if (Attrs.hasAttribute(Attribute::ByVal) && Attrs.getByValType()) {
     Assert(Attrs.getByValType() == cast<PointerType>(Ty)->getElementType(),
            "Attribute 'byval' type does not match parameter!", V);
   }
 
+  RCORPrint( errs() << "Visit Param Attrs:12: " << Broken << "\n" );
   AttrBuilder IncompatibleAttrs = AttributeFuncs::typeIncompatible(Ty);
   Assert(!AttrBuilder(Attrs).overlaps(IncompatibleAttrs),
          "Wrong types for attribute: " +
              AttributeSet::get(Context, IncompatibleAttrs).getAsString(),
          V);
 
+  RCORPrint( errs() << "Visit Param Attrs:13: " << Broken << "\n" );
   if (PointerType *PTy = dyn_cast<PointerType>(Ty)) {
     SmallPtrSet<Type*, 4> Visited;
     if (!PTy->getElementType()->isSized(&Visited)) {
@@ -1696,6 +1722,7 @@ void Verifier::verifyParameterAttrs(AttributeSet Attrs, Type *Ty,
            "with pointer type!",
            V);
   }
+  RCORPrint( errs() << "Visit Param Attrs:-: " << Broken << "\n" );
 }
 
 // Check parameter attributes against a function type.
@@ -1713,6 +1740,7 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
 
   // Verify return value attributes.
   AttributeSet RetAttrs = Attrs.getRetAttributes();
+  RCORPrint( errs() << "Visit Function Attrs:1: " << Broken << "\n" );
   Assert((!RetAttrs.hasAttribute(Attribute::ByVal) &&
           !RetAttrs.hasAttribute(Attribute::Nest) &&
           !RetAttrs.hasAttribute(Attribute::StructRet) &&
@@ -1726,31 +1754,38 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
          "'returned', 'swiftself', and 'swifterror' do not apply to return "
          "values!",
          V);
+  RCORPrint( errs() << "Visit Function Attrs:2: " << Broken << "\n" );
   Assert((!RetAttrs.hasAttribute(Attribute::ReadOnly) &&
           !RetAttrs.hasAttribute(Attribute::WriteOnly) &&
           !RetAttrs.hasAttribute(Attribute::ReadNone)),
          "Attribute '" + RetAttrs.getAsString() +
              "' does not apply to function returns",
          V);
+  RCORPrint( errs() << "Visit Function Attrs:3: " << Broken << "\n" );
   verifyParameterAttrs(RetAttrs, FT->getReturnType(), V);
 
+  RCORPrint( errs() << "Visit Function Attrs:4: " << Broken << "\n" );
   // Verify parameter attributes.
   for (unsigned i = 0, e = FT->getNumParams(); i != e; ++i) {
     Type *Ty = FT->getParamType(i);
     AttributeSet ArgAttrs = Attrs.getParamAttributes(i);
 
+  RCORPrint( errs() << "Visit Function Attrs:5: " << Broken << "\n" );
     if (!IsIntrinsic) {
       Assert(!ArgAttrs.hasAttribute(Attribute::ImmArg),
              "immarg attribute only applies to intrinsics",V);
     }
 
+  RCORPrint( errs() << "Visit Function Attrs:6: " << Broken << "\n" );
     verifyParameterAttrs(ArgAttrs, Ty, V);
 
+  RCORPrint( errs() << "Visit Function Attrs:7: " << Broken << "\n" );
     if (ArgAttrs.hasAttribute(Attribute::Nest)) {
       Assert(!SawNest, "More than one parameter has attribute nest!", V);
       SawNest = true;
     }
 
+  RCORPrint( errs() << "Visit Function Attrs:8: " << Broken << "\n" );
     if (ArgAttrs.hasAttribute(Attribute::Returned)) {
       Assert(!SawReturned, "More than one parameter has attribute returned!",
              V);
@@ -1760,6 +1795,7 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
       SawReturned = true;
     }
 
+  RCORPrint( errs() << "Visit Function Attrs:9: " << Broken << "\n" );
     if (ArgAttrs.hasAttribute(Attribute::StructRet)) {
       Assert(!SawSRet, "Cannot have multiple 'sret' parameters!", V);
       Assert(i == 0 || i == 1,
@@ -1767,54 +1803,68 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
       SawSRet = true;
     }
 
+  RCORPrint( errs() << "Visit Function Attrs:10: " << Broken << "\n" );
     if (ArgAttrs.hasAttribute(Attribute::SwiftSelf)) {
       Assert(!SawSwiftSelf, "Cannot have multiple 'swiftself' parameters!", V);
       SawSwiftSelf = true;
     }
 
+  RCORPrint( errs() << "Visit Function Attrs:11: " << Broken << "\n" );
     if (ArgAttrs.hasAttribute(Attribute::SwiftError)) {
       Assert(!SawSwiftError, "Cannot have multiple 'swifterror' parameters!",
              V);
       SawSwiftError = true;
     }
 
+  RCORPrint( errs() << "Visit Function Attrs:12: " << Broken << "\n" );
     if (ArgAttrs.hasAttribute(Attribute::InAlloca)) {
       Assert(i == FT->getNumParams() - 1,
              "inalloca isn't on the last parameter!", V);
     }
+  RCORPrint( errs() << "Visit Function Attrs:13: " << Broken << "\n" );
   }
+
+  RCORPrint( errs() << "Visit Function Attrs:14: " << Broken << "\n" );
 
   if (!Attrs.hasAttributes(AttributeList::FunctionIndex))
     return;
 
+  RCORPrint( errs() << "Visit Function Attrs:15: " << Broken << "\n" );
   verifyAttributeTypes(Attrs.getFnAttributes(), /*IsFunction=*/true, V);
 
+  RCORPrint( errs() << "Visit Function Attrs:16: " << Broken << "\n" );
   Assert(!(Attrs.hasFnAttribute(Attribute::ReadNone) &&
            Attrs.hasFnAttribute(Attribute::ReadOnly)),
          "Attributes 'readnone and readonly' are incompatible!", V);
 
+  RCORPrint( errs() << "Visit Function Attrs:17: " << Broken << "\n" );
   Assert(!(Attrs.hasFnAttribute(Attribute::ReadNone) &&
            Attrs.hasFnAttribute(Attribute::WriteOnly)),
          "Attributes 'readnone and writeonly' are incompatible!", V);
 
+  RCORPrint( errs() << "Visit Function Attrs:18: " << Broken << "\n" );
   Assert(!(Attrs.hasFnAttribute(Attribute::ReadOnly) &&
            Attrs.hasFnAttribute(Attribute::WriteOnly)),
          "Attributes 'readonly and writeonly' are incompatible!", V);
 
+  RCORPrint( errs() << "Visit Function Attrs:19: " << Broken << "\n" );
   Assert(!(Attrs.hasFnAttribute(Attribute::ReadNone) &&
            Attrs.hasFnAttribute(Attribute::InaccessibleMemOrArgMemOnly)),
          "Attributes 'readnone and inaccessiblemem_or_argmemonly' are "
          "incompatible!",
          V);
 
+  RCORPrint( errs() << "Visit Function Attrs:20: " << Broken << "\n" );
   Assert(!(Attrs.hasFnAttribute(Attribute::ReadNone) &&
            Attrs.hasFnAttribute(Attribute::InaccessibleMemOnly)),
          "Attributes 'readnone and inaccessiblememonly' are incompatible!", V);
 
+  RCORPrint( errs() << "Visit Function Attrs:21: " << Broken << "\n" );
   Assert(!(Attrs.hasFnAttribute(Attribute::NoInline) &&
            Attrs.hasFnAttribute(Attribute::AlwaysInline)),
          "Attributes 'noinline and alwaysinline' are incompatible!", V);
 
+  RCORPrint( errs() << "Visit Function Attrs:22: " << Broken << "\n" );
   if (Attrs.hasFnAttribute(Attribute::OptimizeNone)) {
     Assert(Attrs.hasFnAttribute(Attribute::NoInline),
            "Attribute 'optnone' requires 'noinline'!", V);
@@ -1826,12 +1876,14 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
            "Attributes 'minsize and optnone' are incompatible!", V);
   }
 
+  RCORPrint( errs() << "Visit Function Attrs:23: " << Broken << "\n" );
   if (Attrs.hasFnAttribute(Attribute::JumpTable)) {
     const GlobalValue *GV = cast<GlobalValue>(V);
     Assert(GV->hasGlobalUnnamedAddr(),
            "Attribute 'jumptable' requires 'unnamed_addr'", V);
   }
 
+  RCORPrint( errs() << "Visit Function Attrs:24: " << Broken << "\n" );
   if (Attrs.hasFnAttribute(Attribute::AllocSize)) {
     std::pair<unsigned, Optional<unsigned>> Args =
         Attrs.getAllocSizeArgs(AttributeList::FunctionIndex);
@@ -1859,6 +1911,7 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
       return;
   }
 
+  RCORPrint( errs() << "Visit Function Attrs:25: " << Broken << "\n" );
   if (Attrs.hasFnAttribute("frame-pointer")) {
     StringRef FP = Attrs.getAttribute(AttributeList::FunctionIndex,
                                       "frame-pointer").getValueAsString();
@@ -1866,6 +1919,7 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
       CheckFailed("invalid value for 'frame-pointer' attribute: " + FP, V);
   }
 
+  RCORPrint( errs() << "Visit Function Attrs:26: " << Broken << "\n" );
   if (Attrs.hasFnAttribute("patchable-function-prefix")) {
     StringRef S = Attrs
                       .getAttribute(AttributeList::FunctionIndex,
@@ -1876,6 +1930,7 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
       CheckFailed(
           "\"patchable-function-prefix\" takes an unsigned integer: " + S, V);
   }
+  RCORPrint( errs() << "Visit Function Attrs:27: " << Broken << "\n" );
   if (Attrs.hasFnAttribute("patchable-function-entry")) {
     StringRef S = Attrs
                       .getAttribute(AttributeList::FunctionIndex,
@@ -1886,6 +1941,7 @@ void Verifier::verifyFunctionAttrs(FunctionType *FT, AttributeList Attrs,
       CheckFailed(
           "\"patchable-function-entry\" takes an unsigned integer: " + S, V);
   }
+  RCORPrint( errs() << "Visit Function Attrs:-: " << Broken << "\n" );
 }
 
 void Verifier::verifyFunctionMetadata(
@@ -2176,7 +2232,9 @@ void Verifier::verifySiblingFuncletUnwinds() {
 // visitFunction - Verify that a function is ok.
 //
 void Verifier::visitFunction(const Function &F) {
+  RCORPrint( errs() << "Visit Function:1: " << Broken << "\n" );
   visitGlobalValue(F);
+  RCORPrint( errs() << "Visit Function:2: " << Broken << "\n" );
 
   // Check function arguments.
   FunctionType *FT = F.getFunctionType();
@@ -2185,34 +2243,42 @@ void Verifier::visitFunction(const Function &F) {
   Assert(&Context == &F.getContext(),
          "Function context does not match Module context!", &F);
 
+  RCORPrint( errs() << "Visit Function:3: " << Broken << "\n" );
   Assert(!F.hasCommonLinkage(), "Functions may not have common linkage", &F);
+  RCORPrint( errs() << "Visit Function:4: " << Broken << "\n" );
   Assert(FT->getNumParams() == NumArgs,
          "# formal arguments must match # of arguments for function type!", &F,
          FT);
+  RCORPrint( errs() << "Visit Function:5: " << Broken << "\n" );
   Assert(F.getReturnType()->isFirstClassType() ||
              F.getReturnType()->isVoidTy() || F.getReturnType()->isStructTy(),
          "Functions cannot return aggregate values!", &F);
 
+  RCORPrint( errs() << "Visit Function:6: " << Broken << "\n" );
   Assert(!F.hasStructRetAttr() || F.getReturnType()->isVoidTy(),
          "Invalid struct return type!", &F);
 
   AttributeList Attrs = F.getAttributes();
 
+  RCORPrint( errs() << "Visit Function:7: " << Broken << "\n" );
   Assert(verifyAttributeCount(Attrs, FT->getNumParams()),
          "Attribute after last parameter!", &F);
 
   bool isLLVMdotName = F.getName().size() >= 5 &&
                        F.getName().substr(0, 5) == "llvm.";
 
+  RCORPrint( errs() << "Visit Function:8: " << Broken << "\n" );
   // Check function attributes.
   verifyFunctionAttrs(FT, Attrs, &F, isLLVMdotName);
 
+  RCORPrint( errs() << "Visit Function:9: " << Broken << "\n" );
   // On function declarations/definitions, we do not support the builtin
   // attribute. We do not check this in VerifyFunctionAttrs since that is
   // checking for Attributes that can/can not ever be on functions.
   Assert(!Attrs.hasFnAttribute(Attribute::Builtin),
          "Attribute 'builtin' can only be applied to a callsite.", &F);
 
+  RCORPrint( errs() << "Visit Function:10: " << Broken << "\n" );
   // Check that this function meets the restrictions on this calling convention.
   // Sometimes varargs is used for perfectly forwarding thunks, so some of these
   // restrictions can be lifted.
@@ -2247,11 +2313,14 @@ void Verifier::visitFunction(const Function &F) {
   // Check that the argument values match the function type for this function...
   unsigned i = 0;
   for (const Argument &Arg : F.args()) {
+    RCORPrint( errs() << "Visit Function:11: " << Broken << "\n" );
     Assert(Arg.getType() == FT->getParamType(i),
            "Argument value does not match function argument type!", &Arg,
            FT->getParamType(i));
+    RCORPrint( errs() << "Visit Function:12: " << Broken << "\n" );
     Assert(Arg.getType()->isFirstClassType(),
            "Function arguments must have first-class types!", &Arg);
+    RCORPrint( errs() << "Visit Function:13: " << Broken << "\n" );
     if (!isLLVMdotName) {
       Assert(!Arg.getType()->isMetadataTy(),
              "Function takes metadata but isn't an intrinsic", &Arg, &F);
@@ -2259,6 +2328,7 @@ void Verifier::visitFunction(const Function &F) {
              "Function takes token but isn't an intrinsic", &Arg, &F);
     }
 
+    RCORPrint( errs() << "Visit Function:14: " << Broken << "\n" );
     // Check that swifterror argument is only used by loads and stores.
     if (Attrs.hasParamAttribute(i, Attribute::SwiftError)) {
       verifySwiftErrorValue(&Arg);
@@ -2266,6 +2336,7 @@ void Verifier::visitFunction(const Function &F) {
     ++i;
   }
 
+  RCORPrint( errs() << "Visit Function:15: " << Broken << "\n" );
   if (!isLLVMdotName)
     Assert(!F.getReturnType()->isTokenTy(),
            "Functions returns a token but isn't an intrinsic", &F);
@@ -2273,9 +2344,12 @@ void Verifier::visitFunction(const Function &F) {
   // Get the function metadata attachments.
   SmallVector<std::pair<unsigned, MDNode *>, 4> MDs;
   F.getAllMetadata(MDs);
+  RCORPrint( errs() << "Visit Function:16: " << Broken << "\n" );
   assert(F.hasMetadata() != MDs.empty() && "Bit out-of-sync");
+  RCORPrint( errs() << "Visit Function:17: " << Broken << "\n" );
   verifyFunctionMetadata(MDs);
 
+  RCORPrint( errs() << "Visit Function:18: " << Broken << "\n" );
   // Check validity of the personality function
   if (F.hasPersonalityFn()) {
     auto *Per = dyn_cast<Function>(F.getPersonalityFn()->stripPointerCasts());
@@ -2285,6 +2359,7 @@ void Verifier::visitFunction(const Function &F) {
              &F, F.getParent(), Per, Per->getParent());
   }
 
+  RCORPrint( errs() << "Visit Function:19: " << Broken << "\n" );
   if (F.isMaterializable()) {
     // Function has a body somewhere we can't see.
     Assert(MDs.empty(), "unmaterialized function cannot have metadata", &F,
@@ -2352,6 +2427,7 @@ void Verifier::visitFunction(const Function &F) {
     }
   }
 
+  RCORPrint( errs() << "Visit Function:20: " << Broken << "\n" );
   // If this function is actually an intrinsic, verify that it is only used in
   // direct call/invokes, never having its "address taken".
   // Only do this if the module is materialized, otherwise we don't have all the
@@ -2367,6 +2443,7 @@ void Verifier::visitFunction(const Function &F) {
   if (!HasDebugInfo)
     return;
 
+  RCORPrint( errs() << "Visit Function:21: " << Broken << "\n" );
   // Check that all !dbg attachments lead to back to N.
   //
   // FIXME: Check this incrementally while visiting !dbg attachments.
@@ -2413,6 +2490,7 @@ void Verifier::visitFunction(const Function &F) {
       if (BrokenDebugInfo)
         return;
     }
+  RCORPrint( errs() << "Visit Function:-: " << Broken << "\n" );
 }
 
 // verifyBasicBlock - Verify that a basic block is well formed...
@@ -2476,21 +2554,28 @@ void Verifier::visitBasicBlock(BasicBlock &BB) {
 }
 
 void Verifier::visitTerminator(Instruction &I) {
+  RCORPrint( errs() << "Visit Terminator:1: " << Broken << "\n" );
   // Ensure that terminators only exist at the end of the basic block.
   Assert(&I == I.getParent()->getTerminator(),
          "Terminator found in the middle of a basic block!", I.getParent());
+  RCORPrint( errs() << "Visit Terminator:2: " << Broken << "\n" );
   visitInstruction(I);
+  RCORPrint( errs() << "Visit Terminator:-: " << Broken << "\n" );
 }
 
 void Verifier::visitBranchInst(BranchInst &BI) {
+  RCORPrint( errs() << "Visit Branch:1: " << Broken << "\n" );
   if (BI.isConditional()) {
     Assert(BI.getCondition()->getType()->isIntegerTy(1),
            "Branch condition is not 'i1' type!", &BI, BI.getCondition());
   }
+  RCORPrint( errs() << "Visit Branch:2: " << Broken << "\n" );
   visitTerminator(BI);
+  RCORPrint( errs() << "Visit Branch:-: " << Broken << "\n" );
 }
 
 void Verifier::visitReturnInst(ReturnInst &RI) {
+  RCORPrint( errs() << "Visit Return:1: " << Broken << "\n" );
   Function *F = RI.getParent()->getParent();
   unsigned N = RI.getNumOperands();
   if (F->getReturnType()->isVoidTy())
@@ -2504,9 +2589,11 @@ void Verifier::visitReturnInst(ReturnInst &RI) {
            "type of return inst!",
            &RI, F->getReturnType());
 
+  RCORPrint( errs() << "Visit Return:2: " << Broken << "\n" );
   // Check to make sure that the return value has necessary properties for
   // terminators...
   visitTerminator(RI);
+  RCORPrint( errs() << "Visit Return:-: " << Broken << "\n" );
 }
 
 void Verifier::visitSwitchInst(SwitchInst &SI) {
@@ -2562,13 +2649,17 @@ void Verifier::visitCallBrInst(CallBrInst &CBI) {
 }
 
 void Verifier::visitSelectInst(SelectInst &SI) {
+  RCORPrint( errs() << "Visit Select:1: " << Broken << "\n" );
   Assert(!SelectInst::areInvalidOperands(SI.getOperand(0), SI.getOperand(1),
                                          SI.getOperand(2)),
          "Invalid operands for select instruction!", &SI);
 
+  RCORPrint( errs() << "Visit Select:2: " << Broken << "\n" );
   Assert(SI.getTrueValue()->getType() == SI.getType(),
          "Select values must have same type as select instruction!", &SI);
+  RCORPrint( errs() << "Visit Select:3: " << Broken << "\n" );
   visitInstruction(SI);
+  RCORPrint( errs() << "Visit Select:-: " << Broken << "\n" );
 }
 
 /// visitUserOp1 - User defined operators shouldn't live beyond the lifetime of
@@ -2809,10 +2900,13 @@ void Verifier::visitIntToPtrInst(IntToPtrInst &I) {
 }
 
 void Verifier::visitBitCastInst(BitCastInst &I) {
+  RCORPrint( errs() << "Visit BitCast:1: " << Broken << "\n" );
   Assert(
       CastInst::castIsValid(Instruction::BitCast, I.getOperand(0), I.getType()),
       "Invalid bitcast", &I);
+  RCORPrint( errs() << "Visit BitCast:2: " << Broken << "\n" );
   visitInstruction(I);
+  RCORPrint( errs() << "Visit BitCast:-: " << Broken << "\n" );
 }
 
 void Verifier::visitAddrSpaceCastInst(AddrSpaceCastInst &I) {
@@ -2835,6 +2929,9 @@ void Verifier::visitAddrSpaceCastInst(AddrSpaceCastInst &I) {
 /// visitPHINode - Ensure that a PHI node is well formed.
 ///
 void Verifier::visitPHINode(PHINode &PN) {
+
+  RCORPrint( errs() << "Visit PHI:1: " << Broken << "\n" );
+
   // Ensure that the PHI nodes are all grouped together at the top of the block.
   // This can be tested by checking whether the instruction before this is
   // either nonexistent (because this is begin()) or is a PHI node.  If not,
@@ -2843,34 +2940,44 @@ void Verifier::visitPHINode(PHINode &PN) {
              isa<PHINode>(--BasicBlock::iterator(&PN)),
          "PHI nodes not grouped at top of basic block!", &PN, PN.getParent());
 
+  RCORPrint( errs() << "Visit PHI:2: " << Broken << "\n" );
+
   // Check that a PHI doesn't yield a Token.
   Assert(!PN.getType()->isTokenTy(), "PHI nodes cannot have token type!");
 
   // Check that all of the values of the PHI node have the same type as the
   // result, and that the incoming blocks are really basic blocks.
   for (Value *IncValue : PN.incoming_values()) {
+    RCORPrint( errs() << "Visit PHI:3: " << Broken << "\n" );
     Assert(PN.getType() == IncValue->getType(),
            "PHI node operands are not the same type as the result!", &PN);
   }
 
+  RCORPrint( errs() << "Visit PHI:4: " << Broken << "\n" );
+
   // All other PHI node constraints are checked in the visitBasicBlock method.
 
   visitInstruction(PN);
+  RCORPrint( errs() << "Visit PHI:-: " << Broken << "\n" );
 }
 
 void Verifier::visitCallBase(CallBase &Call) {
+  RCORPrint( errs() << "Visit CallBase:1: " << Broken << "\n" );
   Assert(Call.getCalledValue()->getType()->isPointerTy(),
          "Called function must be a pointer!", Call);
   PointerType *FPTy = cast<PointerType>(Call.getCalledValue()->getType());
 
+  RCORPrint( errs() << "Visit CallBase:2: " << Broken << "\n" );
   Assert(FPTy->getElementType()->isFunctionTy(),
          "Called function is not pointer to function type!", Call);
 
+  RCORPrint( errs() << "Visit CallBase:3: " << Broken << "\n" );
   Assert(FPTy->getElementType() == Call.getFunctionType(),
          "Called function is not the same type as the call!", Call);
 
   FunctionType *FTy = Call.getFunctionType();
 
+  RCORPrint( errs() << "Visit CallBase:4: " << Broken << "\n" );
   // Verify that the correct number of arguments are being passed
   if (FTy->isVarArg())
     Assert(Call.arg_size() >= FTy->getNumParams(),
@@ -2881,16 +2988,20 @@ void Verifier::visitCallBase(CallBase &Call) {
            "Incorrect number of arguments passed to called function!", Call);
 
   // Verify that all arguments to the call match the function type.
-  for (unsigned i = 0, e = FTy->getNumParams(); i != e; ++i)
+  for (unsigned i = 0, e = FTy->getNumParams(); i != e; ++i) {
+    RCORPrint( errs() << "Visit CallBase:5: " << Broken << "\n" );
     Assert(Call.getArgOperand(i)->getType() == FTy->getParamType(i),
            "Call parameter type does not match function signature!",
            Call.getArgOperand(i), FTy->getParamType(i), Call);
+  }
 
   AttributeList Attrs = Call.getAttributes();
 
+  RCORPrint( errs() << "Visit CallBase:6: " << Broken << "\n" );
   Assert(verifyAttributeCount(Attrs, Call.arg_size()),
          "Attribute after last parameter!", Call);
 
+  RCORPrint( errs() << "Visit CallBase:7: " << Broken << "\n" );
   bool IsIntrinsic = Call.getCalledFunction() &&
                      Call.getCalledFunction()->getName().startswith("llvm.");
 
@@ -2904,6 +3015,7 @@ void Verifier::visitCallBase(CallBase &Call) {
            "speculatable attribute may not apply to call sites", Call);
   }
 
+  RCORPrint( errs() << "Visit CallBase:8: " << Broken << "\n" );
   // Verify call attributes.
   verifyFunctionAttrs(FTy, Attrs, &Call, IsIntrinsic);
 
@@ -2921,6 +3033,7 @@ void Verifier::visitCallBase(CallBase &Call) {
   // make sure the underlying alloca/parameter it comes from has a swifterror as
   // well.
   for (unsigned i = 0, e = FTy->getNumParams(); i != e; ++i) {
+    RCORPrint( errs() << "Visit CallBase:9: " << Broken << "\n" );
     if (Call.paramHasAttr(i, Attribute::SwiftError)) {
       Value *SwiftErrorArg = Call.getArgOperand(i);
       if (auto AI = dyn_cast<AllocaInst>(SwiftErrorArg->stripInBoundsOffsets())) {
@@ -2952,6 +3065,7 @@ void Verifier::visitCallBase(CallBase &Call) {
     }
   }
 
+  RCORPrint( errs() << "Visit CallBase:10: " << Broken << "\n" );
   if (FTy->isVarArg()) {
     // FIXME? is 'nest' even legal here?
     bool SawNest = false;
@@ -3000,6 +3114,7 @@ void Verifier::visitCallBase(CallBase &Call) {
     }
   }
 
+  RCORPrint( errs() << "Visit CallBase:11: " << Broken << "\n" );
   // Verify that there's no metadata unless it's a direct call to an intrinsic.
   if (!IsIntrinsic) {
     for (Type *ParamTy : FTy->params()) {
@@ -3010,15 +3125,18 @@ void Verifier::visitCallBase(CallBase &Call) {
     }
   }
 
+  RCORPrint( errs() << "Visit CallBase:12: " << Broken << "\n" );
   // Verify that indirect calls don't return tokens.
   if (!Call.getCalledFunction())
     Assert(!FTy->getReturnType()->isTokenTy(),
            "Return type cannot be token for indirect call!");
 
+  RCORPrint( errs() << "Visit CallBase:13: " << Broken << "\n" );
   if (Function *F = Call.getCalledFunction())
     if (Intrinsic::ID ID = (Intrinsic::ID)F->getIntrinsicID())
       visitIntrinsicCall(ID, Call);
 
+  RCORPrint( errs() << "Visit CallBase:14: " << Broken << "\n" );
   // Verify that a callsite has at most one "deopt", at most one "funclet", at
   // most one "gc-transition", and at most one "cfguardtarget" operand bundle.
   bool FoundDeoptBundle = false, FoundFuncletBundle = false,
@@ -3050,6 +3168,7 @@ void Verifier::visitCallBase(CallBase &Call) {
     }
   }
 
+  RCORPrint( errs() << "Visit CallBase:15: " << Broken << "\n" );
   // Verify that each inlinable callsite of a debug-info-bearing function in a
   // debug-info-bearing function has a debug location attached to it. Failure to
   // do so causes assertion failures when the inliner sets up inline scope info.
@@ -3060,7 +3179,9 @@ void Verifier::visitCallBase(CallBase &Call) {
              "debug info must have a !dbg location",
              Call);
 
+  RCORPrint( errs() << "Visit CallBase:16: " << Broken << "\n" );
   visitInstruction(Call);
+  RCORPrint( errs() << "Visit CallBase:-: " << Broken << "\n" );
 }
 
 /// Two types are "congruent" if they are identical, or if they are both pointer
@@ -3156,15 +3277,20 @@ void Verifier::verifyMustTailCall(CallInst &CI) {
 }
 
 void Verifier::visitCallInst(CallInst &CI) {
+  RCORPrint( errs() << "Visit CallInst:1: " << Broken << "\n" );
   visitCallBase(CI);
 
+  RCORPrint( errs() << "Visit CallInst:2: " << Broken << "\n" );
   if (CI.isMustTailCall())
     verifyMustTailCall(CI);
+  RCORPrint( errs() << "Visit CallInst:-: " << Broken << "\n" );
 }
 
 void Verifier::visitInvokeInst(InvokeInst &II) {
+  RCORPrint( errs() << "Visit Invoke:1: " << Broken << "\n" );
   visitCallBase(II);
 
+  RCORPrint( errs() << "Visit Invoke:2: " << Broken << "\n" );
   // Verify that the first non-PHI instruction of the unwind destination is an
   // exception handling instruction.
   Assert(
@@ -3172,7 +3298,9 @@ void Verifier::visitInvokeInst(InvokeInst &II) {
       "The unwind destination does not have an exception handling instruction!",
       &II);
 
+  RCORPrint( errs() << "Visit Invoke:3: " << Broken << "\n" );
   visitTerminator(II);
+  RCORPrint( errs() << "Visit Invoke:-: " << Broken << "\n" );
 }
 
 /// visitUnaryOperator - Check the argument to the unary operator.
@@ -3295,45 +3423,60 @@ void Verifier::visitFCmpInst(FCmpInst &FC) {
 }
 
 void Verifier::visitExtractElementInst(ExtractElementInst &EI) {
+  RCORPrint( errs() << "Visit ExtractElement:1: " << Broken << "\n" );
   Assert(
       ExtractElementInst::isValidOperands(EI.getOperand(0), EI.getOperand(1)),
       "Invalid extractelement operands!", &EI);
+  RCORPrint( errs() << "Visit ExtractElement:2: " << Broken << "\n" );
   visitInstruction(EI);
+  RCORPrint( errs() << "Visit ExtractElement:-: " << Broken << "\n" );
 }
 
 void Verifier::visitInsertElementInst(InsertElementInst &IE) {
+  RCORPrint( errs() << "Visit InsertElement:1: " << Broken << "\n" );
   Assert(InsertElementInst::isValidOperands(IE.getOperand(0), IE.getOperand(1),
                                             IE.getOperand(2)),
          "Invalid insertelement operands!", &IE);
+  RCORPrint( errs() << "Visit InsertElement:2: " << Broken << "\n" );
   visitInstruction(IE);
+  RCORPrint( errs() << "Visit InsertElement:-: " << Broken << "\n" );
 }
 
 void Verifier::visitShuffleVectorInst(ShuffleVectorInst &SV) {
+  RCORPrint( errs() << "Visit ShuffleVector:1: " << Broken << "\n" );
   Assert(ShuffleVectorInst::isValidOperands(SV.getOperand(0), SV.getOperand(1),
                                             SV.getShuffleMask()),
          "Invalid shufflevector operands!", &SV);
+  RCORPrint( errs() << "Visit ShuffleVector:2: " << Broken << "\n" );
   visitInstruction(SV);
+  RCORPrint( errs() << "Visit ShuffleVector:-: " << Broken << "\n" );
 }
 
 void Verifier::visitGetElementPtrInst(GetElementPtrInst &GEP) {
+  RCORPrint( errs() << "Visit GEP:1: " << Broken << "\n" );
   Type *TargetTy = GEP.getPointerOperandType()->getScalarType();
 
   Assert(isa<PointerType>(TargetTy),
          "GEP base pointer is not a vector or a vector of pointers", &GEP);
+  RCORPrint( errs() << "Visit GEP:2: " << Broken << "\n" );
   Assert(GEP.getSourceElementType()->isSized(), "GEP into unsized type!", &GEP);
+  RCORPrint( errs() << "Visit GEP:3: " << Broken << "\n" );
 
   SmallVector<Value*, 16> Idxs(GEP.idx_begin(), GEP.idx_end());
   Assert(all_of(
       Idxs, [](Value* V) { return V->getType()->isIntOrIntVectorTy(); }),
       "GEP indexes must be integers", &GEP);
+  RCORPrint( errs() << "Visit GEP:4: " << Broken << "\n" );
   Type *ElTy =
       GetElementPtrInst::getIndexedType(GEP.getSourceElementType(), Idxs);
   Assert(ElTy, "Invalid indices for GEP pointer type!", &GEP);
 
+  RCORPrint( errs() << "Visit GEP:5: " << Broken << "\n" );
   Assert(GEP.getType()->isPtrOrPtrVectorTy() &&
              GEP.getResultElementType() == ElTy,
          "GEP is not of right type for indices!", &GEP, ElTy);
 
+  RCORPrint( errs() << "Visit GEP:6: " << Broken << "\n" );
   if (auto *GEPVTy = dyn_cast<VectorType>(GEP.getType())) {
     // Additional checks for vector GEPs.
     unsigned GEPWidth = GEPVTy->getNumElements();
@@ -3353,12 +3496,15 @@ void Verifier::visitGetElementPtrInst(GetElementPtrInst &GEP) {
     }
   }
 
+  RCORPrint( errs() << "Visit GEP:7: " << Broken << "\n" );
   if (auto *PTy = dyn_cast<PointerType>(GEP.getType())) {
     Assert(GEP.getAddressSpace() == PTy->getAddressSpace(),
            "GEP address space doesn't match type", &GEP);
   }
 
+  RCORPrint( errs() << "Visit GEP:8: " << Broken << "\n" );
   visitInstruction(GEP);
+  RCORPrint( errs() << "Visit GEP:-: " << Broken << "\n" );
 }
 
 static bool isContiguous(const ConstantRange &A, const ConstantRange &B) {
@@ -3421,12 +3567,15 @@ void Verifier::checkAtomicMemAccessSize(Type *Ty, const Instruction *I) {
 }
 
 void Verifier::visitLoadInst(LoadInst &LI) {
+  RCORPrint( errs() << "Visit Load:1: " << Broken << "\n" );
   PointerType *PTy = dyn_cast<PointerType>(LI.getOperand(0)->getType());
   Assert(PTy, "Load operand must be a pointer.", &LI);
   Type *ElTy = LI.getType();
   Assert(LI.getAlignment() <= Value::MaximumAlignment,
          "huge alignment values are unsupported", &LI);
+  RCORPrint( errs() << "Visit Load:2: " << Broken << "\n" );
   Assert(ElTy->isSized(), "loading unsized types is not allowed", &LI);
+  RCORPrint( errs() << "Visit Load:3: " << Broken << "\n" );
   if (LI.isAtomic()) {
     Assert(LI.getOrdering() != AtomicOrdering::Release &&
                LI.getOrdering() != AtomicOrdering::AcquireRelease,
@@ -3443,18 +3592,24 @@ void Verifier::visitLoadInst(LoadInst &LI) {
            "Non-atomic load cannot have SynchronizationScope specified", &LI);
   }
 
+  RCORPrint( errs() << "Visit Load:4: " << Broken << "\n" );
   visitInstruction(LI);
+  RCORPrint( errs() << "Visit Load:-: " << Broken << "\n" );
 }
 
 void Verifier::visitStoreInst(StoreInst &SI) {
+  RCORPrint( errs() << "Visit Store:1: " << Broken << "\n" );
   PointerType *PTy = dyn_cast<PointerType>(SI.getOperand(1)->getType());
   Assert(PTy, "Store operand must be a pointer.", &SI);
   Type *ElTy = PTy->getElementType();
   Assert(ElTy == SI.getOperand(0)->getType(),
          "Stored value type does not match pointer operand type!", &SI, ElTy);
+  RCORPrint( errs() << "Visit Store:2: " << Broken << "\n" );
   Assert(SI.getAlignment() <= Value::MaximumAlignment,
          "huge alignment values are unsupported", &SI);
+  RCORPrint( errs() << "Visit Store:3: " << Broken << "\n" );
   Assert(ElTy->isSized(), "storing unsized types is not allowed", &SI);
+  RCORPrint( errs() << "Visit Store:4: " << Broken << "\n" );
   if (SI.isAtomic()) {
     Assert(SI.getOrdering() != AtomicOrdering::Acquire &&
                SI.getOrdering() != AtomicOrdering::AcquireRelease,
@@ -3470,7 +3625,9 @@ void Verifier::visitStoreInst(StoreInst &SI) {
     Assert(SI.getSyncScopeID() == SyncScope::System,
            "Non-atomic store cannot have SynchronizationScope specified", &SI);
   }
+  RCORPrint( errs() << "Visit Store:5: " << Broken << "\n" );
   visitInstruction(SI);
+  RCORPrint( errs() << "Visit Store:-: " << Broken << "\n" );
 }
 
 /// Check that SwiftErrorVal is used as a swifterror argument in CS.
@@ -3607,20 +3764,26 @@ void Verifier::visitFenceInst(FenceInst &FI) {
 }
 
 void Verifier::visitExtractValueInst(ExtractValueInst &EVI) {
+  RCORPrint( errs() << "Visit ExtractValue:1: " << Broken << "\n" );
   Assert(ExtractValueInst::getIndexedType(EVI.getAggregateOperand()->getType(),
                                           EVI.getIndices()) == EVI.getType(),
          "Invalid ExtractValueInst operands!", &EVI);
 
+  RCORPrint( errs() << "Visit ExtractValue:2: " << Broken << "\n" );
   visitInstruction(EVI);
+  RCORPrint( errs() << "Visit ExtractValue:-: " << Broken << "\n" );
 }
 
 void Verifier::visitInsertValueInst(InsertValueInst &IVI) {
+  RCORPrint( errs() << "Visit InsertValue:1: " << Broken << "\n" );
   Assert(ExtractValueInst::getIndexedType(IVI.getAggregateOperand()->getType(),
                                           IVI.getIndices()) ==
              IVI.getOperand(1)->getType(),
          "Invalid InsertValueInst operands!", &IVI);
 
+  RCORPrint( errs() << "Visit InsertValue:2: " << Broken << "\n" );
   visitInstruction(IVI);
+  RCORPrint( errs() << "Visit InsertValue:-: " << Broken << "\n" );
 }
 
 static Value *getParentPad(Value *EHPad) {

@@ -6123,6 +6123,8 @@ bool SimplifyCFGOpt::simplifyOnce(BasicBlock *BB) {
   assert(BB && BB->getParent() && "Block not embedded in function!");
   assert(BB->getTerminator() && "Degenerate basic block encountered!");
 
+  //errs() << "Here 0\n";
+
   // Remove basic blocks that have no predecessors (except the entry block)...
   // or that just have themself as a predecessor.  These are unreachable.
   if ((pred_empty(BB) && BB != &BB->getParent()->getEntryBlock()) ||
@@ -6132,15 +6134,23 @@ bool SimplifyCFGOpt::simplifyOnce(BasicBlock *BB) {
     return true;
   }
 
+  //errs() << "Here 1\n";
+
   // Check to see if we can constant propagate this terminator instruction
   // away...
   Changed |= ConstantFoldTerminator(BB, true);
 
+  //errs() << "Here 2\n";
+
   // Check for and eliminate duplicate PHI nodes in this block.
   Changed |= EliminateDuplicatePHINodes(BB);
 
+  //errs() << "Here 3\n";
+
   // Check for and remove branches that will always cause undefined behavior.
   Changed |= removeUndefIntroducingPredecessor(BB);
+
+  //errs() << "Here 4\n";
 
   // Merge basic blocks into their predecessor if there is only one distinct
   // pred, and if there is only one distinct successor of the predecessor, and
@@ -6148,16 +6158,22 @@ bool SimplifyCFGOpt::simplifyOnce(BasicBlock *BB) {
   if (MergeBlockIntoPredecessor(BB))
     return true;
 
+  //errs() << "Here 5\n";
+
   if (SinkCommon && Options.SinkCommonInsts)
     Changed |= SinkCommonCodeFromPredecessors(BB);
 
   IRBuilder<> Builder(BB);
+
+  //errs() << "Here 6\n";
 
   // If there is a trivial two-entry PHI node in this basic block, and we can
   // eliminate it, do so now.
   if (auto *PN = dyn_cast<PHINode>(BB->begin()))
     if (PN->getNumIncomingValues() == 2)
       Changed |= FoldTwoEntryPHINode(PN, TTI, DL);
+
+  //errs() << "Here 7\n";
 
   Instruction *Terminator = BB->getTerminator();
   Builder.SetInsertPoint(Terminator);
@@ -6184,6 +6200,8 @@ bool SimplifyCFGOpt::simplifyOnce(BasicBlock *BB) {
     Changed |= simplifyIndirectBr(cast<IndirectBrInst>(Terminator));
     break;
   }
+
+  //errs() << "Here 8\n";
 
   return Changed;
 }

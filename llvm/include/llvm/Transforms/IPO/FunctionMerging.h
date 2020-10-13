@@ -199,10 +199,6 @@ private:
   static bool matchInstructions(Instruction *I1, Instruction *I2, const FunctionMergingOptions &Options = {});
   static bool matchWholeBlocks(Value *V1, Value *V2);
 
-  void replaceByCall(Function *F, FunctionMergeResult &MergedFunc, const FunctionMergingOptions &Options = {});
-  bool replaceCallsWith(Function *F, FunctionMergeResult &MergedFunc, const FunctionMergingOptions &Options = {});
-
-  void updateCallGraph(Function *F, FunctionMergeResult &MFR, StringSet<> &AlwaysPreserved, const FunctionMergingOptions &Options);
 
 public:
   FunctionMerger(Module *M, ProfileSummaryInfo *PSI=nullptr, function_ref<BlockFrequencyInfo *(Function &)> LookupBFI=nullptr) :
@@ -218,6 +214,11 @@ public:
 
   static bool areTypesEquivalent(Type *Ty1, Type *Ty2, const DataLayout *DL, const FunctionMergingOptions &Options = {});
   static bool match(Value *V1, Value *V2);
+
+  void replaceByCall(Function *F, FunctionMergeResult &MergedFunc, const FunctionMergingOptions &Options = {});
+  bool replaceCallsWith(Function *F, FunctionMergeResult &MergedFunc, const FunctionMergingOptions &Options = {});
+
+  void updateCallGraph(Function *F, FunctionMergeResult &MFR, StringSet<> &AlwaysPreserved, const FunctionMergingOptions &Options);
 
   void updateCallGraph(FunctionMergeResult &Result, StringSet<> &AlwaysPreserved, const FunctionMergingOptions &Options = {});
 

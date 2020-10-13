@@ -798,8 +798,23 @@ bool MergeFunctions::writeThunkOrAlias(Function *F, Function *G) {
   return false;
 }
 
+static std::string GetValueName(const Value *V) {
+  if (V) {
+    std::string name;
+    raw_string_ostream namestream(name);
+    V->printAsOperand(namestream, false);
+    return namestream.str();
+  } else
+    return "[null]";
+}
+
 // Merge two equivalent functions. Upon completion, Function G is deleted.
 void MergeFunctions::mergeTwoFunctions(Function *F, Function *G) {
+  std::string FName = GetValueName(F);
+  std::string GName = GetValueName(G);
+  //F->dump();
+  //G->dump();
+
   if (F->isInterposable()) {
     assert(G->isInterposable());
 
@@ -827,6 +842,7 @@ void MergeFunctions::mergeTwoFunctions(Function *F, Function *G) {
     F->setLinkage(GlobalValue::PrivateLinkage);
     ++NumDoubleWeak;
     ++NumFunctionsMerged;
+    errs() << "Merged: " << FName << ", " << GName << " = " << GetValueName(F) << "\n";
   } else {
     // For better debugability, under MergeFunctionsPDI, we do not modify G's
     // call sites to point to F even when within the same translation unit.
@@ -852,10 +868,12 @@ void MergeFunctions::mergeTwoFunctions(Function *F, Function *G) {
     if (G->isDiscardableIfUnused() && G->use_empty() && !MergeFunctionsPDI) {
       G->eraseFromParent();
       ++NumFunctionsMerged;
+      errs() << "Merged: " << FName << ", " << GName << " = " << GetValueName(F) << "\n";
       return;
     }
 
     if (writeThunkOrAlias(F, G)) {
+      errs() << "Merged: " << FName << ", " << GName << " = " << GetValueName(F) << "\n";
       ++NumFunctionsMerged;
     }
   }
