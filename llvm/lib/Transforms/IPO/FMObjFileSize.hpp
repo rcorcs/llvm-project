@@ -287,7 +287,7 @@ Optional<size_t> MeasureSize(std::vector<Function*> &Fs, Module &M, bool Timeout
 
   std::remove("/tmp/.tmp.o");
 
-  std::string ClangPath = "/home/rodrigo/salssa20/build/bin/clang";
+  std::string ClangPath = TestFM_ClangPATH;
   //std::string Cmd = std::string("rm /tmp/.tmp.o; ")+(Timeout?std::string("timeout -s KILL 2m "):std::string(""))+ClangPath+std::string(" -x ir /tmp/.tmp.ll -Os -c -o /tmp/.tmp.o");
   std::string Cmd = (Timeout?std::string("timeout -s KILL 5m "):std::string(""))+ClangPath+std::string(" -x ir /tmp/.tmp.ll -Os -c -o /tmp/.tmp.o");
   bool CompilationOK = !std::system(Cmd.c_str());
@@ -323,7 +323,8 @@ Optional<size_t> MeasureSize(Module &M, bool Timeout=true) {
 
   std::remove("/tmp/.tmp.o");
 
-  std::string ClangPath = "/home/rodrigo/salssa20/build/bin/clang";
+  //std::string ClangPath = "/home/rodrigo/salssa20/build/bin/clang";
+  std::string ClangPath = TestFM_ClangPATH;
   std::string Cmd = (Timeout?std::string("timeout -s KILL 5m "):std::string(""))+ClangPath+std::string(" -x ir /tmp/.tmp.ll -Os -c -o /tmp/.tmp.o");
   bool CompilationOK = !std::system(Cmd.c_str());
 

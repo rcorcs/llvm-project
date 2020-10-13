@@ -218,6 +218,9 @@ static cl::opt<std::string> OptBenchName (
 static cl::opt<bool> TestFM_CompilationCostModel("fm-built-size-cost",
                             cl::init(false), cl::Hidden, cl::desc(""));
 
+static cl::opt<std::string> TestFM_ClangPATH("fm-built-size-cost-cc",
+                            cl::init(""), cl::Hidden, cl::desc(""));
+
 
 #define OPTIMIZE_SALSSA_CODEGEN
 //#define DEBUG_OUTPUT_EACH_CHANGE
