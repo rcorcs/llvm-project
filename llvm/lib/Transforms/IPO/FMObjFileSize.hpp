@@ -926,7 +926,284 @@ bool MeasureMergedSize3(unsigned &SizeF1F2, unsigned &SizeF12, Module &M, Functi
 }
 
 
+
+
+
+
+
 bool MeasureMergedSize(unsigned &SizeF1F2, unsigned &SizeF12, Module &M, FunctionMergeResult &Result, StringSet<> &AlwaysPreserved, const FunctionMergingOptions &Options={}, bool Timeout=true) {
+
+  Function *F1 = Result.getFunctions().first;
+  Function *F2 = Result.getFunctions().second;
+
+  std::set<const Function*> Fs;
+  Fs.insert(F1);
+  Fs.insert(F2);
+
+  for (User *U : F1->users()) {
+    if (Instruction *I = dyn_cast<Instruction>(U)) {
+      Fs.insert(dyn_cast<Function>(I->getParent()->getParent()));
+    }
+  }
+  for (User *U : F2->users()) {
+    if (Instruction *I = dyn_cast<Instruction>(U)) {
+      Fs.insert(dyn_cast<Function>(I->getParent()->getParent()));
+    }
+  }
+
+  ValueToValueMapTy VMap;
+
+
+  // First off, we need to create the new module.
+  std::unique_ptr<Module> New =
+      std::make_unique<Module>(M.getModuleIdentifier(), M.getContext());
+  New->setSourceFileName(M.getSourceFileName());
+  New->setDataLayout(M.getDataLayout());
+  New->setTargetTriple(M.getTargetTriple());
+  New->setModuleInlineAsm(M.getModuleInlineAsm());
+
+  // Loop over all of the global variables, making corresponding globals in the
+  // new module.  Here we add them to the VMap and to the new Module.  We
+  // don't worry about attributes or initializers, they will come later.
+  //
+  for (Module::const_global_iterator I = M.global_begin(), E = M.global_end();
+       I != E; ++I) {
+    GlobalVariable *GV = new GlobalVariable(*New,
+                                            I->getValueType(),
+                                            I->isConstant(), I->getLinkage(),
+                                            (Constant*) nullptr, I->getName(),
+                                            (GlobalVariable*) nullptr,
+                                            I->getThreadLocalMode(),
+                                            I->getType()->getAddressSpace());
+    GV->copyAttributesFrom(&*I);
+    VMap[&*I] = GV;
+  }
+
+  // Loop over the functions in the module, making external functions as before
+  for (const Function &I : M) {
+    if ( (&I)==Result.getMergedFunction()) continue;
+    Function *NF =
+        Function::Create(cast<FunctionType>(I.getValueType()), I.getLinkage(),
+                         I.getAddressSpace(), I.getName(), New.get());
+    NF->copyAttributesFrom(&I);
+    VMap[&I] = NF;
+  }
+
+  // Loop over the aliases in the module
+  for (Module::const_alias_iterator I = M.alias_begin(), E = M.alias_end();
+       I != E; ++I) {
+    //if (!ShouldCloneDefinition(&*I)) {
+      // An alias cannot act as an external reference, so we need to create
+      // either a function or a global variable depending on the value type.
+      // FIXME: Once pointee types are gone we can probably pick one or the
+      // other.
+      GlobalValue *GV;
+      if (I->getValueType()->isFunctionTy())
+        GV = Function::Create(cast<FunctionType>(I->getValueType()),
+                              GlobalValue::ExternalLinkage,
+                              I->getAddressSpace(), I->getName(), New.get());
+      else
+        GV = new GlobalVariable(
+            *New, I->getValueType(), false, GlobalValue::ExternalLinkage,
+            nullptr, I->getName(), nullptr,
+            I->getThreadLocalMode(), I->getType()->getAddressSpace());
+      VMap[&*I] = GV;
+      // We do not copy attributes (mainly because copying between different
+      // kinds of globals is forbidden), but this is generally not required for
+      // correctness.
+      continue;
+    //}
+    /*
+    auto *GA = GlobalAlias::create(I->getValueType(),
+                                   I->getType()->getPointerAddressSpace(),
+                                   I->getLinkage(), I->getName(), New.get());
+    GA->copyAttributesFrom(&*I);
+    VMap[&*I] = GA;
+    */
+  }
+
+  // Now that all of the things that global variable initializer can refer to
+  // have been created, loop through and copy the global variable referrers
+  // over...  We also set the attributes on the global now.
+  //
+  for (Module::const_global_iterator I = M.global_begin(), E = M.global_end();
+       I != E; ++I) {
+    if (I->isDeclaration())
+      continue;
+
+    GlobalVariable *GV = cast<GlobalVariable>(VMap[&*I]);
+    /*if (!ShouldCloneDefinition(&*I)) {
+      // Skip after setting the correct linkage for an external reference.
+      GV->setLinkage(GlobalValue::ExternalLinkage);
+      continue;
+    }
+    */
+    if (I->hasInitializer())
+      GV->setInitializer(MapValue(I->getInitializer(), VMap));
+
+    SmallVector<std::pair<unsigned, MDNode *>, 1> MDs;
+    I->getAllMetadata(MDs);
+    for (auto MD : MDs)
+      GV->addMetadata(MD.first,
+                      *MapMetadata(MD.second, VMap, RF_MoveDistinctMDs));
+    
+    copyComdat(GV, &*I);
+  }
+
+  // Similarly, copy over function bodies now...
+  //
+  for (const Function &I : M) {
+    if (I.isDeclaration())
+      continue;
+
+    if ( (&I)==Result.getMergedFunction()) continue;
+
+    Function *F = cast<Function>(VMap[&I]);
+
+
+    //if (!ShouldCloneDefinition(&I)) {
+    if (Fs.count(&I)==0) {
+      // Skip after setting the correct linkage for an external reference.
+      F->setLinkage(GlobalValue::ExternalLinkage);
+      // Personality function is not valid on a declaration.
+      F->setPersonalityFn(nullptr);
+      continue;
+    }
+
+    Function::arg_iterator DestI = F->arg_begin();
+    for (Function::const_arg_iterator J = I.arg_begin(); J != I.arg_end();
+         ++J) {
+      DestI->setName(J->getName());
+      VMap[&*J] = &*DestI++;
+    }
+
+    SmallVector<ReturnInst *, 8> Returns; // Ignore returns cloned.
+    CloneFunctionInto(F, &I, VMap, /*ModuleLevelChanges=*/true, Returns);
+
+    if (I.hasPersonalityFn())
+      F->setPersonalityFn(MapValue(I.getPersonalityFn(), VMap));
+
+    copyComdat(F, &I);
+  }
+
+  // And aliases
+  /*
+  for (Module::const_alias_iterator I = M.alias_begin(), E = M.alias_end();
+       I != E; ++I) {
+    // We already dealt with undefined aliases above.
+    if (!ShouldCloneDefinition(&*I))
+      continue;
+    GlobalAlias *GA = cast<GlobalAlias>(VMap[&*I]);
+    if (const Constant *C = I->getAliasee())
+      GA->setAliasee(MapValue(C, VMap));
+  }*/
+  
+  // And named metadata....
+  const auto* LLVM_DBG_CU = M.getNamedMetadata("llvm.dbg.cu");
+  for (Module::const_named_metadata_iterator I = M.named_metadata_begin(),
+                                             E = M.named_metadata_end();
+       I != E; ++I) {
+    const NamedMDNode &NMD = *I;
+    NamedMDNode *NewNMD = New->getOrInsertNamedMetadata(NMD.getName());
+    if (&NMD == LLVM_DBG_CU) {
+      // Do not insert duplicate operands.
+      SmallPtrSet<const void*, 8> Visited;
+      for (const auto* Operand : NewNMD->operands())
+        Visited.insert(Operand);
+      for (const auto* Operand : NMD.operands()) {
+        auto* MappedOperand = MapMetadata(Operand, VMap);
+        if (Visited.insert(MappedOperand).second)
+          NewNMD->addOperand(MappedOperand);
+      }
+    } else
+      for (unsigned i = 0, e = NMD.getNumOperands(); i != e; ++i)
+        NewNMD->addOperand(MapMetadata(NMD.getOperand(i), VMap));
+  }
+
+
+  ///late cleanup
+  for (Module::alias_iterator I = New->alias_begin(), E = New->alias_end();
+       I != E;) {
+    auto *V = &*I;
+    I++;
+    if ( V->getNumUses() == 0 ) V->eraseFromParent();
+  }
+  for (Module::global_iterator I = New->global_begin(), E = New->global_end();
+       I != E;) {
+    auto *V = &*I;
+    I++;
+    if ( V->getNumUses() == 0 ) V->eraseFromParent();
+  }
+
+  Optional<size_t> SizeF1F2Opt = MeasureSize(*New,Timeout);
+
+  //CloneFunctionAcrossModule(Result.getMergedFunction(),&*NewM,VMap, true);
+  //VMap[Result.getMergedFunction()]->setName( std::string("f")+std::to_string(Count++) );
+
+  {
+    Function &I = *Result.getMergedFunction();
+
+    Function *NF =
+        Function::Create(cast<FunctionType>(I.getValueType()), I.getLinkage(),
+                         I.getAddressSpace(), I.getName(), New.get());
+    NF->copyAttributesFrom(&I);
+    VMap[&I] = NF;
+
+    Function *F = NF;//cast<Function>(VMap[&I]);
+
+    /*
+    if (!ShouldCloneDefinition(&I)) {
+      // Skip after setting the correct linkage for an external reference.
+      F->setLinkage(GlobalValue::ExternalLinkage);
+      // Personality function is not valid on a declaration.
+      F->setPersonalityFn(nullptr);
+      continue;
+    }
+    */
+
+    Function::arg_iterator DestI = F->arg_begin();
+    for (Function::const_arg_iterator J = I.arg_begin(); J != I.arg_end();
+         ++J) {
+      DestI->setName(J->getName());
+      VMap[&*J] = &*DestI++;
+    }
+
+    SmallVector<ReturnInst *, 8> Returns; // Ignore returns cloned.
+    CloneFunctionInto(F, &I, VMap, /*ModuleLevelChanges=*/true, Returns);
+
+    if (I.hasPersonalityFn())
+      F->setPersonalityFn(MapValue(I.getPersonalityFn(), VMap));
+
+    copyComdat(F, &I);
+
+  }
+
+  Function *NewF1 = dyn_cast<Function>(VMap[F1]);
+  Function *NewF2 = dyn_cast<Function>(VMap[F2]);
+  Function *NewMF = dyn_cast<Function>(VMap[Result.getMergedFunction()]);
+  FunctionMergeResult NewResult(NewF1, NewF2, NewMF, Result.needUnifiedReturn());
+  NewResult.setArgumentMapping(NewF1, Result.getArgumentMapping(F1));
+  NewResult.setArgumentMapping(NewF2, Result.getArgumentMapping(F2));
+  NewResult.setFunctionIdArgument(Result.hasFunctionIdArgument());
+
+  //apply NewResults
+  FunctionMerger Merger(New.get());
+  Merger.updateCallGraph(NewResult, AlwaysPreserved, Options);
+
+  Optional<size_t> SizeF12Opt = MeasureSize(*New,Timeout);
+  if (SizeF1F2Opt.hasValue() && SizeF12Opt.hasValue() && SizeF1F2Opt.getValue() && SizeF12Opt.getValue()) {
+            SizeF1F2 = SizeF1F2Opt.getValue();
+            SizeF12 = SizeF12Opt.getValue();
+  } else {
+    errs() << "Sizes: Could NOT Compute!\n";
+    return false;
+  }
+  return true;
+
+
+}
+
+bool MeasureMergedSize5(unsigned &SizeF1F2, unsigned &SizeF12, Module &M, FunctionMergeResult &Result, StringSet<> &AlwaysPreserved, const FunctionMergingOptions &Options={}, bool Timeout=true) {
 
   Optional<size_t> SizeF1F2Opt;
   {
@@ -969,6 +1246,13 @@ bool MeasureMergedSize(unsigned &SizeF1F2, unsigned &SizeF12, Module &M, Functio
         continue;
       }
       auto *SrcF = dyn_cast<Function>(I->getAliasee());
+      if (SrcF==nullptr) {
+        if (auto *C = dyn_cast<Constant>(I->getAliasee()) ) {
+	  if (C->getNumOperands()==1) {
+            SrcF = dyn_cast<Function>(C->getOperand(0));
+	  }
+	}
+      }
       if (SrcF) {
         auto *F = dyn_cast<Function>(VMap[SrcF]);
         if (F->isDeclaration()) {
@@ -1028,6 +1312,13 @@ bool MeasureMergedSize(unsigned &SizeF1F2, unsigned &SizeF12, Module &M, Functio
         continue;
       }
       auto *SrcF = dyn_cast<Function>(I->getAliasee());
+      if (SrcF==nullptr) {
+        if (auto *C = dyn_cast<Constant>(I->getAliasee()) ) {
+	  if (C->getNumOperands()==1) {
+            SrcF = dyn_cast<Function>(C->getOperand(0));
+	  }
+	}
+      }
       if (SrcF) {
         auto *F = dyn_cast<Function>(VMap[SrcF]);
         if (F->isDeclaration()) {
