@@ -102,6 +102,7 @@
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 
+#include "llvm/Support/raw_os_ostream.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -1176,7 +1177,7 @@ static bool validMergePair(Function *F1, Function *F2) {
   if (!HasWholeProgram && (F1->hasLinkOnceLinkage() ||
       F2->hasLinkOnceLinkage())) return false;
 
-  if (!F1->getSection().equals(F2->getSection())) return false;
+  //if (!F1->getSection().equals(F2->getSection())) return false;
 
 //  if (F1->hasSection()!=F2->hasSection()) return false;
 //  if (F1->hasSection() && !F1->getSection().equals(F2->getSection())) return false;
@@ -3047,15 +3048,63 @@ static void WriteTrainingFile(Function *F1, Function *F2, bool Profitable, bool 
    
         out << GetTypeName(Ty) << "\n";
       
-      } else out << "label\n";
+      } else out << "#label\n";
     }
-    out << "EOS\n";
+    out << "#EOS\n";
   };
+  out << "#fn: " << GetValueName(F1) << "\n";
   WriteFunc(F1Vec);
+  out << "#fn: " << GetValueName(F2) << "\n";
   WriteFunc(F2Vec);
 
   out.close();
 }
+
+static void WriteTrainingFile2(Function *F1, Function *F2, bool Profitable, bool Append=true) {
+
+  SmallVector<Value*,8> F1Vec;
+  SmallVector<Value*,8> F2Vec;
+  TmpLinearize(F1,F1Vec);
+  TmpLinearize(F2,F2Vec);
+
+  //std::string FileName = "../training-full.txt";
+  //std::error_code ec;
+  //llvm::raw_fd_ostream os(FileName, ec, llvm::sys::fs::OF_Text);
+
+  std::ofstream out("../training-full.txt", Append ? (std::ofstream::out | std::ofstream::app) : std::ofstream::out );
+  llvm::raw_os_ostream os(out);
+
+  out << "= " << ((int)Profitable) << "\n";
+  auto WriteFunc = [&](auto &Vec) {
+    for (Value *V : Vec) {
+      if (Instruction *I = dyn_cast<Instruction>(V)) {
+        I->print(os);
+        out << "\n";
+        /*
+	out << I->getOpcodeName() << " ";
+        Type *Ty = I->getType();
+        if (StoreInst *SI = dyn_cast<StoreInst>(I)) {
+            Ty = SI->getValueOperand()->getType();
+        } else if (ReturnInst *RI = dyn_cast<ReturnInst>(I)) {
+            if (RI->getReturnValue()) Ty = RI->getReturnValue()->getType();
+        }
+        out << GetTypeName(Ty) << "\n";
+	*/
+      } else {
+	out << "#label: " << GetValueName(V) << "\n";
+      }
+    }
+    out << "#EOS\n";
+  };
+  
+  out << "#fn: " << GetValueName(F1) << "\n";
+  WriteFunc(F1Vec);
+  out << "#fn: " << GetValueName(F2) << "\n";
+  WriteFunc(F2Vec);
+
+  out.close();
+}
+
 
 #include "FMObjFileSize.hpp"
 
@@ -3241,6 +3290,7 @@ bool FunctionMerging::runOnModule(Module &M) {
         TimePrediction.startTimer();
 
         WriteTrainingFile(F1,F2, false, false);
+        WriteTrainingFile2(F1,F2, false, false);
         std::string Cmd = std::string("python3 /home/rodrigo/ml/deepopt/repo/src/predict.py /home/rodrigo/ml/deepopt/testing.txt ") + OptBenchName + std::string(" ../training.txt > /tmp/prediction.txt");
         bool BadMeasurement = std::system(Cmd.c_str());
         if ( !BadMeasurement ) {
@@ -3339,20 +3389,26 @@ bool FunctionMerging::runOnModule(Module &M) {
           //Optional<size_t> SizeF12Opt = MeasureMergedSize(M,Result,AlwaysPreserved,Options);
 
 	  
-	  /* oracle
+	  /* //oracle
           SizeF12Opt = MeasureSize(M,Result,AlwaysPreserved,Options);
-	  
+	 
           if (SizeF1F2Opt.hasValue() && SizeF12Opt.hasValue() && SizeF1F2Opt.getValue() && SizeF12Opt.getValue()) {
             SizeF1F2 = SizeF1F2Opt.getValue();
             SizeF12 = SizeF12Opt.getValue();
           } else {
             errs() << "Sizes: Could NOT Compute!\n";
+            if (Result.getMergedFunction() != nullptr)
+              Result.getMergedFunction()->eraseFromParent();
             continue; //only accept compiled estimates
           }
 	  */
          
 	  //errs() << "Here 3\n";
-          if (!MeasureMergedSize(SizeF1F2,SizeF12,M,Result,AlwaysPreserved,Options)) continue;
+          if (!MeasureMergedSize(SizeF1F2,SizeF12,M,Result,AlwaysPreserved,Options)) {
+            if (Result.getMergedFunction() != nullptr)
+              Result.getMergedFunction()->eraseFromParent();
+	     continue;
+	  }
         } 
 
 	Profitable = (SizeF12 <
@@ -3371,6 +3427,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 	
         if ((GenTestingData || GenTrainingData) && EnableSALSSA) {
 	   WriteTrainingFile(F1,F2, Profitable);
+           WriteTrainingFile2(F1,F2, Profitable);
         }
 
         if (GenTrainingData && EnableSALSSA) {
@@ -5012,8 +5069,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         InstSet.insert(I);
 
       	//Create a coalescing group in InstSet
-        //if (EnableSALSSACoalescing)
-      	//  OptimizeCoalescing(I,InstSet,CoalescingCandidates,Visited);
+        if (EnableSALSSACoalescing)
+      	  OptimizeCoalescing(I,InstSet,CoalescingCandidates,Visited);
 
         for (Instruction *OtherI : InstSet)
       	  Visited.insert(OtherI);
