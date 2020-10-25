@@ -1,4 +1,4 @@
-//===- LoopRerolling.h - Loop rerolling pass ---------------------------------===//
+//===- LoopRolling.h - Loop rolling pass ---------------------------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_TRANSFORMS_SCALAR_LOOPREROLLING_H
-#define LLVM_TRANSFORMS_SCALAR_LOOPREROLLING_H
+#ifndef LLVM_TRANSFORMS_SCALAR_LOOPROLLING_H
+#define LLVM_TRANSFORMS_SCALAR_LOOPROLLING_H
 
 #include "llvm/IR/PassManager.h"
 #include "llvm/Transforms/Scalar/LoopPassManager.h"
@@ -19,7 +19,7 @@ namespace llvm {
 
 class Function;
 
-class LoopRerolling : public PassInfoMixin<LoopRerolling> {
+class LoopRolling : public PassInfoMixin<LoopRolling> {
 public:
   /// Run the pass over the function.
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
@@ -34,4 +34,4 @@ private:
 
 } // end namespace llvm
 
-#endif // LLVM_TRANSFORMS_SCALAR_LOOPREROLL_H
+#endif // LLVM_TRANSFORMS_SCALAR_LOOPROLLING_H
