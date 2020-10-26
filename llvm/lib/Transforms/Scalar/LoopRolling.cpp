@@ -589,8 +589,11 @@ void LoopRolling::collectSeedInstructions(BasicBlock &BB) {
 }
 
 bool LoopRolling::runImpl(Function &F) {
-  for (BasicBlock &BB : F) {
-    collectSeedInstructions(BB);
+  std::vector<BasicBlock *> Blocks;
+  for (BasicBlock &BB : F) Blocks.push_back(&BB);
+
+  for (BasicBlock *BB : Blocks) {
+    collectSeedInstructions(*BB);
     for (auto &Pair : Seeds) {
       if (Pair.second.size()>1)
         buildTree(Pair.second); 
