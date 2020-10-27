@@ -486,7 +486,7 @@ void PassManagerBuilder::addFunctionSimplificationPasses(
   addExtensionsToPM(EP_ScalarOptimizerLate, MPM);
 
   //if (RerollLoops)
-  MPM.add(createLoopRerollPass());
+  //MPM.add(createLoopRerollPass());
   //MPM.add(createLoopRerollingPass());
 
   // TODO: Investigate if this is too expensive at O1.

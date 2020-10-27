@@ -447,7 +447,7 @@ static Instruction *SchedulingPoint(Tree &T, BasicBlock &BB) {
   return &*SplitPt;
 }
 
-static void CodeGen(Tree &T, BasicBlock &BB) {
+static void codeGeneration(Tree &T, BasicBlock &BB) {
   LLVMContext &Context = BB.getParent()->getContext();
 
   Instruction *InstSplitPt = SchedulingPoint(T, BB);
@@ -506,9 +506,15 @@ static void CodeGen(Tree &T, BasicBlock &BB) {
     }
 
     for (auto It = Garbage.rbegin(), E = Garbage.rend(); It!=E; It++) {
+      //TODO: remove instruction from seeds
       (*It)->eraseFromParent();
     }
-
+    
+    for (Instruction &I : BB) {
+      if (auto *PHI = dyn_cast<PHINode>(&I)) {
+        PHI->replaceIncomingBlockWith(&BB,Exit);
+      }
+    }
   } else {
     errs() << "Unprofitable: deleting generated code\n";
     for (auto It = CreatedCode.rbegin(), E = CreatedCode.rend(); It!=E; It++) {
@@ -526,16 +532,6 @@ static void CodeGen(Tree &T, BasicBlock &BB) {
   }
 }
 
-static void buildTree(std::vector<Instruction*> Seeds) {
-  for (auto *V : Seeds) V->dump();
-  Tree T(Seeds);
-
-  BasicBlock *BB = Seeds[0]->getParent();
-  CodeGen(T, *BB);
-
-  T.destroy();
-}
-
 void LoopRolling::collectSeedInstructions(BasicBlock &BB) {
   // Initialize the collections. We will make a single pass over the block.
   Seeds.clear();
@@ -551,7 +547,7 @@ void LoopRolling::collectSeedInstructions(BasicBlock &BB) {
       //  continue;
       //if (!isValidElementType(SI->getValueOperand()->getType()))
       //  continue;
-      auto &Stores = Seeds[getUnderlyingObject(SI->getPointerOperand())];
+      auto &Stores = Seeds.Stores[getUnderlyingObject(SI->getPointerOperand())];
       
       bool Valid = true;
       if (Stores.size()) {
@@ -567,7 +563,7 @@ void LoopRolling::collectSeedInstructions(BasicBlock &BB) {
 
       Function *Callee = CI->getCalledFunction();
       if (Callee && !Callee->isVarArg()) {
-        Seeds[Callee].push_back(CI);
+        Seeds.Calls[Callee].push_back(CI);
       }
     }
     // Ignore getelementptr instructions that have more than one index, a
@@ -594,11 +590,23 @@ bool LoopRolling::runImpl(Function &F) {
 
   for (BasicBlock *BB : Blocks) {
     collectSeedInstructions(*BB);
-    for (auto &Pair : Seeds) {
-      if (Pair.second.size()>1)
-        buildTree(Pair.second); 
+    for (auto &Pair : Seeds.Stores) {
+      if (Pair.second.size()>1) {
+        Tree T(Pair.second);
+        codeGeneration(T, *BB);
+        T.destroy();
+      }
+    }
+    for (auto &Pair : Seeds.Calls) {
+      if (Pair.second.size()>1) {
+        Tree T(Pair.second);
+        codeGeneration(T, *BB);
+        T.destroy();
+      }
     }
   }
+
+  F.dump();
   return true;
 }
 
