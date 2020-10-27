@@ -250,10 +250,15 @@ static bool isConstantSequence(const std::vector<ValueT *> VL) {
 
 static Value *generateGEPSequence(std::vector<Value *> &VL, Value *IndVar, Instruction *PreHeaderPt, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, ValueToValueMapTy &VMap);
 
+static Value *generateBinOpSequence(std::vector<Value *> &VL, Value *IndVar, Instruction *PreHeaderPt, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, ValueToValueMapTy &VMap);
+
 static Value *generateMismatchingCode(std::vector<Value *> &VL, Value *IndVar, Instruction *PreHeaderPt, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, ValueToValueMapTy &VMap) {
   Function *F = PreHeaderPt->getParent()->getParent();
   Module *M = F->getParent();
   LLVMContext &Context = F->getContext();
+
+  errs() << "Mismatch:\n";
+  for (Value *V : VL) V->dump();
 
   if (allConstant(VL)) {
     if (isConstantSequence(VL)) {
@@ -292,6 +297,9 @@ static Value *generateMismatchingCode(std::vector<Value *> &VL, Value *IndVar, I
     }
   } else {
     if (Value *V = generateGEPSequence(VL, IndVar, PreHeaderPt, Builder, Garbage, CreatedCode, VMap)) {
+      return V;
+    }
+    if (Value *V = generateBinOpSequence(VL, IndVar, PreHeaderPt, Builder, Garbage, CreatedCode, VMap)) {
       return V;
     }
     BasicBlock &Entry = F->getEntryBlock();
@@ -341,7 +349,7 @@ static Value *generateGEPSequence(std::vector<Value *> &VL, Value *IndVar, Instr
     }
     
     if (Ty==nullptr || !isa<IntegerType>(Ty)) return nullptr;
-
+    
     Indices[0] = ConstantInt::get(Ty, 0);
 
     for (unsigned i = 1; i<VL.size(); i++) {
@@ -355,9 +363,66 @@ static Value *generateGEPSequence(std::vector<Value *> &VL, Value *IndVar, Instr
     auto *GEP = Builder.CreateGEP(Ptr, IndVarIdx);
     CreatedCode.push_back(GEP);
     return GEP;
-  }
+  } //TODO: handle reversed loops
   return nullptr;
 }
+
+
+static Value *generateBinOpSequence(std::vector<Value *> &VL, Value *IndVar, Instruction *PreHeaderPt, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, ValueToValueMapTy &VMap) {
+
+  if (!isa<IntegerType>(VL[0]->getType())) return nullptr;
+  Type *Ty = VL[0]->getType();
+
+  std::vector<Value*> Operands;
+  Operands.push_back(nullptr);
+
+  unsigned Opcode = 0;
+  for (unsigned i = 1; i<VL.size(); i++) {
+    auto *BinOp = dyn_cast<BinaryOperator>(VL[i]);
+    if (BinOp==nullptr) return nullptr;
+
+    if (Opcode) {
+      if (Opcode!=BinOp->getOpcode()) return nullptr;
+    } else Opcode = BinOp->getOpcode();
+
+    if (BinOp->getOperand(0)!=VL[0]) return nullptr;
+    Operands.push_back(BinOp->getOperand(1));
+  }
+
+  switch(Opcode) {
+  case Instruction::Add:
+  case Instruction::Sub:
+  case Instruction::Or:
+    Operands[0] = ConstantInt::get(Ty, 0);
+    break;
+  case Instruction::Mul:
+  case Instruction::UDiv:
+  case Instruction::SDiv:
+  case Instruction::And:
+    Operands[0] = ConstantInt::get(Ty, 1);
+    break;
+  default:
+    return nullptr;
+  }
+
+  Instruction *BinOpRef = nullptr;
+  for (unsigned i = 1; i<VL.size(); i++) {
+    if (auto *BinOp = dyn_cast<BinaryOperator>(VL[i])) {
+      BinOpRef = BinOp;
+      if (std::find(Garbage.begin(), Garbage.end(), BinOp)==Garbage.end())
+        Garbage.push_back(BinOp);
+    }
+  }
+
+  Value *Op = generateMismatchingCode(Operands, IndVar, PreHeaderPt, Builder, Garbage, CreatedCode, VMap);
+  Instruction *NewI = BinOpRef->clone();
+  Builder.Insert(NewI);
+  NewI->setOperand(0,VL[0]);
+  NewI->setOperand(1,Op);
+  CreatedCode.push_back(NewI);
+  return NewI;
+}
+
 
 static void generateExtract(Node *N, Instruction * NewI, Tree &T, Value *IndVar, IRBuilder<> &Builder,  std::map<Instruction*,Instruction*> &Extracted, BasicBlock *Exit, std::vector<Value *> &CreatedCode) {
   Function *F = Exit->getParent();
@@ -412,6 +477,8 @@ static Value *cloneTree(Node *N, Tree &T, Value *IndVar, Instruction *PreHeaderP
       Operands.push_back(cloneTree(N->getChild(i), T, IndVar, PreHeaderPt, Exit, Builder, Garbage, CreatedCode, Extracted, VMap));
     }
 
+    errs() << "Match: "; N->getValue(0)->dump();
+
     Instruction *I = dyn_cast<Instruction>(N->getValue(0));
     if (I) {
       Instruction *NewI = I->clone();
@@ -452,7 +519,14 @@ static void codeGeneration(Tree &T, BasicBlock &BB) {
 
   Instruction *InstSplitPt = SchedulingPoint(T, BB);
 
-  BasicBlock *Header = BasicBlock::Create(Context, "reroll.header", BB.getParent());
+  if (InstSplitPt==nullptr) {
+    return;
+  }
+ 
+  std::vector<BasicBlock*> SuccBBs;
+  for (auto It = succ_begin(&BB), E = succ_end(&BB); It!=E; It++) SuccBBs.push_back(*It);
+
+  BasicBlock *Header = BasicBlock::Create(Context, "rolled.loop", BB.getParent());
 
   IRBuilder<> Builder(Header);
 
@@ -466,7 +540,7 @@ static void codeGeneration(Tree &T, BasicBlock &BB) {
   std::vector<Instruction *> Garbage;
 
   std::map<Instruction*,Instruction*> Extracted;
-  BasicBlock *Exit = BasicBlock::Create(Context, "reroll.exit", BB.getParent());
+  BasicBlock *Exit = BasicBlock::Create(Context, "rolled.exit", BB.getParent());
 
   cloneTree(T.Root, T, IndVar, InstSplitPt, Exit, Builder, Garbage, CreatedCode, Extracted, VMap);
 
@@ -510,9 +584,11 @@ static void codeGeneration(Tree &T, BasicBlock &BB) {
       (*It)->eraseFromParent();
     }
     
-    for (Instruction &I : BB) {
-      if (auto *PHI = dyn_cast<PHINode>(&I)) {
-        PHI->replaceIncomingBlockWith(&BB,Exit);
+    for (BasicBlock *Succ : SuccBBs) {
+      for (Instruction &I : *Succ) {
+        if (auto *PHI = dyn_cast<PHINode>(&I)) {
+          PHI->replaceIncomingBlockWith(&BB,Exit);
+        }
       }
     }
   } else {
@@ -606,7 +682,6 @@ bool LoopRolling::runImpl(Function &F) {
     }
   }
 
-  F.dump();
   return true;
 }
 
