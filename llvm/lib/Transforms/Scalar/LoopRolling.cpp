@@ -189,6 +189,45 @@ public:
   std::vector<Tree*> &getTrees() { return Trees; }
 };
 
+
+class SeedGroups {
+public:
+  std::map<Value *, std::vector<Instruction *> > Stores;
+  std::map<Value *, std::vector<Instruction *> > Calls;
+
+  void clear() {
+    Stores.clear();
+    Calls.clear();
+  }
+
+  void remove(Instruction *I) {
+    for (auto &Pair : Stores) {
+      Pair.second.erase(std::remove(Pair.second.begin(), Pair.second.end(), I), Pair.second.end());
+    }
+    for (auto &Pair : Calls) {
+      Pair.second.erase(std::remove(Pair.second.begin(), Pair.second.end(), I), Pair.second.end());
+    }
+  }
+};
+
+
+class LoopRoller {
+public:
+  LoopRoller(Function &F) : F(F) {}
+
+  bool run();
+private:
+  Function &F;
+
+
+  void collectSeedInstructions(BasicBlock &BB);
+  void codeGeneration(Tree &T, BasicBlock &BB);
+  
+
+  SeedGroups Seeds;
+};
+
+
 Node *Tree::findRec(Value *V, Node *N) {
   if (std::find(N->getValues().begin(), N->getValues().end(), V)!=N->getValues().end())
     return N;
@@ -257,8 +296,8 @@ static Value *generateMismatchingCode(std::vector<Value *> &VL, Value *IndVar, I
   Module *M = F->getParent();
   LLVMContext &Context = F->getContext();
 
-  errs() << "Mismatch:\n";
-  for (Value *V : VL) V->dump();
+  //errs() << "Mismatch:\n";
+  //for (Value *V : VL) V->dump();
 
   if (allConstant(VL)) {
     if (isConstantSequence(VL)) {
@@ -385,14 +424,22 @@ static Value *generateBinOpSequence(std::vector<Value *> &VL, Value *IndVar, Ins
       if (Opcode!=BinOp->getOpcode()) return nullptr;
     } else Opcode = BinOp->getOpcode();
 
-    if (BinOp->getOperand(0)!=VL[0]) return nullptr;
-    Operands.push_back(BinOp->getOperand(1));
+    Value *Op = nullptr;
+    if (BinOp->isCommutative() && BinOp->getOperand(1)==VL[0])
+      Op = BinOp->getOperand(0);
+    else if (BinOp->getOperand(0)==VL[0])
+      Op = BinOp->getOperand(1);
+
+    if (Op==nullptr) return nullptr;
+
+    Operands.push_back(Op);
   }
 
   switch(Opcode) {
   case Instruction::Add:
   case Instruction::Sub:
   case Instruction::Or:
+  case Instruction::Xor:
     Operands[0] = ConstantInt::get(Ty, 0);
     break;
   case Instruction::Mul:
@@ -443,7 +490,7 @@ static void generateExtract(Node *N, Instruction * NewI, Tree &T, Value *IndVar,
   }
 
   if (NeedExtract.empty()) return;
-  errs() << "Extracting: "; NewI->dump();
+  //errs() << "Extracting: "; NewI->dump();
 
   BasicBlock &Entry = F->getEntryBlock();
   IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
@@ -477,7 +524,7 @@ static Value *cloneTree(Node *N, Tree &T, Value *IndVar, Instruction *PreHeaderP
       Operands.push_back(cloneTree(N->getChild(i), T, IndVar, PreHeaderPt, Exit, Builder, Garbage, CreatedCode, Extracted, VMap));
     }
 
-    errs() << "Match: "; N->getValue(0)->dump();
+    //errs() << "Match: "; N->getValue(0)->dump();
 
     Instruction *I = dyn_cast<Instruction>(N->getValue(0));
     if (I) {
@@ -514,7 +561,7 @@ static Instruction *SchedulingPoint(Tree &T, BasicBlock &BB) {
   return &*SplitPt;
 }
 
-static void codeGeneration(Tree &T, BasicBlock &BB) {
+void LoopRoller::codeGeneration(Tree &T, BasicBlock &BB) {
   LLVMContext &Context = BB.getParent()->getContext();
 
   Instruction *InstSplitPt = SchedulingPoint(T, BB);
@@ -580,7 +627,7 @@ static void codeGeneration(Tree &T, BasicBlock &BB) {
     }
 
     for (auto It = Garbage.rbegin(), E = Garbage.rend(); It!=E; It++) {
-      //TODO: remove instruction from seeds
+      Seeds.remove(*It);
       (*It)->eraseFromParent();
     }
     
@@ -608,7 +655,7 @@ static void codeGeneration(Tree &T, BasicBlock &BB) {
   }
 }
 
-void LoopRolling::collectSeedInstructions(BasicBlock &BB) {
+void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
   // Initialize the collections. We will make a single pass over the block.
   Seeds.clear();
 
@@ -660,7 +707,7 @@ void LoopRolling::collectSeedInstructions(BasicBlock &BB) {
   }
 }
 
-bool LoopRolling::runImpl(Function &F) {
+bool LoopRoller::run() {
   std::vector<BasicBlock *> Blocks;
   for (BasicBlock &BB : F) Blocks.push_back(&BB);
 
@@ -683,6 +730,11 @@ bool LoopRolling::runImpl(Function &F) {
   }
 
   return true;
+}
+
+bool LoopRolling::runImpl(Function &F) {
+  LoopRoller RL(F);
+  return RL.run();
 }
 
 PreservedAnalyses LoopRolling::run(Function &F, FunctionAnalysisManager &AM) {
