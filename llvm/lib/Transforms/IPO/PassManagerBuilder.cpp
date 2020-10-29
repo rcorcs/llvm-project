@@ -487,7 +487,7 @@ void PassManagerBuilder::addFunctionSimplificationPasses(
 
   //if (RerollLoops)
   //MPM.add(createLoopRerollPass());
-  //MPM.add(createLoopRerollingPass());
+  //MPM.add(createLoopRollingPass());
 
   // TODO: Investigate if this is too expensive at O1.
   MPM.add(createAggressiveDCEPass());         // Delete dead instructions

@@ -21,6 +21,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/LoopUtils.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 
 #include <algorithm>    // std::find
 
@@ -65,6 +66,60 @@ static size_t EstimateSize(std::vector<ValueT*> Code, TargetTransformInfo *TTI) 
   size_t size = 0;
   for (ValueT *V : Code) {
     if (auto *I = dyn_cast<Instruction>(V)) {
+  
+      switch(I->getOpcode()) {
+      case Instruction::Alloca:
+      case Instruction::PHI:
+      case Instruction::ZExt:
+      case Instruction::SExt:
+      case Instruction::FPToUI:
+      case Instruction::FPToSI:
+      case Instruction::FPExt:
+      case Instruction::PtrToInt:
+      case Instruction::IntToPtr:
+      case Instruction::SIToFP:
+      case Instruction::UIToFP:
+      case Instruction::Trunc:
+      case Instruction::FPTrunc:
+      case Instruction::BitCast:
+        size += 0;
+        break;
+      case Instruction::Call:
+	size += 1 + dyn_cast<CallBase>(I)->getNumArgOperands();
+	break;
+      case Instruction::GetElementPtr:
+	size += 1;
+	break;
+      case Instruction::Load:
+      case Instruction::Store:
+	size += 1;
+	break;
+      default:
+        size += 1;
+      }
+    } else if (auto *GV = dyn_cast<GlobalVariable>(V)) {
+      size += 1;
+      if (GV->hasInitializer()) {
+	if (auto *ArrTy = dyn_cast<ArrayType>(GV->getInitializer()->getType())) {
+	   size += ArrTy->getNumElements()-1;
+	}
+      }
+    }
+  }
+  return size;
+}
+
+/*
+template<typename ValueT>
+static size_t EstimateSize(std::vector<ValueT*> Code, TargetTransformInfo *TTI) {
+  size_t size = 0;
+  for (ValueT *V : Code) {
+    if (V==nullptr) continue;
+    V->dump();
+    if (auto *I = dyn_cast<Instruction>(V)) {
+       unsigned Cost = TTI->getInstructionCost(
+          I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
+      errs() << "Cost: " << Cost << "\n";
       switch(I->getOpcode()) {
       case Instruction::Alloca:
       case Instruction::PHI:
@@ -97,6 +152,7 @@ static size_t EstimateSize(std::vector<ValueT*> Code, TargetTransformInfo *TTI) 
   }
   return size;
 }
+*/
 
 class Node {
 private:
@@ -138,6 +194,7 @@ class Tree {
 public:
   Node *Root;
   std::vector<Node*> Nodes;
+  std::map<Value*, Node*> NodeMap;
 
   Tree(Node *Root) : Root(Root) {
     addNode(Root);
@@ -156,11 +213,18 @@ public:
   }
 
   void addNode(Node *N) {
-    if (N) Nodes.push_back(N);
+    if (N) {
+      if (std::find(Nodes.begin(), Nodes.end(), N)==Nodes.end()) {
+        Nodes.push_back(N);
+        for (auto *V : N->getValues())
+          NodeMap[V] = N;
+      }
+    }
     if (Root==nullptr) Root = N;
   }
 
   Node *find(Value *V);
+  Node *find(std::vector<Value *> Vs);
 
   void destroy() {
     for (Node *N : Nodes) delete N;
@@ -169,7 +233,6 @@ public:
   }
 private:
   void growTree(Node *N);
-  Node *findRec(Value *V, Node *N);
 };
 
 class MultiTree {
@@ -210,6 +273,29 @@ public:
   }
 };
 
+class CodeGenerator {
+public:
+  CodeGenerator(Function &F, BasicBlock &BB, Tree &T) : F(F), BB(BB), T(T) {}
+
+  bool generate(SeedGroups &Seeds);
+
+private:
+  Function &F;
+  BasicBlock &BB;
+  Tree &T;
+  PHINode *IndVar;
+  BasicBlock *PreHeader;
+  BasicBlock *Header;
+  BasicBlock *Exit;
+
+  std::map<Node*, Value *> NodeMap;
+  std::vector<Instruction *> Garbage;
+  std::vector<Value *> CreatedCode;
+  std::map<Instruction *, Instruction *> Extracted;
+
+  Value *cloneTree(Node *N, IRBuilder<> &Builder);
+  void generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Builder);
+};
 
 class LoopRoller {
 public:
@@ -219,27 +305,28 @@ public:
 private:
   Function &F;
 
-
   void collectSeedInstructions(BasicBlock &BB);
-  void codeGeneration(Tree &T, BasicBlock &BB);
-  
+  //void codeGeneration(Tree &T, BasicBlock &BB);
 
   SeedGroups Seeds;
 };
 
 
-Node *Tree::findRec(Value *V, Node *N) {
-  if (std::find(N->getValues().begin(), N->getValues().end(), V)!=N->getValues().end())
-    return N;
-  for (Node *Child : N->getChildren()) {
-    if (Node *Found = findRec(V, Child)) return Found;
-  }
+Node *Tree::find(Value *V) {
+  if (NodeMap.find(V)!=NodeMap.end()) return NodeMap[V];
   return nullptr;
 }
 
-Node *Tree::find(Value *V) {
-  return findRec(V, Root);
+Node *Tree::find(std::vector<Value *> Vs) {
+  if (Vs.empty()) return nullptr;
+
+  Node *N = find(Vs[0]);
+  for (unsigned i = 1; i<Vs.size(); i++) {
+    if (find(Vs[i])!=N) return nullptr;
+  }
+  return N;
 }
+
 
 void Tree::growTree(Node *N) {
   Instruction *I = dyn_cast<Instruction>(N->getValue(0));
@@ -250,7 +337,9 @@ void Tree::growTree(Node *N) {
     for (unsigned j = 0; j<N->size(); j++) {
       Vs.push_back( dyn_cast<Instruction>(N->getValue(j))->getOperand(i) );
     }
-    Node *Child = new Node(Vs);
+    Node *Child = find(Vs);
+    if (Child==nullptr) Child = new Node(Vs);
+
     this->addNode(Child);
     N->pushChild(Child);
     if (Child->isMatching()) {
@@ -287,17 +376,23 @@ static bool isConstantSequence(const std::vector<ValueT *> VL) {
   return true;
 }
 
-static Value *generateGEPSequence(std::vector<Value *> &VL, Value *IndVar, Instruction *PreHeaderPt, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, ValueToValueMapTy &VMap);
+static Value *generateGEPSequence(std::vector<Value *> &VL, Value *IndVar, BasicBlock *PreHeader, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode);
 
-static Value *generateBinOpSequence(std::vector<Value *> &VL, Value *IndVar, Instruction *PreHeaderPt, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, ValueToValueMapTy &VMap);
+static Value *generateBinOpSequence(std::vector<Value *> &VL, Value *IndVar, BasicBlock *PreHeader, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode);
 
-static Value *generateMismatchingCode(std::vector<Value *> &VL, Value *IndVar, Instruction *PreHeaderPt, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, ValueToValueMapTy &VMap) {
-  Function *F = PreHeaderPt->getParent()->getParent();
+static Value *generateMismatchingCode(std::vector<Value *> &VL, Value *IndVar, BasicBlock *PreHeader, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode) {
+  Function *F = PreHeader->getParent();
   Module *M = F->getParent();
   LLVMContext &Context = F->getContext();
 
   //errs() << "Mismatch:\n";
   //for (Value *V : VL) V->dump();
+
+  bool AllSame = true;
+  for (unsigned i = 0; i<VL.size(); i++) {
+    AllSame = AllSame && VL[i]==VL[0];
+  }
+  if (AllSame) return VL[0];
 
   if (allConstant(VL)) {
     if (isConstantSequence(VL)) {
@@ -313,15 +408,14 @@ static Value *generateMismatchingCode(std::vector<Value *> &VL, Value *IndVar, I
     } else {
 	    
       auto *ArrTy = ArrayType::get(VL[0]->getType(), VL.size());
-      GlobalVariable* GArray = dyn_cast<GlobalVariable>(M->getOrInsertGlobal("vals", ArrTy));
-      CreatedCode.push_back(GArray);
-      GArray->setLinkage(GlobalValue::LinkageTypes::PrivateLinkage);
-      //GArray->setAlignment(4);
 
       SmallVector<Constant*,8> Consts;
       for (auto *V : VL) Consts.push_back(dyn_cast<Constant>(V));
       auto *ConstArray = ConstantArray::get(ArrTy, Consts);
-      GArray->setInitializer(ConstArray);
+
+      GlobalVariable *GArray = new GlobalVariable(*M, ArrTy,true,GlobalValue::LinkageTypes::PrivateLinkage,ConstArray);
+      CreatedCode.push_back(GArray);
+      //GArray->setInitializer(ConstArray);
  
       SmallVector<Value*,8> Indices;
       Type *IndVarTy = IntegerType::get(Context, 64);
@@ -335,20 +429,21 @@ static Value *generateMismatchingCode(std::vector<Value *> &VL, Value *IndVar, I
       return Load;
     }
   } else {
-    if (Value *V = generateGEPSequence(VL, IndVar, PreHeaderPt, Builder, Garbage, CreatedCode, VMap)) {
+    if (Value *V = generateGEPSequence(VL, IndVar, PreHeader, Builder, Garbage, CreatedCode)) {
       return V;
     }
-    if (Value *V = generateBinOpSequence(VL, IndVar, PreHeaderPt, Builder, Garbage, CreatedCode, VMap)) {
+    if (Value *V = generateBinOpSequence(VL, IndVar, PreHeader, Builder, Garbage, CreatedCode)) {
       return V;
     }
-    BasicBlock &Entry = F->getEntryBlock();
-    IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
+    //BasicBlock &Entry = F->getEntryBlock();
+    //IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
+    IRBuilder<> ArrBuilder(PreHeader);
 
     Type *IndVarTy = IntegerType::get(Context, 64);
     Value *ArrPtr = ArrBuilder.CreateAlloca(VL[0]->getType(), ConstantInt::get(IndVarTy, VL.size()));
     CreatedCode.push_back(ArrPtr);
 
-    ArrBuilder.SetInsertPoint(PreHeaderPt);
+    //ArrBuilder.SetInsertPoint(PreHeaderPt);
     for (unsigned i = 0; i<VL.size(); i++) {
       auto *GEP = ArrBuilder.CreateGEP(ArrPtr, ConstantInt::get(IndVarTy, i));
       CreatedCode.push_back(GEP);
@@ -365,7 +460,7 @@ static Value *generateMismatchingCode(std::vector<Value *> &VL, Value *IndVar, I
   return VL[0];
 }
 
-static Value *generateGEPSequence(std::vector<Value *> &VL, Value *IndVar, Instruction *PreHeaderPt, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, ValueToValueMapTy &VMap) {
+static Value *generateGEPSequence(std::vector<Value *> &VL, Value *IndVar, BasicBlock *PreHeader, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode) {
   if (!isa<PointerType>(VL[0]->getType())) return nullptr;
   auto *Ptr = getUnderlyingObject(VL[0]);
   for (unsigned i = 1; i<VL.size(); i++)
@@ -398,7 +493,7 @@ static Value *generateGEPSequence(std::vector<Value *> &VL, Value *IndVar, Instr
       }
     }
 
-    Value *IndVarIdx = generateMismatchingCode(Indices, IndVar, PreHeaderPt, Builder, Garbage, CreatedCode, VMap);
+    Value *IndVarIdx = generateMismatchingCode(Indices, IndVar, PreHeader, Builder, Garbage, CreatedCode);
     auto *GEP = Builder.CreateGEP(Ptr, IndVarIdx);
     CreatedCode.push_back(GEP);
     return GEP;
@@ -407,7 +502,7 @@ static Value *generateGEPSequence(std::vector<Value *> &VL, Value *IndVar, Instr
 }
 
 
-static Value *generateBinOpSequence(std::vector<Value *> &VL, Value *IndVar, Instruction *PreHeaderPt, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, ValueToValueMapTy &VMap) {
+static Value *generateBinOpSequence(std::vector<Value *> &VL, Value *IndVar, BasicBlock *PreHeader, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode) {
 
   if (!isa<IntegerType>(VL[0]->getType())) return nullptr;
   Type *Ty = VL[0]->getType();
@@ -461,19 +556,19 @@ static Value *generateBinOpSequence(std::vector<Value *> &VL, Value *IndVar, Ins
     }
   }
 
-  Value *Op = generateMismatchingCode(Operands, IndVar, PreHeaderPt, Builder, Garbage, CreatedCode, VMap);
+  Value *Op = generateMismatchingCode(Operands, IndVar, PreHeader, Builder, Garbage, CreatedCode);
   Instruction *NewI = BinOpRef->clone();
   Builder.Insert(NewI);
+  CreatedCode.push_back(NewI);
+
   NewI->setOperand(0,VL[0]);
   NewI->setOperand(1,Op);
-  CreatedCode.push_back(NewI);
   return NewI;
 }
 
 
-static void generateExtract(Node *N, Instruction * NewI, Tree &T, Value *IndVar, IRBuilder<> &Builder,  std::map<Instruction*,Instruction*> &Extracted, BasicBlock *Exit, std::vector<Value *> &CreatedCode) {
-  Function *F = Exit->getParent();
-  LLVMContext &Context = F->getContext();
+void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Builder) {
+  LLVMContext &Context = F.getContext();
 
   std::set<unsigned> NeedExtract;
 
@@ -492,7 +587,7 @@ static void generateExtract(Node *N, Instruction * NewI, Tree &T, Value *IndVar,
   if (NeedExtract.empty()) return;
   //errs() << "Extracting: "; NewI->dump();
 
-  BasicBlock &Entry = F->getEntryBlock();
+  BasicBlock &Entry = F.getEntryBlock();
   IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
 
   Type *IndVarTy = IntegerType::get(Context, 64);
@@ -516,12 +611,13 @@ static void generateExtract(Node *N, Instruction * NewI, Tree &T, Value *IndVar,
 
 }
 
+Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
+  if (NodeMap.find(N)!=NodeMap.end()) return NodeMap[N];
 
-static Value *cloneTree(Node *N, Tree &T, Value *IndVar, Instruction *PreHeaderPt, BasicBlock *Exit, IRBuilder<> &Builder, std::vector<Instruction *> &Garbage, std::vector<Value *> &CreatedCode, std::map<Instruction*,Instruction*> &Extracted, ValueToValueMapTy &VMap) {
   if (N->isMatching()) {
     std::vector<Value*> Operands;
     for (unsigned i = 0; i<N->getNumChildren(); i++) {
-      Operands.push_back(cloneTree(N->getChild(i), T, IndVar, PreHeaderPt, Exit, Builder, Garbage, CreatedCode, Extracted, VMap));
+      Operands.push_back(cloneTree(N->getChild(i), Builder));
     }
 
     //errs() << "Match: "; N->getValue(0)->dump();
@@ -531,23 +627,27 @@ static Value *cloneTree(Node *N, Tree &T, Value *IndVar, Instruction *PreHeaderP
       Instruction *NewI = I->clone();
       Builder.Insert(NewI);
       CreatedCode.push_back(NewI);
+      NodeMap[N] = NewI;
+
+      //errs() << "Cloned: "; NewI->dump();
 
       for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
         NewI->setOperand(i,Operands[i]);
       }
       
       for (auto *V : N->getValues()) {
-	//errs() << "Deleting: "; V->dump();
         auto *I = dyn_cast<Instruction>(V);
 	if (I && std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) Garbage.push_back(I);
       }
 
-      generateExtract(N, NewI, T, IndVar, Builder, Extracted, Exit, CreatedCode);
+      generateExtract(N, NewI, Builder);
 
       return NewI;
     } else return N->getValue(0);
   } else {
-    return generateMismatchingCode(N->getValues(), IndVar, PreHeaderPt, Builder, Garbage, CreatedCode, VMap);
+    Value *NewV = generateMismatchingCode(N->getValues(), IndVar, PreHeader, Builder, Garbage, CreatedCode);
+    NodeMap[N] = NewV;
+    return NewV;
   }
 }
 
@@ -561,37 +661,42 @@ static Instruction *SchedulingPoint(Tree &T, BasicBlock &BB) {
   return &*SplitPt;
 }
 
-void LoopRoller::codeGeneration(Tree &T, BasicBlock &BB) {
+bool CodeGenerator::generate(SeedGroups &Seeds) {
   LLVMContext &Context = BB.getParent()->getContext();
 
   Instruction *InstSplitPt = SchedulingPoint(T, BB);
 
   if (InstSplitPt==nullptr) {
-    return;
+    return false;
   }
  
   std::vector<BasicBlock*> SuccBBs;
   for (auto It = succ_begin(&BB), E = succ_end(&BB); It!=E; It++) SuccBBs.push_back(*It);
 
-  BasicBlock *Header = BasicBlock::Create(Context, "rolled.loop", BB.getParent());
+  PreHeader = BasicBlock::Create(Context, "rolled.pre", BB.getParent());
+
+  Header = BasicBlock::Create(Context, "rolled.loop", BB.getParent());
 
   IRBuilder<> Builder(Header);
 
   Type *IndVarTy = IntegerType::get(Context, 64);
 
-  PHINode *IndVar = Builder.CreatePHI(IndVarTy, 0);
-  IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),&BB);
-
-  ValueToValueMapTy VMap;
-  std::vector<Value *> CreatedCode;
-  std::vector<Instruction *> Garbage;
+  IndVar = Builder.CreatePHI(IndVarTy, 0);
+  CreatedCode.push_back(IndVar);
 
   std::map<Instruction*,Instruction*> Extracted;
-  BasicBlock *Exit = BasicBlock::Create(Context, "rolled.exit", BB.getParent());
+  Exit = BasicBlock::Create(Context, "rolled.exit", BB.getParent());
 
-  cloneTree(T.Root, T, IndVar, InstSplitPt, Exit, Builder, Garbage, CreatedCode, Extracted, VMap);
+  cloneTree(T.Root, Builder);
+
+  auto *Add = Builder.CreateAdd(IndVar, ConstantInt::get(IndVarTy, 1));
+  CreatedCode.push_back(Add);
+
+  auto *Cond = Builder.CreateICmpNE(Add, ConstantInt::get(IndVarTy, T.getWidth()));
+  CreatedCode.push_back(Cond);
 
   TargetTransformInfo TTI(BB.getParent()->getParent()->getDataLayout());
+
   size_t SizeOriginal = EstimateSize(Garbage,&TTI);
   size_t SizeModified = EstimateSize(CreatedCode,&TTI) + 3;
 
@@ -601,11 +706,14 @@ void LoopRoller::codeGeneration(Tree &T, BasicBlock &BB) {
   if (Profitable) {
     errs() << "Profitable: finishing code generation\n";
 
-    Value *Add = Builder.CreateAdd(IndVar, ConstantInt::get(IndVarTy, 1));
+    IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
     IndVar->addIncoming(Add,Header);
 
-    Value *Cond = Builder.CreateICmpNE(Add, ConstantInt::get(IndVarTy, T.getWidth()));
-    Builder.CreateCondBr(Cond,Header,Exit);
+    auto *Br = Builder.CreateCondBr(Cond,Header,Exit);
+    CreatedCode.push_back(Br);
+
+    Builder.SetInsertPoint(PreHeader);
+    Builder.CreateBr(Header);
 
     auto SplitPt = BB.begin();
     while ( &*SplitPt!=InstSplitPt ) SplitPt++;
@@ -620,7 +728,7 @@ void LoopRoller::codeGeneration(Tree &T, BasicBlock &BB) {
     }
     
     Builder.SetInsertPoint(&BB);
-    Builder.CreateBr(Header);
+    Builder.CreateBr(PreHeader);
 
     for (auto &Pair : Extracted) {
       Pair.first->replaceAllUsesWith(Pair.second);
@@ -638,8 +746,12 @@ void LoopRoller::codeGeneration(Tree &T, BasicBlock &BB) {
         }
       }
     }
+
+    return true;
   } else {
     errs() << "Unprofitable: deleting generated code\n";
+
+    /*
     for (auto It = CreatedCode.rbegin(), E = CreatedCode.rend(); It!=E; It++) {
       Value *V = *It;
       if (auto *I = dyn_cast<Instruction>(V)) {
@@ -648,10 +760,20 @@ void LoopRoller::codeGeneration(Tree &T, BasicBlock &BB) {
       } else if (auto *GV = dyn_cast<GlobalVariable>(V)) {
         GV->dropAllReferences();
         GV->eraseFromParent();
+      } else {
+         errs() << "Forgotten:"; V->dump();
       }
     }
-    Header->eraseFromParent();
+    
     Exit->eraseFromParent();
+    Header->eraseFromParent();
+    PreHeader->eraseFromParent();
+    */
+    DeleteDeadBlock(Exit);
+    DeleteDeadBlock(Header);
+    DeleteDeadBlock(PreHeader);
+
+    return false;
   }
 }
 
@@ -716,14 +838,16 @@ bool LoopRoller::run() {
     for (auto &Pair : Seeds.Stores) {
       if (Pair.second.size()>1) {
         Tree T(Pair.second);
-        codeGeneration(T, *BB);
+	CodeGenerator CG(F, *BB, T);
+	CG.generate(Seeds);
         T.destroy();
       }
     }
     for (auto &Pair : Seeds.Calls) {
       if (Pair.second.size()>1) {
         Tree T(Pair.second);
-        codeGeneration(T, *BB);
+	CodeGenerator CG(F, *BB, T);
+	CG.generate(Seeds);
         T.destroy();
       }
     }
@@ -776,7 +900,7 @@ private:
 
 char LoopRollingLegacyPass::ID = 0;
 
-INITIALIZE_PASS(LoopRollingLegacyPass, "loop-rolling", "Loop rerolling over straight-line code", false, false)
+INITIALIZE_PASS(LoopRollingLegacyPass, "loop-rolling", "Loop rolling over straight-line code", false, false)
 
 // The public interface to this file...
 FunctionPass *llvm::createLoopRollingPass() {
