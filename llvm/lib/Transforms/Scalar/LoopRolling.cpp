@@ -33,8 +33,17 @@ static bool match(Value *V1, Value *V2) {
   Instruction *I1 = dyn_cast<Instruction>(V1);
   Instruction *I2 = dyn_cast<Instruction>(V2);
 
+  if (V1->getType()!=V2->getType()) return false;
+
   if(I1 && I2 && I1->getOpcode()==I2->getOpcode()) {
+    if (I1->getNumOperands()!=I2->getNumOperands()) return false;
+
+    for (unsigned i = 0; i<I1->getNumOperands(); i++)
+      if (I1->getOperand(i)->getType()!=I2->getOperand(i)->getType()) return false;
+
     switch (I1->getOpcode()) {
+    case Instruction::PHI:
+      return false;
     case Instruction::Call: {
       CallInst *CI1 = dyn_cast<CallInst>(I1);
       CallInst *CI2 = dyn_cast<CallInst>(I2);
@@ -43,10 +52,18 @@ static bool match(Value *V1, Value *V2) {
       if (CI1->getCalledFunction()->isVarArg()) return false;
       return true;
     }
-    case Instruction::PHI:
-      return false;
+    case Instruction::Load: {
+      auto *LI1 = dyn_cast<LoadInst>(I1);
+      auto *LI2 = dyn_cast<LoadInst>(I2);
+      return LI1->getAlign()==LI2->getAlign();
+    }
+    case Instruction::Store: {
+      auto *SI1 = dyn_cast<StoreInst>(I1);
+      auto *SI2 = dyn_cast<StoreInst>(I2);
+      return SI1->getAlign()==SI2->getAlign();
+    }
     default:
-      return I1->getNumOperands()==I2->getNumOperands();
+      return true;
     }
   }
 
@@ -204,7 +221,14 @@ public:
 
   size_t size() { return Values.size(); }
 
-  void pushValue(Value *V) { Values.push_back(V); Match = Match && match(Values[0],V); }
+  void pushValue(Value *V) {
+    Values.push_back(V);
+    Match = Match && match(Values[0],V);
+    if (auto *I = dyn_cast<Instruction>(V)) {
+      if (getParent())
+        Match = Match && dyn_cast<Instruction>(getParent()->getValue(0))->getParent()==I->getParent();
+    }
+  }
   void pushChild( Node * N ) { Children.push_back(N); }
 
   Value *getValue(unsigned i) { return Values[i]; }
@@ -231,18 +255,24 @@ public:
 
   Tree(Node *Root) : Root(Root) {
     addNode(Root);
-    growTree(Root);
-    for (unsigned i = 0; i<Root->size(); i++)
-      buildSchedulingOrder(Root, i);
+    auto *BB = dyn_cast<BasicBlock>(Root->getValue(0));
+    errs() << "Grow Tree 0\n";
+    growTree(Root,BB);
+    errs() << "Grow Tree 1\n";
+    buildSchedulingOrder();
+    errs() << "Scheduling order\n";
   }
   
   template<typename ValueT>
   Tree(std::vector<ValueT*> &Vs) {
     Root = new Node(Vs);
     addNode(Root);
-    growTree(Root);
-    for (unsigned i = 0; i<Root->size(); i++)
-      buildSchedulingOrder(Root, i);
+    auto *BB = dyn_cast<BasicBlock>(Root->getValue(0));
+    errs() << "Grow Tree 0\n";
+    growTree(Root,BB);
+    errs() << "Grow Tree 1\n";
+    buildSchedulingOrder();
+    errs() << "Scheduling order\n";
   }
 
   size_t getWidth() {
@@ -271,9 +301,16 @@ public:
 
   bool isSchedulable(BasicBlock &BB);
 private:
-  void growTree(Node *N);
+  void growTree(Node *N, BasicBlock *BB);
 
-  void buildSchedulingOrder(Node *N, unsigned i);
+  void buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited);
+  void buildSchedulingOrder() {
+    for (unsigned i = 0; i<Root->size(); i++) {
+      std::set<Node*> Visited;
+      buildSchedulingOrder(Root, i, Visited);
+    }
+    
+  }
 };
 
 class MultiTree {
@@ -375,30 +412,33 @@ Node *Tree::find(std::vector<Value *> Vs) {
 }
 
 
-void Tree::growTree(Node *N) {
+void Tree::growTree(Node *N, BasicBlock *BB) {
   Instruction *I = dyn_cast<Instruction>(N->getValue(0));
   if (I==nullptr) return;
-
   for (unsigned i = 0; i<I->getNumOperands(); i++) {
     std::vector<Value*> Vs;
     for (unsigned j = 0; j<N->size(); j++) {
       Vs.push_back( dyn_cast<Instruction>(N->getValue(j))->getOperand(i) );
     }
     Node *Child = find(Vs);
-    if (Child==nullptr) Child = new Node(Vs);
+    if (Child==nullptr) Child = new Node(Vs, N);
 
     this->addNode(Child);
     N->pushChild(Child);
+    
     if (Child->isMatching()) {
-      growTree(Child);
+      growTree(Child, BB);
     }
   }
 }
 
-void Tree::buildSchedulingOrder(Node *N, unsigned i) {
+void Tree::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
+  if (Visited.count(N)) return;
+  Visited.insert(N);
+
   if (N->isMatching()) {
     for (unsigned j = 0; j<N->getNumChildren(); j++) {
-      buildSchedulingOrder(N->getChild(j), i);
+      buildSchedulingOrder(N->getChild(j), i, Visited);
     }
 
     if (auto *I = dyn_cast<Instruction>(N->getValue(i))) {
@@ -425,22 +465,32 @@ bool Tree::isSchedulable(BasicBlock &BB) {
 
   //for ( auto *I : SchedulingOrder) I->dump();
   
-  auto X = BB.begin();
-  while ( !SchedulingOrder[0].contains( &*X ) && X!=BB.end() ) X++;
-  if (X==BB.end()) return false;
-  
-  auto *I = &*X;
+  if (SchedulingOrder.empty()) return false;
+
+  errs() << "Here 1\n"; 
+  Instruction *I = nullptr;
+  for (auto &IRef : BB) {
+    if (SchedulingOrder[0].contains(&IRef)) {
+      I = &IRef;
+      break;
+    }
+  }
+  errs() << "Here 2\n"; 
+  if (I==nullptr) return false;
+  errs() << "Here 3\n"; 
+
   auto *LastI = dyn_cast<Instruction>(Root->getValue(Root->size()-1))->getNextNode();
   auto It = SchedulingOrder.begin(), E = SchedulingOrder.end();
   size_t Count = SchedulingOrder[0].size();
 
-  //errs() << "Start: "; I->dump();
+  errs() << "Start: "; I->dump();
   while (I!=LastI && It!=E) {
     if ( (*It).contains(I) ) {
       Count--;
       if (Count==0) {
-	      It++;
-	      if (It!=E) Count = (*It).size();
+        errs() << "Here ..\n"; 
+        It++;
+        if (It!=E) Count = (*It).size();
       }
     } else {
       errs() << "Skipping: "; I->dump();
@@ -449,10 +499,10 @@ bool Tree::isSchedulable(BasicBlock &BB) {
     I = I->getNextNode();
   }
 
-  //errs() << "I: "; I->dump();
-  //errs() << "Last: "; LastI->dump();
+  errs() << "I: "; I->dump();
+  errs() << "Last: "; LastI->dump();
   bool Result = (I==LastI && It==E);
-  errs() << "Result: " << Result << "\n";
+  errs() << "Schedulable: " << Result << "\n";
   return Result;
 }
 
@@ -508,7 +558,7 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
         CreatedCode.push_back(Add);
 	return Add;
       }
-    } else {    
+    } else {
       auto *ArrTy = ArrayType::get(VL[0]->getType(), VL.size());
 
       SmallVector<Constant*,8> Consts;
@@ -527,7 +577,7 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
 	    if (C->getAggregateElement(i)!=Consts[i]) continue;
 	  }
 	  //Found Array
-	  errs() << "Found Array: "; GA->dump();
+	  //errs() << "Found Array: "; GA->dump();
           IndexedValue = Pair.second;
 	  break;
         }
@@ -579,6 +629,7 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
     CreatedCode.push_back(GEP);
     auto *Load = Builder.CreateLoad(VL[0]->getType(), GEP);
     CreatedCode.push_back(Load);
+
     return Load;
   }
   return VL[0];
@@ -620,9 +671,11 @@ Value *CodeGenerator::generateGEPSequence(std::vector<Value *> &VL, IRBuilder<> 
     if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
       if (std::find(Garbage.begin(), Garbage.end(), GEP)==Garbage.end())
         Garbage.push_back(GEP);
+
     }
   }
 
+  //errs() << "Generating GEP\n";
   Value *IndVarIdx = generateMismatchingCode(Indices, Builder);
   auto *GEP = Builder.CreateGEP(Ptr, IndVarIdx);
   CreatedCode.push_back(GEP);
@@ -674,6 +727,8 @@ Value *CodeGenerator::generateBinOpSequence(std::vector<Value *> &VL, IRBuilder<
     return nullptr;
   }
 
+  //errs() << "Generating BinOp\n";
+
   Instruction *BinOpRef = nullptr;
   for (unsigned i = 1; i<VL.size(); i++) {
     if (auto *BinOp = dyn_cast<BinaryOperator>(VL[i])) {
@@ -701,7 +756,8 @@ void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Bu
 
   for (unsigned i = 0; i<N->size(); i++) {
     Value *V = N->getValue(i);
-    if (!isa<Instruction>(V)) continue;
+    if (!(isa<Operator>(V) || isa<Instruction>(V))) continue;
+    //if (!isa<Instruction>(V)) continue;
 
     for (auto *U : V->users()) {
       if (T.find(U)==nullptr) {
@@ -712,6 +768,7 @@ void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Bu
   }
 
   if (NeedExtract.empty()) return;
+
   //errs() << "Extracting: "; NewI->dump();
 
   BasicBlock &Entry = F.getEntryBlock();
@@ -755,6 +812,13 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       Builder.Insert(NewI);
       CreatedCode.push_back(NewI);
       NodeMap[N] = NewI;
+
+
+      SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
+      NewI->getAllMetadata(MDs);
+      for (std::pair<unsigned, MDNode *> MDPair : MDs) {
+        NewI->setMetadata(MDPair.first, nullptr);
+      }
 
       //errs() << "Cloned: "; NewI->dump();
 
@@ -806,7 +870,6 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   IndVar = Builder.CreatePHI(IndVarTy, 0);
   CreatedCode.push_back(IndVar);
 
-  std::map<Instruction*,Instruction*> Extracted;
   Exit = BasicBlock::Create(Context, "rolled.exit", BB.getParent());
 
   cloneTree(T.Root, Builder);
@@ -821,9 +884,9 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   TargetTransformInfo TTI(DL);
 
   size_t SizeOriginal = EstimateSize(Garbage,DL,&TTI);
-  size_t SizeModified = EstimateSize(CreatedCode,DL,&TTI) + 3;
+  size_t SizeModified = EstimateSize(CreatedCode,DL,&TTI); // + 3;
 
-  bool Profitable = SizeOriginal >= SizeModified;
+  bool Profitable = SizeOriginal >= SizeModified + 10;
 
   //PreHeader->dump();
   //Header->dump();
@@ -832,6 +895,8 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   errs() << "Gains: " << SizeOriginal << " - " << SizeModified << " = " << ( ((int)SizeOriginal) - ((int)SizeModified) ) << "\n";
   if (Profitable) {
     errs() << "Profitable: finishing code generation\n";
+
+    F.dump();
 
     IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
     IndVar->addIncoming(Add,Header);
@@ -873,6 +938,13 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
       }
     }
 
+    errs() << "Done!\n";
+
+    F.dump();
+    //PreHeader->dump();
+    //Header->dump();
+    //Exit->dump();
+
     return true;
   } else {
     errs() << "Unprofitable: deleting generated code\n";
@@ -881,6 +953,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     DeleteDeadBlock(Header);
     DeleteDeadBlock(PreHeader);
 
+    errs() << "Done!\n";
     return false;
   }
 }
@@ -941,32 +1014,42 @@ bool LoopRoller::run() {
   std::vector<BasicBlock *> Blocks;
   for (BasicBlock &BB : F) Blocks.push_back(&BB);
 
+  bool Changed = false;
   for (BasicBlock *BB : Blocks) {
     collectSeedInstructions(*BB);
+    errs() << "stores\n";
     for (auto &Pair : Seeds.Stores) {
       if (Pair.second.size()>1) {
         Tree T(Pair.second);
 	if (T.isSchedulable(*BB)) {
 	  CodeGenerator CG(F, *BB, T);
-	  CG.generate(Seeds);
+	  errs() << "code gen 0\n";
+	  Changed = Changed || CG.generate(Seeds);
+	  errs() << "code gen 1\n";
 	}
+	errs() << "destroying tree\n";
         T.destroy();
       }
     }
+    errs() << "calls\n";
     for (auto &Pair : Seeds.Calls) {
       if (Pair.second.size()>1) {
         Tree T(Pair.second);
 	if (T.isSchedulable(*BB)) {
 	  CodeGenerator CG(F, *BB, T);
-	  CG.generate(Seeds);
+	  errs() << "code gen 0\n";
+	  Changed = Changed || CG.generate(Seeds);
+	  errs() << "code gen 1\n";
 	}
+	errs() << "destroying tree\n";
         T.destroy();
       }
     }
   }
 
   //F.getParent()->dump();
-  return true;
+  errs() << "Done Loop Roller!\n";
+  return Changed;
 }
 
 bool LoopRolling::runImpl(Function &F) {
@@ -1000,6 +1083,8 @@ public:
   bool runOnFunction(Function &F) override {
     if (skipFunction(F))
       return false;
+    if (F.isDeclaration()) return false;
+
     return Impl.runImpl(F);
   }
 
