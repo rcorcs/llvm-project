@@ -14,6 +14,7 @@
 
 #include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/ADT/APInt.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
@@ -803,18 +804,17 @@ AliasResult BasicAAResult::alias(const MemoryLocation &LocA,
   // If we have a directly cached entry for these locations, we have recursed
   // through this once, so just return the cached results. Notably, when this
   // happens, we don't clear the cache.
-  auto CacheIt = AAQI.AliasCache.find(AAQueryInfo::LocPair(LocA, LocB));
-  if (CacheIt != AAQI.AliasCache.end())
-    return CacheIt->second;
-
-  CacheIt = AAQI.AliasCache.find(AAQueryInfo::LocPair(LocB, LocA));
+  AAQueryInfo::LocPair Locs(LocA, LocB);
+  if (Locs.first.Ptr > Locs.second.Ptr)
+    std::swap(Locs.first, Locs.second);
+  auto CacheIt = AAQI.AliasCache.find(Locs);
   if (CacheIt != AAQI.AliasCache.end())
     return CacheIt->second;
 
   AliasResult Alias = aliasCheck(LocA.Ptr, LocA.Size, LocA.AATags, LocB.Ptr,
                                  LocB.Size, LocB.AATags, AAQI);
 
-  VisitedPhiBBs.clear();
+  assert(VisitedPhiBBs.empty());
   return Alias;
 }
 
@@ -1535,10 +1535,6 @@ AliasResult BasicAAResult::aliasPHI(const PHINode *PN, LocationSize PNSize,
                                     LocationSize V2Size,
                                     const AAMDNodes &V2AAInfo,
                                     const Value *UnderV2, AAQueryInfo &AAQI) {
-  // Track phi nodes we have visited. We use this information when we determine
-  // value equivalence.
-  VisitedPhiBBs.insert(PN->getParent());
-
   // If the values are PHIs in the same block, we can do a more precise
   // as well as efficient check: just check for aliases between the values
   // on corresponding edges.
@@ -1577,12 +1573,8 @@ AliasResult BasicAAResult::aliasPHI(const PHINode *PN, LocationSize PNSize,
       }
 
       // Reset if speculation failed.
-      if (Alias != NoAlias) {
-        auto Pair =
-            AAQI.AliasCache.insert(std::make_pair(Locs, OrigAliasResult));
-        assert(!Pair.second && "Entry must have existed");
-        Pair.first->second = OrigAliasResult;
-      }
+      if (Alias != NoAlias)
+        AAQI.updateResult(Locs, OrigAliasResult);
       return Alias;
     }
 
@@ -1659,8 +1651,23 @@ AliasResult BasicAAResult::aliasPHI(const PHINode *PN, LocationSize PNSize,
   if (isRecursive)
     PNSize = LocationSize::unknown();
 
+  // In the recursive alias queries below, we may compare values from two
+  // different loop iterations. Keep track of visited phi blocks, which will
+  // be used when determining value equivalence.
+  bool BlockInserted = VisitedPhiBBs.insert(PN->getParent()).second;
+  auto _ = make_scope_exit([&]() {
+    if (BlockInserted)
+      VisitedPhiBBs.erase(PN->getParent());
+  });
+
+  // If we inserted a block into VisitedPhiBBs, alias analysis results that
+  // have been cached earlier may no longer be valid. Perform recursive queries
+  // with a new AAQueryInfo.
+  AAQueryInfo NewAAQI;
+  AAQueryInfo *UseAAQI = BlockInserted ? &NewAAQI : &AAQI;
+
   AliasResult Alias = aliasCheck(V2, V2Size, V2AAInfo, V1Srcs[0], PNSize,
-                                 PNAAInfo, AAQI, UnderV2);
+                                 PNAAInfo, *UseAAQI, UnderV2);
 
   // Early exit if the check of the first PHI source against V2 is MayAlias.
   // Other results are not possible.
@@ -1676,8 +1683,8 @@ AliasResult BasicAAResult::aliasPHI(const PHINode *PN, LocationSize PNSize,
   for (unsigned i = 1, e = V1Srcs.size(); i != e; ++i) {
     Value *V = V1Srcs[i];
 
-    AliasResult ThisAlias =
-        aliasCheck(V2, V2Size, V2AAInfo, V, PNSize, PNAAInfo, AAQI, UnderV2);
+    AliasResult ThisAlias = aliasCheck(V2, V2Size, V2AAInfo, V, PNSize,
+                                       PNAAInfo, *UseAAQI, UnderV2);
     Alias = MergeAliasResults(ThisAlias, Alias);
     if (Alias == MayAlias)
       break;
@@ -1689,8 +1696,9 @@ AliasResult BasicAAResult::aliasPHI(const PHINode *PN, LocationSize PNSize,
 /// Provides a bunch of ad-hoc rules to disambiguate in common cases, such as
 /// array references.
 AliasResult BasicAAResult::aliasCheck(const Value *V1, LocationSize V1Size,
-                                      AAMDNodes V1AAInfo, const Value *V2,
-                                      LocationSize V2Size, AAMDNodes V2AAInfo,
+                                      const AAMDNodes &V1AAInfo,
+                                      const Value *V2, LocationSize V2Size,
+                                      const AAMDNodes &V2AAInfo,
                                       AAQueryInfo &AAQI, const Value *O1,
                                       const Value *O2) {
   // If either of the memory references is empty, it doesn't matter what the
@@ -1792,53 +1800,40 @@ AliasResult BasicAAResult::aliasCheck(const Value *V1, LocationSize V1Size,
 
   // FIXME: This isn't aggressively handling alias(GEP, PHI) for example: if the
   // GEP can't simplify, we don't even look at the PHI cases.
-  if (!isa<GEPOperator>(V1) && isa<GEPOperator>(V2)) {
-    std::swap(V1, V2);
-    std::swap(V1Size, V2Size);
-    std::swap(O1, O2);
-    std::swap(V1AAInfo, V2AAInfo);
-  }
   if (const GEPOperator *GV1 = dyn_cast<GEPOperator>(V1)) {
     AliasResult Result =
         aliasGEP(GV1, V1Size, V1AAInfo, V2, V2Size, V2AAInfo, O1, O2, AAQI);
-    if (Result != MayAlias) {
-      auto ItInsPair = AAQI.AliasCache.insert(std::make_pair(Locs, Result));
-      assert(!ItInsPair.second && "Entry must have existed");
-      ItInsPair.first->second = Result;
-      return Result;
-    }
+    if (Result != MayAlias)
+      return AAQI.updateResult(Locs, Result);
+  } else if (const GEPOperator *GV2 = dyn_cast<GEPOperator>(V2)) {
+    AliasResult Result =
+        aliasGEP(GV2, V2Size, V2AAInfo, V1, V1Size, V1AAInfo, O2, O1, AAQI);
+    if (Result != MayAlias)
+      return AAQI.updateResult(Locs, Result);
   }
 
-  if (isa<PHINode>(V2) && !isa<PHINode>(V1)) {
-    std::swap(V1, V2);
-    std::swap(O1, O2);
-    std::swap(V1Size, V2Size);
-    std::swap(V1AAInfo, V2AAInfo);
-  }
   if (const PHINode *PN = dyn_cast<PHINode>(V1)) {
     AliasResult Result =
         aliasPHI(PN, V1Size, V1AAInfo, V2, V2Size, V2AAInfo, O2, AAQI);
-    if (Result != MayAlias) {
-      Pair = AAQI.AliasCache.try_emplace(Locs, Result);
-      assert(!Pair.second && "Entry must have existed");
-      return Pair.first->second = Result;
-    }
+    if (Result != MayAlias)
+      return AAQI.updateResult(Locs, Result);
+  } else if (const PHINode *PN = dyn_cast<PHINode>(V2)) {
+    AliasResult Result =
+        aliasPHI(PN, V2Size, V2AAInfo, V1, V1Size, V1AAInfo, O1, AAQI);
+    if (Result != MayAlias)
+      return AAQI.updateResult(Locs, Result);
   }
 
-  if (isa<SelectInst>(V2) && !isa<SelectInst>(V1)) {
-    std::swap(V1, V2);
-    std::swap(O1, O2);
-    std::swap(V1Size, V2Size);
-    std::swap(V1AAInfo, V2AAInfo);
-  }
   if (const SelectInst *S1 = dyn_cast<SelectInst>(V1)) {
     AliasResult Result =
         aliasSelect(S1, V1Size, V1AAInfo, V2, V2Size, V2AAInfo, O2, AAQI);
-    if (Result != MayAlias) {
-      Pair = AAQI.AliasCache.try_emplace(Locs, Result);
-      assert(!Pair.second && "Entry must have existed");
-      return Pair.first->second = Result;
-    }
+    if (Result != MayAlias)
+      return AAQI.updateResult(Locs, Result);
+  } else if (const SelectInst *S2 = dyn_cast<SelectInst>(V2)) {
+    AliasResult Result =
+        aliasSelect(S2, V2Size, V2AAInfo, V1, V1Size, V1AAInfo, O1, AAQI);
+    if (Result != MayAlias)
+      return AAQI.updateResult(Locs, Result);
   }
 
   // If both pointers are pointing into the same object and one of them
@@ -1846,19 +1841,14 @@ AliasResult BasicAAResult::aliasCheck(const Value *V1, LocationSize V1Size,
   if (O1 == O2)
     if (V1Size.isPrecise() && V2Size.isPrecise() &&
         (isObjectSize(O1, V1Size.getValue(), DL, TLI, NullIsValidLocation) ||
-         isObjectSize(O2, V2Size.getValue(), DL, TLI, NullIsValidLocation))) {
-      Pair = AAQI.AliasCache.try_emplace(Locs, PartialAlias);
-      assert(!Pair.second && "Entry must have existed");
-      return Pair.first->second = PartialAlias;
-    }
+         isObjectSize(O2, V2Size.getValue(), DL, TLI, NullIsValidLocation)))
+      return AAQI.updateResult(Locs, PartialAlias);
 
   // Recurse back into the best AA results we have, potentially with refined
   // memory locations. We have already ensured that BasicAA has a MayAlias
   // cache result for these, so any recursion back into BasicAA won't loop.
   AliasResult Result = getBestAAResults().alias(Locs.first, Locs.second, AAQI);
-  Pair = AAQI.AliasCache.try_emplace(Locs, Result);
-  assert(!Pair.second && "Entry must have existed");
-  return Pair.first->second = Result;
+  return AAQI.updateResult(Locs, Result);
 }
 
 /// Check whether two Values can be considered equivalent.

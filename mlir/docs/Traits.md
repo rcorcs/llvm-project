@@ -249,7 +249,7 @@ particular:
 -   Ops must be symbols, i.e. also have the `Symbol` trait;
 -   Ops have a single region with multiple blocks that corresponds to the body
     of the function;
--   the absence of a region corresponds to an external function;
+-   An op with a single empty region corresponds to an external function;
 -   arguments of the first block of the region are treated as function
     arguments;
 -   they can have argument and result attributes that are stored in dictionary
@@ -263,7 +263,8 @@ assumption based on it.
 
 ### HasParent
 
-*   `OpTrait::HasParent<typename ParentOpType>` -- `HasParent<string op>`
+*   `OpTrait::HasParent<typename ParentOpType>` -- `HasParent<string op>` or
+    `ParentOneOf<list<string> opList>`
 
 This trait provides APIs and verifiers for operations that can only be nested
 within regions that are attached to operations of `ParentOpType`.
