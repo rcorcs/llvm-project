@@ -29,6 +29,36 @@
 
 using namespace llvm;
 
+
+
+static bool matchGEP(GetElementPtrInst *GEP1, GetElementPtrInst *GEP2) {
+  Type *Ty1 = GEP1->getSourceElementType();
+  SmallVector<Value*, 16> Idxs1(GEP1->idx_begin(), GEP1->idx_end());
+
+  Type *Ty2 = GEP2->getSourceElementType();
+  SmallVector<Value*, 16> Idxs2(GEP2->idx_begin(), GEP2->idx_end());
+
+  if (Ty1!=Ty2) return false;
+  if (Idxs1.size()!=Idxs2.size()) return false;
+
+  if (Idxs1.empty())
+    return true;
+
+  for (unsigned i = 1; i<Idxs1.size(); i++) {
+    Value *V1 = Idxs1[i];
+    Value *V2 = Idxs2[i];
+
+    //structs must have constant indices, therefore they must be constants and must be identical when merging
+    if (isa<StructType>(Ty1)) {
+      if (V1!=V2) return false;
+    }
+    Ty1 = GetElementPtrInst::getTypeAtIndex(Ty1, V1);
+    Ty2 = GetElementPtrInst::getTypeAtIndex(Ty2, V2);
+    if (Ty1!=Ty2) return false;
+  }
+  return true;
+}
+
 static bool match(Value *V1, Value *V2) {
   Instruction *I1 = dyn_cast<Instruction>(V1);
   Instruction *I2 = dyn_cast<Instruction>(V2);
@@ -61,6 +91,12 @@ static bool match(Value *V1, Value *V2) {
       auto *SI1 = dyn_cast<StoreInst>(I1);
       auto *SI2 = dyn_cast<StoreInst>(I2);
       return SI1->getAlign()==SI2->getAlign();
+    }
+    case Instruction::GetElementPtr: {
+      auto *GEP1 = dyn_cast<GetElementPtrInst>(I1);
+      auto *GEP2 = dyn_cast<GetElementPtrInst>(I2);
+      bool Result = matchGEP(GEP1,GEP2);
+      return Result;
     }
     default:
       return true;
@@ -256,11 +292,11 @@ public:
   Tree(Node *Root) : Root(Root) {
     addNode(Root);
     auto *BB = dyn_cast<BasicBlock>(Root->getValue(0));
-    errs() << "Grow Tree 0\n";
+    //errs() << "Grow Tree 0\n";
     growTree(Root,BB);
-    errs() << "Grow Tree 1\n";
+    //errs() << "Grow Tree 1\n";
     buildSchedulingOrder();
-    errs() << "Scheduling order\n";
+    //errs() << "Scheduling order\n";
   }
   
   template<typename ValueT>
@@ -268,11 +304,11 @@ public:
     Root = new Node(Vs);
     addNode(Root);
     auto *BB = dyn_cast<BasicBlock>(Root->getValue(0));
-    errs() << "Grow Tree 0\n";
+    //errs() << "Grow Tree 0\n";
     growTree(Root,BB);
-    errs() << "Grow Tree 1\n";
+    //errs() << "Grow Tree 1\n";
     buildSchedulingOrder();
-    errs() << "Scheduling order\n";
+    //errs() << "Scheduling order\n";
   }
 
   size_t getWidth() {
@@ -373,7 +409,7 @@ private:
   std::map<GlobalVariable*, Instruction *> GlobalLoad;
 
   Value *cloneTree(Node *N, IRBuilder<> &Builder);
-  void generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Builder);
+  void generateExtract(std::vector<Value *> &VL, Instruction * NewI, IRBuilder<> &Builder);
 
   Value *generateMismatchingCode(std::vector<Value *> &VL, IRBuilder<> &Builder);
   Value *generateGEPSequence(std::vector<Value *> &VL, IRBuilder<> &Builder);
@@ -461,13 +497,12 @@ void Tree::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
 }
 
 bool Tree::isSchedulable(BasicBlock &BB) {
-  errs() << "Attempting scheduling...\n";
+  //errs() << "Attempting scheduling...\n";
 
   //for ( auto *I : SchedulingOrder) I->dump();
   
   if (SchedulingOrder.empty()) return false;
 
-  errs() << "Here 1\n"; 
   Instruction *I = nullptr;
   for (auto &IRef : BB) {
     if (SchedulingOrder[0].contains(&IRef)) {
@@ -475,34 +510,31 @@ bool Tree::isSchedulable(BasicBlock &BB) {
       break;
     }
   }
-  errs() << "Here 2\n"; 
   if (I==nullptr) return false;
-  errs() << "Here 3\n"; 
 
   auto *LastI = dyn_cast<Instruction>(Root->getValue(Root->size()-1))->getNextNode();
   auto It = SchedulingOrder.begin(), E = SchedulingOrder.end();
   size_t Count = SchedulingOrder[0].size();
 
-  errs() << "Start: "; I->dump();
+  //errs() << "Start: "; I->dump();
   while (I!=LastI && It!=E) {
     if ( (*It).contains(I) ) {
       Count--;
       if (Count==0) {
-        errs() << "Here ..\n"; 
         It++;
         if (It!=E) Count = (*It).size();
       }
     } else {
-      errs() << "Skipping: "; I->dump();
+      //errs() << "Skipping: "; I->dump();
       if (I->mayReadOrWriteMemory()) return false;
     }
     I = I->getNextNode();
   }
 
-  errs() << "I: "; I->dump();
-  errs() << "Last: "; LastI->dump();
+  //errs() << "I: "; I->dump();
+  //errs() << "Last: "; LastI->dump();
   bool Result = (I==LastI && It==E);
-  errs() << "Schedulable: " << Result << "\n";
+  //errs() << "Schedulable: " << Result << "\n";
   return Result;
 }
 
@@ -534,12 +566,58 @@ static bool isConstantSequence(const std::vector<ValueT *> VL) {
   return true;
 }
 
+void CodeGenerator::generateExtract(std::vector<Value *> &VL, Instruction * NewI, IRBuilder<> &Builder) {
+  LLVMContext &Context = F.getContext();
+
+  std::set<unsigned> NeedExtract;
+
+  for (unsigned i = 0; i<VL.size(); i++) {
+    Value *V = VL[i];
+    if (!(isa<Operator>(V) || isa<Instruction>(V))) continue;
+    //if (!isa<Instruction>(V)) continue;
+
+    for (auto *U : V->users()) {
+      if (T.find(U)==nullptr) {
+        NeedExtract.insert(i);
+	break;
+      }
+    }
+  }
+
+  if (NeedExtract.empty()) return;
+
+  errs() << "Extracting: "; NewI->dump();
+
+  BasicBlock &Entry = F.getEntryBlock();
+  IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
+
+  Type *IndVarTy = IntegerType::get(Context, 8);
+  Value *ArrPtr = ArrBuilder.CreateAlloca(NewI->getType(), ConstantInt::get(IndVarTy, VL.size()));
+  CreatedCode.push_back(ArrPtr);
+
+  auto *GEP = Builder.CreateGEP(ArrPtr, IndVar);
+  CreatedCode.push_back(GEP);
+  auto *Store = Builder.CreateStore(NewI, GEP);
+  CreatedCode.push_back(Store);
+
+  IRBuilder<> ExitBuilder(Exit);
+  for (unsigned i : NeedExtract) {
+    Instruction *I = dyn_cast<Instruction>(VL[i]);
+    auto *GEP = ExitBuilder.CreateGEP(ArrPtr, ConstantInt::get(IndVarTy, i));
+    CreatedCode.push_back(GEP);
+    auto *Load = ExitBuilder.CreateLoad(GEP);
+    CreatedCode.push_back(Load);
+    Extracted[I] = Load;
+  }
+}
+
+
 Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilder<> &Builder) {
   Module *M = F.getParent();
   LLVMContext &Context = F.getContext();
 
-  //errs() << "Mismatch:\n";
-  //for (Value *V : VL) V->dump();
+  errs() << "Mismatch:\n";
+  for (Value *V : VL) V->dump();
 
   bool AllSame = true;
   for (unsigned i = 0; i<VL.size(); i++) {
@@ -646,6 +724,7 @@ Value *CodeGenerator::generateGEPSequence(std::vector<Value *> &VL, IRBuilder<> 
   Type *Ty = nullptr;
   for (unsigned i = 1; i<VL.size(); i++) {
     if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
+      if (GEP->getParent()!=(&BB)) return nullptr;
       if (GEP->getPointerOperand()!=Ptr) return nullptr;
       if (GEP->getNumIndices()!=1) return nullptr;
       Value *Idx = GEP->getOperand(1);
@@ -671,16 +750,19 @@ Value *CodeGenerator::generateGEPSequence(std::vector<Value *> &VL, IRBuilder<> 
     if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
       if (std::find(Garbage.begin(), Garbage.end(), GEP)==Garbage.end())
         Garbage.push_back(GEP);
-
     }
   }
 
   //errs() << "Generating GEP\n";
   Value *IndVarIdx = generateMismatchingCode(Indices, Builder);
-  auto *GEP = Builder.CreateGEP(Ptr, IndVarIdx);
+  auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(Ptr, IndVarIdx));
   CreatedCode.push_back(GEP);
+
+  generateExtract(VL, GEP, Builder);
+
   return GEP;
 }
+
 
 
 Value *CodeGenerator::generateBinOpSequence(std::vector<Value *> &VL, IRBuilder<> &Builder) {
@@ -694,6 +776,8 @@ Value *CodeGenerator::generateBinOpSequence(std::vector<Value *> &VL, IRBuilder<
   for (unsigned i = 1; i<VL.size(); i++) {
     auto *BinOp = dyn_cast<BinaryOperator>(VL[i]);
     if (BinOp==nullptr) return nullptr;
+    
+    if (BinOp->getParent()!=(&BB)) return nullptr;
 
     if (Opcode) {
       if (Opcode!=BinOp->getOpcode()) return nullptr;
@@ -745,54 +829,10 @@ Value *CodeGenerator::generateBinOpSequence(std::vector<Value *> &VL, IRBuilder<
 
   NewI->setOperand(0,VL[0]);
   NewI->setOperand(1,Op);
+
+  generateExtract(VL, NewI, Builder);
+
   return NewI;
-}
-
-
-void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Builder) {
-  LLVMContext &Context = F.getContext();
-
-  std::set<unsigned> NeedExtract;
-
-  for (unsigned i = 0; i<N->size(); i++) {
-    Value *V = N->getValue(i);
-    if (!(isa<Operator>(V) || isa<Instruction>(V))) continue;
-    //if (!isa<Instruction>(V)) continue;
-
-    for (auto *U : V->users()) {
-      if (T.find(U)==nullptr) {
-        NeedExtract.insert(i);
-	break;
-      }
-    }
-  }
-
-  if (NeedExtract.empty()) return;
-
-  //errs() << "Extracting: "; NewI->dump();
-
-  BasicBlock &Entry = F.getEntryBlock();
-  IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
-
-  Type *IndVarTy = IntegerType::get(Context, 8);
-  Value *ArrPtr = ArrBuilder.CreateAlloca(NewI->getType(), ConstantInt::get(IndVarTy, N->size()));
-  CreatedCode.push_back(ArrPtr);
-
-  auto *GEP = Builder.CreateGEP(ArrPtr, IndVar);
-  CreatedCode.push_back(GEP);
-  auto *Store = Builder.CreateStore(NewI, GEP);
-  CreatedCode.push_back(Store);
-
-  IRBuilder<> ExitBuilder(Exit);
-  for (unsigned i : NeedExtract) {
-    Instruction *I = dyn_cast<Instruction>(N->getValue(i));
-    auto *GEP = ExitBuilder.CreateGEP(ArrPtr, ConstantInt::get(IndVarTy, i));
-    CreatedCode.push_back(GEP);
-    auto *Load = ExitBuilder.CreateLoad(GEP);
-    CreatedCode.push_back(Load);
-    Extracted[I] = Load;
-  }
-
 }
 
 Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
@@ -804,8 +844,12 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       Operands.push_back(cloneTree(N->getChild(i), Builder));
     }
 
-    //errs() << "Match: "; N->getValue(0)->dump();
-
+    errs() << "Match: "; 
+    if (isa<Function>(N->getValue(0))) errs() << N->getValue(0)->getName() << "\n";
+    else {
+	   errs() << "\n";
+	for (auto *V : N->getValues()) V->dump();
+    }
     Instruction *I = dyn_cast<Instruction>(N->getValue(0));
     if (I) {
       Instruction *NewI = I->clone();
@@ -831,7 +875,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 	if (I && std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) Garbage.push_back(I);
       }
 
-      generateExtract(N, NewI, Builder);
+      generateExtract(N->getValues(), NewI, Builder);
 
       return NewI;
     } else return N->getValue(0);
@@ -886,17 +930,13 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   size_t SizeOriginal = EstimateSize(Garbage,DL,&TTI);
   size_t SizeModified = EstimateSize(CreatedCode,DL,&TTI); // + 3;
 
-  bool Profitable = SizeOriginal >= SizeModified + 10;
-
-  //PreHeader->dump();
-  //Header->dump();
-  //Exit->dump();
+  bool Profitable = SizeOriginal > SizeModified;
 
   errs() << "Gains: " << SizeOriginal << " - " << SizeModified << " = " << ( ((int)SizeOriginal) - ((int)SizeModified) ) << "\n";
   if (Profitable) {
     errs() << "Profitable: finishing code generation\n";
 
-    F.dump();
+    BB.dump();
 
     IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
     IndVar->addIncoming(Add,Header);
@@ -925,7 +965,12 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
       Pair.first->replaceAllUsesWith(Pair.second);
     }
 
+    PreHeader->dump();
+    Header->dump();
+    Exit->dump();
+
     for (auto It = Garbage.rbegin(), E = Garbage.rend(); It!=E; It++) {
+      errs() << "Deleting: "; (*It)->dump();
       Seeds.remove(*It);
       (*It)->eraseFromParent();
     }
@@ -940,10 +985,10 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 
     errs() << "Done!\n";
 
-    F.dump();
-    //PreHeader->dump();
-    //Header->dump();
-    //Exit->dump();
+    BB.dump();
+    PreHeader->dump();
+    Header->dump();
+    Exit->dump();
 
     return true;
   } else {
@@ -1017,31 +1062,31 @@ bool LoopRoller::run() {
   bool Changed = false;
   for (BasicBlock *BB : Blocks) {
     collectSeedInstructions(*BB);
-    errs() << "stores\n";
+    //errs() << "stores\n";
     for (auto &Pair : Seeds.Stores) {
       if (Pair.second.size()>1) {
         Tree T(Pair.second);
 	if (T.isSchedulable(*BB)) {
 	  CodeGenerator CG(F, *BB, T);
-	  errs() << "code gen 0\n";
+	  //errs() << "code gen 0\n";
 	  Changed = Changed || CG.generate(Seeds);
-	  errs() << "code gen 1\n";
+	  //errs() << "code gen 1\n";
 	}
-	errs() << "destroying tree\n";
+	//errs() << "destroying tree\n";
         T.destroy();
       }
     }
-    errs() << "calls\n";
+    //errs() << "calls\n";
     for (auto &Pair : Seeds.Calls) {
       if (Pair.second.size()>1) {
         Tree T(Pair.second);
 	if (T.isSchedulable(*BB)) {
 	  CodeGenerator CG(F, *BB, T);
-	  errs() << "code gen 0\n";
+	  //errs() << "code gen 0\n";
 	  Changed = Changed || CG.generate(Seeds);
-	  errs() << "code gen 1\n";
+	  //errs() << "code gen 1\n";
 	}
-	errs() << "destroying tree\n";
+	//errs() << "destroying tree\n";
         T.destroy();
       }
     }
