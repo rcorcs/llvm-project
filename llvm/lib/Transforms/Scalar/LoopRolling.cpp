@@ -312,13 +312,14 @@ public:
   std::string getString() {
     std::string str;
     raw_string_ostream labelStream(str);
-    labelStream << BinOpRef->getOpcodeName() << " seq";
+    labelStream << BinOpRef->getOpcodeName() << " seq.";
     return labelStream.str();
   }
 };
 
 template<typename ValueT>
 static Node *buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+
   if (!isa<PointerType>(VL[0]->getType())) return nullptr;
   auto *Ptr = getUnderlyingObject(VL[0]);
   for (unsigned i = 1; i<VL.size(); i++)
@@ -766,6 +767,7 @@ Node *Tree::find(std::vector<Value *> Vs) {
 void Tree::growTree(Node *N, BasicBlock &BB) {
   switch(N->getNodeType()) {
     case NodeType::MISMATCH: break;
+    case NodeType::INTSEQ: break;
     case NodeType::GEPSEQ: {
        auto &Vs = ((GEPSequenceNode*)N)->getIndices();
        Node *Child = find(Vs);
@@ -813,27 +815,73 @@ void Tree::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
   if (Visited.count(N)) return;
   Visited.insert(N);
 
-  if (N->isMatching()) {
-    for (unsigned j = 0; j<N->getNumChildren(); j++) {
-      buildSchedulingOrder(N->getChild(j), i, Visited);
-    }
+  switch(N->getNodeType()) {
+    case NodeType::MISMATCH: break;
+    case NodeType::INTSEQ: break;
+    case NodeType::MATCH: {
+      if (auto *I = dyn_cast<Instruction>(N->getValue(i))) {
+        for (unsigned j = 0; j<N->getNumChildren(); j++) {
+          buildSchedulingOrder(N->getChild(j), i, Visited);
+        }
+        //if (std::find(SchedulingOrder.begin(),SchedulingOrder.end(),I)==SchedulingOrder.end()) {
+        bool Found = false;
+        for (auto &SN : SchedulingOrder) {
+          if (SN.contains(I)) { Found = true; break; }
+        }
+        if (!Found) {
+          if (I->mayWriteToMemory() || SchedulingOrder.empty()) {
+            //errs() << "Breaking Scheduling Node\n";
+            ScheduleNode SN;
+            SchedulingOrder.push_back(SN);
+          }
+          //I->dump();
+          SchedulingOrder.back().add(I);
+        }
+      }
+    } break;
+    case NodeType::BINOP: {
+      if (auto *I = dyn_cast<BinaryOperator>(N->getValue(i))) {
+        for (unsigned j = 0; j<N->getNumChildren(); j++) {
+          buildSchedulingOrder(N->getChild(j), i, Visited);
+        }
+        //if (std::find(SchedulingOrder.begin(),SchedulingOrder.end(),I)==SchedulingOrder.end()) {
+        bool Found = false;
+        for (auto &SN : SchedulingOrder) {
+          if (SN.contains(I)) { Found = true; break; }
+        }
+        if (!Found) {
+          if (I->mayWriteToMemory() || SchedulingOrder.empty()) {
+            //errs() << "Breaking Scheduling Node\n";
+            ScheduleNode SN;
+            SchedulingOrder.push_back(SN);
+          }
+          //I->dump();
+          SchedulingOrder.back().add(I);
+        }
+      }
+    } break;
+    case NodeType::GEPSEQ: {
+      if (auto *I = dyn_cast<GetElementPtrInst>(N->getValue(i))) {
+        for (unsigned j = 0; j<N->getNumChildren(); j++) {
+          buildSchedulingOrder(N->getChild(j), i, Visited);
+        }
 
-    if (auto *I = dyn_cast<Instruction>(N->getValue(i))) {
-      //if (std::find(SchedulingOrder.begin(),SchedulingOrder.end(),I)==SchedulingOrder.end()) {
-      bool Found = false;
-      for (auto &SN : SchedulingOrder) {
-        if (SN.contains(I)) { Found = true; break; }
+        //if (std::find(SchedulingOrder.begin(),SchedulingOrder.end(),I)==SchedulingOrder.end()) {
+        bool Found = false;
+        for (auto &SN : SchedulingOrder) {
+          if (SN.contains(I)) { Found = true; break; }
+        }
+        if (!Found) {
+          if (I->mayWriteToMemory() || SchedulingOrder.empty()) {
+            //errs() << "Breaking Scheduling Node\n";
+            ScheduleNode SN;
+            SchedulingOrder.push_back(SN);
+          }
+          //I->dump();
+          SchedulingOrder.back().add(I);
+        }
       }
-      if (!Found) {
-	if (I->mayWriteToMemory() || SchedulingOrder.empty()) {
-	  //errs() << "Breaking Scheduling Node\n";
-	  ScheduleNode SN;
-          SchedulingOrder.push_back(SN);
-	}
-	//I->dump();
-        SchedulingOrder.back().add(I);
-      }
-    }
+    } break;
   }
 }
 
@@ -1184,10 +1232,14 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       errs() << "Generating GEP\n";
 #endif
       auto *GN = (GEPSequenceNode*)N;
+
+      std::vector<Value*> Tmp;
       for (unsigned i = 1; i<GN->size(); i++) {
         if (auto *GEP = dyn_cast<GetElementPtrInst>(GN->getValue(i))) {
-          if (std::find(Garbage.begin(), Garbage.end(), GEP)==Garbage.end())
+          if (std::find(Garbage.begin(), Garbage.end(), GEP)==Garbage.end()) {
             Garbage.push_back(GEP);
+	    Tmp.push_back(GEP);
+	  }
         }
       }
 
@@ -1195,7 +1247,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(GN->getPointerOperand(), IndVarIdx));
       CreatedCode.push_back(GEP);
 
-      generateExtract(GN->getValues(), GEP, Builder);
+      generateExtract(Tmp, GEP, Builder);
 
       NodeMap[N] = GEP;
       return GEP;
@@ -1206,10 +1258,13 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 #endif
       auto *BON = (BinOpSequenceNode*)N;
 
+      std::vector<Value*> Tmp;
       for (unsigned i = 1; i<BON->size(); i++) {
         if (auto *BinOp = dyn_cast<BinaryOperator>(BON->getValue(i))) {
-          if (std::find(Garbage.begin(), Garbage.end(), BinOp)==Garbage.end())
+          if (std::find(Garbage.begin(), Garbage.end(), BinOp)==Garbage.end()) {
             Garbage.push_back(BinOp);
+	    Tmp.push_back(BinOp);
+	  }
         }
       }
 
@@ -1221,7 +1276,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       NewI->setOperand(0,BON->getFixedOperand());
       NewI->setOperand(1,Op);
 
-      generateExtract(BON->getValues(), NewI, Builder);
+      generateExtract(Tmp, NewI, Builder);
 
       NodeMap[N] = NewI;
       return NewI;
@@ -1342,6 +1397,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
       Pair.first->replaceAllUsesWith(Pair.second);
     }
 
+    //BB.dump();
     //PreHeader->dump();
     //Header->dump();
     //Exit->dump();
