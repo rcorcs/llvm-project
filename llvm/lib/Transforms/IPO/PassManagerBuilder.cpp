@@ -494,8 +494,8 @@ void PassManagerBuilder::addFunctionSimplificationPasses(
   addExtensionsToPM(EP_ScalarOptimizerLate, MPM);
 
   //if (RerollLoops)
-  MPM.add(createLoopRerollPass());
-  MPM.add(createLoopRollingPass());
+  //MPM.add(createLoopRerollPass());
+  //MPM.add(createLoopRollingPass());
 
   MPM.add(createCFGSimplificationPass()); // Merge & remove BBs
   // Clean up after everything.
