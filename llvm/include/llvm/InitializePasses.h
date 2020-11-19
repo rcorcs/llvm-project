@@ -305,6 +305,7 @@ void initializeMemorySSAPrinterLegacyPassPass(PassRegistry&);
 void initializeMemorySSAWrapperPassPass(PassRegistry&);
 void initializeMemorySanitizerLegacyPassPass(PassRegistry&);
 void initializeMergeFunctionsLegacyPassPass(PassRegistry&);
+void initializeFunctionMergingPass(PassRegistry&);
 void initializeMergeICmpsLegacyPassPass(PassRegistry &);
 void initializeMergedLoadStoreMotionLegacyPassPass(PassRegistry&);
 void initializeMetaRenamerPass(PassRegistry&);
