@@ -1,4 +1,3 @@
-//===- FunctionMerging.cpp - A function merging pass ----------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -811,15 +810,14 @@ bool matchCallInsts(const CallInst *CI1, const CallInst *CI2) {
     }
   }
 
-  return CI1->getCallingConv() ==
-         CI2->getCallingConv(); // &&
-                                // CI->getAttributes() ==
-                                // cast<CallInst>(I2)->getAttributes();
+  return CI1->getCallingConv() == CI2->getCallingConv()
+      && CI1->getAttributes() == CI2->getAttributes();
 }
 
 bool matchInvokeInsts(const InvokeInst *II1, const InvokeInst *II2) {
-    return II1->getCallingConv() == II2->getCallingConv() &&
-           matchLandingPad(II1->getLandingPadInst(), II2->getLandingPadInst());
+    return II1->getCallingConv() == II2->getCallingConv()
+        && II1->getAttributes() == II2->getAttributes()
+        && matchLandingPad(II1->getLandingPadInst(), II2->getLandingPadInst());
 }
 
 bool matchInsertValueInsts(const InsertValueInst *IV1, const InsertValueInst *IV2) {
@@ -865,9 +863,6 @@ bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2, const F
   if (!sameType)
     return false;
 
-  //if (I1->hasNoUnsignedWrap()!=I2->hasNoUnsignedWrap()) return false;
-  //if (I1->hasNoSignedWrap()!=I2->hasNoSignedWrap()) return false;
-
   switch (I1->getOpcode()) {
   //case Instruction::Br: return false; //{ return (I1->getNumOperands()==1); }
 
@@ -901,8 +896,28 @@ bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2, const F
            RMWI->getSyncScopeID() == cast<AtomicRMWInst>(I2)->getSyncScopeID();
   }
   default:
-    if (const CmpInst *CI = dyn_cast<CmpInst>(I1))
+    if (auto *CI = dyn_cast<CmpInst>(I1))
       return CI->getPredicate() == cast<CmpInst>(I2)->getPredicate();
+    if (isa<OverflowingBinaryOperator>(I1)) {
+      if (!isa<OverflowingBinaryOperator>(I2)) return false;
+      if (I1->hasNoUnsignedWrap()!=I2->hasNoUnsignedWrap()) return false;
+      if (I1->hasNoSignedWrap()!=I2->hasNoSignedWrap()) return false;
+    }
+    if (isa<PossiblyExactOperator>(I1)) {
+      if (!isa<PossiblyExactOperator>(I2)) return false;
+      if (I1->isExact()!=I2->isExact()) return false;
+    }
+    if (isa<FPMathOperator>(I1)) {
+      if (!isa<FPMathOperator>(I2)) return false;
+      if (I1->isFast()!=I2->isFast()) return false;
+      if (I1->hasAllowReassoc()!=I2->hasAllowReassoc()) return false;
+      if (I1->hasNoNaNs()!=I2->hasNoNaNs()) return false;
+      if (I1->hasNoInfs()!=I2->hasNoInfs()) return false;
+      if (I1->hasNoSignedZeros()!=I2->hasNoSignedZeros()) return false;
+      if (I1->hasAllowReciprocal()!=I2->hasAllowReciprocal()) return false;
+      if (I1->hasAllowContract()!=I2->hasAllowContract()) return false;
+      if (I1->hasApproxFunc()!=I2->hasApproxFunc()) return false;
+    }
   }
 
   return true;
@@ -1049,24 +1064,6 @@ void FunctionMerger::linearize(Function *F, SmallVectorImpl<Value *> &FVec,
   }
 }
 
-/*
-void FunctionMerger::alignLinearizedCFGs(SmallVectorImpl<Value *> &F1Vec,
-                    SmallVectorImpl<Value *> &F2Vec,
-                    std::list<std::pair<Value *, Value *>> &AlignedInstsList) {
-
-  ScoringSystem Scoring;
-  Scoring.setMatchProfit(1)
-         .setAllowMismatch(false)
-         .setGapStartPenalty(-3)
-         .setGapExtendPenalty(0)
-         .setPenalizeStartingGap(true)
-         .setPenalizeEndingGap(false);
-
-  SequenceAligner<Value*> SA(F1Vec,F2Vec,FunctionMerger::match,(Value*)nullptr,Scoring);
-  AlignedInstsList = SA.Result.Data;
-}
-*/
-
 bool FunctionMerger::validMergeTypes(Function *F1, Function *F2, const FunctionMergingOptions &Options) {
   bool EquivTypes = areTypesEquivalent(F1->getReturnType(), F2->getReturnType(), DL, 
                                        Options);
@@ -1124,6 +1121,9 @@ static void MergeArguments(LLVMContext &Context, Function *F1, Function *F2, Ali
     ArgId++;
   }
 
+  auto AttrList1 = F1->getAttributes();
+  auto AttrList2 = F2->getAttributes();
+
   // merge arguments from Function2 with Function1
   ArgId = 0;
   for (auto I = F2->arg_begin(), E = F2->arg_end(); I != E; I++) {
@@ -1133,14 +1133,11 @@ static void MergeArguments(LLVMContext &Context, Function *F1, Function *F2, Ali
     // otherwise try to match by type only
     for (unsigned i = 0; i < ArgsList1.size(); i++) {
       if (ArgsList1[i]->getType() == (*I).getType()) {
-        if ( (*I).getType()->isPointerTy() ) {
-	if (ArgsList1[i]->getDereferenceableBytes()!=(*I).getDereferenceableBytes())
-	  continue;
-	if (ArgsList1[i]->getDereferenceableOrNullBytes()!=(*I).getDereferenceableOrNullBytes())
-	  continue;
-	if (ArgsList1[i]->getParamAlign()!=(*I).getParamAlign())
-	  continue;
-	}
+	
+	auto AttrSet1 = AttrList1.getParamAttributes( ArgsList1[i]->getArgNo() );
+	auto AttrSet2 = AttrList2.getParamAttributes( (*I).getArgNo() );
+	if (AttrSet1!=AttrSet2) continue;
+
         bool hasConflict = false; // check for conflict from a previous matching
         for (auto ParamPair : ParamMap2) {
           if (ParamPair.second == ParamMap1[i]) {
@@ -1646,42 +1643,34 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   }
   Value *FuncId = ArgsList[0];
 
+
+  auto AttrList1 = F1->getAttributes();
+  auto AttrList2 = F2->getAttributes();
+  auto AttrListM = MergedFunc->getAttributes();
+
   int ArgId = 0;
   for (auto I = F1->arg_begin(), E = F1->arg_end(); I != E; I++) {
     VMap[&(*I)] = ArgsList[ParamMap1[ArgId]];
 
-    if ( (*I).getType()->isPointerTy() ) {
-    if ( (*I).getDereferenceableBytes() ) {
-      MergedFunc->addDereferenceableParamAttr( ParamMap1[ArgId], (*I).getDereferenceableBytes() );
-    }
-    if ( (*I).getDereferenceableOrNullBytes() ) {
-      MergedFunc->addDereferenceableOrNullParamAttr( ParamMap1[ArgId], (*I).getDereferenceableOrNullBytes() );
-    }
-    if ( auto Alignment = (*I).getParamAlign() ) {
-      if (Alignment.hasValue())
-	MergedFunc->addParamAttr(ParamMap1[ArgId], Attribute::getWithAlignment(Context, Alignment.getValue()));
-    }
-    }
+    auto AttrSet1 = AttrList1.getParamAttributes( (*I).getArgNo() );
+    AttrBuilder Attrs(AttrSet1);
+    AttrListM = AttrListM.addParamAttributes(Context, ArgsList[ParamMap1[ArgId]]->getArgNo(), Attrs );
 
     ArgId++;
   }
+
   ArgId = 0;
   for (auto I = F2->arg_begin(), E = F2->arg_end(); I != E; I++) {
     VMap[&(*I)] = ArgsList[ParamMap2[ArgId]];
-    if ( (*I).getType()->isPointerTy() ) {
-    if ( (*I).getDereferenceableBytes() ) {
-      MergedFunc->addDereferenceableParamAttr( ParamMap2[ArgId], (*I).getDereferenceableBytes() );
-    }
-    if ( (*I).getDereferenceableOrNullBytes() ) {
-      MergedFunc->addDereferenceableOrNullParamAttr( ParamMap2[ArgId], (*I).getDereferenceableOrNullBytes() );
-    }
-    if ( auto Alignment = (*I).getParamAlign() ) {
-      if (Alignment.hasValue())
-	MergedFunc->addParamAttr(ParamMap2[ArgId], Attribute::getWithAlignment(Context, Alignment.getValue()));
-    }
-    }
+
+    auto AttrSet2 = AttrList2.getParamAttributes( (*I).getArgNo() );
+    AttrBuilder Attrs(AttrSet2);
+    AttrListM = AttrListM.addParamAttributes(Context, ArgsList[ParamMap2[ArgId]]->getArgNo(), Attrs );
+
     ArgId++;
   }
+  MergedFunc->setAttributes(AttrListM);
+
 
 #ifdef TIME_STEPS_DEBUG
   TimeParam.stopTimer();
@@ -2636,9 +2625,10 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
       //      "Num of Operands SHOULD be EQUAL!");
       NewI = I->clone();
       Builder.Insert(NewI);
+
     }
     
-    NewI->dropPoisonGeneratingFlags(); //TODO: NOT SURE IF THIS IS VALID
+    //NewI->dropPoisonGeneratingFlags(); //TODO: NOT SURE IF THIS IS VALID
 
 
     // TODO: temporarily removing metadata
@@ -2655,16 +2645,14 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
       dyn_cast<GetElementPtrInst>(NewI)->setIsInBounds(GEP->isInBounds());
     }
     
-    if (CallBase *CB = dyn_cast<CallBase>(NewI)) {
-      AttributeList AL;
-      CB->setAttributes(AL);
+    if (auto *CB = dyn_cast<CallBase>(I)) {
+      auto *NewCB = dyn_cast<CallBase>(NewI);
+      auto AttrList = CB->getAttributes();
+      NewCB->setAttributes(AttrList);
     }
-
     
     return NewI;
   };
-
-  
 
   for (auto &Entry : AlignedSeq) {
     if (Entry.match()) {
