@@ -120,7 +120,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#ifdef __unix__
+#if defined(__unix__) || defined(__linux__)
 /* __unix__ is usually defined by compilers targeting Unix systems */
 #include <unistd.h>
 #elif defined(_WIN32) || defined(WIN32)
@@ -249,7 +249,7 @@ unsigned TestCount = 0;
 
 //////////////////////////// Tests
 
-#ifdef __unix__                    /* __unix__ is usually defined by compilers targeting Unix systems */
+#if defined(__unix__) || defined(__linux__)
 
 unsigned long long getTotalSystemMemory()
 {
@@ -2187,9 +2187,11 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   }
   //errs() << "Here Lin 2\n";
 
+#ifndef __APPLE__
   size_t MemoryRequirement = F1Vec.size()*F2Vec.size()*sizeof(ScoreSystemType);
   if (MemoryRequirement > getTotalSystemMemory()*0.9) 
     return ErrorResponse;
+#endif
 
 #ifdef TIME_STEPS_DEBUG
   TimeLin.stopTimer();
