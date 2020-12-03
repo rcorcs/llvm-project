@@ -120,6 +120,14 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef __unix__
+/* __unix__ is usually defined by compilers targeting Unix systems */
+#include <unistd.h>
+#elif defined(_WIN32) || defined(WIN32)
+/* _Win32 is usually defined by compilers targeting 32 or   64 bit Windows systems */
+#include <windows.h>
+#endif
+
 #define DEBUG_TYPE "MyFuncMerge"
 
 //#define ENABLE_DEBUG_CODE
@@ -216,6 +224,13 @@ static cl::opt<std::string> OptBenchName (
 
 //////////////////////////// Tests
 
+static cl::opt<std::string> TestFM_DataPATH("func-merging-gen-prefix",
+                            cl::init(""), cl::Hidden, cl::desc(""));
+
+
+static cl::opt<bool> TestFM_Oracle("fm-built-oracle",
+                            cl::init(false), cl::Hidden, cl::desc(""));
+
 static cl::opt<bool> TestFM_CompilationCostModel("fm-built-size-cost",
                             cl::init(false), cl::Hidden, cl::desc(""));
 
@@ -223,10 +238,36 @@ static cl::opt<std::string> TestFM_ClangPATH("fm-built-size-cost-cc",
                             cl::init(""), cl::Hidden, cl::desc(""));
 
 
+
+
 #define OPTIMIZE_SALSSA_CODEGEN
 //#define DEBUG_OUTPUT_EACH_CHANGE
 
+
+std::string TPrefix;
+unsigned TestCount = 0;
+
 //////////////////////////// Tests
+
+#ifdef __unix__                    /* __unix__ is usually defined by compilers targeting Unix systems */
+
+unsigned long long getTotalSystemMemory()
+{
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    return pages * page_size;
+}
+
+#elif defined(_WIN32) || defined(WIN32)     /* _Win32 is usually defined by compilers targeting 32 or   64 bit Windows systems */
+
+unsigned long long getTotalSystemMemory()
+{
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    return status.ullTotalPhys;
+}
+#endif
 
 static Value *GetAnyValue(Type *Ty) {
   switch (Ty->getTypeID()) {
@@ -2146,6 +2187,10 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   }
   //errs() << "Here Lin 2\n";
 
+  size_t MemoryRequirement = F1Vec.size()*F2Vec.size()*sizeof(ScoreSystemType);
+  if (MemoryRequirement > getTotalSystemMemory()*0.9) 
+    return ErrorResponse;
+
 #ifdef TIME_STEPS_DEBUG
   TimeLin.stopTimer();
 #endif
@@ -2988,6 +3033,7 @@ static void TmpLinearize(Function *F, SmallVectorImpl<Value *> &FVec) {
   for (BasicBlock *BB : OrderedBBs) {
     FVec.push_back(BB);
     for (Instruction &I : *BB) {
+      //FVec.push_back(&I);
       if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
         FVec.push_back(&I);
       }
@@ -3025,14 +3071,18 @@ static std::string GetTypeName(const Type *Ty) {
 }
 
 
-static void WriteTrainingFile(Function *F1, Function *F2, bool Profitable, bool Append=true) {
+static void WriteTrainingFile(std::string Prefix, Function *F1, Function *F2, Function *FM, bool Profitable, bool Append=true) {
 
   SmallVector<Value*,8> F1Vec;
   SmallVector<Value*,8> F2Vec;
   TmpLinearize(F1,F1Vec);
   TmpLinearize(F2,F2Vec);
+  SmallVector<Value*,8> FMVec;
+  if (FM) TmpLinearize(FM,FMVec);
 
-  std::ofstream out("../training.txt", Append ? (std::ofstream::out | std::ofstream::app) : std::ofstream::out );
+  std::string Name = Prefix+std::string("training.txt");
+
+  std::ofstream out(Name.c_str(), Append ? (std::ofstream::out | std::ofstream::app) : std::ofstream::out );
 
   out << "= " << ((int)Profitable) << "\n";
   auto WriteFunc = [&](auto &Vec) {
@@ -3048,30 +3098,36 @@ static void WriteTrainingFile(Function *F1, Function *F2, bool Profitable, bool 
    
         out << GetTypeName(Ty) << "\n";
       
-      } else out << "#label\n";
+      } else out << "label\n";
     }
-    out << "#EOS\n";
+    out << "EOS\n";
   };
-  out << "#fn: " << GetValueName(F1) << "\n";
+  out << "!fn: " << GetValueName(F1) << "\n";
   WriteFunc(F1Vec);
-  out << "#fn: " << GetValueName(F2) << "\n";
+  out << "!fn: " << GetValueName(F2) << "\n";
   WriteFunc(F2Vec);
-
+  if (FM) {
+    out << "!fn: " << GetValueName(FM) << "\n";
+    WriteFunc(FMVec);
+  }
   out.close();
 }
 
-static void WriteTrainingFile2(Function *F1, Function *F2, bool Profitable, bool Append=true) {
+static void WriteTrainingFile2(std::string Prefix, Function *F1, Function *F2, Function *FM, bool Profitable, bool Append=true) {
 
   SmallVector<Value*,8> F1Vec;
   SmallVector<Value*,8> F2Vec;
   TmpLinearize(F1,F1Vec);
   TmpLinearize(F2,F2Vec);
+  SmallVector<Value*,8> FMVec;
+  if (FM) TmpLinearize(FM,FMVec);
 
   //std::string FileName = "../training-full.txt";
   //std::error_code ec;
   //llvm::raw_fd_ostream os(FileName, ec, llvm::sys::fs::OF_Text);
 
-  std::ofstream out("../training-full.txt", Append ? (std::ofstream::out | std::ofstream::app) : std::ofstream::out );
+  std::string Name = Prefix+std::string("training-full.txt");
+  std::ofstream out(Name.c_str(), Append ? (std::ofstream::out | std::ofstream::app) : std::ofstream::out );
   llvm::raw_os_ostream os(out);
 
   out << "= " << ((int)Profitable) << "\n";
@@ -3091,16 +3147,20 @@ static void WriteTrainingFile2(Function *F1, Function *F2, bool Profitable, bool
         out << GetTypeName(Ty) << "\n";
 	*/
       } else {
-	out << "#label: " << GetValueName(V) << "\n";
+	out << "!label: " << GetValueName(V) << "\n";
       }
     }
-    out << "#EOS\n";
+    out << "EOS\n";
   };
   
-  out << "#fn: " << GetValueName(F1) << "\n";
+  out << "!fn: " << GetValueName(F1) << "\n";
   WriteFunc(F1Vec);
-  out << "#fn: " << GetValueName(F2) << "\n";
+  out << "!fn: " << GetValueName(F2) << "\n";
   WriteFunc(F2Vec);
+  if (FM) {
+    out << "!fn: " << GetValueName(FM) << "\n";
+    WriteFunc(FMVec);
+  }
 
   out.close();
 }
@@ -3115,6 +3175,10 @@ bool FunctionMerging::runOnModule(Module &M) {
 #endif
 
   //errs() << "Running FMSA\n";
+
+  TPrefix = std::string("/tmp/")+std::to_string(getpid()) + std::string("-") + std::to_string((size_t)(&FunctionMerging::ID))+std::string(".");
+  //TPrefix = std::string("../");
+
 
   StringSet<> AlwaysPreserved;
   AlwaysPreserved.insert("main");
@@ -3199,8 +3263,8 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   Optional<size_t> SizeF1F2Opt;
   Optional<size_t> SizeF12Opt;
-  if (TestFM_CompilationCostModel) {
-    //SizeF1F2Opt = MeasureSize(M); //oracle
+  if (TestFM_Oracle) {
+    SizeF1F2Opt = MeasureSize(M, "oracle1"); //oracle
   }
 
   while (!WorkList.empty()) {
@@ -3289,12 +3353,17 @@ bool FunctionMerging::runOnModule(Module &M) {
 #endif
         TimePrediction.startTimer();
 
-        WriteTrainingFile(F1,F2, false, false);
-        WriteTrainingFile2(F1,F2, false, false);
-        std::string Cmd = std::string("python3 /home/rodrigo/ml/deepopt/repo/src/predict.py /home/rodrigo/ml/deepopt/testing.txt ") + OptBenchName + std::string(" ../training.txt > /tmp/prediction.txt");
+        WriteTrainingFile(TPrefix, F1,F2, nullptr, false, false);
+
+	std::string PredictionPath = TPrefix + std::string(".prediction.txt");
+
+        //WriteTrainingFile2(TPrefix, F1,F2, nullptr, false, false);
+        //std::string Cmd = std::string("python3 /home/rodrigo/ml/deepopt/repo/src/v2/predict.py /home/rodrigo/ml/deepopt/data/dataset-n1-built-full-2.txt  ") + OptBenchName + std::string(" ../training-full.txt > /tmp/prediction.txt");
+        std::string Cmd = std::string("python3 /home/rodrigo/ml/deepopt/repo/src/v4/predict.py /home/rodrigo/ml/deepopt/data/dataset-n1-built-2.txt  ") + OptBenchName + std::string("   ") + TPrefix+std::string("training.txt") + std::string("  >   ") + PredictionPath;
+        //std::string Cmd = std::string("python3 /home/rodrigo/ml/deepopt/repo/src/v1/predict.py /home/rodrigo/ml/deepopt/data/testing.txt  ") + OptBenchName + std::string(" ../training.txt > /tmp/prediction.txt");
         bool BadMeasurement = std::system(Cmd.c_str());
         if ( !BadMeasurement ) {
-        std::ifstream ifs("/tmp/prediction.txt");
+        std::ifstream ifs(PredictionPath.c_str());
         if ( ifs.good() ) {
           std::string Str;
           ifs >> Str;
@@ -3309,6 +3378,8 @@ bool FunctionMerging::runOnModule(Module &M) {
         TimeTotal.startTimer();
 #endif
       }
+
+      if (!ProftablePrediction) { errs() << "Skipping\n"; }
 
       if (ProftablePrediction) {
 
@@ -3374,22 +3445,8 @@ bool FunctionMerging::runOnModule(Module &M) {
 
         unsigned SizeF1F2 = SizeF1+SizeF2;
 
-        if (TestFM_CompilationCostModel) {
-	  /*
-          std::vector<Function*> F1F2Arr;
-          F1F2Arr.push_back(F1);
-          F1F2Arr.push_back(F2);
-          Optional<size_t> SizeF1F2Opt = MeasureSize(F1F2Arr,M);
-
-          std::vector<Function*> F12Arr;
-          F12Arr.push_back(Result.getMergedFunction());
-          Optional<size_t> SizeF12Opt = MeasureSize(F12Arr,M);
-          */
-          //Optional<size_t> SizeF1F2Opt = MeasureOriginalSize(M,Result,AlwaysPreserved,Options);
-          //Optional<size_t> SizeF12Opt = MeasureMergedSize(M,Result,AlwaysPreserved,Options);
-
-	  
-	  /* //oracle
+	if (TestFM_Oracle) {
+	   //oracle
           SizeF12Opt = MeasureSize(M,Result,AlwaysPreserved,Options);
 	 
           if (SizeF1F2Opt.hasValue() && SizeF12Opt.hasValue() && SizeF1F2Opt.getValue() && SizeF12Opt.getValue()) {
@@ -3401,38 +3458,61 @@ bool FunctionMerging::runOnModule(Module &M) {
               Result.getMergedFunction()->eraseFromParent();
             continue; //only accept compiled estimates
           }
-	  */
-         
+	}
+
+	bool ProfitableOracle = (SizeF12 <
+            SizeF1F2 * ((100.0 + MergingOverheadThreshold) / 100.0));
+
+          errs() << "Estimated Sizes: " << SizeF1F2 << " <= " << SizeF12 << "? : " << ProfitableOracle
+                 << ": Reduction: "
+                 << (int)(((((double)SizeF1F2) - (double)SizeF12) / ((double)SizeF1F2)) * 100.)
+                 << "% \n";
+
+        if (TestFM_CompilationCostModel) {
+          
 	  //errs() << "Here 3\n";
           if (!MeasureMergedSize(SizeF1F2,SizeF12,M,Result,AlwaysPreserved,Options)) {
+            if (ProfitableOracle) {
+		    errs() << "Could not extract profitable candidate!! " << TestCount <<"\n";
+	    }
             if (Result.getMergedFunction() != nullptr)
               Result.getMergedFunction()->eraseFromParent();
 	     continue;
 	  }
+	  
         } 
 
 	Profitable = (SizeF12 <
             SizeF1F2 * ((100.0 + MergingOverheadThreshold) / 100.0));
+
+        if (ProfitableOracle!=Profitable) {
+	  errs() << "unexpected diversion! " << TestCount <<"\n";
+
+	}
+        TestCount++;
+
 
         if (Debug || Verbose) {
           errs() << "Estimated Sizes: " << SizeF1F2 << " <= " << SizeF12 << "? : " << Profitable 
                  << ": Reduction: "
                  << (int)(((((double)SizeF1F2) - (double)SizeF12) / ((double)SizeF1F2)) * 100.)
                  << "% : "
-                 << MergingTrialsCount << " : " << GetValueName(F1)
-                 << "; " << GetValueName(F2) << " :  Score : " << RankEntry.Score
+                 << MergingTrialsCount << " : "
+		 << GetValueName(F1) << "; " << GetValueName(F2)
                  << "\n";
         }
 
 	
         if ((GenTestingData || GenTrainingData) && EnableSALSSA) {
-	   WriteTrainingFile(F1,F2, Profitable);
-           WriteTrainingFile2(F1,F2, Profitable);
+           if (!RunPrediction) {
+	     WriteTrainingFile(TestFM_DataPATH,F1,F2, Result.getMergedFunction(), Profitable);
+             WriteTrainingFile2(TestFM_DataPATH,F1,F2, Result.getMergedFunction(), Profitable);
+	   }
         }
 
-        if (GenTrainingData && EnableSALSSA) {
-           Profitable = false;
-        }
+        //if (GenTrainingData && EnableSALSSA) {
+        //   Profitable = false;
+        //}
 
 
         if (Profitable) {
@@ -3502,8 +3582,8 @@ bool FunctionMerging::runOnModule(Module &M) {
           TimeUpdate.stopTimer();
 #endif
 
-          if (TestFM_CompilationCostModel) {
-            //SizeF1F2Opt = SizeF12Opt; //oracle
+          if (TestFM_Oracle) {
+            SizeF1F2Opt = SizeF12Opt; //oracle
           }
 
           //if (!ProftablePrediction)
