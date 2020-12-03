@@ -117,6 +117,14 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef __unix__
+/* __unix__ is usually defined by compilers targeting Unix systems */
+#include <unistd.h>
+#elif defined(_WIN32) || defined(WIN32)
+/* _Win32 is usually defined by compilers targeting 32 or   64 bit Windows systems */
+#include <windows.h>
+#endif
+
 #define DEBUG_TYPE "MyFuncMerge"
 
 //#define ENABLE_DEBUG_CODE
@@ -202,6 +210,26 @@ static cl::opt<bool> ConservativeMode (
 //////////////////////////// Tests
 
 static std::string GetValueName(const Value *V);
+
+#ifdef __unix__                    /* __unix__ is usually defined by compilers targeting Unix systems */
+
+unsigned long long getTotalSystemMemory()
+{
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long page_size = sysconf(_SC_PAGE_SIZE);
+    return pages * page_size;
+}
+
+#elif defined(_WIN32) || defined(WIN32)     /* _Win32 is usually defined by compilers targeting 32 or   64 bit Windows systems */
+
+unsigned long long getTotalSystemMemory()
+{
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    return status.ullTotalPhys;
+}
+#endif
 
 FunctionMergeResult MergeFunctions(Function *F1, Function *F2,
  const FunctionMergingOptions &Options) {
@@ -1446,6 +1474,11 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   if (ConservativeMode) {
       errs() << "Sequence Alignment\n";
       NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::matchWholeBlocks);
+
+      if ( SA.getMemoryRequirement(F1Vec,F2Vec) > getTotalSystemMemory()*0.9 )
+        return ErrorResponse;
+        
+
       AlignedSequence<Value*> AlignedBlocks = SA.getAlignment(F1Vec,F2Vec);
       
       errs() << "Expanding Alignment\n";
@@ -1509,6 +1542,10 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 */
       //DiagonalWindowsSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match,256);
       NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
+
+      if ( SA.getMemoryRequirement(F1Vec,F2Vec) > getTotalSystemMemory()*0.9 )
+        return ErrorResponse;
+
       AlignedSeq = SA.getAlignment(F1Vec,F2Vec);
 
 /*
@@ -2347,11 +2384,10 @@ bool FunctionMerging::runOnModule(Module &M) {
         if (Debug || Verbose) {
           errs() << "Estimated Sizes: " << SizeF1 << " + " << SizeF2 << " <= " << SizeF12 << "? " << ( ((int)SizeF1F2)- ((int)SizeF12) ) << " (" << Profitable << ") ";
           errs() << "Reduction: "
-                 << (int)( ((((double)SizeF12) - ((double)SizeF1F2)) / SizeF1F2) * 100 )
+                 << (int)( (( ((double)SizeF1F2) - ((double)SizeF12) ) / SizeF1F2) * 100 )
                  << "% "
                  << MergingTrialsCount << " : " << GetValueName(F1)
-                 << "; " << GetValueName(F2) << " | Score " << RankEntry.Score
-                 << "\n";
+                 << "; " << GetValueName(F2) << "\n";
         }
 
         if (Profitable) {
@@ -3504,9 +3540,11 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
   errs() << "Finishing code\n";
   if (MergedFunc!=nullptr) {
-    //errs() << "Allocas: " << Allocas.size() << " ";
-    //errs() << "Offending: " << OffendingInsts.size() << " ";
-    if (Allocas.size()>1000 || OffendingInsts.size()>1000) {
+    errs() << "Offending: " << OffendingInsts.size() << " ";
+    errs() << ((float)OffendingInsts.size())/((float)AlignedSeq.size()) << " : ";
+    //if (OffendingInsts.size()>1000) {
+    //if (false) {
+    if ( ((float)OffendingInsts.size())/((float)AlignedSeq.size()) > 4.5 ) {
       if (Debug) errs() << "Bailing out\n";
       return false;
     } else {

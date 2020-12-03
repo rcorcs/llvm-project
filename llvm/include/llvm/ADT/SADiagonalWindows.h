@@ -8,6 +8,20 @@ private:
 public:
   DiagonalWindowsSA(ScoringSystem Scoring, MatchFnTy Match, size_t WindowSize) : BaseType(Scoring, Match), WindowSize(WindowSize) {}
 
+  virtual size_t getMemoryRequirement(ContainerType &Seq1,
+                                      ContainerType &Seq2) {
+    const size_t SizeSeq1 = Seq1.size();
+    const size_t SizeSeq2 = Seq2.size();
+    size_t MemorySize = 0;
+
+    MemorySize += sizeof(ScoreSystemType)*(WindowSize+1)*(WindowSize+1);
+
+    if (BaseType::getMatchOperation() != nullptr)
+      MemorySize += WindowSize*WindowSize*sizeof(bool);
+
+    return MemorySize;
+  }
+
   virtual AlignedSequence<Ty,Blank> getAlignment(ContainerType &Seq1, ContainerType &Seq2) {
       
     AlignedSequence<Ty,Blank> Res;

@@ -139,6 +139,20 @@ public:
   HirschbergSA(ScoringSystem Scoring, MatchFnTy Match = nullptr)
    : BaseType(Scoring, Match) {}
 
+  virtual size_t getMemoryRequirement(ContainerType &Seq1,
+                                      ContainerType &Seq2) {
+    const size_t SizeSeq1 = Seq1.size();
+    const size_t SizeSeq2 = Seq2.size();
+    size_t MemorySize = 0;
+
+    MemorySize += sizeof(ScoreSystemType)*(3*(Seq2.size()+1));
+
+    if (BaseType::getMatchOperation() != nullptr)
+      MemorySize += sizeof(bool)*(3*(Seq2.size()+1));
+
+    return MemorySize;
+  }
+
   virtual AlignedSequence<Ty,Blank> getAlignment(ContainerType &Seq1, ContainerType &Seq2) {
     AlignedSequence<Ty,Blank> Result;
     ScoreSystemType *ScoreContainer = new ScoreSystemType[3*(Seq2.size()+1)];

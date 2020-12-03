@@ -88,6 +88,7 @@ public:
   typename std::list< Entry >::iterator begin() { return Data.begin(); }
   typename std::list< Entry >::iterator end() { return Data.end(); }
 
+  size_t size() { return Data.size(); }
 
 };
 
@@ -152,7 +153,7 @@ public:
   Ty getBlank() { return Blank; }
 
   virtual AlignedSequence<Ty,Blank> getAlignment(ContainerType &Seq0, ContainerType &Seq1) = 0;
-
+  virtual size_t getMemoryRequirement(ContainerType &Seq0, ContainerType &Seq1) = 0;
 };
 
 #include "llvm/ADT/SANeedlemanWunsch.h"

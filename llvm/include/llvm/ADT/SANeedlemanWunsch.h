@@ -43,7 +43,7 @@ private:
 
     const size_t NumRows = SizeSeq1 + 1;
     const size_t NumCols = SizeSeq2 + 1;
-    Matrix = new int[NumRows * NumCols];
+    Matrix = new ScoreSystemType[NumRows * NumCols];
     MatrixRows = NumRows;
     MatrixCols = NumCols;
 
@@ -239,6 +239,20 @@ public:
 
   NeedlemanWunschSA(ScoringSystem Scoring, MatchFnTy Match = nullptr)
       : BaseType(Scoring, Match), Matrix(nullptr), Matches(nullptr) {}
+
+  virtual size_t getMemoryRequirement(ContainerType &Seq1,
+                                      ContainerType &Seq2) {
+    const size_t SizeSeq1 = Seq1.size();
+    const size_t SizeSeq2 = Seq2.size();
+    size_t MemorySize = 0;
+
+    MemorySize += sizeof(ScoreSystemType)*(SizeSeq1+1)*(SizeSeq2+1);
+
+    if (BaseType::getMatchOperation() != nullptr)
+      MemorySize += SizeSeq1*SizeSeq2*sizeof(bool);
+
+    return MemorySize;
+  }
 
   virtual AlignedSequence<Ty, Blank> getAlignment(ContainerType &Seq1,
                                                   ContainerType &Seq2) {
