@@ -3178,7 +3178,11 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   //errs() << "Running FMSA\n";
 
-  TPrefix = std::string("/tmp/")+std::to_string(getpid()) + std::string("-") + std::to_string((size_t)(&FunctionMerging::ID))+std::string(".");
+  int pid = 0;
+#ifndef __APPLE__
+  pid = getpid();
+#endif
+  TPrefix = std::string("/tmp/")+std::to_string(pid) + std::string("-") + std::to_string((size_t)(&FunctionMerging::ID))+std::string(".");
   //TPrefix = std::string("../");
 
 
@@ -3239,6 +3243,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 
     CachedFingerprints[&F] = new Fingerprint(&F);
   }
+  errs() << "Number of Functions: " << FunctionsToProcess.size() << "\n";
 
   std::sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
             CompareFunctionScores);
