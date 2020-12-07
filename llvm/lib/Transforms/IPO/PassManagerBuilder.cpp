@@ -64,9 +64,14 @@ static cl::opt<bool> ExtraVectorizerPasses(
     "extra-vectorizer-passes", cl::init(false), cl::Hidden,
     cl::desc("Run cleanup optimization passes after vectorization."));
 
-static cl::opt<bool>
-RunLoopRerolling("reroll-loops", cl::Hidden,
+//static cl::opt<bool>
+//RunLoopRerolling("reroll-loops", cl::Hidden,
+//                 cl::desc("Run the loop rerolling pass"));
+
+static cl::opt<unsigned>
+RunLoopRerolling("reroll-loops", cl::init(0), cl::Hidden,
                  cl::desc("Run the loop rerolling pass"));
+
 
 static cl::opt<bool> RunNewGVN("enable-newgvn", cl::init(false), cl::Hidden,
                                cl::desc("Run the NewGVN pass"));
@@ -494,8 +499,10 @@ void PassManagerBuilder::addFunctionSimplificationPasses(
   addExtensionsToPM(EP_ScalarOptimizerLate, MPM);
 
   //if (RerollLoops)
-  //MPM.add(createLoopRerollPass());
-  //MPM.add(createLoopRollingPass());
+  if (RunLoopRerolling==1 || RunLoopRerolling==3)
+  MPM.add(createLoopRerollPass());
+  if (RunLoopRerolling==2 || RunLoopRerolling==3)
+  MPM.add(createLoopRollingPass());
 
   MPM.add(createCFGSimplificationPass()); // Merge & remove BBs
   // Clean up after everything.
