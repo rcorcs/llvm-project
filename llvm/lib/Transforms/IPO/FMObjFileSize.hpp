@@ -277,13 +277,14 @@ Optional<size_t> MeasureSize(std::vector<Function*> &Fs, Module &M, bool Timeout
   std::unique_ptr<Module> NewM = ExtractMultipleFunctionsIntoNewModule(Fs,M);
   //NewM->dump();
  
-  std::string FilePathLL = TPrefix + std::string("extracted.ll");
+  std::string FilePathLL = TPrefix + std::string("extracted.bc");
   std::string FilePathObj = TPrefix + std::string("extracted.o");
   std::error_code EC;
   llvm::raw_fd_ostream OS(FilePathLL, EC, llvm::sys::fs::F_None);
   //WriteBitcodeToFile(*NewM, OS);
   //NewM->print(OS,false);
-  OS << *NewM;
+  //OS << *NewM;
+  WriteBitcodeToFile(*NewM, OS);
   OS.flush();
 
   std::remove(FilePathObj.c_str());
@@ -310,18 +311,24 @@ Optional<size_t> MeasureSize(std::vector<Function*> &Fs, Module &M, bool Timeout
     
     ifs.close();
     builtObj.close();
+
+    std::remove(FilePathLL.c_str());
+    std::remove(FilePathObj.c_str());
+    std::remove(SizeFileTXT.c_str());
+
     return Optional<size_t>(Size);
   } else return Optional<size_t>();
 }
 
 Optional<size_t> MeasureSize(Module &M, std::string Name, bool Timeout=true) {
-  std::string FilePathLL = TPrefix + std::string("extracted-") + Name + std::string("-") + std::to_string(TestCount) + std::string(".ll");
+  std::string FilePathLL = TPrefix + std::string("extracted-") + Name + std::string("-") + std::to_string(TestCount) + std::string(".bc");
   std::string FilePathObj = TPrefix + std::string("extracted-") + Name + std::string("-") + std::to_string(TestCount) + std::string(".o");
   std::error_code EC;
   llvm::raw_fd_ostream OS(FilePathLL, EC, llvm::sys::fs::F_None);
   //WriteBitcodeToFile(*NewM, OS);
   //NewM->print(OS,false);
-  OS << M;
+  //OS << M;
+  WriteBitcodeToFile(M, OS);
   OS.flush();
 
   std::remove(FilePathObj.c_str());
@@ -331,10 +338,13 @@ Optional<size_t> MeasureSize(Module &M, std::string Name, bool Timeout=true) {
 	            ClangPath+std::string("  -x ir  ") + FilePathLL + std::string("  -Os -c -o  ") + FilePathObj;
   bool CompilationOK = !std::system(Cmd.c_str());
 
+  std::remove(FilePathLL.c_str());
+
   std::ifstream builtObj(FilePathObj.c_str());
   if (CompilationOK && builtObj.good()) {
     auto Size = filesize(FilePathObj);
     builtObj.close();
+    std::remove(FilePathObj.c_str());
     return Size;
   } else return Optional<size_t>();
 
@@ -850,6 +860,7 @@ void ExportForAlive(Function *F, Module &M, FunctionMergeResult &Result, std::st
     std::error_code EC;
     llvm::raw_fd_ostream OS(FilePath, EC, llvm::sys::fs::F_None);
     OS << *NewM;
+    //WriteBitcodeToFile(*NewM, OS);
     OS.flush();
   }
 
@@ -876,6 +887,7 @@ void ExportForAlive(Function *F, Module &M, FunctionMergeResult &Result, std::st
     std::error_code EC;
     llvm::raw_fd_ostream OS(FilePath, EC, llvm::sys::fs::F_None);
     OS << *NewM;
+    //WriteBitcodeToFile(*NewM, OS);
     OS.flush();
   }
 
