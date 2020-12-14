@@ -130,8 +130,9 @@
 //#define ENABLE_DEBUG_CODE
 
 //#define FMSA_USE_JACCARD
+//#define FINGERPRINT_USE_TYPE
 
-//#define TIME_STEPS_DEBUG
+#define TIME_STEPS_DEBUG
 
 using namespace llvm;
 
@@ -1105,8 +1106,7 @@ bool FunctionMerger::validMergeTypes(Function *F1, Function *F2, const FunctionM
 #ifdef TIME_STEPS_DEBUG
 Timer TimeAlign("Merge::Align", "Merge::Align");
 Timer TimeParam("Merge::Param", "Merge::Param");
-Timer TimeCodeGen1("Merge::CodeGen1", "Merge::CodeGen1");
-Timer TimeCodeGen2("Merge::CodeGen2", "Merge::CodeGen2");
+Timer TimeCodeGen("Merge::CodeGen", "Merge::CodeGen");
 Timer TimeCodeGenFix("Merge::CodeGenFix", "Merge::CodeGenFix");
 #endif
 
@@ -1117,12 +1117,12 @@ static bool validMergePair(Function *F1, Function *F2) {
   if (!HasWholeProgram && (F1->hasLinkOnceLinkage() ||
       F2->hasLinkOnceLinkage())) return false;
 
-  if (!F1->getSection().equals(F2->getSection())) return false;
+  //if (!F1->getSection().equals(F2->getSection())) return false;
 //  if (F1->hasSection()!=F2->hasSection()) return false;
 //  if (F1->hasSection() && !F1->getSection().equals(F2->getSection())) return false;
 
-  if (F1->hasComdat()!=F2->hasComdat()) return false;
-  if (F1->hasComdat() && F1->getComdat() != F2->getComdat()) return false;
+  //if (F1->hasComdat()!=F2->hasComdat()) return false;
+  //if (F1->hasComdat() && F1->getComdat() != F2->getComdat()) return false;
   
   if (F1->hasPersonalityFn()!=F2->hasPersonalityFn()) return false;
   if (F1->hasPersonalityFn()) {
@@ -1475,21 +1475,32 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
       errs() << "Sequence Alignment\n";
       NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::matchWholeBlocks);
 
-      if ( SA.getMemoryRequirement(F1Vec,F2Vec) > getTotalSystemMemory()*0.9 )
+      auto MemReq = SA.getMemoryRequirement(F1Vec,F2Vec);
+      auto MemAvailable = getTotalSystemMemory();
+      errs() << "Memory Available: " << MemAvailable << " (" << ((float)MemAvailable/(1024.f*1024.f)) << "); Required: " << MemReq <<  " (" << ((float)MemReq/(1024.f*1024.f)) << ")\n";
+      if ( MemReq > MemAvailable*0.9 ) {
+	errs() << "Insufficient Memory\n";
+#ifdef TIME_STEPS_DEBUG
+  TimeAlign.stopTimer();
+#endif
         return ErrorResponse;
+      }
         
 
       AlignedSequence<Value*> AlignedBlocks = SA.getAlignment(F1Vec,F2Vec);
       
-      errs() << "Expanding Alignment\n";
+      //errs() << "Expanding Alignment\n";
       for (auto &Entry : AlignedBlocks) {
         if (Entry.match()) {
 	  BasicBlock *BB1 = dyn_cast<BasicBlock>(Entry.get(0));
 	  BasicBlock *BB2 = dyn_cast<BasicBlock>(Entry.get(1));
 	  if (BB1==nullptr || BB2==nullptr) {
-             errs() << "WHY?\n";
-	     Entry.get(0)->dump();
-	     Entry.get(1)->dump();
+             //errs() << "WHY?\n";
+	     //Entry.get(0)->dump();
+	     //Entry.get(1)->dump();
+#ifdef TIME_STEPS_DEBUG
+  TimeAlign.stopTimer();
+#endif
               return ErrorResponse;
 	  }
           AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,BB2,true));
@@ -1504,8 +1515,12 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
             Instruction *I1 = &*It1;
             Instruction *I2 = &*It2;
 
-            if (!matchInstructions(I1,I2))
+            if (!matchInstructions(I1,I2)) {
+#ifdef TIME_STEPS_DEBUG
+  TimeAlign.stopTimer();
+#endif
               return ErrorResponse;
+	    }
 
             AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,I2,true));
 
@@ -1513,8 +1528,12 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
             It2++;
           }
 
-          if (It1!=BB1->end() || It2!=BB2->end())
+          if (It1!=BB1->end() || It2!=BB2->end()) {
+#ifdef TIME_STEPS_DEBUG
+  TimeAlign.stopTimer();
+#endif
             return ErrorResponse;
+	  }
 	  
         } else {
 	  if (Entry.get(0)) {
@@ -1543,9 +1562,16 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
       //DiagonalWindowsSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match,256);
       NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
 
-      if ( SA.getMemoryRequirement(F1Vec,F2Vec) > getTotalSystemMemory()*0.9 )
+      auto MemReq = SA.getMemoryRequirement(F1Vec,F2Vec);
+      auto MemAvailable = getTotalSystemMemory();
+      errs() << "Memory Available: " << MemAvailable << " (" << ((float)MemAvailable/(1024.f*1024.f)) << "); Required: " << MemReq <<  " (" << ((float)MemReq/(1024.f*1024.f)) << ")\n";
+      if ( MemReq > MemAvailable*0.9 ) {
+	errs() << "Insufficient Memory\n";
+#ifdef TIME_STEPS_DEBUG
+  TimeAlign.stopTimer();
+#endif
         return ErrorResponse;
-
+      }
       AlignedSeq = SA.getAlignment(F1Vec,F2Vec);
 
 /*
@@ -1572,7 +1598,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   TimeAlign.stopTimer();
 #endif
 
-  errs() << "Code Gen\n";
+  //errs() << "Code Gen\n";
 //#ifdef ENABLE_DEBUG_CODE
   if (Verbose) {
     for (auto &Entry : AlignedSeq) {
@@ -1652,8 +1678,12 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     } else {
       ReturnType = RetType2;
     }
-  } else return ErrorResponse;
-
+  } else {
+#ifdef TIME_STEPS_DEBUG
+  TimeParam.stopTimer();
+#endif
+	  return ErrorResponse;
+  }
   FunctionType *FTy = FunctionType::get(ReturnType, ArrayRef<Type*>(Args), false);
 
   if (Name.empty()) {
@@ -1718,10 +1748,6 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
   Value *IsFunc1 = FuncId;
 
-#ifdef TIME_STEPS_DEBUG
-  TimeCodeGen1.startTimer();
-#endif
-
   //errs() << "Running code generator\n";
 
   auto Gen = [&](auto &CG) {
@@ -1745,6 +1771,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
   SALSSACodeGen<Function::BasicBlockListType> CG(F1->getBasicBlockList(),F2->getBasicBlockList());
   Gen(CG);
+
 
   /*
   if (!RequiresFuncId) {
@@ -1988,17 +2015,19 @@ static bool CompareFunctionScores(const std::pair<Function *, unsigned> &F1,
 
 class Fingerprint {
 public:
-  //static const size_t MaxOpcode = 65;
-  //int OpcodeFreq[MaxOpcode];
-  std::map<unsigned, int> OpcodeFreq;
+  static const size_t MaxOpcode = 68;
+  int OpcodeFreq[MaxOpcode];
+  //std::map<unsigned, int> OpcodeFreq;
   // size_t NumOfInstructions;
   // size_t NumOfBlocks;
 
+#ifdef FINGERPRINT_USE_TYPE
   #ifdef FMSA_USE_JACCARD
   std::set<Type *> Types;
   #else
   std::map<Type*, int> TypeFreq;
   #endif
+#endif
 
   Function *F;
 
@@ -2006,48 +2035,82 @@ public:
     this->F = F;
 
     //memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
-    //for (int i = 0; i<MaxOpcode; i++) OpcodeFreq[i] = 0;
+    for (int i = 0; i<MaxOpcode; i++) OpcodeFreq[i] = 0;
 
     // NumOfInstructions = 0;
     for (Instruction &I : instructions(F)) {
-      //OpcodeFreq[I.getOpcode()]++;
-      if (OpcodeFreq.find(I.getOpcode()) != OpcodeFreq.end())
-        OpcodeFreq[I.getOpcode()]++;
-      else OpcodeFreq[I.getOpcode()] = 1;
+      OpcodeFreq[I.getOpcode()]++;
+
+      //if (OpcodeFreq.find(I.getOpcode()) != OpcodeFreq.end())
+      //  OpcodeFreq[I.getOpcode()]++;
+      //else OpcodeFreq[I.getOpcode()] = 1;
+ 
       // NumOfInstructions++;
       
+#ifdef FINGERPRINT_USE_TYPE
       #ifdef FMSA_USE_JACCARD
       Types.insert(I.getType());
       #else
       TypeFreq[I.getType()]++;
       #endif
+#endif
     }
     // NumOfBlocks = F->size();
   }
 };
 
-class FingerprintSimilarity {
+template<typename T, typename SimilarityT>
+class BaseFingerprintSimilarity {
 public:
   Function *F1;
   Function *F2;
+  T Score;
+
+  BaseFingerprintSimilarity() : F1(nullptr), F2(nullptr), Score(0) {}
+
+  BaseFingerprintSimilarity(Fingerprint *FP1, Fingerprint *FP2) : F1(FP1->F), F2(FP2->F), Score(0) {}
+
+  bool operator<(const SimilarityT &FS) const {
+    return Score < FS.Score;
+  }
+
+  bool operator>(const SimilarityT &FS) const {
+    return Score > FS.Score;
+  }
+
+  bool operator<=(const SimilarityT &FS) const {
+    return Score <= FS.Score;
+  }
+
+  bool operator>=(const SimilarityT &FS) const {
+    return Score >= FS.Score;
+  }
+
+  bool operator==(const SimilarityT &FS) const {
+    return Score == FS.Score;
+  }
+};
+
+class FingerprintSimilarity : public BaseFingerprintSimilarity<float,FingerprintSimilarity> {
+public:
   int Similarity;
   int LeftOver;
+#ifdef FINGERPRINT_USE_TYPE
   int TypesDiff;
   int TypesSim;
-  float Score;
+#endif
+  using Base = BaseFingerprintSimilarity<float,FingerprintSimilarity>;
 
-  FingerprintSimilarity() : F1(nullptr), F2(nullptr), Score(0.0f) {}
+  FingerprintSimilarity() : Base() {}
 
-  FingerprintSimilarity(Fingerprint *FP1, Fingerprint *FP2) {
-    F1 = FP1->F;
-    F2 = FP2->F;
-
+  FingerprintSimilarity(Fingerprint *FP1, Fingerprint *FP2) : Base(FP1,FP2) {
     Similarity = 0;
     LeftOver = 0;
+#ifdef FINGERPRINT_USE_TYPE
     TypesDiff = 0;
     TypesSim = 0;
+#endif
 
-    /*
     for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
       int Freq1 = FP1->OpcodeFreq[i];
       int Freq2 = FP2->OpcodeFreq[i];
@@ -2055,8 +2118,8 @@ public:
       Similarity += MinFreq;
       LeftOver += std::max(Freq1, Freq2) - MinFreq;
     }
-    */
     
+    /*
     for (auto Pair : FP1->OpcodeFreq) {
       if (FP2->OpcodeFreq.find(Pair.first) == FP2->OpcodeFreq.end()) {
         LeftOver += Pair.second;
@@ -2072,7 +2135,9 @@ public:
         LeftOver += Pair.second;
       }
     }
+    */
     
+#ifdef FINGERPRINT_USE_TYPE
     #ifdef FMSA_USE_JACCARD
     for (auto Ty1 : FP1->Types) {
       if (FP2->Types.find(Ty1) == FP2->Types.end())
@@ -2105,50 +2170,98 @@ public:
     float TypeScore =
         ((float)TypesSim) / ((float)(TypesSim * 2.0f + TypesDiff));
     #endif
+#endif
     float UpperBound =
         ((float)Similarity) / ((float)(Similarity * 2.0f + LeftOver));
 
+#ifdef FINGERPRINT_USE_TYPE
     #ifdef FMSA_USE_JACCARD
     Score = UpperBound * TypeScore;
     #else
     Score = std::min(UpperBound,TypeScore);
     #endif
+#else
+    Score = UpperBound;
+#endif
   }
 
-  bool operator<(const FingerprintSimilarity &FS) const {
-    return Score < FS.Score;
-  }
-
-  bool operator>(const FingerprintSimilarity &FS) const {
-    return Score > FS.Score;
-  }
-
-  bool operator<=(const FingerprintSimilarity &FS) const {
-    return Score <= FS.Score;
-  }
-
-  bool operator>=(const FingerprintSimilarity &FS) const {
-    return Score >= FS.Score;
-  }
-
-  bool operator==(const FingerprintSimilarity &FS) const {
-    return Score == FS.Score;
-  }
-};
-
-bool SimilarityHeuristicFilter(const FingerprintSimilarity &Item) {
+  static bool accept(const FingerprintSimilarity &Item) {
   if (!ApplySimilarityHeuristic)
     return true;
 
   if ( ((float)Item.Similarity) < 0.8f*Item.LeftOver)
     return false;
 
+#ifdef FINGERPRINT_USE_TYPE
   float TypesDiffRatio = (((float)Item.TypesDiff) / ((float)Item.TypesSim));
   if (TypesDiffRatio > 2.f)
     return false;
-
+#endif
   return true;
-}
+  }
+
+};
+
+class FingerprintManhattanSimilarity : public BaseFingerprintSimilarity<int,FingerprintManhattanSimilarity> {
+public:
+  using Base = BaseFingerprintSimilarity<int,FingerprintManhattanSimilarity>;
+
+  FingerprintManhattanSimilarity() : Base() { Score = std::numeric_limits<int>::min(); }
+
+  FingerprintManhattanSimilarity(Fingerprint *FP1, Fingerprint *FP2) : Base(FP1,FP2) {
+    for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
+      int Freq1 = FP1->OpcodeFreq[i];
+      int Freq2 = FP2->OpcodeFreq[i];
+      Score += std::abs(Freq1-Freq2);
+    }
+    Score = -Score;
+  }
+
+  static bool accept(const FingerprintManhattanSimilarity &Item) { return true; }
+};
+
+class FingerprintCosineSimilarity : public BaseFingerprintSimilarity<float,FingerprintCosineSimilarity> {
+public:
+  using Base = BaseFingerprintSimilarity<float,FingerprintCosineSimilarity>;
+
+  FingerprintCosineSimilarity() : Base() {}
+
+  FingerprintCosineSimilarity(Fingerprint *FP1, Fingerprint *FP2) : Base(FP1,FP2) {
+    int AB = 0;
+    int A2 = 0;
+    int B2 = 0;
+    for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
+      int Freq1 = FP1->OpcodeFreq[i];
+      int Freq2 = FP2->OpcodeFreq[i];
+      AB += Freq1*Freq2;
+      A2 += Freq1*Freq1;
+      B2 += Freq2*Freq2;
+    }
+    Score = ((float)AB)/(std::sqrt((float)A2)*std::sqrt((float)B2));
+  }
+
+  static bool accept(const FingerprintCosineSimilarity &Item) { return true; }
+};
+
+class FingerprintEuclideanSimilarity : public BaseFingerprintSimilarity<float,FingerprintEuclideanSimilarity> {
+public:
+  using Base = BaseFingerprintSimilarity<float,FingerprintEuclideanSimilarity>;
+
+  FingerprintEuclideanSimilarity() : Base() { Score = std::numeric_limits<int>::min(); }
+
+  FingerprintEuclideanSimilarity(Fingerprint *FP1, Fingerprint *FP2) : Base(FP1,FP2) {
+    int Sum = 0;
+    for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
+      int Freq1 = FP1->OpcodeFreq[i];
+      int Freq2 = FP2->OpcodeFreq[i];
+      int Sub = Freq1-Freq2;
+      Sum += Sub*Sub;
+    }
+    Score = - std::sqrt((float)Sum);
+  }
+
+  static bool accept(const FingerprintEuclideanSimilarity &Item) { return true; }
+};
 
 size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
   double size = 0;
@@ -2176,6 +2289,9 @@ Timer TimeRank("Merge::Rank", "Merge::Rank");
 Timer TimeUpdate("Merge::Update", "Merge::Update");
 #endif
 
+//template<typename SimilarityT>
+//bool FunctionMerging::search(std::list<Function *> &AvailableCandidates, std::list<Function *> &WorkList, FunctionMergingOptions &Options) {
+
 bool FunctionMerging::runOnModule(Module &M) {
 
   //errs() << "Running FMSA\n";
@@ -2201,13 +2317,6 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   std::vector<std::pair<Function *, unsigned>> FunctionsToProcess;
 
-  unsigned TotalMerges = 0;
-
-  unsigned TotalOpReorder = 0;
-  unsigned TotalBinOps = 0;
-
-  FunctionMerger FM(&M);//,PSI,LookupBFI);
-
   std::map<Function *, Fingerprint *> CachedFingerprints;
   std::map<Function *, unsigned> FuncSizes;
 
@@ -2215,16 +2324,9 @@ bool FunctionMerging::runOnModule(Module &M) {
   TimePreProcess.startTimer();
 #endif
 
-  std::set<std::string> Blacklist;
-  //TODO: load from file
-  //Blacklist.insert(std::string("quantum_state_collapse"));
-  //Blacklist.insert(std::string("quantum_bmeasure_bitpreserve"));
-
   for (auto &F : M) {
     if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
-
-    //if (!Blacklist.count(F.getName().str())) continue;
     
     FuncSizes[&F] = EstimateFunctionSize(&F, &TTI);
 
@@ -2233,6 +2335,8 @@ bool FunctionMerging::runOnModule(Module &M) {
 
     CachedFingerprints[&F] = new Fingerprint(&F);
   }
+
+  errs() << "Number of Functions: " << FunctionsToProcess.size() << "\n";
 
   std::sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
             CompareFunctionScores);
@@ -2251,7 +2355,18 @@ bool FunctionMerging::runOnModule(Module &M) {
     AvailableCandidates.push_back(F1);
   }
 
-  std::vector<FingerprintSimilarity> Rank;
+  unsigned TotalMerges = 0;
+  unsigned TotalOpReorder = 0;
+  unsigned TotalBinOps = 0;
+
+  FunctionMerger FM(&M);//,PSI,LookupBFI);
+
+  //#define SIMILARITY_TYPE FingerprintSimilarity
+  //#define SIMILARITY_TYPE FingerprintManhattanSimilarity
+  //#define SIMILARITY_TYPE FingerprintCosineSimilarity
+  #define SIMILARITY_TYPE FingerprintEuclideanSimilarity
+
+  std::vector<SIMILARITY_TYPE> Rank;
   if (ExplorationThreshold > 1)
     Rank.reserve(FunctionsToProcess.size());
 
@@ -2279,8 +2394,9 @@ bool FunctionMerging::runOnModule(Module &M) {
 
         Fingerprint *FP2 = CachedFingerprints[F2];
 
-        FingerprintSimilarity PairSim(FP1, FP2);
-        if (SimilarityHeuristicFilter(PairSim))
+
+        SIMILARITY_TYPE PairSim(FP1, FP2);
+        if (SIMILARITY_TYPE::accept(PairSim))
           Rank.push_back(PairSim);
         if (RankingThreshold && CountCandidates>RankingThreshold) {
           break;
@@ -2291,7 +2407,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     } else {
 
       bool FoundCandidate = false;
-      FingerprintSimilarity BestPair;
+      SIMILARITY_TYPE BestPair;
 
       unsigned CountCandidates = 0;
       for (Function *F2 : AvailableCandidates) {
@@ -2300,8 +2416,8 @@ bool FunctionMerging::runOnModule(Module &M) {
 
         Fingerprint *FP2 = CachedFingerprints[F2];
 
-        FingerprintSimilarity PairSim(FP1, FP2);
-        if (PairSim > BestPair && SimilarityHeuristicFilter(PairSim)) {
+        SIMILARITY_TYPE PairSim(FP1, FP2);
+        if (PairSim > BestPair && SIMILARITY_TYPE::accept(PairSim)) {
           BestPair = PairSim;
           FoundCandidate = true;
         }
@@ -2313,6 +2429,10 @@ bool FunctionMerging::runOnModule(Module &M) {
       if (FoundCandidate)
         Rank.push_back(BestPair);
     }
+
+#ifdef TIME_STEPS_DEBUG
+    TimeRank.stopTimer();
+#endif
 
     unsigned MergingTrialsCount = 0;
 
@@ -2328,7 +2448,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       MergingTrialsCount++;
 
       if (Debug || Verbose) {
-        errs() << "Attempting: " << GetValueName(F1) << ", " << GetValueName(F2)
+        errs() << "Attempting: " << GetValueName(F1) << ", " << GetValueName(F2) << " : " << RankEntry.Score
                << "\n";
       }
 
@@ -2400,9 +2520,9 @@ bool FunctionMerging::runOnModule(Module &M) {
                    << " = " << GetValueName(Result.getMergedFunction()) << "\n";
           }
           //if (Verbose) {
-            F1->dump();
-            F2->dump();
-            Result.getMergedFunction()->dump();
+            //F1->dump();
+            //F2->dump();
+            //Result.getMergedFunction()->dump();
           //}
 #ifdef TIME_STEPS_DEBUG
           TimeUpdate.startTimer();
@@ -2474,13 +2594,9 @@ bool FunctionMerging::runOnModule(Module &M) {
   errs() << "Timer:Param: " << TimeParam.getTotalTime().getWallTime() << "\n";
   TimeParam.clear();
 
-  errs() << "Timer:CodeGen1: " << TimeCodeGen1.getTotalTime().getWallTime()
+  errs() << "Timer:CodeGen: " << TimeCodeGen.getTotalTime().getWallTime()
          << "\n";
-  TimeCodeGen1.clear();
-
-  errs() << "Timer:CodeGen2: " << TimeCodeGen2.getTotalTime().getWallTime()
-         << "\n";
-  TimeCodeGen2.clear();
+  TimeCodeGen.clear();
 
   errs() << "Timer:CodeGenFix: " << TimeCodeGenFix.getTotalTime().getWallTime()
          << "\n";
@@ -2626,10 +2742,10 @@ void FunctionMerger::CodeGenerator<BlockListType>::removeRedundantInstructions(s
 static void postProcessFunction(Function &F) {
   legacy::FunctionPassManager FPM(F.getParent());
 
-  FPM.add(createPromoteMemoryToRegisterPass());
+  //FPM.add(createPromoteMemoryToRegisterPass());
   FPM.add(createCFGSimplificationPass());
-  FPM.add(createInstructionCombiningPass());
-  FPM.add(createCFGSimplificationPass());
+  //FPM.add(createInstructionCombiningPass());
+  //FPM.add(createCFGSimplificationPass());
 
   FPM.doInitialization();
   FPM.run(F);
@@ -2832,6 +2948,10 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                   ValueToValueMapTy &VMap,
                   const FunctionMergingOptions &Options) {
 
+#ifdef TIME_STEPS_DEBUG
+  TimeCodeGen.startTimer();
+#endif
+
   LLVMContext &Context = CodeGenerator<BlockListType>::getContext();
   Function *MergedFunc = CodeGenerator<BlockListType>::getMergedFunction();
   Value *IsFunc1 = CodeGenerator<BlockListType>::getFunctionIdentifier();
@@ -2943,7 +3063,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                         "VMap);\n";
               //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-          TimeCodeGen2.stopTimer();
+          TimeCodeGen.stopTimer();
 #endif
               return false;
             }
@@ -2964,7 +3084,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                         "VMap);\n";
               //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-          TimeCodeGen2.stopTimer();
+          TimeCodeGen.stopTimer();
 #endif
               return false;
             }
@@ -3072,12 +3192,18 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         if (Debug) errs() << "ERROR: Value should NOT be null\n";
         //MergedFunc->eraseFromParent();
 
+#ifdef TIME_STEPS_DEBUG
+  TimeCodeGen.stopTimer();
+#endif
         return false;
       }
       if (I2 != nullptr && !AssignLabelOperands(I2, BlocksF2)) {
         if (Debug) errs() << "ERROR: Value should NOT be null\n";
         //MergedFunc->eraseFromParent();
 
+#ifdef TIME_STEPS_DEBUG
+  TimeCodeGen.stopTimer();
+#endif
         return false;
       }
     }
@@ -3207,7 +3333,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 	    }
             //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
             return false; // ErrorResponse;
           }
@@ -3232,7 +3358,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                         "VMap);\n";
               //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
               return false;
             }
@@ -3251,7 +3377,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                         "VMap);\n";
               //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
               return false;
             }
@@ -3271,7 +3397,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 	    }
             //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
             return false; // ErrorResponse;
           }
@@ -3288,7 +3414,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         if (Debug) errs() << "ERROR: Value should NOT be null\n";
         //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
         return false;
       }
@@ -3296,7 +3422,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         if (Debug) errs() << "ERROR: Value should NOT be null\n";
         //MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen2.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
         return false;
       }
@@ -3353,11 +3479,17 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
       if (BB1 != nullptr && !AssignPHIOperandsInBlock(BB1, BlocksF1)) {
           if (Debug) errs() << "ERROR: PHI assignment\n";
           //MergedFunc->eraseFromParent();
+#ifdef TIME_STEPS_DEBUG
+  TimeCodeGen.stopTimer();
+#endif
           return false;
       }
       if (BB2 != nullptr && !AssignPHIOperandsInBlock(BB2, BlocksF2)) {
           if (Debug) errs() << "ERROR: PHI assignment\n";
           //MergedFunc->eraseFromParent();
+#ifdef TIME_STEPS_DEBUG
+  TimeCodeGen.stopTimer();
+#endif
           return false;
       }
   }
@@ -3387,7 +3519,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 */
 
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen2.stopTimer();
+  TimeCodeGen.stopTimer();
 #endif
 
 #ifdef TIME_STEPS_DEBUG
@@ -3546,6 +3678,9 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     //if (false) {
     if ( ((float)OffendingInsts.size())/((float)AlignedSeq.size()) > 4.5 ) {
       if (Debug) errs() << "Bailing out\n";
+#ifdef TIME_STEPS_DEBUG
+  TimeCodeGenFix.stopTimer();
+#endif
       return false;
     } else {
       std::set<Instruction*> Visited;
@@ -3556,8 +3691,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         InstSet.insert(I);
 
       	//Create a coalescing group in InstSet
-        //if (EnableSALSSACoalescing)
-      	//  OptimizeCoalescing(I,InstSet,CoalescingCandidates,Visited);
+        if (EnableSALSSACoalescing)
+      	  OptimizeCoalescing(I,InstSet,CoalescingCandidates,Visited);
 
         for (Instruction *OtherI : InstSet)
       	  Visited.insert(OtherI);
@@ -3570,14 +3705,17 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
       //MergedFunc->dump();
       
       #ifdef OPTIMIZE_SALSSA_CODEGEN
-      //DominatorTree DT(*MergedFunc);
-      //PromoteMemToReg(Allocas, DT, nullptr);
+      DominatorTree DT(*MergedFunc);
+      PromoteMemToReg(Allocas, DT, nullptr);
 
       //errs() << "Mem2Reg:\n";
       //MergedFunc->dump();
 
       if ( verifyFunction(*MergedFunc) ) {
 	errs() << "ERROR: Produced Broken Function!\n";
+#ifdef TIME_STEPS_DEBUG
+  TimeCodeGenFix.stopTimer();
+#endif
         return false;
       }
       postProcessFunction(*MergedFunc);
