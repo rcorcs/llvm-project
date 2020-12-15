@@ -134,7 +134,7 @@
 
 //#define FMSA_USE_JACCARD
 
-//#define TIME_STEPS_DEBUG
+#define TIME_STEPS_DEBUG
 
 using namespace llvm;
 
@@ -222,6 +222,10 @@ static cl::opt<std::string> OptBenchName (
     "func-merging-bench-name", cl::init(""), cl::Hidden,
     cl::desc("Generate the testing data"));
 
+static cl::opt<unsigned> MaxNumSelection (
+    "func-merging-max-selects", cl::init(500), cl::Hidden,
+    cl::desc("Maximum number of allowed operand selection"));
+
 //////////////////////////// Tests
 
 static cl::opt<std::string> TestFM_DataPATH("func-merging-gen-prefix",
@@ -236,8 +240,6 @@ static cl::opt<bool> TestFM_CompilationCostModel("fm-built-size-cost",
 
 static cl::opt<std::string> TestFM_ClangPATH("fm-built-size-cost-cc",
                             cl::init(""), cl::Hidden, cl::desc(""));
-
-
 
 
 #define OPTIMIZE_SALSSA_CODEGEN
@@ -2030,8 +2032,8 @@ bool FunctionMerger::FMSACodeGen<BlockListType>::generate(AlignedSequence<Value*
                                                          Builder, IntPtrTy, Options);
                     SelectI = Builder.CreateSelect(IsFunc1, V1, CastedV2);
                     CodeGenerator<BlockListType>::insert(dyn_cast<Instruction>(SelectI));
-
-                    ListSelects.push_back(dyn_cast<Instruction>(SelectI));
+                    if (isa<Instruction>(SelectI))
+                      ListSelects.push_back(dyn_cast<Instruction>(SelectI));
 
                     SelectCache[SCE] = SelectI;
                   }
@@ -2880,8 +2882,8 @@ size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
 Timer TimePreProcess("Merge::Preprocess", "Merge::Preprocess");
 Timer TimeRank("Merge::Rank", "Merge::Rank");
 Timer TimeUpdate("Merge::Update", "Merge::Update");
-double AccumulatedUnprofitableMergeTime = 0;
-Timer TimeTotal("FM::Total", "FM::Total");
+//double AccumulatedUnprofitableMergeTime = 0;
+//Timer TimeTotal("FM::Total", "FM::Total");
 #endif
 Timer TimePrediction("FM::Prediction", "FM::Prediction");
 
@@ -3172,8 +3174,8 @@ static void WriteTrainingFile2(std::string Prefix, Function *F1, Function *F2, F
 
 bool FunctionMerging::runOnModule(Module &M) {
 #ifdef TIME_STEPS_DEBUG
-  TimeTotal.startTimer();
-  AccumulatedUnprofitableMergeTime  = 0;
+  //TimeTotal.startTimer();
+  //AccumulatedUnprofitableMergeTime  = 0;
 #endif
 
   //errs() << "Running FMSA\n";
@@ -3356,7 +3358,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       bool ProftablePrediction = true;
       if (RunPrediction) {
 #ifdef TIME_STEPS_DEBUG
-        TimeTotal.stopTimer();
+        //TimeTotal.stopTimer();
 #endif
         TimePrediction.startTimer();
 
@@ -3382,7 +3384,7 @@ bool FunctionMerging::runOnModule(Module &M) {
   
         TimePrediction.stopTimer();
 #ifdef TIME_STEPS_DEBUG
-        TimeTotal.startTimer();
+        //TimeTotal.startTimer();
 #endif
       }
 
@@ -3394,8 +3396,8 @@ bool FunctionMerging::runOnModule(Module &M) {
       //  TimePredictionGains.startTimer();
       
 #ifdef TIME_STEPS_DEBUG
-      Timer TimeOneMerge("FM::OneMerge", "FM::OneMerge");
-      TimeOneMerge.startTimer();
+      //Timer TimeOneMerge("FM::OneMerge", "FM::OneMerge");
+      //TimeOneMerge.startTimer();
 #endif
 
       //errs() << "Here1\n";
@@ -3603,11 +3605,11 @@ bool FunctionMerging::runOnModule(Module &M) {
       }//end if valid merge
 
 #ifdef TIME_STEPS_DEBUG
-      TimeOneMerge.stopTimer();
-      if (!Profitable) {
-       AccumulatedUnprofitableMergeTime +=  TimeOneMerge.getTotalTime().getWallTime();
-      }
-      TimeOneMerge.clear();
+      //TimeOneMerge.stopTimer();
+      //if (!Profitable) {
+      // AccumulatedUnprofitableMergeTime +=  TimeOneMerge.getTotalTime().getWallTime();
+      //}
+      //TimeOneMerge.clear();
 #endif
       //if (!ProftablePrediction)
       //  TimePredictionGains.stopTimer();
@@ -3643,7 +3645,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 */
 
 #ifdef TIME_STEPS_DEBUG
-  TimeTotal.stopTimer();
+  //TimeTotal.stopTimer();
 #endif
  
   if (Debug || Verbose) {
@@ -3669,10 +3671,10 @@ bool FunctionMerging::runOnModule(Module &M) {
   errs() << "Timer:PredictionGains: " << TimePredictionGains.getTotalTime().getWallTime() << "\n";
   TimePredictionGains.clear();
 
-  errs() << "Timer:Total: " << TimeTotal.getTotalTime().getWallTime() << "\n";
-  TimeTotal.clear();
+  //errs() << "Timer:Total: " << TimeTotal.getTotalTime().getWallTime() << "\n";
+  //TimeTotal.clear();
 
-  errs() << "Timer:Unprofitable: " << AccumulatedUnprofitableMergeTime << "\n";
+  //errs() << "Timer:Unprofitable: " << AccumulatedUnprofitableMergeTime << "\n";
 
   errs() << "Timer:Align: " << TimeAlign.getTotalTime().getWallTime() << "\n";
   TimeAlign.clear();
@@ -4610,6 +4612,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
     IRBuilder<> Builder(InsertPt);
     Instruction *Sel = (Instruction *)Builder.CreateSelect(IsFunc1, V1, V2);
+    ListSelects.push_back(Sel);
+
     return Sel;
   };
 
@@ -4909,6 +4913,13 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
   TimeCodeGen.stopTimer();
 #endif
 
+  errs() << "NumSelects: " << ListSelects.size() << "\n";
+  if (ListSelects.size() > MaxNumSelection ) {
+    errs() << "Bailing out: Operand selection threshold\n";
+    return false;
+  }
+    
+
 #ifdef TIME_STEPS_DEBUG
   TimeSimplify.startTimer();
 #endif
@@ -5174,8 +5185,12 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
       PromoteMemToReg(Allocas, DT, nullptr);
 
 
-      if (verifyFunction(*MergedFunc)) return false;
-
+      if (verifyFunction(*MergedFunc)) {
+#ifdef TIME_STEPS_DEBUG
+  TimeSimplify.stopTimer();
+#endif
+	      return false;
+      }
       //errs() << "Mem2Reg:\n";
       //MergedFunc->dump();
 
