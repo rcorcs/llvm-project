@@ -125,6 +125,8 @@
 #include <windows.h>
 #endif
 
+//#include <faiss/IndexFlat.h>
+
 #define DEBUG_TYPE "MyFuncMerge"
 
 //#define ENABLE_DEBUG_CODE
@@ -2292,6 +2294,65 @@ Timer TimeUpdate("Merge::Update", "Merge::Update");
 //template<typename SimilarityT>
 //bool FunctionMerging::search(std::list<Function *> &AvailableCandidates, std::list<Function *> &WorkList, FunctionMergingOptions &Options) {
 
+
+void printAverageDistance(std::vector<std::pair<Function *, unsigned>> &FunctionsToProcess,  std::map<Function *, Fingerprint *> &CachedFingerprints) {
+  //#define SIMILARITY_TYPE FingerprintSimilarity
+  #define SIMILARITY_TYPE FingerprintManhattanSimilarity
+  //#define SIMILARITY_TYPE FingerprintCosineSimilarity
+  //#define SIMILARITY_TYPE FingerprintEuclideanSimilarity
+  int Sum = 0;
+  int Count = 0;
+  int MinDistance = std::numeric_limits<int>::max();
+  int MaxDistance = 0;
+
+  int Index1 = 0;
+  for (std::pair<Function *, unsigned> FuncAndSize1 : FunctionsToProcess) {
+    Function *F1 = FuncAndSize1.first;
+
+    Fingerprint *FP1 = CachedFingerprints[F1];
+
+      bool FoundCandidate = false;
+      SIMILARITY_TYPE BestPair;
+      int BestIndex = 0;
+
+      int Index2 = 0;
+      for (std::pair<Function *, unsigned> FuncAndSize2 : FunctionsToProcess) {
+        Function *F2 = FuncAndSize2.first;
+
+	if (F1==F2 || Index1==Index2) {
+          Index2++;
+	  continue;
+	}
+
+        //if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
+        //  continue;
+        Fingerprint *FP2 = CachedFingerprints[F2];
+        SIMILARITY_TYPE PairSim(FP1, FP2);
+        if (PairSim > BestPair && SIMILARITY_TYPE::accept(PairSim)) {
+          BestPair = PairSim;
+          FoundCandidate = true;
+	  BestIndex = Index2;
+        }
+
+        Index2++;
+      }
+      if (FoundCandidate) {
+	int Distance = std::abs(Index1 - BestIndex);
+        Sum += Distance;
+	if (Distance > MaxDistance) MaxDistance = Distance;
+	if (Distance < MinDistance) MinDistance = Distance;
+	Count++;
+      }
+
+     Index1++;
+  }
+
+   errs() << "Total: " << Count << "\n";
+   errs() << "Min Distance: " << MinDistance << "\n";
+   errs() << "Max Distance: " << MaxDistance << "\n";
+   errs() << "Average Distance: " << (((double)Sum)/((double)Count)) << "\n";
+}
+
 bool FunctionMerging::runOnModule(Module &M) {
 
   //errs() << "Running FMSA\n";
@@ -2338,8 +2399,42 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   errs() << "Number of Functions: " << FunctionsToProcess.size() << "\n";
 
+  
   std::sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
             CompareFunctionScores);
+
+  std::stable_sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
+      [&](auto &Pair1, auto &Pair2) -> bool {
+        unsigned Sum1 = 0;
+        for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
+          Sum1 += CachedFingerprints[Pair1.first]->OpcodeFreq[i];
+	}
+        unsigned Sum2 = 0;
+        for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
+          Sum2 += CachedFingerprints[Pair2.first]->OpcodeFreq[i];
+	}
+	float Avg1 = ((float)Sum1)/((float)Fingerprint::MaxOpcode);
+	float Avg2 = ((float)Sum2)/((float)Fingerprint::MaxOpcode);
+	return Avg1 > Avg2;
+  });
+  
+
+  /*
+  for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
+    std::stable_sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
+      [&](auto &Pair1, auto &Pair2) -> bool {
+        int Freq1 = CachedFingerprints[Pair1.first]->OpcodeFreq[i];
+        int Freq2 = CachedFingerprints[Pair2.first]->OpcodeFreq[i];
+	return Freq1 > Freq2;
+    });
+  }
+  */
+
+  //faiss::IndexFlat1D index(Fingerprint::MaxOpcode);           // call constructor
+
+
+  //printAverageDistance(FunctionsToProcess, CachedFingerprints);
+  //return false;
 
 #ifdef TIME_STEPS_DEBUG
   TimePreProcess.stopTimer();
@@ -2362,9 +2457,9 @@ bool FunctionMerging::runOnModule(Module &M) {
   FunctionMerger FM(&M);//,PSI,LookupBFI);
 
   //#define SIMILARITY_TYPE FingerprintSimilarity
-  //#define SIMILARITY_TYPE FingerprintManhattanSimilarity
+  #define SIMILARITY_TYPE FingerprintManhattanSimilarity
   //#define SIMILARITY_TYPE FingerprintCosineSimilarity
-  #define SIMILARITY_TYPE FingerprintEuclideanSimilarity
+  //#define SIMILARITY_TYPE FingerprintEuclideanSimilarity
 
   std::vector<SIMILARITY_TYPE> Rank;
   if (ExplorationThreshold > 1)
