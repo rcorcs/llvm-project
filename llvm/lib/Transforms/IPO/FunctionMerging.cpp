@@ -43,6 +43,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+//#define ENABLE_FAISS
+
 #include "llvm/Transforms/IPO/FunctionMerging.h"
 
 #include "llvm/IR/BasicBlock.h"
@@ -125,7 +127,9 @@
 #include <windows.h>
 #endif
 
-//#include <faiss/IndexFlat.h>
+#ifdef ENABLE_FAISS
+#include <faiss/IndexFlat.h>
+#endif
 
 #define DEBUG_TYPE "MyFuncMerge"
 
@@ -199,6 +203,10 @@ static cl::opt<bool>
 static cl::opt<bool> ConservativeMode (
     "func-merging-conservative", cl::init(false), cl::Hidden,
     cl::desc("Enable conservative mode to avoid runtime overhead"));
+
+static cl::opt<bool> ReuseMergedFunctions (
+    "func-merging-reuse-merges", cl::init(true), cl::Hidden,
+    cl::desc("Try to reuse merged functions for another merge operation"));
 
 //////////////////////////// Tests
 
@@ -1454,7 +1462,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   SmallVector<Value*,8> F1Vec;
   SmallVector<Value*,8> F2Vec;
 
-  errs() << "Linearization\n";
+  //errs() << "Linearization\n";
   if (ConservativeMode) {
     std::list<BasicBlock *> OrderedBBs;
     CanonicalLinearizationOfBlocks(F1, OrderedBBs);
@@ -1474,12 +1482,12 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
   AlignedSequence<Value*> AlignedSeq;
   if (ConservativeMode) {
-      errs() << "Sequence Alignment\n";
+      //errs() << "Sequence Alignment\n";
       NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::matchWholeBlocks);
 
       auto MemReq = SA.getMemoryRequirement(F1Vec,F2Vec);
       auto MemAvailable = getTotalSystemMemory();
-      errs() << "Memory Available: " << MemAvailable << " (" << ((float)MemAvailable/(1024.f*1024.f)) << "); Required: " << MemReq <<  " (" << ((float)MemReq/(1024.f*1024.f)) << ")\n";
+      //errs() << "Memory Available: " << MemAvailable << " (" << ((float)MemAvailable/(1024.f*1024.f)) << "); Required: " << MemReq <<  " (" << ((float)MemReq/(1024.f*1024.f)) << ")\n";
       if ( MemReq > MemAvailable*0.9 ) {
 	errs() << "Insufficient Memory\n";
 #ifdef TIME_STEPS_DEBUG
@@ -1991,7 +1999,9 @@ void FunctionMerger::updateCallGraph(Function *F, FunctionMergeResult &MFR, Stri
       CanErase = CanErase && !ShouldPreserveGV(F);
       CanErase = CanErase && F->isDiscardableIfUnused();
     }
-    if (CanErase) F->eraseFromParent();
+    if (CanErase) {
+	    F->eraseFromParent();
+    }
   }
 }
 
@@ -2018,7 +2028,11 @@ static bool CompareFunctionScores(const std::pair<Function *, unsigned> &F1,
 class Fingerprint {
 public:
   static const size_t MaxOpcode = 68;
+#ifdef ENABLE_FAISS
+  float OpcodeFreq[MaxOpcode];
+#else
   int OpcodeFreq[MaxOpcode];
+#endif
   //std::map<unsigned, int> OpcodeFreq;
   // size_t NumOfInstructions;
   // size_t NumOfBlocks;
@@ -2092,6 +2106,20 @@ public:
     return Score == FS.Score;
   }
 };
+
+#ifdef ENABLE_FAISS
+
+class FAISSSimilarity : public BaseFingerprintSimilarity<int,FAISSSimilarity> {
+public:
+  using Base = BaseFingerprintSimilarity<int,FAISSSimilarity>;
+  FAISSSimilarity() : Base() {}
+  FAISSSimilarity(Fingerprint *FP1, Fingerprint *FP2, int Score) : Base(FP1,FP2) {
+    this->Score = Score;
+  }
+  static bool accept(const FAISSSimilarity &Item) { return true; }
+};
+
+#else //FAISS
 
 class FingerprintSimilarity : public BaseFingerprintSimilarity<float,FingerprintSimilarity> {
 public:
@@ -2264,6 +2292,7 @@ public:
 
   static bool accept(const FingerprintEuclideanSimilarity &Item) { return true; }
 };
+#endif
 
 size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
   double size = 0;
@@ -2294,7 +2323,7 @@ Timer TimeUpdate("Merge::Update", "Merge::Update");
 //template<typename SimilarityT>
 //bool FunctionMerging::search(std::list<Function *> &AvailableCandidates, std::list<Function *> &WorkList, FunctionMergingOptions &Options) {
 
-
+#ifndef ENABLE_FAISS
 void printAverageDistance(std::vector<std::pair<Function *, unsigned>> &FunctionsToProcess,  std::map<Function *, Fingerprint *> &CachedFingerprints) {
   //#define SIMILARITY_TYPE FingerprintSimilarity
   #define SIMILARITY_TYPE FingerprintManhattanSimilarity
@@ -2352,6 +2381,7 @@ void printAverageDistance(std::vector<std::pair<Function *, unsigned>> &Function
    errs() << "Max Distance: " << MaxDistance << "\n";
    errs() << "Average Distance: " << (((double)Sum)/((double)Count)) << "\n";
 }
+#endif
 
 bool FunctionMerging::runOnModule(Module &M) {
 
@@ -2385,6 +2415,15 @@ bool FunctionMerging::runOnModule(Module &M) {
   TimePreProcess.startTimer();
 #endif
 
+  FunctionMerger FM(&M);//,PSI,LookupBFI);
+
+#ifdef ENABLE_FAISS
+  faiss::IndexFlat faissIndex(Fingerprint::MaxOpcode, faiss::MetricType::METRIC_L1); //Manhattan/Taxicab distance
+  //faiss::IndexFlatL2 faissIndex(Fingerprint::MaxOpcode); //squared l2 distance
+  
+  std::vector<Function*> faissDatabase;
+#endif
+
   for (auto &F : M) {
     if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
@@ -2395,11 +2434,15 @@ bool FunctionMerging::runOnModule(Module &M) {
       std::pair<Function *, unsigned>(&F, FuncSizes[&F]) );
 
     CachedFingerprints[&F] = new Fingerprint(&F);
+#ifdef ENABLE_FAISS
+    faissIndex.add(1,CachedFingerprints[&F]->OpcodeFreq);
+    faissDatabase.push_back(&F);
+#endif
   }
 
   errs() << "Number of Functions: " << FunctionsToProcess.size() << "\n";
 
-  
+#ifndef ENABLE_FAISS 
   std::sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
             CompareFunctionScores);
 
@@ -2429,9 +2472,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     });
   }
   */
-
-  //faiss::IndexFlat1D index(Fingerprint::MaxOpcode);           // call constructor
-
+#endif
 
   //printAverageDistance(FunctionsToProcess, CachedFingerprints);
   //return false;
@@ -2454,18 +2495,21 @@ bool FunctionMerging::runOnModule(Module &M) {
   unsigned TotalOpReorder = 0;
   unsigned TotalBinOps = 0;
 
-  FunctionMerger FM(&M);//,PSI,LookupBFI);
 
+#ifdef ENABLE_FAISS
+  #define SIMILARITY_TYPE FAISSSimilarity 
+#else
   //#define SIMILARITY_TYPE FingerprintSimilarity
   #define SIMILARITY_TYPE FingerprintManhattanSimilarity
   //#define SIMILARITY_TYPE FingerprintCosineSimilarity
   //#define SIMILARITY_TYPE FingerprintEuclideanSimilarity
+#endif
 
   std::vector<SIMILARITY_TYPE> Rank;
   if (ExplorationThreshold > 1)
     Rank.reserve(FunctionsToProcess.size());
 
-  FunctionsToProcess.clear();
+  //FunctionsToProcess.clear();
 
   while (!WorkList.empty()) {
     Function *F1 = WorkList.front();
@@ -2479,8 +2523,40 @@ bool FunctionMerging::runOnModule(Module &M) {
     TimeRank.startTimer();
 #endif
 
+
     Fingerprint *FP1 = CachedFingerprints[F1];
 
+#ifdef ENABLE_FAISS
+    if ( ! faissDatabase.empty() ) {
+    int k = std::min( (size_t)(ExplorationThreshold+1), (size_t)faissDatabase.size());
+    faiss::Index::idx_t *I = new faiss::Index::idx_t[k];
+    float *D = new float[k];
+
+    //faissIndex.add(1,CachedFingerprints[&F]->OpcodeFreq);
+    //index.search(5, xb, k, D, I);
+    faissIndex.search(1,FP1->OpcodeFreq,k,D,I);
+
+    /*
+    errs() << "Ranked: ";
+    for (int i = 0; i<k; i++)
+        errs() << I[i] << " ";
+    errs() << "\n";
+    errs() << "Distances: ";
+    for (int i = 0; i<k; i++)
+        errs() << D[i] << " ";
+    errs() << "\n";
+    */
+    for (int i = 0; i<k; i++) {
+      Function *F2 = faissDatabase[I[i]];
+      if (F2 && F2!=F1) {
+        Fingerprint *FP2 = CachedFingerprints[F2];
+        FAISSSimilarity PairSim(FP1,FP2,((int)ExplorationThreshold)-i);
+        Rank.push_back(PairSim);
+      }
+    }
+    std::make_heap(Rank.begin(), Rank.end());
+    }
+#else
     if (ExplorationThreshold > 1) {
       unsigned CountCandidates = 0;
       for (Function *F2 : AvailableCandidates) {
@@ -2524,6 +2600,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       if (FoundCandidate)
         Rank.push_back(BestPair);
     }
+#endif
 
 #ifdef TIME_STEPS_DEBUG
     TimeRank.stopTimer();
@@ -2630,16 +2707,25 @@ bool FunctionMerging::runOnModule(Module &M) {
 
           FM.updateCallGraph(Result, AlwaysPreserved, Options);
 
-          // feed new function back into the working lists
-          WorkList.push_front(Result.getMergedFunction());
-          AvailableCandidates.push_front(Result.getMergedFunction());
-
+	  if (ReuseMergedFunctions) {
           FuncSizes[Result.getMergedFunction()] =
               EstimateFunctionSize(Result.getMergedFunction(), &TTI);
 
           CachedFingerprints[Result.getMergedFunction()] =
               new Fingerprint(Result.getMergedFunction());
 
+#ifdef ENABLE_FAISS
+          faissIndex.reset();
+          faissDatabase.clear();
+	  for (Function *F : WorkList) {
+            faissIndex.add(1,CachedFingerprints[F]->OpcodeFreq);
+            faissDatabase.push_back(F);
+          }
+#endif
+          // feed new function back into the working lists
+          WorkList.push_front(Result.getMergedFunction());
+          AvailableCandidates.push_front(Result.getMergedFunction());
+          }
 #ifdef TIME_STEPS_DEBUG
           TimeUpdate.stopTimer();
 #endif
@@ -3094,7 +3180,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
 
 
-  errs() << "Assigning label operands\n";
+  //errs() << "Assigning label operands\n";
   
   std::set<BranchInst*> XorBrConds;
   //assigning label operands
@@ -3304,7 +3390,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     }
   }
   
-  errs() << "Assigning value operands\n";
+  //errs() << "Assigning value operands\n";
 
   auto MergeValues = [&](Value *V1, Value *V2,
                          Instruction *InsertPt) -> Value * {
@@ -3591,7 +3677,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
 
 
-  errs() << "Collecting offending instructions\n";
+  //errs() << "Collecting offending instructions\n";
   DominatorTree DT(*MergedFunc);
 
   for (Instruction &I : instructions(MergedFunc)) {
@@ -3765,13 +3851,14 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     }
   };
 
-  errs() << "Finishing code\n";
+  //errs() << "Finishing code\n";
   if (MergedFunc!=nullptr) {
-    errs() << "Offending: " << OffendingInsts.size() << " ";
-    errs() << ((float)OffendingInsts.size())/((float)AlignedSeq.size()) << " : ";
-    //if (OffendingInsts.size()>1000) {
+    //errs() << "Offending: " << OffendingInsts.size() << " ";
+    //errs() << ((float)OffendingInsts.size())/((float)AlignedSeq.size()) << " : ";
+
+    if (OffendingInsts.size()>1000) {
     //if (false) {
-    if ( ((float)OffendingInsts.size())/((float)AlignedSeq.size()) > 4.5 ) {
+    //if ( ((float)OffendingInsts.size())/((float)AlignedSeq.size()) > 4.5 ) {
       if (Debug) errs() << "Bailing out\n";
 #ifdef TIME_STEPS_DEBUG
   TimeCodeGenFix.stopTimer();

@@ -247,7 +247,6 @@ public:
 
     Function *MergedFunc;
 
-
     SmallPtrSet<BasicBlock*,8> CreatedBBs;
     SmallPtrSet<Instruction*,8> CreatedInsts;
 

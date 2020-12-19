@@ -68,4 +68,7 @@ add_llvm_component_library(LLVMipo
   TransformUtils
   Vectorize
   Instrumentation
+
+  LINK_LIBS
+  -fopenmp -lfaiss -lblas -llapack /home/rodrigo/faiss/build/faiss/libfaiss.a
   )
