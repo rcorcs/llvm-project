@@ -200,6 +200,12 @@ static cl::opt<bool> ConservativeMode (
     "func-merging-conservative", cl::init(false), cl::Hidden,
     cl::desc("Enable conservative mode to avoid runtime overhead"));
 
+static cl::opt<bool> ReuseMergedFunctions (
+    "func-merging-reuse-merges", cl::init(true), cl::Hidden,
+    cl::desc("Try to reuse merged functions for another merge operation"));
+
+
+
 //////////////////////////// Tests
 
 //static cl::opt<bool> TestFM_CompilationCostModel("fm-built-size-cost",
@@ -2630,6 +2636,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 
           FM.updateCallGraph(Result, AlwaysPreserved, Options);
 
+	  if (ReuseMergedFunctions) {
           // feed new function back into the working lists
           WorkList.push_front(Result.getMergedFunction());
           AvailableCandidates.push_front(Result.getMergedFunction());
@@ -2639,7 +2646,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 
           CachedFingerprints[Result.getMergedFunction()] =
               new Fingerprint(Result.getMergedFunction());
-
+          }
 #ifdef TIME_STEPS_DEBUG
           TimeUpdate.stopTimer();
 #endif
@@ -2871,6 +2878,9 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
       //assert(I1->getNumOperands() == I2->getNumOperands() &&
       //      "Num of Operands SHOULD be EQUAL!");
       NewI = I->clone();
+      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+        NewI->setOperand(i,nullptr);
+      }
       Builder.Insert(NewI);
 
     }
