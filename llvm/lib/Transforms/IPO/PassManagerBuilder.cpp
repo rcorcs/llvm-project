@@ -461,6 +461,12 @@ void PassManagerBuilder::addFunctionSimplificationPasses(
   // Unroll small loops
   MPM.add(createSimpleLoopUnrollPass(OptLevel, DisableUnrollLoops,
                                      ForgetAllSCEVInLoopUnroll));
+
+  if (RunLoopRerolling==1 || RunLoopRerolling==3)
+  MPM.add(createLoopRerollPass());
+  if (RunLoopRerolling==2 || RunLoopRerolling==3)
+  MPM.add(createLoopRollingPass());
+
   addExtensionsToPM(EP_LoopOptimizerEnd, MPM);
   // This ends the loop pass pipelines.
 
@@ -499,10 +505,10 @@ void PassManagerBuilder::addFunctionSimplificationPasses(
   addExtensionsToPM(EP_ScalarOptimizerLate, MPM);
 
   //if (RerollLoops)
-  if (RunLoopRerolling==1 || RunLoopRerolling==3)
-  MPM.add(createLoopRerollPass());
-  if (RunLoopRerolling==2 || RunLoopRerolling==3)
-  MPM.add(createLoopRollingPass());
+  //if (RunLoopRerolling==1 || RunLoopRerolling==3)
+  //MPM.add(createLoopRerollPass());
+  //if (RunLoopRerolling==2 || RunLoopRerolling==3)
+  //MPM.add(createLoopRollingPass());
 
   MPM.add(createCFGSimplificationPass()); // Merge & remove BBs
   // Clean up after everything.

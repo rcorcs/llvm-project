@@ -1646,6 +1646,9 @@ bool LoopReroll::reroll(Instruction *IV, Loop *L, BasicBlock *Header,
     return false;
   // At this point, we've validated the rerolling, and we're committed to
   // making changes!
+  
+  errs() << "Rerolling Loop! " << Header->getParent()->getName() << " - " << Header->getName() << "\n";
+  IV->dump();
 
   Reductions.replaceSelected();
   DAGRoots.replace(BackedgeTakenCount);

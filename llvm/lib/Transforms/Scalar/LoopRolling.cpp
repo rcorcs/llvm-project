@@ -23,6 +23,8 @@
 #include "llvm/Transforms/Utils/LoopUtils.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 
+#include <unordered_set>
+#include <unordered_map>
 #include <algorithm>    // std::find
 #include <fstream>
 #include <memory>
@@ -151,7 +153,7 @@ static bool match(Value *V1, Value *V2) {
 }
 
 enum NodeType {
-  MATCH, BINOP, GEPSEQ, INTSEQ, REDUCTION, MISMATCH
+  MATCH, BINOP, GEPSEQ, INTSEQ, REDUCTION, RECURRENCE, MISMATCH
 };
 
 class Node {
@@ -342,16 +344,40 @@ public:
   }
 };
 
+
+class RecurrenceNode : public Node {
+private:
+  Value *StartValue;
+public:
+  template<typename ValueT>
+  RecurrenceNode(std::vector<ValueT *> &Vs, Value *StartValue, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::RECURRENCE,Vs,BB,Parent), StartValue(StartValue) {}
+  Value *getStartValue() { return StartValue; }
+
+  Instruction *getValidInstruction(unsigned i) {
+    return nullptr;
+  }
+
+  std::string getString() {
+    std::string str;
+    raw_string_ostream labelStream(str);
+    labelStream << "recurrence";
+    return labelStream.str();
+  }
+};
+
+
 class ReductionNode : public Node {
 private:
   BinaryOperator *BinOpRef;
+  Value *Start;
   std::vector<Value *> Vs;
 public:
 
-  ReductionNode(BinaryOperator *BinOp, std::vector<BinaryOperator*> &BOs, std::vector<Value*> &Vs, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::REDUCTION,BOs,BB,Parent), BinOpRef(BinOp), Vs(Vs) {}
+  ReductionNode(BinaryOperator *BinOp, PHINode *Start, std::vector<BinaryOperator*> &BOs, std::vector<Value*> &Vs, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::REDUCTION,BOs,BB,Parent), BinOpRef(BinOp), Start(Start), Vs(Vs) {}
 
   BinaryOperator *getBinaryOperator() { return BinOpRef; }
   std::vector<Value *> &getOperands() { return Vs; }
+  Value *getStartValue() { if (Start) return Start; else return getNeutralValue(); }
 
   Instruction *getValidInstruction(unsigned i) {
     auto *I = dyn_cast<BinaryOperator>(getValue(i));
@@ -402,14 +428,16 @@ public:
     }
   }
 
-  static void collectValues(BinaryOperator *BO, std::vector<BinaryOperator*> &BOs, std::vector<Value*> &Vs) {
+  static void collectValues(BinaryOperator *BO, PHINode *PHI, std::vector<BinaryOperator*> &BOs, std::vector<Value*> &Vs) {
     BOs.push_back(BO);
-    BinaryOperator *BO0 = dyn_cast<BinaryOperator>(BO->getOperand(0));
-    BinaryOperator *BO1 = dyn_cast<BinaryOperator>(BO->getOperand(1));
-    if (BO0 && BO0->getParent()==BO->getParent() && BO0->getOpcode()==BO->getOpcode()) collectValues(BO0, BOs, Vs);
-    else Vs.push_back(BO->getOperand(0));
-    if (BO1 && BO1->getParent()==BO->getParent() && BO1->getOpcode()==BO->getOpcode()) collectValues(BO1, BOs, Vs);
-    else Vs.push_back(BO->getOperand(1));
+    Value *V0 = BO->getOperand(0);
+    Value *V1 = BO->getOperand(1);
+    BinaryOperator *BO0 = dyn_cast<BinaryOperator>(V0);
+    BinaryOperator *BO1 = dyn_cast<BinaryOperator>(V1);
+    if (BO0 && BO0->getParent()==BO->getParent() && BO0->getOpcode()==BO->getOpcode()) collectValues(BO0, PHI, BOs, Vs);
+    else if (PHI!=V0) Vs.push_back(V0);
+    if (BO1 && BO1->getParent()==BO->getParent() && BO1->getOpcode()==BO->getOpcode()) collectValues(BO1, PHI, BOs, Vs);
+    else if (PHI!=V1) Vs.push_back(V1);
   }
 
 };
@@ -495,10 +523,10 @@ static size_t EstimateSize(ValueT *V, const DataLayout &DL, TargetTransformInfo 
   return size;
 }
 
-template<typename ValueT>
-static size_t EstimateSize(std::vector<ValueT*> Code, const DataLayout &DL, TargetTransformInfo *TTI) {
+template<typename ValueListT>
+static size_t EstimateSize(ValueListT &Code, const DataLayout &DL, TargetTransformInfo *TTI) {
   size_t size = 0;
-  for (ValueT *V : Code) {
+  for (auto *V : Code) {
     size += EstimateSize(V,DL,TTI);
   }
   return size;
@@ -582,11 +610,13 @@ class Tree {
 public:
   Node *Root;
   std::vector<Node*> Nodes;
-  std::map<Value*, std::set<Node*> > NodeMap;
+  std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap;
   std::vector<ScheduleNode> SchedulingOrder;
+  std::unordered_set<Value *> ValuesInNode;
+  std::unordered_set<Value *> Inputs;
 
-  Tree(BinaryOperator *BO, BasicBlock &BB) {
-    Root = buildReduction(BO,BB,nullptr);
+  Tree(BinaryOperator *BO, Instruction *U, BasicBlock &BB) {
+    Root = buildReduction(BO,U,BB,nullptr);
     if (Root) {
       addNode(Root);
 #ifdef TEST_DEBUG
@@ -627,17 +657,20 @@ public:
   }
 
   void addNode(Node *N) {
-    if (N) {
+    if (N && N->size()) {
       if (std::find(Nodes.begin(), Nodes.end(), N)==Nodes.end()) {
         Nodes.push_back(N);
-        for (auto *V : N->getValues())
-          NodeMap[V].insert(N);
+        for (auto *V : N->getValues()) {
+          //NodeMap[V].insert(N);
+          ValuesInNode.insert(V);
+	}
+        NodeMap[N->getValue(0)].insert(N);
       }
+      if (Root==nullptr) Root = N;
     }
-    if (Root==nullptr) Root = N;
   }
 
-  Node *find(Value *V);
+  bool contains(Value *V) { return ValuesInNode.count(V); }
   
   template<typename ValueT>
   Node *find(std::vector<ValueT *> &Vs);
@@ -657,7 +690,7 @@ public:
     raw_string_ostream os(dotStr);
     os << "digraph VTree {\n";
 
-    std::map<Node*, int> NodeId;
+    std::unordered_map<Node*, int> NodeId;
 
     int id = 0;
     //Nodes
@@ -684,13 +717,14 @@ public:
       }
     }
 
-    std::map<Value *, int> ExternalNodes;
+    std::unordered_map<Value *, int> ExternalNodes;
     for (Node *N : Nodes) {
       for (unsigned i = 0; i<N->size(); i++) {
         Value *V = N->getValidInstruction(i);
         if (V==nullptr) continue;
         for (auto *U : V->users()) {
-          if (this->find(U)==nullptr) {
+          //if (this->find(U)==nullptr) {
+          if (!this->contains(U)) {
 	    if (ExternalNodes.find(U)==ExternalNodes.end()) {
 	      std::string Name = "user";
 	      if (Instruction *UI = dyn_cast<Instruction>(U)) Name = UI->getOpcodeName();
@@ -725,11 +759,13 @@ private:
   void growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited);
 
   template<typename ValueT>
-  Node *buildReduction(ValueT *V, BasicBlock &BB, Node *Parent);
+  Node *buildReduction(ValueT *V, Instruction *, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  template<typename ValueT>
+  Node *buildRecurrenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent=nullptr);
 
@@ -757,7 +793,8 @@ private:
         Value *V = N->getValidInstruction(i);
         if (V==nullptr) continue;
         for (auto *U : V->users()) {
-          if (this->find(U)==nullptr) {
+          //if (this->find(U)==nullptr) {
+          if (!this->contains(U)) {
 	    Users.insert(U);
           }
         }
@@ -786,9 +823,9 @@ public:
 
 class SeedGroups {
 public:
-  std::map<Value *, std::vector<Instruction *> > Stores;
-  std::map<Value *, std::vector<Instruction *> > Calls;
-  std::vector<BinaryOperator *> Reductions;
+  std::unordered_map<Value *, std::vector<Instruction *> > Stores;
+  std::unordered_map<Value *, std::vector<Instruction *> > Calls;
+  std::unordered_map<BinaryOperator *, Instruction *> Reductions;
 
   void clear() {
     Stores.clear();
@@ -803,8 +840,11 @@ public:
     for (auto &Pair : Calls) {
       Pair.second.erase(std::remove(Pair.second.begin(), Pair.second.end(), I), Pair.second.end());
     }
-    if (BinaryOperator *BO = dyn_cast<BinaryOperator>(I))
-      Reductions.erase(std::remove(Reductions.begin(), Reductions.end(), BO), Reductions.end());
+    if (BinaryOperator *BO = dyn_cast<BinaryOperator>(I)) {
+      if (Reductions.find(BO)!=Reductions.end()) Reductions[BO] = nullptr;
+      //Reductions.erase(BO);
+      //Reductions.erase(std::remove(Reductions.begin(), Reductions.end(), BO), Reductions.end());
+    }
   }
 };
 
@@ -823,11 +863,12 @@ private:
   BasicBlock *Header;
   BasicBlock *Exit;
 
-  std::map<Node*, Value *> NodeMap;
-  std::vector<Instruction *> Garbage;
+  std::unordered_map<Node*, Value *> NodeMap;
+  //std::vector<Instruction *> Garbage;
+  std::unordered_set<Instruction *> Garbage;
   std::vector<Value *> CreatedCode;
-  std::map<Instruction *, Instruction *> Extracted;
-  std::map<GlobalVariable*, Instruction *> GlobalLoad;
+  std::unordered_map<Instruction *, Instruction *> Extracted;
+  std::unordered_map<GlobalVariable*, Instruction *> GlobalLoad;
 
   Value *cloneTree(Node *N, IRBuilder<> &Builder);
   void generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Builder);
@@ -854,11 +895,6 @@ private:
 };
 
 
-Node *Tree::find(Value *V) {
-  if (NodeMap.find(V)!=NodeMap.end()) return (*NodeMap[V].begin());
-  return nullptr;
-}
-
 template<typename ValueT>
 Node *Tree::find(std::vector<ValueT *> &Vs) {
   if (Vs.empty()) return nullptr;
@@ -868,7 +904,7 @@ Node *Tree::find(std::vector<ValueT *> &Vs) {
 
   if (NodeMap.find(Vs[0])==NodeMap.end()) return nullptr;
   
-  std::set<Node*> Result(NodeMap[Vs[0]]);
+  std::unordered_set<Node*> Result(NodeMap[Vs[0]]);
   //errs() << "Set: " << Result.size() << "\n";
   for (unsigned i = 1; i<Vs.size(); i++) {
     //if (NodeMap.find(Vs[i])==NodeMap.end()) return nullptr;
@@ -888,7 +924,7 @@ Node *Tree::find(std::vector<ValueT *> &Vs) {
 }
 
 static void ReorderOperands(std::vector<Value*> &Operands, BasicBlock &BB) {
-  std::map<const Value*,APInt> Ids;
+  std::unordered_map<const Value*,APInt> Ids;
   
   unsigned BitWidth = 64;
   if (Operands[0]->getType()->isIntegerTy()) {
@@ -915,29 +951,39 @@ static void ReorderOperands(std::vector<Value*> &Operands, BasicBlock &BB) {
 }
 
 template<typename ValueT>
-Node *Tree::buildReduction(ValueT *V, BasicBlock &BB, Node *Parent) {
-
+Node *Tree::buildReduction(ValueT *V, Instruction *U, BasicBlock &BB, Node *Parent) {
+  if (V==nullptr) return nullptr;
   BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
   if (BO==nullptr) return nullptr;
   if (BO->getParent()!=&BB) return nullptr;
   if (!ReductionNode::isValidOperation(BO)) return nullptr;
 
+  PHINode *PHI = dyn_cast<PHINode>(U);
+
   std::vector<BinaryOperator*> BOs;
   std::vector<Value*> Vs;
-  ReductionNode::collectValues(BO,BOs,Vs);
+  ReductionNode::collectValues(BO,PHI,BOs,Vs);
 
   if (BOs.size()<=1) return nullptr;
 
+#ifdef TEST_DEBUG
   errs() << "BOs:\n";
   for (auto * V : BOs) V->dump();
   errs() << "Operands:\n";
   for (auto * V : Vs) V->dump();
+#endif
 
   ReorderOperands(Vs, BB);
+
+#ifdef TEST_DEBUG
   errs() << "Operands:\n";
   for (auto * V : Vs) V->dump();
   errs() << "ReductionNode\n"; 
-  return new ReductionNode(BO, BOs, Vs, BB, Parent);
+#endif
+
+  if (PHI) Inputs.insert(PHI);
+
+  return new ReductionNode(BO, PHI, BOs, Vs, BB, Parent);
 }
 
 
@@ -976,6 +1022,8 @@ Node *Tree::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Pa
     } else return nullptr;
   }
 
+  Inputs.insert(Ptr);
+  
   return new GEPSequenceNode(VL, Ptr, Indices, BB, Parent);
 }
 
@@ -1045,7 +1093,51 @@ Node *Tree::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, No
     if (Operands[i]==nullptr) Operands[i] = Neutral;
   }
 
+  if (FixedV) Inputs.insert(FixedV);
+
   return new BinOpSequenceNode(VL, BinOpRef, FixedV, Operands, BB, Parent);
+}
+
+template<typename ValueT>
+Node *Tree::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent) {
+  if (Vs.size()<=1) return nullptr;
+
+  //if (!this->Root) return nullptr;
+  //if (Vs.size()!=this->Root->size()) return nullptr;
+  //if (this->Root->getNodeType()!=NodeType::MATCH) return nullptr;
+  //if (!isa<CallBase>(this->Root->getValue(0))) return nullptr;
+
+  if (NodeMap.find(Vs[1])==NodeMap.end()) return nullptr;
+  
+  std::unordered_set<Node*> Result(NodeMap[Vs[1]]);
+  for (unsigned i = 2; i<Vs.size(); i++) {
+    for (auto It = Result.begin(), E = Result.end(); It!=E; ) {
+      Node *N = *It;
+      It++;
+      if (N->getValue(i-1)!=Vs[i]) Result.erase(N);
+    }
+  }
+  if (Result.size()!=1) return nullptr;
+
+  Node *N = *Result.begin();
+
+  if (Vs.size()!=N->size()) return nullptr;
+  if (N->getNodeType()!=NodeType::MATCH) return nullptr;
+
+  for (unsigned i = 1; i<Vs.size(); i++) {
+    if (Vs[i]->getType()!=Vs[0]->getType()) return nullptr;
+    if (Vs[i]!=N->getValue(i-1)) return nullptr;
+  }
+
+  errs() << "Found possible recurrence! Init: "; Vs[0]->dump();
+  for (auto *V : N->getValues()) V->dump();
+
+  Inputs.insert(Vs[0]);
+
+  auto *RN = new RecurrenceNode(Vs, Vs[0], BB, Parent);
+  RN->pushChild(N);
+
+  return RN;
 }
 
 template<typename ValueT>
@@ -1055,8 +1147,8 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
 #endif
   bool Matching = true;
   for (unsigned i = 1; i<Vs.size(); i++) {
-    Matching = Matching && match(Vs[0],Vs[i]);
-    if (auto *I = dyn_cast<Instruction>(Vs[0])) {
+    Matching = Matching && match(Vs[i-1],Vs[i]);
+    if (auto *I = dyn_cast<Instruction>(Vs[i])) {
       if (I->getParent()!=(&BB)) Matching = false;
     }
     //TODO: hack
@@ -1087,8 +1179,15 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
 #endif
   if (Node *N = buildBinOpSequenceNode(Vs, BB, Parent)) return N;
 #ifdef TEST_DEBUG
+  errs() << "trying RECURRENCE\n";
+#endif
+
+  if (Node *N = buildRecurrenceNode(Vs, BB, Parent)) return N;
+
+#ifdef TEST_DEBUG
   errs() << "trying INTSEQ\n";
 #endif
+
   if (allConstant(Vs)) {
     if (Value *Step = isConstantSequence(Vs)) {
       return new IntSequenceNode(Vs, Step, BB, Parent);
@@ -1097,6 +1196,8 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
 #ifdef TEST_DEBUG
   errs() << "building MISMATCH\n";
 #endif
+  for (auto *V : Vs) Inputs.insert(V);
+
   return new MismatchingNode(Vs,BB,Parent);
 }
 
@@ -1107,6 +1208,7 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
   switch(N->getNodeType()) {
     case NodeType::MISMATCH: break;
     case NodeType::INTSEQ: break;
+    case NodeType::RECURRENCE: break;
     case NodeType::REDUCTION: {
 #ifdef TEST_DEBUG
        errs() << "Growing REDUCTION\n";
@@ -1200,7 +1302,7 @@ void Tree::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
       buildSchedulingOrder(CN, i, Visited);
     }
     //if (std::find(SchedulingOrder.begin(),SchedulingOrder.end(),I)==SchedulingOrder.end()) {
-    if (I->mayReadOrWriteMemory()) {
+    if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
     bool Found = false;
     for (auto &SN : SchedulingOrder) {
       if (SN.contains(I)) { Found = true; break; }
@@ -1214,7 +1316,7 @@ void Tree::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
     if (!Found) {
       //N->getValue(i)->dump();
 
-      if (I->mayWriteToMemory()) {
+      if (I->mayWriteToMemory() || I->mayHaveSideEffects()) {
         //errs() << "Breaking Scheduling Node\n";
 	if (!SchedulingOrder.back().empty()) {
           ScheduleNode SN;
@@ -1265,29 +1367,36 @@ bool Tree::isSchedulable(BasicBlock &BB) {
   Instruction *I = getStartingInstruction(BB);
   if (I==nullptr) return false;
 
-  auto *LastI = dyn_cast<Instruction>(Root->getValue(Root->size()-1))->getNextNode();
+  //auto *LastI = dyn_cast<Instruction>(Root->getValue(Root->size()-1))->getNextNode();
+  auto *LastI = BB.getTerminator();
   auto It = SchedulingOrder.begin(), E = SchedulingOrder.end();
   int Count = SchedulingOrder[0].size();
 
+  //errs() << "Count: " << Count << "\n";
   //errs() << "Start: "; I->dump();
   while (I!=LastI && It!=E) {
-    if (I->mayReadOrWriteMemory()) {
+    if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
     //errs() << "Processing: "; I->dump();
+    //errs() << "Count: " << Count << "\n";
     if ( (*It).contains(I) ) {
+      //errs() << "Found: "; I->dump();
       Count--;
       if (Count==0) {
         It++;
         if (It!=E) Count = (*It).size();
       }
     } else {
+      //errs() << "Not found: "; I->dump();
       //if (I->mayReadOrWriteMemory()) return false;
       //if (I->mayWriteToMemory()) {
-      if (I->mayReadOrWriteMemory()) {
-	      //errs() << "Read/Write memory\n";
+      if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
+	      errs() << "Read/Write memory\n";
 	      //return false;
 	      break;
       }
     }
+    } else {
+      //errs() << "Non-memory: "; I->dump();
     }
     I = I->getNextNode();
   }
@@ -1308,11 +1417,16 @@ void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Bu
   std::set<unsigned> NeedExtract;
 
   for (unsigned i = 0; i<N->size(); i++) {
-    auto *I = N->getValidInstruction(i);
-    if (I==nullptr) continue;
-
-    for (auto *U : I->users()) {
-      if (T.find(U)==nullptr) {
+    Value *V = N->getValidInstruction(i);
+    if (V==nullptr) continue;
+#ifdef TEST_DEBUG
+    errs() << "Looking for:"; V->dump();
+#endif
+    for (auto *U : V->users()) {
+      if (!T.contains(U)) {
+#ifdef TEST_DEBUG
+	errs() << "Found use: " << i << ": "; U->dump();
+#endif
         NeedExtract.insert(i);
 	break;
       }
@@ -1453,9 +1567,9 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 
 #ifdef TEST_DEBUG
       errs() << "Match: "; 
-      if (isa<Function>(N->getValue(0)))
+      if (isa<Function>(N->getValue(0))) {
         errs() << N->getValue(0)->getName() << "\n";
-      else {
+      } else {
         errs() << "\n";
         for (auto *V : N->getValues()) V->dump();
       }
@@ -1463,6 +1577,9 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       Instruction *I = dyn_cast<Instruction>(N->getValue(0));
       if (I) {
         Instruction *NewI = I->clone();
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,nullptr);
+        }
         NodeMap[N] = NewI;
 
         std::vector<Value*> Operands;
@@ -1486,12 +1603,14 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
         for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
           NewI->setOperand(i,Operands[i]);
         }
-        
-        for (auto *V : N->getValues()) {
-          auto *I = dyn_cast<Instruction>(V);
-          if (I && std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) Garbage.push_back(I);
-        }
 
+        for (unsigned i = 0; i<N->size(); i++) {
+          if (auto *I = N->getValidInstruction(i)) {
+            //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) Garbage.push_back(I);
+	    Garbage.insert(I);
+	  }
+	}
+        
         generateExtract(N, NewI, Builder);
 
 #ifdef TEST_DEBUG
@@ -1513,12 +1632,14 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 #endif
       auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(GN->getPointerOperand(), IndVarIdx));
       CreatedCode.push_back(GEP);
+      NodeMap[N] = GEP;
 
       for (unsigned i = 0; i<GN->size(); i++) {
         if (auto *I = GN->getValidInstruction(i)) {
-          if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
-            Garbage.push_back(I);
-	  }
+	  Garbage.insert(I);
+          //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
+          //  Garbage.push_back(I);
+	  //}
         }
       }
 
@@ -1527,7 +1648,6 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 #ifdef TEST_DEBUG
       errs() << "Gen: "; GEP->dump();
 #endif
-      NodeMap[N] = GEP;
       return GEP;
     }
     case NodeType::BINOP: {
@@ -1542,14 +1662,19 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       errs() << "Closing BINOP\n";
 #endif
       Instruction *NewI = BON->getReference()->clone();
+      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+        NewI->setOperand(i,nullptr);
+      }
       Builder.Insert(NewI);
+      NodeMap[N] = NewI;
       CreatedCode.push_back(NewI);
 
       for (unsigned i = 0; i<BON->size(); i++) {
         if (auto *I = BON->getValidInstruction(i)) {
-          if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
-            Garbage.push_back(I);
-	  }
+	  Garbage.insert(I);
+          //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
+          //  Garbage.push_back(I);
+	  //}
         }
       }
 
@@ -1561,8 +1686,30 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 #ifdef TEST_DEBUG
       errs() << "Gen: "; NewI->dump();
 #endif
-      NodeMap[N] = NewI;
       return NewI;
+    }
+    case NodeType::RECURRENCE: {
+#ifdef TEST_DEBUG
+      errs() << "Generating RECURRENCE\n";
+#endif
+      auto *RN = (RecurrenceNode*)N;
+          
+      PHINode *PHI = nullptr;
+      if (Header->getFirstNonPHI()) {
+        IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+        PHI = PHIBuilder.CreatePHI(RN->getStartValue()->getType(),0);
+      } else {
+        PHI = Builder.CreatePHI(RN->getStartValue()->getType(),0);
+      }
+      CreatedCode.push_back(PHI);
+      PHI->addIncoming(RN->getStartValue(),PreHeader);
+      NodeMap[N] = PHI;
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; PHI->dump();
+#endif
+      
+      return PHI;
     }
     case NodeType::REDUCTION: {
 #ifdef TEST_DEBUG
@@ -1576,9 +1723,14 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       errs() << "Closing REDUCTION\n";
 #endif
       Instruction *NewI = RN->getBinaryOperator()->clone();
+      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+        NewI->setOperand(i,nullptr);
+      }
       Builder.Insert(NewI);
       CreatedCode.push_back(NewI);
+      NodeMap[N] = NewI;
 
+      /*
       for (int i = RN->size(); i>0; i--) {
         if (auto *I = RN->getValidInstruction((int)i - 1)) {
           if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
@@ -1586,13 +1738,25 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 	  }
         }
       }
+      */
+      for (int i = 0; i<RN->size(); i++) {
+        if (auto *I = RN->getValidInstruction(i)) {
+	  Garbage.insert(I);
+        }
+      }
 
-
-
-      IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
-      PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      PHINode *PHI = nullptr;
+      if (Header->getFirstNonPHI()) {
+        IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+        PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      } else {
+        PHI = Builder.CreatePHI(NewI->getType(),2);
+      }
+      //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
+      //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      CreatedCode.push_back(PHI);
       PHI->addIncoming(NewI,Header);
-      PHI->addIncoming(RN->getNeutralValue(),PreHeader);
+      PHI->addIncoming(RN->getStartValue(),PreHeader);
       NewI->setOperand(0,PHI);
       NewI->setOperand(1,Op);
 
@@ -1602,7 +1766,6 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 #ifdef TEST_DEBUG
       errs() << "Gen: "; NewI->dump();
 #endif
-      NodeMap[N] = NewI;
       return NewI;
     }
     case NodeType::INTSEQ: {
@@ -1683,6 +1846,15 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 #ifdef TEST_DEBUG
   errs() << "Tree code generated!\n";
 #endif
+ 
+  //Late generation of recurrences
+  for (Node *N : T.Nodes) {
+    if (N->getNodeType()==NodeType::RECURRENCE) {
+      //update PHI
+      PHINode *PHI = dyn_cast<PHINode>(NodeMap[N]);
+      PHI->addIncoming(NodeMap[N->getChild(0)],Header);
+    }
+  }
 
 #ifdef TEST_DEBUG
   errs() << "Root:\n";
@@ -1712,12 +1884,13 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   SizeModified += 0.25*EstimateSize(Exit,DL,&TTI); 
 
   bool Profitable = SizeOriginal > SizeModified;
-  BB.dump();
+  //BB.dump();
+  //
   errs() << T.getDotString() << "\n";
 
-  PreHeader->dump();
-  Header->dump();
-  Exit->dump();
+  //PreHeader->dump();
+  //Header->dump();
+  //Exit->dump();
 
   errs() << "Gains: " << SizeOriginal << " - " << SizeModified << " = " << ( ((int)SizeOriginal) - ((int)SizeModified) ) << "; ";
   errs() << "Width: " << T.Root->size() << "; ";
@@ -1790,12 +1963,32 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     //PreHeader->dump();
     //Header->dump();
     //Exit->dump();
-
+    
+    for (auto It = Exit->rbegin(), E = Exit->rend(); It!=E; ) {
+      Instruction *I = &*It;
+      It++;
+      //if (std::find(Garbage.begin(), Garbage.end(), I)!=Garbage.end()) {
+      if (Garbage.count(I)) {
+	 Seeds.remove(I);
+	 I->eraseFromParent();
+      }
+    }
+    for (auto It = BB.rbegin(), E = BB.rend(); It!=E; ) {
+      Instruction *I = &*It;
+      It++;
+      //if (std::find(Garbage.begin(), Garbage.end(), I)!=Garbage.end()) {
+      if (Garbage.count(I)) {
+	 Seeds.remove(I);
+	 I->eraseFromParent();
+      }
+    }
+    /*
     for (auto It = Garbage.rbegin(), E = Garbage.rend(); It!=E; It++) {
       //errs() << "Deleting: "; (*It)->dump();
       Seeds.remove(*It);
       (*It)->eraseFromParent();
     }
+    */
     
     for (BasicBlock *Succ : SuccBBs) {
       for (Instruction &I : *Succ) { //TODO: run only over PHIs
@@ -1888,8 +2081,9 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
       if (BinaryOperator *BO = getPossibleReduction(SI->getValueOperand())) {
 #ifdef TEST_DEBUG
         errs() << "Possible reduction\n";
+	BO->dump();
 #endif
-        Seeds.Reductions.push_back(BO);
+        Seeds.Reductions[BO] = &I;
       }
     }
     else if (auto *CI = dyn_cast<CallInst>(&I)) {
@@ -1913,8 +2107,9 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
         if (BinaryOperator *BO = getPossibleReduction(CI->getArgOperand(i))) {
 #ifdef TEST_DEBUG
           errs() << "Possible reduction\n";
+	  BO->dump();
 #endif
-          Seeds.Reductions.push_back(BO);
+          Seeds.Reductions[BO] = &I;
         }
       }
     }
@@ -1924,7 +2119,8 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
 #ifdef TEST_DEBUG
           errs() << "Possible reduction\n";
 #endif
-          Seeds.Reductions.push_back(BO);
+	  BO->dump();
+          Seeds.Reductions[BO] = &I;
         }
       }
     }
@@ -1932,8 +2128,9 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
       if (BinaryOperator *BO = getPossibleReduction(Ret->getReturnValue())) {
 #ifdef TEST_DEBUG
         errs() << "Possible reduction\n";
+	BO->dump();
 #endif
-        Seeds.Reductions.push_back(BO);
+        Seeds.Reductions[BO] = &I;
       }
     }
     else if (auto *PHI = dyn_cast<PHINode>(&I)) {
@@ -1943,8 +2140,9 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
         if (BinaryOperator *BO = getPossibleReduction(V)) {
 #ifdef TEST_DEBUG
           errs() << "Possible reduction\n";
+	  BO->dump();
 #endif
-          Seeds.Reductions.push_back(BO);
+          Seeds.Reductions[BO] = &I;
         }
       }
     }
@@ -1977,6 +2175,7 @@ bool LoopRoller::run() {
     errs() << "stores\n";
 #endif
     unsigned Count = 0;
+
     for (auto &Pair : Seeds.Stores) {
       if (Pair.second.size()>1) {
         Tree T(Pair.second, *BB);
@@ -2029,9 +2228,10 @@ bool LoopRoller::run() {
 #ifdef TEST_DEBUG
     errs() << "reductions\n";
 #endif
-    for (auto *I : Seeds.Reductions) {
-      errs() << "REDUCTION TREE!!\n";
-      Tree T(I, *BB);
+    for (auto &Pair : Seeds.Reductions) {
+      if (Pair.second==nullptr) continue;
+      //errs() << "REDUCTION TREE!!\n";
+      Tree T(Pair.first, Pair.second, *BB);
       if (T.isSchedulable(*BB)) {
         CodeGenerator CG(F, *BB, T);
 #ifdef TEST_DEBUG
