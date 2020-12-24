@@ -109,6 +109,7 @@
 
 #include <limits.h>
 
+#include <unordered_set>
 #include <functional>
 #include <queue>
 #include <vector>
@@ -196,8 +197,8 @@ static cl::opt<bool>
     EnableSALSSACoalescing("func-merging-coalescing", cl::init(true), cl::Hidden,
                   cl::desc("Enable phi-node coalescing during SSA reconstruction"));
 
-static cl::opt<bool> ConservativeMode (
-    "func-merging-conservative", cl::init(false), cl::Hidden,
+static cl::opt<unsigned> ConservativeMode (
+    "func-merging-conservative", cl::init(0), cl::Hidden,
     cl::desc("Enable conservative mode to avoid runtime overhead"));
 
 static cl::opt<bool> ReuseMergedFunctions (
@@ -1450,6 +1451,14 @@ void FunctionMerger::CodeGenerator<BlockListType>::destroyGeneratedCode() {
   CreatedBBs.clear();
 }
 
+static size_t BlockSize(BasicBlock *BB) {
+  size_t s = 0;
+  for (Instruction &I : *BB) {
+    if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) s++;
+  }
+  return s;
+}
+
 FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const FunctionMergingOptions &Options) {
   LLVMContext &Context = *ContextPtr;
   FunctionMergeResult ErrorResponse(F1, F2, nullptr);
@@ -1461,7 +1470,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   SmallVector<Value*,8> F2Vec;
 
   errs() << "Linearization\n";
-  if (ConservativeMode) {
+  if (ConservativeMode==1) {
     std::list<BasicBlock *> OrderedBBs;
     CanonicalLinearizationOfBlocks(F1, OrderedBBs);
     for (BasicBlock * BB : OrderedBBs) F1Vec.push_back(BB);
@@ -1469,7 +1478,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     OrderedBBs.clear();
     CanonicalLinearizationOfBlocks(F2, OrderedBBs);
     for (BasicBlock * BB : OrderedBBs) F2Vec.push_back(BB);
-  } else {
+  } else if (ConservativeMode==0) {
     linearize(F1, F1Vec);
     linearize(F2, F2Vec);
   }
@@ -1479,7 +1488,75 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 #endif
 
   AlignedSequence<Value*> AlignedSeq;
-  if (ConservativeMode) {
+  if (ConservativeMode==2) {
+      ///TODO:: ignore seq. alignment. Perform n^2, pairing any two matching basic blocks. There is no need to linearize them either.
+
+      std::map<size_t, std::vector<BasicBlock *> > BlocksF1;
+      for (BasicBlock &BB1 : *F1) BlocksF1[BlockSize(&BB1)].push_back(&BB1);
+      
+      for (BasicBlock &BIt : *F2) {
+	BasicBlock *BB2 = &BIt;
+	auto &SetRef = BlocksF1[BlockSize(BB2)];
+        for (BasicBlock *BB1 : SetRef) {
+	  if (FunctionMerger::matchWholeBlocks(BB1,BB2)) {
+
+            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,BB2,true));
+
+            auto It1 = BB1->begin();
+            auto It2 = BB2->begin();
+
+            while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
+            while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
+
+            while (It1!=BB1->end() && It2!=BB2->end()) {
+              Instruction *I1 = &*It1;
+              Instruction *I2 = &*It2;
+
+              if (!matchInstructions(I1,I2)) {
+#ifdef TIME_STEPS_DEBUG
+  TimeAlign.stopTimer();
+#endif
+                return ErrorResponse;
+	      }
+
+              AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,I2,true));
+
+              It1++;
+              It2++;
+            }
+
+            if (It1!=BB1->end() || It2!=BB2->end()) {
+#ifdef TIME_STEPS_DEBUG
+  TimeAlign.stopTimer();
+#endif
+              return ErrorResponse;
+	    }
+	    
+            SetRef.erase(std::remove(SetRef.begin(), SetRef.end(), BB1), SetRef.end());
+	    BB2 = nullptr;
+	    break;
+	  }
+	}
+	if (BB2) {
+          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,BB2,false));
+	  for (Instruction &I : *BB2) {
+	    if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
+            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,&I,false));
+	  }
+	}
+      }
+      for (auto &Pair : BlocksF1) {
+        for (BasicBlock *BB1 : Pair.second) {
+          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,nullptr,false));
+	  for (Instruction &I : *BB1) {
+	    if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
+            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(&I,nullptr,false));
+	  }
+	}
+      }
+
+  } else if (ConservativeMode==1) {
+      
       errs() << "Sequence Alignment\n";
       NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::matchWholeBlocks);
 
@@ -1494,7 +1571,6 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
         return ErrorResponse;
       }
         
-
       AlignedSequence<Value*> AlignedBlocks = SA.getAlignment(F1Vec,F2Vec);
       
       //errs() << "Expanding Alignment\n";
@@ -1562,7 +1638,8 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 	  }
         }
       }
-  } else {
+      
+  } else if (ConservativeMode==0) {
   /*
   switch (SAMethod) {
     case 2: {
@@ -2014,11 +2091,12 @@ static int EstimateThunkOverhead(FunctionMergeResult &MFR, StringSet<> &AlwaysPr
   return RequiresOriginalInterfaces(MFR, AlwaysPreserved)*(2+MFR.getMergedFunction()->getFunctionType()->getNumParams());
 }
 
+/*
 static bool CompareFunctionScores(const std::pair<Function *, unsigned> &F1,
                                   const std::pair<Function *, unsigned> &F2) {
   return F1.second > F2.second;
 }
-
+*/
 //#define FMSA_USE_JACCARD
 
 class Fingerprint {
@@ -2067,16 +2145,28 @@ public:
   }
 };
 
+class FunctionData {
+public:
+  Function *F;
+  Fingerprint *FP;
+  size_t Size;
+  std::list<FunctionData>::iterator iterator;
+
+  FunctionData() : F(nullptr), FP(nullptr), Size(0) {}
+  FunctionData(Function *F, Fingerprint *FP, size_t Size) : F(F), FP(FP), Size(Size) {}
+};
+
+
 template<typename T, typename SimilarityT>
 class BaseFingerprintSimilarity {
 public:
-  Function *F1;
-  Function *F2;
+  FunctionData FD1;
+  FunctionData FD2;
   T Score;
 
-  BaseFingerprintSimilarity() : F1(nullptr), F2(nullptr), Score(0) {}
+  BaseFingerprintSimilarity() : Score(0) {}
 
-  BaseFingerprintSimilarity(Fingerprint *FP1, Fingerprint *FP2) : F1(FP1->F), F2(FP2->F), Score(0) {}
+  BaseFingerprintSimilarity(FunctionData &FD1, FunctionData &FD2) : FD1(FD1), FD2(FD2), Score(0) {}
 
   bool operator<(const SimilarityT &FS) const {
     return Score < FS.Score;
@@ -2111,7 +2201,9 @@ public:
 
   FingerprintSimilarity() : Base() {}
 
-  FingerprintSimilarity(Fingerprint *FP1, Fingerprint *FP2) : Base(FP1,FP2) {
+  FingerprintSimilarity(FunctionData &FD1, FunctionData &FD2) : Base(FD1,FD2) {
+    Fingerprint *FP1 = FD1.FP;
+    Fingerprint *FP2 = FD2.FP;
     Similarity = 0;
     LeftOver = 0;
 #ifdef FINGERPRINT_USE_TYPE
@@ -2216,7 +2308,9 @@ public:
 
   FingerprintManhattanSimilarity() : Base() { Score = std::numeric_limits<int>::min(); }
 
-  FingerprintManhattanSimilarity(Fingerprint *FP1, Fingerprint *FP2) : Base(FP1,FP2) {
+  FingerprintManhattanSimilarity(FunctionData &FD1, FunctionData &FD2) : Base(FD1,FD2) {
+    Fingerprint *FP1 = FD1.FP;
+    Fingerprint *FP2 = FD2.FP;
     for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
       int Freq1 = FP1->OpcodeFreq[i];
       int Freq2 = FP2->OpcodeFreq[i];
@@ -2234,7 +2328,9 @@ public:
 
   FingerprintCosineSimilarity() : Base() {}
 
-  FingerprintCosineSimilarity(Fingerprint *FP1, Fingerprint *FP2) : Base(FP1,FP2) {
+  FingerprintCosineSimilarity(FunctionData &FD1, FunctionData &FD2) : Base(FD1,FD2) {
+    Fingerprint *FP1 = FD1.FP;
+    Fingerprint *FP2 = FD2.FP;
     int AB = 0;
     int A2 = 0;
     int B2 = 0;
@@ -2257,7 +2353,9 @@ public:
 
   FingerprintEuclideanSimilarity() : Base() { Score = std::numeric_limits<int>::min(); }
 
-  FingerprintEuclideanSimilarity(Fingerprint *FP1, Fingerprint *FP2) : Base(FP1,FP2) {
+  FingerprintEuclideanSimilarity(FunctionData &FD1, FunctionData &FD2) : Base(FD1,FD2) {
+    Fingerprint *FP1 = FD1.FP;
+    Fingerprint *FP2 = FD2.FP;
     int Sum = 0;
     for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
       int Freq1 = FP1->OpcodeFreq[i];
@@ -2300,7 +2398,7 @@ Timer TimeUpdate("Merge::Update", "Merge::Update");
 //template<typename SimilarityT>
 //bool FunctionMerging::search(std::list<Function *> &AvailableCandidates, std::list<Function *> &WorkList, FunctionMergingOptions &Options) {
 
-
+/*
 void printAverageDistance(std::vector<std::pair<Function *, unsigned>> &FunctionsToProcess,  std::map<Function *, Fingerprint *> &CachedFingerprints) {
   //#define SIMILARITY_TYPE FingerprintSimilarity
   #define SIMILARITY_TYPE FingerprintManhattanSimilarity
@@ -2333,7 +2431,7 @@ void printAverageDistance(std::vector<std::pair<Function *, unsigned>> &Function
         //if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
         //  continue;
         Fingerprint *FP2 = CachedFingerprints[F2];
-        SIMILARITY_TYPE PairSim(FP1, FP2);
+        SIMILARITY_TYPE PairSim(FD1, FD2);
         if (PairSim > BestPair && SIMILARITY_TYPE::accept(PairSim)) {
           BestPair = PairSim;
           FoundCandidate = true;
@@ -2357,6 +2455,12 @@ void printAverageDistance(std::vector<std::pair<Function *, unsigned>> &Function
    errs() << "Min Distance: " << MinDistance << "\n";
    errs() << "Max Distance: " << MaxDistance << "\n";
    errs() << "Average Distance: " << (((double)Sum)/((double)Count)) << "\n";
+}
+*/
+
+static bool CompareFunctionDataScores(const FunctionData &F1,
+                                  const FunctionData &F2) {
+  return F1.Size > F2.Size;
 }
 
 bool FunctionMerging::runOnModule(Module &M) {
@@ -2382,10 +2486,7 @@ bool FunctionMerging::runOnModule(Module &M) {
   //a FunctionPass.
   TargetTransformInfo TTI(M.getDataLayout());
 
-  std::vector<std::pair<Function *, unsigned>> FunctionsToProcess;
-
-  std::map<Function *, Fingerprint *> CachedFingerprints;
-  std::map<Function *, unsigned> FuncSizes;
+  std::vector<FunctionData> FunctionsToProcess;
 
 #ifdef TIME_STEPS_DEBUG
   TimePreProcess.startTimer();
@@ -2395,29 +2496,25 @@ bool FunctionMerging::runOnModule(Module &M) {
     if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
     
-    FuncSizes[&F] = EstimateFunctionSize(&F, &TTI);
-
-    FunctionsToProcess.push_back(
-      std::pair<Function *, unsigned>(&F, FuncSizes[&F]) );
-
-    CachedFingerprints[&F] = new Fingerprint(&F);
+    FunctionData FD(&F, new Fingerprint(&F), EstimateFunctionSize(&F, &TTI));
+    FunctionsToProcess.push_back(FD);
   }
 
   errs() << "Number of Functions: " << FunctionsToProcess.size() << "\n";
 
   
-  std::sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
-            CompareFunctionScores);
+  //std::sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
+  //          CompareFunctionDataScores);
 
   std::stable_sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
-      [&](auto &Pair1, auto &Pair2) -> bool {
+      [&](auto &FD1, auto &FD2) -> bool {
         unsigned Sum1 = 0;
         for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
-          Sum1 += CachedFingerprints[Pair1.first]->OpcodeFreq[i];
+          Sum1 += FD1.FP->OpcodeFreq[i];
 	}
         unsigned Sum2 = 0;
         for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
-          Sum2 += CachedFingerprints[Pair2.first]->OpcodeFreq[i];
+          Sum2 += FD2.FP->OpcodeFreq[i];
 	}
 	float Avg1 = ((float)Sum1)/((float)Fingerprint::MaxOpcode);
 	float Avg2 = ((float)Sum2)/((float)Fingerprint::MaxOpcode);
@@ -2436,9 +2533,6 @@ bool FunctionMerging::runOnModule(Module &M) {
   }
   */
 
-  //faiss::IndexFlat1D index(Fingerprint::MaxOpcode);           // call constructor
-
-
   //printAverageDistance(FunctionsToProcess, CachedFingerprints);
   //return false;
 
@@ -2446,14 +2540,10 @@ bool FunctionMerging::runOnModule(Module &M) {
   TimePreProcess.stopTimer();
 #endif
 
-  std::list<Function *> WorkList;
+  std::list<FunctionData> WorkList;
 
-  std::list<Function *> AvailableCandidates;
-
-  for (std::pair<Function *, unsigned> FuncAndSize1 : FunctionsToProcess) {
-    Function *F1 = FuncAndSize1.first;
-    WorkList.push_back(F1);
-    AvailableCandidates.push_back(F1);
+  for (auto &FD : FunctionsToProcess) {
+    WorkList.push_back(FD);
   }
 
   unsigned TotalMerges = 0;
@@ -2474,10 +2564,8 @@ bool FunctionMerging::runOnModule(Module &M) {
   FunctionsToProcess.clear();
 
   while (!WorkList.empty()) {
-    Function *F1 = WorkList.front();
+    FunctionData FD1 = WorkList.front();
     WorkList.pop_front();
-
-    AvailableCandidates.remove(F1);
 
     Rank.clear();
 
@@ -2485,18 +2573,21 @@ bool FunctionMerging::runOnModule(Module &M) {
     TimeRank.startTimer();
 #endif
 
-    Fingerprint *FP1 = CachedFingerprints[F1];
+    Function *F1 = FD1.F;
+    Fingerprint *FP1 = FD1.FP;
 
     if (ExplorationThreshold > 1) {
       unsigned CountCandidates = 0;
-      for (Function *F2 : AvailableCandidates) {
+      for (auto It = WorkList.begin(), E = WorkList.end(); It!=E; It++) {
+	FunctionData &FD2 = *It;
+	Function *F2 = FD2.F;
+        Fingerprint *FP2 = FD2.FP;
+
         if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
           continue;
 
-        Fingerprint *FP2 = CachedFingerprints[F2];
-
-
-        SIMILARITY_TYPE PairSim(FP1, FP2);
+	FD2.iterator = It;
+        SIMILARITY_TYPE PairSim(FD1, FD2);
         if (SIMILARITY_TYPE::accept(PairSim))
           Rank.push_back(PairSim);
         if (RankingThreshold && CountCandidates>RankingThreshold) {
@@ -2511,13 +2602,16 @@ bool FunctionMerging::runOnModule(Module &M) {
       SIMILARITY_TYPE BestPair;
 
       unsigned CountCandidates = 0;
-      for (Function *F2 : AvailableCandidates) {
+      for (auto It = WorkList.begin(), E = WorkList.end(); It!=E; It++) {
+	FunctionData &FD2 = *It;
+	Function *F2 = FD2.F;
+        Fingerprint *FP2 = FD2.FP;
+
         if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
           continue;
 
-        Fingerprint *FP2 = CachedFingerprints[F2];
-
-        SIMILARITY_TYPE PairSim(FP1, FP2);
+	FD2.iterator = It;
+        SIMILARITY_TYPE PairSim(FD1, FD2);
         if (PairSim > BestPair && SIMILARITY_TYPE::accept(PairSim)) {
           BestPair = PairSim;
           FoundCandidate = true;
@@ -2537,9 +2631,15 @@ bool FunctionMerging::runOnModule(Module &M) {
 
     unsigned MergingTrialsCount = 0;
 
+    delete FD1.FP;
+    FD1.FP = nullptr;
+
     while (!Rank.empty()) {
       auto RankEntry = Rank.front();
-      Function *F2 = RankEntry.F2;
+
+      FunctionData FD2 = RankEntry.FD2;
+      Function *F2 = FD2.F;
+
       std::pop_heap(Rank.begin(), Rank.end());
       Rank.pop_back();
 
@@ -2581,8 +2681,8 @@ bool FunctionMerging::runOnModule(Module &M) {
 
       if (Result.getMergedFunction() && validFunction) {
 
-        size_t SizeF1 = FuncSizes[F1];
-        size_t SizeF2 = FuncSizes[F2];
+        size_t SizeF1 = FD1.Size;
+        size_t SizeF2 = FD2.Size;
 
         size_t SizeF12 = EstimateThunkOverhead(Result, AlwaysPreserved) +
                          EstimateFunctionSize(Result.getMergedFunction(), &TTI);
@@ -2629,23 +2729,26 @@ bool FunctionMerging::runOnModule(Module &M) {
           TimeUpdate.startTimer();
 #endif
 
-          AvailableCandidates.remove(F2);
-          WorkList.remove(F2);
+          FM.updateCallGraph(Result, AlwaysPreserved, Options);
+
 
           TotalMerges++;
 
-          FM.updateCallGraph(Result, AlwaysPreserved, Options);
+	  if (FD2.iterator==WorkList.end()) {
+            errs() << "Nothing to remove!\n";
+	  } else if ( (*FD2.iterator).F!=F2) {
+            errs() << "Wrong function!\n";
+	  }
+          WorkList.erase(FD2.iterator);
+	  delete FD2.FP;
+          FD2.FP = nullptr;
 
 	  if (ReuseMergedFunctions) {
-          // feed new function back into the working lists
-          WorkList.push_front(Result.getMergedFunction());
-          AvailableCandidates.push_front(Result.getMergedFunction());
-
-          FuncSizes[Result.getMergedFunction()] =
-              EstimateFunctionSize(Result.getMergedFunction(), &TTI);
-
-          CachedFingerprints[Result.getMergedFunction()] =
-              new Fingerprint(Result.getMergedFunction());
+            // feed new function back into the working lists
+	    FunctionData MFD(Result.getMergedFunction(),
+                            new Fingerprint(Result.getMergedFunction()),
+			    EstimateFunctionSize(Result.getMergedFunction(), &TTI));
+            WorkList.push_front(MFD);
           }
 #ifdef TIME_STEPS_DEBUG
           TimeUpdate.stopTimer();
@@ -2665,11 +2768,6 @@ bool FunctionMerging::runOnModule(Module &M) {
   }
 
   WorkList.clear();
-
-  for (auto kv : CachedFingerprints) {
-    delete kv.second;
-  }
-  CachedFingerprints.clear();
 
   double MergingAverageDistance = 0;
   unsigned MergingMaxDistance = 0;
