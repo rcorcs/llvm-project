@@ -33,7 +33,7 @@
 
 #define DEBUG_TYPE "loop-rolling"
 
-//#define TEST_DEBUG
+#define TEST_DEBUG
 
 using namespace llvm;
 
@@ -679,6 +679,32 @@ public:
     for (Node *N : Nodes) delete N;
     Root = nullptr;
     Nodes.clear();
+  }
+
+  bool dependsOn(Instruction *I, Value *V, BasicBlock *BB) {
+    if (I->getParent()!=BB) return false;
+    if (isa<PHINode>(I)) return false;
+
+    for (unsigned i = 0; i<I->getNumOperands(); i++) {
+      if (I->getOperand(i)==V) return true;
+    }
+    bool Depends = false;
+    for (unsigned i = 0; i<I->getNumOperands(); i++) {
+      if (Instruction *IV = dyn_cast<Instruction>(I->getOperand(i))) {
+        Depends = Depends || dependsOn(IV,V,BB);
+	if (Depends) break;
+      }
+    }
+    return Depends;
+  }
+
+  bool dependsOn(Value *V) {
+    bool Depends = false;
+    for (unsigned i = 0; i<Root->size(); i++) {
+      auto *I = Root->getValidInstruction(i);
+      Depends = Depends || dependsOn(I,V,I->getParent());
+    }
+    return Depends;
   }
 
   Instruction *getStartingInstruction(BasicBlock &BB);
@@ -1918,36 +1944,23 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     Builder.CreateBr(Header);
 
     Instruction *InstSplitPt = T.getStartingInstruction(BB);
-    Instruction *InstFinalPt = T.getEndingInstruction(BB)->getNextNode();
-    //Instruction *InstSplitPt = SchedulingPoint(T, BB);
     if (InstSplitPt==nullptr) {
       return false;
     }
-
     auto *EndPt = BB.getTerminator();
 
     //copy instructions to the Exit block
     Builder.SetInsertPoint(Exit);
 
-    std::set<User*> NeedMoving(T.Users);
-
-    while (InstSplitPt!=InstFinalPt) {
+    while (InstSplitPt!=EndPt) {
       auto *I = InstSplitPt;
       InstSplitPt = InstSplitPt->getNextNode();
-      if (NeedMoving.count(I)) {
-	for (auto *U : I->users()) NeedMoving.insert(U);
-
+      if (!T.dependsOn(I)) {
         I->removeFromParent();
         Builder.Insert(I);
       }
     }
-
-    while (InstSplitPt!=EndPt) {
-      auto *I = InstSplitPt;
-      InstSplitPt = InstSplitPt->getNextNode();
-      I->removeFromParent();
-      Builder.Insert(I);
-    }
+    //move terminator to the exit block
     InstSplitPt->removeFromParent();
     Builder.Insert(InstSplitPt);
 
@@ -1967,7 +1980,6 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     for (auto It = Exit->rbegin(), E = Exit->rend(); It!=E; ) {
       Instruction *I = &*It;
       It++;
-      //if (std::find(Garbage.begin(), Garbage.end(), I)!=Garbage.end()) {
       if (Garbage.count(I)) {
 	 Seeds.remove(I);
 	 I->eraseFromParent();
@@ -1976,19 +1988,11 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     for (auto It = BB.rbegin(), E = BB.rend(); It!=E; ) {
       Instruction *I = &*It;
       It++;
-      //if (std::find(Garbage.begin(), Garbage.end(), I)!=Garbage.end()) {
       if (Garbage.count(I)) {
 	 Seeds.remove(I);
 	 I->eraseFromParent();
       }
     }
-    /*
-    for (auto It = Garbage.rbegin(), E = Garbage.rend(); It!=E; It++) {
-      //errs() << "Deleting: "; (*It)->dump();
-      Seeds.remove(*It);
-      (*It)->eraseFromParent();
-    }
-    */
     
     for (BasicBlock *Succ : SuccBBs) {
       for (Instruction &I : *Succ) { //TODO: run only over PHIs
@@ -2006,8 +2010,10 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     Header->dump();
     Exit->dump();
 #endif
-
-
+    if ( verifyFunction(*BB.getParent()) ) {
+      errs() << "Broken Function!!\n";
+      BB.getParent()->dump();
+    }
     return true;
   } else {
     //errs() << "Unprofitable\n";
