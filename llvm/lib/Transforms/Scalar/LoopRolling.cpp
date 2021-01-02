@@ -291,7 +291,6 @@ public:
   }
 };
 
-
 class GEPSequenceNode : public Node {
 private:
   Value *Ptr;
@@ -608,6 +607,7 @@ public:
 
 class Tree {
 public:
+  BasicBlock *BB;
   Node *Root;
   std::vector<Node*> Nodes;
   std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap;
@@ -615,7 +615,7 @@ public:
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
 
-  Tree(BinaryOperator *BO, Instruction *U, BasicBlock &BB) {
+  Tree(BinaryOperator *BO, Instruction *U, BasicBlock &BB) : BB(&BB) {
     Root = buildReduction(BO,U,BB,nullptr);
     if (Root) {
       addNode(Root);
@@ -635,7 +635,7 @@ public:
   }
 
   template<typename ValueT>
-  Tree(std::vector<ValueT*> &Vs, BasicBlock &BB) {
+  Tree(std::vector<ValueT*> &Vs, BasicBlock &BB) : BB(&BB) {
     Root = createNode(Vs,BB);
     addNode(Root);
 #ifdef TEST_DEBUG
@@ -652,6 +652,8 @@ public:
 #endif
   }
 
+  BasicBlock *getBlock() { return BB; }
+
   size_t getWidth() {
     return Root->size();
   }
@@ -660,9 +662,11 @@ public:
     if (N && N->size()) {
       if (std::find(Nodes.begin(), Nodes.end(), N)==Nodes.end()) {
         Nodes.push_back(N);
-        for (auto *V : N->getValues()) {
-          //NodeMap[V].insert(N);
-          ValuesInNode.insert(V);
+	if (N->getNodeType()!=NodeType::MISMATCH && N->getNodeType()!=NodeType::RECURRENCE) {
+          for (auto *V : N->getValues()) {
+            //NodeMap[V].insert(N);
+            ValuesInNode.insert(V);
+	  }
 	}
         NodeMap[N->getValue(0)].insert(N);
       }
@@ -681,9 +685,11 @@ public:
     Nodes.clear();
   }
 
-  bool dependsOn(Instruction *I, Value *V, BasicBlock *BB) {
+  bool dependsOn(Instruction *I, Value *V, BasicBlock *BB, std::unordered_set<Value*> &Visited) {
     if (I->getParent()!=BB) return false;
     if (isa<PHINode>(I)) return false;
+    if (Visited.find(I)!=Visited.end()) return false;
+    Visited.insert(I);
 
     for (unsigned i = 0; i<I->getNumOperands(); i++) {
       if (I->getOperand(i)==V) return true;
@@ -691,7 +697,7 @@ public:
     bool Depends = false;
     for (unsigned i = 0; i<I->getNumOperands(); i++) {
       if (Instruction *IV = dyn_cast<Instruction>(I->getOperand(i))) {
-        Depends = Depends || dependsOn(IV,V,BB);
+        Depends = Depends || dependsOn(IV,V,BB,Visited);
 	if (Depends) break;
       }
     }
@@ -700,12 +706,15 @@ public:
 
   bool dependsOn(Value *V) {
     bool Depends = false;
+    std::unordered_set<Value*> Visited;
     for (unsigned i = 0; i<Root->size(); i++) {
       auto *I = Root->getValidInstruction(i);
-      Depends = Depends || dependsOn(I,V,I->getParent());
+      Depends = Depends || dependsOn(I,V,I->getParent(),Visited);
     }
     return Depends;
   }
+
+  bool invalidDependence(Value *V, std::unordered_set<Value*> &Visited);
 
   Instruction *getStartingInstruction(BasicBlock &BB);
   Instruction *getEndingInstruction(BasicBlock &BB);
@@ -889,7 +898,7 @@ private:
   BasicBlock *Header;
   BasicBlock *Exit;
 
-  std::unordered_map<Node*, Value *> NodeMap;
+  std::unordered_map<Node*, Value *> NodeToValue;
   //std::vector<Instruction *> Garbage;
   std::unordered_set<Instruction *> Garbage;
   std::vector<Value *> CreatedCode;
@@ -1134,13 +1143,14 @@ Node *Tree::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node 
   //if (!isa<CallBase>(this->Root->getValue(0))) return nullptr;
 
   if (NodeMap.find(Vs[1])==NodeMap.end()) return nullptr;
+  if (!isa<Instruction>(Vs[1])) return nullptr;
   
   std::unordered_set<Node*> Result(NodeMap[Vs[1]]);
   for (unsigned i = 2; i<Vs.size(); i++) {
     for (auto It = Result.begin(), E = Result.end(); It!=E; ) {
       Node *N = *It;
       It++;
-      if (N->getValue(i-1)!=Vs[i]) Result.erase(N);
+      if (N->getValidInstruction(i-1)!=Vs[i]) Result.erase(N);
     }
   }
   if (Result.size()!=1) return nullptr;
@@ -1375,13 +1385,47 @@ Instruction *Tree::getEndingInstruction(BasicBlock &BB) {
   return dyn_cast<Instruction>(Root->getValue(Root->size()-1));
 }
 
+bool Tree::invalidDependence(Value *V, std::unordered_set<Value*> &Visited) {
+  if (isa<Instruction>(V) && contains(V)) {
+	  errs() << "Invalid: "; V->dump();
+	  return true;
+  }
+
+  if (Visited.find(V)!=Visited.end()) return false;
+  if (isa<PHINode>(V)) return false;
+
+  Visited.insert(V);
+
+  Instruction *I = dyn_cast<Instruction>(V);
+  if (I && I->getParent()==getBlock()) {
+    for (unsigned i = 0 ; i<I->getNumOperands(); i++) {
+      if (invalidDependence(I->getOperand(i), Visited)) return true;
+    }
+  }
+
+  return false;
+}
+
 
 bool Tree::isSchedulable(BasicBlock &BB) {
 
   if (Root==nullptr) return false;
 
 #ifdef TEST_DEBUG
-  errs() << "Attempting scheduling...\n";
+  errs() << "Checking input dependencies\n";
+#endif
+  std::unordered_set<Value*> Visited;
+  for (auto *V : Inputs) {
+    if (invalidDependence(V,Visited)) {
+#ifdef TEST_DEBUG
+      errs() << "Invalid dependence found!\n";
+#endif
+      return false;
+    }
+  }
+
+#ifdef TEST_DEBUG
+  errs() << "Checking scheduling order\n";
 #endif
   //for ( auto &SN : SchedulingOrder) {
   //  errs() << "Scheduling Node:\n";
@@ -1583,7 +1627,7 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
 }
 
 Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
-  if (NodeMap.find(N)!=NodeMap.end()) return NodeMap[N];
+  if (NodeToValue.find(N)!=NodeToValue.end()) return NodeToValue[N];
 
   switch(N->getNodeType()) {
     case NodeType::MATCH: {
@@ -1606,7 +1650,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
         for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
           NewI->setOperand(i,nullptr);
         }
-        NodeMap[N] = NewI;
+        NodeToValue[N] = NewI;
 
         std::vector<Value*> Operands;
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
@@ -1658,7 +1702,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 #endif
       auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(GN->getPointerOperand(), IndVarIdx));
       CreatedCode.push_back(GEP);
-      NodeMap[N] = GEP;
+      NodeToValue[N] = GEP;
 
       for (unsigned i = 0; i<GN->size(); i++) {
         if (auto *I = GN->getValidInstruction(i)) {
@@ -1692,7 +1736,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
         NewI->setOperand(i,nullptr);
       }
       Builder.Insert(NewI);
-      NodeMap[N] = NewI;
+      NodeToValue[N] = NewI;
       CreatedCode.push_back(NewI);
 
       for (unsigned i = 0; i<BON->size(); i++) {
@@ -1729,7 +1773,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       }
       CreatedCode.push_back(PHI);
       PHI->addIncoming(RN->getStartValue(),PreHeader);
-      NodeMap[N] = PHI;
+      NodeToValue[N] = PHI;
 
 #ifdef TEST_DEBUG
       errs() << "Gen: "; PHI->dump();
@@ -1754,7 +1798,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       }
       Builder.Insert(NewI);
       CreatedCode.push_back(NewI);
-      NodeMap[N] = NewI;
+      NodeToValue[N] = NewI;
 
       /*
       for (int i = RN->size(); i>0; i--) {
@@ -1765,7 +1809,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
         }
       }
       */
-      for (int i = 0; i<RN->size(); i++) {
+      for (unsigned i = 0; i<RN->size(); i++) {
         if (auto *I = RN->getValidInstruction(i)) {
 	  Garbage.insert(I);
         }
@@ -1823,7 +1867,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 #ifdef TEST_DEBUG
       errs() << "Gen: "; NewV->dump();
 #endif
-      NodeMap[N] = NewV;
+      NodeToValue[N] = NewV;
       return NewV;
     }
     case NodeType::MISMATCH: {
@@ -1834,9 +1878,11 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 #ifdef TEST_DEBUG
       errs() << "Gen: "; NewV->dump();
 #endif
-      NodeMap[N] = NewV;
+      NodeToValue[N] = NewV;
       return NewV;
     }
+    default:
+      assert(true && "Unknown node type!");
   }
 }
 
@@ -1877,8 +1923,9 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   for (Node *N : T.Nodes) {
     if (N->getNodeType()==NodeType::RECURRENCE) {
       //update PHI
-      PHINode *PHI = dyn_cast<PHINode>(NodeMap[N]);
-      PHI->addIncoming(NodeMap[N->getChild(0)],Header);
+      PHINode *PHI = dyn_cast<PHINode>(NodeToValue[N]);
+      errs() << "PHI: recurrence " << Header->getName() << ",";NodeToValue[N->getChild(0)]->dump();
+      PHI->addIncoming(NodeToValue[N->getChild(0)],Header);
     }
   }
 
@@ -1931,8 +1978,6 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 	//std::string FileName = std::string("/tmp/roll.") + F.getParent()->getSourceFileName() + std::string(".") + F.getName().str();
 	//FileName += "." + BB.getName().str() + ".dot";
 	//T.writeDotFile(FileName);
-
-    //BB.dump();
 
     IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
     IndVar->addIncoming(Add,Header);
@@ -2002,14 +2047,14 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
       }
     }
 
-#ifdef TEST_DEBUG
+//#ifdef TEST_DEBUG
     errs() << "Done!\n";
 
     BB.dump();
     PreHeader->dump();
     Header->dump();
     Exit->dump();
-#endif
+//#endif
     if ( verifyFunction(*BB.getParent()) ) {
       errs() << "Broken Function!!\n";
       BB.getParent()->dump();
@@ -2180,8 +2225,9 @@ bool LoopRoller::run() {
 #ifdef TEST_DEBUG
     errs() << "stores\n";
 #endif
-    unsigned Count = 0;
+    //unsigned Count = 0;
 
+    BB->dump();
     for (auto &Pair : Seeds.Stores) {
       if (Pair.second.size()>1) {
         Tree T(Pair.second, *BB);
@@ -2238,6 +2284,7 @@ bool LoopRoller::run() {
       if (Pair.second==nullptr) continue;
       //errs() << "REDUCTION TREE!!\n";
       Tree T(Pair.first, Pair.second, *BB);
+      //errs() << T.getDotString() << "\n";
       if (T.isSchedulable(*BB)) {
         CodeGenerator CG(F, *BB, T);
 #ifdef TEST_DEBUG
