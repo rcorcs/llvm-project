@@ -214,6 +214,13 @@ ModulePass *createMergeFunctionsPass();
 /// code size.
 ///
 ModulePass *createFunctionMergingPass();
+ModulePass *createFastFMPass();
+
+
+/// createMergeSimilarFunctionsPass - This pass discovers similar functions and
+/// merges them.
+///
+ModulePass *createMergeSimilarFunctionsPass();
 
 //===----------------------------------------------------------------------===//
 /// createHotColdSplittingPass - This pass outlines cold blocks into a separate

@@ -195,6 +195,9 @@ namespace {
       (void) llvm::createPostOrderFunctionAttrsLegacyPass();
       (void) llvm::createReversePostOrderFunctionAttrsPass();
       (void) llvm::createMergeFunctionsPass();
+      (void) llvm::createFunctionMergingPass();
+      (void) llvm::createFastFMPass();
+      (void) llvm::createMergeSimilarFunctionsPass();
       (void) llvm::createMergeICmpsLegacyPass();
       (void) llvm::createExpandMemCmpPass();
       std::string buf;

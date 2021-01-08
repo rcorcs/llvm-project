@@ -16,6 +16,9 @@ add_llvm_component_library(LLVMipo
   FunctionAttrs.cpp
   FunctionImport.cpp
   FunctionMerging.cpp
+  MergeSimilarFunctions.cpp
+  FMSA.cpp
+  FastFM.cpp
   GlobalDCE.cpp
   GlobalOpt.cpp
   GlobalSplit.cpp

@@ -63,8 +63,8 @@ public:
 
   };
 
-  size_t LargestMatch;
   std::list< Entry > Data;
+  size_t LargestMatch;
 
   AlignedSequence() : LargestMatch(0) {}
 

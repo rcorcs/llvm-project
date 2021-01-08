@@ -42,11 +42,9 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_TRANSFORMS_IPO_FUNCTIONMERGING_H
-#define LLVM_TRANSFORMS_IPO_FUNCTIONMERGING_H
+#ifndef LLVM_TRANSFORMS_IPO_FASTFM_H
+#define LLVM_TRANSFORMS_IPO_FASTFM_H
 
-
-//#include "llvm/ADT/KeyValueCache.h"
 
 #include "llvm/InitializePasses.h"
 
@@ -64,12 +62,28 @@
 
 #include "llvm/Transforms/Utils/Cloning.h"
 
-#include "llvm/ADT/SequenceAlignment.h"
-
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace llvm{
+
+namespace fastfm {
+
+struct MatchingBlocks {
+  BasicBlock *Blocks[2];
+
+  MatchingBlocks() {
+    Blocks[0] = Blocks[1] = nullptr;
+  }
+
+  MatchingBlocks(BasicBlock *BB0, BasicBlock *BB1) {
+    Blocks[0] = BB0;
+    Blocks[1] = BB1;
+  }
+
+  BasicBlock *operator[](size_t i) { return Blocks[i]; }
+};
 
 /// A set of parameters used to control the transforms by MergeFunctions.
 struct FunctionMergingOptions {
@@ -191,11 +205,7 @@ private:
   //int CountOpReorder = 0;
   //int CountBinOps = 0;
 
-  enum LinearizationKind { LK_Random, LK_Canonical };
-
-  void linearize(Function *F, SmallVectorImpl<Value *> &FVec,
-                          LinearizationKind LK = LinearizationKind::LK_Canonical);
-
+  static bool areTypesEquivalent(Type *Ty1, Type *Ty2, const DataLayout *DL, const FunctionMergingOptions &Options = {});
   static bool matchInstructions(Instruction *I1, Instruction *I2, const FunctionMergingOptions &Options = {});
   static bool matchWholeBlocks(Value *V1, Value *V2);
 
@@ -217,12 +227,9 @@ public:
 
   bool validMergeTypes(Function *F1, Function *F2, const FunctionMergingOptions &Options = {});
 
-  static bool areTypesEquivalent(Type *Ty1, Type *Ty2, const DataLayout *DL, const FunctionMergingOptions &Options = {});
-  static bool match(Value *V1, Value *V2);
-
   void updateCallGraph(FunctionMergeResult &Result, StringSet<> &AlwaysPreserved, const FunctionMergingOptions &Options = {});
 
-  FunctionMergeResult merge(Function *F1, Function *F2, std::string Name = "", const FunctionMergingOptions &Options = {});
+  FunctionMergeResult merge(Function *F1, Function *F2, std::string Name,std::vector<MatchingBlocks> &AlignedBlocks, const FunctionMergingOptions &Options = {});
 
   template<typename BlockListType>
   class CodeGenerator {
@@ -333,7 +340,7 @@ public:
     void erase(BasicBlock *BB) { CreatedBBs.erase(BB); }
     void erase(Instruction *I) { CreatedInsts.erase(I); }
 
-    virtual bool generate(AlignedSequence<Value*> &AlignedSeq,
+    virtual bool generate(std::vector<MatchingBlocks> &AlignedBlocks,
                   ValueToValueMapTy &VMap,
                   const FunctionMergingOptions &Options = {}) = 0;
 
@@ -349,7 +356,7 @@ public:
     
   public:
     SALSSACodeGen(BlockListType &Blocks1, BlockListType &Blocks2) : CodeGenerator<BlockListType>(Blocks1,Blocks2) {}
-    virtual bool generate(AlignedSequence<Value*> &AlignedSeq,
+    virtual bool generate(std::vector<MatchingBlocks> &AlignedBlocks,
                   ValueToValueMapTy &VMap,
                   const FunctionMergingOptions &Options = {});
   };
@@ -358,12 +365,13 @@ public:
 
 FunctionMergeResult MergeFunctions(Function *F1, Function *F2, const FunctionMergingOptions &Options = {});
 
+}
 
-class FunctionMerging : public ModulePass {
+class FastFM : public ModulePass {
 public:
   static char ID;
-  FunctionMerging() : ModulePass(ID) {
-     initializeFunctionMergingPass(*PassRegistry::getPassRegistry());
+  FastFM() : ModulePass(ID) {
+     initializeFastFMPass(*PassRegistry::getPassRegistry());
   }
   bool runOnModule(Module &M) override;
   void getAnalysisUsage(AnalysisUsage &AU) const override;
