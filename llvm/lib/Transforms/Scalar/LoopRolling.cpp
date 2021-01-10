@@ -108,7 +108,7 @@ static bool matchGEP(GetElementPtrInst *GEP1, GetElementPtrInst *GEP2) {
 static bool match(Value *V1, Value *V2) {
   Instruction *I1 = dyn_cast<Instruction>(V1);
   Instruction *I2 = dyn_cast<Instruction>(V2);
-
+  
   if (V1->getType()!=V2->getType()) return false;
 
   if(I1 && I2 && I1->getOpcode()==I2->getOpcode()) {
@@ -118,6 +118,8 @@ static bool match(Value *V1, Value *V2) {
       if (I1->getOperand(i)->getType()!=I2->getOperand(i)->getType()) return false;
 
     switch (I1->getOpcode()) {
+    case Instruction::Alloca:
+    case Instruction::Invoke:
     case Instruction::PHI:
       return false;
     case Instruction::Call: {
@@ -153,7 +155,7 @@ static bool match(Value *V1, Value *V2) {
 }
 
 enum NodeType {
-  MATCH, BINOP, GEPSEQ, INTSEQ, REDUCTION, RECURRENCE, MISMATCH
+  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, REDUCTION, RECURRENCE, MISMATCH
 };
 
 class Node {
@@ -264,6 +266,46 @@ public:
   }
 };
 
+class IdenticalNode : public Node {
+public:
+  template<typename ValueT>
+  IdenticalNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::IDENTICAL,Vs,BB,Parent) {}
+
+  Instruction *getValidInstruction(unsigned i) {
+    return nullptr;
+  }
+
+  std::string getString() {
+    std::string str;
+    raw_string_ostream labelStream(str);
+    Value *V = getValue(0);
+
+    if (Instruction *I = dyn_cast<Instruction>(V)) {
+      labelStream << I->getOpcodeName();
+      if (CallInst *CI = dyn_cast<CallInst>(I)) {
+        Function *F = CI->getCalledFunction();
+        if (F && F->hasName())
+          labelStream << ": " << demangle(F->getName().data());
+      }
+    } else if (isa<Constant>(V) && !isa<Function>(V)) {
+      if (isa<ConstantInt>(V) || isa<ConstantFP>(V) || isa<ConstantPointerNull>(V) ||
+          isa<UndefValue>(V))
+        V->printAsOperand(labelStream, false);
+      else
+        labelStream << "const";
+    } else if (isa<Argument>(V)) {
+      labelStream << "arg";
+    } else if (isa<Function>(V)) {
+      labelStream << "func";
+      Function *F = dyn_cast<Function>(V);
+      if (F && F->hasName())
+        labelStream << ": " << demangle(F->getName().data());
+    }
+
+    return labelStream.str();
+  }
+};
+
 class IntSequenceNode : public Node {
 private:
   Value *Step;
@@ -287,6 +329,32 @@ public:
     getEnd()->printAsOperand(labelStream, false);
     labelStream << ", ";
     getStep()->printAsOperand(labelStream, false);
+    return labelStream.str();
+  }
+};
+
+class AlternatingSequenceNode : public Node {
+private:
+  Value *First;
+  Value *Second;
+public:
+  template<typename ValueT>
+  AlternatingSequenceNode(std::vector<ValueT *> &Vs, Value *First, Value *Second, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::ALTSEQ,Vs,BB,Parent), First(First), Second(Second) {}
+
+  Value *getFirst() { return First; }
+  Value *getSecond() { return Second; }
+
+  Instruction *getValidInstruction(unsigned i) {
+    return nullptr;
+  }
+
+  std::string getString() {
+    std::string str;
+    raw_string_ostream labelStream(str);
+    labelStream << "alt: ";
+    getFirst()->printAsOperand(labelStream, false);
+    labelStream << ", ";
+    getSecond()->printAsOperand(labelStream, false);
     return labelStream.str();
   }
 };
@@ -400,18 +468,15 @@ public:
     case Instruction::Sub:
     case Instruction::Or:
     case Instruction::Xor:
-      Neutral = ConstantInt::get(Ty, 0);
-      break;
+      return ConstantInt::get(Ty, 0);
     case Instruction::Mul:
     case Instruction::UDiv:
     case Instruction::SDiv:
     case Instruction::And:
-      Neutral = ConstantInt::get(Ty, 1);
-      break;
+      return ConstantInt::get(Ty, 1);
     default:
       return nullptr;
     }
-    return Neutral;
   }
 
   static bool isValidOperation(BinaryOperator *BO) {
@@ -662,7 +727,7 @@ public:
     if (N && N->size()) {
       if (std::find(Nodes.begin(), Nodes.end(), N)==Nodes.end()) {
         Nodes.push_back(N);
-	if (N->getNodeType()!=NodeType::MISMATCH && N->getNodeType()!=NodeType::RECURRENCE) {
+	if (N->getNodeType()!=NodeType::MISMATCH && N->getNodeType()!=NodeType::IDENTICAL && N->getNodeType()!=NodeType::RECURRENCE) {
           for (auto *V : N->getValues()) {
             //NodeMap[V].insert(N);
             ValuesInNode.insert(V);
@@ -797,6 +862,8 @@ private:
   Node *buildReduction(ValueT *V, Instruction *, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  template<typename ValueT>
+  Node *buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
@@ -1063,6 +1130,26 @@ Node *Tree::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Pa
 }
 
 template<typename ValueT>
+Node *Tree::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+  if (VL.size()<2) return nullptr;
+
+  Value *First = VL[0];
+  Value *Second = VL[1];
+
+  if (First->getType()!=Second->getType()) return nullptr;
+
+  for (unsigned i = 2; i<VL.size(); i++) {
+    if (VL[i] != VL[i%2]) return nullptr;
+  }
+  
+  Inputs.insert(First);
+  Inputs.insert(Second);
+
+  return new AlternatingSequenceNode(VL, First, Second, BB, Parent);
+}
+
+
+template<typename ValueT>
 Node *Tree::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
   if (!isa<IntegerType>(VL[0]->getType())) return nullptr;
 
@@ -1070,7 +1157,9 @@ Node *Tree::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, No
 
   std::set<Value *> NonBinOp;
   for (auto *V : VL) {
-    if (!isa<BinaryOperator>(V)) NonBinOp.insert(V);
+    auto *BO = dyn_cast<BinaryOperator>(V);
+    if (!BO) NonBinOp.insert(V);
+    else if (BO->getParent()!=(&BB)) NonBinOp.insert(V);
   }
   if (NonBinOp.size()!=1) return nullptr;
 
@@ -1079,12 +1168,12 @@ Node *Tree::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, No
   BinaryOperator *BinOpRef = nullptr;
   for (unsigned i = 0; i<VL.size(); i++) {
     auto *BinOp = dyn_cast<BinaryOperator>(VL[i]);
-    if (BinOp==nullptr) {
+    if (BinOp==nullptr || BinOp->getParent()!=(&BB)) {
       Operands.push_back(nullptr);
       continue;
     }
     
-    if (BinOp->getParent()!=(&BB)) return nullptr;
+    //if (BinOp->getParent()!=(&BB)) return nullptr;
 
     if (BinOpRef) {
       //matching binop?
@@ -1181,9 +1270,13 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
 #ifdef TEST_DEBUG
   errs() << "Creating node\n";
 #endif
+
+  bool AllSame = true;
   bool Matching = true;
   for (unsigned i = 1; i<Vs.size(); i++) {
+    AllSame = AllSame && Vs[i]==Vs[0];
     Matching = Matching && match(Vs[i-1],Vs[i]);
+    if (Vs[i-1]==Vs[i]) Matching = false;
     if (auto *I = dyn_cast<Instruction>(Vs[i])) {
       if (I->getParent()!=(&BB)) Matching = false;
     }
@@ -1201,6 +1294,13 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
       if (GEP1->getPointerOperand()!=GEP2->getPointerOperand()) Matching = false;
     }
     */
+  }
+#ifdef TEST_DEBUG
+  if (AllSame) errs() << "All the Same\n";
+#endif
+  if (AllSame) {
+    Inputs.insert(Vs[0]);
+    return new IdenticalNode(Vs,BB,Parent);
   }
 #ifdef TEST_DEBUG
   errs() << "trying MATCH\n";
@@ -1229,6 +1329,12 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
       return new IntSequenceNode(Vs, Step, BB, Parent);
     }
   }
+
+#ifdef TEST_DEBUG
+  errs() << "trying ALTSEQ\n";
+#endif
+  if (Node *N = buildAlternatingSequenceNode(Vs, BB, Parent)) return N;
+
 #ifdef TEST_DEBUG
   errs() << "building MISMATCH\n";
 #endif
@@ -1243,6 +1349,8 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
 
   switch(N->getNodeType()) {
     case NodeType::MISMATCH: break;
+    case NodeType::IDENTICAL: break;
+    case NodeType::ALTSEQ: break;
     case NodeType::INTSEQ: break;
     case NodeType::RECURRENCE: break;
     case NodeType::REDUCTION: {
@@ -1371,14 +1479,19 @@ void Tree::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
 }
 
 Instruction *Tree::getStartingInstruction(BasicBlock &BB) {
-  Instruction *I = nullptr;
-  for (auto &IRef : BB) {
-    if (SchedulingOrder[0].contains(&IRef)) {
-      I = &IRef;
-      break;
+  //Instruction *StartI = nullptr;
+  //for (auto &IRef : BB) {
+  //  if (SchedulingOrder[0].contains(&IRef)) {
+  //    I = &IRef;
+  //    break;
+  //  }
+  //}
+  for (Instruction &I : BB) {
+    if (ValuesInNode.count(&I)) {
+      return &I;
     }
   }
-  return I;
+  return nullptr;
 }
 
 Instruction *Tree::getEndingInstruction(BasicBlock &BB) {
@@ -1490,7 +1603,7 @@ void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Bu
     Value *V = N->getValidInstruction(i);
     if (V==nullptr) continue;
 #ifdef TEST_DEBUG
-    errs() << "Looking for:"; V->dump();
+    //errs() << "Looking for:"; V->dump();
 #endif
     for (auto *U : V->users()) {
       if (!T.contains(U)) {
@@ -1568,9 +1681,10 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
 
       if (GA->hasInitializer()) {
         auto *C = GA->getInitializer();
-        auto *ArrTy = dyn_cast<ArrayType>(C->getType());
-        if (ArrTy==nullptr) continue;
-        if (ArrTy->getNumElements()!=Consts.size()) continue;
+        auto *GArrTy = dyn_cast<ArrayType>(C->getType());
+        if (GArrTy==nullptr) continue;
+	if (ArrTy!=GArrTy) continue;
+        if (GArrTy->getNumElements()!=Consts.size()) continue;
         for (unsigned i = 0; i<Consts.size(); i++) {
           if (C->getAggregateElement(i)!=Consts[i]) continue;
         }
@@ -1630,6 +1744,12 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
   if (NodeToValue.find(N)!=NodeToValue.end()) return NodeToValue[N];
 
   switch(N->getNodeType()) {
+    case NodeType::IDENTICAL: {
+#ifdef TEST_DEBUG
+      errs() << "Generating IDENTICAL\n";
+#endif
+      return N->getValue(0);
+    }
     case NodeType::MATCH: {
 #ifdef TEST_DEBUG
       errs() << "Generating Match\n";
@@ -1673,6 +1793,9 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
         for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
           NewI->setOperand(i,Operands[i]);
         }
+#ifdef TEST_DEBUG
+        errs() << "Generated: "; NewI->dump();
+#endif
 
         for (unsigned i = 0; i<N->size(); i++) {
           if (auto *I = N->getValidInstruction(i)) {
@@ -1852,6 +1975,8 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       CreatedCode.push_back(CastIndVar);
       if (StartValue->isZero() && StepValue->isOne()){
         NewV = CastIndVar;
+      } else if (StepValue->isZero()){
+        NewV = StartValue;
       } else {
 	Value *Factor = CastIndVar;
 	if (!StepValue->isOne()) {
@@ -1868,6 +1993,83 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       errs() << "Gen: "; NewV->dump();
 #endif
       NodeToValue[N] = NewV;
+      return NewV;
+    }
+    case NodeType::ALTSEQ: {
+#ifdef TEST_DEBUG
+      errs() << "Generating ALTSEQ\n";
+#endif
+
+      auto *ASN = (AlternatingSequenceNode*)N;
+
+      errs() << "Values:\n";
+      for (unsigned i = 0; i<N->size(); i++) N->getValue(i)->dump();
+
+      errs() << "Generated:\n";
+      Value *NewV = nullptr;
+
+      auto IsNegatedInt = [](const APInt &V1, const APInt &V2) -> bool {
+	APInt NegV1(V1);
+        NegV1.negate(); //in place
+	return V1.eq(V2);
+      };
+
+      auto *CInt1 = dyn_cast<ConstantInt>(ASN->getFirst());
+      auto *CInt2 = dyn_cast<ConstantInt>(ASN->getSecond());
+      if (CInt1 && CInt2 && CInt1->isZero() && CInt2->isOne()) {
+	auto *CastIndVar = Builder.CreateIntCast(IndVar, CInt1->getType(), false);
+        CreatedCode.push_back(CastIndVar);
+        CastIndVar->dump();
+
+        auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(CastIndVar->getType(), 2));
+        if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+          CreatedCode.push_back(Rem2I);
+        Rem2->dump();
+
+        NewV = Rem2;
+      } else if (CInt1 && CInt2 && IsNegatedInt(CInt1->getValue(), CInt2->getValue()) ) {
+        PHINode *PHI = nullptr;
+        if (Header->getFirstNonPHI()) {
+          IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+          PHI = PHIBuilder.CreatePHI(CInt1->getType(),2);
+        } else {
+          PHI = Builder.CreatePHI(CInt1->getType(),2);
+        }
+        //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
+        //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+        CreatedCode.push_back(PHI);
+        PHI->addIncoming(CInt1,PreHeader);
+
+	auto Neg = Builder.CreateNeg(PHI);
+        PHI->addIncoming(Neg,Header);
+
+        if (auto *NegI = dyn_cast<Instruction>(Neg))
+          CreatedCode.push_back(NegI);
+
+	PHI->dump();
+	Neg->dump();
+
+	NewV = PHI;
+      } else {
+        auto *Rem2 = Builder.CreateURem(IndVar, ConstantInt::get(IndVar->getType(), 2));
+        if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+          CreatedCode.push_back(Rem2I);
+        Rem2->dump();
+
+        Value *Cond = Builder.CreateICmpEQ(Rem2, ConstantInt::get(IndVar->getType(), 0));
+        if (auto *CondI = dyn_cast<Instruction>(Cond))
+          CreatedCode.push_back(CondI);
+        Cond->dump();
+        
+        auto *Sel = Builder.CreateSelect(Cond, ASN->getFirst(), ASN->getSecond());
+        if (auto *SelI = dyn_cast<Instruction>(Sel))
+          CreatedCode.push_back(SelI);
+
+        Sel->dump();
+
+	NewV = Sel;
+      }
+      if (NewV) NodeToValue[N] = NewV;
       return NewV;
     }
     case NodeType::MISMATCH: {
@@ -1978,6 +2180,9 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 	//std::string FileName = std::string("/tmp/roll.") + F.getParent()->getSourceFileName() + std::string(".") + F.getName().str();
 	//FileName += "." + BB.getName().str() + ".dot";
 	//T.writeDotFile(FileName);
+#ifdef TEST_DEBUG
+    //BB.dump();
+#endif
 
     IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
     IndVar->addIncoming(Add,Header);
@@ -2021,11 +2226,13 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     //PreHeader->dump();
     //Header->dump();
     //Exit->dump();
-    
+ 
     for (auto It = Exit->rbegin(), E = Exit->rend(); It!=E; ) {
       Instruction *I = &*It;
       It++;
       if (Garbage.count(I)) {
+	 //Garbage.erase(I);
+	 //errs() << "Removed from " << I->getParent()->getName() << ": "; I->dump();
 	 Seeds.remove(I);
 	 I->eraseFromParent();
       }
@@ -2034,10 +2241,15 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
       Instruction *I = &*It;
       It++;
       if (Garbage.count(I)) {
+	 //Garbage.erase(I);
+	 //errs() << "Removed from " << I->getParent()->getName() << ": "; I->dump();
 	 Seeds.remove(I);
 	 I->eraseFromParent();
       }
     }
+    //for (auto *V : Garbage) {
+    //  errs() << "Garbage: "; V->dump();
+    //}
     
     for (BasicBlock *Succ : SuccBBs) {
       for (Instruction &I : *Succ) { //TODO: run only over PHIs
@@ -2047,14 +2259,14 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
       }
     }
 
-//#ifdef TEST_DEBUG
+#ifdef TEST_DEBUG
     errs() << "Done!\n";
 
-    BB.dump();
-    PreHeader->dump();
-    Header->dump();
-    Exit->dump();
-//#endif
+    //BB.dump();
+    //PreHeader->dump();
+    //Header->dump();
+    //Exit->dump();
+#endif
     if ( verifyFunction(*BB.getParent()) ) {
       errs() << "Broken Function!!\n";
       BB.getParent()->dump();
@@ -2340,6 +2552,7 @@ public:
       return false;
     if (F.isDeclaration()) return false;
 
+    //F.dump();
     return Impl.runImpl(F);
   }
 
