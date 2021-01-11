@@ -19,6 +19,7 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar.h"
@@ -38,6 +39,10 @@
 #define TEST_DEBUG
 
 using namespace llvm;
+
+static cl::opt<bool>
+AlwaysRoll("always-roll-loops", cl::init(false), cl::Hidden,
+                 cl::desc("Always roll loops, skipping the profitability analysis"));
 
 static std::string demangle(const char* name) {
   int status = -1;
@@ -487,7 +492,6 @@ public:
   Value *getNeutralValue() {
     Type *Ty = BinOpRef->getType();
 
-    Value *Neutral = nullptr;
     switch(BinOpRef->getOpcode()) {
     case Instruction::Add:
     case Instruction::Sub:
@@ -2384,7 +2388,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   } else errs() << "Unprofitable;\n";
 
   //if (false) {
-  if (Profitable) {
+  if (AlwaysRoll || Profitable) {
 	//std::string FileName = std::string("/tmp/roll.") + F.getParent()->getSourceFileName() + std::string(".") + F.getName().str();
 	//FileName += "." + BB.getName().str() + ".dot";
 	//T.writeDotFile(FileName);
