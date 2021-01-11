@@ -9,6 +9,8 @@
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/IR/Constants.h"
+#include "llvm/IR/Operator.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
@@ -77,7 +79,8 @@ static Value *isConstantSequence(const std::vector<ValueT *> VL) {
   return Step;
 }
 
-static bool matchGEP(GetElementPtrInst *GEP1, GetElementPtrInst *GEP2) {
+template<typename GetElementPtrT>
+static bool matchGEP(GetElementPtrT *GEP1, GetElementPtrT *GEP2) {
   Type *Ty1 = GEP1->getSourceElementType();
   SmallVector<Value*, 16> Idxs1(GEP1->idx_begin(), GEP1->idx_end());
 
@@ -155,7 +158,7 @@ static bool match(Value *V1, Value *V2) {
 }
 
 enum NodeType {
-  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, REDUCTION, RECURRENCE, MISMATCH
+  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, REDUCTION, RECURRENCE, MISMATCH
 };
 
 class Node {
@@ -188,7 +191,6 @@ public:
 
   void clearChildren() { Children.clear(); }
 
-  bool isMatching() { return NType!=NodeType::MISMATCH; }
   NodeType getNodeType() { return NType; }
 
   virtual std::string getString() = 0;
@@ -234,6 +236,29 @@ public:
     return labelStream.str();
   }
 };
+
+class ConstantExprNode : public Node {
+public:
+  template<typename ValueT>
+  ConstantExprNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::CONSTEXPR,Vs,BB,Parent) {}
+
+  Instruction *getValidInstruction(unsigned i) {
+    return nullptr;
+  }
+
+  std::string getString() {
+    std::string str;
+    raw_string_ostream labelStream(str);
+    Value *V = getValue(0);
+
+    if (auto *CE = dyn_cast<ConstantExpr>(V)) {
+      labelStream << "cosntexpr: " << Instruction::getOpcodeName(CE->getOpcode());
+    } else labelStream << "expected constexpr";
+
+    return labelStream.str();
+  }
+};
+
 
 class MismatchingNode : public Node {
 public:
@@ -798,7 +823,7 @@ public:
       NodeId[N] = id;
 
       os << id << " [label=\"" << N->getString() << "\""
-        << ", style=\"filled\" , fillcolor=" << ((N->isMatching()) ? "\"#8ae18a\"" : "\"#ff6671\"")
+        << ", style=\"filled\" , fillcolor=" << ((N->getNodeType()!=NodeType::MISMATCH) ? "\"#8ae18a\"" : "\"#ff6671\"")
         << ", shape=box" << "];\n";
         //<< ", shape=" << ((N->isMatching()) ? "box" : "oval") << "];\n";
 
@@ -868,6 +893,8 @@ private:
   Node *buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *buildRecurrenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  template<typename ValueT>
+  Node *buildConstExprNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent=nullptr);
 
@@ -1266,6 +1293,39 @@ Node *Tree::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node 
 }
 
 template<typename ValueT>
+Node *Tree::buildConstExprNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent) {
+
+  ConstantExpr *CExpr = dyn_cast<ConstantExpr>(Vs[0]);
+  if (CExpr==nullptr) return nullptr;
+
+  std::unordered_set<Value*> UniqueValues;
+  for (unsigned i = 0; i<Vs.size(); i++) {
+    UniqueValues.insert(Vs[i]);
+    auto *CV = dyn_cast<ConstantExpr>(Vs[i]);
+    if (CV==nullptr) return nullptr;
+    if (CV->getOpcode()!=CExpr->getOpcode()) return nullptr;
+    if (CV->getType()!=CExpr->getType()) return nullptr;
+    if (CV->getNumOperands()!=CExpr->getNumOperands()) return nullptr;
+    for (unsigned i = 0; i<CExpr->getNumOperands(); i++) {
+      if (CV->getOperand(i)->getType()!=CExpr->getOperand(i)->getType()) return nullptr;
+    }
+
+    auto *GEP1 = dyn_cast<GEPOperator>(CExpr);
+    auto *GEP2 = dyn_cast<GEPOperator>(CV);
+    if (GEP1 && GEP2) {
+      errs() << "Checking Constant GEP:"; GEP2->dump();
+      if (!matchGEP(GEP1,GEP2)) return nullptr;
+    }
+  }
+  if (UniqueValues.size()!=Vs.size()) return nullptr;
+
+  errs() << "Matching Constant Exprs:\n";
+  for (auto *V : Vs) V->dump();
+
+  return new ConstantExprNode(Vs,BB,Parent);
+}
+
+template<typename ValueT>
 Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
 #ifdef TEST_DEBUG
   errs() << "Creating node\n";
@@ -1273,7 +1333,10 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
 
   bool AllSame = true;
   bool Matching = true;
+  std::unordered_set<Value*> UniqueValues;
+  UniqueValues.insert(Vs[0]);
   for (unsigned i = 1; i<Vs.size(); i++) {
+    UniqueValues.insert(Vs[i]);
     AllSame = AllSame && Vs[i]==Vs[0];
     Matching = Matching && match(Vs[i-1],Vs[i]);
     if (Vs[i-1]==Vs[i]) Matching = false;
@@ -1295,6 +1358,8 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
     }
     */
   }
+  Matching = Matching && (UniqueValues.size()==Vs.size());
+
 #ifdef TEST_DEBUG
   if (AllSame) errs() << "All the Same\n";
 #endif
@@ -1334,6 +1399,11 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
   errs() << "trying ALTSEQ\n";
 #endif
   if (Node *N = buildAlternatingSequenceNode(Vs, BB, Parent)) return N;
+
+#ifdef TEST_DEBUG
+  errs() << "trying CONSTEXPR\n";
+#endif
+  if (Node *N = buildConstExprNode(Vs, BB, Parent)) return N;
 
 #ifdef TEST_DEBUG
   errs() << "building MISMATCH\n";
@@ -1404,7 +1474,34 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
 #ifdef TEST_DEBUG
        errs() << "OK\n";
 #endif
-       break;
+      break;
+    }
+    case NodeType::CONSTEXPR: {
+#ifdef TEST_DEBUG
+       errs() << "Growing CONSTEXPR\n";
+#endif
+      auto *CE = dyn_cast<ConstantExpr>(N->getValue(0));
+      if (CE==nullptr) return;
+      for (unsigned i = 0; i<CE->getNumOperands(); i++) {
+        std::vector<Value*> Vs;
+        for (unsigned j = 0; j<N->size(); j++) {
+	  auto *IV = dyn_cast<ConstantExpr>(N->getValue(j));
+	  assert(IV && "ConstantExprNode expecting valid constant expression!");
+	  assert((i < IV->getNumOperands()) && "Invalid number of operands!");
+          Vs.push_back( IV->getOperand(i) );
+        }
+        Node *Child = find(Vs);
+        if (Child==nullptr) {
+	  Child = createNode(Vs, BB, N);
+          this->addNode(Child);
+          N->pushChild(Child);
+          growTree(Child, BB, Visited);
+	} else N->pushChild(Child);
+#ifdef TEST_DEBUG
+        errs() << "OK\n";
+#endif
+      }
+      break;
     }
     case NodeType::MATCH: {
 #ifdef TEST_DEBUG
@@ -1659,8 +1756,17 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
   LLVMContext &Context = F.getContext();
 
 #ifdef TEST_DEBUG
-  errs() << "Mismatch:\n";
-  for (Value *V : VL) V->dump();
+  errs() << "Mismatched Values:\n";
+  for (Value *V : VL) {
+    if (isa<Instruction>(V)) errs() << "inst: ";
+    else if (isa<ConstantInt>(V)) errs() << "int: ";
+    else if (isa<ConstantExpr>(V)) errs() << "constexpr: ";
+    else if (isa<Constant>(V)) errs() << "const: ";
+    else if (isa<Argument>(V)) errs() << "arg: ";
+    else errs() << "val: ";
+
+    V->dump();
+  }
 #endif
   
   bool AllSame = true;
@@ -1670,6 +1776,8 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
   if (AllSame) return VL[0];
 
   if (allConstant(VL)) {
+    errs() << "All constants\n";
+
     auto *ArrTy = ArrayType::get(VL[0]->getType(), VL.size());
 
     SmallVector<Constant*,8> Consts;
@@ -1689,7 +1797,7 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
           if (C->getAggregateElement(i)!=Consts[i]) continue;
         }
         //Found Array
-        //errs() << "Found Array: "; GA->dump();
+        errs() << "Found Array: "; GA->dump();
         IndexedValue = Pair.second;
         break;
       }
@@ -1703,6 +1811,9 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
       Type *IndVarTy = IntegerType::get(Context, 8);
       Indices.push_back(ConstantInt::get(IndVarTy, 0));
       Indices.push_back(IndVar);
+
+      errs() << "Created array: "; GArray->dump();
+
       auto *GEP = Builder.CreateGEP(GArray, Indices);
       CreatedCode.push_back(GEP);
 
@@ -1714,6 +1825,7 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
     }
     return IndexedValue;
   } else {
+    errs() << "Non constants\n";
     //BasicBlock &Entry = F->getEntryBlock();
     //IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
     IRBuilder<> ArrBuilder(PreHeader);
@@ -1721,6 +1833,8 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
     Type *IndVarTy = IntegerType::get(Context, 8);
     Value *ArrPtr = ArrBuilder.CreateAlloca(VL[0]->getType(), ConstantInt::get(IndVarTy, VL.size()));
     CreatedCode.push_back(ArrPtr);
+    
+    errs() << "Created array: "; ArrPtr->dump();
 
     //ArrBuilder.SetInsertPoint(PreHeaderPt);
     for (unsigned i = 0; i<VL.size(); i++) {
@@ -1732,12 +1846,13 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
 
     auto *GEP = Builder.CreateGEP(ArrPtr, IndVar);
     CreatedCode.push_back(GEP);
+
     auto *Load = Builder.CreateLoad(VL[0]->getType(), GEP);
     CreatedCode.push_back(Load);
-
+    
     return Load;
   }
-  return VL[0];
+  return VL[0]; //TODO: return nullptr?
 }
 
 Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
@@ -1752,7 +1867,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
     }
     case NodeType::MATCH: {
 #ifdef TEST_DEBUG
-      errs() << "Generating Match\n";
+      errs() << "Generating MATCH\n";
 #endif
 
 #ifdef TEST_DEBUG
@@ -1810,18 +1925,79 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 	errs() << "Gen: "; NewI->dump();
 #endif
         return NewI;
-      } else return N->getValue(0);
+      } else return N->getValue(0); //TODO: maybe an assert false
+    }
+    case NodeType::CONSTEXPR: {
+#ifdef TEST_DEBUG
+      errs() << "Generating CONSTEXPR\n";
+#endif
+
+#ifdef TEST_DEBUG
+      errs() << "Matching ConstExpr: "; 
+      if (isa<Function>(N->getValue(0))) {
+        errs() << N->getValue(0)->getName() << "\n";
+      } else {
+        errs() << "\n";
+        for (auto *V : N->getValues()) V->dump();
+      }
+#endif
+      auto *I = dyn_cast<ConstantExpr>(N->getValue(0));
+      if (I) {
+        Instruction *NewI = I->getAsInstruction();
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,nullptr);
+        }
+        NodeToValue[N] = NewI;
+
+        std::vector<Value*> Operands;
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          Operands.push_back(cloneTree(N->getChild(i), Builder));
+        }
+
+#ifdef TEST_DEBUG
+        errs() << "Operands done!\n";
+#endif
+
+        SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
+        NewI->getAllMetadata(MDs);
+        for (std::pair<unsigned, MDNode *> MDPair : MDs) {
+          NewI->setMetadata(MDPair.first, nullptr);
+        }
+
+        Builder.Insert(NewI);
+        CreatedCode.push_back(NewI);
+
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,Operands[i]);
+        }
+
+	/*
+        for (unsigned i = 0; i<N->size(); i++) {
+          if (auto *I = N->getValidInstruction(i)) {
+	    Garbage.insert(I);
+	  }
+	}
+        
+        generateExtract(N, NewI, Builder);
+        */
+
+#ifdef TEST_DEBUG
+        errs() << "Generated: "; NewI->dump();
+#endif
+
+        return NewI;
+      } else return N->getValue(0); //TODO: maybe an assert false
     }
     case NodeType::GEPSEQ: {
 #ifdef TEST_DEBUG
-      errs() << "Generating GEP\n";
+      errs() << "Generating GEPSEQ\n";
 #endif
       auto *GN = (GEPSequenceNode*)N;
 
       assert(GN->getNumChildren() && "Expected child with indices!");
       Value *IndVarIdx = cloneTree(GN->getChild(0), Builder);
 #ifdef TEST_DEBUG
-      errs() << "Closing GEP\n";
+      errs() << "Closing GEPSEQ\n";
 #endif
       auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(GN->getPointerOperand(), IndVarIdx));
       CreatedCode.push_back(GEP);
@@ -2002,10 +2178,11 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 
       auto *ASN = (AlternatingSequenceNode*)N;
 
+      auto *SeqTy = ASN->getFirst()->getType();
+
       errs() << "Values:\n";
       for (unsigned i = 0; i<N->size(); i++) N->getValue(i)->dump();
 
-      errs() << "Generated:\n";
       Value *NewV = nullptr;
 
       auto IsNegatedInt = [](const APInt &V1, const APInt &V2) -> bool {
@@ -2017,23 +2194,27 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       auto *CInt1 = dyn_cast<ConstantInt>(ASN->getFirst());
       auto *CInt2 = dyn_cast<ConstantInt>(ASN->getSecond());
       if (CInt1 && CInt2 && CInt1->isZero() && CInt2->isOne()) {
-	auto *CastIndVar = Builder.CreateIntCast(IndVar, CInt1->getType(), false);
-        CreatedCode.push_back(CastIndVar);
-        CastIndVar->dump();
+        errs() << "Generated Version 1:\n";
+	auto *CastIndVar = Builder.CreateIntCast(IndVar, SeqTy, false);
+	if (CastIndVar!=IndVar) {
+          CreatedCode.push_back(CastIndVar);
+          CastIndVar->dump();
+	}
 
-        auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(CastIndVar->getType(), 2));
+        auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
         if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
           CreatedCode.push_back(Rem2I);
         Rem2->dump();
 
         NewV = Rem2;
       } else if (CInt1 && CInt2 && IsNegatedInt(CInt1->getValue(), CInt2->getValue()) ) {
+        errs() << "Generated Version 2:\n";
         PHINode *PHI = nullptr;
         if (Header->getFirstNonPHI()) {
           IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
-          PHI = PHIBuilder.CreatePHI(CInt1->getType(),2);
+          PHI = PHIBuilder.CreatePHI(SeqTy,2);
         } else {
-          PHI = Builder.CreatePHI(CInt1->getType(),2);
+          PHI = Builder.CreatePHI(SeqTy,2);
         }
         //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
         //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
@@ -2050,7 +2231,39 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 	Neg->dump();
 
 	NewV = PHI;
+      } else if (CInt1 && CInt2) {
+        errs() << "Generated Version 3:\n";
+
+	auto *CastIndVar = Builder.CreateIntCast(IndVar, SeqTy, false);
+	if (CastIndVar!=IndVar) {
+          CreatedCode.push_back(CastIndVar);
+          CastIndVar->dump();
+	}
+
+        auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
+        if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+          CreatedCode.push_back(Rem2I);
+        Rem2->dump();
+
+	APInt Diff(CInt2->getValue());
+	Diff -= CInt1->getValue();
+
+	auto *Mul = Builder.CreateMul(Rem2, ConstantInt::get(SeqTy, Diff));
+        if (auto *MulI = dyn_cast<Instruction>(Mul))
+          CreatedCode.push_back(MulI);
+        Mul->dump();
+
+	auto *Add = Builder.CreateAdd(Mul, ASN->getFirst());
+        if (auto *AddI = dyn_cast<Instruction>(Add))
+          CreatedCode.push_back(AddI);
+
+	Add->dump();
+
+	NewV = Add;
+        
       } else {
+        errs() << "Generated Version 4:\n";
+
         auto *Rem2 = Builder.CreateURem(IndVar, ConstantInt::get(IndVar->getType(), 2));
         if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
           CreatedCode.push_back(Rem2I);
@@ -2090,11 +2303,6 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 
 bool CodeGenerator::generate(SeedGroups &Seeds) {
   LLVMContext &Context = BB.getParent()->getContext();
-
-  //for (auto *N : T.Nodes) {
-  //  if (N->getNodeType()==NodeType::MISMATCH && !allConstant(N->getValues()))
-  //    return false;
-  //}
 
   std::vector<BasicBlock*> SuccBBs;
   for (auto It = succ_begin(&BB), E = succ_end(&BB); It!=E; It++) SuccBBs.push_back(*It);
@@ -2439,7 +2647,6 @@ bool LoopRoller::run() {
 #endif
     //unsigned Count = 0;
 
-    BB->dump();
     for (auto &Pair : Seeds.Stores) {
       if (Pair.second.size()>1) {
         Tree T(Pair.second, *BB);
