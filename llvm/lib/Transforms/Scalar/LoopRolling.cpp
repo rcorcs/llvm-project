@@ -41,7 +41,7 @@
 using namespace llvm;
 
 static cl::opt<bool>
-AlwaysRoll("always-roll-loops", cl::init(false), cl::Hidden,
+AlwaysRoll("loop-rolling-always", cl::init(false), cl::Hidden,
                  cl::desc("Always roll loops, skipping the profitability analysis"));
 
 static std::string demangle(const char* name) {
