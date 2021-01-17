@@ -4233,6 +4233,13 @@ void Verifier::verifyDominatesUse(Instruction &I, unsigned i) {
     return;
 
   const Use &U = I.getOperandUse(i);
+  //if (!DT.dominates(Op, U)) {
+  //  errs() << "ERROR: Domination Fail\n";
+  //  I.dump();
+  //  I.getParent()->dump();
+  //  Op->dump();
+  //  Op->getParent()->dump();
+  //}
   Assert(DT.dominates(Op, U),
          "Instruction does not dominate all uses!", Op, &I);
 }

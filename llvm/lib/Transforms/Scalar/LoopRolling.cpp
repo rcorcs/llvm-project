@@ -545,6 +545,8 @@ static size_t EstimateSize(ValueT *V, const DataLayout &DL, TargetTransformInfo 
   
       switch(I->getOpcode()) {
         case Instruction::Alloca:
+          size += 0;
+          break;
         case Instruction::PHI:
         case Instruction::ZExt:
         case Instruction::SExt:
@@ -558,7 +560,7 @@ static size_t EstimateSize(ValueT *V, const DataLayout &DL, TargetTransformInfo 
         case Instruction::Trunc:
         case Instruction::FPTrunc:
         case Instruction::BitCast:
-          size += 0;
+          size += 1;
           break;
         case Instruction::Call:
           size += 1 + dyn_cast<CallBase>(I)->getNumArgOperands();
@@ -1003,6 +1005,8 @@ private:
   std::unordered_map<Instruction *, Instruction *> Extracted;
   std::unordered_map<GlobalVariable*, Instruction *> GlobalLoad;
 
+  std::unordered_map<Type *, Value *> CachedCastIndVar;
+
   Value *cloneTree(Node *N, IRBuilder<> &Builder);
   void generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Builder);
   //void generateExtract(std::vector<Value *> &VL, Instruction * NewI, IRBuilder<> &Builder);
@@ -1131,7 +1135,7 @@ Node *Tree::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Pa
   std::vector<Value*> Indices;
 
   Type *Ty = nullptr;
-  for (unsigned i = 1; i<VL.size(); i++) {
+  for (unsigned i = 0; i<VL.size(); i++) {
     if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
       if (GEP->getParent()!=(&BB)) return nullptr;
       if (GEP->getPointerOperand()!=Ptr) return nullptr;
@@ -1143,7 +1147,7 @@ Node *Tree::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Pa
   }
   if (Ty==nullptr || !isa<IntegerType>(Ty)) return nullptr;
 
-  for (unsigned i = 1; i<VL.size(); i++) {
+  for (unsigned i = 0; i<VL.size(); i++) {
     if (Ptr==VL[i]) {
       Indices.push_back(ConstantInt::get(Ty, 0));
     } else if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
@@ -1339,6 +1343,9 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
   bool Matching = true;
   std::unordered_set<Value*> UniqueValues;
   UniqueValues.insert(Vs[0]);
+  if (auto *I = dyn_cast<Instruction>(Vs[0])) {
+    if (I->getParent()!=(&BB)) Matching = false;
+  }
   for (unsigned i = 1; i<Vs.size(); i++) {
     UniqueValues.insert(Vs[i]);
     AllSame = AllSame && Vs[i]==Vs[0];
@@ -2151,8 +2158,17 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       auto *ISN = (IntSequenceNode*)N;
       auto *StartValue = dyn_cast<ConstantInt>(ISN->getStart());
       auto *StepValue = dyn_cast<ConstantInt>(ISN->getStep());
-      auto *CastIndVar = Builder.CreateIntCast(IndVar, StartValue->getType(), false);
-      CreatedCode.push_back(CastIndVar);
+      Value *CastIndVar = IndVar;
+      if (CachedCastIndVar.find(StartValue->getType())!=CachedCastIndVar.end()) {
+        CastIndVar = CachedCastIndVar[StartValue->getType()];
+      } else {
+	auto *CIndVarI = Builder.CreateIntCast(IndVar, StartValue->getType(), false);
+	if (CIndVarI!=IndVar) {
+          CreatedCode.push_back(CastIndVar);
+          CachedCastIndVar[StartValue->getType()] = CIndVarI;
+          CastIndVar = CIndVarI;
+	}
+      }
       if (StartValue->isZero() && StepValue->isOne()){
         NewV = CastIndVar;
       } else if (StepValue->isZero()){
@@ -2199,11 +2215,22 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       auto *CInt2 = dyn_cast<ConstantInt>(ASN->getSecond());
       if (CInt1 && CInt2 && CInt1->isZero() && CInt2->isOne()) {
         errs() << "Generated Version 1:\n";
-	auto *CastIndVar = Builder.CreateIntCast(IndVar, SeqTy, false);
-	if (CastIndVar!=IndVar) {
-          CreatedCode.push_back(CastIndVar);
-          CastIndVar->dump();
-	}
+	//auto *CastIndVar = Builder.CreateIntCast(IndVar, SeqTy, false);
+	//if (CastIndVar!=IndVar) {
+        //  CreatedCode.push_back(CastIndVar);
+        //  CastIndVar->dump();
+	//}
+        Value *CastIndVar = IndVar;
+        if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
+          CastIndVar = CachedCastIndVar[SeqTy];
+        } else {
+          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+          if (CIndVarI!=IndVar) {
+            CreatedCode.push_back(CastIndVar);
+            CachedCastIndVar[SeqTy] = CIndVarI;
+            CastIndVar = CIndVarI;
+          }
+        }
 
         auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
         if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
@@ -2238,11 +2265,22 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       } else if (CInt1 && CInt2) {
         errs() << "Generated Version 3:\n";
 
-	auto *CastIndVar = Builder.CreateIntCast(IndVar, SeqTy, false);
-	if (CastIndVar!=IndVar) {
-          CreatedCode.push_back(CastIndVar);
-          CastIndVar->dump();
-	}
+	//auto *CastIndVar = Builder.CreateIntCast(IndVar, SeqTy, false);
+	//if (CastIndVar!=IndVar) {
+        //  CreatedCode.push_back(CastIndVar);
+        //  CastIndVar->dump();
+	//}
+        Value *CastIndVar = IndVar;
+        if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
+          CastIndVar = CachedCastIndVar[SeqTy];
+        } else {
+          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+          if (CIndVarI!=IndVar) {
+            CreatedCode.push_back(CastIndVar);
+            CachedCastIndVar[SeqTy] = CIndVarI;
+            CastIndVar = CIndVarI;
+          }
+        }
 
         auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
         if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
@@ -2308,6 +2346,8 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 bool CodeGenerator::generate(SeedGroups &Seeds) {
   LLVMContext &Context = BB.getParent()->getContext();
 
+    //BB.dump();
+
   std::vector<BasicBlock*> SuccBBs;
   for (auto It = succ_begin(&BB), E = succ_end(&BB); It!=E; It++) SuccBBs.push_back(*It);
 
@@ -2333,13 +2373,18 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   errs() << "Tree code generated!\n";
 #endif
  
+  bool HasRecurrence = false;
+  bool HasMismatch = false;
   //Late generation of recurrences
   for (Node *N : T.Nodes) {
     if (N->getNodeType()==NodeType::RECURRENCE) {
+      HasRecurrence = true;
       //update PHI
       PHINode *PHI = dyn_cast<PHINode>(NodeToValue[N]);
       errs() << "PHI: recurrence " << Header->getName() << ",";NodeToValue[N->getChild(0)]->dump();
       PHI->addIncoming(NodeToValue[N->getChild(0)],Header);
+    } else if (N->getNodeType()==NodeType::MISMATCH) {
+      HasMismatch = true;
     }
   }
 
@@ -2366,11 +2411,11 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   errs() << "Estimating size: modified\n";
 #endif
   size_t SizeModified = 0;
-  SizeModified += 2*EstimateSize(PreHeader,DL,&TTI); 
+  SizeModified += EstimateSize(PreHeader,DL,&TTI); 
   SizeModified += EstimateSize(Header,DL,&TTI); 
-  SizeModified += 0.25*EstimateSize(Exit,DL,&TTI); 
+  SizeModified += EstimateSize(Exit,DL,&TTI); 
 
-  bool Profitable = SizeOriginal > SizeModified;
+  bool Profitable = (SizeOriginal > SizeModified) && (HasMismatch==false);
   //BB.dump();
   //
   errs() << T.getDotString() << "\n";
@@ -2382,6 +2427,8 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   errs() << "Gains: " << SizeOriginal << " - " << SizeModified << " = " << ( ((int)SizeOriginal) - ((int)SizeModified) ) << "; ";
   errs() << "Width: " << T.Root->size() << "; ";
   if (T.Root->getNodeType() == NodeType::REDUCTION) errs() << "Reduction ";
+  if (HasRecurrence) errs() << "Recurrence ";
+
   if (Profitable) {
     errs() << "Profitable;\n";
     //errs() << T.getDotString() << "\n";
@@ -2642,6 +2689,8 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
 bool LoopRoller::run() {
   std::vector<BasicBlock *> Blocks;
   for (BasicBlock &BB : F) Blocks.push_back(&BB);
+
+  //F.dump();
 
   bool Changed = false;
   for (BasicBlock *BB : Blocks) {
