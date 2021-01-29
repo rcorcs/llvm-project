@@ -80,6 +80,9 @@ static cl::opt<bool> UseGlobalAliases(
     "mergesimilarfunc-global-aliases", cl::Hidden, cl::init(false),
     cl::desc("Enable writing alias by enabling global aliases"));
 
+static cl::opt<bool> MSFDebug("mergesimilarfunc-debug", cl::Hidden,
+                                    cl::init(false));
+
 void PrintMerges(const char *Desc, Function *Old, Function *New) {
   if (OptPrintMerges) {
     dbgs() << "=== [" << Desc << "] replacing " << Old->getName() << " with "
@@ -1532,6 +1535,10 @@ void MergeSimilarFunctions::mergeTwoFunctions(Function *F, Function *G) {
   std::string F1Name = getVertexName(F);
   std::string F2Name = getVertexName(G);
   std::string F12Name;
+  //if (MSFDebug) {
+  //  F->dump();
+  //  G->dump();
+  //}
   if (F->isInterposable()) {
     assert(G->isInterposable());
 
@@ -2009,18 +2016,21 @@ void MergeSimilarFunctions::outlineAndMergeFunctions(
   PrintMerges("FNSM", F1, NewF);
 
   errs() << "Merged: " << getVertexName(F1);
+  if (MSFDebug) F1->dump();
 
   writeThunkWithChoice(NewF, F1, 0);
   for (unsigned FnI = 0, FnE = Fns.size(); FnI != FnE; ++FnI) {
     Function *F2 = Fns[FnI]->getF2();
-    PrintMerges("FNSM", F2, NewF);
-    writeThunkWithChoice(NewF, F2, FnI + 1);
 
     errs() << ", " << getVertexName(F2);
+    if (MSFDebug) F2->dump();
 
+    PrintMerges("FNSM", F2, NewF);
+    writeThunkWithChoice(NewF, F2, FnI + 1);
   }
 
   errs() << " = " << getVertexName(NewF) << "\n";
+  if (MSFDebug) NewF->dump();
 
   NumSimilarFunctionsMerged += Fns.size() + 1;
 }

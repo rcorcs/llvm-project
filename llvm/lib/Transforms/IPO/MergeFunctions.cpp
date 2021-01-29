@@ -106,6 +106,7 @@
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/InstIterator.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
@@ -170,6 +171,20 @@ static cl::opt<bool>
     MergeFunctionsAliases("mergefunc-use-aliases", cl::Hidden,
                           cl::init(false),
                           cl::desc("Allow mergefunc to create aliases"));
+
+static cl::opt<bool>
+    VerboseMode("mergefunc-verbose", cl::Hidden,
+                          cl::init(false),
+                          cl::desc("Enable the verbose mode"));
+
+static std::string getVertexName(const Value *V){
+   if(V){
+      std::string name;
+      raw_string_ostream namestream(name);
+      V->printAsOperand(namestream,false);
+      return namestream.str();
+   }else return "[nullptr]";
+}
 
 namespace {
 
@@ -409,6 +424,22 @@ static bool isEligibleForMerging(Function &F) {
 
 bool MergeFunctions::runOnModule(Module &M) {
   bool Changed = false;
+
+  if (VerboseMode) {
+    for (auto &F : M) {
+      size_t FnSize = 0;
+      //for (auto &I : instructions(F)) Size++;
+      for (auto &BB : F) {
+        size_t BBSize = 0;
+        for (auto &I : BB) {
+          BBSize++;
+        }
+        errs() << "BBSize: " << BBSize << "\n";
+        FnSize += BBSize;
+      }
+      errs() << "FnSize: " << F.getName() << ": " << FnSize << "\n";
+    }
+  }
 
   // All functions in the module, ordered by hash. Functions with a unique
   // hash value are easily eliminated.
@@ -799,6 +830,9 @@ bool MergeFunctions::writeThunkOrAlias(Function *F, Function *G) {
 
 // Merge two equivalent functions. Upon completion, Function G is deleted.
 void MergeFunctions::mergeTwoFunctions(Function *F, Function *G) {
+  std::string F1Name = getVertexName(F);
+  std::string F2Name = getVertexName(G);
+  std::string F12Name;
   if (F->isInterposable()) {
     assert(G->isInterposable());
 
@@ -826,6 +860,9 @@ void MergeFunctions::mergeTwoFunctions(Function *F, Function *G) {
     F->setLinkage(GlobalValue::PrivateLinkage);
     ++NumDoubleWeak;
     ++NumFunctionsMerged;
+    
+    F12Name = getVertexName(F);
+    errs() << "Merged: " << F1Name << ", " << F2Name << " = " << F12Name << "\n";
   } else {
     // For better debugability, under MergeFunctionsPDI, we do not modify G's
     // call sites to point to F even when within the same translation unit.
@@ -851,11 +888,15 @@ void MergeFunctions::mergeTwoFunctions(Function *F, Function *G) {
     if (G->isDiscardableIfUnused() && G->use_empty() && !MergeFunctionsPDI) {
       G->eraseFromParent();
       ++NumFunctionsMerged;
+      F12Name = getVertexName(F);
+      errs() << "Merged: " << F1Name << ", " << F2Name << " = " << F12Name << "\n";
       return;
     }
 
     if (writeThunkOrAlias(F, G)) {
       ++NumFunctionsMerged;
+      F12Name = getVertexName(F);
+      errs() << "Merged: " << F1Name << ", " << F2Name << " = " << F12Name << "\n";
     }
   }
 }
