@@ -462,16 +462,15 @@ void PassManagerBuilder::addFunctionSimplificationPasses(
   MPM.add(createSimpleLoopUnrollPass(OptLevel, DisableUnrollLoops,
                                      ForgetAllSCEVInLoopUnroll));
 
+  /*
   if (RunLoopRerolling==1 || RunLoopRerolling==3)
   MPM.add(createLoopRerollPass());
   if (RunLoopRerolling==2 || RunLoopRerolling==3)
   MPM.add(createLoopRollingPass());
+  */
 
   addExtensionsToPM(EP_LoopOptimizerEnd, MPM);
   // This ends the loop pass pipelines.
-
-  // Break up allocas that may now be splittable after loop unrolling.
-  MPM.add(createSROAPass());
 
   if (OptLevel > 1) {
     MPM.add(createMergedLoadStoreMotionPass()); // Merge ld/st in diamonds
@@ -511,9 +510,15 @@ void PassManagerBuilder::addFunctionSimplificationPasses(
   //MPM.add(createLoopRollingPass());
 
   MPM.add(createCFGSimplificationPass()); // Merge & remove BBs
+  
   // Clean up after everything.
   MPM.add(createInstructionCombiningPass());
   addExtensionsToPM(EP_Peephole, MPM);
+
+  if (RunLoopRerolling==1 || RunLoopRerolling==3)
+  MPM.add(createLoopRerollPass());
+  if (RunLoopRerolling==2 || RunLoopRerolling==3)
+  MPM.add(createLoopRollingPass());
 
   if (EnableCHR && OptLevel >= 3 &&
       (!PGOInstrUse.empty() || !PGOSampleUse.empty() || EnablePGOCSInstrGen))

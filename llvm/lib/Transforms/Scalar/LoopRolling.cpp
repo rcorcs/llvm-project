@@ -118,13 +118,45 @@ static bool matchGEP(GetElementPtrT *GEP1, GetElementPtrT *GEP2) {
   return true;
 }
 
+template<typename GetElementPtrT>
+static Type *matchGEPUntilLastType(GetElementPtrT *GEP1, GetElementPtrT *GEP2) {
+  Type *Ty1 = GEP1->getSourceElementType();
+  SmallVector<Value*, 16> Idxs1(GEP1->idx_begin(), GEP1->idx_end());
+
+  Type *Ty2 = GEP2->getSourceElementType();
+  SmallVector<Value*, 16> Idxs2(GEP2->idx_begin(), GEP2->idx_end());
+
+  if (Ty1!=Ty2) return nullptr;
+  if (Idxs1.size()!=Idxs2.size()) return nullptr;
+
+  if (Idxs1.empty())
+    return Ty1;
+
+  for (unsigned i = 1; i<Idxs1.size()-1; i++) {
+    Value *V1 = Idxs1[i];
+    Value *V2 = Idxs2[i];
+
+    //structs must have constant indices, therefore they must be constants and must be identical when merging
+    if (isa<StructType>(Ty1)) {
+      if (V1!=V2) return nullptr;
+    }
+    Ty1 = GetElementPtrInst::getTypeAtIndex(Ty1, V1);
+    Ty2 = GetElementPtrInst::getTypeAtIndex(Ty2, V2);
+    if (Ty1!=Ty2) return nullptr;
+  }
+  return Ty1;
+}
+
+
+
 static bool match(Value *V1, Value *V2) {
   Instruction *I1 = dyn_cast<Instruction>(V1);
   Instruction *I2 = dyn_cast<Instruction>(V2);
   
   if (V1->getType()!=V2->getType()) return false;
 
-  if(I1 && I2 && I1->getOpcode()==I2->getOpcode()) {
+  if(I1 && I2) {
+    if (I1->getOpcode()!=I2->getOpcode()) return false;
     if (I1->getNumOperands()!=I2->getNumOperands()) return false;
 
     for (unsigned i = 0; i<I1->getNumOperands(); i++)
@@ -399,11 +431,12 @@ public:
 
 class GEPSequenceNode : public Node {
 private:
+  GetElementPtrInst *RefGEP;
   Value *Ptr;
   std::vector<Value*> Indices;
 public:
   template<typename ValueT>
-  GEPSequenceNode(std::vector<ValueT *> &Vs, Value *Ptr, std::vector<Value*> &Indices, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::GEPSEQ,Vs,BB,Parent), Ptr(Ptr), Indices(Indices) {}
+  GEPSequenceNode(std::vector<ValueT *> &Vs, GetElementPtrInst *RefGEP, Value *Ptr, std::vector<Value*> &Indices, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::GEPSEQ,Vs,BB,Parent), RefGEP(RefGEP), Ptr(Ptr), Indices(Indices) {}
 
   Value *getPointerOperand() { return Ptr; }
   std::vector<Value *> &getIndices() { return Indices; }
@@ -411,12 +444,17 @@ public:
   Instruction *getValidInstruction(unsigned i) {
     auto *I = dyn_cast<GetElementPtrInst>(getValue(i));
 
-    if (I==nullptr || getUnderlyingObject(I)!=Ptr) return nullptr;
+    if (I==nullptr) return nullptr;
+    if (Ptr && getUnderlyingObject(I)!=Ptr) return nullptr;
+    //if (I==nullptr || getUnderlyingObject(I)!=Ptr) return nullptr;
     if (I->getParent()!=getBlock()) return nullptr;
     if (I->getOpcode()!=Instruction::GetElementPtr) return nullptr;
+    if (I->getNumOperands()!=RefGEP->getNumOperands()) return nullptr;
 
     return I;
   }
+
+  GetElementPtrInst *getReference() { return RefGEP; }
 
   std::string getString() {
     std::string str;
@@ -710,6 +748,11 @@ public:
     return Instructions;
   }
 
+  void dump() {
+    errs() << "ScheduleNode: {\n";
+    for (auto *I : Instructions) I->dump();
+    errs() << "}\n";
+  }
 };
 
 
@@ -727,18 +770,9 @@ public:
     Root = buildReduction(BO,U,BB,nullptr);
     if (Root) {
       addNode(Root);
-#ifdef TEST_DEBUG
-      errs() << "Grow Tree 0\n";
-#endif
       std::set<Node*> Visited;
       growTree(Root,BB, Visited);
-#ifdef TEST_DEBUG
-      errs() << "Grow Tree 1\n";
-#endif
       buildSchedulingOrder();
-#ifdef TEST_DEBUG
-      errs() << "Scheduling order\n";
-#endif
     }
   }
 
@@ -746,18 +780,9 @@ public:
   Tree(std::vector<ValueT*> &Vs, BasicBlock &BB) : BB(&BB) {
     Root = createNode(Vs,BB);
     addNode(Root);
-#ifdef TEST_DEBUG
-    errs() << "Grow Tree 0\n";
-#endif
     std::set<Node*> Visited;
     growTree(Root,BB, Visited);
-#ifdef TEST_DEBUG
-    errs() << "Grow Tree 1\n";
-#endif
     buildSchedulingOrder();
-#ifdef TEST_DEBUG
-    errs() << "Scheduling order\n";
-#endif
   }
 
   BasicBlock *getBlock() { return BB; }
@@ -905,6 +930,8 @@ private:
   Node *buildReduction(ValueT *V, Instruction *, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  template<typename ValueT>
+  Node *buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
@@ -1144,41 +1171,140 @@ template<typename ValueT>
 Node *Tree::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
 
   if (!isa<PointerType>(VL[0]->getType())) return nullptr;
-  auto *Ptr = getUnderlyingObject(VL[0]);
-  for (unsigned i = 1; i<VL.size(); i++)
-    if (Ptr != getUnderlyingObject(VL[i])) return nullptr;
+  //auto *Ptr = getUnderlyingObject(VL[0]);
+  //for (unsigned i = 1; i<VL.size(); i++)
+  //  if (Ptr != getUnderlyingObject(VL[i])) return nullptr;
+
+  for (auto *V : VL) V->dump();
 
   std::vector<Value*> Indices;
 
+  Value *Ptr = nullptr;
+  GetElementPtrInst *RefGEP = nullptr;
   Type *Ty = nullptr;
   for (unsigned i = 0; i<VL.size(); i++) {
     if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
       if (GEP->getParent()!=(&BB)) return nullptr;
-      if (GEP->getPointerOperand()!=Ptr) return nullptr;
-      if (GEP->getNumIndices()!=1) return nullptr;
-      Value *Idx = GEP->getOperand(1);
+      //if (GEP->getPointerOperand()!=Ptr) return nullptr;
+      if (GEP->getNumIndices()!=1) return nullptr; //strong restriction
+      /*if (!GEP->hasIndices()) return nullptr;
+      for (unsigned i = 1; i<GEP->getNumOperands()-1; i++) {
+        Value *Idx = GEP->getOperand(i);
+        auto *CIdx = dyn_cast<ConstantInt>(Idx);
+	if (CIdx==nullptr) return nullptr;
+	if (!CIdx->isZero()) return nullptr;
+      }*/
+      Value *Idx = GEP->getOperand(GEP->getNumOperands()-1);
       Ty = Idx->getType();
+      RefGEP = GEP;
+      Ptr = GEP->getPointerOperand();
       break;
     }
   }
   if (Ty==nullptr || !isa<IntegerType>(Ty)) return nullptr;
 
+  errs() << "Ptr: "; Ptr->dump();
+
+  bool AllGEPs = true;
   for (unsigned i = 0; i<VL.size(); i++) {
     if (Ptr==VL[i]) {
+      AllGEPs = false;
       Indices.push_back(ConstantInt::get(Ty, 0));
     } else if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
       if (GEP->getPointerOperand()!=Ptr) return nullptr;
-      if (GEP->getNumIndices()!=1) return nullptr;
-      Value *Idx = GEP->getOperand(1);
+      if (GEP->getNumIndices()!=1) return nullptr; //strong restriction
+      if (GEP->getNumOperands()!=RefGEP->getNumOperands()) return nullptr;
+      /*if (!GEP->hasIndices()) return nullptr;
+      for (unsigned i = 1; i<GEP->getNumOperands()-1; i++) {
+        Value *Idx = GEP->getOperand(i);
+	if (RefGEP->getOperand(i)->getType()!=Idx->getType()) return nullptr;
+        auto *CIdx = dyn_cast<ConstantInt>(Idx);
+	if (CIdx==nullptr) return nullptr;
+	if (!CIdx->isZero()) return nullptr;
+      }*/
+      Value *Idx = GEP->getOperand(GEP->getNumOperands()-1);
       Indices.push_back(Idx);
       if (Ty!=Idx->getType()) return nullptr;
     } else return nullptr;
   }
 
+  errs() << "AllGEPs: " << AllGEPs << "\n";
+  if (AllGEPs) return nullptr; //Should be a valid match then
+
+
   Inputs.insert(Ptr);
-  
-  return new GEPSequenceNode(VL, Ptr, Indices, BB, Parent);
+  return new GEPSequenceNode(VL, RefGEP, Ptr, Indices, BB, Parent);
 }
+
+
+template<typename ValueT>
+Node *Tree::buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+  errs() << "GEPSeq2\n";
+  if (!isa<PointerType>(VL[0]->getType())) return nullptr;
+  //auto *Ptr = getUnderlyingObject(VL[0]);
+  Type *Ty = nullptr;
+  for (unsigned i = 1; i<VL.size(); i++) {
+    auto *GEP1 = dyn_cast<GetElementPtrInst>(VL[i-1]);
+    auto *GEP2 = dyn_cast<GetElementPtrInst>(VL[i]);
+    if (GEP1==nullptr || GEP2==nullptr) return nullptr;
+    Ty = matchGEPUntilLastType(GEP1,GEP2);
+    if (Ty==nullptr) return nullptr;
+  }
+  Ty->dump();
+
+  GetElementPtrInst *RefGEP = dyn_cast<GetElementPtrInst>(VL[0]);
+  std::vector<Value*> Indices;
+
+  for (unsigned i = 0; i<VL.size(); i++) {
+    if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
+      if (GEP->getPointerOperand()!=RefGEP->getPointerOperand()) return nullptr;
+      if (GEP->getNumOperands()!=RefGEP->getNumOperands()) return nullptr;
+      if (!GEP->hasIndices()) return nullptr;
+      for (unsigned i = 1; i<GEP->getNumOperands()-1; i++) {
+        Value *Idx = GEP->getOperand(i);
+	if (RefGEP->getOperand(i)->getType()!=Idx->getType()) return nullptr;
+	if (RefGEP->getOperand(i)!=Idx) return nullptr;
+      }
+      Value *Idx = GEP->getOperand(GEP->getNumOperands()-1);
+      Indices.push_back(Idx);
+    }
+  }
+
+  if (Indices.empty()) return nullptr;
+
+  if (!isa<ArrayType>(Ty)) {
+    auto *STy = dyn_cast<StructType>(Ty);
+    if (STy==nullptr) return nullptr;
+
+    bool AllSameType = true;
+    for (unsigned i = 1; i<STy->getNumElements(); i++) {
+      if (STy->getElementType(0)!=STy->getElementType(i)) AllSameType = false;
+    }
+
+    if (!AllSameType) {
+      Value *Step = isConstantSequence(Indices);
+      if (Step==nullptr) return nullptr;
+      auto *CStart = dyn_cast<ConstantInt>(Indices[0]);
+      auto *CStep = dyn_cast<ConstantInt>(Step);
+      if (CStart==nullptr) return nullptr;
+      if (CStep==nullptr) return nullptr;
+      if (!CStep->isOne() || !CStart->isZero()) return nullptr;
+      if (STy->getNumElements()<Indices.size()) return nullptr;
+      for (unsigned i = 1; i<Indices.size(); i++) {
+        if (STy->getElementType(0)!=STy->getElementType(i)) return nullptr;
+      }
+    }
+  }
+
+  errs() << "Indices:\n";
+  for (auto *V : Indices) V->dump();
+
+  //return nullptr;
+  //Inputs.insert(Ptr);
+  Inputs.insert(RefGEP->getPointerOperand());
+  return new GEPSequenceNode(VL, RefGEP, nullptr, Indices, BB, Parent);
+}
+
 
 template<typename ValueT>
 Node *Tree::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
@@ -1202,24 +1328,30 @@ Node *Tree::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &
 
 template<typename ValueT>
 Node *Tree::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+  errs() << "BinOP?\n";
+  VL[0]->dump();
+
   if (!isa<IntegerType>(VL[0]->getType())) return nullptr;
-
   std::vector<Value*> Operands;
-
   std::set<Value *> NonBinOp;
   for (auto *V : VL) {
     auto *BO = dyn_cast<BinaryOperator>(V);
     if (!BO) NonBinOp.insert(V);
-    else if (BO->getParent()!=(&BB)) NonBinOp.insert(V);
+    //else if (BO->getParent()!=(&BB)) NonBinOp.insert(V);
   }
+  errs() << "NonBinOps:\n";
+  for (auto *V : NonBinOp) V->dump();
+
   if (NonBinOp.size()!=1) return nullptr;
 
   Value *FixedV = *NonBinOp.begin();
+  errs() << "Fixed:";FixedV->dump();
 
   BinaryOperator *BinOpRef = nullptr;
   for (unsigned i = 0; i<VL.size(); i++) {
     auto *BinOp = dyn_cast<BinaryOperator>(VL[i]);
-    if (BinOp==nullptr || BinOp->getParent()!=(&BB)) {
+    //if (BinOp==nullptr || BinOp->getParent()!=(&BB)) {
+    if (BinOp==nullptr) {
       Operands.push_back(nullptr);
       continue;
     }
@@ -1349,12 +1481,9 @@ Node *Tree::buildConstExprNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *
   return new ConstantExprNode(Vs,BB,Parent);
 }
 
-template<typename ValueT>
-Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
-#ifdef TEST_DEBUG
-  errs() << "Creating node\n";
-#endif
 
+template<typename ValueT>
+static bool tempMatching(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
   bool AllSame = true;
   bool Matching = true;
   std::unordered_set<Value*> UniqueValues;
@@ -1366,77 +1495,110 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
     UniqueValues.insert(Vs[i]);
     AllSame = AllSame && Vs[i]==Vs[0];
     Matching = Matching && match(Vs[i-1],Vs[i]);
-    if (Vs[i-1]==Vs[i]) Matching = false;
     if (auto *I = dyn_cast<Instruction>(Vs[i])) {
       if (I->getParent()!=(&BB)) Matching = false;
     }
-    //TODO: hack
-    /*
-    auto *GEP1 = dyn_cast<GetElementPtrInst>(Vs[0]);
-    auto *GEP2 = dyn_cast<GetElementPtrInst>(Vs[i]);
-    auto *LI1 = dyn_cast<LoadInst>(Vs[0]);
-    auto *LI2 = dyn_cast<LoadInst>(Vs[i]);
-    if (LI1 && LI2) {
-      GEP1 = dyn_cast<GetElementPtrInst>(LI1->getPointerOperand());
-      GEP2 = dyn_cast<GetElementPtrInst>(LI2->getPointerOperand());
-    }
-    if (GEP1 && GEP2) {
-      if (GEP1->getPointerOperand()!=GEP2->getPointerOperand()) Matching = false;
-    }
-    */
   }
   Matching = Matching && (UniqueValues.size()==Vs.size());
 
-#ifdef TEST_DEBUG
-  if (AllSame) errs() << "All the Same\n";
-#endif
+  return Matching;
+}
+
+template<typename ValueT>
+Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
+  errs() << "Creating Node\n";
+  //for (auto *V : Vs) {
+  //  V->dump();
+  //}
+  bool AllSame = true;
+  bool Matching = true;
+  bool HasSideEffect = false;
+  std::unordered_set<Value*> UniqueValues;
+  UniqueValues.insert(Vs[0]);
+  if (auto *I = dyn_cast<Instruction>(Vs[0])) {
+    if (I->getParent()!=(&BB)) Matching = false;
+    HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
+  }
+  for (unsigned i = 1; i<Vs.size(); i++) {
+    UniqueValues.insert(Vs[i]);
+    AllSame = AllSame && Vs[i]==Vs[0];
+    Matching = Matching && match(Vs[i-1],Vs[i]);
+    if (auto *I = dyn_cast<Instruction>(Vs[i])) {
+      if (I->getParent()!=(&BB)) Matching = false;
+      HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
+    }
+  }
+  errs() << "Match: " << Matching << "\n";
+  errs() << UniqueValues.size() << " x " << Vs.size() << "\n";
+
+  Matching = Matching && (UniqueValues.size()==Vs.size() || (!HasSideEffect));
+  errs() << "Final Match: " << Matching << "\n";
+
   if (AllSame) {
+    errs() << "All the Same\n";
     Inputs.insert(Vs[0]);
     return new IdenticalNode(Vs,BB,Parent);
   }
-#ifdef TEST_DEBUG
-  errs() << "trying MATCH\n";
-#endif
-  if (Matching) return new MatchingNode(Vs,BB,Parent);
-#ifdef TEST_DEBUG
-  errs() << "trying GEPSEQ\n";
-#endif
-  if (Node *N = buildGEPSequence(Vs, BB, Parent)) return N;
-#ifdef TEST_DEBUG
-  errs() << "trying BINOP\n";
-#endif
-  if (Node *N = buildBinOpSequenceNode(Vs, BB, Parent)) return N;
-#ifdef TEST_DEBUG
-  errs() << "trying RECURRENCE\n";
-#endif
+  if (Matching) {
+    errs() << "Matching\n";
+    return new MatchingNode(Vs,BB,Parent);
+  }
+  if (Node *N = buildGEPSequence(Vs, BB, Parent)) {
+    errs() << "GEP Seq\n";
+    return N;
+  }
+  if (Node *N = buildGEPSequence2(Vs, BB, Parent)) {
+    errs() << "GEP Seq\n";
+    return N;
+  }
 
-  if (Node *N = buildRecurrenceNode(Vs, BB, Parent)) return N;
-
-#ifdef TEST_DEBUG
-  errs() << "trying INTSEQ\n";
-#endif
+  if (Node *N = buildBinOpSequenceNode(Vs, BB, Parent)) {
+    errs() << "BinOp Seq\n";
+    return N;
+  }
+  if (Node *N = buildRecurrenceNode(Vs, BB, Parent)) {
+    errs() << "Recurrence\n";
+    return N;
+  }
 
   if (allConstant(Vs)) {
     if (Value *Step = isConstantSequence(Vs)) {
+      errs() << "Int Seq\n";
       return new IntSequenceNode(Vs, Step, BB, Parent);
     }
   }
 
-#ifdef TEST_DEBUG
-  errs() << "trying ALTSEQ\n";
-#endif
-  if (Node *N = buildAlternatingSequenceNode(Vs, BB, Parent)) return N;
+  if (Node *N = buildAlternatingSequenceNode(Vs, BB, Parent)) {
+    errs() << "Alt Seq\n";
+    return N;
+  }
+  if (Node *N = buildConstExprNode(Vs, BB, Parent)) {
+    errs() << "Const Expr\n";
+    return N;
+  }
 
-#ifdef TEST_DEBUG
-  errs() << "trying CONSTEXPR\n";
-#endif
-  if (Node *N = buildConstExprNode(Vs, BB, Parent)) return N;
+  std::vector<ValueT *> Seq1;
+  for (unsigned i = 0; i<Vs.size(); i+=2) {
+    Seq1.push_back(Vs[i]);
+  }
 
-#ifdef TEST_DEBUG
-  errs() << "building MISMATCH\n";
-#endif
+  std::vector<ValueT *> Seq2;
+  for (unsigned i = 1; i<Vs.size(); i+=2) {
+    Seq2.push_back(Vs[i]);
+  }
+  if (tempMatching(Seq1, BB, Parent) && tempMatching(Seq2, BB, Parent)) {
+    errs() << "New Alternating Pattern:\n";
+    for (auto *V : Seq1) {
+      errs() << "1:"; V->dump();
+    }
+    for (auto *V : Seq2) {
+      errs() << "2:"; V->dump();
+    }
+    BB.dump();
+  } 
+
+  errs() << "Mismatching\n";
   for (auto *V : Vs) Inputs.insert(V);
-
   return new MismatchingNode(Vs,BB,Parent);
 }
 
@@ -1451,9 +1613,6 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
     case NodeType::INTSEQ: break;
     case NodeType::RECURRENCE: break;
     case NodeType::REDUCTION: {
-#ifdef TEST_DEBUG
-       errs() << "Growing REDUCTION\n";
-#endif
        auto &Vs = ((ReductionNode*)N)->getOperands();
 
        Node *Child = find(Vs);
@@ -1463,15 +1622,9 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
          N->pushChild(Child);
          growTree(Child, BB, Visited);
        } else N->pushChild(Child);
-#ifdef TEST_DEBUG
-       errs() << "OK\n";
-#endif
        break;
     }
     case NodeType::GEPSEQ: {
-#ifdef TEST_DEBUG
-       errs() << "Growing GEPSEQ\n";
-#endif
        auto &Vs = ((GEPSequenceNode*)N)->getIndices();
 
        Node *Child = find(Vs);
@@ -1481,15 +1634,9 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
          N->pushChild(Child);
          growTree(Child, BB, Visited);
        } else N->pushChild(Child);
-#ifdef TEST_DEBUG
-       errs() << "OK\n";
-#endif
        break;
     }
     case NodeType::BINOP: {
-#ifdef TEST_DEBUG
-       errs() << "Growing BINOP\n";
-#endif
        auto &Vs = ((BinOpSequenceNode*)N)->getOperands();
        Node *Child = find(Vs);
        if (Child==nullptr) {
@@ -1498,15 +1645,9 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
          N->pushChild(Child);
          growTree(Child, BB, Visited);
        } else N->pushChild(Child);
-#ifdef TEST_DEBUG
-       errs() << "OK\n";
-#endif
       break;
     }
     case NodeType::CONSTEXPR: {
-#ifdef TEST_DEBUG
-       errs() << "Growing CONSTEXPR\n";
-#endif
       auto *CE = dyn_cast<ConstantExpr>(N->getValue(0));
       if (CE==nullptr) return;
       for (unsigned i = 0; i<CE->getNumOperands(); i++) {
@@ -1524,16 +1665,10 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
           N->pushChild(Child);
           growTree(Child, BB, Visited);
 	} else N->pushChild(Child);
-#ifdef TEST_DEBUG
-        errs() << "OK\n";
-#endif
       }
       break;
     }
     case NodeType::MATCH: {
-#ifdef TEST_DEBUG
-       errs() << "Growing MATCH\n";
-#endif
       Instruction *I = dyn_cast<Instruction>(N->getValue(0));
       if (I==nullptr) return;
       for (unsigned i = 0; i<I->getNumOperands(); i++) {
@@ -1551,9 +1686,6 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
           N->pushChild(Child);
           growTree(Child, BB, Visited);
 	} else N->pushChild(Child);
-#ifdef TEST_DEBUG
-        errs() << "OK\n";
-#endif
       }
       break;
     }
@@ -1623,14 +1755,13 @@ Instruction *Tree::getEndingInstruction(BasicBlock &BB) {
 }
 
 bool Tree::invalidDependence(Value *V, std::unordered_set<Value*> &Visited) {
+  if (Visited.find(V)!=Visited.end()) return false;
+  if (isa<PHINode>(V)) return false;
+
   if (isa<Instruction>(V) && contains(V)) {
 	  errs() << "Invalid: "; V->dump();
 	  return true;
   }
-
-  if (Visited.find(V)!=Visited.end()) return false;
-  if (isa<PHINode>(V)) return false;
-
   Visited.insert(V);
 
   Instruction *I = dyn_cast<Instruction>(V);
@@ -1647,10 +1778,6 @@ bool Tree::invalidDependence(Value *V, std::unordered_set<Value*> &Visited) {
 bool Tree::isSchedulable(BasicBlock &BB) {
 
   if (Root==nullptr) return false;
-
-#ifdef TEST_DEBUG
-  errs() << "Checking input dependencies\n";
-#endif
   std::unordered_set<Value*> Visited;
   for (auto *V : Inputs) {
     if (invalidDependence(V,Visited)) {
@@ -1661,14 +1788,6 @@ bool Tree::isSchedulable(BasicBlock &BB) {
     }
   }
 
-#ifdef TEST_DEBUG
-  errs() << "Checking scheduling order\n";
-#endif
-  //for ( auto &SN : SchedulingOrder) {
-  //  errs() << "Scheduling Node:\n";
-  //  for (auto *I : SN.getInstructions()) I->dump();
-  //}
-  
   if (SchedulingOrder.empty()) return false;
 
   Instruction *I = getStartingInstruction(BB);
@@ -1678,43 +1797,47 @@ bool Tree::isSchedulable(BasicBlock &BB) {
   auto *LastI = BB.getTerminator();
   auto It = SchedulingOrder.begin(), E = SchedulingOrder.end();
   int Count = SchedulingOrder[0].size();
+  (*It).dump();
 
-  //errs() << "Count: " << Count << "\n";
-  //errs() << "Start: "; I->dump();
+  errs() << "Count: " << Count << "\n";
+  errs() << "Start: "; I->dump();
   while (I!=LastI && It!=E) {
     if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
-    //errs() << "Processing: "; I->dump();
-    //errs() << "Count: " << Count << "\n";
-    if ( (*It).contains(I) ) {
-      //errs() << "Found: "; I->dump();
-      Count--;
-      if (Count==0) {
-        It++;
-        if (It!=E) Count = (*It).size();
+      errs() << "Processing: "; I->dump();
+      errs() << "Count: " << Count << "\n";
+      if ( (*It).contains(I) ) {
+        errs() << "Found: "; I->dump();
+        Count--;
+        if (Count==0) {
+          It++;
+          if (It!=E) {
+		  Count = (*It).size();
+            (*It).dump();
+	  }
+        }
+      } else {
+        errs() << "Not found: "; I->dump();
+        //if (I->mayReadOrWriteMemory()) return false;
+        //if (I->mayWriteToMemory()) {
+        if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
+                errs() << "Read/Write memory\n";
+                //return false;
+                break;
+        }
       }
     } else {
-      //errs() << "Not found: "; I->dump();
-      //if (I->mayReadOrWriteMemory()) return false;
-      //if (I->mayWriteToMemory()) {
-      if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
-	      errs() << "Read/Write memory\n";
-	      //return false;
-	      break;
-      }
-    }
-    } else {
-      //errs() << "Non-memory: "; I->dump();
+      errs() << "Non-memory: "; I->dump();
     }
     I = I->getNextNode();
   }
 
-  //errs() << "I: "; I->dump();
-  //errs() << "Last: "; LastI->dump();
+  errs() << "I: "; I->dump();
+  errs() << "Last: "; LastI->dump();
   //bool Result = (I==LastI && It==E);
   bool Result = It==E;
-#ifdef TEST_DEBUG
+//#ifdef TEST_DEBUG
   errs() << "Schedulable: " << Result << "\n";
-#endif
+//#endif
   return Result;
 }
 
@@ -1724,12 +1847,10 @@ void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Bu
   std::set<unsigned> NeedExtract;
 
   for (unsigned i = 0; i<N->size(); i++) {
-    Value *V = N->getValidInstruction(i);
-    if (V==nullptr) continue;
-#ifdef TEST_DEBUG
-    //errs() << "Looking for:"; V->dump();
-#endif
-    for (auto *U : V->users()) {
+    auto *I = N->getValidInstruction(i);
+    if (I==nullptr) continue;
+    if (I->getParent()!=(&BB)) continue;
+    for (auto *U : I->users()) {
       if (!T.contains(U)) {
 #ifdef TEST_DEBUG
 	errs() << "Found use: " << i << ": "; U->dump();
@@ -1981,10 +2102,6 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
           Operands.push_back(cloneTree(N->getChild(i), Builder));
         }
 
-#ifdef TEST_DEBUG
-        errs() << "Operands done!\n";
-#endif
-
         SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
         NewI->getAllMetadata(MDs);
         for (std::pair<unsigned, MDNode *> MDPair : MDs) {
@@ -2021,12 +2138,30 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 #endif
       auto *GN = (GEPSequenceNode*)N;
 
+      Value *Ptr = GN->getPointerOperand();
+      if (Ptr==nullptr) {
+        IRBuilder<> PreHeaderBuilder(PreHeader);
+        auto *GEP = GN->getReference()->clone();
+        auto *IdxTy = GN->getReference()->getOperand(GN->getReference()->getNumOperands()-1)->getType();
+        auto *Zero = ConstantInt::get(IdxTy, 0);
+        GEP->setOperand(GN->getReference()->getNumOperands()-1, Zero);
+        PreHeaderBuilder.Insert(GEP);
+        Ptr = GEP;
+      }
+
       assert(GN->getNumChildren() && "Expected child with indices!");
       Value *IndVarIdx = cloneTree(GN->getChild(0), Builder);
 #ifdef TEST_DEBUG
       errs() << "Closing GEPSEQ\n";
 #endif
-      auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(GN->getPointerOperand(), IndVarIdx));
+      //auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(GN->getPointerOperand(), IndVarIdx));
+      auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(Ptr, IndVarIdx));
+      /*
+      auto *GEP = GN->getReference()->clone();
+      GEP->setOperand(0, GN->getPointerOperand());
+      GEP->setOperand(GN->getReference()->getNumOperands()-1, IndVarIdx);
+      Builder.Insert(GEP);
+      */
       CreatedCode.push_back(GEP);
       NodeToValue[N] = GEP;
 
@@ -2453,13 +2588,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   auto &DL = BB.getParent()->getParent()->getDataLayout();
   TargetTransformInfo TTI(DL);
 
-#ifdef TEST_DEBUG
-  errs() << "Estimating size: original\n";
-#endif
   size_t SizeOriginal = EstimateSize(Garbage,DL,&TTI);
-#ifdef TEST_DEBUG
-  errs() << "Estimating size: modified\n";
-#endif
   size_t SizeModified = 0;
   SizeModified += 4*EstimateSize(PreHeader,DL,&TTI); 
   SizeModified += EstimateSize(Header,DL,&TTI); 
@@ -2584,29 +2713,16 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   } else {
     //errs() << "Unprofitable\n";
 
-#ifdef TEST_DEBUG
-    errs() << "Destroying Exit\n";
-#endif
     DeleteDeadBlock(Exit);
-#ifdef TEST_DEBUG
-    errs() << "Destroying Header\n";
-#endif
     DeleteDeadBlock(Header);
-#ifdef TEST_DEBUG
-    errs() << "Destroying Pre Header\n";
-#endif
     DeleteDeadBlock(PreHeader);
-
-#ifdef TEST_DEBUG
-    errs() << "Done!\n";
-#endif
     return false;
   }
 }
 
 static BinaryOperator *getPossibleReduction(Value *V) {
 #ifdef TEST_DEBUG
-  errs() << "looking for reduction\n";
+  //errs() << "looking for reduction\n";
 #endif
   if (V==nullptr) return nullptr;
   BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
@@ -2625,9 +2741,6 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
   // Initialize the collections. We will make a single pass over the block.
   Seeds.clear();
 
-#ifdef TEST_DEBUG
-    errs() << "collecting seeds\n";
-#endif
   // Visit the store and getelementptr instructions in BB and organize them in
   // Stores and GEPs according to the underlying objects of their pointer
   // operands.
@@ -2652,8 +2765,8 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
 
       if (BinaryOperator *BO = getPossibleReduction(SI->getValueOperand())) {
 #ifdef TEST_DEBUG
-        errs() << "Possible reduction\n";
-	BO->dump();
+        //errs() << "Possible reduction\n";
+	//BO->dump();
 #endif
         Seeds.Reductions[BO] = &I;
       }
@@ -2678,8 +2791,19 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
       for (unsigned i = 0; i<CI->getNumArgOperands(); i++) {
         if (BinaryOperator *BO = getPossibleReduction(CI->getArgOperand(i))) {
 #ifdef TEST_DEBUG
-          errs() << "Possible reduction\n";
-	  BO->dump();
+          //errs() << "Possible reduction\n";
+	  //BO->dump();
+#endif
+          Seeds.Reductions[BO] = &I;
+        }
+      }
+    }
+    else if (auto *CB = dyn_cast<CallBase>(&I)) {
+      for (unsigned i = 0; i<CB->getNumArgOperands(); i++) {
+        if (BinaryOperator *BO = getPossibleReduction(CB->getArgOperand(i))) {
+#ifdef TEST_DEBUG
+          //errs() << "Possible reduction\n";
+	  //BO->dump();
 #endif
           Seeds.Reductions[BO] = &I;
         }
@@ -2689,9 +2813,9 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
       if (Br->isConditional()) {
         if (BinaryOperator *BO = getPossibleReduction(Br->getCondition())) {
 #ifdef TEST_DEBUG
-          errs() << "Possible reduction\n";
+          //errs() << "Possible reduction\n";
+	  //BO->dump();
 #endif
-	  BO->dump();
           Seeds.Reductions[BO] = &I;
         }
       }
@@ -2699,8 +2823,8 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
     else if (auto *Ret = dyn_cast<ReturnInst>(&I)) {
       if (BinaryOperator *BO = getPossibleReduction(Ret->getReturnValue())) {
 #ifdef TEST_DEBUG
-        errs() << "Possible reduction\n";
-	BO->dump();
+        //errs() << "Possible reduction\n";
+	//BO->dump();
 #endif
         Seeds.Reductions[BO] = &I;
       }
@@ -2711,8 +2835,8 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
         Value *V = PHI->getIncomingValueForBlock(PHI->getParent());
         if (BinaryOperator *BO = getPossibleReduction(V)) {
 #ifdef TEST_DEBUG
-          errs() << "Possible reduction\n";
-	  BO->dump();
+          //errs() << "Possible reduction\n";
+	  //BO->dump();
 #endif
           Seeds.Reductions[BO] = &I;
         }
@@ -2746,7 +2870,7 @@ bool LoopRoller::run() {
   for (BasicBlock *BB : Blocks) {
     collectSeedInstructions(*BB);
 #ifdef TEST_DEBUG
-    errs() << "stores\n";
+    //errs() << "stores\n";
 #endif
     //unsigned Count = 0;
 
@@ -2767,18 +2891,12 @@ bool LoopRoller::run() {
 	    //T.writeDotFile(FileName);
 	    if (T.isSchedulable(*BB)) {
 	      CodeGenerator CG(F, *BB, T);
-#ifdef TEST_DEBUG
-	      errs() << "code gen 0\n";
-#endif
 	      HasRolled = CG.generate(Seeds);
 	      Changed = Changed || HasRolled;
-#ifdef TEST_DEBUG
-	      errs() << "code gen 1\n";
-#endif
+	    } else {
+	      errs() << T.getDotString() << "\n";
+	      BB->dump();
 	    }
-#ifdef TEST_DEBUG
-	    errs() << "destroying tree\n";
-#endif
             T.destroy();
 	  }
 	  if (!HasRolled && FirstAttempt) {
@@ -2809,8 +2927,23 @@ bool LoopRoller::run() {
         }
       }
     }
+
 #ifdef TEST_DEBUG
-    errs() << "calls\n";
+    //errs() << "reductions (terminators)\n";
+#endif
+    for (auto &Pair : Seeds.Reductions) {
+      if (Pair.second==nullptr) continue;
+      if (!Pair.second->isTerminator()) continue; //skip non-terminators
+      Tree T(Pair.first, Pair.second, *BB);
+      if (T.isSchedulable(*BB)) {
+        CodeGenerator CG(F, *BB, T);
+        Changed = Changed || CG.generate(Seeds);
+      }
+      T.destroy();
+    }
+
+#ifdef TEST_DEBUG
+    //errs() << "calls\n";
 #endif
     for (auto &Pair : Seeds.Calls) {
       if (Pair.second.size()>1) {
@@ -2821,41 +2954,25 @@ bool LoopRoller::run() {
 	//T.writeDotFile(FileName);
 	if (T.isSchedulable(*BB)) {
 	  CodeGenerator CG(F, *BB, T);
-#ifdef TEST_DEBUG
-	  errs() << "code gen 0\n";
-#endif
 	  Changed = Changed || CG.generate(Seeds);
-#ifdef TEST_DEBUG
-	  errs() << "code gen 1\n";
-#endif
+	} else {
+	  errs() << T.getDotString() << "\n";
+	  BB->dump();
 	}
-#ifdef TEST_DEBUG
-	errs() << "destroying tree\n";
-#endif
         T.destroy();
       }
     }
 #ifdef TEST_DEBUG
-    errs() << "reductions\n";
+    //errs() << "reductions (non-terminators)\n";
 #endif
     for (auto &Pair : Seeds.Reductions) {
       if (Pair.second==nullptr) continue;
-      //errs() << "REDUCTION TREE!!\n";
+      if (Pair.second->isTerminator()) continue; //skip terminators
       Tree T(Pair.first, Pair.second, *BB);
-      //errs() << T.getDotString() << "\n";
       if (T.isSchedulable(*BB)) {
         CodeGenerator CG(F, *BB, T);
-#ifdef TEST_DEBUG
-        errs() << "code gen 0\n";
-#endif
         Changed = Changed || CG.generate(Seeds);
-#ifdef TEST_DEBUG
-        errs() << "code gen 1\n";
-#endif
       }
-#ifdef TEST_DEBUG
-      errs() << "destroying tree\n";
-#endif
       T.destroy();
     }
   }
