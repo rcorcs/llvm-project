@@ -57,6 +57,7 @@ add_llvm_component_library(LLVMScalarOpts
   NaryReassociate.cpp
   NewGVN.cpp
   PartiallyInlineLibCalls.cpp
+  PlaceFencesWMO.cpp
   PlaceSafepoints.cpp
   Reassociate.cpp
   Reg2Mem.cpp
