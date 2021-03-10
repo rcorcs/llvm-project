@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This pass lowers atomic intrinsics to non-atomic form for use in a known
-// non-preemptible environment.
+// This pass places fences when retargetting from a TSO architecture to one
+// with a weark memory ordering memory model.
 //
 //===----------------------------------------------------------------------===//
 
