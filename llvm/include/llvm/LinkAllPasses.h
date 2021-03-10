@@ -206,6 +206,7 @@ namespace {
       (void) llvm::createLintLegacyPassPass();
       (void) llvm::createSinkingPass();
       (void) llvm::createLowerAtomicPass();
+      (void) llvm::createPlaceFencesWMOPass();
       (void) llvm::createCorrelatedValuePropagationPass();
       (void) llvm::createMemDepPrinter();
       (void) llvm::createLoopVectorizePass();
