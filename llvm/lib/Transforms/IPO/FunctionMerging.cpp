@@ -1487,7 +1487,6 @@ public:
       if (I.isTerminator()) 
         OpcodeFreq[0] += I.getNumSuccessors();
     }
-    
   }
 
 
@@ -1633,7 +1632,6 @@ int HashEncoder(Instruction *I, int Encoding) {
   return Encoding+InstEnc+TyEnc;
 }
 
-
 class BlockFingerprint : public Fingerprint {
 public:
   size_t Size;
@@ -1681,15 +1679,30 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   if (ConservativeMode==3) {
       
       int TotalMatches = 0;
+      int TotalInsts = 0;
+      int TotalCoreMatches = 0;
+
+
+      int B1Max = 0;
+      int B2Max = 0;
+      size_t MaxMem = 0;
+
+      int NumBB1 = 0;
+      int NumBB2 = 0;
+      size_t MemSize = 0;
+
       //std::map<size_t, std::vector<BlockData> > BlocksF1;
       //std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
       std::vector<BlockFingerprint> Blocks;
       for (BasicBlock &BB1 : *F1) {
+	NumBB1 ++;
         BlockFingerprint BD1(&BB1);
         Blocks.push_back(BD1);
+	MemSize += BD1.MaxOpcode*sizeof(int);
       }
       
       for (BasicBlock &BIt : *F2) {
+	NumBB2 ++;
 	BasicBlock *BB2 = &BIt;
 	//BlockData BD2(BB2, HashEncoder);
         BlockFingerprint BD2(BB2);
@@ -1730,7 +1743,100 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 	  }
 
           NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
+
+          auto MemReq = SA.getMemoryRequirement(BB1Vec,BB2Vec);
+          //auto MemAvailable = getTotalSystemMemory();
+          //errs() << "PStats: " << BB1Vec.size() << " , " << BB2Vec.size() << " , " << MemReq  << "\n";
+
+	  if (MemReq > MaxMem) {
+		  MaxMem = MemReq;
+                  B1Max = BB1Vec.size();
+                  B2Max = BB2Vec.size();
+	  }
+
           AlignedSequence<Value*> AlignedBlocks = SA.getAlignment(BB1Vec,BB2Vec);
+	  
+
+
+	  bool Profitable = true;
+	    if (HyFMProfitability) {
+
+	      //std::unordered_map<Value *, Value *> LocalMapped1To2;
+	      int OriginalCost = 0;
+	      int MergedCost = 0;
+
+	      bool InsideSplit = false;
+
+              
+              for (auto &Entry : AlignedBlocks) {
+                Instruction *I1 = nullptr;
+  	        if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
+                Instruction *I2 = nullptr;
+  	        if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
+		bool IsInstruction = I1!=nullptr || I2!=nullptr;
+		if (Entry.match()) {
+		  if (IsInstruction) {
+		    OriginalCost += 2;
+		    MergedCost += 1;
+		  }
+		  if (InsideSplit) {
+		    InsideSplit = false;
+		    MergedCost += 2;
+		  }
+		} else {
+		  if (IsInstruction) {
+		    OriginalCost += 1;
+		    MergedCost += 1;
+		  }
+		  if (!InsideSplit) {
+		    InsideSplit = true;
+		    MergedCost += 1;
+		  }
+		}
+  	      }
+
+	      //Profitable = (CountMatches>0);
+	      //Profitable = (CoreMatches>0) || (NumInsts==1);
+	      //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && ((float)CoreMatches)/((float)NumInsts)>0.2);
+	      //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
+              Profitable = (MergedCost <= OriginalCost);
+	      if (Verbose) {
+                errs() << ((Profitable)?"Profitable":"Unprofitable") << "\n";
+	      }
+            }
+
+	  //bool Profitable = (CountMatches>0);
+	  
+
+
+	  if (Profitable) {
+            for (auto &Entry : AlignedBlocks) {
+              Instruction *I1 = nullptr;
+	      if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
+              Instruction *I2 = nullptr;
+	      if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
+	      bool IsInstruction = I1!=nullptr || I2!=nullptr;
+
+	      AlignedSeq.Data.push_back( AlignedSequence<Value*>::Entry(Entry.get(0),Entry.get(1),Entry.match()) );
+
+	      if (IsInstruction) {
+	        TotalInsts++;
+	        if (Entry.match()) TotalMatches++;
+                Instruction *I = I2;
+		if (I1) I = I1;
+		if (I->isTerminator()) TotalCoreMatches++;
+	      }
+	    }
+            //SetRef.erase(BestIt);
+            Blocks.erase(BestIt);
+	    MergedBlocks = true;
+	  }
+	}
+/*
+
+
+
+
 
 	  unsigned CountMatches = 0;
           for (auto &Entry : AlignedBlocks) {
@@ -1756,11 +1862,13 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 	    MergedBlocks = true;
 	  }
 	}
+	*/
 	if (!MergedBlocks) {
           AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,BB2,false));
 	  for (Instruction &I : *BB2) {
 	    if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
             AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,&I,false));
+	        TotalInsts++;
 	  }
 	}
       }
@@ -1770,10 +1878,16 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
         for (Instruction &I : *BB1) {
           if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
           AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(&I,nullptr,false));
+	        TotalInsts++;
         }
       }
 
-      if (TotalMatches==0) {
+      errs() << "Stats: " << B1Max << " , " << B2Max  << " , " << MaxMem  << "\n";
+      errs() << "RStats: " << NumBB1 << " , " << NumBB2  << " , " << MemSize  << "\n";
+
+      bool Profitable = (TotalMatches==TotalInsts) || (TotalCoreMatches>0);
+      if (!Profitable) {
+      //if (TotalMatches==0) {
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.stopTimer();
 #endif
@@ -1956,13 +2070,21 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
       //std::map<size_t, std::vector<BlockData> > BlocksF1;
       std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
+      
+      int NumBB1 = 0;
+      int NumBB2 = 0;
+      size_t MemSize = 0;
+
       for (BasicBlock &BB1 : *F1) {
+	NumBB1 ++;
         //BlockData BD1(&BB1, HashEncoder);
         BlockFingerprint BD1(&BB1);
         BlocksF1[BD1.Size].push_back(BD1);
+	MemSize += BD1.MaxOpcode*sizeof(int);
       }
       
       for (BasicBlock &BIt : *F2) {
+	NumBB2 ++;
 	BasicBlock *BB2 = &BIt;
 	//BlockData BD2(BB2, HashEncoder);
         BlockFingerprint BD2(BB2);
@@ -2009,8 +2131,8 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 	    if (HyFMProfitability) {
 
 	      //std::unordered_map<Value *, Value *> LocalMapped1To2;
-	      float OriginalCost = 0;
-	      float MergedCost = 0;
+	      int OriginalCost = 0;
+	      int MergedCost = 0;
 
 	      bool InsideSplit = false;
               if (FunctionMerger::match(BB1,BB2)) {
@@ -2023,6 +2145,11 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
               while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
               while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
 
+              if (Verbose) {
+	        errs() << GetValueName(BB1) << "x " << GetValueName(BB2) << "\n";
+	        errs() << OriginalCost << " x " << MergedCost << "\n";
+              }
+
 	      unsigned CountMatches = 0;
 	      unsigned CoreMatches = 0;
 	      unsigned NumInsts = 0;
@@ -2034,8 +2161,9 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
 		NumInsts++;
                 if (matchInstructions(I1,I2)) {
+                  if (Verbose) errs() << "Matched:\n";
+
 	          CountMatches++;
-                  errs() << "Matched:\n";
 		  MergedCost += 1; //reduces 1 inst by merging two insts into one
 		  if (InsideSplit) {
                     InsideSplit = false;
@@ -2063,9 +2191,8 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 		  if (!I1->isTerminator()) {
 		    CoreMatches++;
 		  }
-		  errs() << OriginalCost << " x " << MergedCost << "\n";
 	        } else {
-                  errs() << "Mismatched:\n";
+	          if (Verbose) errs() << "Mismatched:\n";
                   //LocalMapped1To2[I1] = I1;
 
 	          if (!InsideSplit) {
@@ -2077,9 +2204,11 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
                 It1++;
                 It2++;
 
-	        I1->dump();
-	        I2->dump();
-	        errs() << OriginalCost << " x " << MergedCost << "\n";
+	        if (Verbose) {
+	          I1->dump();
+	          I2->dump();
+	          errs() << OriginalCost << " x " << MergedCost << "\n";
+		}
               }
 
               if (It1!=BB1->end() || It2!=BB2->end()) {
@@ -2094,7 +2223,9 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 	      //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && ((float)CoreMatches)/((float)NumInsts)>0.2);
 	      //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
               Profitable = (MergedCost <= OriginalCost);
-
+	      if (Verbose) {
+                errs() << ((Profitable)?"Profitable":"Unprofitable") << "\n";
+	      }
               It1 = BB1->begin();
               It2 = BB2->begin();
             }
@@ -2157,9 +2288,250 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 	}
       }
 
+      errs() << "RStats: " << NumBB1 << " , " << NumBB2  << " , " << MemSize  << "\n";
+
       //bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 && TotalCoreMatches>0);
-      //if (!Profitable) {
-      if (TotalMatches==0) {
+      bool Profitable = (TotalMatches==TotalInsts) || (TotalCoreMatches>0);
+      if (!Profitable) {
+      //if (TotalMatches==0) {
+#ifdef TIME_STEPS_DEBUG
+  TimeAlign.stopTimer();
+#endif
+        errs() << "Skipped: Not profitable enough!!\n";
+        return ErrorResponse;
+      }
+
+
+  } else if (ConservativeMode==7) {
+      ///TODO:: ignore seq. alignment. Perform n^2, pairing any two matching basic blocks. There is no need to linearize them either.
+
+      int TotalMatches = 0;
+      int TotalInsts = 0;
+      int TotalCoreMatches = 0;
+
+      int B1Max = 0;
+      int B2Max = 0;
+      size_t MaxMem = 0;
+
+      int NumBB1 = 0;
+      int NumBB2 = 0;
+      size_t MemSize = 0;
+
+      //std::map<size_t, std::vector<BlockData> > BlocksF1;
+      std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
+      for (BasicBlock &BB1 : *F1) {
+	NumBB1 ++;
+        //BlockData BD1(&BB1, HashEncoder);
+        BlockFingerprint BD1(&BB1);
+        BlocksF1[BD1.Size].push_back(BD1);
+	MemSize += BD1.MaxOpcode*sizeof(int);
+      }
+      
+      for (BasicBlock &BIt : *F2) {
+	NumBB2 ++;
+	BasicBlock *BB2 = &BIt;
+	//BlockData BD2(BB2, HashEncoder);
+        BlockFingerprint BD2(BB2);
+	
+	auto &SetRef = BlocksF1[BD2.Size];
+
+	/*
+	std::sort(SetRef.begin(), SetRef.end(), [&](auto &A, auto &B) -> bool {
+	   int VA = std::abs(A.Encoding - BD2.Encoding);
+	   int VB = std::abs(B.Encoding - BD2.Encoding);
+	   return VA < VB;
+	});
+        */
+
+	//errs() << "NumBlocks: " << SetRef.size() << "\n";
+
+	auto BestIt = SetRef.end();
+	size_t BestDist = std::numeric_limits<size_t>::max();
+	for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt!=E; BDIt++) {
+	  //auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
+	  auto D = BD2.distance(*BDIt);
+	  //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+	  //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+	  if (D<BestDist) {
+	    BestDist = D;
+	    BestIt = BDIt;
+	  }
+	}
+	bool MergedBlocks = false;
+	if (BestIt!=SetRef.end()) {
+          auto &BD1 = *BestIt;
+	  BasicBlock *BB1 = BD1.BB;
+	  
+	    //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist << "\n";
+	    //auto D = BD2.distance(BD1);
+	    //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+
+
+
+
+
+
+
+
+
+
+
+
+          SmallVector<Value*,8> BB1Vec;
+          SmallVector<Value*,8> BB2Vec;
+
+	  BB1Vec.push_back(BB1);
+	  for (auto &I : *BB1) {
+            if(!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
+	      BB1Vec.push_back(&I);
+	  }
+
+	  BB2Vec.push_back(BB2);
+	  for (auto &I : *BB2) {
+            if(!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
+	      BB2Vec.push_back(&I);
+	  }
+
+          NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
+
+          auto MemReq = SA.getMemoryRequirement(BB1Vec,BB2Vec);
+          //auto MemAvailable = getTotalSystemMemory();
+          errs() << "PStats: " << BB1Vec.size() << " , " << BB2Vec.size() << " , " << MemReq  << "\n";
+
+	  if (MemReq > MaxMem) {
+		  MaxMem = MemReq;
+                  B1Max = BB1Vec.size();
+                  B2Max = BB2Vec.size();
+	  }
+          AlignedSequence<Value*> AlignedBlocks = SA.getAlignment(BB1Vec,BB2Vec);
+
+	  /*
+	  unsigned CountMatches = 0;
+          for (auto &Entry : AlignedBlocks) {
+            Instruction *I1 = nullptr;
+	    if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
+            Instruction *I2 = nullptr;
+	    if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
+	    if (Entry.match() && (I1 || I2)) CountMatches++;
+	  }
+          */
+
+	  bool Profitable = true;
+	    if (HyFMProfitability) {
+
+	      //std::unordered_map<Value *, Value *> LocalMapped1To2;
+	      int OriginalCost = 0;
+	      int MergedCost = 0;
+
+	      bool InsideSplit = false;
+
+              
+              for (auto &Entry : AlignedBlocks) {
+                Instruction *I1 = nullptr;
+  	        if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
+                Instruction *I2 = nullptr;
+  	        if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
+		bool IsInstruction = I1!=nullptr || I2!=nullptr;
+		if (Entry.match()) {
+		  if (IsInstruction) {
+		    OriginalCost += 2;
+		    MergedCost += 1;
+		  }
+		  if (InsideSplit) {
+		    InsideSplit = false;
+		    MergedCost += 2;
+		  }
+		} else {
+		  if (IsInstruction) {
+		    OriginalCost += 1;
+		    MergedCost += 1;
+		  }
+		  if (!InsideSplit) {
+		    InsideSplit = true;
+		    MergedCost += 1;
+		  }
+		}
+  	      }
+
+	      //Profitable = (CountMatches>0);
+	      //Profitable = (CoreMatches>0) || (NumInsts==1);
+	      //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && ((float)CoreMatches)/((float)NumInsts)>0.2);
+	      //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
+              Profitable = (MergedCost <= OriginalCost);
+	      if (Verbose) {
+                errs() << ((Profitable)?"Profitable":"Unprofitable") << "\n";
+	      }
+            }
+
+	  //bool Profitable = (CountMatches>0);
+	  
+
+
+	  if (Profitable) {
+            for (auto &Entry : AlignedBlocks) {
+              Instruction *I1 = nullptr;
+	      if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
+              Instruction *I2 = nullptr;
+	      if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
+	      bool IsInstruction = I1!=nullptr || I2!=nullptr;
+
+	      AlignedSeq.Data.push_back( AlignedSequence<Value*>::Entry(Entry.get(0),Entry.get(1),Entry.match()) );
+
+	      if (IsInstruction) {
+	        TotalInsts++;
+	        if (Entry.match()) TotalMatches++;
+                Instruction *I = I2;
+		if (I1) I = I1;
+		if (I->isTerminator()) TotalCoreMatches++;
+	      }
+	    }
+            SetRef.erase(BestIt);
+	    MergedBlocks = true;
+	  }
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	if (!MergedBlocks) {
+          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,BB2,false));
+	  for (Instruction &I : *BB2) {
+	    if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
+            TotalInsts++;
+            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,&I,false));
+	  }
+	}
+      }
+      for (auto &Pair : BlocksF1) {
+        for (auto &BD1 : Pair.second) {
+	  BasicBlock *BB1 = BD1.BB;
+          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,nullptr,false));
+	  for (Instruction &I : *BB1) {
+	    if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
+            TotalInsts++;
+            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(&I,nullptr,false));
+	  }
+	}
+      }
+
+      errs() << "Stats: " << B1Max << " , " << B2Max  << " , " << MaxMem  << "\n";
+      errs() << "RStats: " << NumBB1 << " , " << NumBB2  << " , " << MemSize  << "\n";
+
+      //bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 && TotalCoreMatches>0);
+      bool Profitable = (TotalMatches==TotalInsts) || (TotalCoreMatches>0);
+      if (!Profitable) {
+      //if (TotalMatches==0) {
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.stopTimer();
 #endif
@@ -2353,6 +2725,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
       auto MemReq = SA.getMemoryRequirement(F1Vec,F2Vec);
       auto MemAvailable = getTotalSystemMemory();
+      errs() << "Stats: " << F1Vec.size() << " , " << F2Vec.size() << " , " << MemReq  << "\n";
       //errs() << "Memory Available: " << MemAvailable << " (" << ((float)MemAvailable/(1024.f*1024.f)) << "); Required: " << MemReq <<  " (" << ((float)MemReq/(1024.f*1024.f)) << ")\n";
       if ( MemReq > MemAvailable*0.9 ) {
 	errs() << "Insufficient Memory\n";
@@ -2968,6 +3341,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
     
+    errs() << "FNSize: " << F.getName() << " : " << F.getInstructionCount() << "\n";
     FunctionData FD(&F, new Fingerprint(&F), EstimateFunctionSize(&F, &TTI));
     FunctionsToProcess.push_back(FD);
   }
@@ -3223,7 +3597,8 @@ bool FunctionMerging::runOnModule(Module &M) {
 
           if (Debug || Verbose) {
             errs() << "Merged: " << GetValueName(F1) << ", " << GetValueName(F2)
-                   << " = " << GetValueName(Result.getMergedFunction()) << "\n";
+                   << " = " << GetValueName(Result.getMergedFunction()) << " : " <<
+		   F1->getInstructionCount() << " , " << F2->getInstructionCount() << "\n";
 	    errs() << "Profitable Distance: " << FD2.Distance << "\n";
 	    if (AcrossBlocks) errs() << "Corss Block Merging\n";
           }

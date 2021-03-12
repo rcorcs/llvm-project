@@ -48,6 +48,7 @@ void llvm::initializeIPO(PassRegistry &Registry) {
   initializeFunctionMergingPass(Registry);
   initializeFastFMPass(Registry);
   initializeFMSAPass(Registry);
+  initializeMinSizeAttrLegacyPassPass(Registry);
   initializeMergeSimilarFunctionsPass(Registry); //function-merging Tobias von Koch
   initializePartialInlinerLegacyPassPass(Registry);
   initializeAttributorLegacyPassPass(Registry);

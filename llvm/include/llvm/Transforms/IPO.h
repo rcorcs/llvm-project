@@ -215,6 +215,7 @@ ModulePass *createMergeFunctionsPass();
 ///
 ModulePass *createFunctionMergingPass();
 ModulePass *createFastFMPass();
+ModulePass *createMinSizeAttrPass();
 
 
 /// createMergeSimilarFunctionsPass - This pass discovers similar functions and

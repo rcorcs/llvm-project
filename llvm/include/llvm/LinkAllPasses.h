@@ -195,6 +195,7 @@ namespace {
       (void) llvm::createPostOrderFunctionAttrsLegacyPass();
       (void) llvm::createReversePostOrderFunctionAttrsPass();
       (void) llvm::createMergeFunctionsPass();
+      (void) llvm::createMinSizeAttrPass();
       (void) llvm::createFunctionMergingPass();
       (void) llvm::createFastFMPass();
       (void) llvm::createMergeSimilarFunctionsPass();
