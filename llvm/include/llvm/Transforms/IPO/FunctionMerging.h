@@ -66,6 +66,9 @@
 
 #include "llvm/ADT/SequenceAlignment.h"
 
+#include "llvm/Transforms/IPO/SearchStrategy.h"
+#include "llvm/Transforms/IPO/tsl/robin_map.h"
+
 #include <map>
 #include <vector>
 
