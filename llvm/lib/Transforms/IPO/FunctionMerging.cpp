@@ -1476,23 +1476,158 @@ void FunctionMerger::CodeGenerator<BlockListType>::destroyGeneratedCode() {
 
 unsigned instToInt(Instruction *I);
 
-class Fingerprint;
+inst_range getInstructions(Function* F) {
+  return instructions(F);
+}
+
+iterator_range<BasicBlock::iterator> getInstructions(BasicBlock* BB) {
+  return make_range(BB->begin(), BB->end());
+}
+
+
+template<class T>
+class FingerprintLSH {
+  private:
+    static const size_t rows = 2;
+    static const size_t nHashes = 200;// nHashes determines accuracy of similarity estimation -- 200 hashes around 0.07 error estimation -- e = 1/(sqrt(nHashes))
+                                      // This can also depend on the hashing scheme being used but for now is just the multiple hash function variant
+    static constexpr size_t K = 2;    // The number of instructions defining a shingle. 2 or 3 is best.
+    static constexpr double threshold = 0.3;
+    static constexpr size_t MaxOpcode = 68;
+
+    inline static std::vector<uint32_t> bandHashes;
+    inline static std::vector<uint32_t> shingleHashes;
+    inline static std::vector<uint32_t> randomHashFuncs;
+    inline static SearchStrategy<std::vector<uint32_t>> searchStrategy;
+
+  public:
+    static const size_t bands = 100;  // e.g. 4 rows and 50 bands -- threshold around 40% similarity -- t = (1/b)^(1/r)
+    uint64_t magnitude;
+    uint32_t hash[nHashes];
+    uint32_t bandHash[bands];
+
+  public:
+    FingerprintLSH(): magnitude(0) {};
+
+    FingerprintLSH(T owner) : magnitude(0) {
+      std::vector<uint32_t> opcodes;
+      uint32_t OpcodeFreq[MaxOpcode];
+	 
+      for (Instruction &I : getInstructions(owner)) {
+          opcodes.push_back(instToInt(&I));
+          OpcodeFreq[I.getOpcode()]++;
+          if (I.isTerminator()) 
+            OpcodeFreq[0] += I.getNumSuccessors();
+      }
+
+      for (size_t i = 0; i < MaxOpcode; ++i)
+        magnitude += OpcodeFreq[i] * OpcodeFreq[i];
+
+      updateHashes(opcodes);
+    }
+
+    static void initialize(){
+      bandHashes.resize(bands);
+      shingleHashes.resize(nHashes);
+      randomHashFuncs.resize(nHashes - 1);
+      searchStrategy.generateRandomHashFunctions(nHashes - 1, randomHashFuncs);
+    }
+
+    void updateHashes(std::vector<uint32_t> &opcodes) {
+      searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(opcodes, nHashes, shingleHashes, randomHashFuncs);
+      searchStrategy.generateBands(shingleHashes, rows, bands, bandHashes);
+      for (size_t i = 0; i < nHashes; ++i)
+        hash[i] = shingleHashes[i];
+      for (size_t i = 0; i < bands; ++i)
+        bandHash[i] = bandHashes[i];
+    }
+
+    uint32_t footprint() {
+      return sizeof(uint32_t) * (nHashes + bands);
+    }
+
+
+    float distance(FingerprintLSH* FP2) {
+      size_t nintersect = 0;
+      size_t pos1 = 0;
+      size_t pos2 = 0;
+      size_t s = 0;
+
+      const size_t smax = (int)std::ceil((1.0 - threshold) / (1.0 + threshold) * 2 * nHashes);
+
+      while (pos1 < nHashes && pos2 < nHashes) {
+        if (hash[pos1] == FP2->hash[pos2]) {
+            nintersect++;
+            pos1++;
+            pos2++;
+        } else if (hash[pos1] < FP2->hash[pos2]) {
+            pos1++;
+            s++;
+        } else {
+            pos2++;
+            s++;
+        }
+
+        if (s > smax)
+            return 1.0;
+      }
+
+      int nunion = 2 * nHashes - nintersect;
+      return 1.f - (nintersect / (float)nunion);
+    }
+};
+
+
+template<class T>
+class Fingerprint {
+public:
+  uint64_t magnitude;
+  static const size_t MaxOpcode = 68;
+  int OpcodeFreq[MaxOpcode];
+
+  Fingerprint() : magnitude(0) {}
+
+  Fingerprint(T owner) : magnitude(0) {
+    //memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
+    for (size_t i = 0; i<MaxOpcode; i++)
+      OpcodeFreq[i] = 0;
+
+    for (Instruction &I : getInstructions(owner)) {
+      OpcodeFreq[I.getOpcode()]++;
+      if (I.isTerminator()) 
+        OpcodeFreq[0] += I.getNumSuccessors();
+    }
+    for (size_t i = 0; i < MaxOpcode; i++)
+      magnitude += OpcodeFreq[i] * OpcodeFreq[i];
+  }
+
+  uint32_t footprint() {
+    return sizeof(int) * MaxOpcode;
+  }
+
+  float distance(Fingerprint* FP2) {
+    int Distance = 0;
+    for (size_t i = 0; i < MaxOpcode; i++) {
+      int Freq1 = OpcodeFreq[i];
+      int Freq2 = FP2->OpcodeFreq[i];
+      Distance += std::abs(Freq1-Freq2);
+    }
+    return Distance;
+  }
+};
+
 
 class FunctionData {
 public:
   Function *F;
-  Fingerprint *FP;
+  FingerprintLSH<Function*> *FP;
   size_t Size;
   int Distance;
   std::list<FunctionData>::iterator iterator;
 
   FunctionData() : F(nullptr), FP(nullptr), Size(0), Distance(0) {}
-  FunctionData(Function *F, Fingerprint *FP, size_t Size) : F(F), FP(FP), Size(Size), Distance(0) {}
+  FunctionData(Function *F, FingerprintLSH<Function*> *FP, size_t Size) : F(F), FP(FP), Size(Size), Distance(0) {}
 };
-
-struct LSH {
-  std::vector<tsl::robin_map<uint32_t, std::vector<FunctionData*>>> bands;
-} lsh;
 
 
 class BlockData {
@@ -1519,293 +1654,12 @@ public:
     for (Instruction &I : *BB) {
       if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
         Size++;
-  Encoding = BBEncoder(&I, Encoding);
+        Encoding = BBEncoder(&I, Encoding);
       } else if (isa<LandingPadInst>(&I))
-  Encoding = BBEncoder(&I, Encoding);
+        Encoding = BBEncoder(&I, Encoding);
     }
   }
 };
-
-
-class Fingerprint {
-  public:
-    Function *F;
-    BasicBlock *BB;
-
-  private:
-    static const size_t rows = 2;
-    static const size_t bands = 100;  // e.g. 4 rows and 50 bands -- threshold around 40% similarity -- t = (1/b)^(1/r)
-    static const size_t nHashes = 200;// nHashes determines accuracy of similarity estimation -- 200 hashes around 0.07 error estimation -- e = 1/(sqrt(nHashes))
-                                      // This can also depend on the hashing scheme being used but for now is just the multiple hash function variant
-    static constexpr size_t K = 2;    // The number of instructions defining a shingle. 2 or 3 is best.
-    static constexpr double threshold = 0.3;
-
-    inline static std::vector<tsl::robin_map<uint32_t, std::vector<FunctionData>>> flsh;
-    inline static std::vector<tsl::robin_map<uint32_t, std::vector<BlockData>>> bblsh;
-    inline static std::vector<uint32_t> bandHashes;
-    inline static std::vector<uint32_t> shingleHashes;
-    inline static std::vector<uint32_t> randomHashFuncs;
-    inline static SearchStrategy<std::vector<uint32_t>> searchStrategy;
-
-    uint32_t hash[nHashes];
-    uint32_t bandHash[bands];
-
-  public:
-    Fingerprint(): F(nullptr), BB(nullptr) {};
-
-    Fingerprint(Function *F) : F(F), BB(nullptr) {
-      std::vector<uint32_t> opcodes;
-      for (Instruction &I : instructions(F))
-          opcodes.push_back(instToInt(&I));
-
-      updateHashes(opcodes);
-    }
-
-    Fingerprint(BasicBlock *BB) : F(nullptr), BB(BB) {
-      std::vector<uint32_t> opcodes;
-      for (Instruction &I : *BB)
-          opcodes.push_back(instToInt(&I));
-
-      updateHashes(opcodes);
-    }
-
-    static void initialize(){
-      flsh.resize(bands);
-      bblsh.resize(bands);
-      bandHashes.resize(bands);
-      shingleHashes.resize(nHashes);
-      randomHashFuncs.resize(nHashes - 1);
-      searchStrategy.generateRandomHashFunctions(nHashes - 1, randomHashFuncs);
-    }
-
-    void register_function(FunctionData &FD) {
-      for (size_t i = 0; i < bands; ++i) {
-        if (flsh[i].count(bandHash[i]) > 0)
-          flsh[i].at(bandHash[i]).push_back(FD);
-        else
-          flsh[i].insert(std::make_pair(bandHash[i], std::vector<FunctionData>(1, FD)));
-      }
-    }
-
-    void unregister_function(FunctionData &FD) {
-      for (size_t i = 0; i < bands; ++i) {
-        if (flsh[i].count(bandHash[i]) == 0)
-          continue;
-
-        auto &foundFs = flsh[i].at(bandHash[i]);
-        for (size_t j = 0; j < foundFs.size(); ++j)
-          if (foundFs[j].F == FD.F)
-            flsh[i].at(bandHash[i]).erase(flsh[i].at(bandHash[i]).begin() + j);
-      }
-    }
-
-    void register_block(BlockData &BBD) {
-      for (size_t i = 0; i < bands; ++i) {
-        if (bblsh[i].count(bandHash[i]) > 0)
-            bblsh[i].at(bandHash[i]).push_back(BBD);
-        else
-            bblsh[i].insert(std::make_pair(bandHash[i], std::vector<BlockData>(1, BBD)));
-      }
-    }
-
-    void updateHashes(std::vector<uint32_t> &opcodes) {
-      searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(opcodes, nHashes, shingleHashes, randomHashFuncs);
-      searchStrategy.generateBands(shingleHashes, rows, bands, bandHashes);
-      for (size_t i = 0; i < nHashes; ++i)
-        hash[i] = shingleHashes[i];
-      for (size_t i = 0; i < bands; ++i)
-        bandHash[i] = bandHashes[i];
-    }
-
-    uint32_t magnitude() {
-      uint32_t num = 0;
-      for (size_t i = 0; i < nHashes; ++i)
-        num += hash[i] * hash[i];
-      return num;
-    }
-
-    uint32_t footprint() {
-      return sizeof(uint32_t) * (nHashes + bands);
-    }
-
-    std::vector<FunctionData> get_similar_functions() {
-      std::vector<FunctionData> similar;
-      for (size_t i = 0; i < bands; ++i) {
-        if (flsh[i].count(bandHash[i]) <= 0)
-          continue;
-
-        auto &foundFs = flsh[i].at(bandHash[i]);
-        for (size_t j = 0; j < foundFs.size(); ++j) {
-          FunctionData &FD2 = foundFs[j];
-          if ((FD2.F == NULL) || (FD2.F == F))
-            continue;
-          similar.push_back(FD2);
-        }
-      }
-	  return similar;
-    }
-
-
-    class Distances {
-    public:
-      static int manhattan(Fingerprint *FP1, Fingerprint *FP2) {
-        int Distance = 0;
-        for (size_t i = 0; i < nHashes; ++i) {
-          int Freq1 = FP1->hash[i];
-          int Freq2 = FP2->hash[i];
-          Distance += std::abs(Freq1-Freq2);
-        }
-        return Distance;
-      }
-
-      static float euclidean(Fingerprint *FP1, Fingerprint *FP2) {
-        int Sum = 0;
-        for (size_t i = 0; i < nHashes; i++) {
-          int Freq1 = FP1->hash[i];
-          int Freq2 = FP2->hash[i];
-          int Sub = Freq1-Freq2;
-          Sum += Sub*Sub;
-        }
-        float Distance = std::sqrt((float)Sum);
-        return Distance;
-      }
-
-      static float cosine(Fingerprint *FP1, Fingerprint *FP2) {
-        int AB = 0;
-        int A2 = 0;
-        int B2 = 0;
-        for (size_t i = 0; i < nHashes; i++) {
-          int Freq1 = FP1->hash[i];
-          int Freq2 = FP2->hash[i];
-          AB += Freq1*Freq2;
-          A2 += Freq1*Freq1;
-          B2 += Freq2*Freq2;
-        }
-        float Similarity = ((float)AB)/(std::sqrt((float)A2)*std::sqrt((float)B2));
-        float Distance = 1.f - Similarity;
-        return Distance;
-      }
-
-      static float jaccard(Fingerprint *FP1, Fingerprint *FP2) {
-        size_t nintersect = 0;
-        size_t pos1 = 0;
-        size_t pos2 = 0;
-        size_t s = 0;
-
-        const size_t smax = (int)std::ceil((1.0 - threshold) / (1.0 + threshold) * 2 * FP1->nHashes);
-
-        while (pos1 < FP1->nHashes && pos2 < FP2->nHashes) {
-          if (FP1->hash[pos1] == FP2->hash[pos2]) {
-              nintersect++;
-              pos1++;
-              pos2++;
-          } else if (FP1->hash[pos1] < FP2->hash[pos2]) {
-              pos1++;
-              s++;
-          } else {
-              pos2++;
-              s++;
-          }
-
-          if (s > smax)
-              return 1.0;
-        }
-
-        int nunion = 2 * nHashes - nintersect;
-        return 1.f - (nintersect / (float)nunion);
-      }
-    };
-};
-
-/*
-class Fingerprint {
-public:
-  static const size_t MaxOpcode = 68;
-  int OpcodeFreq[MaxOpcode];
-  Function *F;
-  BasicBlock *BB;
-
-  Fingerprint() : F(nullptr), BB(nullptr) {}
-
-  Fingerprint(Function *F) : F(F), BB(nullptr) {
-    //memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
-    for (size_t i = 0; i<MaxOpcode; i++) OpcodeFreq[i] = 0;
-
-    for (Instruction &I : instructions(F)) {
-      OpcodeFreq[I.getOpcode()]++;
-      if (I.isTerminator()) 
-        OpcodeFreq[0] += I.getNumSuccessors();
-    }
-  }
-
-
-  Fingerprint(BasicBlock *BB) : F(BB->getParent()), BB(BB) {
-    //memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
-    for (size_t i = 0; i<MaxOpcode; i++) OpcodeFreq[i] = 0;
-
-    // NumOfInstructions = 0;
-    for (Instruction &I : *BB) {
-      OpcodeFreq[I.getOpcode()]++;
-      if (I.isTerminator()) 
-        OpcodeFreq[0] += I.getNumSuccessors();
-    }
-  }
-
-  uint32_t magnitude() {
-    uint32_t num = 0;
-    for (unsigned i = 0; i < MaxOpcode; i++) {
-      auto Val = FD2.FP->OpcodeFreq[i];
-      num += Val * Val;
-    }
-  }
-
-  uint32_t footprint() {
-    return sizeof(int) * MaxOpcode;
-  }
-
-
-  class Distances {
-  public:
-    static int manhattan(Fingerprint *FP1, Fingerprint *FP2) {
-      int Distance = 0;
-      for (size_t i = 0; i < Fingerprint::MaxOpcode; i++) {
-        int Freq1 = FP1->OpcodeFreq[i];
-        int Freq2 = FP2->OpcodeFreq[i];
-        Distance += std::abs(Freq1-Freq2);
-      }
-      return Distance;
-    }
-
-    static float euclidean(Fingerprint *FP1, Fingerprint *FP2) {
-      int Sum = 0;
-      for (size_t i = 0; i < Fingerprint::MaxOpcode; i++) {
-        int Freq1 = FP1->OpcodeFreq[i];
-        int Freq2 = FP2->OpcodeFreq[i];
-        int Sub = Freq1-Freq2;
-        Sum += Sub*Sub;
-      }
-      float Distance = std::sqrt((float)Sum);
-      return Distance;
-    }
-
-    static float cosine(Fingerprint *FP1, Fingerprint *FP2) {
-      int AB = 0;
-      int A2 = 0;
-      int B2 = 0;
-      for (size_t i = 0; i < Fingerprint::MaxOpcode; i++) {
-        int Freq1 = FP1->OpcodeFreq[i];
-        int Freq2 = FP2->OpcodeFreq[i];
-        AB += Freq1*Freq2;
-        A2 += Freq1*Freq1;
-        B2 += Freq2*Freq2;
-      }
-      float Similarity = ((float)AB)/(std::sqrt((float)A2)*std::sqrt((float)B2));
-      float Distance = 1.f - Similarity;
-      return Distance;
-    }
-  };
-};
-*/
 
 std::vector<Type*> TypesEncoding;
 std::vector<Value*> CallEncoding;
@@ -1850,13 +1704,14 @@ int HashEncoder(Instruction *I, int Encoding) {
   return Encoding+InstEnc+TyEnc;
 }
 
-class BlockFingerprint : public Fingerprint {
+class BlockFingerprint : public Fingerprint<BasicBlock*> {
 public:
+  BasicBlock* BB;
   size_t Size;
 
   BlockFingerprint() : Size(0) {}
 
-  BlockFingerprint(BasicBlock *BB) : Fingerprint(BB) {
+  BlockFingerprint(BasicBlock *BB) : Fingerprint(BB), BB(BB) {
     Size = 0;
     for (Instruction &I : *BB) {
       if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
@@ -1864,12 +1719,64 @@ public:
       }
     }
   }
-
-  int distance(BlockFingerprint &BF) {
-    return Fingerprint::Distances::jaccard(this, &BF);
-  }
-
 };
+
+class RankerLSH {
+  private:
+    size_t bands;
+    std::vector<tsl::robin_map<uint32_t, std::vector<FunctionData>>> lsh;
+
+  public:
+    RankerLSH() : bands(1) {
+      lsh.resize(bands);
+    }
+
+    RankerLSH(size_t bands) : bands(bands) {
+      lsh.resize(bands);
+    }
+
+    void register_fp(FunctionData &FD) {
+      auto& bandHash = FD.FP->bandHash;
+      for (size_t i = 0; i < bands; ++i) {
+        if (lsh[i].count(bandHash[i]) > 0)
+          lsh[i].at(bandHash[i]).push_back(FD);
+        else
+          lsh[i].insert(std::make_pair(bandHash[i], std::vector<FunctionData>(1, FD)));
+      }
+    }
+
+    void unregister_fp(FunctionData &FD) {
+      auto& bandHash = FD.FP->bandHash;
+      for (size_t i = 0; i < bands; ++i) {
+        if (lsh[i].count(bandHash[i]) == 0)
+          continue;
+
+        auto& foundFs = lsh[i].at(bandHash[i]);
+        for (size_t j = 0; j < foundFs.size(); ++j)
+          if (foundFs[j].F == FD.F)
+            lsh[i].at(bandHash[i]).erase(lsh[i].at(bandHash[i]).begin() + j);
+      }
+    }
+
+    std::vector<FunctionData> get_similar_functions(FunctionData& FD) {
+      auto& bandHash = FD.FP->bandHash;
+      std::vector<FunctionData> similar;
+      for (size_t i = 0; i < bands; ++i) {
+        if (lsh[i].count(bandHash[i]) <= 0)
+          continue;
+
+        auto &foundFs = lsh[i].at(bandHash[i]);
+        for (size_t j = 0; j < foundFs.size(); ++j) {
+          FunctionData& FD2 = foundFs[j];
+          if ((FD2.F == NULL) || (FD2.F == FD.F))
+            continue;
+          similar.push_back(FD2);
+        }
+      }
+      return similar;
+    }
+};
+
 
 bool AcrossBlocks;
 
@@ -1930,7 +1837,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
         auto BestIt = Blocks.end();
         int BestDist = std::numeric_limits<int>::max();
         for (auto BDIt = Blocks.begin(), E = Blocks.end(); BDIt!=E; BDIt++) {
-          auto D = BD2.distance(*BDIt);
+          auto D = BD2.distance(&(*BDIt));
           //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
           if (D<BestDist) {
             BestDist = D;
@@ -1942,7 +1849,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
           auto &BD1 = *BestIt;
           BasicBlock *BB1 = BD1.BB;
 
-          //auto D = BD2.distance(BD1);
+          //auto D = BD2.distance(&BD1);
           //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
     
           SmallVector<Value*,8> BB1Vec;
@@ -2142,7 +2049,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   size_t BestDist = std::numeric_limits<size_t>::max();
   for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt!=E; BDIt++) {
     //auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
-    auto D = BD2.distance(*BDIt);
+    auto D = BD2.distance(&(*BDIt));
     //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
     //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
     if (D<BestDist) {
@@ -2156,7 +2063,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     BasicBlock *BB1 = BD1.BB;
     
       //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist << "\n";
-      //auto D = BD2.distance(BD1);
+      //auto D = BD2.distance(&BD1);
       //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
 
       auto It1 = BB1->begin();
@@ -2295,12 +2202,12 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
       }
       
       for (BasicBlock &BIt : *F2) {
-  NumBB2 ++;
-  BasicBlock *BB2 = &BIt;
-  //BlockData BD2(BB2, HashEncoder);
+        NumBB2 ++;
+        BasicBlock *BB2 = &BIt;
+        //BlockData BD2(BB2, HashEncoder);
         BlockFingerprint BD2(BB2);
   
-  auto &SetRef = BlocksF1[BD2.Size];
+        auto &SetRef = BlocksF1[BD2.Size];
 
   /*
   std::sort(SetRef.begin(), SetRef.end(), [&](auto &A, auto &B) -> bool {
@@ -2316,7 +2223,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   size_t BestDist = std::numeric_limits<size_t>::max();
   for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt!=E; BDIt++) {
     //auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
-    auto D = BD2.distance(*BDIt);
+    auto D = BD2.distance(&(*BDIt));
     //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
     //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
     if (D<BestDist) {
@@ -2330,7 +2237,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     BasicBlock *BB1 = BD1.BB;
     
       //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist << "\n";
-      //auto D = BD2.distance(BD1);
+      //auto D = BD2.distance(&BD1);
       //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
 
             auto It1 = BB1->begin();
@@ -2560,7 +2467,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   size_t BestDist = std::numeric_limits<size_t>::max();
   for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt!=E; BDIt++) {
     //auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
-    auto D = BD2.distance(*BDIt);
+    auto D = BD2.distance(&(*BDIt));
     //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
     //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
     if (D<BestDist) {
@@ -2570,30 +2477,19 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   }
   bool MergedBlocks = false;
   if (BestIt!=SetRef.end()) {
-          auto &BD1 = *BestIt;
+    auto &BD1 = *BestIt;
     BasicBlock *BB1 = BD1.BB;
     
       //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist << "\n";
-      //auto D = BD2.distance(BD1);
+      //auto D = BD2.distance(&BD1);
       //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
 
-
-
-
-
-
-
-
-
-
-
-
-          SmallVector<Value*,8> BB1Vec;
-          SmallVector<Value*,8> BB2Vec;
+    SmallVector<Value*,8> BB1Vec;
+    SmallVector<Value*,8> BB2Vec;
 
     BB1Vec.push_back(BB1);
     for (auto &I : *BB1) {
-            if(!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
+      if(!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
         BB1Vec.push_back(&I);
     }
 
@@ -2775,7 +2671,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   auto BestIt = Blocks.end();
   int BestDist = std::numeric_limits<int>::max();
   for (auto BDIt = Blocks.begin(), E = Blocks.end(); BDIt!=E; BDIt++) {
-    auto D = BD2.distance(*BDIt);
+    auto D = BD2.distance(&(*BDIt));
     //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
     if (D<BestDist) {
       BestDist = D;
@@ -2789,7 +2685,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
 
       //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist << "\n";
-      //auto D = BD2.distance(BD1);
+      //auto D = BD2.distance(&BD1);
       //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
 
             auto It1 = BB1->begin();
@@ -3829,7 +3725,7 @@ static void printAverageDistance(FunctionMerger &FM, std::vector<FunctionData> &
       if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
         continue;
 
-      auto Dist = Fingerprint::Distances::manhattan(FD1.FP, FD2.FP);
+      auto Dist = FD1.FP->distance(FD2.FP);
       FD2.Distance = Dist;
       if (Dist < BestDist) {
         BestDist = Dist;
@@ -3888,82 +3784,27 @@ bool FunctionMerging::runOnModule(Module &M) {
   TimeTotal.startTimer();
 #endif
 
-  Fingerprint::initialize();
+  FingerprintLSH<Function*>::initialize();
+  RankerLSH ranker(FingerprintLSH<Function*>::bands);
 
   for (auto &F : M) {
     if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
     
     errs() << "FNSize: " << F.getName() << " : " << F.getInstructionCount() << "\n";
-    FunctionData FD(&F, new Fingerprint(&F), EstimateFunctionSize(&F, &TTI));
+    FunctionData FD(&F, new FingerprintLSH<Function*>(&F), EstimateFunctionSize(&F, &TTI));
     FunctionsToProcess.push_back(FD);
+    ranker.register_fp(FD);
   }
   errs() << "Number of Functions: " << FunctionsToProcess.size() << "\n";
 
   
-  /*
-  //shuffled
-  std::srand ( 0 );
-  std::random_shuffle ( FunctionsToProcess.begin(), FunctionsToProcess.end() );
-  */
-
-  /*
-  //size of functions
-  std::sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
-            CompareFunctionDataScores);
-  */
- 
-  /*
-  //fingerprint average 
   std::stable_sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
       [&](auto &FD1, auto &FD2) -> bool {
-        unsigned Sum1 = 0;
-        for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
-          Sum1 += FD1.FP->OpcodeFreq[i];
-  }
-        unsigned Sum2 = 0;
-        for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
-          Sum2 += FD2.FP->OpcodeFreq[i];
-  }
-  float Avg1 = ((float)Sum1)/((float)Fingerprint::MaxOpcode);
-  float Avg2 = ((float)Sum2)/((float)Fingerprint::MaxOpcode);
-  return Avg1 > Avg2;
+        return FD1.FP->magnitude > FD2.FP->magnitude;
   });
-  */
-  
-  /*
-  //max element in fingerprint
-  std::stable_sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
-      [&](auto &FD1, auto &FD2) -> bool {
-  int Max1 = -1;
-        for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
-          auto Val = FD1.FP->OpcodeFreq[i];
-    Max1 = (Val>Max1)?Val:Max1;
-  }
-  int Max2 = -1;
-        for (unsigned i = 0; i < Fingerprint::MaxOpcode; i++) {
-          auto Val = FD2.FP->OpcodeFreq[i];
-    Max2 = (Val>Max2)?Val:Max2;
-  }
-  return Max1 > Max2;
-  });
-  */
 
-  //fingerprint magnitude
-  std::stable_sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
-      [&](auto &FD1, auto &FD2) -> bool {
-        unsigned Sum1 = FD1.FP->magnitude();
-        unsigned Sum2 = FD2.FP->magnitude();
-        float Sqrt1 = std::sqrt((float)Sum1);
-        float Sqrt2 = std::sqrt((float)Sum2);
-        return Sqrt1 > Sqrt2;
-  });
-  
-
-  FunctionMerger FM(&M);//,PSI,LookupBFI);
-
-  //printAverageDistance(FM, FunctionsToProcess, Options);
-  //return false;
+  FunctionMerger FM(&M);
 
 #ifdef TIME_STEPS_DEBUG
   TimePreProcess.stopTimer();
@@ -3973,11 +3814,6 @@ bool FunctionMerging::runOnModule(Module &M) {
   for (auto &FD : FunctionsToProcess) {
     WorkList.push_back(FD);
   }
-
-  for (auto &FD : WorkList) {
-    FD.FP->register_function(FD);
-  }
-
 
   unsigned TotalMerges = 0;
   unsigned TotalOpReorder = 0;
@@ -4006,13 +3842,13 @@ bool FunctionMerging::runOnModule(Module &M) {
     unsigned CountCandidates = 0;
     if (ExplorationThreshold > 1) {
       if (EnableSean) {
-        for (auto &FD2 : FD1.FP->get_similar_functions()) {
+        for (auto &FD2 : ranker.get_similar_functions(FD1)) {
           Function *F2 = FD2.F;
 
           if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
             continue;
 
-          FD2.Distance = Fingerprint::Distances::jaccard(FD1.FP, FD2.FP);
+          FD2.Distance = FD1.FP->distance(FD2.FP);
           Rank.push_back(FD2);
           if (RankingThreshold && CountCandidates>RankingThreshold)
             break;
@@ -4026,7 +3862,7 @@ bool FunctionMerging::runOnModule(Module &M) {
           if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
             continue;
 
-          FD2.Distance = Fingerprint::Distances::jaccard(FD1.FP, FD2.FP);
+          FD2.Distance = FD1.FP->distance(FD2.FP);
           Rank.push_back(FD2);
           if (RankingThreshold && CountCandidates>RankingThreshold)
             break;
@@ -4041,13 +3877,13 @@ bool FunctionMerging::runOnModule(Module &M) {
       int BestDist = std::numeric_limits<int>::max();
 
       if (EnableSean) {
-        for (auto &FD2 : FD1.FP->get_similar_functions()) {
+        for (auto &FD2 : ranker.get_similar_functions(FD1)) {
           Function *F2 = FD2.F;
 
           if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
             continue;
 
-          FD2.Distance = Fingerprint::Distances::jaccard(FD1.FP, FD2.FP);
+          FD2.Distance = FD1.FP->distance(FD2.FP);
           if (FD2.Distance < BestDist) {
             BestDist = FD2.Distance;
             BestFD = FD2;
@@ -4065,7 +3901,7 @@ bool FunctionMerging::runOnModule(Module &M) {
           if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
             continue;
 
-          FD2.Distance = Fingerprint::Distances::jaccard(FD1.FP, FD2.FP);
+          FD2.Distance = FD1.FP->distance(FD2.FP);
           if (FD2.Distance < BestDist) {
             BestDist = FD2.Distance;
             BestFD = FD2;
@@ -4086,7 +3922,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 
     unsigned MergingTrialsCount = 0;
 
-    FD1.FP->unregister_function(FD1);
+    ranker.unregister_fp(FD1);
     delete FD1.FP;
     FD1.FP = nullptr;
 
@@ -4207,17 +4043,17 @@ bool FunctionMerging::runOnModule(Module &M) {
       WorkList.erase(it);
     }
 
-    FD2.FP->unregister_function(FD2);
+    ranker.unregister_fp(FD2);
     delete FD2.FP;
     FD2.FP = nullptr;
 
     if (ReuseMergedFunctions) {
       // feed new function back into the working lists
       FunctionData MFD(Result.getMergedFunction(),
-                            new Fingerprint(Result.getMergedFunction()),
+                            new FingerprintLSH<Function*>(Result.getMergedFunction()),
       EstimateFunctionSize(Result.getMergedFunction(), &TTI));
       WorkList.push_front(MFD);
-      MFD.FP->register_function(MFD);
+      ranker.register_fp(MFD);
     }
 #ifdef TIME_STEPS_DEBUG
     TimeUpdate.stopTimer();
