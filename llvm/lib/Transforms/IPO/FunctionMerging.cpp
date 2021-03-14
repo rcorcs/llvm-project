@@ -1512,7 +1512,7 @@ class FingerprintLSH {
     FingerprintLSH(T owner) : magnitude(0) {
       std::vector<uint32_t> opcodes;
       uint32_t OpcodeFreq[MaxOpcode];
-	 
+   
       for (Instruction &I : getInstructions(owner)) {
           opcodes.push_back(instToInt(&I));
           OpcodeFreq[I.getOpcode()]++;
@@ -3874,7 +3874,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     } else {
       FunctionData BestFD;
       bool found = false;
-      int BestDist = std::numeric_limits<int>::max();
+      float BestDist = std::numeric_limits<float>::max();
 
       if (EnableSean) {
         for (auto &FD2 : ranker.get_similar_functions(FD1)) {
@@ -3888,6 +3888,8 @@ bool FunctionMerging::runOnModule(Module &M) {
             BestDist = FD2.Distance;
             BestFD = FD2;
             found = true;
+            if (BestDist < 0.000001)
+              break;
           }
           if (RankingThreshold && CountCandidates>RankingThreshold)
             break;
