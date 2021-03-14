@@ -1540,8 +1540,8 @@ class Fingerprint {
     static constexpr size_t K = 2;    // The number of instructions defining a shingle. 2 or 3 is best.
     static constexpr double threshold = 0.3;
 
-    inline static std::vector<tsl::robin_map<uint32_t, std::vector<FunctionData*>>> flsh;
-    inline static std::vector<tsl::robin_map<uint32_t, std::vector<BlockData*>>> bblsh;
+    inline static std::vector<tsl::robin_map<uint32_t, std::vector<FunctionData>>> flsh;
+    inline static std::vector<tsl::robin_map<uint32_t, std::vector<BlockData>>> bblsh;
     inline static std::vector<uint32_t> bandHashes;
     inline static std::vector<uint32_t> shingleHashes;
     inline static std::vector<uint32_t> randomHashFuncs;
@@ -1578,33 +1578,33 @@ class Fingerprint {
       searchStrategy.generateRandomHashFunctions(nHashes - 1, randomHashFuncs);
     }
 
-    void register_function(FunctionData *FD) {
+    void register_function(FunctionData &FD) {
       for (size_t i = 0; i < bands; ++i) {
         if (flsh[i].count(bandHash[i]) > 0)
           flsh[i].at(bandHash[i]).push_back(FD);
         else
-          flsh[i].insert(std::make_pair(bandHash[i], std::vector<FunctionData*>(1, FD)));
+          flsh[i].insert(std::make_pair(bandHash[i], std::vector<FunctionData>(1, FD)));
       }
     }
 
-    void unregister_function(FunctionData *FD) {
+    void unregister_function(FunctionData &FD) {
       for (size_t i = 0; i < bands; ++i) {
         if (flsh[i].count(bandHash[i]) == 0)
           continue;
 
         auto &foundFs = flsh[i].at(bandHash[i]);
         for (size_t j = 0; j < foundFs.size(); ++j)
-          if (foundFs[j] == FD)
+          if (foundFs[j].F == FD.F)
             flsh[i].at(bandHash[i]).erase(flsh[i].at(bandHash[i]).begin() + j);
       }
     }
 
-    void register_block(BlockData *BBD) {
+    void register_block(BlockData &BBD) {
       for (size_t i = 0; i < bands; ++i) {
         if (bblsh[i].count(bandHash[i]) > 0)
             bblsh[i].at(bandHash[i]).push_back(BBD);
         else
-            bblsh[i].insert(std::make_pair(bandHash[i], std::vector<BlockData*>(1, BBD)));
+            bblsh[i].insert(std::make_pair(bandHash[i], std::vector<BlockData>(1, BBD)));
       }
     }
 
@@ -1624,25 +1624,25 @@ class Fingerprint {
       return num;
     }
 
-  uint32_t footprint() {
-    return sizeof(uint32_t) * (nHashes + bands);
-  }
+    uint32_t footprint() {
+      return sizeof(uint32_t) * (nHashes + bands);
+    }
 
-
-    std::list<FunctionData*> get_similar_functions() {
-      std::list<FunctionData*> similar;
+    std::vector<FunctionData> get_similar_functions() {
+      std::vector<FunctionData> similar;
       for (size_t i = 0; i < bands; ++i) {
         if (flsh[i].count(bandHash[i]) <= 0)
           continue;
 
         auto &foundFs = flsh[i].at(bandHash[i]);
         for (size_t j = 0; j < foundFs.size(); ++j) {
-          FunctionData *FD2 = foundFs[j];
-          if ((FD2 == NULL) || (FD2->F == F))
+          FunctionData &FD2 = foundFs[j];
+          if ((FD2.F == NULL) || (FD2.F == F))
             continue;
           similar.push_back(FD2);
         }
       }
+	  return similar;
     }
 
 
@@ -3897,9 +3897,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     errs() << "FNSize: " << F.getName() << " : " << F.getInstructionCount() << "\n";
     FunctionData FD(&F, new Fingerprint(&F), EstimateFunctionSize(&F, &TTI));
     FunctionsToProcess.push_back(FD);
-    FD.FP->register_function(&FD);
   }
-
   errs() << "Number of Functions: " << FunctionsToProcess.size() << "\n";
 
   
@@ -3976,6 +3974,11 @@ bool FunctionMerging::runOnModule(Module &M) {
     WorkList.push_back(FD);
   }
 
+  for (auto &FD : WorkList) {
+    FD.FP->register_function(FD);
+  }
+
+
   unsigned TotalMerges = 0;
   unsigned TotalOpReorder = 0;
   unsigned TotalBinOps = 0;
@@ -4003,8 +4006,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     unsigned CountCandidates = 0;
     if (ExplorationThreshold > 1) {
       if (EnableSean) {
-        for (auto It : FD1.FP->get_similar_functions()) {
-          FunctionData &FD2 = *It;
+        for (auto &FD2 : FD1.FP->get_similar_functions()) {
           Function *F2 = FD2.F;
 
           if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
@@ -4039,8 +4041,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       int BestDist = std::numeric_limits<int>::max();
 
       if (EnableSean) {
-        for (auto It : FD1.FP->get_similar_functions()) {
-          FunctionData &FD2 = *It;
+        for (auto &FD2 : FD1.FP->get_similar_functions()) {
           Function *F2 = FD2.F;
 
           if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
@@ -4085,7 +4086,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 
     unsigned MergingTrialsCount = 0;
 
-    FD1.FP->unregister_function(&FD1);
+    FD1.FP->unregister_function(FD1);
     delete FD1.FP;
     FD1.FP = nullptr;
 
@@ -4206,7 +4207,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       WorkList.erase(it);
     }
 
-    FD2.FP->unregister_function(&FD2);
+    FD2.FP->unregister_function(FD2);
     delete FD2.FP;
     FD2.FP = nullptr;
 
@@ -4216,7 +4217,7 @@ bool FunctionMerging::runOnModule(Module &M) {
                             new Fingerprint(Result.getMergedFunction()),
       EstimateFunctionSize(Result.getMergedFunction(), &TTI));
       WorkList.push_front(MFD);
-      MFD.FP->register_function(&MFD);
+      MFD.FP->register_function(MFD);
     }
 #ifdef TIME_STEPS_DEBUG
     TimeUpdate.stopTimer();
