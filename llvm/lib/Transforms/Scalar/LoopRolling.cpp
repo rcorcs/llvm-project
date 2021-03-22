@@ -48,6 +48,9 @@ static cl::opt<int>
 SizeThreshold("loop-rolling-size-threshold", cl::init(2), cl::Hidden,
                  cl::desc("Size threshold for the loop rolling profitability analysis"));
 
+static cl::opt<bool>
+MatchAlignment("loop-rolling-match-alignment", cl::init(false), cl::Hidden,
+                 cl::desc("Consider alignment while matching instructions"));
 
 static std::string demangle(const char* name) {
   int status = -1;
@@ -178,12 +181,12 @@ static bool match(Value *V1, Value *V2) {
     case Instruction::Load: {
       auto *LI1 = dyn_cast<LoadInst>(I1);
       auto *LI2 = dyn_cast<LoadInst>(I2);
-      return LI1->getAlign()==LI2->getAlign();
+      return (MatchAlignment?(LI1->getAlign()==LI2->getAlign()):true);
     }
     case Instruction::Store: {
       auto *SI1 = dyn_cast<StoreInst>(I1);
       auto *SI2 = dyn_cast<StoreInst>(I2);
-      return SI1->getAlign()==SI2->getAlign();
+      return (MatchAlignment?(SI1->getAlign()==SI2->getAlign()):true);
     }
     case Instruction::GetElementPtr: {
       auto *GEP1 = dyn_cast<GetElementPtrInst>(I1);
@@ -548,11 +551,15 @@ public:
     case Instruction::Or:
     case Instruction::Xor:
       return ConstantInt::get(Ty, 0);
+    case Instruction::FAdd:
+      return ConstantFP::get(Ty, 0.0);
     case Instruction::Mul:
     case Instruction::UDiv:
     case Instruction::SDiv:
     case Instruction::And:
       return ConstantInt::get(Ty, 1);
+    case Instruction::FMul:
+      return ConstantFP::get(Ty, 1.0);
     default:
       return nullptr;
     }
@@ -561,11 +568,14 @@ public:
   static bool isValidOperation(BinaryOperator *BO) {
     switch(BO->getOpcode()) {
     case Instruction::Add:
+    case Instruction::FAdd:
     case Instruction::Or:
     case Instruction::Xor:
     case Instruction::Mul:
+    case Instruction::FMul:
     case Instruction::And:
-      return (BO->isAssociative() && BO->isCommutative());
+      //return (BO->isAssociative() && BO->isCommutative());
+      return true; 
     default:
       return false;
     }
@@ -1134,6 +1144,9 @@ template<typename ValueT>
 Node *Tree::buildReduction(ValueT *V, Instruction *U, BasicBlock &BB, Node *Parent) {
   if (V==nullptr) return nullptr;
   BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
+  errs() << "Building reduction\n";
+  U->dump();
+  BO->dump();
   if (BO==nullptr) return nullptr;
   if (BO->getParent()!=&BB) return nullptr;
   if (!ReductionNode::isValidOperation(BO)) return nullptr;
@@ -1288,6 +1301,16 @@ Node *Tree::buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock &BB, Node *P
       auto *CStep = dyn_cast<ConstantInt>(Step);
       if (CStart==nullptr) return nullptr;
       if (CStep==nullptr) return nullptr;
+      if (CStep->isNegative()) return nullptr;
+      APInt Min(CStart->getValue());
+      APInt Max(CStart->getValue());
+      for (auto *V : Indices) {
+        auto *C = dyn_cast<ConstantInt>(V);
+	APInt CInt(C->getValue());
+	if (CInt.slt(Min)) Min = CInt;
+	if (CInt.sgt(Max)) Max = CInt;
+      }
+
       if (!CStep->isOne() || !CStart->isZero()) return nullptr;
       if (STy->getNumElements()<Indices.size()) return nullptr;
       for (unsigned i = 1; i<Indices.size(); i++) {
@@ -1507,9 +1530,9 @@ static bool tempMatching(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) 
 template<typename ValueT>
 Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
   errs() << "Creating Node\n";
-  //for (auto *V : Vs) {
-  //  V->dump();
-  //}
+  for (auto *V : Vs) {
+    V->dump();
+  }
   bool AllSame = true;
   bool Matching = true;
   bool HasSideEffect = false;
@@ -1788,7 +1811,10 @@ bool Tree::isSchedulable(BasicBlock &BB) {
     }
   }
 
-  if (SchedulingOrder.empty()) return false;
+  if (SchedulingOrder.empty()) {
+	  errs() << "Empty scheduling entries\n";
+	  return true;
+  }
 
   Instruction *I = getStartingInstruction(BB);
   if (I==nullptr) return false;
@@ -2049,6 +2075,15 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
         for (std::pair<unsigned, MDNode *> MDPair : MDs) {
           NewI->setMetadata(MDPair.first, nullptr);
         }
+
+	if (!MatchAlignment) {
+          if (auto *LI = dyn_cast<LoadInst>(NewI)) {
+            LI->setAlignment(Align());
+	  }
+	  else if (auto *SI = dyn_cast<StoreInst>(NewI)) {
+            SI->setAlignment(Align());
+	  }
+	}
 
         Builder.Insert(NewI);
         CreatedCode.push_back(NewI);
@@ -2609,9 +2644,10 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   if (HasRecurrence) errs() << "Recurrence ";
 
   if (Profitable) {
-    errs() << "Profitable;\n";
+    errs() << "Profitable; ";
     //errs() << T.getDotString() << "\n";
-  } else errs() << "Unprofitable;\n";
+  } else errs() << "Unprofitable; ";
+  errs() << BB.getParent()->getName() << "\n";
 
   //if (false) {
   if (AlwaysRoll || Profitable) {
@@ -2643,7 +2679,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     while (InstSplitPt!=EndPt) {
       auto *I = InstSplitPt;
       InstSplitPt = InstSplitPt->getNextNode();
-      if (!T.dependsOn(I)) {
+      if (!isa<PHINode>(I) && !T.dependsOn(I)) {
         I->removeFromParent();
         Builder.Insert(I);
       }
@@ -2722,11 +2758,12 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 
 static BinaryOperator *getPossibleReduction(Value *V) {
 #ifdef TEST_DEBUG
-  //errs() << "looking for reduction\n";
+  errs() << "looking for reduction\n";
 #endif
   if (V==nullptr) return nullptr;
   BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
   if (BO==nullptr) return nullptr;
+  BO->dump();
   if (!ReductionNode::isValidOperation(BO)) return nullptr;
   BinaryOperator *BO1 = dyn_cast<BinaryOperator>(BO->getOperand(0));
   BinaryOperator *BO2 = dyn_cast<BinaryOperator>(BO->getOperand(1));
@@ -2734,6 +2771,7 @@ static BinaryOperator *getPossibleReduction(Value *V) {
   if (BO1 && BO1->getOpcode()==BO->getOpcode()) PossibleReduction += 1;
   if (BO2 && BO2->getOpcode()==BO->getOpcode()) PossibleReduction += 1;
   if (PossibleReduction==0) return nullptr;
+  errs() << "Found\n";
   return BO;
 }
 
@@ -2831,12 +2869,14 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
     }
     else if (auto *PHI = dyn_cast<PHINode>(&I)) {
       //if (PHI->getNumIncomingValues()!=2) continue;
+      PHI->dump();
       if (PHI->getBasicBlockIndex(PHI->getParent())>=0) {
         Value *V = PHI->getIncomingValueForBlock(PHI->getParent());
+	V->dump();
         if (BinaryOperator *BO = getPossibleReduction(V)) {
 #ifdef TEST_DEBUG
-          //errs() << "Possible reduction\n";
-	  //BO->dump();
+          errs() << "Possible reduction\n";
+	  BO->dump();
 #endif
           Seeds.Reductions[BO] = &I;
         }
@@ -2864,9 +2904,12 @@ bool LoopRoller::run() {
   std::vector<BasicBlock *> Blocks;
   for (BasicBlock &BB : F) Blocks.push_back(&BB);
 
+  errs() << "Optimizing: " << F.getName() << "\n";
   //F.dump();
 
   bool Changed = false;
+
+  bool NothingFound = true;
   for (BasicBlock *BB : Blocks) {
     collectSeedInstructions(*BB);
 #ifdef TEST_DEBUG
@@ -2890,6 +2933,7 @@ bool LoopRoller::run() {
 	    //FileName += "." + std::to_string(Count++) + ".dot";
 	    //T.writeDotFile(FileName);
 	    if (T.isSchedulable(*BB)) {
+	      NothingFound = false;
 	      CodeGenerator CG(F, *BB, T);
 	      HasRolled = CG.generate(Seeds);
 	      Changed = Changed || HasRolled;
@@ -2936,6 +2980,7 @@ bool LoopRoller::run() {
       if (!Pair.second->isTerminator()) continue; //skip non-terminators
       Tree T(Pair.first, Pair.second, *BB);
       if (T.isSchedulable(*BB)) {
+	NothingFound = false;
         CodeGenerator CG(F, *BB, T);
         Changed = Changed || CG.generate(Seeds);
       }
@@ -2953,6 +2998,7 @@ bool LoopRoller::run() {
 	//FileName += "." + std::to_string(Count++) + ".dot";
 	//T.writeDotFile(FileName);
 	if (T.isSchedulable(*BB)) {
+	  NothingFound = false;
 	  CodeGenerator CG(F, *BB, T);
 	  Changed = Changed || CG.generate(Seeds);
 	} else {
@@ -2970,6 +3016,7 @@ bool LoopRoller::run() {
       if (Pair.second->isTerminator()) continue; //skip terminators
       Tree T(Pair.first, Pair.second, *BB);
       if (T.isSchedulable(*BB)) {
+	NothingFound = false;
         CodeGenerator CG(F, *BB, T);
         Changed = Changed || CG.generate(Seeds);
       }
@@ -2979,6 +3026,8 @@ bool LoopRoller::run() {
 #ifdef TEST_DEBUG
   errs() << "Done Loop Roller!\n";
 #endif
+  if (NothingFound) errs() << "Nothing found in: " << F.getName() << "\n";
+
   return Changed;
 }
 

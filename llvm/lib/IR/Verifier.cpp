@@ -113,6 +113,9 @@
 #include <string>
 #include <utility>
 
+//#define RDEBUG(_M_) { errs() << _M_ << "\n"; }
+#define RDEBUG(_M_) {}
+
 using namespace llvm;
 
 namespace llvm {
@@ -2983,6 +2986,8 @@ void Verifier::visitAddrSpaceCastInst(AddrSpaceCastInst &I) {
 /// visitPHINode - Ensure that a PHI node is well formed.
 ///
 void Verifier::visitPHINode(PHINode &PN) {
+  //PN.dump();
+  RDEBUG("Visit: PHI: 0 := " << Broken); 
   // Ensure that the PHI nodes are all grouped together at the top of the block.
   // This can be tested by checking whether the instruction before this is
   // either nonexistent (because this is begin()) or is a PHI node.  If not,
@@ -2991,9 +2996,11 @@ void Verifier::visitPHINode(PHINode &PN) {
              isa<PHINode>(--BasicBlock::iterator(&PN)),
          "PHI nodes not grouped at top of basic block!", &PN, PN.getParent());
 
+  RDEBUG("Visit: PHI: 1 := " << Broken); 
   // Check that a PHI doesn't yield a Token.
   Assert(!PN.getType()->isTokenTy(), "PHI nodes cannot have token type!");
 
+  RDEBUG("Visit: PHI: 2 := " << Broken); 
   // Check that all of the values of the PHI node have the same type as the
   // result, and that the incoming blocks are really basic blocks.
   for (Value *IncValue : PN.incoming_values()) {
@@ -3001,9 +3008,11 @@ void Verifier::visitPHINode(PHINode &PN) {
            "PHI node operands are not the same type as the result!", &PN);
   }
 
+  RDEBUG("Visit: PHI: 3 := " << Broken); 
   // All other PHI node constraints are checked in the visitBasicBlock method.
 
   visitInstruction(PN);
+  RDEBUG("Visit: PHI: - := " << Broken); 
 }
 
 void Verifier::visitCallBase(CallBase &Call) {
@@ -3504,23 +3513,30 @@ void Verifier::visitShuffleVectorInst(ShuffleVectorInst &SV) {
 
 void Verifier::visitGetElementPtrInst(GetElementPtrInst &GEP) {
   Type *TargetTy = GEP.getPointerOperandType()->getScalarType();
+  //GEP.dump();
+  RDEBUG("Visit: GEP: 0 := " << Broken); 
 
   Assert(isa<PointerType>(TargetTy),
          "GEP base pointer is not a vector or a vector of pointers", &GEP);
+  RDEBUG("Visit: GEP: 1 := " << Broken); 
   Assert(GEP.getSourceElementType()->isSized(), "GEP into unsized type!", &GEP);
 
+  RDEBUG("Visit: GEP: 2 := " << Broken); 
   SmallVector<Value*, 16> Idxs(GEP.idx_begin(), GEP.idx_end());
   Assert(all_of(
       Idxs, [](Value* V) { return V->getType()->isIntOrIntVectorTy(); }),
       "GEP indexes must be integers", &GEP);
+  RDEBUG("Visit: GEP: 3 := " << Broken); 
   Type *ElTy =
       GetElementPtrInst::getIndexedType(GEP.getSourceElementType(), Idxs);
   Assert(ElTy, "Invalid indices for GEP pointer type!", &GEP);
 
+  RDEBUG("Visit: GEP: 4 := " << Broken); 
   Assert(GEP.getType()->isPtrOrPtrVectorTy() &&
              GEP.getResultElementType() == ElTy,
          "GEP is not of right type for indices!", &GEP, ElTy);
 
+  RDEBUG("Visit: GEP: 5 := " << Broken); 
   if (auto *GEPVTy = dyn_cast<VectorType>(GEP.getType())) {
     // Additional checks for vector GEPs.
     ElementCount GEPWidth = GEPVTy->getElementCount();
@@ -3540,12 +3556,15 @@ void Verifier::visitGetElementPtrInst(GetElementPtrInst &GEP) {
     }
   }
 
+  RDEBUG("Visit: GEP: 6 := " << Broken); 
   if (auto *PTy = dyn_cast<PointerType>(GEP.getType())) {
     Assert(GEP.getAddressSpace() == PTy->getAddressSpace(),
            "GEP address space doesn't match type", &GEP);
   }
 
+  RDEBUG("Visit: GEP: 7 := " << Broken); 
   visitInstruction(GEP);
+  RDEBUG("Visit: GEP: - := " << Broken); 
 }
 
 static bool isContiguous(const ConstantRange &A, const ConstantRange &B) {
@@ -4213,6 +4232,9 @@ void Verifier::visitCleanupReturnInst(CleanupReturnInst &CRI) {
 }
 
 void Verifier::verifyDominatesUse(Instruction &I, unsigned i) {
+  //I.dump();
+  //RDEBUG("Visit: DominatesUse: Operand: " << i); 
+  //RDEBUG("Visit: DominatesUse: 0 := " << Broken); 
   Instruction *Op = cast<Instruction>(I.getOperand(i));
   // If the we have an invalid invoke, don't try to compute the dominance.
   // We already reject it in the invoke specific checks and the dominance
@@ -4233,15 +4255,20 @@ void Verifier::verifyDominatesUse(Instruction &I, unsigned i) {
     return;
 
   const Use &U = I.getOperandUse(i);
-  //if (!DT.dominates(Op, U)) {
-  //  errs() << "ERROR: Domination Fail\n";
-  //  I.dump();
-  //  I.getParent()->dump();
-  //  Op->dump();
-  //  Op->getParent()->dump();
-  //}
+  /*
+  if (!DT.dominates(Op, U)) {
+    RDEBUG("ERROR: Domination Fail"); 
+    RDEBUG("Instruction:"); 
+    I.dump();
+    I.getParent()->dump();
+    RDEBUG("Operand:"); 
+    Op->dump();
+    Op->getParent()->dump();
+  }
+  */
   Assert(DT.dominates(Op, U),
          "Instruction does not dominate all uses!", Op, &I);
+  //RDEBUG("Visit: DominatesUse: - := " << Broken); 
 }
 
 void Verifier::visitDereferenceableMetadata(Instruction& I, MDNode* MD) {
