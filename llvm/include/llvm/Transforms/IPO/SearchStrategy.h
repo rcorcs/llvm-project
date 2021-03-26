@@ -103,7 +103,7 @@ public:
     std::vector<uint32_t>& generateShinglesMultipleHashPipelineTurbo(const ContainerType& Seq, uint32_t nHashes, std::vector<uint32_t>& ret, std::vector<uint32_t>& ranHash)
     {
         uint32_t pipeline[K] = { 0 };
-        int len = Seq.size();
+        uint32_t len = Seq.size();
 
         uint32_t smallest = std::numeric_limits<uint32_t>::max();
 
@@ -116,9 +116,9 @@ public:
         // Do this nHashes-1 times to obtain nHashes minHashes quickly
         // Sort the hashes at the end
 
-        for (int i = 0; i < len; i++)
+        for (uint32_t i = 0; i < len; i++)
         {
-            for (int k = 0; k < K; k++)
+            for (uint32_t k = 0; k < K; k++)
             {
                 pipeline[k] ^= Seq[i];
                 pipeline[k] *= 1099511628211;
@@ -132,7 +132,7 @@ public:
             shingleHashes[i] = pipeline[0];
 
             //Shift pipeline
-            for (int k = 0; k < K - 1; k++)
+            for (uint32_t k = 0; k < K - 1; k++)
             {
                 pipeline[k] = pipeline[k + 1];
             }
@@ -142,11 +142,11 @@ public:
         ret[0] = smallest;
 
         // Now for each hash function, rehash each shingle and store the smallest each time
-        for (int i = 0; i < ranHash.size(); i++)
+        for (uint32_t i = 0; i < ranHash.size(); i++)
         {
             smallest = std::numeric_limits<uint32_t>::max();
 
-            for (int j = 0; j < shingleHashes.size(); j++)
+            for (uint32_t j = 0; j < shingleHashes.size(); j++)
             {
                 uint32_t temp = shingleHashes[j] ^ ranHash[i];
                 
@@ -164,7 +164,7 @@ public:
         return ret;
     }
 
-    constexpr std::vector<uint32_t>& generateRandomHashFunctions(int num, std::vector<uint32_t>& ret)
+    std::vector<uint32_t>& generateRandomHashFunctions(int num, std::vector<uint32_t>& ret)
     {
         //std::random_device rd;
         //std::mt19937 gen(rd());
@@ -183,7 +183,7 @@ public:
     std::vector<uint32_t>& generateBands(const std::vector<uint32_t> &minHashes, uint32_t rows, uint32_t bands, std::vector<uint32_t> &lsh)
     {
         // Generate a hash for each band
-        for (int i = 0; i < bands; i++)
+        for (uint32_t i = 0; i < bands; i++)
         {
             // Perform fnv1a on the rows
             auto first = minHashes.begin() + (i*rows);

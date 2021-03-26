@@ -113,7 +113,6 @@
 
 #include <limits.h>
 
-#include <unordered_set>
 #include <functional>
 #include <queue>
 #include <vector>
@@ -1551,25 +1550,17 @@ class FingerprintLSH {
       size_t nintersect = 0;
       size_t pos1 = 0;
       size_t pos2 = 0;
-      size_t s = 0;
 
-      const size_t smax = (int)std::ceil((1.0 - threshold) / (1.0 + threshold) * 2 * nHashes);
-
-      while (pos1 < nHashes && pos2 < nHashes) {
-        if (hash[pos1] == FP2->hash[pos2]) {
+      while (pos1 != nHashes && pos2 != nHashes) {
+        if (hash[pos1] == FP2->hash[pos2]) [[likely]] {
             nintersect++;
             pos1++;
             pos2++;
         } else if (hash[pos1] < FP2->hash[pos2]) {
             pos1++;
-            s++;
         } else {
             pos2++;
-            s++;
         }
-
-        if (s > smax)
-            return 1.0;
       }
 
       int nunion = 2 * nHashes - nintersect;
@@ -1578,42 +1569,41 @@ class FingerprintLSH {
 };
 
 
-template<class T>
-class Fingerprint {
-public:
-  uint64_t magnitude;
-  static const size_t MaxOpcode = 68;
-  int OpcodeFreq[MaxOpcode];
+template<class T> class Fingerprint {
+  public:
+    uint64_t magnitude;
+    static const size_t MaxOpcode = 68;
+    int OpcodeFreq[MaxOpcode];
 
-  Fingerprint() : magnitude(0) {}
+    Fingerprint() : magnitude(0) {}
 
-  Fingerprint(T owner) : magnitude(0) {
-    //memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
-    for (size_t i = 0; i<MaxOpcode; i++)
-      OpcodeFreq[i] = 0;
+    Fingerprint(T owner) : magnitude(0) {
+      //memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
+      for (size_t i = 0; i<MaxOpcode; i++)
+        OpcodeFreq[i] = 0;
 
-    for (Instruction &I : getInstructions(owner)) {
-      OpcodeFreq[I.getOpcode()]++;
-      if (I.isTerminator()) 
-        OpcodeFreq[0] += I.getNumSuccessors();
+      for (Instruction &I : getInstructions(owner)) {
+        OpcodeFreq[I.getOpcode()]++;
+        if (I.isTerminator()) 
+          OpcodeFreq[0] += I.getNumSuccessors();
+      }
+      for (size_t i = 0; i < MaxOpcode; i++)
+        magnitude += OpcodeFreq[i] * OpcodeFreq[i];
     }
-    for (size_t i = 0; i < MaxOpcode; i++)
-      magnitude += OpcodeFreq[i] * OpcodeFreq[i];
-  }
 
-  uint32_t footprint() {
-    return sizeof(int) * MaxOpcode;
-  }
-
-  float distance(Fingerprint* FP2) {
-    int Distance = 0;
-    for (size_t i = 0; i < MaxOpcode; i++) {
-      int Freq1 = OpcodeFreq[i];
-      int Freq2 = FP2->OpcodeFreq[i];
-      Distance += std::abs(Freq1-Freq2);
+    uint32_t footprint() {
+      return sizeof(int) * MaxOpcode;
     }
-    return Distance;
-  }
+
+    float distance(Fingerprint* FP2) {
+      int Distance = 0;
+      for (size_t i = 0; i < MaxOpcode; i++) {
+        int Freq1 = OpcodeFreq[i];
+        int Freq2 = FP2->OpcodeFreq[i];
+        Distance += std::abs(Freq1-Freq2);
+      }
+      return Distance;
+    }
 };
 
 
@@ -1622,7 +1612,7 @@ public:
   Function *F;
   FingerprintLSH<Function*> *FP;
   size_t Size;
-  int Distance;
+  float Distance;
   std::list<FunctionData>::iterator iterator;
 
   FunctionData() : F(nullptr), FP(nullptr), Size(0), Distance(0) {}
@@ -1721,60 +1711,258 @@ public:
   }
 };
 
-class RankerLSH {
+template<class T> class MatchInfo {
+  public:
+    T candidate;
+    size_t Size;
+    size_t OtherSize;
+    float Distance;
+
+    MatchInfo() : MatchInfo(nullptr, 0) {};
+    MatchInfo(T candidate) : MatchInfo(candidate, 0) {};
+    MatchInfo(T candidate, size_t Size) : candidate(candidate), Size(Size), OtherSize(0), Distance(0) {};
+};
+
+template<class T> class Matcher {
+  public:
+    Matcher() {};
+
+    virtual ~Matcher() {};
+
+    virtual void add_candidate(T candidate, size_t size)=0;
+    virtual void remove_candidate(T candidate)=0;
+    virtual T next_candidate()=0;
+    virtual std::vector<MatchInfo<T>>& get_matches(T candidate)=0;
+    virtual size_t size()=0;
+};
+
+template<class T> class MatcherFQ : public Matcher<T> {
   private:
-    size_t bands;
-    std::vector<tsl::robin_map<uint32_t, std::vector<FunctionData>>> lsh;
+    struct MatcherEntry {
+      T candidate;
+      size_t size;
+      Fingerprint<T>* FP;
+      MatcherEntry() : MatcherEntry(nullptr, 0, nullptr) {};
+      MatcherEntry(T candidate, size_t size, Fingerprint<T>* FP) : candidate(candidate), size(size), FP(FP) {};
+    };
+    typedef typename std::list<MatcherEntry>::iterator MatcherIt;
+
+    bool initialized;
+    FunctionMerger& FM;
+    FunctionMergingOptions& Options;
+    std::list<MatcherEntry> candidates;
+    std::unordered_map<T, MatcherIt> cache;
+    std::vector<MatchInfo<T>> matches;
 
   public:
-    RankerLSH() : bands(1) {
-      lsh.resize(bands);
+    MatcherFQ() : initialized(false) {};
+    MatcherFQ(FunctionMerger& FM, FunctionMergingOptions &Options) : initialized(false), FM(FM), Options(Options) {};
+
+    ~MatcherFQ() override {
+      for (MatcherEntry entry: candidates)
+        delete entry.FP;
     }
 
-    RankerLSH(size_t bands) : bands(bands) {
-      lsh.resize(bands);
+    void add_candidate(T candidate, size_t size) override {
+      auto FP = new Fingerprint<T>(candidate);
+      candidates.emplace_front(candidate, size, FP);
+      MatcherIt it = candidates.begin();
+      cache[candidate] = it;
     }
 
-    void register_fp(FunctionData &FD) {
-      auto& bandHash = FD.FP->bandHash;
+    void remove_candidate(T candidate) override {
+      auto cache_it = cache.find(candidate);
+      assert (cache_it != cache.end());
+      delete cache_it->second->FP;
+      candidates.erase(cache_it->second);
+    }
+
+    T next_candidate() override {
+      if (!initialized) {
+        candidates.sort([&](auto& item1, auto& item2) -> bool {return item1.FP->magnitude > item2.FP->magnitude;});
+        initialized = true;
+      }
+      update_matches(candidates.begin());
+      return candidates.front().candidate;
+    }
+
+    std::vector<MatchInfo<T>>& get_matches(T candidate) override {
+      return matches;
+    }
+
+    size_t size() override {return candidates.size();}
+
+  private:
+    void update_matches(MatcherIt it) {
+      matches.clear();
+
+      for (auto& entry : candidates) {
+        MatchInfo<T> new_match(entry.candidate, entry.size);
+        new_match.Distance = it->FP->distance(entry.FP);
+        new_match.OtherSize = it->size;
+        matches.push_back(std::move(new_match));
+      }
+
+      if (RankingThreshold & (RankingThreshold < matches.size())) {
+        std::partial_sort(
+            matches.begin(),
+            matches.begin() + RankingThreshold,
+            matches.end(),
+            [&](auto& match1, auto& match2) -> bool {return match1.Distance < match2.Distance;}
+            );
+        matches.resize(RankingThreshold);
+      } else {
+        std::sort(
+            matches.begin(),
+            matches.end(),
+            [&](auto& match1, auto& match2) -> bool {return match1.Distance < match2.Distance;}
+            );
+      }
+    }
+};
+
+template<class T> class MatcherLSH : public Matcher<T> {
+  private:
+    struct MatcherEntry {
+      T candidate;
+      size_t size;
+      FingerprintLSH<T>* FP;
+      MatcherEntry() : MatcherEntry(nullptr, 0, nullptr) {};
+      MatcherEntry(T candidate, size_t size, FingerprintLSH<T>* FP) : candidate(candidate), size(size), FP(FP) {};
+    };
+    typedef typename std::list<MatcherEntry>::iterator MatcherIt;
+
+    bool initialized;
+    size_t bands;
+    FunctionMerger& FM;
+    FunctionMergingOptions& Options;
+    std::list<MatcherEntry> candidates;
+    tsl::robin_map<uint32_t, std::vector<MatcherIt>> lsh;
+    std::vector<std::pair<T, MatcherIt>> cache;
+    std::vector<MatchInfo<T>> matches;
+
+  public:
+    MatcherLSH() : bands(1) {};
+    MatcherLSH(size_t bands, FunctionMerger& FM, FunctionMergingOptions &Options) : initialized(false), bands(bands), FM(FM), Options(Options) {};
+
+    ~MatcherLSH() override {
+      for (MatcherEntry entry: candidates)
+        delete entry.FP;
+    }
+
+    void add_candidate(T candidate, size_t size) override {
+      auto FP = new FingerprintLSH<T>(candidate);
+      candidates.emplace_front(candidate, size, FP);
+      MatcherIt it = candidates.begin();
+
+      auto& bandHash = FP->bandHash;
       for (size_t i = 0; i < bands; ++i) {
-        if (lsh[i].count(bandHash[i]) > 0)
-          lsh[i].at(bandHash[i]).push_back(FD);
+        if (lsh.count(bandHash[i]) > 0)
+          lsh.at(bandHash[i]).push_back(it);
         else
-          lsh[i].insert(std::make_pair(bandHash[i], std::vector<FunctionData>(1, FD)));
+          lsh.insert(std::make_pair(bandHash[i], std::vector<MatcherIt>(1, it)));
       }
     }
 
-    void unregister_fp(FunctionData &FD) {
-      auto& bandHash = FD.FP->bandHash;
-      for (size_t i = 0; i < bands; ++i) {
-        if (lsh[i].count(bandHash[i]) == 0)
-          continue;
-
-        auto& foundFs = lsh[i].at(bandHash[i]);
-        for (size_t j = 0; j < foundFs.size(); ++j)
-          if (foundFs[j].F == FD.F)
-            lsh[i].at(bandHash[i]).erase(lsh[i].at(bandHash[i]).begin() + j);
-      }
-    }
-
-    std::vector<FunctionData> get_similar_functions(FunctionData& FD) {
-      auto& bandHash = FD.FP->bandHash;
-      std::vector<FunctionData> similar;
-      for (size_t i = 0; i < bands; ++i) {
-        if (lsh[i].count(bandHash[i]) <= 0)
-          continue;
-
-        auto &foundFs = lsh[i].at(bandHash[i]);
-        for (size_t j = 0; j < foundFs.size(); ++j) {
-          FunctionData& FD2 = foundFs[j];
-          if ((FD2.F == NULL) || (FD2.F == FD.F))
-            continue;
-          similar.push_back(FD2);
+    void remove_candidate(T candidate) override {
+      MatcherIt cache_it = candidates.end();
+      for (auto& cache_item : cache) {
+        if (cache_item.first == candidate) {
+          cache_it = cache_item.second;
+          break;
         }
       }
-      return similar;
+      assert(cache_it != candidates.end());
+
+
+      auto FP = cache_it->FP;
+      for (size_t i = 0; i < bands; ++i) {
+        if (lsh.count(FP->bandHash[i]) == 0)
+          continue;
+
+        auto& foundFs = lsh.at(FP->bandHash[i]);
+        for (size_t j = 0; j < foundFs.size(); ++j)
+          if (foundFs[j]->candidate == candidate)
+            lsh.at(FP->bandHash[i]).erase(lsh.at(FP->bandHash[i]).begin() + j);
+      }
+      delete FP;
+      candidates.erase(cache_it);
     }
+
+    T next_candidate() override {
+      if (!initialized) {
+        candidates.sort([&](auto& item1, auto& item2) -> bool {return item1.FP->magnitude > item2.FP->magnitude;});
+        initialized = true;
+      }
+      update_matches(candidates.begin());
+      return candidates.front().candidate;
+    }
+
+    std::vector<MatchInfo<T>>& get_matches(T candidate) override {
+      return matches;
+    }
+
+    size_t size() override {return candidates.size();}
+
+  private:
+    void update_matches(MatcherIt it) {
+      float best_distance = 1.0;
+      std::unordered_set<T> seen;
+      seen.reserve(candidates.size()/10);
+      matches.clear();
+      cache.clear();
+      cache.emplace_back(it->candidate, it);
+
+      auto FP = it->FP;
+      for (size_t i = 0; i < bands; ++i) {
+        assert(lsh.count(FP->bandHash[i]) > 0);
+        //if (lsh.count(FP->bandHash[i]) <= 0)
+        //  continue;
+
+        auto& foundFs = lsh.at(FP->bandHash[i]);
+        for (size_t j = 0; j < foundFs.size() && j < 100; ++j) {
+          MatcherIt match_it = foundFs[j];
+          if ((match_it->candidate == NULL) || (match_it->candidate == it->candidate))
+            continue;
+          if ((!FM.validMergeTypes(it->candidate, match_it->candidate, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(it->candidate, match_it->candidate))
+            continue;
+
+          if (seen.count(match_it->candidate) == 1)
+            continue;
+          seen.insert(match_it->candidate);
+
+          MatchInfo<T> new_match(match_it->candidate, match_it->size);
+          new_match.Distance = FP->distance(match_it->FP);
+          new_match.OtherSize = it->size;
+          matches.push_back(new_match);
+          cache.emplace_back(match_it->candidate, match_it);
+          best_distance = new_match.Distance < best_distance ? new_match.Distance: best_distance;
+        }
+        // If we've gone through i = 0 without finding a distance of 0.0
+        // the minimum distance we might ever find is 2.0 / (nHashes + 1)
+        if ((RankingThreshold <= 1) && (best_distance < (1/ 100.0)))
+          break;
+      }
+
+      size_t toRank;
+      if (matches.size() == 0)
+        return;
+      else if (RankingThreshold <= 1)
+        toRank = 1;
+      else if (RankingThreshold < matches.size())
+        toRank = RankingThreshold;
+      else
+        toRank = matches.size();
+
+      std::partial_sort(
+          matches.begin(),
+          matches.begin() + toRank,
+          matches.end(),
+          [&](auto& match1, auto& match2) -> bool {return match1.Distance < match2.Distance;}
+          );
+      matches.resize(toRank);
+    }
+
 };
 
 
@@ -3340,7 +3528,7 @@ static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
 
 unsigned instToInt(Instruction *I) {
 
-    std::srand(0);
+    //std::srand(0);
 
 
     uint32_t value = 0;
@@ -3368,7 +3556,7 @@ unsigned instToInt(Instruction *I) {
         value = value * (reinterpret_cast<std::uintptr_t>(ITypePtr)+1);
     }
 
-    for (int i = 0; i < I->getNumOperands(); i++)
+    for (size_t i = 0; i < I->getNumOperands(); i++)
     {
         uint32_t operTypeID = static_cast<uint32_t>(I->getOperand(i)->getType()->getTypeID());
         value = value*(operTypeID+1);
@@ -3689,71 +3877,6 @@ Timer TimeRank("Merge::Rank", "Merge::Rank");
 Timer TimeUpdate("Merge::Update", "Merge::Update");
 #endif
 
-static bool CompareFunctionDataScores(const FunctionData &F1,
-                                  const FunctionData &F2) {
-  return F1.Size > F2.Size;
-}
-
-
-static void printAverageDistance(FunctionMerger &FM, std::vector<FunctionData> &FunctionsToProcess, FunctionMergingOptions &Options) {
-  int Sum = 0;
-  int Count = 0;
-  int MinDistance = std::numeric_limits<int>::max();
-  int MaxDistance = 0;
-
-  int Index1 = 0;
-  for (auto It1 = FunctionsToProcess.begin(), E1 = FunctionsToProcess.end(); It1!=E1; It1++) {
-    FunctionData &FD1 = *It1;
-    Function *F1 = FD1.F;
-
-    int BestIndex = 0;
-    bool FoundCandidate = false;
-    FunctionData BestFD;
-    int BestDist = std::numeric_limits<int>::max();
-
-    unsigned CountCandidates = 0;
-    int Index2 = Index1;
-    for (auto It2 = It1, E2 = FunctionsToProcess.end(); It2!=E2; It2++) {
-      FunctionData &FD2 = *It2;
-      Function *F2 = FD2.F;
-
-      if (F1==F2 || Index1==Index2) {
-        Index2++;
-        continue;
-      }
-
-      if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
-        continue;
-
-      auto Dist = FD1.FP->distance(FD2.FP);
-      FD2.Distance = Dist;
-      if (Dist < BestDist) {
-        BestDist = Dist;
-        BestFD = FD2;
-        FoundCandidate = true;
-        BestIndex = Index2;
-      }
-      if (RankingThreshold && CountCandidates>RankingThreshold) {
-        break;
-      }
-      CountCandidates++;
-      Index2++;
-    }
-    if (FoundCandidate) {
-      int Distance = std::abs(Index1 - BestIndex);
-      Sum += Distance;
-      if (Distance > MaxDistance) MaxDistance = Distance;
-      if (Distance < MinDistance) MinDistance = Distance;
-      Count++;
-    }
-    Index1++;
-  }
-  errs() << "Total: " << Count << "\n";
-  errs() << "Min Distance: " << MinDistance << "\n";
-  errs() << "Max Distance: " << MaxDistance << "\n";
-  errs() << "Average Distance: " << (((double)Sum)/((double)Count)) << "\n";
-}
-
 bool FunctionMerging::runOnModule(Module &M) {
 
   //errs() << "Running FMSA\n";
@@ -3777,146 +3900,45 @@ bool FunctionMerging::runOnModule(Module &M) {
   //a FunctionPass.
   TargetTransformInfo TTI(M.getDataLayout());
 
-  std::vector<FunctionData> FunctionsToProcess;
-
 #ifdef TIME_STEPS_DEBUG
   TimePreProcess.startTimer();
   TimeTotal.startTimer();
 #endif
 
+  FunctionMerger FM(&M);
+
   FingerprintLSH<Function*>::initialize();
-  RankerLSH ranker(FingerprintLSH<Function*>::bands);
+  std::unique_ptr<Matcher<Function*>> matcher;
+  if (EnableSean)
+    matcher = std::make_unique<MatcherLSH<Function*>>(FingerprintLSH<Function*>::bands, FM, Options);
+  else
+    matcher = std::make_unique<MatcherFQ<Function*>>(FM, Options);
 
   for (auto &F : M) {
     if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
-    
+
     errs() << "FNSize: " << F.getName() << " : " << F.getInstructionCount() << "\n";
-    FunctionData FD(&F, new FingerprintLSH<Function*>(&F), EstimateFunctionSize(&F, &TTI));
-    FunctionsToProcess.push_back(FD);
-    ranker.register_fp(FD);
+    matcher->add_candidate(&F, EstimateFunctionSize(&F, &TTI)); 
   }
-  errs() << "Number of Functions: " << FunctionsToProcess.size() << "\n";
-
-  
-  std::stable_sort(FunctionsToProcess.begin(), FunctionsToProcess.end(),
-      [&](auto &FD1, auto &FD2) -> bool {
-        return FD1.FP->magnitude > FD2.FP->magnitude;
-  });
-
-  FunctionMerger FM(&M);
+  errs() << "Number of Functions: " << matcher->size() << "\n";
 
 #ifdef TIME_STEPS_DEBUG
   TimePreProcess.stopTimer();
 #endif
 
-  std::list<FunctionData> WorkList;
-  for (auto &FD : FunctionsToProcess) {
-    WorkList.push_back(FD);
-  }
-
   unsigned TotalMerges = 0;
   unsigned TotalOpReorder = 0;
   unsigned TotalBinOps = 0;
 
-
-  std::vector<FunctionData> Rank;
-  if (ExplorationThreshold > 1)
-    Rank.reserve(FunctionsToProcess.size());
-
-  FunctionsToProcess.clear();
-
-  while (!WorkList.empty()) {
-    FunctionData FD1 = WorkList.front();
-    WorkList.pop_front();
-
-    Rank.clear();
-
-    Function *F1 = FD1.F;
-
+  while (matcher->size() > 0) {
 #ifdef TIME_STEPS_DEBUG
     TimeRank.startTimer();
 #endif
 
-    // Push candidates in Rank
-    unsigned CountCandidates = 0;
-    if (ExplorationThreshold > 1) {
-      if (EnableSean) {
-        for (auto &FD2 : ranker.get_similar_functions(FD1)) {
-          Function *F2 = FD2.F;
-
-          if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
-            continue;
-
-          FD2.Distance = FD1.FP->distance(FD2.FP);
-          Rank.push_back(FD2);
-          if (RankingThreshold && CountCandidates>RankingThreshold)
-            break;
-          CountCandidates++;
-        }
-      } else {
-        for (auto It = WorkList.begin(), E = WorkList.end(); It != E; ++It) {
-          FunctionData &FD2 = *It;
-          Function *F2 = FD2.F;
-
-          if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
-            continue;
-
-          FD2.Distance = FD1.FP->distance(FD2.FP);
-          Rank.push_back(FD2);
-          if (RankingThreshold && CountCandidates>RankingThreshold)
-            break;
-          CountCandidates++;
-        }
-      }
-      //std::sort(Rank.begin(), Rank.end(), [&](auto &A, auto &B) {});
-
-    } else {
-      FunctionData BestFD;
-      bool found = false;
-      float BestDist = std::numeric_limits<float>::max();
-
-      if (EnableSean) {
-        for (auto &FD2 : ranker.get_similar_functions(FD1)) {
-          Function *F2 = FD2.F;
-
-          if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
-            continue;
-
-          FD2.Distance = FD1.FP->distance(FD2.FP);
-          if (FD2.Distance < BestDist) {
-            BestDist = FD2.Distance;
-            BestFD = FD2;
-            found = true;
-            if (BestDist < 0.000001)
-              break;
-          }
-          if (RankingThreshold && CountCandidates>RankingThreshold)
-            break;
-          CountCandidates++;
-        }
-      } else {
-        for (auto It = WorkList.begin(), E = WorkList.end(); It != E; ++It) {
-          FunctionData &FD2 = *It;
-          Function *F2 = FD2.F;
-
-          if ((!FM.validMergeTypes(F1, F2, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(F1, F2))
-            continue;
-
-          FD2.Distance = FD1.FP->distance(FD2.FP);
-          if (FD2.Distance < BestDist) {
-            BestDist = FD2.Distance;
-            BestFD = FD2;
-            found = true;
-          }
-          if (RankingThreshold && CountCandidates>RankingThreshold)
-            break;
-          CountCandidates++;
-        }
-      }
-      if (found)
-        Rank.push_back(BestFD);
-    }
+    Function* F1 = matcher->next_candidate();
+    auto& Rank = matcher->get_matches(F1);
+    matcher->remove_candidate(F1);
 
 #ifdef TIME_STEPS_DEBUG
     TimeRank.stopTimer();
@@ -3924,23 +3946,15 @@ bool FunctionMerging::runOnModule(Module &M) {
 
     unsigned MergingTrialsCount = 0;
 
-    ranker.unregister_fp(FD1);
-    delete FD1.FP;
-    FD1.FP = nullptr;
-
     while (!Rank.empty()) {
-      FunctionData FD2 = Rank.back();
+      MatchInfo<Function*> match = Rank.back();
       Rank.pop_back();
-      
-      Function *F2 = FD2.F;
-
-      //CountBinOps = 0;
-      //CountOpReorder = 0;
+      Function *F2 = match.candidate;
 
       MergingTrialsCount++;
 
       if (Debug || Verbose) {
-        errs() << "Attempting: " << GetValueName(F1) << ", " << GetValueName(F2) << " : " << FD2.Distance
+        errs() << "Attempting: " << GetValueName(F1) << ", " << GetValueName(F2) << " : " << match.Distance
                << "\n";
       }
 
@@ -3973,8 +3987,8 @@ bool FunctionMerging::runOnModule(Module &M) {
 
       if (Result.getMergedFunction() && validFunction) {
 
-        size_t SizeF1 = FD1.Size;
-        size_t SizeF2 = FD2.Size;
+        size_t SizeF1 = match.OtherSize;
+        size_t SizeF2 = match.Size;
 
   size_t MergedSize = EstimateFunctionSize(Result.getMergedFunction(), &TTI);
         size_t Overhead = EstimateThunkOverhead(Result, AlwaysPreserved);
@@ -4015,7 +4029,7 @@ bool FunctionMerging::runOnModule(Module &M) {
             errs() << "Merged: " << GetValueName(F1) << ", " << GetValueName(F2)
                    << " = " << GetValueName(Result.getMergedFunction()) << " : " <<
        F1->getInstructionCount() << " , " << F2->getInstructionCount() << "\n";
-      errs() << "Profitable Distance: " << FD2.Distance << "\n";
+      errs() << "Profitable Distance: " << match.Distance << "\n";
       if (AcrossBlocks) errs() << "Corss Block Merging\n";
           }
           //if (Verbose) {
@@ -4032,30 +4046,11 @@ bool FunctionMerging::runOnModule(Module &M) {
 
           TotalMerges++;
 
-    auto it = WorkList.begin();
-    while (it != WorkList.end()) {
-      if (it->F == FD2.F) {
-        break;
-      }
-      ++it;
-    }
-    if (it == WorkList.end()) {
-      errs() << "Nothing to remove!\n";
-    } else {
-      WorkList.erase(it);
-    }
-
-    ranker.unregister_fp(FD2);
-    delete FD2.FP;
-    FD2.FP = nullptr;
+    matcher->remove_candidate(F2);
 
     if (ReuseMergedFunctions) {
       // feed new function back into the working lists
-      FunctionData MFD(Result.getMergedFunction(),
-                            new FingerprintLSH<Function*>(Result.getMergedFunction()),
-      EstimateFunctionSize(Result.getMergedFunction(), &TTI));
-      WorkList.push_front(MFD);
-      ranker.register_fp(MFD);
+      matcher->add_candidate(Result.getMergedFunction(), EstimateFunctionSize(Result.getMergedFunction(), &TTI));
     }
 #ifdef TIME_STEPS_DEBUG
     TimeUpdate.stopTimer();
@@ -4067,15 +4062,13 @@ bool FunctionMerging::runOnModule(Module &M) {
             Result.getMergedFunction()->eraseFromParent();
         }
       }
-      errs() << "Unprofitable Distance: " << FD2.Distance << "\n";
+      errs() << "Unprofitable Distance: " << match.Distance << "\n";
 
       if (MergingTrialsCount >= ExplorationThreshold) {
         break;
       }
     }
   }
-
-  WorkList.clear();
 
   double MergingAverageDistance = 0;
   unsigned MergingMaxDistance = 0;
