@@ -241,7 +241,7 @@ public:
       : BaseType(Scoring, Match), Matrix(nullptr), Matches(nullptr) {}
 
   virtual size_t getMemoryRequirement(ContainerType &Seq1,
-                                      ContainerType &Seq2) {
+                                      ContainerType &Seq2) override {
     const size_t SizeSeq1 = Seq1.size();
     const size_t SizeSeq2 = Seq2.size();
     size_t MemorySize = 0;
@@ -255,7 +255,7 @@ public:
   }
 
   virtual AlignedSequence<Ty, Blank> getAlignment(ContainerType &Seq1,
-                                                  ContainerType &Seq2) {
+                                                  ContainerType &Seq2) override {
     AlignedSequence<Ty, Blank> Result;
     cacheAllMatches(Seq1, Seq2);
     computeScoreMatrix(Seq1, Seq2);

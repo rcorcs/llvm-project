@@ -381,10 +381,17 @@ static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallBase *CI1,
                                 const CallBase *CI2) {
   Intrinsic::ID ID1;
   Intrinsic::ID ID2;
-  if (Function *F = CI1->getCalledFunction())
-    ID1 = (Intrinsic::ID)F->getIntrinsicID();
-  if (Function *F = CI2->getCalledFunction())
-    ID2 = (Intrinsic::ID)F->getIntrinsicID();
+  Function *F;
+  
+  F = CI1->getCalledFunction();
+  if (!F)
+    return false;
+  ID1 = (Intrinsic::ID)F->getIntrinsicID();
+
+  F = CI2->getCalledFunction();
+  if (!F)
+    return false;
+  ID2 = (Intrinsic::ID)F->getIntrinsicID();
 
   if (ID1 != ID)
     return false;
@@ -1494,21 +1501,21 @@ class FingerprintLSH {
     static constexpr double threshold = 0.3;
     static constexpr size_t MaxOpcode = 68;
 
-    inline static std::vector<uint32_t> bandHashes;
-    inline static std::vector<uint32_t> shingleHashes;
     inline static std::vector<uint32_t> randomHashFuncs;
     inline static SearchStrategy<std::vector<uint32_t>> searchStrategy;
 
   public:
     static const size_t bands = 100;  // e.g. 4 rows and 50 bands -- threshold around 40% similarity -- t = (1/b)^(1/r)
     uint64_t magnitude;
-    uint32_t hash[nHashes];
-    uint32_t bandHash[bands];
+    std::vector<uint32_t> hash;
+    std::vector<uint32_t> bandHash;
 
   public:
     FingerprintLSH(): magnitude(0) {};
 
     FingerprintLSH(T owner) : magnitude(0) {
+      hash.resize(nHashes);
+      bandHash.resize(bands);
       std::vector<uint32_t> opcodes;
       uint32_t OpcodeFreq[MaxOpcode];
    
@@ -1526,19 +1533,13 @@ class FingerprintLSH {
     }
 
     static void initialize(){
-      bandHashes.resize(bands);
-      shingleHashes.resize(nHashes);
       randomHashFuncs.resize(nHashes - 1);
       searchStrategy.generateRandomHashFunctions(nHashes - 1, randomHashFuncs);
     }
 
     void updateHashes(std::vector<uint32_t> &opcodes) {
-      searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(opcodes, nHashes, shingleHashes, randomHashFuncs);
-      searchStrategy.generateBands(shingleHashes, rows, bands, bandHashes);
-      for (size_t i = 0; i < nHashes; ++i)
-        hash[i] = shingleHashes[i];
-      for (size_t i = 0; i < bands; ++i)
-        bandHash[i] = bandHashes[i];
+      searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(opcodes, nHashes, hash, randomHashFuncs);
+      searchStrategy.generateBands(hash, rows, bands, bandHash);
     }
 
     uint32_t footprint() {
@@ -1552,7 +1553,7 @@ class FingerprintLSH {
       size_t pos2 = 0;
 
       while (pos1 != nHashes && pos2 != nHashes) {
-        if (hash[pos1] == FP2->hash[pos2]) [[likely]] {
+        if (hash[pos1] == FP2->hash[pos2]) {
             nintersect++;
             pos1++;
             pos2++;
@@ -3527,17 +3528,10 @@ static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
 }
 
 unsigned instToInt(Instruction *I) {
-
-    //std::srand(0);
-
-
     uint32_t value = 0;
 
     //std::ofstream myfile;
     //std::string newPath = "/home/sean/similarityChecker.txt";
-
-
-    const DataLayout *DL = &I->getParent()->getParent()->getParent()->getDataLayout();
 
     // Opcodes must be equivalent for instructions to match -- use opcode value as base
     value = I->getOpcode();
@@ -3545,7 +3539,6 @@ unsigned instToInt(Instruction *I) {
     // Number of operands must be equivalent -- except in the case where the instruction is a return instruction -- +1 to stop being zero
     uint32_t operands = I->getOpcode() == Instruction::Ret ? 1 : I->getNumOperands();
     value = value * (operands+1);
-
 
     // Instruction type must be equivalent, pairwise operand types must be equivalent -- use typeID casted to int -- This may not be perfect as my understanding of this is limited
     uint32_t instTypeID = static_cast<uint32_t>(I->getType()->getTypeID());
@@ -3657,9 +3650,7 @@ unsigned instToInt(Instruction *I) {
                     {
                         i = reinterpret_cast<std::uintptr_t>(Idx);
                     }
-                    unsigned oldValue = gValue;
                     gValue += i;
-
                 }
             }
 
@@ -4305,11 +4296,11 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
       NewI->setMetadata(MDPair.first, nullptr);
     }
 
-    if (isa<GetElementPtrInst>(NewI)) {
-      GetElementPtrInst * GEP = dyn_cast<GetElementPtrInst>(I);
+    //if (isa<GetElementPtrInst>(NewI)) {
+      //GetElementPtrInst * GEP = dyn_cast<GetElementPtrInst>(I);
       //GetElementPtrInst * GEP2 = dyn_cast<GetElementPtrInst>(I2);
       //dyn_cast<GetElementPtrInst>(NewI)->setIsInBounds(GEP->isInBounds());
-    }
+    //}
     
     /*
     if (auto *CB = dyn_cast<CallBase>(I)) {

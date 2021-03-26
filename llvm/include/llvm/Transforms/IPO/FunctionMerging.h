@@ -177,7 +177,7 @@ class FunctionMerger {
 private:
   Module *M;
 
-  ProfileSummaryInfo *PSI;
+  //ProfileSummaryInfo *PSI;
   function_ref<BlockFrequencyInfo *(Function &)> LookupBFI;
 
   Type *IntPtrTy;
@@ -264,6 +264,8 @@ public:
       for (BasicBlock &BB : Blocks1) this->Blocks1.push_back(&BB);
       for (BasicBlock &BB : Blocks2) this->Blocks2.push_back(&BB);
     }
+
+    virtual ~CodeGenerator() {}
 
     CodeGenerator &setContext(LLVMContext *ContextPtr) {
       this->ContextPtr = ContextPtr;
@@ -352,9 +354,10 @@ public:
     
   public:
     SALSSACodeGen(BlockListType &Blocks1, BlockListType &Blocks2) : CodeGenerator<BlockListType>(Blocks1,Blocks2) {}
+    virtual ~SALSSACodeGen() {}
     virtual bool generate(AlignedSequence<Value*> &AlignedSeq,
                   ValueToValueMapTy &VMap,
-                  const FunctionMergingOptions &Options = {});
+                  const FunctionMergingOptions &Options = {}) override;
   };
 
 };
