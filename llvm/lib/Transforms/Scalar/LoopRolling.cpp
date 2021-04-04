@@ -569,11 +569,11 @@ public:
     switch(BO->getOpcode()) {
     case Instruction::Add:
     case Instruction::FAdd:
-    case Instruction::Or:
-    case Instruction::Xor:
     case Instruction::Mul:
     case Instruction::FMul:
+    case Instruction::Or:
     case Instruction::And:
+    case Instruction::Xor:
       //return (BO->isAssociative() && BO->isCommutative());
       return true; 
     default:
@@ -766,7 +766,7 @@ public:
 };
 
 
-class Tree {
+class AlignedGraph {
 public:
   BasicBlock *BB;
   Node *Root;
@@ -776,22 +776,22 @@ public:
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
 
-  Tree(BinaryOperator *BO, Instruction *U, BasicBlock &BB) : BB(&BB) {
+  AlignedGraph(BinaryOperator *BO, Instruction *U, BasicBlock &BB) : BB(&BB) {
     Root = buildReduction(BO,U,BB,nullptr);
     if (Root) {
       addNode(Root);
       std::set<Node*> Visited;
-      growTree(Root,BB, Visited);
+      growGraph(Root,BB, Visited);
       buildSchedulingOrder();
     }
   }
 
   template<typename ValueT>
-  Tree(std::vector<ValueT*> &Vs, BasicBlock &BB) : BB(&BB) {
+  AlignedGraph(std::vector<ValueT*> &Vs, BasicBlock &BB) : BB(&BB) {
     Root = createNode(Vs,BB);
     addNode(Root);
     std::set<Node*> Visited;
-    growTree(Root,BB, Visited);
+    growGraph(Root,BB, Visited);
     buildSchedulingOrder();
   }
 
@@ -934,7 +934,7 @@ public:
 
   std::set<User*> Users;
 private:
-  void growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited);
+  void growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited);
 
   template<typename ValueT>
   Node *buildReduction(ValueT *V, Instruction *, BasicBlock &BB, Node *Parent);
@@ -988,6 +988,7 @@ private:
   }
 };
 
+/*
 class MultiTree {
 public:
   std::vector<Tree *> Trees;
@@ -1004,6 +1005,7 @@ public:
 
   std::vector<Tree*> &getTrees() { return Trees; }
 };
+*/
 
 class SeedGroups {
 public:
@@ -1034,14 +1036,14 @@ public:
 
 class CodeGenerator {
 public:
-  CodeGenerator(Function &F, BasicBlock &BB, Tree &T) : F(F), BB(BB), T(T) {}
+  CodeGenerator(Function &F, BasicBlock &BB, AlignedGraph &G) : F(F), BB(BB), G(G) {}
 
   bool generate(SeedGroups &Seeds);
 
 private:
   Function &F;
   BasicBlock &BB;
-  Tree &T;
+  AlignedGraph &G;
   PHINode *IndVar;
   BasicBlock *PreHeader;
   BasicBlock *Header;
@@ -1060,7 +1062,7 @@ private:
   std::unordered_map<Type *, Value *> CachedRem2;
   Value *AltSeqCmp{nullptr};
 
-  Value *cloneTree(Node *N, IRBuilder<> &Builder);
+  Value *cloneGraph(Node *N, IRBuilder<> &Builder);
   void generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Builder);
   //void generateExtract(std::vector<Value *> &VL, Instruction * NewI, IRBuilder<> &Builder);
 
@@ -1086,7 +1088,7 @@ private:
 
 
 template<typename ValueT>
-Node *Tree::find(std::vector<ValueT *> &Vs) {
+Node *AlignedGraph::find(std::vector<ValueT *> &Vs) {
   if (Vs.empty()) return nullptr;
 
   //errs() << "Searching for:\n";
@@ -1140,8 +1142,22 @@ static void ReorderOperands(std::vector<Value*> &Operands, BasicBlock &BB) {
   });
 }
 
+/*
+For a given binary operator, collect all neighboring instructions of the same opcode, composing a single reduction node.
+This binary operator must be valid for reduction, i.e., must be associative, such as addition, multiplication, etc.
+Every operand that is not part of the reduction node itself is an input value.
+
+          /- phi
+      /- + - input 
+   - + 
+  /   \- input
+-+ 
+  \
+   - input
+
+*/
 template<typename ValueT>
-Node *Tree::buildReduction(ValueT *V, Instruction *U, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildReduction(ValueT *V, Instruction *U, BasicBlock &BB, Node *Parent) {
   if (V==nullptr) return nullptr;
   BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
   errs() << "Building reduction\n";
@@ -1180,8 +1196,17 @@ Node *Tree::buildReduction(ValueT *V, Instruction *U, BasicBlock &BB, Node *Pare
 }
 
 
+/*
+For a given base address, Addr, the sequence
+A[0], A[1], A[2], ...
+can be simplified as
+*A, A[1], A[2], ...
+making it less obvious that these operations match.
+In LLVM, the indexing operation is represented using GetElementPtr (GEP).
+This special node tries to identify this pattern of GEP sequence.
+*/
 template<typename ValueT>
-Node *Tree::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
 
   if (!isa<PointerType>(VL[0]->getType())) return nullptr;
   //auto *Ptr = getUnderlyingObject(VL[0]);
@@ -1251,7 +1276,7 @@ Node *Tree::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Pa
 
 
 template<typename ValueT>
-Node *Tree::buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
   errs() << "GEPSeq2\n";
   if (!isa<PointerType>(VL[0]->getType())) return nullptr;
   //auto *Ptr = getUnderlyingObject(VL[0]);
@@ -1328,9 +1353,15 @@ Node *Tree::buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock &BB, Node *P
   return new GEPSequenceNode(VL, RefGEP, nullptr, Indices, BB, Parent);
 }
 
-
+/*
+ Identifies a sequence of alternating values of the same type, for example:
+ V0, V1, V0, V1, V0, V1, ...
+ In a loop with induction variable i starting from 0, can be represented by the expression:
+ (i%2==0) ? V0 : V1
+ V0 and V1 must be loop invariant, after loop rolling, i.e., they must be input values to the aligned graph.
+*/
 template<typename ValueT>
-Node *Tree::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
   if (VL.size()<2) return nullptr;
 
   Value *First = VL[0];
@@ -1348,9 +1379,17 @@ Node *Tree::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &
   return new AlternatingSequenceNode(VL, First, Second, BB, Parent);
 }
 
-
+/*
+For a given binary operator with a neutral element, we can have a sequence such as:
+a0 + 0, a1 + 1, a2 + 2, ...
+which can often be simplified as:
+a0, a1 + 1, a2 + 2, ...
+making it less obvious that these operations match.
+This special node tries to identify this pattern of sequence of binary operation,
+reconstructing the operation over the neutral element.
+*/
 template<typename ValueT>
-Node *Tree::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
   errs() << "BinOP?\n";
   VL[0]->dump();
 
@@ -1429,7 +1468,7 @@ Node *Tree::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, No
 }
 
 template<typename ValueT>
-Node *Tree::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent) {
   if (Vs.size()<=1) return nullptr;
 
   //if (!this->Root) return nullptr;
@@ -1472,7 +1511,7 @@ Node *Tree::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node 
 }
 
 template<typename ValueT>
-Node *Tree::buildConstExprNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildConstExprNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent) {
 
   ConstantExpr *CExpr = dyn_cast<ConstantExpr>(Vs[0]);
   if (CExpr==nullptr) return nullptr;
@@ -1528,7 +1567,7 @@ static bool tempMatching(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) 
 }
 
 template<typename ValueT>
-Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
   errs() << "Creating Node\n";
   for (auto *V : Vs) {
     V->dump();
@@ -1625,7 +1664,7 @@ Node *Tree::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
   return new MismatchingNode(Vs,BB,Parent);
 }
 
-void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
+void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
   if (Visited.find(N)!=Visited.end()) return;
   Visited.insert(N);
 
@@ -1643,7 +1682,7 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
          Child = createNode(Vs, BB, N);
          this->addNode(Child);
          N->pushChild(Child);
-         growTree(Child, BB, Visited);
+         growGraph(Child, BB, Visited);
        } else N->pushChild(Child);
        break;
     }
@@ -1655,7 +1694,7 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
          Child = createNode(Vs, BB, N);
          this->addNode(Child);
          N->pushChild(Child);
-         growTree(Child, BB, Visited);
+         growGraph(Child, BB, Visited);
        } else N->pushChild(Child);
        break;
     }
@@ -1666,7 +1705,7 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
          Child = createNode(Vs, BB, N);
          this->addNode(Child);
          N->pushChild(Child);
-         growTree(Child, BB, Visited);
+         growGraph(Child, BB, Visited);
        } else N->pushChild(Child);
       break;
     }
@@ -1686,7 +1725,7 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
 	  Child = createNode(Vs, BB, N);
           this->addNode(Child);
           N->pushChild(Child);
-          growTree(Child, BB, Visited);
+          growGraph(Child, BB, Visited);
 	} else N->pushChild(Child);
       }
       break;
@@ -1707,7 +1746,7 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
 	  Child = createNode(Vs, BB, N);
           this->addNode(Child);
           N->pushChild(Child);
-          growTree(Child, BB, Visited);
+          growGraph(Child, BB, Visited);
 	} else N->pushChild(Child);
       }
       break;
@@ -1715,7 +1754,7 @@ void Tree::growTree(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
   }
 }
 
-void Tree::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
+void AlignedGraph::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
   if (Visited.count(N)) return;
   Visited.insert(N);
   if (i>=N->size()) return;
@@ -1757,7 +1796,7 @@ void Tree::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
   }
 }
 
-Instruction *Tree::getStartingInstruction(BasicBlock &BB) {
+Instruction *AlignedGraph::getStartingInstruction(BasicBlock &BB) {
   //Instruction *StartI = nullptr;
   //for (auto &IRef : BB) {
   //  if (SchedulingOrder[0].contains(&IRef)) {
@@ -1773,11 +1812,11 @@ Instruction *Tree::getStartingInstruction(BasicBlock &BB) {
   return nullptr;
 }
 
-Instruction *Tree::getEndingInstruction(BasicBlock &BB) {
+Instruction *AlignedGraph::getEndingInstruction(BasicBlock &BB) {
   return dyn_cast<Instruction>(Root->getValue(Root->size()-1));
 }
 
-bool Tree::invalidDependence(Value *V, std::unordered_set<Value*> &Visited) {
+bool AlignedGraph::invalidDependence(Value *V, std::unordered_set<Value*> &Visited) {
   if (Visited.find(V)!=Visited.end()) return false;
   if (isa<PHINode>(V)) return false;
 
@@ -1798,7 +1837,7 @@ bool Tree::invalidDependence(Value *V, std::unordered_set<Value*> &Visited) {
 }
 
 
-bool Tree::isSchedulable(BasicBlock &BB) {
+bool AlignedGraph::isSchedulable(BasicBlock &BB) {
 
   if (Root==nullptr) return false;
   std::unordered_set<Value*> Visited;
@@ -1877,7 +1916,7 @@ void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Bu
     if (I==nullptr) continue;
     if (I->getParent()!=(&BB)) continue;
     for (auto *U : I->users()) {
-      if (!T.contains(U)) {
+      if (!G.contains(U)) {
 #ifdef TEST_DEBUG
 	errs() << "Found use: " << i << ": "; U->dump();
 #endif
@@ -2029,7 +2068,7 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
   return VL[0]; //TODO: return nullptr?
 }
 
-Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
+Value *CodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
   if (NodeToValue.find(N)!=NodeToValue.end()) return NodeToValue[N];
 
   switch(N->getNodeType()) {
@@ -2063,7 +2102,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 
         std::vector<Value*> Operands;
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
-          Operands.push_back(cloneTree(N->getChild(i), Builder));
+          Operands.push_back(cloneGraph(N->getChild(i), Builder));
         }
 
 #ifdef TEST_DEBUG
@@ -2134,7 +2173,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
 
         std::vector<Value*> Operands;
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
-          Operands.push_back(cloneTree(N->getChild(i), Builder));
+          Operands.push_back(cloneGraph(N->getChild(i), Builder));
         }
 
         SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
@@ -2185,7 +2224,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       }
 
       assert(GN->getNumChildren() && "Expected child with indices!");
-      Value *IndVarIdx = cloneTree(GN->getChild(0), Builder);
+      Value *IndVarIdx = cloneGraph(GN->getChild(0), Builder);
 #ifdef TEST_DEBUG
       errs() << "Closing GEPSEQ\n";
 #endif
@@ -2223,7 +2262,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       auto *BON = (BinOpSequenceNode*)N;
 
       assert(BON->getNumChildren() && "Expected child with varying operands!");
-      Value *Op = cloneTree(BON->getChild(0), Builder);
+      Value *Op = cloneGraph(BON->getChild(0), Builder);
 #ifdef TEST_DEBUG
       errs() << "Closing BINOP\n";
 #endif
@@ -2284,7 +2323,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
       auto *RN = (ReductionNode*)N;
 
       assert(RN->getNumChildren() && "Expected child with varying operands!");
-      Value *Op = cloneTree(RN->getChild(0), Builder);
+      Value *Op = cloneGraph(RN->getChild(0), Builder);
 #ifdef TEST_DEBUG
       errs() << "Closing REDUCTION\n";
 #endif
@@ -2472,7 +2511,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
           }
 
 	  Rem2 = CastIndVar;
-	  if (T.Root->size()>2){
+	  if (G.Root->size()>2){
             Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
             if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
               CreatedCode.push_back(Rem2I);
@@ -2510,7 +2549,7 @@ Value *CodeGenerator::cloneTree(Node *N, IRBuilder<> &Builder) {
           Rem2 = CachedRem2[IndVar->getType()];
 	} else {
 	
-	if (T.Root->size()>2){
+	if (G.Root->size()>2){
           Rem2 = Builder.CreateURem(IndVar, ConstantInt::get(IndVar->getType(), 2));
           if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
             CreatedCode.push_back(Rem2I);
@@ -2580,15 +2619,15 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 #ifdef TEST_DEBUG
   errs() << "Generating tree\n";
 #endif
-  cloneTree(T.Root, Builder);
+  cloneGraph(G.Root, Builder);
 #ifdef TEST_DEBUG
-  errs() << "Tree code generated!\n";
+  errs() << "Graph code generated!\n";
 #endif
  
   bool HasRecurrence = false;
   int HasMismatch = 0;
   //Late generation of recurrences
-  for (Node *N : T.Nodes) {
+  for (Node *N : G.Nodes) {
     if (N->getNodeType()==NodeType::RECURRENCE) {
       HasRecurrence = true;
       //update PHI
@@ -2602,8 +2641,8 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 
 #ifdef TEST_DEBUG
   errs() << "Root:\n";
-  for (auto *V : T.Root->getValues()) V->dump();
-  errs() << "Root size: " << T.Root->size() << "\n";
+  for (auto *V : G.Root->getValues()) V->dump();
+  errs() << "Root size: " << G.Root->size() << "\n";
 #endif
 
   auto *Add = Builder.CreateAdd(IndVar, ConstantInt::get(IndVarTy, 1));
@@ -2611,10 +2650,10 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 
 
   Value *Cond = nullptr;
-  if (AltSeqCmp && T.Root->size()==2) {
+  if (AltSeqCmp && G.Root->size()==2) {
     Cond = AltSeqCmp;
   } else {
-    auto *CondI = Builder.CreateICmpNE(Add, ConstantInt::get(IndVarTy, T.getWidth()));
+    auto *CondI = Builder.CreateICmpNE(Add, ConstantInt::get(IndVarTy, G.getWidth()));
     CreatedCode.push_back(CondI);
 
     Cond = CondI;
@@ -2632,20 +2671,20 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   bool Profitable = (SizeOriginal > SizeModified + SizeThreshold) && (HasMismatch<4);
   //BB.dump();
   //
-  errs() << T.getDotString() << "\n";
+  errs() << G.getDotString() << "\n";
 
   //PreHeader->dump();
   //Header->dump();
   //Exit->dump();
 
   errs() << "Gains: " << SizeOriginal << " - " << SizeModified << " = " << ( ((int)SizeOriginal) - ((int)SizeModified) ) << "; ";
-  errs() << "Width: " << T.Root->size() << "; ";
-  if (T.Root->getNodeType() == NodeType::REDUCTION) errs() << "Reduction ";
+  errs() << "Width: " << G.Root->size() << "; ";
+  if (G.Root->getNodeType() == NodeType::REDUCTION) errs() << "Reduction ";
   if (HasRecurrence) errs() << "Recurrence ";
 
   if (Profitable) {
     errs() << "Profitable; ";
-    //errs() << T.getDotString() << "\n";
+    //errs() << G.getDotString() << "\n";
   } else errs() << "Unprofitable; ";
   errs() << BB.getParent()->getName() << "\n";
 
@@ -2653,7 +2692,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   if (AlwaysRoll || Profitable) {
 	//std::string FileName = std::string("/tmp/roll.") + F.getParent()->getSourceFileName() + std::string(".") + F.getName().str();
 	//FileName += "." + BB.getName().str() + ".dot";
-	//T.writeDotFile(FileName);
+	//G.writeDotFile(FileName);
 #ifdef TEST_DEBUG
     //BB.dump();
 #endif
@@ -2667,7 +2706,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     Builder.SetInsertPoint(PreHeader);
     Builder.CreateBr(Header);
 
-    Instruction *InstSplitPt = T.getStartingInstruction(BB);
+    Instruction *InstSplitPt = G.getStartingInstruction(BB);
     if (InstSplitPt==nullptr) {
       return false;
     }
@@ -2679,7 +2718,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     while (InstSplitPt!=EndPt) {
       auto *I = InstSplitPt;
       InstSplitPt = InstSplitPt->getNextNode();
-      if (!isa<PHINode>(I) && !T.dependsOn(I)) {
+      if (!isa<PHINode>(I) && !G.dependsOn(I)) {
         I->removeFromParent();
         Builder.Insert(I);
       }
@@ -2927,21 +2966,21 @@ bool LoopRoller::run() {
           Attempt = false;
 	  bool HasRolled = false;
           if (StoreInsts.size()>1) {
-            Tree T(StoreInsts, *BB);
-	    //errs() << T.getDotString() << "\n";
+            AlignedGraph G(StoreInsts, *BB);
+	    //errs() << G.getDotString() << "\n";
 	    //std::string FileName = std::string("/tmp/roll.") + F.getParent()->getSourceFileName() + std::string(".") + F.getName().str();
 	    //FileName += "." + std::to_string(Count++) + ".dot";
-	    //T.writeDotFile(FileName);
-	    if (T.isSchedulable(*BB)) {
+	    //G.writeDotFile(FileName);
+	    if (G.isSchedulable(*BB)) {
 	      NothingFound = false;
-	      CodeGenerator CG(F, *BB, T);
+	      CodeGenerator CG(F, *BB, G);
 	      HasRolled = CG.generate(Seeds);
 	      Changed = Changed || HasRolled;
 	    } else {
-	      errs() << T.getDotString() << "\n";
+	      errs() << G.getDotString() << "\n";
 	      BB->dump();
 	    }
-            T.destroy();
+            G.destroy();
 	  }
 	  if (!HasRolled && FirstAttempt) {
             SavedInsts = StoreInsts;
@@ -2978,13 +3017,13 @@ bool LoopRoller::run() {
     for (auto &Pair : Seeds.Reductions) {
       if (Pair.second==nullptr) continue;
       if (!Pair.second->isTerminator()) continue; //skip non-terminators
-      Tree T(Pair.first, Pair.second, *BB);
-      if (T.isSchedulable(*BB)) {
+      AlignedGraph G(Pair.first, Pair.second, *BB);
+      if (G.isSchedulable(*BB)) {
 	NothingFound = false;
-        CodeGenerator CG(F, *BB, T);
+        CodeGenerator CG(F, *BB, G);
         Changed = Changed || CG.generate(Seeds);
       }
-      T.destroy();
+      G.destroy();
     }
 
 #ifdef TEST_DEBUG
@@ -2992,20 +3031,20 @@ bool LoopRoller::run() {
 #endif
     for (auto &Pair : Seeds.Calls) {
       if (Pair.second.size()>1) {
-        Tree T(Pair.second, *BB);
-	//errs() << T.getDotString() << "\n";
+        AlignedGraph G(Pair.second, *BB);
+	//errs() << G.getDotString() << "\n";
 	//std::string FileName = std::string("/tmp/roll.") + F.getParent()->getSourceFileName() + std::string(".") + F.getName().str();
 	//FileName += "." + std::to_string(Count++) + ".dot";
-	//T.writeDotFile(FileName);
-	if (T.isSchedulable(*BB)) {
+	//G.writeDotFile(FileName);
+	if (G.isSchedulable(*BB)) {
 	  NothingFound = false;
-	  CodeGenerator CG(F, *BB, T);
+	  CodeGenerator CG(F, *BB, G);
 	  Changed = Changed || CG.generate(Seeds);
 	} else {
-	  errs() << T.getDotString() << "\n";
+	  errs() << G.getDotString() << "\n";
 	  BB->dump();
 	}
-        T.destroy();
+        G.destroy();
       }
     }
 #ifdef TEST_DEBUG
@@ -3014,13 +3053,13 @@ bool LoopRoller::run() {
     for (auto &Pair : Seeds.Reductions) {
       if (Pair.second==nullptr) continue;
       if (Pair.second->isTerminator()) continue; //skip terminators
-      Tree T(Pair.first, Pair.second, *BB);
-      if (T.isSchedulable(*BB)) {
+      AlignedGraph G(Pair.first, Pair.second, *BB);
+      if (G.isSchedulable(*BB)) {
 	NothingFound = false;
-        CodeGenerator CG(F, *BB, T);
+        CodeGenerator CG(F, *BB, G);
         Changed = Changed || CG.generate(Seeds);
       }
-      T.destroy();
+      G.destroy();
     }
   }
 #ifdef TEST_DEBUG
