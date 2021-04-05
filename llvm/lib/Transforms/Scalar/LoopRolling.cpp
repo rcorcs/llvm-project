@@ -470,15 +470,15 @@ public:
 class BinOpSequenceNode : public Node {
 private:
   BinaryOperator *BinOpRef;
-  Value *FixedOperand;
-  std::vector<Value *> Operands;
+  std::vector<Value *> LeftOperands;
+  std::vector<Value *> RightOperands;
 public:
   template<typename ValueT>
-  BinOpSequenceNode(std::vector<ValueT *> &Vs, BinaryOperator *BinOpRef, Value *FixedOperand, std::vector<Value *> &Operands, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::BINOP,Vs,BB,Parent), BinOpRef(BinOpRef), FixedOperand(FixedOperand), Operands(Operands) {}
+  BinOpSequenceNode(std::vector<ValueT *> &Vs, BinaryOperator *BinOpRef, std::vector<Value *> &LeftOperands, std::vector<Value *> &RightOperands, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::BINOP,Vs,BB,Parent), BinOpRef(BinOpRef), LeftOperands(LeftOperands), RightOperands(RightOperands) {}
 
   BinaryOperator *getReference() { return BinOpRef; }
-  Value *getFixedOperand() { return FixedOperand; }
-  std::vector<Value *> &getOperands() { return Operands; }
+  std::vector<Value *> &getLeftOperands() { return LeftOperands; }
+  std::vector<Value *> &getRightOperands() { return RightOperands; }
 
   Instruction *getValidInstruction(unsigned i) {
     auto *I = dyn_cast<BinaryOperator>(getValue(i));
@@ -1394,51 +1394,53 @@ Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock
   VL[0]->dump();
 
   if (!isa<IntegerType>(VL[0]->getType())) return nullptr;
-  std::vector<Value*> Operands;
-  std::set<Value *> NonBinOp;
+  std::map<unsigned, unsigned> OpcodeFreq;
   for (auto *V : VL) {
     auto *BO = dyn_cast<BinaryOperator>(V);
-    if (!BO) NonBinOp.insert(V);
-    //else if (BO->getParent()!=(&BB)) NonBinOp.insert(V);
+    if (BO) {
+      OpcodeFreq[BO->getOpcode()]++;
+    }
   }
-  errs() << "NonBinOps:\n";
-  for (auto *V : NonBinOp) V->dump();
 
-  if (NonBinOp.size()!=1) return nullptr;
+  unsigned MaxOpcode = 0;
+  unsigned MaxFreq = 0;
+  for (auto &Pair : OpcodeFreq) {
+    if (Pair.second > MaxFreq) {
+      MaxOpcode = Pair.first;
+      MaxFreq = Pair.second;
+    }
+  }
+  if (!MaxOpcode)  return nullptr;
 
-  Value *FixedV = *NonBinOp.begin();
-  errs() << "Fixed:";FixedV->dump();
+
+  std::vector<Value*> LeftOperands;
+  std::vector<Value*> RightOperands;
 
   BinaryOperator *BinOpRef = nullptr;
   for (unsigned i = 0; i<VL.size(); i++) {
     auto *BinOp = dyn_cast<BinaryOperator>(VL[i]);
-    //if (BinOp==nullptr || BinOp->getParent()!=(&BB)) {
-    if (BinOp==nullptr) {
-      Operands.push_back(nullptr);
+
+    //if (BinOp==nullptr || BinOp->getParent()!=(&BB))
+    
+    if (BinOp==nullptr || BinOp->getOpcode()!=MaxOpcode) {
+      LeftOperands.push_back(VL[i]);
+      RightOperands.push_back(nullptr);
       continue;
     }
-    
-    //if (BinOp->getParent()!=(&BB)) return nullptr;
+    if (BinOpRef==nullptr) BinOpRef = BinOp;
 
-    if (BinOpRef) {
-      //matching binop?
-      if (BinOpRef->getOpcode()!=BinOp->getOpcode()) return nullptr;
-    } else BinOpRef = BinOp;
-
-    Value *Op = nullptr;
-    if (BinOp->isCommutative() && BinOp->getOperand(1)==FixedV)
-      Op = BinOp->getOperand(0);
-    else if (BinOp->getOperand(0)==FixedV)
-      Op = BinOp->getOperand(1);
-
-    if (Op==nullptr) return nullptr;
-
-    Operands.push_back(Op);
+    if (BinOp->isCommutative() && isa<Constant>(BinOp->getOperand(0))) {
+      LeftOperands.push_back(BinOp->getOperand(1));
+      RightOperands.push_back(BinOp->getOperand(0));
+    } else {
+      LeftOperands.push_back(BinOp->getOperand(0));
+      RightOperands.push_back(BinOp->getOperand(1));
+    }
   }
 
   if (BinOpRef==nullptr) return nullptr;
 
-  Type *Ty = FixedV->getType();
+  Type *Ty = BinOpRef->getType();
 
   Value *Neutral = nullptr;
   switch(BinOpRef->getOpcode()) {
@@ -1458,13 +1460,11 @@ Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock
     return nullptr;
   }
 
-  for (unsigned i = 0; i<Operands.size(); i++) {
-    if (Operands[i]==nullptr) Operands[i] = Neutral;
+  for (unsigned i = 0; i<RightOperands.size(); i++) {
+    if (RightOperands[i]==nullptr) RightOperands[i] = Neutral;
   }
 
-  if (FixedV) Inputs.insert(FixedV);
-
-  return new BinOpSequenceNode(VL, BinOpRef, FixedV, Operands, BB, Parent);
+  return new BinOpSequenceNode(VL, BinOpRef, LeftOperands, RightOperands, BB, Parent);
 }
 
 template<typename ValueT>
@@ -1699,14 +1699,23 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
        break;
     }
     case NodeType::BINOP: {
-       auto &Vs = ((BinOpSequenceNode*)N)->getOperands();
-       Node *Child = find(Vs);
-       if (Child==nullptr) {
-         Child = createNode(Vs, BB, N);
-         this->addNode(Child);
-         N->pushChild(Child);
-         growGraph(Child, BB, Visited);
-       } else N->pushChild(Child);
+       auto &V0 = ((BinOpSequenceNode*)N)->getLeftOperands();
+       Node *Child0 = find(V0);
+       if (Child0==nullptr) {
+         Child0 = createNode(V0, BB, N);
+         this->addNode(Child0);
+         N->pushChild(Child0);
+         growGraph(Child0, BB, Visited);
+       } else N->pushChild(Child0);
+
+       auto &V1 = ((BinOpSequenceNode*)N)->getRightOperands();
+       Node *Child1 = find(V1);
+       if (Child1==nullptr) {
+         Child1 = createNode(V1, BB, N);
+         this->addNode(Child1);
+         N->pushChild(Child1);
+         growGraph(Child1, BB, Visited);
+       } else N->pushChild(Child1);
       break;
     }
     case NodeType::CONSTEXPR: {
@@ -1759,10 +1768,10 @@ void AlignedGraph::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Vi
   Visited.insert(N);
   if (i>=N->size()) return;
 
+  for (auto *CN : N->getChildren()) {
+    buildSchedulingOrder(CN, i, Visited);
+  }
   if (auto *I = N->getValidInstruction(i)) {
-    for (auto *CN : N->getChildren()) {
-      buildSchedulingOrder(CN, i, Visited);
-    }
     //if (std::find(SchedulingOrder.begin(),SchedulingOrder.end(),I)==SchedulingOrder.end()) {
     if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
     bool Found = false;
@@ -1779,6 +1788,7 @@ void AlignedGraph::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Vi
       //N->getValue(i)->dump();
 
       if (I->mayWriteToMemory() || I->mayHaveSideEffects()) {
+      //if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
         //errs() << "Breaking Scheduling Node\n";
 	if (!SchedulingOrder.back().empty()) {
           ScheduleNode SN;
@@ -1850,10 +1860,13 @@ bool AlignedGraph::isSchedulable(BasicBlock &BB) {
     }
   }
 
+  for (auto &SO : SchedulingOrder) SO.dump();
+
   if (SchedulingOrder.empty()) {
 	  errs() << "Empty scheduling entries\n";
 	  return true;
   }
+
 
   Instruction *I = getStartingInstruction(BB);
   if (I==nullptr) return false;
@@ -2262,7 +2275,9 @@ Value *CodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       auto *BON = (BinOpSequenceNode*)N;
 
       assert(BON->getNumChildren() && "Expected child with varying operands!");
-      Value *Op = cloneGraph(BON->getChild(0), Builder);
+      Value *Op0 = cloneGraph(BON->getChild(0), Builder);
+      Value *Op1 = cloneGraph(BON->getChild(1), Builder);
+
 #ifdef TEST_DEBUG
       errs() << "Closing BINOP\n";
 #endif
@@ -2283,8 +2298,8 @@ Value *CodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
         }
       }
 
-      NewI->setOperand(0,BON->getFixedOperand());
-      NewI->setOperand(1,Op);
+      NewI->setOperand(0,Op0);
+      NewI->setOperand(1,Op1);
 
       generateExtract(N, NewI, Builder);
 
