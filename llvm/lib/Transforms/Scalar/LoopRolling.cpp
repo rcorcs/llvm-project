@@ -806,9 +806,11 @@ public:
       if (std::find(Nodes.begin(), Nodes.end(), N)==Nodes.end()) {
         Nodes.push_back(N);
 	if (N->getNodeType()!=NodeType::MISMATCH && N->getNodeType()!=NodeType::IDENTICAL && N->getNodeType()!=NodeType::RECURRENCE) {
-          for (auto *V : N->getValues()) {
+          //for (auto *V : N->getValues()) {
+	  for (unsigned i = 0; i<N->size(); i++) {
+            Value *V = N->getValidInstruction(i);
+	    if (V) ValuesInNode.insert(V);
             //NodeMap[V].insert(N);
-            ValuesInNode.insert(V);
 	  }
 	}
         NodeMap[N->getValue(0)].insert(N);
