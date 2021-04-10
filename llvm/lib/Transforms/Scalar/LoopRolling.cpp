@@ -203,7 +203,7 @@ static bool match(Value *V1, Value *V2) {
 }
 
 enum NodeType {
-  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, REDUCTION, RECURRENCE, MISMATCH
+  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, REDUCTION, RECURRENCE, MISMATCH, MULTI
 };
 
 class Node {
@@ -214,6 +214,8 @@ private:
   std::vector<Value*> Values;
   std::vector<Node *> Children;
 public:
+  Node(NodeType NT, BasicBlock &BB, Node *Parent=nullptr) : BBPtr(&BB), Parent(Parent), NType(NT) {}
+
   template<typename ValueT>
   Node(NodeType NT, std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent=nullptr) : BBPtr(&BB), Parent(Parent), NType(NT) {
     for (auto *V : Vs) Values.push_back(V);
@@ -244,6 +246,27 @@ public:
   virtual std::string getString() = 0;
   virtual Instruction *getValidInstruction(unsigned i) = 0;
 };
+
+class MultiNode : public Node {
+public:
+  std::vector< std::vector<Instruction *> > Groups;
+
+  MultiNode(BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::MULTI,BB,Parent) {}
+
+  Instruction *getValidInstruction(unsigned i) {
+    return nullptr;
+  }
+
+  std::string getString() {
+    return "multi flow";
+  }
+
+  void addGroup(std::vector<Instruction *> &Vs) { Groups.push_back(Vs); }
+  size_t getNumGroups() { return Groups.size(); }
+  std::vector<Instruction *> &getGroup(size_t i) { return Groups[i]; }
+
+};
+
 
 class MatchingNode : public Node {
 public:
@@ -776,6 +799,16 @@ public:
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
 
+  AlignedGraph(Node *N, BasicBlock &BB) : BB(&BB) {
+    Root = N;
+    if (Root) {
+      addNode(Root);
+      std::set<Node*> Visited;
+      growGraph(Root, BB, Visited);
+      buildSchedulingOrder();
+    }
+  }
+
   AlignedGraph(BinaryOperator *BO, Instruction *U, BasicBlock &BB) : BB(&BB) {
     Root = buildReduction(BO,U,BB,nullptr);
     if (Root) {
@@ -794,6 +827,8 @@ public:
     growGraph(Root,BB, Visited);
     buildSchedulingOrder();
   }
+
+  
 
   BasicBlock *getBlock() { return BB; }
 
@@ -862,7 +897,7 @@ public:
   bool invalidDependence(Value *V, std::unordered_set<Value*> &Visited);
 
   Instruction *getStartingInstruction(BasicBlock &BB);
-  Instruction *getEndingInstruction(BasicBlock &BB);
+  //Instruction *getEndingInstruction(BasicBlock &BB);
   bool isSchedulable(BasicBlock &BB);
 
   std::string getDotString() {
@@ -1034,6 +1069,16 @@ public:
       //Reductions.erase(std::remove(Reductions.begin(), Reductions.end(), BO), Reductions.end());
     }
   }
+
+  std::vector<Instruction *> *getGroupWith(Instruction *I) {
+    for (auto &Pair : Stores) {
+      if (std::find(Pair.second.begin(), Pair.second.end(), I)!=Pair.second.end()) return &(Pair.second);
+    }
+    for (auto &Pair : Calls) {
+      if (std::find(Pair.second.begin(), Pair.second.end(), I)!=Pair.second.end()) return &(Pair.second);
+    }
+    return nullptr;
+  }
 };
 
 class CodeGenerator {
@@ -1076,13 +1121,16 @@ private:
 
 class LoopRoller {
 public:
-  LoopRoller(Function &F) : F(F) {}
+  LoopRoller(Function &F) : F(F), NumAttempts(0), NumRolledLoops(0) {}
 
   bool run();
 private:
   Function &F;
+  unsigned NumAttempts;
+  unsigned NumRolledLoops;
 
   void collectSeedInstructions(BasicBlock &BB);
+  bool attemptRollingSeeds(BasicBlock &BB);
   //void codeGeneration(Tree &T, BasicBlock &BB);
 
   SeedGroups Seeds;
@@ -1381,6 +1429,13 @@ Node *AlignedGraph::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, Basi
   return new AlternatingSequenceNode(VL, First, Second, BB, Parent);
 }
 
+
+template<typename ValueT>
+static Node *specialAddOrBinOpSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+  return nullptr;
+}
+
+
 /*
 For a given binary operator with a neutral element, we can have a sequence such as:
 a0 + 0, a1 + 1, a2 + 2, ...
@@ -1389,6 +1444,12 @@ a0, a1 + 1, a2 + 2, ...
 making it less obvious that these operations match.
 This special node tries to identify this pattern of sequence of binary operation,
 reconstructing the operation over the neutral element.
+However, this is a general implementation that works for any sequence of left- and right-hand side operands:
+a0 + b0, a1 + b1, ..., ai, ..., aj, ..., an + bn.
+The sequence can have multiple mismatching terms that are then rewritten as an operation with the neutral operand, e.g., ai + 0 and aj + 0.
+Note that any of the ak or bk terms can be anything.
+The mismatching terms can also be anything, even another binary operation, as long as they have different opcodes to the main binary operation.
+If the input sequence contains multiple binary operations, the most frequent one is selected.
 */
 template<typename ValueT>
 Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
@@ -1413,7 +1474,11 @@ Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock
     }
   }
   if (!MaxOpcode)  return nullptr;
-
+  
+  if (MaxOpcode==Instruction::Add && OpcodeFreq.find(Instruction::Or)!=OpcodeFreq.end()) {
+    Node *N = specialAddOrBinOpSequence(VL, BB, Parent);
+    if (N) return N;
+  }
 
   std::vector<Value*> LeftOperands;
   std::vector<Value*> RightOperands;
@@ -1512,6 +1577,18 @@ Node *AlignedGraph::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock &B
   return RN;
 }
 
+
+/*
+Create a node of matching constant expressions.
+This is similar to the node of matching instructions.
+While constant expressions can be solved at compile time,
+we generate conventional instructions in the rolled loop.
+Note that they are not computing identical values.
+Therefore, the alternative would be to keep them as individual constant expressions
+but generate code to import their values from the loop, which has
+a greater cost in terms of code size.
+Constant expressions are often used for computing indexes of global arrays, using GEPOperators.
+*/
 template<typename ValueT>
 Node *AlignedGraph::buildConstExprNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent) {
 
@@ -1676,6 +1753,19 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
     case NodeType::ALTSEQ: break;
     case NodeType::INTSEQ: break;
     case NodeType::RECURRENCE: break;
+    case NodeType::MULTI: {
+       MultiNode *MN = ((MultiNode*)N);
+       for (size_t i = 0; i<MN->getNumGroups(); i++) {
+         auto &Vs = MN->getGroup(i);
+	 Node *Child = find(Vs);
+	 if (Child==nullptr) {
+           Child = createNode(Vs, BB, N);
+	   this->addNode(Child);
+	   N->pushChild(Child);
+           growGraph(Child, BB, Visited);
+         } else N->pushChild(Child);
+       }
+    } break;
     case NodeType::REDUCTION: {
        auto &Vs = ((ReductionNode*)N)->getOperands();
 
@@ -1686,8 +1776,7 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
          N->pushChild(Child);
          growGraph(Child, BB, Visited);
        } else N->pushChild(Child);
-       break;
-    }
+    } break;
     case NodeType::GEPSEQ: {
        auto &Vs = ((GEPSequenceNode*)N)->getIndices();
 
@@ -1698,8 +1787,7 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
          N->pushChild(Child);
          growGraph(Child, BB, Visited);
        } else N->pushChild(Child);
-       break;
-    }
+    } break;
     case NodeType::BINOP: {
        auto &V0 = ((BinOpSequenceNode*)N)->getLeftOperands();
        Node *Child0 = find(V0);
@@ -1718,8 +1806,7 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
          N->pushChild(Child1);
          growGraph(Child1, BB, Visited);
        } else N->pushChild(Child1);
-      break;
-    }
+    } break;
     case NodeType::CONSTEXPR: {
       auto *CE = dyn_cast<ConstantExpr>(N->getValue(0));
       if (CE==nullptr) return;
@@ -1739,8 +1826,7 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
           growGraph(Child, BB, Visited);
 	} else N->pushChild(Child);
       }
-      break;
-    }
+    } break;
     case NodeType::MATCH: {
       Instruction *I = dyn_cast<Instruction>(N->getValue(0));
       if (I==nullptr) return;
@@ -1760,8 +1846,8 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
           growGraph(Child, BB, Visited);
 	} else N->pushChild(Child);
       }
-      break;
-    }
+    } break;
+    default: break;
   }
 }
 
@@ -1824,9 +1910,11 @@ Instruction *AlignedGraph::getStartingInstruction(BasicBlock &BB) {
   return nullptr;
 }
 
+/*
 Instruction *AlignedGraph::getEndingInstruction(BasicBlock &BB) {
   return dyn_cast<Instruction>(Root->getValue(Root->size()-1));
 }
+*/
 
 bool AlignedGraph::invalidDependence(Value *V, std::unordered_set<Value*> &Visited) {
   if (Visited.find(V)!=Visited.end()) return false;
@@ -2092,6 +2180,15 @@ Value *CodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       errs() << "Generating IDENTICAL\n";
 #endif
       return N->getValue(0);
+    }
+    case NodeType::MULTI: {
+#ifdef TEST_DEBUG
+      errs() << "Generating MULTI\n";
+#endif
+      for (unsigned i = 0; i<N->getNumChildren(); i++) {
+        cloneGraph(N->getChild(i), Builder);
+      }
+      return nullptr; //there is no single value to return
     }
     case NodeType::MATCH: {
 #ifdef TEST_DEBUG
@@ -2956,23 +3053,111 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
   }
 }
 
-bool LoopRoller::run() {
-  std::vector<BasicBlock *> Blocks;
-  for (BasicBlock &BB : F) Blocks.push_back(&BB);
 
-  errs() << "Optimizing: " << F.getName() << "\n";
-  //F.dump();
+bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
+    bool Changed = false;
+    
+    for (auto &Pair : Seeds.Stores) {
+      bool Valid = true;
+      errs() << "Attempting Group:\n";
+      for (Instruction *I : Pair.second) {
+	I->dump();
+        if (I->getNumUses()) {
+	    Valid = false;
+        }
+      }
+      if (Valid && Pair.second.size()>1) {
+	MultiNode *MN = new MultiNode(BB);
+	MN->addGroup(Pair.second);
+	Instruction *I = Pair.second[0];
+	I = I->getNextNode();
+	for (; I!=Pair.second[1]; I=I->getNextNode()) {
+	  auto *Group = Seeds.getGroupWith(I);
+	  bool Valid = false;
+	  if (Group && Pair.second.size()==Group->size()) {
+	    if ( (*Group)[0]!=I ) continue; //accept only groups in order
+	    Valid = true;
+	    for (Instruction *OtherI : (*Group)) {
+              if (OtherI->getNumUses()) {
+		Valid = false;
+	      }
+	    }
+	  }
+	  if (Valid) {
+	    MN->addGroup(*Group);
+            errs() << "Group:\n";
+	    for (Instruction *OtherI : (*Group)) {
+	      OtherI->dump();
+	    }
+	  }
+	}
 
-  bool Changed = false;
+	if (MN->getNumGroups()>1) {
+	  AlignedGraph G(MN,BB);
+          if (G.isSchedulable(BB)) {
+  	    NumAttempts++;
+            CodeGenerator CG(F, BB, G);
+	    bool HasRolled = CG.generate(Seeds);
+            Changed = Changed || HasRolled;
+	    if (HasRolled) NumRolledLoops++;
+          }
+          G.destroy();
+	} else delete MN;
+      }
+    }
 
-  bool NothingFound = true;
-  for (BasicBlock *BB : Blocks) {
-    collectSeedInstructions(*BB);
+    for (auto &Pair : Seeds.Calls) {
+      bool Valid = true;
+      errs() << "Attempting Group:\n";
+      for (Instruction *I : Pair.second) {
+	I->dump();
+        if (I->getNumUses()) {
+	    Valid = false;
+        }
+      }
+      if (Valid && Pair.second.size()>1) {
+	MultiNode *MN = new MultiNode(BB);
+	MN->addGroup(Pair.second);
+	Instruction *I = Pair.second[0];
+	I = I->getNextNode();
+	for (; I!=Pair.second[1]; I=I->getNextNode()) {
+	  auto *Group = Seeds.getGroupWith(I);
+	  bool Valid = false;
+	  if (Group && Pair.second.size()==Group->size()) {
+	    if ( (*Group)[0]!=I ) continue; //accept only groups in order
+	    Valid = true;
+	    for (Instruction *OtherI : (*Group)) {
+              if (OtherI->getNumUses()) {
+		Valid = false;
+	      }
+	    }
+	  }
+	  if (Valid) {
+	    MN->addGroup(*Group);
+            errs() << "Group:\n";
+	    for (Instruction *OtherI : (*Group)) {
+	      OtherI->dump();
+	    }
+	  }
+	}
+
+	if (MN->getNumGroups()>1) {
+	  AlignedGraph G(MN,BB);
+          if (G.isSchedulable(BB)) {
+  	    NumAttempts++;
+            CodeGenerator CG(F, BB, G);
+	    bool HasRolled = CG.generate(Seeds);
+            Changed = Changed || HasRolled;
+	    if (HasRolled) NumRolledLoops++;
+          }
+          G.destroy();
+	} else delete MN;
+      }
+    }
+
 #ifdef TEST_DEBUG
     //errs() << "stores\n";
 #endif
-    //unsigned Count = 0;
-
     for (auto &Pair : Seeds.Stores) {
       if (Pair.second.size()>1) {
         std::vector<Instruction *> SavedInsts;
@@ -2983,19 +3168,16 @@ bool LoopRoller::run() {
           Attempt = false;
 	  bool HasRolled = false;
           if (StoreInsts.size()>1) {
-            AlignedGraph G(StoreInsts, *BB);
-	    //errs() << G.getDotString() << "\n";
-	    //std::string FileName = std::string("/tmp/roll.") + F.getParent()->getSourceFileName() + std::string(".") + F.getName().str();
-	    //FileName += "." + std::to_string(Count++) + ".dot";
-	    //G.writeDotFile(FileName);
-	    if (G.isSchedulable(*BB)) {
-	      NothingFound = false;
-	      CodeGenerator CG(F, *BB, G);
+            AlignedGraph G(StoreInsts, BB);
+	    if (G.isSchedulable(BB)) {
+	      NumAttempts++;
+	      CodeGenerator CG(F, BB, G);
 	      HasRolled = CG.generate(Seeds);
+	      if (HasRolled) NumRolledLoops++;
 	      Changed = Changed || HasRolled;
 	    } else {
 	      errs() << G.getDotString() << "\n";
-	      BB->dump();
+	      BB.dump();
 	    }
             G.destroy();
 	  }
@@ -3010,12 +3192,12 @@ bool LoopRoller::run() {
 	      errs() << "Trying AGAIN\n";
 	      StoreInsts.clear();
 	      StoreInsts.push_back(SI0);
-	      int step = 1;
+	      size_t step = 1;
 	      for (; step<SavedInsts.size(); step++) {
 	        StoreInst *SI = dyn_cast<StoreInst>(SavedInsts[step]);
                 if (SI && match(SI0->getPointerOperand(), SI->getPointerOperand())) {
                   StoreInsts.push_back(SI);
-		} else break;
+                } else break;
 	      }
               std::vector<Instruction *> Tmp;
 	      for (; step<SavedInsts.size(); step++) {
@@ -3027,39 +3209,37 @@ bool LoopRoller::run() {
         }
       }
     }
-
 #ifdef TEST_DEBUG
     //errs() << "reductions (terminators)\n";
 #endif
     for (auto &Pair : Seeds.Reductions) {
       if (Pair.second==nullptr) continue;
       if (!Pair.second->isTerminator()) continue; //skip non-terminators
-      AlignedGraph G(Pair.first, Pair.second, *BB);
-      if (G.isSchedulable(*BB)) {
-	NothingFound = false;
-        CodeGenerator CG(F, *BB, G);
-        Changed = Changed || CG.generate(Seeds);
+      AlignedGraph G(Pair.first, Pair.second, BB);
+      if (G.isSchedulable(BB)) {
+	NumAttempts++;
+        CodeGenerator CG(F, BB, G);
+	bool HasRolled = CG.generate(Seeds);
+        Changed = Changed || HasRolled;
+	if (HasRolled) NumRolledLoops++;
       }
       G.destroy();
     }
-
 #ifdef TEST_DEBUG
     //errs() << "calls\n";
 #endif
     for (auto &Pair : Seeds.Calls) {
       if (Pair.second.size()>1) {
-        AlignedGraph G(Pair.second, *BB);
-	//errs() << G.getDotString() << "\n";
-	//std::string FileName = std::string("/tmp/roll.") + F.getParent()->getSourceFileName() + std::string(".") + F.getName().str();
-	//FileName += "." + std::to_string(Count++) + ".dot";
-	//G.writeDotFile(FileName);
-	if (G.isSchedulable(*BB)) {
-	  NothingFound = false;
-	  CodeGenerator CG(F, *BB, G);
-	  Changed = Changed || CG.generate(Seeds);
+        AlignedGraph G(Pair.second, BB);
+	if (G.isSchedulable(BB)) {
+	  NumAttempts++;
+          CodeGenerator CG(F, BB, G);
+	  bool HasRolled = CG.generate(Seeds);
+          Changed = Changed || HasRolled;
+	  if (HasRolled) NumRolledLoops++;
 	} else {
 	  errs() << G.getDotString() << "\n";
-	  BB->dump();
+	  BB.dump();
 	}
         G.destroy();
       }
@@ -3070,19 +3250,38 @@ bool LoopRoller::run() {
     for (auto &Pair : Seeds.Reductions) {
       if (Pair.second==nullptr) continue;
       if (Pair.second->isTerminator()) continue; //skip terminators
-      AlignedGraph G(Pair.first, Pair.second, *BB);
-      if (G.isSchedulable(*BB)) {
-	NothingFound = false;
-        CodeGenerator CG(F, *BB, G);
-        Changed = Changed || CG.generate(Seeds);
+      AlignedGraph G(Pair.first, Pair.second, BB);
+      if (G.isSchedulable(BB)) {
+	NumAttempts++;
+        CodeGenerator CG(F, BB, G);
+	bool HasRolled = CG.generate(Seeds);
+        Changed = Changed || HasRolled;
+	if (HasRolled) NumRolledLoops++;
       }
       G.destroy();
     }
+
+    return Changed;
+}
+
+
+bool LoopRoller::run() {
+  std::vector<BasicBlock *> Blocks;
+  for (BasicBlock &BB : F) Blocks.push_back(&BB);
+
+  errs() << "Optimizing: " << F.getName() << "\n";
+  //F.dump();
+
+  bool Changed = false;
+
+  for (BasicBlock *BB : Blocks) {
+    collectSeedInstructions(*BB);
+    Changed = Changed || attemptRollingSeeds(*BB);
   }
 #ifdef TEST_DEBUG
-  errs() << "Done Loop Roller!\n";
+  errs() << "Done Loop Roller: " << NumRolledLoops << "/" << NumAttempts << "\n";
 #endif
-  if (NothingFound) errs() << "Nothing found in: " << F.getName() << "\n";
+  if (NumAttempts==0) errs() << "Nothing found in: " << F.getName() << "\n";
 
   return Changed;
 }
