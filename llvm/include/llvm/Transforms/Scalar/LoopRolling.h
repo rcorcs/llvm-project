@@ -10,6 +10,7 @@
 #define LLVM_TRANSFORMS_SCALAR_LOOPROLLING_H
 
 #include "llvm/IR/PassManager.h"
+#include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/Transforms/Scalar/LoopPassManager.h"
 
 #include <vector>
@@ -24,7 +25,7 @@ public:
   /// Run the pass over the function.
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 
-  bool runImpl(Function &F);
+  bool runImpl(Function &F, ScalarEvolution *SE);
 };
 
 } // end namespace llvm

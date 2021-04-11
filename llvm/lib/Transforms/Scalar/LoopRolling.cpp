@@ -792,6 +792,7 @@ public:
 class AlignedGraph {
 public:
   BasicBlock *BB;
+  ScalarEvolution *SE;
   Node *Root;
   std::vector<Node*> Nodes;
   std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap;
@@ -799,7 +800,7 @@ public:
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
 
-  AlignedGraph(Node *N, BasicBlock &BB) : BB(&BB) {
+  AlignedGraph(Node *N, BasicBlock &BB, ScalarEvolution *SE=nullptr) : BB(&BB), SE(SE) {
     Root = N;
     if (Root) {
       addNode(Root);
@@ -809,7 +810,7 @@ public:
     }
   }
 
-  AlignedGraph(BinaryOperator *BO, Instruction *U, BasicBlock &BB) : BB(&BB) {
+  AlignedGraph(BinaryOperator *BO, Instruction *U, BasicBlock &BB, ScalarEvolution *SE=nullptr) : BB(&BB), SE(SE) {
     Root = buildReduction(BO,U,BB,nullptr);
     if (Root) {
       addNode(Root);
@@ -820,15 +821,13 @@ public:
   }
 
   template<typename ValueT>
-  AlignedGraph(std::vector<ValueT*> &Vs, BasicBlock &BB) : BB(&BB) {
+  AlignedGraph(std::vector<ValueT*> &Vs, BasicBlock &BB, ScalarEvolution *SE=nullptr) : BB(&BB), SE(SE) {
     Root = createNode(Vs,BB);
     addNode(Root);
     std::set<Node*> Visited;
     growGraph(Root,BB, Visited);
     buildSchedulingOrder();
   }
-
-  
 
   BasicBlock *getBlock() { return BB; }
 
@@ -1121,11 +1120,12 @@ private:
 
 class LoopRoller {
 public:
-  LoopRoller(Function &F) : F(F), NumAttempts(0), NumRolledLoops(0) {}
+  LoopRoller(Function &F, ScalarEvolution *SE) : F(F), SE(SE), NumAttempts(0), NumRolledLoops(0) {}
 
   bool run();
 private:
   Function &F;
+  ScalarEvolution *SE;
   unsigned NumAttempts;
   unsigned NumRolledLoops;
 
@@ -1429,12 +1429,47 @@ Node *AlignedGraph::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, Basi
   return new AlternatingSequenceNode(VL, First, Second, BB, Parent);
 }
 
+static bool isAddition(Instruction *I, ScalarEvolution *SE) {
+  if (I->getOpcode()==Instruction::Add) return true;
+  if (I->getOpcode()==Instruction::Or) {
+    errs() << "Checking if represents addition:"; I->dump();
 
-template<typename ValueT>
-static Node *specialAddOrBinOpSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
-  return nullptr;
+    Value *Op1 = I->getOperand(0);
+    ConstantInt *Op2 = dyn_cast<ConstantInt>(I->getOperand(1));
+    if (Op2==nullptr) return false;
+    if (!isa<PHINode>(Op1)) return false;
+
+    auto *AddRec = dyn_cast<SCEVAddRecExpr>(SE->getSCEV(Op1));
+    if (AddRec==nullptr) return false;
+    errs() << "SCEV:"; AddRec->dump();
+
+    auto *Start = dyn_cast<SCEVConstant>(AddRec->getStart());
+    if (Start==nullptr) return false;
+    errs() << "Start:"; Start->dump();
+    auto *Step = dyn_cast<SCEVConstant>(AddRec->getStepRecurrence(*SE));
+    if (Step==nullptr) return false;
+    errs() << "Step:"; Step->dump();
+
+
+    auto StartInt = Start->getAPInt();
+    auto StepInt = Step->getAPInt();
+
+    if (! StepInt.abs().isPowerOf2() ) return false;
+    if (StepInt.abs().slt(Op2->getValue())) return false;
+    StartInt &= Op2->getValue();
+    errs() << "AND: " << StartInt << "\n";
+    if (!StartInt.isNullValue()) return false;
+
+    errs() << "Is Addition\n";
+    return true;
+  }
+  return false;
 }
 
+static bool isEquivalent(Instruction *I, unsigned opcode, ScalarEvolution *SE) {
+  if (SE && opcode==Instruction::Add) return isAddition(I, SE);
+  return (I->getOpcode()==opcode);
+}
 
 /*
 For a given binary operator with a neutral element, we can have a sequence such as:
@@ -1475,11 +1510,6 @@ Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock
   }
   if (!MaxOpcode)  return nullptr;
   
-  if (MaxOpcode==Instruction::Add && OpcodeFreq.find(Instruction::Or)!=OpcodeFreq.end()) {
-    Node *N = specialAddOrBinOpSequence(VL, BB, Parent);
-    if (N) return N;
-  }
-
   std::vector<Value*> LeftOperands;
   std::vector<Value*> RightOperands;
 
@@ -1489,12 +1519,13 @@ Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock
 
     //if (BinOp==nullptr || BinOp->getParent()!=(&BB))
     
-    if (BinOp==nullptr || BinOp->getOpcode()!=MaxOpcode) {
+    //if (BinOp==nullptr || BinOp->getOpcode()!=MaxOpcode) {
+    if (BinOp==nullptr || (!isEquivalent(BinOp, MaxOpcode, SE)) ) {
       LeftOperands.push_back(VL[i]);
       RightOperands.push_back(nullptr);
       continue;
     }
-    if (BinOpRef==nullptr) BinOpRef = BinOp;
+    if (BinOpRef==nullptr && BinOp->getOpcode()==MaxOpcode) BinOpRef = BinOp;
 
     if (BinOp->isCommutative() && isa<Constant>(BinOp->getOperand(0))) {
       LeftOperands.push_back(BinOp->getOperand(1));
@@ -3093,7 +3124,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 	}
 
 	if (MN->getNumGroups()>1) {
-	  AlignedGraph G(MN,BB);
+	  AlignedGraph G(MN,BB,SE);
           if (G.isSchedulable(BB)) {
   	    NumAttempts++;
             CodeGenerator CG(F, BB, G);
@@ -3142,7 +3173,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 	}
 
 	if (MN->getNumGroups()>1) {
-	  AlignedGraph G(MN,BB);
+	  AlignedGraph G(MN,BB,SE);
           if (G.isSchedulable(BB)) {
   	    NumAttempts++;
             CodeGenerator CG(F, BB, G);
@@ -3168,7 +3199,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
           Attempt = false;
 	  bool HasRolled = false;
           if (StoreInsts.size()>1) {
-            AlignedGraph G(StoreInsts, BB);
+            AlignedGraph G(StoreInsts, BB, SE);
 	    if (G.isSchedulable(BB)) {
 	      NumAttempts++;
 	      CodeGenerator CG(F, BB, G);
@@ -3215,7 +3246,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
     for (auto &Pair : Seeds.Reductions) {
       if (Pair.second==nullptr) continue;
       if (!Pair.second->isTerminator()) continue; //skip non-terminators
-      AlignedGraph G(Pair.first, Pair.second, BB);
+      AlignedGraph G(Pair.first, Pair.second, BB, SE);
       if (G.isSchedulable(BB)) {
 	NumAttempts++;
         CodeGenerator CG(F, BB, G);
@@ -3230,7 +3261,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 #endif
     for (auto &Pair : Seeds.Calls) {
       if (Pair.second.size()>1) {
-        AlignedGraph G(Pair.second, BB);
+        AlignedGraph G(Pair.second, BB, SE);
 	if (G.isSchedulable(BB)) {
 	  NumAttempts++;
           CodeGenerator CG(F, BB, G);
@@ -3250,7 +3281,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
     for (auto &Pair : Seeds.Reductions) {
       if (Pair.second==nullptr) continue;
       if (Pair.second->isTerminator()) continue; //skip terminators
-      AlignedGraph G(Pair.first, Pair.second, BB);
+      AlignedGraph G(Pair.first, Pair.second, BB, SE);
       if (G.isSchedulable(BB)) {
 	NumAttempts++;
         CodeGenerator CG(F, BB, G);
@@ -3286,13 +3317,14 @@ bool LoopRoller::run() {
   return Changed;
 }
 
-bool LoopRolling::runImpl(Function &F) {
-  LoopRoller RL(F);
+bool LoopRolling::runImpl(Function &F, ScalarEvolution *SE) {
+  LoopRoller RL(F, SE);
   return RL.run();
 }
 
 PreservedAnalyses LoopRolling::run(Function &F, FunctionAnalysisManager &AM) {
-  bool Changed = runImpl(F);
+  auto *SE = &AM.getResult<ScalarEvolutionAnalysis>(F);
+  bool Changed = runImpl(F, SE);
   if (!Changed)
     return PreservedAnalyses::all();
   PreservedAnalyses PA;
@@ -3320,10 +3352,12 @@ public:
     if (F.isDeclaration()) return false;
 
     //F.dump();
-    return Impl.runImpl(F);
+    auto *SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
+    return Impl.runImpl(F, SE);
   }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.addRequired<ScalarEvolutionWrapperPass>();
   }
 
 private:
