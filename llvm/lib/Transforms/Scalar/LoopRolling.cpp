@@ -1485,6 +1485,9 @@ The sequence can have multiple mismatching terms that are then rewritten as an o
 Note that any of the ak or bk terms can be anything.
 The mismatching terms can also be anything, even another binary operation, as long as they have different opcodes to the main binary operation.
 If the input sequence contains multiple binary operations, the most frequent one is selected.
+
+It also allows binop sequences to contain mixed opcodes that are equivalent.
+For example, it may contain 'or' and 'add' -- an 'or' operation can be used if no carry is needed in the binary addition.
 */
 template<typename ValueT>
 Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
