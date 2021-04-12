@@ -3058,9 +3058,12 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR, con
   Value *FuncId = MFR.getFunctionIdValue(F);
   Function *MergedF = MFR.getMergedFunction();
 
+  errs() << "Updating uses of: " << F->getName() << "\n";
+
   unsigned CountUsers = 0;
   std::vector<CallBase *> Calls;
   for (User *U : F->users()) {
+    errs() << "Replacing use: "; U->dump();
     CountUsers++;
     if (CallInst *CI = dyn_cast<CallInst>(U)) {
       if (CI->getCalledFunction() == F) {
@@ -3072,6 +3075,7 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR, con
         Calls.push_back(II);
       }
     }
+    
   }
 
   if (Calls.size()<CountUsers)
@@ -3938,6 +3942,19 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
         BlocksF1[MergedBB] = BB1;
         BlocksF2[MergedBB] = BB2;
 
+	//IMPORTANT: make sure any use in a blockaddress constant
+	//operation is updated correctly
+        for (User *U : BB1->users()) {
+          if (BlockAddress *BA = dyn_cast<BlockAddress>(U)) {
+	    VMap[BA] = BlockAddress::get(MergedFunc, MergedBB);
+          }
+        }
+        for (User *U : BB2->users()) {
+          if (BlockAddress *BA = dyn_cast<BlockAddress>(U)) {
+	    VMap[BA] = BlockAddress::get(MergedFunc, MergedBB);
+          }
+        }
+
         IRBuilder<> Builder(MergedBB);
         for (Instruction &I : *BB1) {
           if (isa<PHINode>(&I)) {
@@ -3981,6 +3998,15 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
         NewBB = BasicBlock::Create(MergedFunc->getContext(), BBName, MergedFunc);
         VMap[BB] = NewBB;
         BlocksFX[NewBB] = BB;
+
+	//IMPORTANT: make sure any use in a blockaddress constant
+	//operation is updated correctly
+        for (User *U : BB->users()) {
+          if (BlockAddress *BA = dyn_cast<BlockAddress>(U)) {
+	    VMap[BA] = BlockAddress::get(MergedFunc, NewBB);
+          }
+        }
+
         //errs() << "NewBB: " << NewBB->getName() << "\n";
         IRBuilder<> Builder(NewBB);
         for (Instruction &I : *BB) {
@@ -4499,6 +4525,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
           assert(V1 != nullptr && "Value should NOT be null!");
           assert(V2 != nullptr && "Value should NOT be null!");
+
 
           Value *V = MergeValues(V1, V2, NewI);
           if (V == nullptr) {
