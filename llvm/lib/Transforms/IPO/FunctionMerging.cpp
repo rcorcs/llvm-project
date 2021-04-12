@@ -4352,6 +4352,19 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
         BlocksF1[MergedBB] = BB1;
         BlocksF2[MergedBB] = BB2;
 
+        //IMPORTANT: make sure any use in a blockaddress constant
+        //operation is updated correctly
+        for (User *U : BB1->users()) {
+          if (BlockAddress *BA = dyn_cast<BlockAddress>(U)) {
+            VMap[BA] = BlockAddress::get(MergedFunc, MergedBB);
+          }
+        }
+        for (User *U : BB2->users()) {
+          if (BlockAddress *BA = dyn_cast<BlockAddress>(U)) {
+            VMap[BA] = BlockAddress::get(MergedFunc, MergedBB);
+          }
+        }
+
         IRBuilder<> Builder(MergedBB);
         for (Instruction &I : *BB1) {
           if (isa<PHINode>(&I)) {
@@ -4395,6 +4408,15 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
         NewBB = BasicBlock::Create(MergedFunc->getContext(), BBName, MergedFunc);
         VMap[BB] = NewBB;
         BlocksFX[NewBB] = BB;
+
+        //IMPORTANT: make sure any use in a blockaddress constant
+        //operation is updated correctly
+        for (User *U : BB->users()) {
+          if (BlockAddress *BA = dyn_cast<BlockAddress>(U)) {
+            VMap[BA] = BlockAddress::get(MergedFunc, NewBB);
+          }
+        }
+
         //errs() << "NewBB: " << NewBB->getName() << "\n";
         IRBuilder<> Builder(NewBB);
         for (Instruction &I : *BB) {
