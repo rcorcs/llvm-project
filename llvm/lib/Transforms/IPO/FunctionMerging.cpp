@@ -140,6 +140,8 @@
 
 #define TIME_STEPS_DEBUG
 
+#define LSH_BANDS 100
+
 using namespace llvm;
 
 static cl::opt<unsigned> ExplorationThreshold(
@@ -1925,6 +1927,8 @@ template<class T> class MatcherLSH : public Matcher<T> {
           MatcherIt match_it = foundFs[j];
           if ((match_it->candidate == NULL) || (match_it->candidate == it->candidate))
             continue;
+          //if (it->candidate->getCallingConv() != match_it->candidate->getCallingConv())
+          //  continue;
           if ((!FM.validMergeTypes(it->candidate, match_it->candidate, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(it->candidate, match_it->candidate))
             continue;
 
@@ -3901,7 +3905,7 @@ bool FunctionMerging::runOnModule(Module &M) {
   FingerprintLSH<Function*>::initialize();
   std::unique_ptr<Matcher<Function*>> matcher;
   if (EnableSean)
-    matcher = std::make_unique<MatcherLSH<Function*>>(FingerprintLSH<Function*>::bands, FM, Options);
+    matcher = std::make_unique<MatcherLSH<Function*>>(LSH_BANDS, FM, Options);
   else
     matcher = std::make_unique<MatcherFQ<Function*>>(FM, Options);
 
@@ -3926,6 +3930,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 #ifdef TIME_STEPS_DEBUG
     TimeRank.startTimer();
 #endif
+
 
     Function* F1 = matcher->next_candidate();
     auto& Rank = matcher->get_matches(F1);
