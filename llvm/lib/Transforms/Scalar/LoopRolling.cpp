@@ -832,7 +832,13 @@ public:
   BasicBlock *getBlock() { return BB; }
 
   size_t getWidth() {
-    return Root->size();
+    switch (Root->getNodeType()) {
+      case NodeType::MULTI:{
+        return Root->getChild(0)->size();
+      }
+      default:
+        return Root->size();
+    }
   }
 
   void addNode(Node *N) {
