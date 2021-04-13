@@ -892,9 +892,19 @@ public:
   bool dependsOn(Value *V) {
     bool Depends = false;
     std::unordered_set<Value*> Visited;
-    for (unsigned i = 0; i<Root->size(); i++) {
-      auto *I = Root->getValidInstruction(i);
-      Depends = Depends || dependsOn(I,V,I->getParent(),Visited);
+    if (Root->getNodeType()==NodeType::MULTI) {
+      for (unsigned i = 0; i<Root->getNumChildren(); i++) {
+        Node *Child = Root->getChild(i);
+        for (unsigned j = 0; j<Child->size(); j++) {
+          auto *I = Child->getValidInstruction(j);
+          Depends = Depends || dependsOn(I,V,I->getParent(),Visited);
+        }
+      }
+    } else {
+      for (unsigned i = 0; i<Root->size(); i++) {
+        auto *I = Root->getValidInstruction(i);
+        Depends = Depends || dependsOn(I,V,I->getParent(),Visited);
+      }
     }
     return Depends;
   }
@@ -1687,9 +1697,11 @@ static bool tempMatching(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) 
 
 template<typename ValueT>
 Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
+  
   errs() << "Creating Node\n";
   for (auto *V : Vs) {
-    V->dump();
+    if (isa<Function>(V)) errs() << "Function: " << V->getName() << "\n";
+    else V->dump();
   }
   bool AllSame = true;
   bool Matching = true;
@@ -2182,6 +2194,9 @@ Value *CodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilde
     return IndexedValue;
   } else {
     errs() << "Non constants\n";
+
+    errs() << "Array Type: " << VL.size() << ":"; VL[0]->getType()->dump();
+
     //BasicBlock &Entry = F->getEntryBlock();
     //IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
     IRBuilder<> ArrBuilder(PreHeader);
@@ -2752,6 +2767,16 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   LLVMContext &Context = BB.getParent()->getContext();
 
     //BB.dump();
+  if (G.Root==nullptr) return false;
+  if (G.Root->getNodeType()==NodeType::MISMATCH) return false;
+  if (G.Root->getNodeType()==NodeType::MULTI) {
+    for (int i = 0; i<G.Root->getNumChildren(); i++) {
+      if (G.Root->getChild(i)->getNodeType()==NodeType::MISMATCH) {
+        errs() << "MultiNode cannot have a mismatching child\n";
+        return false;
+      }
+    }
+  }
 
   std::vector<BasicBlock*> SuccBBs;
   for (auto It = succ_begin(&BB), E = succ_end(&BB); It!=E; It++) SuccBBs.push_back(*It);
@@ -2889,10 +2914,10 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
       Pair.first->replaceAllUsesWith(Pair.second);
     }
 
-    //BB.dump();
-    //PreHeader->dump();
-    //Header->dump();
-    //Exit->dump();
+    BB.dump();
+    PreHeader->dump();
+    Header->dump();
+    Exit->dump();
  
     for (auto It = Exit->rbegin(), E = Exit->rend(); It!=E; ) {
       Instruction *I = &*It;
@@ -3101,17 +3126,19 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
       bool Valid = true;
       errs() << "Attempting Group:\n";
       for (Instruction *I : Pair.second) {
-	I->dump();
+	//I->dump();
         if (I->getNumUses()) {
 	    Valid = false;
         }
       }
       if (Valid && Pair.second.size()>1) {
+	errs() << "Looking for groups\n";
+
 	MultiNode *MN = new MultiNode(BB);
 	MN->addGroup(Pair.second);
 	Instruction *I = Pair.second[0];
 	I = I->getNextNode();
-	for (; I!=Pair.second[1]; I=I->getNextNode()) {
+	for (; I!=Pair.second[1] && !I->isTerminator(); I=I->getNextNode()) {
 	  auto *Group = Seeds.getGroupWith(I);
 	  bool Valid = false;
 	  if (Group && Pair.second.size()==Group->size()) {
@@ -3150,17 +3177,18 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
       bool Valid = true;
       errs() << "Attempting Group:\n";
       for (Instruction *I : Pair.second) {
-	I->dump();
+	//I->dump();
         if (I->getNumUses()) {
 	    Valid = false;
         }
       }
       if (Valid && Pair.second.size()>1) {
+	errs() << "Looking for groups\n";
 	MultiNode *MN = new MultiNode(BB);
 	MN->addGroup(Pair.second);
 	Instruction *I = Pair.second[0];
 	I = I->getNextNode();
-	for (; I!=Pair.second[1]; I=I->getNextNode()) {
+	for (; I!=Pair.second[1] && !I->isTerminator(); I=I->getNextNode()) {
 	  auto *Group = Seeds.getGroupWith(I);
 	  bool Valid = false;
 	  if (Group && Pair.second.size()==Group->size()) {
