@@ -245,6 +245,17 @@ public:
 
   virtual std::string getString() = 0;
   virtual Instruction *getValidInstruction(unsigned i) = 0;
+
+  bool mustKeepOrder() {
+    if (getNodeType()==NodeType::MATCH || getNodeType()==NodeType::MULTI) {
+      for (unsigned i = 0; i<size(); i++) {
+        if (auto *I = getValidInstruction(i)) {
+          if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) return true;
+        }
+      }
+    }
+    return false;
+  }
 };
 
 class MultiNode : public Node {
@@ -796,7 +807,8 @@ public:
   Node *Root;
   std::vector<Node*> Nodes;
   std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap;
-  std::vector<ScheduleNode> SchedulingOrder;
+  std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap2;
+  std::vector<Node *> SchedulingOrder;
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
 
@@ -806,7 +818,6 @@ public:
       addNode(Root);
       std::set<Node*> Visited;
       growGraph(Root, BB, Visited);
-      buildSchedulingOrder();
     }
   }
 
@@ -816,7 +827,6 @@ public:
       addNode(Root);
       std::set<Node*> Visited;
       growGraph(Root,BB, Visited);
-      buildSchedulingOrder();
     }
   }
 
@@ -826,7 +836,6 @@ public:
     addNode(Root);
     std::set<Node*> Visited;
     growGraph(Root,BB, Visited);
-    buildSchedulingOrder();
   }
 
   BasicBlock *getBlock() { return BB; }
@@ -850,7 +859,7 @@ public:
 	  for (unsigned i = 0; i<N->size(); i++) {
             Value *V = N->getValidInstruction(i);
 	    if (V) ValuesInNode.insert(V);
-            //NodeMap[V].insert(N);
+            NodeMap2[V].insert(N);
 	  }
 	}
         NodeMap[N->getValue(0)].insert(N);
@@ -863,6 +872,8 @@ public:
   
   template<typename ValueT>
   Node *find(std::vector<ValueT *> &Vs);
+
+  Node *find(Instruction *I);
 
   void destroy() {
     for (Node *N : Nodes) delete N;
@@ -1004,40 +1015,6 @@ private:
   Node *buildConstExprNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
   template<typename ValueT>
   Node *createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent=nullptr);
-
-  void buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited);
-  void buildSchedulingOrder() {
-    ScheduleNode SN;
-    SchedulingOrder.push_back(SN);
-
-    Node *N = Root;
-    if (N->getNodeType()==NodeType::REDUCTION) {
-      N = N->getChild(0);
-    }
-
-    for (unsigned i = 0; i<N->size(); i++) {
-      std::set<Node*> Visited;
-      buildSchedulingOrder(N, i, Visited);
-    }
-
-    if (SchedulingOrder.back().empty()) {
-      SchedulingOrder.pop_back();
-    }
-
-    for (Node *N : Nodes) {
-      for (unsigned i = 0; i<N->size(); i++) {
-        Value *V = N->getValidInstruction(i);
-        if (V==nullptr) continue;
-        for (auto *U : V->users()) {
-          //if (this->find(U)==nullptr) {
-          if (!this->contains(U)) {
-	    Users.insert(U);
-          }
-        }
-      }
-    }
-
-  }
 };
 
 /*
@@ -1179,6 +1156,21 @@ Node *AlignedGraph::find(std::vector<ValueT *> &Vs) {
   
   if (Result.empty()) return nullptr;
   return *Result.begin();
+}
+
+Node *AlignedGraph::find(Instruction *I) {
+  Node *Result = nullptr;
+  auto It = NodeMap2.find(I);
+  if (It==NodeMap2.end()) return nullptr;
+  
+  for (Node *N : It->second) {
+    if (N!=nullptr && N->getNodeType()!=NodeType::MISMATCH) {
+      if (Result!=nullptr) return nullptr;
+      Result = N;
+    }
+  }
+
+  return Result;
 }
 
 static void ReorderOperands(std::vector<Value*> &Operands, BasicBlock &BB) {
@@ -1903,57 +1895,7 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
   }
 }
 
-void AlignedGraph::buildSchedulingOrder(Node *N, unsigned i, std::set<Node*> &Visited) {
-  if (Visited.count(N)) return;
-  Visited.insert(N);
-  if (i>=N->size()) return;
-
-  for (auto *CN : N->getChildren()) {
-    buildSchedulingOrder(CN, i, Visited);
-  }
-  if (auto *I = N->getValidInstruction(i)) {
-    //if (std::find(SchedulingOrder.begin(),SchedulingOrder.end(),I)==SchedulingOrder.end()) {
-    if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
-    bool Found = false;
-    for (auto &SN : SchedulingOrder) {
-      if (SN.contains(I)) { Found = true; break; }
-    }
-#ifdef TEST_DEBUG
-    if (Found) {
-      errs() << "Already scheduled?! ";
-      I->dump();
-    }
-#endif
-    if (!Found) {
-      //N->getValue(i)->dump();
-
-      if (I->mayWriteToMemory() || I->mayHaveSideEffects()) {
-      //if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
-        //errs() << "Breaking Scheduling Node\n";
-	if (!SchedulingOrder.back().empty()) {
-          ScheduleNode SN;
-          SchedulingOrder.push_back(SN);
-	}
-        SchedulingOrder.back().add(I);
-        ScheduleNode SN;
-        SchedulingOrder.push_back(SN);
-      } else {
-        //I->dump();
-        SchedulingOrder.back().add(I);
-      }
-    }
-    }
-  }
-}
-
 Instruction *AlignedGraph::getStartingInstruction(BasicBlock &BB) {
-  //Instruction *StartI = nullptr;
-  //for (auto &IRef : BB) {
-  //  if (SchedulingOrder[0].contains(&IRef)) {
-  //    I = &IRef;
-  //    break;
-  //  }
-  //}
   for (Instruction &I : BB) {
     if (ValuesInNode.count(&I)) {
       return &I;
@@ -2002,63 +1944,105 @@ bool AlignedGraph::isSchedulable(BasicBlock &BB) {
     }
   }
 
-  for (auto &SO : SchedulingOrder) SO.dump();
-
-  if (SchedulingOrder.empty()) {
-	  errs() << "Empty scheduling entries\n";
-	  return true;
+  std::set<Instruction *> AllInsts;
+  for (Value *V : ValuesInNode) {
+    if (Instruction *I = dyn_cast<Instruction>(V)) AllInsts.insert(I);
   }
+  
+  errs() << "Computing order of nodes for each lane\n";
+  std::map<unsigned, std::vector<Node*> > NodeSchedulingOrder;
+  for (Instruction *I = getStartingInstruction(BB); (I!=nullptr && !I->isTerminator()) ; I = I->getNextNode()) {
+  //for (Instruction &IRef : BB) {
+    //Instruction *I = &IRef;
+    if (AllInsts.empty()) break; //finished analysis
 
+    Node *N = find(I);
+    if (N==nullptr || N->getNodeType()==NodeType::MISMATCH) {
+      if (N==nullptr) errs() << "Node is null\n";
+      else  errs() << "Node is a mismatch\n";
 
-  Instruction *I = getStartingInstruction(BB);
-  if (I==nullptr) return false;
-
-  //auto *LastI = dyn_cast<Instruction>(Root->getValue(Root->size()-1))->getNextNode();
-  auto *LastI = BB.getTerminator();
-  auto It = SchedulingOrder.begin(), E = SchedulingOrder.end();
-  int Count = SchedulingOrder[0].size();
-  (*It).dump();
-
-  errs() << "Count: " << Count << "\n";
-  errs() << "Start: "; I->dump();
-  while (I!=LastI && It!=E) {
-    if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
-      errs() << "Processing: "; I->dump();
-      errs() << "Count: " << Count << "\n";
-      if ( (*It).contains(I) ) {
-        errs() << "Found: "; I->dump();
-        Count--;
-        if (Count==0) {
-          It++;
-          if (It!=E) {
-		  Count = (*It).size();
-            (*It).dump();
-	  }
-        }
-      } else {
-        errs() << "Not found: "; I->dump();
-        //if (I->mayReadOrWriteMemory()) return false;
-        //if (I->mayWriteToMemory()) {
-        if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
-                errs() << "Read/Write memory\n";
-                //return false;
-                break;
-        }
+      if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
+        errs() << "Read/Write memory found in between\n";
+	I->dump();
+	return false;
       }
     } else {
-      errs() << "Non-memory: "; I->dump();
+      AllInsts.erase(I);
+      for (unsigned i = 0; i<N->size(); i++) {
+        if (N->getValidInstruction(i)==I) {
+          //only add unique nodes to the correct lane
+          auto &LaneRef = NodeSchedulingOrder[i];
+          if (std::find(LaneRef.begin(), LaneRef.end(), N)==LaneRef.end()) {
+            LaneRef.push_back(N);
+          }
+        }
+      }
     }
-    I = I->getNextNode();
   }
 
-  errs() << "I: "; I->dump();
-  errs() << "Last: "; LastI->dump();
-  //bool Result = (I==LastI && It==E);
-  bool Result = It==E;
-//#ifdef TEST_DEBUG
-  errs() << "Schedulable: " << Result << "\n";
-//#endif
-  return Result;
+  for (auto &Pair : NodeSchedulingOrder) {
+    errs() << "Nodes in lane: " << Pair.first << "\n";
+    for (Node *N : Pair.second) {
+      errs() << "> " << N->getString() << "\n";
+    }
+  }
+
+  errs() << "Created Order of nodes\n";
+
+  //TODO: make sure all lanes have the same scheduling order.
+  unsigned Indices[NodeSchedulingOrder.size()];
+  for (unsigned i = 0; i<NodeSchedulingOrder.size(); i++) {
+    Indices[i] = 0;
+  }
+  for (unsigned n = 0; n<NodeSchedulingOrder[0].size(); n++) {
+    Indices[0] = n;
+    errs() << "Lane: " << 0 << "\n";
+    errs() << "Idx: " << n << "\n";
+    if (NodeSchedulingOrder[0][n]->mustKeepOrder()) {
+      errs() << "Analyzing order: " << NodeSchedulingOrder[0][n]->getString() << "\n";
+          NodeSchedulingOrder[0][n]->getValue(0)->dump();
+      for (unsigned i = 1; i<NodeSchedulingOrder.size(); i++) {
+	errs() << "Lane: " << i << "\n";
+	while (Indices[i]<NodeSchedulingOrder[i].size()) {
+	  unsigned nidx = Indices[i];
+          Indices[i]++;
+
+          errs() << "Idx: " << nidx << "\n";
+	  if (nidx >= NodeSchedulingOrder[i].size()) {
+            errs() << "Found different order of nodes: index out of bound\n";
+	    return false;
+	  }
+          if (NodeSchedulingOrder[i][nidx]->mustKeepOrder()) {
+            errs() << "Hit: " << NodeSchedulingOrder[i][nidx]->getString() << "\n";
+            NodeSchedulingOrder[i][nidx]->getValue(i)->dump();
+	    if (NodeSchedulingOrder[i][nidx]!=NodeSchedulingOrder[0][n]) {
+              errs() << "Found different order of nodes: nodes mismatching\n";
+	      return false;
+	    }
+	    break;
+	  }
+	}
+      }
+    }
+  }
+  errs() << "Finished with nodes in first lane\n";
+  //all nodes that must be kept in order, should have been exausted
+  for (unsigned i = 1; i<NodeSchedulingOrder.size(); i++) {
+    unsigned nidx = Indices[i];
+    Indices[i]++;
+    if (nidx >= NodeSchedulingOrder[i].size()) continue;
+    if (NodeSchedulingOrder[i][nidx]->mustKeepOrder()) {
+      return false;
+    }
+  }
+
+  //TODO: make sure the scheduling order is valid according to the graph.
+  for (Node *N : NodeSchedulingOrder[0]) {
+    SchedulingOrder.push_back(N);
+  }
+
+  errs() << "Schedulable: " << true << "\n";
+  return true;
 }
 
 void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Builder) {
@@ -2798,7 +2782,9 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 #ifdef TEST_DEBUG
   errs() << "Generating tree\n";
 #endif
-  cloneGraph(G.Root, Builder);
+  for (Node *N : G.SchedulingOrder) {
+    cloneGraph(N, Builder);
+  }
 #ifdef TEST_DEBUG
   errs() << "Graph code generated!\n";
 #endif
