@@ -774,32 +774,6 @@ static size_t EstimateSize(std::vector<ValueT*> Code, TargetTransformInfo *TTI) 
 }
 */
 
-class ScheduleNode {
-  std::set<Instruction *> Instructions;
-
-public:
-  void add(Instruction *I) { Instructions.insert(I); }
-
-  bool contains(Instruction *I) {
-    return Instructions.count(I);
-  }
-
-  size_t size() { return Instructions.size(); }
-  
-  bool empty() { return Instructions.empty(); }
-
-  std::set<Instruction *> &getInstructions() {
-    return Instructions;
-  }
-
-  void dump() {
-    errs() << "ScheduleNode: {\n";
-    for (auto *I : Instructions) I->dump();
-    errs() << "}\n";
-  }
-};
-
-
 class AlignedGraph {
 public:
   BasicBlock *BB;
@@ -1791,6 +1765,16 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
   if (Visited.find(N)!=Visited.end()) return;
   Visited.insert(N);
 
+  auto growGraphNode = [&](auto &Vs, Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
+       Node *Child = find(Vs);
+       if (Child==nullptr) {
+         Child = createNode(Vs, BB, N);
+         this->addNode(Child);
+         N->pushChild(Child);
+         growGraph(Child, BB, Visited);
+       } else N->pushChild(Child);
+  };
+
   switch(N->getNodeType()) {
     case NodeType::MISMATCH: break;
     case NodeType::IDENTICAL: break;
@@ -1801,55 +1785,23 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
        MultiNode *MN = ((MultiNode*)N);
        for (size_t i = 0; i<MN->getNumGroups(); i++) {
          auto &Vs = MN->getGroup(i);
-	 Node *Child = find(Vs);
-	 if (Child==nullptr) {
-           Child = createNode(Vs, BB, N);
-	   this->addNode(Child);
-	   N->pushChild(Child);
-           growGraph(Child, BB, Visited);
-         } else N->pushChild(Child);
+         growGraphNode(Vs, N, BB, Visited);
        }
     } break;
     case NodeType::REDUCTION: {
        auto &Vs = ((ReductionNode*)N)->getOperands();
-
-       Node *Child = find(Vs);
-       if (Child==nullptr) {
-         Child = createNode(Vs, BB, N);
-         this->addNode(Child);
-         N->pushChild(Child);
-         growGraph(Child, BB, Visited);
-       } else N->pushChild(Child);
+       growGraphNode(Vs, N, BB, Visited);
     } break;
     case NodeType::GEPSEQ: {
        auto &Vs = ((GEPSequenceNode*)N)->getIndices();
-
-       Node *Child = find(Vs);
-       if (Child==nullptr) {
-         Child = createNode(Vs, BB, N);
-         this->addNode(Child);
-         N->pushChild(Child);
-         growGraph(Child, BB, Visited);
-       } else N->pushChild(Child);
+       growGraphNode(Vs, N, BB, Visited);
     } break;
     case NodeType::BINOP: {
        auto &V0 = ((BinOpSequenceNode*)N)->getLeftOperands();
-       Node *Child0 = find(V0);
-       if (Child0==nullptr) {
-         Child0 = createNode(V0, BB, N);
-         this->addNode(Child0);
-         N->pushChild(Child0);
-         growGraph(Child0, BB, Visited);
-       } else N->pushChild(Child0);
+       growGraphNode(V0, N, BB, Visited);
 
        auto &V1 = ((BinOpSequenceNode*)N)->getRightOperands();
-       Node *Child1 = find(V1);
-       if (Child1==nullptr) {
-         Child1 = createNode(V1, BB, N);
-         this->addNode(Child1);
-         N->pushChild(Child1);
-         growGraph(Child1, BB, Visited);
-       } else N->pushChild(Child1);
+       growGraphNode(V1, N, BB, Visited);
     } break;
     case NodeType::CONSTEXPR: {
       auto *CE = dyn_cast<ConstantExpr>(N->getValue(0));
@@ -1862,13 +1814,7 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
 	  assert((i < IV->getNumOperands()) && "Invalid number of operands!");
           Vs.push_back( IV->getOperand(i) );
         }
-        Node *Child = find(Vs);
-        if (Child==nullptr) {
-	  Child = createNode(Vs, BB, N);
-          this->addNode(Child);
-          N->pushChild(Child);
-          growGraph(Child, BB, Visited);
-	} else N->pushChild(Child);
+        growGraphNode(Vs, N, BB, Visited);
       }
     } break;
     case NodeType::MATCH: {
@@ -1882,13 +1828,7 @@ void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) 
 	  assert((i < IV->getNumOperands()) && "Invalid number of operands!");
           Vs.push_back( IV->getOperand(i) );
         }
-        Node *Child = find(Vs);
-        if (Child==nullptr) {
-	  Child = createNode(Vs, BB, N);
-          this->addNode(Child);
-          N->pushChild(Child);
-          growGraph(Child, BB, Visited);
-	} else N->pushChild(Child);
+        growGraphNode(Vs, N, BB, Visited);
       }
     } break;
     default: break;
@@ -1944,23 +1884,24 @@ bool AlignedGraph::isSchedulable(BasicBlock &BB) {
     }
   }
 
+  //set of all instructions that must be covered in the next steps
   std::set<Instruction *> AllInsts;
   for (Value *V : ValuesInNode) {
     if (Instruction *I = dyn_cast<Instruction>(V)) AllInsts.insert(I);
   }
   
   errs() << "Computing order of nodes for each lane\n";
+  //1. Reconstruct the order the nodes appear in each lane
+  //2. Identify instructions that appear in-between this code that
+  //could prevent us from scheduling the rolled loop.
+  //Any instruction, from outside the aligned graph, is an impediment if it may access a memory location
+  //or may have side effects.
   std::map<unsigned, std::vector<Node*> > NodeSchedulingOrder;
   for (Instruction *I = getStartingInstruction(BB); (I!=nullptr && !I->isTerminator()) ; I = I->getNextNode()) {
-  //for (Instruction &IRef : BB) {
-    //Instruction *I = &IRef;
     if (AllInsts.empty()) break; //finished analysis
 
     Node *N = find(I);
     if (N==nullptr || N->getNodeType()==NodeType::MISMATCH) {
-      if (N==nullptr) errs() << "Node is null\n";
-      else  errs() << "Node is a mismatch\n";
-
       if (I->mayReadOrWriteMemory() || I->mayHaveSideEffects()) {
         errs() << "Read/Write memory found in between\n";
 	I->dump();
@@ -1980,34 +1921,32 @@ bool AlignedGraph::isSchedulable(BasicBlock &BB) {
     }
   }
 
-  for (auto &Pair : NodeSchedulingOrder) {
-    errs() << "Nodes in lane: " << Pair.first << "\n";
-    for (Node *N : Pair.second) {
-      errs() << "> " << N->getString() << "\n";
-    }
-  }
-
-  errs() << "Created Order of nodes\n";
-
-  //TODO: make sure all lanes have the same scheduling order.
+  //Make sure all lanes have the same scheduling order.
+  //An aligned graph is not schedulable if nodes with
+  //critical instructions appear in different order in
+  //different lanes. For example:
+  // t00 = dummy0();
+  // t01 = dummy1();
+  // add0 = add t00, t01
+  // store add0, ...
+  // t10 = dummy1(); //different order
+  // t11 = dummy0(); //different order
+  // add1 = add t10, t11
+  // store add1, ...
+  // The code bellow verifies if all lanes have critical nodes
+  // appearing in the same order as in the first lane.
   unsigned Indices[NodeSchedulingOrder.size()];
   for (unsigned i = 0; i<NodeSchedulingOrder.size(); i++) {
     Indices[i] = 0;
   }
   for (unsigned n = 0; n<NodeSchedulingOrder[0].size(); n++) {
     Indices[0] = n;
-    errs() << "Lane: " << 0 << "\n";
-    errs() << "Idx: " << n << "\n";
     if (NodeSchedulingOrder[0][n]->mustKeepOrder()) {
-      errs() << "Analyzing order: " << NodeSchedulingOrder[0][n]->getString() << "\n";
-          NodeSchedulingOrder[0][n]->getValue(0)->dump();
       for (unsigned i = 1; i<NodeSchedulingOrder.size(); i++) {
-	errs() << "Lane: " << i << "\n";
 	while (Indices[i]<NodeSchedulingOrder[i].size()) {
 	  unsigned nidx = Indices[i];
           Indices[i]++;
 
-          errs() << "Idx: " << nidx << "\n";
 	  if (nidx >= NodeSchedulingOrder[i].size()) {
             errs() << "Found different order of nodes: index out of bound\n";
 	    return false;
@@ -2025,7 +1964,6 @@ bool AlignedGraph::isSchedulable(BasicBlock &BB) {
       }
     }
   }
-  errs() << "Finished with nodes in first lane\n";
   //all nodes that must be kept in order, should have been exausted
   for (unsigned i = 1; i<NodeSchedulingOrder.size(); i++) {
     unsigned nidx = Indices[i];
@@ -2036,10 +1974,13 @@ bool AlignedGraph::isSchedulable(BasicBlock &BB) {
     }
   }
 
-  //TODO: make sure the scheduling order is valid according to the graph.
+  //Write down the final scheduling order.
+  //Missing nodes will be generated recursively.
   for (Node *N : NodeSchedulingOrder[0]) {
     SchedulingOrder.push_back(N);
   }
+
+  //TODO: make sure the scheduling order is valid according to the graph.
 
   errs() << "Schedulable: " << true << "\n";
   return true;
@@ -2785,6 +2726,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
   for (Node *N : G.SchedulingOrder) {
     cloneGraph(N, Builder);
   }
+  cloneGraph(G.Root, Builder);
 #ifdef TEST_DEBUG
   errs() << "Graph code generated!\n";
 #endif
