@@ -825,10 +825,10 @@ public:
   }
 
   void addNode(Node *N) {
-    if (N && N->size()) {
+    if (N) {
       if (std::find(Nodes.begin(), Nodes.end(), N)==Nodes.end()) {
         Nodes.push_back(N);
-	if (N->getNodeType()!=NodeType::MISMATCH && N->getNodeType()!=NodeType::IDENTICAL && N->getNodeType()!=NodeType::RECURRENCE) {
+	if (N->getNodeType()!=NodeType::MISMATCH && N->getNodeType()!=NodeType::MULTI && N->getNodeType()!=NodeType::IDENTICAL && N->getNodeType()!=NodeType::RECURRENCE) {
           //for (auto *V : N->getValues()) {
 	  for (unsigned i = 0; i<N->size(); i++) {
             Value *V = N->getValidInstruction(i);
@@ -836,7 +836,7 @@ public:
             NodeMap2[V].insert(N);
 	  }
 	}
-        NodeMap[N->getValue(0)].insert(N);
+	if (N->size()) NodeMap[N->getValue(0)].insert(N);
       }
       if (Root==nullptr) Root = N;
     }
@@ -2886,6 +2886,25 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     //PreHeader->dump();
     //Header->dump();
     //Exit->dump();
+    //
+    
+    errs() << "NodeTypeFreq;\n";
+    std::map<NodeType, unsigned> NodeFreq;
+    for (Node *N : G.Nodes) {
+      NodeFreq[N->getNodeType()]++;
+    }
+   // MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, REDUCTION, RECURRENCE, MISMATCH, MULTI
+    errs() << "MISMATCH: " << NodeFreq[NodeType::MISMATCH] << "\n";
+    errs() << "MATCH: " << NodeFreq[NodeType::MATCH] << "\n";
+    errs() << "IDENTICAL: " << NodeFreq[NodeType::IDENTICAL] << "\n";
+    errs() << "CONSTEXPR: " << NodeFreq[NodeType::CONSTEXPR] << "\n";
+    errs() << "BINOP: " << NodeFreq[NodeType::BINOP] << "\n";
+    errs() << "INTSEQ: " << NodeFreq[NodeType::INTSEQ] << "\n";
+    errs() << "ALTSEQ: " << NodeFreq[NodeType::ALTSEQ] << "\n";
+    errs() << "GEPSEQ: " << NodeFreq[NodeType::GEPSEQ] << "\n";
+    errs() << "REDUCTION: " << NodeFreq[NodeType::REDUCTION] << "\n";
+    errs() << "RECURRENCE: " << NodeFreq[NodeType::RECURRENCE] << "\n";
+    errs() << "MULTI: " << NodeFreq[NodeType::MULTI] << "\n";
 #endif
     if ( verifyFunction(*BB.getParent()) ) {
       errs() << "Broken Function!!\n";
