@@ -159,6 +159,7 @@ static bool match(Value *V1, Value *V2) {
   if (V1->getType()!=V2->getType()) return false;
 
   if(I1 && I2) {
+    //return I1->isSameOperationAs(I2);
     if (I1->getOpcode()!=I2->getOpcode()) return false;
     if (I1->getNumOperands()!=I2->getNumOperands()) return false;
 
@@ -1034,6 +1035,9 @@ public:
       //Reductions.erase(BO);
       //Reductions.erase(std::remove(Reductions.begin(), Reductions.end(), BO), Reductions.end());
     }
+    for (auto &Pair : Reductions) {
+      if (Pair.second==I) Reductions[Pair.first] = nullptr;
+    }
   }
 
   std::vector<Instruction *> *getGroupWith(Instruction *I) {
@@ -1245,7 +1249,7 @@ Node *AlignedGraph::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, 
   //for (unsigned i = 1; i<VL.size(); i++)
   //  if (Ptr != getUnderlyingObject(VL[i])) return nullptr;
 
-  for (auto *V : VL) V->dump();
+  //for (auto *V : VL) V->dump();
 
   std::vector<Value*> Indices;
 
@@ -1414,7 +1418,7 @@ Node *AlignedGraph::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, Basi
 static bool isAddition(Instruction *I, ScalarEvolution *SE) {
   if (I->getOpcode()==Instruction::Add) return true;
   if (I->getOpcode()==Instruction::Or) {
-    errs() << "Checking if represents addition:"; I->dump();
+    //errs() << "Checking if represents addition:"; I->dump();
 
     Value *Op1 = I->getOperand(0);
     ConstantInt *Op2 = dyn_cast<ConstantInt>(I->getOperand(1));
@@ -1423,14 +1427,14 @@ static bool isAddition(Instruction *I, ScalarEvolution *SE) {
 
     auto *AddRec = dyn_cast<SCEVAddRecExpr>(SE->getSCEV(Op1));
     if (AddRec==nullptr) return false;
-    errs() << "SCEV:"; AddRec->dump();
+    //errs() << "SCEV:"; AddRec->dump();
 
     auto *Start = dyn_cast<SCEVConstant>(AddRec->getStart());
     if (Start==nullptr) return false;
-    errs() << "Start:"; Start->dump();
+    //errs() << "Start:"; Start->dump();
     auto *Step = dyn_cast<SCEVConstant>(AddRec->getStepRecurrence(*SE));
     if (Step==nullptr) return false;
-    errs() << "Step:"; Step->dump();
+    //errs() << "Step:"; Step->dump();
 
 
     auto StartInt = Start->getAPInt();
@@ -1439,7 +1443,7 @@ static bool isAddition(Instruction *I, ScalarEvolution *SE) {
     if (! StepInt.abs().isPowerOf2() ) return false;
     if (StepInt.abs().slt(Op2->getValue())) return false;
     StartInt &= Op2->getValue();
-    errs() << "AND: " << StartInt << "\n";
+    //errs() << "AND: " << StartInt << "\n";
     if (!StartInt.isNullValue()) return false;
 
     errs() << "Is Addition\n";
@@ -1665,10 +1669,10 @@ template<typename ValueT>
 Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
   
   errs() << "Creating Node\n";
-  for (auto *V : Vs) {
-    if (isa<Function>(V)) errs() << "Function: " << V->getName() << "\n";
-    else V->dump();
-  }
+  //for (auto *V : Vs) {
+  //  if (isa<Function>(V)) errs() << "Function: " << V->getName() << "\n";
+  //  else V->dump();
+  //}
   bool AllSame = true;
   bool Matching = true;
   bool HasSideEffect = false;
@@ -1753,7 +1757,7 @@ Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Pa
     for (auto *V : Seq2) {
       errs() << "2:"; V->dump();
     }
-    BB.dump();
+    //BB.dump();
   } 
 
   errs() << "Mismatching\n";
@@ -2842,10 +2846,10 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
       Pair.first->replaceAllUsesWith(Pair.second);
     }
 
-    BB.dump();
-    PreHeader->dump();
-    Header->dump();
-    Exit->dump();
+    //BB.dump();
+    //PreHeader->dump();
+    //Header->dump();
+    //Exit->dump();
  
     for (auto It = Exit->rbegin(), E = Exit->rend(); It!=E; ) {
       Instruction *I = &*It;
@@ -2923,12 +2927,12 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 
 static BinaryOperator *getPossibleReduction(Value *V) {
 #ifdef TEST_DEBUG
-  errs() << "looking for reduction\n";
+  //errs() << "looking for reduction\n";
 #endif
   if (V==nullptr) return nullptr;
   BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
   if (BO==nullptr) return nullptr;
-  BO->dump();
+  //BO->dump();
   if (!ReductionNode::isValidOperation(BO)) return nullptr;
   BinaryOperator *BO1 = dyn_cast<BinaryOperator>(BO->getOperand(0));
   BinaryOperator *BO2 = dyn_cast<BinaryOperator>(BO->getOperand(1));
@@ -2936,7 +2940,7 @@ static BinaryOperator *getPossibleReduction(Value *V) {
   if (BO1 && BO1->getOpcode()==BO->getOpcode()) PossibleReduction += 1;
   if (BO2 && BO2->getOpcode()==BO->getOpcode()) PossibleReduction += 1;
   if (PossibleReduction==0) return nullptr;
-  errs() << "Found\n";
+  //errs() << "Found\n";
   return BO;
 }
 
@@ -3079,7 +3083,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
         }
       }
       if (Valid && Pair.second.size()>1) {
-	errs() << "Looking for groups\n";
+	//errs() << "Looking for groups\n";
 
 	MultiNode *MN = new MultiNode(BB);
 	MN->addGroup(Pair.second);
@@ -3099,10 +3103,10 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 	  }
 	  if (Valid) {
 	    MN->addGroup(*Group);
-            errs() << "Group:\n";
-	    for (Instruction *OtherI : (*Group)) {
-	      OtherI->dump();
-	    }
+            //errs() << "Group:\n";
+	    //for (Instruction *OtherI : (*Group)) {
+	    //  OtherI->dump();
+	    //}
 	  }
 	}
 
@@ -3130,7 +3134,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
         }
       }
       if (Valid && Pair.second.size()>1) {
-	errs() << "Looking for groups\n";
+	//errs() << "Looking for groups\n";
 	MultiNode *MN = new MultiNode(BB);
 	MN->addGroup(Pair.second);
 	Instruction *I = Pair.second[0];
@@ -3149,10 +3153,10 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 	  }
 	  if (Valid) {
 	    MN->addGroup(*Group);
-            errs() << "Group:\n";
-	    for (Instruction *OtherI : (*Group)) {
-	      OtherI->dump();
-	    }
+            //errs() << "Group:\n";
+	    //for (Instruction *OtherI : (*Group)) {
+	    //  OtherI->dump();
+	    //}
 	  }
 	}
 
@@ -3192,7 +3196,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 	      Changed = Changed || HasRolled;
 	    } else {
 	      errs() << G.getDotString() << "\n";
-	      BB.dump();
+	      //BB.dump();
 	    }
             G.destroy();
 	  }
@@ -3254,7 +3258,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 	  if (HasRolled) NumRolledLoops++;
 	} else {
 	  errs() << G.getDotString() << "\n";
-	  BB.dump();
+	  //BB.dump();
 	}
         G.destroy();
       }
@@ -3290,6 +3294,7 @@ bool LoopRoller::run() {
   bool Changed = false;
 
   for (BasicBlock *BB : Blocks) {
+    errs() << "BlockSize: " << BB->size() << "\n";
     collectSeedInstructions(*BB);
     Changed = Changed || attemptRollingSeeds(*BB);
   }

@@ -1257,7 +1257,20 @@ bool LoopReroll::DAGRootTracker::validate(ReductionTracker &Reductions) {
       }
       if (Continue) continue;
 
-      if (!BaseInst->isSameOperationAs(RootInst)) {
+
+      bool Isomorphic = BaseInst->isSameOperationAs(RootInst);
+      auto *LI1 = dyn_cast<LoadInst>(BaseInst);
+      auto *LI2 = dyn_cast<LoadInst>(RootInst);
+      if (LI1 && LI2 && LI1->getType()==LI2->getType()) {
+        Isomorphic = true;
+      }
+      auto *SI1 = dyn_cast<StoreInst>(BaseInst);
+      auto *SI2 = dyn_cast<StoreInst>(RootInst);
+      if (SI1 && SI2 && SI1->getValueOperand()->getType()==SI2->getValueOperand()->getType()) {
+        Isomorphic = true;
+      }
+
+      if (!Isomorphic) {
         // Last chance saloon. We don't try and solve the full isomorphism
         // problem, but try and at least catch the case where two instructions
         // *of different types* are round the wrong way. We won't be able to
