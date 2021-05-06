@@ -7,7 +7,7 @@
 //===----------------------------------------------------------------------===//
 //
 // This file implements the general function merging optimization.
-//  
+//
 // It identifies similarities between functions, and If profitable, merges them
 // into a single function, replacing the original ones. Functions do not need
 // to be identical to be merged. In fact, there is very little restriction to
@@ -30,7 +30,7 @@
 // degree of similarity, which is computed from the functions' fingerprints.
 // Only the top candidates are analyzed in a greedy manner and if one of them
 // produces a profitable result, the merged function is taken.
-// 
+//
 //===----------------------------------------------------------------------===//
 //
 // This optimization was proposed in
@@ -52,13 +52,13 @@
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalValue.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Verifier.h"
-#include <llvm/IR/IRBuilder.h>
 
 #include "llvm/Support/Error.h"
 #include "llvm/Support/Timer.h"
@@ -70,9 +70,9 @@
 //#include "llvm/Analysis/ValueTracking.h"
 #include "llvm/Analysis/CFG.h"
 #include "llvm/Analysis/CallGraph.h"
-#include "llvm/Analysis/PostDominators.h"
-#include "llvm/Analysis/IteratedDominanceFrontier.h"
 #include "llvm/Analysis/InstructionSimplify.h"
+#include "llvm/Analysis/IteratedDominanceFrontier.h"
+#include "llvm/Analysis/PostDominators.h"
 
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/CodeExtractor.h"
@@ -103,29 +103,27 @@
 
 #include "llvm/Analysis/InlineSizeEstimatorAnalysis.h"
 
-#include <cstdlib>
-#include <fstream>
 
 #include <algorithm>
-#include <list>
-#include <unordered_map>
-#include <unordered_set>
-
-#include <limits.h>
-
+#include <array>
+#include <fstream>
 #include <functional>
 #include <queue>
+#include <random>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
-#include <algorithm>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdlib>
+#include <climits>
+#include <ctime>
 
 #ifdef __unix__
 /* __unix__ is usually defined by compilers targeting Unix systems */
 #include <unistd.h>
 #elif defined(_WIN32) || defined(WIN32)
-/* _Win32 is usually defined by compilers targeting 32 or   64 bit Windows systems */
+/* _Win32 is usually defined by compilers targeting 32 or   64 bit Windows
+ * systems */
 #include <windows.h>
 #endif
 
@@ -140,23 +138,19 @@
 
 #define TIME_STEPS_DEBUG
 
-#define LSH_BANDS 100
-
 using namespace llvm;
 
 static cl::opt<unsigned> ExplorationThreshold(
     "func-merging-explore", cl::init(1), cl::Hidden,
     cl::desc("Exploration threshold of evaluated functions"));
 
-
-static cl::opt<unsigned> SAMethod(
-    "func-merging-sa-method", cl::init(0), cl::Hidden,
-    cl::desc("(0) hirschberg; (1) needleman-wunsch;"));
+static cl::opt<unsigned>
+    SAMethod("func-merging-sa-method", cl::init(0), cl::Hidden,
+             cl::desc("(0) hirschberg; (1) needleman-wunsch;"));
 
 static cl::opt<unsigned> RankingThreshold(
     "func-merging-ranking-threshold", cl::init(0), cl::Hidden,
     cl::desc("Threshold of how many candidates should be ranked"));
-
 
 static cl::opt<int> MergingOverheadThreshold(
     "func-merging-threshold", cl::init(0), cl::Hidden,
@@ -180,53 +174,54 @@ static cl::opt<bool> ApplySimilarityHeuristic(
     "func-merging-similarity-pruning", cl::init(true), cl::Hidden,
     cl::desc("Prune the candidates based on their fingerprint similarity"));
 
+static cl::opt<bool>
+    EnableUnifiedReturnType("func-merging-unify-return", cl::init(false),
+                            cl::Hidden,
+                            cl::desc("Enable unified return types"));
 
 static cl::opt<bool>
-    EnableUnifiedReturnType("func-merging-unify-return", cl::init(false), cl::Hidden,
-                  cl::desc("Enable unified return types"));
-
-static cl::opt<bool>
-    EnableOperandReordering("func-merging-operand-reorder", cl::init(false), cl::Hidden,
-                  cl::desc("Enable operand reordering"));
+    EnableOperandReordering("func-merging-operand-reorder", cl::init(false),
+                            cl::Hidden, cl::desc("Enable operand reordering"));
 
 static cl::opt<bool>
     HasWholeProgram("func-merging-whole-program", cl::init(false), cl::Hidden,
-                  cl::desc("Function merging applied on whole program"));
+                    cl::desc("Function merging applied on whole program"));
 
 static cl::opt<bool>
     EnableSALSSA("func-merging-salssa", cl::init(false), cl::Hidden,
-                  cl::desc("Enable full support of the SSA form with SalSSA"));
+                 cl::desc("Enable full support of the SSA form with SalSSA"));
 
-static cl::opt<bool>
-    EnableSALSSACoalescing("func-merging-coalescing", cl::init(true), cl::Hidden,
-                  cl::desc("Enable phi-node coalescing during SSA reconstruction"));
+static cl::opt<bool> EnableSALSSACoalescing(
+    "func-merging-coalescing", cl::init(true), cl::Hidden,
+    cl::desc("Enable phi-node coalescing during SSA reconstruction"));
 
-static cl::opt<unsigned> ConservativeMode (
+static cl::opt<unsigned> ConservativeMode(
     "func-merging-conservative", cl::init(0), cl::Hidden,
     cl::desc("Enable conservative mode to avoid runtime overhead"));
 
-static cl::opt<bool> ReuseMergedFunctions (
+static cl::opt<bool> ReuseMergedFunctions(
     "func-merging-reuse-merges", cl::init(true), cl::Hidden,
     cl::desc("Try to reuse merged functions for another merge operation"));
 
+static cl::opt<unsigned>
+    MaxNumSelection("func-merging-max-selects", cl::init(500), cl::Hidden,
+                    cl::desc("Maximum number of allowed operand selection"));
 
-static cl::opt<unsigned> MaxNumSelection (
-    "func-merging-max-selects", cl::init(500), cl::Hidden,
-    cl::desc("Maximum number of allowed operand selection"));
-
-static cl::opt<bool> HyFMProfitability (
+static cl::opt<bool> HyFMProfitability(
     "hyfm-profitability", cl::init(true), cl::Hidden,
     cl::desc("Try to reuse merged functions for another merge operation"));
-
 
 static cl::opt<bool> EnableSean(
     "func-merging-sean", cl::init(false), cl::Hidden,
     cl::desc("Enable Sean's Contributions LSH or Alternative Alignment Algos"));
 
+static cl::opt<unsigned> LSHBands(
+    "hyfm-lsh-bands", cl::init(100), cl::Hidden,
+  cl::desc("Number of bands in the LSH structure"));
 
 //////////////////////////// Tests
 
-//static cl::opt<bool> TestFM_CompilationCostModel("fm-built-size-cost",
+// static cl::opt<bool> TestFM_CompilationCostModel("fm-built-size-cost",
 //                            cl::init(false), cl::Hidden, cl::desc(""));
 
 //#include "FMObjFileSize.hpp"
@@ -238,51 +233,51 @@ static cl::opt<bool> EnableSean(
 
 static std::string GetValueName(const Value *V);
 
-#ifdef __unix__                    /* __unix__ is usually defined by compilers targeting Unix systems */
+#ifdef __unix__ /* __unix__ is usually defined by compilers targeting Unix     \
+                   systems */
 
-unsigned long long getTotalSystemMemory()
-{
-    long pages = sysconf(_SC_PHYS_PAGES);
-    long page_size = sysconf(_SC_PAGE_SIZE);
-    return pages * page_size;
+unsigned long long getTotalSystemMemory() {
+  long pages = sysconf(_SC_PHYS_PAGES);
+  long page_size = sysconf(_SC_PAGE_SIZE);
+  return pages * page_size;
 }
 
-#elif defined(_WIN32) || defined(WIN32)     /* _Win32 is usually defined by compilers targeting 32 or   64 bit Windows systems */
+#elif defined(_WIN32) ||                                                       \
+    defined(WIN32) /* _Win32 is usually defined by compilers targeting 32 or   \
+                      64 bit Windows systems */
 
-unsigned long long getTotalSystemMemory()
-{
-    MEMORYSTATUSEX status;
-    status.dwLength = sizeof(status);
-    GlobalMemoryStatusEx(&status);
-    return status.ullTotalPhys;
+unsigned long long getTotalSystemMemory() {
+  MEMORYSTATUSEX status;
+  status.dwLength = sizeof(status);
+  GlobalMemoryStatusEx(&status);
+  return status.ullTotalPhys;
 }
 #endif
 
 FunctionMergeResult MergeFunctions(Function *F1, Function *F2,
- const FunctionMergingOptions &Options) {
-  if (F1->getParent()!=F2->getParent()) return FunctionMergeResult(F1,F2,nullptr);
+                                   const FunctionMergingOptions &Options) {
+  if (F1->getParent() != F2->getParent())
+    return FunctionMergeResult(F1, F2, nullptr);
   FunctionMerger Merger(F1->getParent());
-  return Merger.merge(F1,F2,"",Options);
+  return Merger.merge(F1, F2, "", Options);
 }
 
-static bool CmpNumbers(uint64_t L, uint64_t R) {
-  return L==R;
-}
+static bool CmpNumbers(uint64_t L, uint64_t R) { return L == R; }
 
 // Any two pointers in the same address space are equivalent, intptr_t and
 // pointers are equivalent. Otherwise, standard type equivalence rules apply.
 static bool CmpTypes(Type *TyL, Type *TyR, const DataLayout *DL) {
-  PointerType *PTyL = dyn_cast<PointerType>(TyL);
-  PointerType *PTyR = dyn_cast<PointerType>(TyR);
+  auto *PTyL = dyn_cast<PointerType>(TyL);
+  auto *PTyR = dyn_cast<PointerType>(TyR);
 
-  //const DataLayout &DL = FnL->getParent()->getDataLayout();
+  // const DataLayout &DL = FnL->getParent()->getDataLayout();
   if (PTyL && PTyL->getAddressSpace() == 0)
     TyL = DL->getIntPtrType(TyL);
   if (PTyR && PTyR->getAddressSpace() == 0)
     TyR = DL->getIntPtrType(TyR);
 
   if (TyL == TyR)
-    return 0;
+    return false;
 
   if (int Res = CmpNumbers(TyL->getTypeID(), TyR->getTypeID()))
     return Res;
@@ -303,15 +298,15 @@ static bool CmpTypes(Type *TyL, Type *TyR, const DataLayout *DL) {
   case Type::LabelTyID:
   case Type::MetadataTyID:
   case Type::TokenTyID:
-    return 0;
+    return false;
 
   case Type::PointerTyID:
     assert(PTyL && PTyR && "Both types must be pointers here.");
     return CmpNumbers(PTyL->getAddressSpace(), PTyR->getAddressSpace());
 
   case Type::StructTyID: {
-    StructType *STyL = cast<StructType>(TyL);
-    StructType *STyR = cast<StructType>(TyR);
+    auto *STyL = cast<StructType>(TyL);
+    auto *STyR = cast<StructType>(TyR);
     if (STyL->getNumElements() != STyR->getNumElements())
       return CmpNumbers(STyL->getNumElements(), STyR->getNumElements());
 
@@ -319,15 +314,16 @@ static bool CmpTypes(Type *TyL, Type *TyR, const DataLayout *DL) {
       return CmpNumbers(STyL->isPacked(), STyR->isPacked());
 
     for (unsigned i = 0, e = STyL->getNumElements(); i != e; ++i) {
-      if (int Res = CmpTypes(STyL->getElementType(i), STyR->getElementType(i), DL))
+      if (int Res =
+              CmpTypes(STyL->getElementType(i), STyR->getElementType(i), DL))
         return Res;
     }
-    return 0;
+    return false;
   }
 
   case Type::FunctionTyID: {
-    FunctionType *FTyL = cast<FunctionType>(TyL);
-    FunctionType *FTyR = cast<FunctionType>(TyR);
+    auto *FTyL = cast<FunctionType>(TyL);
+    auto *FTyR = cast<FunctionType>(TyR);
     if (FTyL->getNumParams() != FTyR->getNumParams())
       return CmpNumbers(FTyL->getNumParams(), FTyR->getNumParams());
 
@@ -341,7 +337,7 @@ static bool CmpTypes(Type *TyL, Type *TyR, const DataLayout *DL) {
       if (int Res = CmpTypes(FTyL->getParamType(i), FTyR->getParamType(i), DL))
         return Res;
     }
-    return 0;
+    return false;
   }
 
   case Type::ArrayTyID: {
@@ -367,33 +363,30 @@ static bool CmpTypes(Type *TyL, Type *TyR, const DataLayout *DL) {
   }
 }
 
-
 // Any two pointers in the same address space are equivalent, intptr_t and
 // pointers are equivalent. Otherwise, standard type equivalence rules apply.
-bool FunctionMerger::areTypesEquivalent(Type *Ty1, Type *Ty2, const DataLayout *DL, const FunctionMergingOptions &Options) {
- if (Ty1 == Ty2)
-   return true;
- if (Options.IdenticalTypesOnly)
-   return false;
+bool FunctionMerger::areTypesEquivalent(Type *Ty1, Type *Ty2,
+                                        const DataLayout *DL,
+                                        const FunctionMergingOptions &Options) {
+  if (Ty1 == Ty2)
+    return true;
+  if (Options.IdenticalTypesOnly)
+    return false;
 
- return CmpTypes(Ty1, Ty2, DL);
+  return CmpTypes(Ty1, Ty2, DL);
 }
 
 static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallBase *CI1,
                                 const CallBase *CI2) {
-  Intrinsic::ID ID1;
-  Intrinsic::ID ID2;
-  Function *F;
-  
-  F = CI1->getCalledFunction();
+  Function *F = CI1->getCalledFunction();
   if (!F)
     return false;
-  ID1 = (Intrinsic::ID)F->getIntrinsicID();
+  auto ID1 = (Intrinsic::ID)F->getIntrinsicID();
 
   F = CI2->getCalledFunction();
   if (!F)
     return false;
-  ID2 = (Intrinsic::ID)F->getIntrinsicID();
+  auto ID2 = (Intrinsic::ID)F->getIntrinsicID();
 
   if (ID1 != ID)
     return false;
@@ -421,7 +414,7 @@ static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallBase *CI1,
   }
   case Intrinsic::ctlz: // llvm.ctlz
   case Intrinsic::cttz: // llvm.cttz
-    //is_zero_undef argument of bit counting intrinsics must be a constant int
+    // is_zero_undef argument of bit counting intrinsics must be a constant int
     return CI1->getArgOperand(1) == CI2->getArgOperand(1);
   case Intrinsic::experimental_constrained_fadd:
   case Intrinsic::experimental_constrained_fsub:
@@ -463,7 +456,7 @@ static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallBase *CI1,
   case Intrinsic::memcpy:
   case Intrinsic::memmove:
   case Intrinsic::memset: {
-    //isvolatile argument of memory intrinsics must be a constant int
+    // isvolatile argument of memory intrinsics must be a constant int
     return CI1->getArgOperand(3) == CI2->getArgOperand(3);
   }
   case Intrinsic::memcpy_element_unordered_atomic:
@@ -472,23 +465,21 @@ static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallBase *CI1,
     const auto *AMI1 = cast<AtomicMemIntrinsic>(CI1);
     const auto *AMI2 = cast<AtomicMemIntrinsic>(CI2);
 
-    ConstantInt *ElementSizeCI1 =
-        dyn_cast<ConstantInt>(AMI1->getRawElementSizeInBytes());
+    auto *ElementSizeCI1 = dyn_cast<ConstantInt>(AMI1->getRawElementSizeInBytes());
 
-    ConstantInt *ElementSizeCI2 =
-        dyn_cast<ConstantInt>(AMI2->getRawElementSizeInBytes());
+    auto *ElementSizeCI2 = dyn_cast<ConstantInt>(AMI2->getRawElementSizeInBytes());
 
-    return (ElementSizeCI1!=nullptr && ElementSizeCI1==ElementSizeCI2);
+    return (ElementSizeCI1 != nullptr && ElementSizeCI1 == ElementSizeCI2);
   }
   case Intrinsic::gcroot:
   case Intrinsic::gcwrite:
   case Intrinsic::gcread:
-    //llvm.gcroot parameter #2 must be a constant.
+    // llvm.gcroot parameter #2 must be a constant.
     return CI1->getArgOperand(1) == CI2->getArgOperand(1);
   case Intrinsic::init_trampoline:
     break;
   case Intrinsic::prefetch:
-    //arguments #2 and #3 in llvm.prefetch must be constants
+    // arguments #2 and #3 in llvm.prefetch must be constants
     return CI1->getArgOperand(1) == CI2->getArgOperand(1) &&
            CI1->getArgOperand(2) == CI2->getArgOperand(2);
   case Intrinsic::stackprotector:
@@ -500,10 +491,10 @@ static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallBase *CI1,
   case Intrinsic::lifetime_start:
   case Intrinsic::lifetime_end:
   case Intrinsic::invariant_start:
-    //size argument of memory use markers must be a constant integer
+    // size argument of memory use markers must be a constant integer
     return CI1->getArgOperand(0) == CI2->getArgOperand(0);
   case Intrinsic::invariant_end:
-    //llvm.invariant.end parameter #2 must be a constant integer
+    // llvm.invariant.end parameter #2 must be a constant integer
     return CI1->getArgOperand(1) == CI2->getArgOperand(1);
   case Intrinsic::localescape: {
     /*
@@ -766,8 +757,9 @@ static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallBase *CI1,
   return false; // TODO: change to false by default
 }
 
-//bool FunctionMerger::matchLandingPad(LandingPadInst *LP1, LandingPadInst *LP2) {
-static  bool matchLandingPad(LandingPadInst *LP1, LandingPadInst *LP2) {
+// bool FunctionMerger::matchLandingPad(LandingPadInst *LP1, LandingPadInst
+// *LP2) {
+static bool matchLandingPad(LandingPadInst *LP1, LandingPadInst *LP2) {
   if (LP1->getType() != LP2->getType())
     return false;
   if (LP1->isCleanup() != LP2->isCleanup())
@@ -814,30 +806,36 @@ static bool matchAllocaInsts(const AllocaInst *AI1, const AllocaInst *AI2) {
   return true;
 }
 
-static bool matchGetElementPtrInsts(const GetElementPtrInst *GEP1, const GetElementPtrInst *GEP2) {
+static bool matchGetElementPtrInsts(const GetElementPtrInst *GEP1,
+                                    const GetElementPtrInst *GEP2) {
   Type *Ty1 = GEP1->getSourceElementType();
-  SmallVector<Value*, 16> Idxs1(GEP1->idx_begin(), GEP1->idx_end());
+  SmallVector<Value *, 16> Idxs1(GEP1->idx_begin(), GEP1->idx_end());
 
   Type *Ty2 = GEP2->getSourceElementType();
-  SmallVector<Value*, 16> Idxs2(GEP2->idx_begin(), GEP2->idx_end());
+  SmallVector<Value *, 16> Idxs2(GEP2->idx_begin(), GEP2->idx_end());
 
-  if (Ty1!=Ty2) return false;
-  if (Idxs1.size()!=Idxs2.size()) return false;
+  if (Ty1 != Ty2)
+    return false;
+  if (Idxs1.size() != Idxs2.size())
+    return false;
 
   if (Idxs1.empty())
     return true;
 
-  for (unsigned i = 1; i<Idxs1.size(); i++) {
+  for (unsigned i = 1; i < Idxs1.size(); i++) {
     Value *V1 = Idxs1[i];
     Value *V2 = Idxs2[i];
 
-    //structs must have constant indices, therefore they must be constants and must be identical when merging
+    // structs must have constant indices, therefore they must be constants and
+    // must be identical when merging
     if (isa<StructType>(Ty1)) {
-      if (V1!=V2) return false;
+      if (V1 != V2)
+        return false;
     }
     Ty1 = GetElementPtrInst::getTypeAtIndex(Ty1, V1);
     Ty2 = GetElementPtrInst::getTypeAtIndex(Ty2, V2);
-    if (Ty1!=Ty2) return false;
+    if (Ty1 != Ty2)
+      return false;
   }
   return true;
 }
@@ -863,54 +861,60 @@ static bool matchCallInsts(const CallBase *CI1, const CallBase *CI2) {
   if (CI1->isInlineAsm() || CI2->isInlineAsm())
     return false;
 
-  //if (CI1->getCalledFunction()==nullptr) return false;
+  // if (CI1->getCalledFunction()==nullptr) return false;
 
   if (CI1->getCalledFunction() != CI2->getCalledFunction())
     return false;
- 
+
   if (Function *F = CI1->getCalledFunction()) {
-    if (Intrinsic::ID ID = (Intrinsic::ID)F->getIntrinsicID()) {
+    if (auto ID = (Intrinsic::ID)F->getIntrinsicID()) {
       if (!matchIntrinsicCalls(ID, CI1, CI2))
         return false;
     }
   }
 
-  return CI1->getNumArgOperands() == CI2->getNumArgOperands()
-      && CI1->getCallingConv() == CI2->getCallingConv()
-      && CI1->getAttributes() == CI2->getAttributes();
+  return CI1->getNumArgOperands() == CI2->getNumArgOperands() &&
+         CI1->getCallingConv() == CI2->getCallingConv() &&
+         CI1->getAttributes() == CI2->getAttributes();
 }
 
 static bool matchInvokeInsts(const InvokeInst *II1, const InvokeInst *II2) {
-    return matchCallInsts(II1,II2) && II1->getCallingConv() == II2->getCallingConv()
-        && II1->getAttributes() == II2->getAttributes()
-        && matchLandingPad(II1->getLandingPadInst(), II2->getLandingPadInst());
+  return matchCallInsts(II1, II2) &&
+         II1->getCallingConv() == II2->getCallingConv() &&
+         II1->getAttributes() == II2->getAttributes() &&
+         matchLandingPad(II1->getLandingPadInst(), II2->getLandingPadInst());
 }
 
-static bool matchInsertValueInsts(const InsertValueInst *IV1, const InsertValueInst *IV2) {
-    return IV1->getIndices() == IV2->getIndices();
+static bool matchInsertValueInsts(const InsertValueInst *IV1,
+                                  const InsertValueInst *IV2) {
+  return IV1->getIndices() == IV2->getIndices();
 }
 
-static bool matchExtractValueInsts(const ExtractValueInst *EV1, const ExtractValueInst *EV2) {
-    return EV1->getIndices() == EV2->getIndices();
+static bool matchExtractValueInsts(const ExtractValueInst *EV1,
+                                   const ExtractValueInst *EV2) {
+  return EV1->getIndices() == EV2->getIndices();
 }
 
 static bool matchFenceInsts(const FenceInst *FI1, const FenceInst *FI2) {
-    return FI1->getOrdering() == FI2->getOrdering() &&
-           FI1->getSyncScopeID() == FI2->getSyncScopeID();
+  return FI1->getOrdering() == FI2->getOrdering() &&
+         FI1->getSyncScopeID() == FI2->getSyncScopeID();
 }
 
-bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2, const FunctionMergingOptions &Options) {
+bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2,
+                                       const FunctionMergingOptions &Options) {
 
-  if (I1->getOpcode() != I2->getOpcode()) return false;
+  if (I1->getOpcode() != I2->getOpcode())
+    return false;
 
-  //Returns are special cases that can differ in the number of operands
+  // Returns are special cases that can differ in the number of operands
   if (I1->getOpcode() == Instruction::Ret)
     return true;
 
   if (I1->getNumOperands() != I2->getNumOperands())
     return false;
 
-  const DataLayout *DL = &I1->getParent()->getParent()->getParent()->getDataLayout();
+  const DataLayout *DL =
+      &I1->getParent()->getParent()->getParent()->getDataLayout();
 
   bool sameType = false;
   if (Options.IdenticalTypesOnly) {
@@ -922,29 +926,43 @@ bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2, const F
   } else {
     sameType = areTypesEquivalent(I1->getType(), I2->getType(), DL, Options);
     for (unsigned i = 0; i < I1->getNumOperands(); i++) {
-      sameType = sameType && areTypesEquivalent(I1->getOperand(i)->getType(),
-                                              I2->getOperand(i)->getType(), DL, Options);
+      sameType = sameType &&
+                 areTypesEquivalent(I1->getOperand(i)->getType(),
+                                    I2->getOperand(i)->getType(), DL, Options);
     }
   }
   if (!sameType)
     return false;
 
   switch (I1->getOpcode()) {
-  //case Instruction::Br: return false; //{ return (I1->getNumOperands()==1); }
+    // case Instruction::Br: return false; //{ return (I1->getNumOperands()==1);
+    // }
 
-//#define MatchCaseInst(Kind, I1, I2) case Instruction::#Kind 
+    //#define MatchCaseInst(Kind, I1, I2) case Instruction::#Kind
 
-  case Instruction::Load: return matchLoadInsts(dyn_cast<LoadInst>(I1), dyn_cast<LoadInst>(I2));
-  case Instruction::Store: return matchStoreInsts(dyn_cast<StoreInst>(I1), dyn_cast<StoreInst>(I2));
-  case Instruction::Alloca: return matchAllocaInsts(dyn_cast<AllocaInst>(I1), dyn_cast<AllocaInst>(I2));
-  case Instruction::GetElementPtr: 
-    return matchGetElementPtrInsts(dyn_cast<GetElementPtrInst>(I1), dyn_cast<GetElementPtrInst>(I2));
-  case Instruction::Switch: return matchSwitchInsts(dyn_cast<SwitchInst>(I1), dyn_cast<SwitchInst>(I2));
-  case Instruction::Call: return matchCallInsts(dyn_cast<CallInst>(I1), dyn_cast<CallInst>(I2));
-  case Instruction::Invoke: return matchInvokeInsts(dyn_cast<InvokeInst>(I1), dyn_cast<InvokeInst>(I2));
-  case Instruction::InsertValue: return matchInsertValueInsts(dyn_cast<InsertValueInst>(I1), dyn_cast<InsertValueInst>(I2));
-  case Instruction::ExtractValue: return matchExtractValueInsts(dyn_cast<ExtractValueInst>(I1), dyn_cast<ExtractValueInst>(I2));
-  case Instruction::Fence: return matchFenceInsts(dyn_cast<FenceInst>(I1), dyn_cast<FenceInst>(I2));
+  case Instruction::Load:
+    return matchLoadInsts(dyn_cast<LoadInst>(I1), dyn_cast<LoadInst>(I2));
+  case Instruction::Store:
+    return matchStoreInsts(dyn_cast<StoreInst>(I1), dyn_cast<StoreInst>(I2));
+  case Instruction::Alloca:
+    return matchAllocaInsts(dyn_cast<AllocaInst>(I1), dyn_cast<AllocaInst>(I2));
+  case Instruction::GetElementPtr:
+    return matchGetElementPtrInsts(dyn_cast<GetElementPtrInst>(I1),
+                                   dyn_cast<GetElementPtrInst>(I2));
+  case Instruction::Switch:
+    return matchSwitchInsts(dyn_cast<SwitchInst>(I1), dyn_cast<SwitchInst>(I2));
+  case Instruction::Call:
+    return matchCallInsts(dyn_cast<CallInst>(I1), dyn_cast<CallInst>(I2));
+  case Instruction::Invoke:
+    return matchInvokeInsts(dyn_cast<InvokeInst>(I1), dyn_cast<InvokeInst>(I2));
+  case Instruction::InsertValue:
+    return matchInsertValueInsts(dyn_cast<InsertValueInst>(I1),
+                                 dyn_cast<InsertValueInst>(I2));
+  case Instruction::ExtractValue:
+    return matchExtractValueInsts(dyn_cast<ExtractValueInst>(I1),
+                                  dyn_cast<ExtractValueInst>(I2));
+  case Instruction::Fence:
+    return matchFenceInsts(dyn_cast<FenceInst>(I1), dyn_cast<FenceInst>(I2));
   case Instruction::AtomicCmpXchg: {
     const AtomicCmpXchgInst *CXI = dyn_cast<AtomicCmpXchgInst>(I1);
     const AtomicCmpXchgInst *CXI2 = cast<AtomicCmpXchgInst>(I2);
@@ -965,24 +983,38 @@ bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2, const F
     if (auto *CI = dyn_cast<CmpInst>(I1))
       return CI->getPredicate() == cast<CmpInst>(I2)->getPredicate();
     if (isa<OverflowingBinaryOperator>(I1)) {
-      if (!isa<OverflowingBinaryOperator>(I2)) return false;
-      if (I1->hasNoUnsignedWrap()!=I2->hasNoUnsignedWrap()) return false;
-      if (I1->hasNoSignedWrap()!=I2->hasNoSignedWrap()) return false;
+      if (!isa<OverflowingBinaryOperator>(I2))
+        return false;
+      if (I1->hasNoUnsignedWrap() != I2->hasNoUnsignedWrap())
+        return false;
+      if (I1->hasNoSignedWrap() != I2->hasNoSignedWrap())
+        return false;
     }
     if (isa<PossiblyExactOperator>(I1)) {
-      if (!isa<PossiblyExactOperator>(I2)) return false;
-      if (I1->isExact()!=I2->isExact()) return false;
+      if (!isa<PossiblyExactOperator>(I2))
+        return false;
+      if (I1->isExact() != I2->isExact())
+        return false;
     }
     if (isa<FPMathOperator>(I1)) {
-      if (!isa<FPMathOperator>(I2)) return false;
-      if (I1->isFast()!=I2->isFast()) return false;
-      if (I1->hasAllowReassoc()!=I2->hasAllowReassoc()) return false;
-      if (I1->hasNoNaNs()!=I2->hasNoNaNs()) return false;
-      if (I1->hasNoInfs()!=I2->hasNoInfs()) return false;
-      if (I1->hasNoSignedZeros()!=I2->hasNoSignedZeros()) return false;
-      if (I1->hasAllowReciprocal()!=I2->hasAllowReciprocal()) return false;
-      if (I1->hasAllowContract()!=I2->hasAllowContract()) return false;
-      if (I1->hasApproxFunc()!=I2->hasApproxFunc()) return false;
+      if (!isa<FPMathOperator>(I2))
+        return false;
+      if (I1->isFast() != I2->isFast())
+        return false;
+      if (I1->hasAllowReassoc() != I2->hasAllowReassoc())
+        return false;
+      if (I1->hasNoNaNs() != I2->hasNoNaNs())
+        return false;
+      if (I1->hasNoInfs() != I2->hasNoInfs())
+        return false;
+      if (I1->hasNoSignedZeros() != I2->hasNoSignedZeros())
+        return false;
+      if (I1->hasAllowReciprocal() != I2->hasAllowReciprocal())
+        return false;
+      if (I1->hasAllowContract() != I2->hasAllowContract())
+        return false;
+      if (I1->hasApproxFunc() != I2->hasApproxFunc())
+        return false;
     }
   }
 
@@ -990,53 +1022,60 @@ bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2, const F
 }
 
 bool FunctionMerger::match(Value *V1, Value *V2) {
-  if (isa<Instruction>(V1) && isa<Instruction>(V2)) {
-    return matchInstructions(dyn_cast<Instruction>(V1), dyn_cast<Instruction>(V2));
-  } else if (isa<BasicBlock>(V1) && isa<BasicBlock>(V2)) {
-    BasicBlock *BB1 = dyn_cast<BasicBlock>(V1);
-    BasicBlock *BB2 = dyn_cast<BasicBlock>(V2);
+  if (isa<Instruction>(V1) && isa<Instruction>(V2))
+    return matchInstructions(dyn_cast<Instruction>(V1),
+                             dyn_cast<Instruction>(V2));
+
+  if (isa<BasicBlock>(V1) && isa<BasicBlock>(V2)) {
+    auto *BB1 = dyn_cast<BasicBlock>(V1);
+    auto *BB2 = dyn_cast<BasicBlock>(V2);
     if (BB1->isLandingPad() || BB2->isLandingPad()) {
       LandingPadInst *LP1 = BB1->getLandingPadInst();
       LandingPadInst *LP2 = BB2->getLandingPadInst();
       if (LP1 == nullptr || LP2 == nullptr)
         return false;
       return matchLandingPad(LP1, LP2);
-    } else return true;
+    } 
+    return true;
   }
   return false;
 }
 
-
 bool FunctionMerger::matchWholeBlocks(Value *V1, Value *V2) {
   if (isa<BasicBlock>(V1) && isa<BasicBlock>(V2)) {
-    BasicBlock *BB1 = dyn_cast<BasicBlock>(V1);
-    BasicBlock *BB2 = dyn_cast<BasicBlock>(V2);
+    auto *BB1 = dyn_cast<BasicBlock>(V1);
+    auto *BB2 = dyn_cast<BasicBlock>(V2);
     if (BB1->isLandingPad() || BB2->isLandingPad()) {
       LandingPadInst *LP1 = BB1->getLandingPadInst();
       LandingPadInst *LP2 = BB2->getLandingPadInst();
       if (LP1 == nullptr || LP2 == nullptr)
         return false;
-      if(!matchLandingPad(LP1, LP2)) return false;
+      if (!matchLandingPad(LP1, LP2))
+        return false;
     }
-    
+
     auto It1 = BB1->begin();
     auto It2 = BB2->begin();
 
-    while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
-    while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
+    while (isa<PHINode>(*It1) || isa<LandingPadInst>(*It1))
+      It1++;
+    while (isa<PHINode>(*It2) || isa<LandingPadInst>(*It2))
+      It2++;
 
-    while (It1!=BB1->end() && It2!=BB2->end()) {
+    while (It1 != BB1->end() && It2 != BB2->end()) {
       Instruction *I1 = &*It1;
       Instruction *I2 = &*It2;
 
-      if (!matchInstructions(I1,I2)) return false;
+      if (!matchInstructions(I1, I2))
+        return false;
 
       It1++;
       It2++;
     }
 
-    if (It1!=BB1->end() || It2!=BB2->end()) return false;
-    
+    if (It1 != BB1->end() || It2 != BB2->end())
+      return false;
+
     return true;
   }
   return false;
@@ -1056,7 +1095,8 @@ RandomLinearizationOfBlocks(BasicBlock *BB,
   for (unsigned i = 0; i < TI->getNumSuccessors(); i++) {
     NextBBs.push_back(TI->getSuccessor(i));
   }
-  std::random_shuffle(NextBBs.begin(), NextBBs.end());
+  std::random_device rd;
+  std::shuffle(NextBBs.begin(), NextBBs.end(), std::mt19937(rd()));
 
   unsigned SumSizes = 0;
   for (BasicBlock *NextBlock : NextBBs) {
@@ -1085,10 +1125,13 @@ CanonicalLinearizationOfBlocks(BasicBlock *BB,
 
   unsigned SumSizes = 0;
   for (unsigned i = 0; i < TI->getNumSuccessors(); i++) {
-    SumSizes += CanonicalLinearizationOfBlocks(TI->getSuccessor(i), OrederedBBs,Visited);
+    SumSizes += CanonicalLinearizationOfBlocks(TI->getSuccessor(i), OrederedBBs,
+                                               Visited);
   }
-  //for (unsigned i = 1; i <= TI->getNumSuccessors(); i++) {
-  //  SumSizes += CanonicalLinearizationOfBlocks(TI->getSuccessor(TI->getNumSuccessors()-i), OrederedBBs,
+  // for (unsigned i = 1; i <= TI->getNumSuccessors(); i++) {
+  //  SumSizes +=
+  //  CanonicalLinearizationOfBlocks(TI->getSuccessor(TI->getNumSuccessors()-i),
+  //  OrederedBBs,
   //                                             Visited);
   //}
 
@@ -1105,7 +1148,7 @@ CanonicalLinearizationOfBlocks(Function *F,
 }
 
 void FunctionMerger::linearize(Function *F, SmallVectorImpl<Value *> &FVec,
-                          FunctionMerger::LinearizationKind LK) {
+                               FunctionMerger::LinearizationKind LK) {
   std::list<BasicBlock *> OrderedBBs;
 
   unsigned FReserve = 0;
@@ -1130,12 +1173,13 @@ void FunctionMerger::linearize(Function *F, SmallVectorImpl<Value *> &FVec,
   }
 }
 
-bool FunctionMerger::validMergeTypes(Function *F1, Function *F2, const FunctionMergingOptions &Options) {
-  bool EquivTypes = areTypesEquivalent(F1->getReturnType(), F2->getReturnType(), DL, 
-                                       Options);
-  if (!EquivTypes &&
-      !F1->getReturnType()->isVoidTy() && !F2->getReturnType()->isVoidTy()) {
-      return false;
+bool FunctionMerger::validMergeTypes(Function *F1, Function *F2,
+                                     const FunctionMergingOptions &Options) {
+  bool EquivTypes =
+      areTypesEquivalent(F1->getReturnType(), F2->getReturnType(), DL, Options);
+  if (!EquivTypes && !F1->getReturnType()->isVoidTy() &&
+      !F2->getReturnType()->isVoidTy()) {
+    return false;
   }
   return true;
 }
@@ -1151,29 +1195,39 @@ Timer TimeTotal("Merge::Total", "Merge::Total");
 
 static bool validMergePair(Function *F1, Function *F2) {
   if (!HasWholeProgram && (F1->hasAvailableExternallyLinkage() ||
-      F2->hasAvailableExternallyLinkage())) return false;
+                           F2->hasAvailableExternallyLinkage()))
+    return false;
 
-  if (!HasWholeProgram && (F1->hasLinkOnceLinkage() ||
-      F2->hasLinkOnceLinkage())) return false;
+  if (!HasWholeProgram &&
+      (F1->hasLinkOnceLinkage() || F2->hasLinkOnceLinkage()))
+    return false;
 
-  //if (!F1->getSection().equals(F2->getSection())) return false;
-//  if (F1->hasSection()!=F2->hasSection()) return false;
-//  if (F1->hasSection() && !F1->getSection().equals(F2->getSection())) return false;
+  // if (!F1->getSection().equals(F2->getSection())) return false;
+  //  if (F1->hasSection()!=F2->hasSection()) return false;
+  //  if (F1->hasSection() && !F1->getSection().equals(F2->getSection())) return
+  //  false;
 
-  //if (F1->hasComdat()!=F2->hasComdat()) return false;
-  //if (F1->hasComdat() && F1->getComdat() != F2->getComdat()) return false;
-  
-  if (F1->hasPersonalityFn()!=F2->hasPersonalityFn()) return false;
+  // if (F1->hasComdat()!=F2->hasComdat()) return false;
+  // if (F1->hasComdat() && F1->getComdat() != F2->getComdat()) return false;
+
+  if (F1->hasPersonalityFn() != F2->hasPersonalityFn())
+    return false;
   if (F1->hasPersonalityFn()) {
     Constant *PersonalityFn1 = F1->getPersonalityFn();
     Constant *PersonalityFn2 = F2->getPersonalityFn();
-    if (PersonalityFn1 != PersonalityFn2) return false;
+    if (PersonalityFn1 != PersonalityFn2)
+      return false;
   }
-  
+
   return true;
 }
 
-static void MergeArguments(LLVMContext &Context, Function *F1, Function *F2, AlignedSequence<Value*> &AlignedSeq, std::map<unsigned, unsigned> &ParamMap1, std::map<unsigned, unsigned> &ParamMap2, std::vector<Type *> &Args, const FunctionMergingOptions &Options) {
+static void MergeArguments(LLVMContext &Context, Function *F1, Function *F2,
+                           AlignedSequence<Value *> &AlignedSeq,
+                           std::map<unsigned, unsigned> &ParamMap1,
+                           std::map<unsigned, unsigned> &ParamMap2,
+                           std::vector<Type *> &Args,
+                           const FunctionMergingOptions &Options) {
 
   std::vector<Argument *> ArgsList1;
   for (Argument &arg : F1->args()) {
@@ -1200,10 +1254,11 @@ static void MergeArguments(LLVMContext &Context, Function *F1, Function *F2, Ali
     // otherwise try to match by type only
     for (unsigned i = 0; i < ArgsList1.size(); i++) {
       if (ArgsList1[i]->getType() == (*I).getType()) {
-  
-  auto AttrSet1 = AttrList1.getParamAttributes( ArgsList1[i]->getArgNo() );
-  auto AttrSet2 = AttrList2.getParamAttributes( (*I).getArgNo() );
-  if (AttrSet1!=AttrSet2) continue;
+
+        auto AttrSet1 = AttrList1.getParamAttributes(ArgsList1[i]->getArgNo());
+        auto AttrSet2 = AttrList2.getParamAttributes((*I).getArgNo());
+        if (AttrSet1 != AttrSet2)
+          continue;
 
         bool hasConflict = false; // check for conflict from a previous matching
         for (auto ParamPair : ParamMap2) {
@@ -1240,7 +1295,7 @@ static void MergeArguments(LLVMContext &Context, Function *F1, Function *F2, Ali
       }
 
       int MaxScore = -1;
-      int MaxId = 0;
+      unsigned MaxId = 0;
 
       for (auto KV : MatchingScore) {
         if (KV.second > MaxScore) {
@@ -1257,32 +1312,35 @@ static void MergeArguments(LLVMContext &Context, Function *F1, Function *F2, Ali
 
     ArgId++;
   }
-
 }
 
-static void SetFunctionAttributes(Function *F1, Function *F2, Function *MergedFunc) {
+static void SetFunctionAttributes(Function *F1, Function *F2,
+                                  Function *MergedFunc) {
   unsigned MaxAlignment = std::max(F1->getAlignment(), F2->getAlignment());
-  if (F1->getAlignment()!=F2->getAlignment()) {
-  if (Debug) errs() << "WARNING: different function alignment!\n";
+  if (F1->getAlignment() != F2->getAlignment()) {
+    if (Debug)
+      errs() << "WARNING: different function alignment!\n";
   }
-  if (MaxAlignment) MergedFunc->setAlignment(Align(MaxAlignment));
+  if (MaxAlignment)
+    MergedFunc->setAlignment(Align(MaxAlignment));
 
   if (F1->getCallingConv() == F2->getCallingConv()) {
     MergedFunc->setCallingConv(F1->getCallingConv());
   } else {
-    if (Debug) errs() << "WARNING: different calling convention!\n";
-    //MergedFunc->setCallingConv(CallingConv::Fast);
+    if (Debug)
+      errs() << "WARNING: different calling convention!\n";
+    // MergedFunc->setCallingConv(CallingConv::Fast);
   }
 
-/*
-  if (F1->getLinkage() == F2->getLinkage()) {
-    MergedFunc->setLinkage(F1->getLinkage());
-  } else {
-    if (Debug) errs() << "ERROR: different linkage type!\n";
-    MergedFunc->setLinkage(GlobalValue::LinkageTypes::InternalLinkage);
-  }
-*/
-  //MergedFunc->setLinkage(GlobalValue::LinkageTypes::ExternalLinkage);
+  /*
+    if (F1->getLinkage() == F2->getLinkage()) {
+      MergedFunc->setLinkage(F1->getLinkage());
+    } else {
+      if (Debug) errs() << "ERROR: different linkage type!\n";
+      MergedFunc->setLinkage(GlobalValue::LinkageTypes::InternalLinkage);
+    }
+  */
+  // MergedFunc->setLinkage(GlobalValue::LinkageTypes::ExternalLinkage);
   MergedFunc->setLinkage(GlobalValue::LinkageTypes::InternalLinkage);
 
   /*
@@ -1297,18 +1355,19 @@ static void SetFunctionAttributes(Function *F1, Function *F2, Function *MergedFu
   if (F1->getSubprogram() == F2->getSubprogram()) {
     MergedFunc->setSubprogram(F1->getSubprogram());
   } else {
-    if (Debug) errs() << "WARNING: different subprograms!\n";
+    if (Debug)
+      errs() << "WARNING: different subprograms!\n";
   }
 
-/*
-  if (F1->getUnnamedAddr() == F2->getUnnamedAddr()) {
-    MergedFunc->setUnnamedAddr(F1->getUnnamedAddr());
-  } else {
-    if (Debug) errs() << "ERROR: different unnamed addr!\n";
-    MergedFunc->setUnnamedAddr(GlobalValue::UnnamedAddr::Local);
-  }
-*/
-  //MergedFunc->setUnnamedAddr(GlobalValue::UnnamedAddr::Local);
+  /*
+    if (F1->getUnnamedAddr() == F2->getUnnamedAddr()) {
+      MergedFunc->setUnnamedAddr(F1->getUnnamedAddr());
+    } else {
+      if (Debug) errs() << "ERROR: different unnamed addr!\n";
+      MergedFunc->setUnnamedAddr(GlobalValue::UnnamedAddr::Local);
+    }
+  */
+  // MergedFunc->setUnnamedAddr(GlobalValue::UnnamedAddr::Local);
 
   /*
   if (F1->getVisibility() == F2->getVisibility()) {
@@ -1331,19 +1390,24 @@ static void SetFunctionAttributes(Function *F1, Function *F2, Function *MergedFu
       PersonalityFn1->dump();
       PersonalityFn2->dump();
 #endif
-      //errs() << "ERROR: different personality function!\n";
-      if (Debug) errs() << "WARNING: different personality function!\n";
+      // errs() << "ERROR: different personality function!\n";
+      if (Debug)
+        errs() << "WARNING: different personality function!\n";
     }
   } else if (F1->hasPersonalityFn()) {
-    //errs() << "Only F1 has PersonalityFn\n";
-    // TODO: check if this is valid: merge function with personality with function without it
+    // errs() << "Only F1 has PersonalityFn\n";
+    // TODO: check if this is valid: merge function with personality with
+    // function without it
     MergedFunc->setPersonalityFn(F1->getPersonalityFn());
-    if (Debug) errs() << "WARNING: only one personality function!\n";
+    if (Debug)
+      errs() << "WARNING: only one personality function!\n";
   } else if (F2->hasPersonalityFn()) {
-    //errs() << "Only F2 has PersonalityFn\n";
-    // TODO: check if this is valid: merge function with personality with function without it
+    // errs() << "Only F2 has PersonalityFn\n";
+    // TODO: check if this is valid: merge function with personality with
+    // function without it
     MergedFunc->setPersonalityFn(F2->getPersonalityFn());
-    if (Debug) errs() << "WARNING: only one personality function!\n";
+    if (Debug)
+      errs() << "WARNING: only one personality function!\n";
   }
 
   if (F1->hasComdat() && F2->hasComdat()) {
@@ -1355,119 +1419,125 @@ static void SetFunctionAttributes(Function *F1, Function *F2, Function *MergedFu
       errs() << "WARNING: different comdats!\n";
     }
   } else if (F1->hasComdat()) {
-    //errs() << "Only F1 has Comdat\n";
+    // errs() << "Only F1 has Comdat\n";
     MergedFunc->setComdat(F1->getComdat()); // TODO: check if this is valid:
                                             // merge function with comdat with
                                             // function without it
-    if (Debug) errs() << "WARNING: only one comdat!\n";
+    if (Debug)
+      errs() << "WARNING: only one comdat!\n";
   } else if (F2->hasComdat()) {
-    //errs() << "Only F2 has Comdat\n";
+    // errs() << "Only F2 has Comdat\n";
     MergedFunc->setComdat(F2->getComdat()); // TODO: check if this is valid:
                                             // merge function with comdat with
                                             // function without it
-    if (Debug) errs() << "WARNING: only one comdat!\n";
+    if (Debug)
+      errs() << "WARNING: only one comdat!\n";
   }
 
   if (F1->hasSection()) {
     MergedFunc->setSection(F1->getSection());
   }
-
 }
 
-static Function *RemoveFuncIdArg(Function *F, std::vector<Argument *> &ArgsList) {
+static Function *RemoveFuncIdArg(Function *F,
+                                 std::vector<Argument *> &ArgsList) {
 
-   // Start by computing a new prototype for the function, which is the same as
-   // the old function, but doesn't have isVarArg set.
-   FunctionType *FTy = F->getFunctionType();
+  // Start by computing a new prototype for the function, which is the same as
+  // the old function, but doesn't have isVarArg set.
+  FunctionType *FTy = F->getFunctionType();
 
-   std::vector<Type *> NewArgs;
-   for (unsigned i = 1; i < ArgsList.size(); i++) {
-     NewArgs.push_back(ArgsList[i]->getType());
-   }
-   ArrayRef<llvm::Type *> Params(NewArgs);
+  std::vector<Type *> NewArgs;
+  for (unsigned i = 1; i < ArgsList.size(); i++) {
+    NewArgs.push_back(ArgsList[i]->getType());
+  }
+  ArrayRef<llvm::Type *> Params(NewArgs);
 
-   //std::vector<Type *> Params(FTy->param_begin(), FTy->param_end());
-   FunctionType *NFTy = FunctionType::get(FTy->getReturnType(), Params, false);
-   //unsigned NumArgs = Params.size();
- 
-   // Create the new function body and insert it into the module...
-   Function *NF = Function::Create(NFTy, F->getLinkage());
+  // std::vector<Type *> Params(FTy->param_begin(), FTy->param_end());
+  FunctionType *NFTy = FunctionType::get(FTy->getReturnType(), Params, false);
+  // unsigned NumArgs = Params.size();
 
-   NF->copyAttributesFrom(F);
+  // Create the new function body and insert it into the module...
+  Function *NF = Function::Create(NFTy, F->getLinkage());
 
-   if (F->getAlignment())
+  NF->copyAttributesFrom(F);
+
+  if (F->getAlignment())
     NF->setAlignment(Align(F->getAlignment()));
-   NF->setCallingConv(F->getCallingConv());
-   NF->setLinkage(F->getLinkage());
-   NF->setDSOLocal(F->isDSOLocal());
-   NF->setSubprogram(F->getSubprogram());
-   NF->setUnnamedAddr(F->getUnnamedAddr());
-   NF->setVisibility(F->getVisibility());
-   // Exception Handling requires landing pads to have the same personality
-   // function
-   if (F->hasPersonalityFn())
-     NF->setPersonalityFn(F->getPersonalityFn());
-   if (F->hasComdat())
-     NF->setComdat(F->getComdat());
-   if (F->hasSection())
+  NF->setCallingConv(F->getCallingConv());
+  NF->setLinkage(F->getLinkage());
+  NF->setDSOLocal(F->isDSOLocal());
+  NF->setSubprogram(F->getSubprogram());
+  NF->setUnnamedAddr(F->getUnnamedAddr());
+  NF->setVisibility(F->getVisibility());
+  // Exception Handling requires landing pads to have the same personality
+  // function
+  if (F->hasPersonalityFn())
+    NF->setPersonalityFn(F->getPersonalityFn());
+  if (F->hasComdat())
+    NF->setComdat(F->getComdat());
+  if (F->hasSection())
     NF->setSection(F->getSection());
 
-   F->getParent()->getFunctionList().insert(F->getIterator(), NF);
-   NF->takeName(F);
- 
-   // Since we have now created the new function, splice the body of the old
-   // function right into the new function, leaving the old rotting hulk of the
-   // function empty.
-   NF->getBasicBlockList().splice(NF->begin(), F->getBasicBlockList());
+  F->getParent()->getFunctionList().insert(F->getIterator(), NF);
+  NF->takeName(F);
 
-   std::vector<Argument *> NewArgsList;
-   for (Argument &arg : NF->args()) {
-     NewArgsList.push_back(&arg);
-   }
+  // Since we have now created the new function, splice the body of the old
+  // function right into the new function, leaving the old rotting hulk of the
+  // function empty.
+  NF->getBasicBlockList().splice(NF->begin(), F->getBasicBlockList());
 
-   // Loop over the argument list, transferring uses of the old arguments over to
-   // the new arguments, also transferring over the names as well.  While we're at
-   // it, remove the dead arguments from the DeadArguments list.
-   /*
-   for (Function::arg_iterator I = F->arg_begin(), E = F->arg_end(),
-        I2 = NF->arg_begin(); I != E; ++I, ++I2) {
-     // Move the name and users over to the new version.
-     I->replaceAllUsesWith(&*I2);
-     I2->takeName(&*I);
-   }
-   */
+  std::vector<Argument *> NewArgsList;
+  for (Argument &arg : NF->args()) {
+    NewArgsList.push_back(&arg);
+  }
 
-   for (unsigned i = 0; i<NewArgsList.size(); i++) {
-     ArgsList[i+1]->replaceAllUsesWith(NewArgsList[i]);
-     NewArgsList[i]->takeName(ArgsList[i+1]);
-   }
+  // Loop over the argument list, transferring uses of the old arguments over to
+  // the new arguments, also transferring over the names as well.  While we're
+  // at it, remove the dead arguments from the DeadArguments list.
+  /*
+  for (Function::arg_iterator I = F->arg_begin(), E = F->arg_end(),
+       I2 = NF->arg_begin(); I != E; ++I, ++I2) {
+    // Move the name and users over to the new version.
+    I->replaceAllUsesWith(&*I2);
+    I2->takeName(&*I);
+  }
+  */
 
-   // Clone metadatas from the old function, including debug info descriptor.
-   SmallVector<std::pair<unsigned, MDNode *>, 1> MDs;
-   F->getAllMetadata(MDs);
-   for (auto MD : MDs)
-     NF->addMetadata(MD.first, *MD.second);
- 
-   // Fix up any BlockAddresses that refer to the function.
-   F->replaceAllUsesWith(ConstantExpr::getBitCast(NF, F->getType()));
-   // Delete the bitcast that we just created, so that NF does not
-   // appear to be address-taken.
-   NF->removeDeadConstantUsers();
-   // Finally, nuke the old function.
-   F->eraseFromParent();
-   return NF;
+  for (unsigned i = 0; i < NewArgsList.size(); i++) {
+    ArgsList[i + 1]->replaceAllUsesWith(NewArgsList[i]);
+    NewArgsList[i]->takeName(ArgsList[i + 1]);
+  }
+
+  // Clone metadatas from the old function, including debug info descriptor.
+  SmallVector<std::pair<unsigned, MDNode *>, 1> MDs;
+  F->getAllMetadata(MDs);
+  for (auto MD : MDs)
+    NF->addMetadata(MD.first, *MD.second);
+
+  // Fix up any BlockAddresses that refer to the function.
+  F->replaceAllUsesWith(ConstantExpr::getBitCast(NF, F->getType()));
+  // Delete the bitcast that we just created, so that NF does not
+  // appear to be address-taken.
+  NF->removeDeadConstantUsers();
+  // Finally, nuke the old function.
+  F->eraseFromParent();
+  return NF;
 }
 
-static Value *createCastIfNeeded(Value *V, Type *DstType, IRBuilder<> &Builder, Type *IntPtrTy, const FunctionMergingOptions &Options = {});
+static Value *createCastIfNeeded(Value *V, Type *DstType, IRBuilder<> &Builder,
+                                 Type *IntPtrTy,
+                                 const FunctionMergingOptions &Options = {});
 
 /*
-bool CodeGenerator(Value *IsFunc1, BasicBlock *EntryBB1, BasicBlock *EntryBB2, BasicBlock *PreBB,
-                   std::list<std::pair<Value *, Value *>> &AlignedInsts,
+bool CodeGenerator(Value *IsFunc1, BasicBlock *EntryBB1, BasicBlock *EntryBB2,
+BasicBlock *PreBB, std::list<std::pair<Value *, Value *>> &AlignedInsts,
                    ValueToValueMapTy &VMap, Function *MergedFunc,
-Type *RetType1, Type *RetType2, Type *ReturnType, bool RequiresUnifiedReturn, LLVMContext &Context, Type *IntPtrTy, const FunctionMergingOptions &Options = {}) {
+Type *RetType1, Type *RetType2, Type *ReturnType, bool RequiresUnifiedReturn,
+LLVMContext &Context, Type *IntPtrTy, const FunctionMergingOptions &Options =
+{}) {
 */
 
-template<typename BlockListType>
+template <typename BlockListType>
 void FunctionMerger::CodeGenerator<BlockListType>::destroyGeneratedCode() {
   for (Instruction *I : CreatedInsts) {
     I->dropAllReferences();
@@ -1484,166 +1554,147 @@ void FunctionMerger::CodeGenerator<BlockListType>::destroyGeneratedCode() {
 
 unsigned instToInt(Instruction *I);
 
-inst_range getInstructions(Function* F) {
-  return instructions(F);
-}
+inst_range getInstructions(Function *F) { return instructions(F); }
 
-iterator_range<BasicBlock::iterator> getInstructions(BasicBlock* BB) {
+iterator_range<BasicBlock::iterator> getInstructions(BasicBlock *BB) {
   return make_range(BB->begin(), BB->end());
 }
 
+template <class T> class FingerprintLSH {
+private:
+  static const size_t rows = 2;
+  // nHashes determines accuracy of similarity estimation -- 200 hashes
+  // around 0.07 error estimation -- e = 1/(sqrt(nHashes)) This can
+  // also depend on the hashing scheme being used but for now is just
+  // the multiple hash function variant
+  static const size_t nHashes = 200;
+  // The number of instructions defining a shingle. 2 or 3 is best.
+  static constexpr size_t K = 2;
+  static constexpr double threshold = 0.3;
+  static constexpr size_t MaxOpcode = 68;
 
-template<class T>
-class FingerprintLSH {
-  private:
-    static const size_t rows = 2;
-    static const size_t nHashes = 200;// nHashes determines accuracy of similarity estimation -- 200 hashes around 0.07 error estimation -- e = 1/(sqrt(nHashes))
-                                      // This can also depend on the hashing scheme being used but for now is just the multiple hash function variant
-    static constexpr size_t K = 2;    // The number of instructions defining a shingle. 2 or 3 is best.
-    static constexpr double threshold = 0.3;
-    static constexpr size_t MaxOpcode = 68;
+  inline static std::vector<uint32_t> randomHashFuncs;
+  inline static SearchStrategy<std::vector<uint32_t>> searchStrategy;
 
-    inline static std::vector<uint32_t> randomHashFuncs;
-    inline static SearchStrategy<std::vector<uint32_t>> searchStrategy;
-
-  public:
-    static const size_t bands = 100;  // e.g. 4 rows and 50 bands -- threshold around 40% similarity -- t = (1/b)^(1/r)
-    uint64_t magnitude;
-    std::vector<uint32_t> hash;
-    std::vector<uint32_t> bandHash;
-
-  public:
-    FingerprintLSH(): magnitude(0) {};
-
-    FingerprintLSH(T owner) : magnitude(0) {
-      hash.resize(nHashes);
-      bandHash.resize(bands);
-      std::vector<uint32_t> opcodes;
-      uint32_t OpcodeFreq[MaxOpcode];
-   
-      for (Instruction &I : getInstructions(owner)) {
-          opcodes.push_back(instToInt(&I));
-          OpcodeFreq[I.getOpcode()]++;
-          if (I.isTerminator()) 
-            OpcodeFreq[0] += I.getNumSuccessors();
-      }
-
-      for (size_t i = 0; i < MaxOpcode; ++i)
-        magnitude += OpcodeFreq[i] * OpcodeFreq[i];
-
-      updateHashes(opcodes);
-    }
-
-    static void initialize(){
-      randomHashFuncs.resize(nHashes - 1);
-      searchStrategy.generateRandomHashFunctions(nHashes - 1, randomHashFuncs);
-    }
-
-    void updateHashes(std::vector<uint32_t> &opcodes) {
-      searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(opcodes, nHashes, hash, randomHashFuncs);
-      searchStrategy.generateBands(hash, rows, bands, bandHash);
-    }
-
-    uint32_t footprint() {
-      return sizeof(uint32_t) * (nHashes + bands);
-    }
-
-
-    float distance(FingerprintLSH* FP2) {
-      size_t nintersect = 0;
-      size_t pos1 = 0;
-      size_t pos2 = 0;
-
-      while (pos1 != nHashes && pos2 != nHashes) {
-        if (hash[pos1] == FP2->hash[pos2]) {
-            nintersect++;
-            pos1++;
-            pos2++;
-        } else if (hash[pos1] < FP2->hash[pos2]) {
-            pos1++;
-        } else {
-            pos2++;
-        }
-      }
-
-      int nunion = 2 * nHashes - nintersect;
-      return 1.f - (nintersect / (float)nunion);
-    }
-};
-
-
-template<class T> class Fingerprint {
-  public:
-    uint64_t magnitude;
-    static const size_t MaxOpcode = 68;
-    int OpcodeFreq[MaxOpcode];
-
-    Fingerprint() : magnitude(0) {}
-
-    Fingerprint(T owner) : magnitude(0) {
-      //memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
-      for (size_t i = 0; i<MaxOpcode; i++)
-        OpcodeFreq[i] = 0;
-
-      for (Instruction &I : getInstructions(owner)) {
-        OpcodeFreq[I.getOpcode()]++;
-        if (I.isTerminator()) 
-          OpcodeFreq[0] += I.getNumSuccessors();
-      }
-      for (size_t i = 0; i < MaxOpcode; i++)
-        magnitude += OpcodeFreq[i] * OpcodeFreq[i];
-    }
-
-    uint32_t footprint() {
-      return sizeof(int) * MaxOpcode;
-    }
-
-    float distance(Fingerprint* FP2) {
-      int Distance = 0;
-      for (size_t i = 0; i < MaxOpcode; i++) {
-        int Freq1 = OpcodeFreq[i];
-        int Freq2 = FP2->OpcodeFreq[i];
-        Distance += std::abs(Freq1-Freq2);
-      }
-      return Distance;
-    }
-};
-
-
-class FunctionData {
 public:
-  Function *F;
-  FingerprintLSH<Function*> *FP;
-  size_t Size;
-  float Distance;
-  std::list<FunctionData>::iterator iterator;
+  static const size_t bands = 100; // e.g. 4 rows and 50 bands -- threshold
+                                   // around 40% similarity -- t = (1/b)^(1/r)
+  uint64_t magnitude{0};
+  std::vector<uint32_t> hash;
+  std::vector<uint32_t> bandHash;
 
-  FunctionData() : F(nullptr), FP(nullptr), Size(0), Distance(0) {}
-  FunctionData(Function *F, FingerprintLSH<Function*> *FP, size_t Size) : F(F), FP(FP), Size(Size), Distance(0) {}
+public:
+  FingerprintLSH() = default;
+
+  FingerprintLSH(T owner) {
+    hash.resize(nHashes);
+    bandHash.resize(bands);
+    std::vector<uint32_t> opcodes;
+  std::array<uint32_t, MaxOpcode> OpcodeFreq;
+
+    for (Instruction &I : getInstructions(owner)) {
+      opcodes.push_back(instToInt(&I));
+      OpcodeFreq[I.getOpcode()]++;
+      if (I.isTerminator())
+        OpcodeFreq[0] += I.getNumSuccessors();
+    }
+
+    for (size_t i = 0; i < MaxOpcode; ++i)
+      magnitude += OpcodeFreq[i] * OpcodeFreq[i];
+
+    updateHashes(opcodes);
+  }
+
+  static void initialize() {
+    randomHashFuncs.resize(nHashes - 1);
+    searchStrategy.generateRandomHashFunctions(nHashes - 1, randomHashFuncs);
+  }
+
+  void updateHashes(std::vector<uint32_t> &opcodes) {
+    searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(
+        opcodes, nHashes, hash, randomHashFuncs);
+    searchStrategy.generateBands(hash, rows, bands, bandHash);
+  }
+
+  uint32_t footprint() const { return sizeof(uint32_t) * (nHashes + bands); }
+
+  float distance(const FingerprintLSH &FP2) const {
+    size_t nintersect = 0;
+    size_t pos1 = 0;
+    size_t pos2 = 0;
+
+    while (pos1 != nHashes && pos2 != nHashes) {
+      if (hash[pos1] == FP2.hash[pos2]) {
+        nintersect++;
+        pos1++;
+        pos2++;
+      } else if (hash[pos1] < FP2.hash[pos2]) {
+        pos1++;
+      } else {
+        pos2++;
+      }
+    }
+
+    int nunion = 2 * nHashes - nintersect;
+    return 1.f - (nintersect / (float)nunion);
+  }
 };
 
+template <class T> class Fingerprint {
+public:
+  uint64_t magnitude{0};
+  static const size_t MaxOpcode = 68;
+  std::array<int, MaxOpcode> OpcodeFreq;
+
+  Fingerprint() = default;
+
+  Fingerprint(T owner) {
+    // memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
+    for (size_t i = 0; i < MaxOpcode; i++)
+      OpcodeFreq[i] = 0;
+
+    for (Instruction &I : getInstructions(owner)) {
+      OpcodeFreq[I.getOpcode()]++;
+      if (I.isTerminator())
+        OpcodeFreq[0] += I.getNumSuccessors();
+    }
+    for (size_t i = 0; i < MaxOpcode; i++)
+      magnitude += OpcodeFreq[i] * OpcodeFreq[i];
+  }
+
+  uint32_t footprint() const { return sizeof(int) * MaxOpcode; }
+
+  float distance(const Fingerprint &FP2) const {
+    int Distance = 0;
+    for (size_t i = 0; i < MaxOpcode; i++) {
+      int Freq1 = OpcodeFreq[i];
+      int Freq2 = FP2.OpcodeFreq[i];
+      Distance += std::abs(Freq1 - Freq2);
+    }
+    return static_cast<float>(Distance);
+  }
+};
 
 class BlockData {
 public:
-  BasicBlock *BB;
-  size_t Size;
-  int Encoding;
+  BasicBlock *BB{nullptr};
+  size_t Size{0};
+  int Encoding{0};
 
-  BlockData() : BB(nullptr), Size(0), Encoding(0) {}
+  BlockData() = default;
 
   BlockData(BasicBlock *BB) : BB(BB) {
-    Size = 0;
     for (Instruction &I : *BB) {
       if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
         Size++;
         Encoding += I.getOpcode();
-      } else if (isa<LandingPadInst>(&I)) Encoding += I.getOpcode();
+      } else if (isa<LandingPadInst>(&I))
+        Encoding += I.getOpcode();
     }
   }
 
-  template<typename EncoderT>
+  template <typename EncoderT>
   BlockData(BasicBlock *BB, EncoderT BBEncoder) : BB(BB) {
-    Size = 0;
     for (Instruction &I : *BB) {
       if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
         Size++;
@@ -1654,8 +1705,8 @@ public:
   }
 };
 
-std::vector<Type*> TypesEncoding;
-std::vector<Value*> CallEncoding;
+std::vector<Type *> TypesEncoding;
+std::vector<Value *> CallEncoding;
 int HashEncoder(Instruction *I, int Encoding) {
   int TyEnc = -1;
 
@@ -1663,17 +1714,17 @@ int HashEncoder(Instruction *I, int Encoding) {
   if (auto *CI = dyn_cast<CallBase>(I)) {
     int CallEnc = -1;
     auto *Callee = CI->getCalledFunction();
-    for (unsigned i = 0; i<CallEncoding.size(); i++) {
-      if (CallEncoding[i]==Callee) {
+    for (int i = 0; i < CallEncoding.size(); i++) {
+      if (CallEncoding[i] == Callee) {
         CallEnc = i;
-  break;
+        break;
       }
     }
-    if (CallEnc<0) {
+    if (CallEnc < 0) {
       CallEnc = CallEncoding.size();
       CallEncoding.push_back(Callee);
     }
-    //InstEnc += 1000*CallEnc;
+    // InstEnc += 1000*CallEnc;
     InstEnc += CallEnc;
   }
 
@@ -1682,30 +1733,29 @@ int HashEncoder(Instruction *I, int Encoding) {
     SI->getValueOperand()->getType();
   }
 
-  for (unsigned i = 0; i<TypesEncoding.size(); i++) {
-    if (TypesEncoding[i]==Ty) {
+  for (unsigned i = 0; i < TypesEncoding.size(); i++) {
+    if (TypesEncoding[i] == Ty) {
       TyEnc = i;
       break;
     }
   }
-  if (TyEnc<0) {
+  if (TyEnc < 0) {
     TyEnc = TypesEncoding.size();
     TypesEncoding.push_back(Ty);
   }
-  //TyEnc *= 100;
+  // TyEnc *= 100;
 
-  return Encoding+InstEnc+TyEnc;
+  return Encoding + InstEnc + TyEnc;
 }
 
-class BlockFingerprint : public Fingerprint<BasicBlock*> {
+class BlockFingerprint : public Fingerprint<BasicBlock *> {
 public:
-  BasicBlock* BB;
-  size_t Size;
+  BasicBlock *BB{nullptr};
+  size_t Size{0};
 
-  BlockFingerprint() : Size(0) {}
+  BlockFingerprint() = default;
 
   BlockFingerprint(BasicBlock *BB) : Fingerprint(BB), BB(BB) {
-    Size = 0;
     for (Instruction &I : *BB) {
       if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
         Size++;
@@ -1714,277 +1764,264 @@ public:
   }
 };
 
-template<class T> class MatchInfo {
-  public:
+template <class T> class MatchInfo {
+public:
+  T candidate{nullptr};
+  size_t Size{0};
+  size_t OtherSize{0};
+  float Distance{0};
+
+  MatchInfo() = default;
+  MatchInfo(T candidate) : candidate(candidate) {};
+  MatchInfo(T candidate, size_t Size) : candidate(candidate), Size(Size) {};
+};
+
+template <class T> class Matcher {
+public:
+  Matcher() = default;
+  virtual ~Matcher() = default;
+
+  virtual void add_candidate(T candidate, size_t size) = 0;
+  virtual void remove_candidate(T candidate) = 0;
+  virtual T next_candidate() = 0;
+  virtual std::vector<MatchInfo<T>> &get_matches(T candidate) = 0;
+  virtual size_t size() = 0;
+};
+
+template <class T> class MatcherFQ : public Matcher<T> {
+private:
+  struct MatcherEntry {
     T candidate;
-    size_t Size;
-    size_t OtherSize;
-    float Distance;
+    size_t size;
+    Fingerprint<T> FP;
+    MatcherEntry() : MatcherEntry(nullptr, 0){};
+    MatcherEntry(T candidate, size_t size)
+        : candidate(candidate), size(size), FP(candidate){};
+  };
+  using MatcherIt = typename std::list<MatcherEntry>::iterator;
 
-    MatchInfo() : MatchInfo(nullptr, 0) {};
-    MatchInfo(T candidate) : MatchInfo(candidate, 0) {};
-    MatchInfo(T candidate, size_t Size) : candidate(candidate), Size(Size), OtherSize(0), Distance(0) {};
+  bool initialized{false};
+  FunctionMerger &FM;
+  FunctionMergingOptions &Options;
+  std::list<MatcherEntry> candidates;
+  std::unordered_map<T, MatcherIt> cache;
+  std::vector<MatchInfo<T>> matches;
+
+public:
+  MatcherFQ() = default;
+  MatcherFQ(FunctionMerger &FM, FunctionMergingOptions &Options)
+      : FM(FM), Options(Options){};
+
+  void add_candidate(T candidate, size_t size) override {
+    candidates.emplace_front(candidate, size);
+    cache[candidate] = candidates.begin();
+  }
+
+  void remove_candidate(T candidate) override {
+    auto cache_it = cache.find(candidate);
+    assert(cache_it != cache.end());
+    candidates.erase(cache_it->second);
+  }
+
+  T next_candidate() override {
+    if (!initialized) {
+      candidates.sort([&](auto &item1, auto &item2) -> bool {
+        return item1.FP.magnitude > item2.FP.magnitude;
+      });
+      initialized = true;
+    }
+    update_matches(candidates.begin());
+    return candidates.front().candidate;
+  }
+
+  std::vector<MatchInfo<T>> &get_matches(T candidate) override {
+    return matches;
+  }
+
+  size_t size() override { return candidates.size(); }
+
+private:
+  void update_matches(MatcherIt it) {
+    matches.clear();
+
+    for (auto &entry : candidates) {
+      MatchInfo<T> new_match(entry.candidate, entry.size);
+      new_match.Distance = it->FP.distance(entry.FP);
+      new_match.OtherSize = it->size;
+      matches.push_back(std::move(new_match));
+    }
+
+    if (RankingThreshold & (RankingThreshold < matches.size())) {
+      std::partial_sort(matches.begin(), matches.begin() + RankingThreshold,
+                        matches.end(), [&](auto &match1, auto &match2) -> bool {
+                          return match1.Distance < match2.Distance;
+                        });
+      matches.resize(RankingThreshold);
+    } else {
+      std::sort(matches.begin(), matches.end(),
+                [&](auto &match1, auto &match2) -> bool {
+                  return match1.Distance < match2.Distance;
+                });
+    }
+  }
 };
 
-template<class T> class Matcher {
-  public:
-    Matcher() {};
+template <class T> class MatcherLSH : public Matcher<T> {
+private:
+  struct MatcherEntry {
+    T candidate;
+    size_t size;
+    FingerprintLSH<T> FP;
+    MatcherEntry() : MatcherEntry(nullptr, 0){};
+    MatcherEntry(T candidate, size_t size)
+        : candidate(candidate), size(size),
+        FP(candidate){};
+  };
+  using MatcherIt = typename std::list<MatcherEntry>::iterator;
 
-    virtual ~Matcher() {};
+  bool initialized{false};
+  size_t bands{1};
+  FunctionMerger &FM;
+  FunctionMergingOptions &Options;
+  std::list<MatcherEntry> candidates;
+  tsl::robin_map<uint32_t, std::vector<MatcherIt>> lsh;
+  std::vector<std::pair<T, MatcherIt>> cache;
+  std::vector<MatchInfo<T>> matches;
 
-    virtual void add_candidate(T candidate, size_t size)=0;
-    virtual void remove_candidate(T candidate)=0;
-    virtual T next_candidate()=0;
-    virtual std::vector<MatchInfo<T>>& get_matches(T candidate)=0;
-    virtual size_t size()=0;
-};
+public:
+  MatcherLSH() = default;
+  MatcherLSH(size_t bands, FunctionMerger &FM, FunctionMergingOptions &Options)
+      : bands(bands), FM(FM), Options(Options){};
 
-template<class T> class MatcherFQ : public Matcher<T> {
-  private:
-    struct MatcherEntry {
-      T candidate;
-      size_t size;
-      Fingerprint<T>* FP;
-      MatcherEntry() : MatcherEntry(nullptr, 0, nullptr) {};
-      MatcherEntry(T candidate, size_t size, Fingerprint<T>* FP) : candidate(candidate), size(size), FP(FP) {};
-    };
-    typedef typename std::list<MatcherEntry>::iterator MatcherIt;
+  void add_candidate(T candidate, size_t size) override {
+    candidates.emplace_front(candidate, size);
 
-    bool initialized;
-    FunctionMerger& FM;
-    FunctionMergingOptions& Options;
-    std::list<MatcherEntry> candidates;
-    std::unordered_map<T, MatcherIt> cache;
-    std::vector<MatchInfo<T>> matches;
-
-  public:
-    MatcherFQ() : initialized(false) {};
-    MatcherFQ(FunctionMerger& FM, FunctionMergingOptions &Options) : initialized(false), FM(FM), Options(Options) {};
-
-    ~MatcherFQ() override {
-      for (MatcherEntry entry: candidates)
-        delete entry.FP;
+    auto it = candidates.begin();
+    auto &bandHash = it->FP.bandHash;
+    for (size_t i = 0; i < bands; ++i) {
+      if (lsh.count(bandHash[i]) > 0)
+        lsh.at(bandHash[i]).push_back(it);
+      else
+        lsh.insert(std::make_pair(bandHash[i], std::vector<MatcherIt>(1, it)));
     }
+  }
 
-    void add_candidate(T candidate, size_t size) override {
-      auto FP = new Fingerprint<T>(candidate);
-      candidates.emplace_front(candidate, size, FP);
-      MatcherIt it = candidates.begin();
-      cache[candidate] = it;
-    }
-
-    void remove_candidate(T candidate) override {
-      auto cache_it = cache.find(candidate);
-      assert (cache_it != cache.end());
-      delete cache_it->second->FP;
-      candidates.erase(cache_it->second);
-    }
-
-    T next_candidate() override {
-      if (!initialized) {
-        candidates.sort([&](auto& item1, auto& item2) -> bool {return item1.FP->magnitude > item2.FP->magnitude;});
-        initialized = true;
-      }
-      update_matches(candidates.begin());
-      return candidates.front().candidate;
-    }
-
-    std::vector<MatchInfo<T>>& get_matches(T candidate) override {
-      return matches;
-    }
-
-    size_t size() override {return candidates.size();}
-
-  private:
-    void update_matches(MatcherIt it) {
-      matches.clear();
-
-      for (auto& entry : candidates) {
-        MatchInfo<T> new_match(entry.candidate, entry.size);
-        new_match.Distance = it->FP->distance(entry.FP);
-        new_match.OtherSize = it->size;
-        matches.push_back(std::move(new_match));
-      }
-
-      if (RankingThreshold & (RankingThreshold < matches.size())) {
-        std::partial_sort(
-            matches.begin(),
-            matches.begin() + RankingThreshold,
-            matches.end(),
-            [&](auto& match1, auto& match2) -> bool {return match1.Distance < match2.Distance;}
-            );
-        matches.resize(RankingThreshold);
-      } else {
-        std::sort(
-            matches.begin(),
-            matches.end(),
-            [&](auto& match1, auto& match2) -> bool {return match1.Distance < match2.Distance;}
-            );
+  void remove_candidate(T candidate) override {
+    auto cache_it = candidates.end();
+    for (auto &cache_item : cache) {
+      if (cache_item.first == candidate) {
+        cache_it = cache_item.second;
+        break;
       }
     }
-};
+    assert(cache_it != candidates.end());
 
-template<class T> class MatcherLSH : public Matcher<T> {
-  private:
-    struct MatcherEntry {
-      T candidate;
-      size_t size;
-      FingerprintLSH<T>* FP;
-      MatcherEntry() : MatcherEntry(nullptr, 0, nullptr) {};
-      MatcherEntry(T candidate, size_t size, FingerprintLSH<T>* FP) : candidate(candidate), size(size), FP(FP) {};
-    };
-    typedef typename std::list<MatcherEntry>::iterator MatcherIt;
+    auto &FP = cache_it->FP;
+    for (size_t i = 0; i < bands; ++i) {
+      if (lsh.count(FP.bandHash[i]) == 0)
+        continue;
 
-    bool initialized;
-    size_t bands;
-    FunctionMerger& FM;
-    FunctionMergingOptions& Options;
-    std::list<MatcherEntry> candidates;
-    tsl::robin_map<uint32_t, std::vector<MatcherIt>> lsh;
-    std::vector<std::pair<T, MatcherIt>> cache;
-    std::vector<MatchInfo<T>> matches;
-
-  public:
-    MatcherLSH() : bands(1) {};
-    MatcherLSH(size_t bands, FunctionMerger& FM, FunctionMergingOptions &Options) : initialized(false), bands(bands), FM(FM), Options(Options) {};
-
-    ~MatcherLSH() override {
-      for (MatcherEntry entry: candidates)
-        delete entry.FP;
+      auto &foundFs = lsh.at(FP.bandHash[i]);
+      for (size_t j = 0; j < foundFs.size(); ++j)
+        if (foundFs[j]->candidate == candidate)
+          lsh.at(FP.bandHash[i]).erase(lsh.at(FP.bandHash[i]).begin() + j);
     }
+    candidates.erase(cache_it);
+  }
 
-    void add_candidate(T candidate, size_t size) override {
-      auto FP = new FingerprintLSH<T>(candidate);
-      candidates.emplace_front(candidate, size, FP);
-      MatcherIt it = candidates.begin();
-
-      auto& bandHash = FP->bandHash;
-      for (size_t i = 0; i < bands; ++i) {
-        if (lsh.count(bandHash[i]) > 0)
-          lsh.at(bandHash[i]).push_back(it);
-        else
-          lsh.insert(std::make_pair(bandHash[i], std::vector<MatcherIt>(1, it)));
-      }
+  T next_candidate() override {
+    if (!initialized) {
+      candidates.sort([&](auto &item1, auto &item2) -> bool {
+        return item1.FP.magnitude > item2.FP.magnitude;
+      });
+      initialized = true;
     }
+    update_matches(candidates.begin());
+    return candidates.front().candidate;
+  }
 
-    void remove_candidate(T candidate) override {
-      MatcherIt cache_it = candidates.end();
-      for (auto& cache_item : cache) {
-        if (cache_item.first == candidate) {
-          cache_it = cache_item.second;
-          break;
-        }
-      }
-      assert(cache_it != candidates.end());
+  std::vector<MatchInfo<T>> &get_matches(T candidate) override {
+    return matches;
+  }
 
+  size_t size() override { return candidates.size(); }
 
-      auto FP = cache_it->FP;
-      for (size_t i = 0; i < bands; ++i) {
-        if (lsh.count(FP->bandHash[i]) == 0)
+private:
+  void update_matches(MatcherIt it) {
+    float best_distance = 1.0;
+    std::unordered_set<T> seen;
+    seen.reserve(candidates.size() / 10);
+    matches.clear();
+    cache.clear();
+    cache.emplace_back(it->candidate, it);
+
+    auto &FP = it->FP;
+    for (size_t i = 0; i < bands; ++i) {
+      assert(lsh.count(FP.bandHash[i]) > 0);
+
+      auto &foundFs = lsh.at(FP.bandHash[i]);
+      for (size_t j = 0; j < foundFs.size() && j < 100; ++j) {
+        auto match_it = foundFs[j];
+        if ((match_it->candidate == NULL) ||
+            (match_it->candidate == it->candidate))
+          continue;
+        if ((!FM.validMergeTypes(it->candidate, match_it->candidate, Options) &&
+             !Options.EnableUnifiedReturnType) ||
+            !validMergePair(it->candidate, match_it->candidate))
           continue;
 
-        auto& foundFs = lsh.at(FP->bandHash[i]);
-        for (size_t j = 0; j < foundFs.size(); ++j)
-          if (foundFs[j]->candidate == candidate)
-            lsh.at(FP->bandHash[i]).erase(lsh.at(FP->bandHash[i]).begin() + j);
+        if (seen.count(match_it->candidate) == 1)
+          continue;
+        seen.insert(match_it->candidate);
+
+        MatchInfo<T> new_match(match_it->candidate, match_it->size);
+        new_match.Distance = FP.distance(match_it->FP);
+        new_match.OtherSize = it->size;
+        matches.push_back(new_match);
+        cache.emplace_back(match_it->candidate, match_it);
+        best_distance = new_match.Distance < best_distance ? new_match.Distance
+                                                           : best_distance;
       }
-      delete FP;
-      candidates.erase(cache_it);
+      // If we've gone through i = 0 without finding a distance of 0.0
+      // the minimum distance we might ever find is 2.0 / (nHashes + 1)
+      if ((RankingThreshold <= 1) && (best_distance < (1 / 100.0)))
+        break;
     }
 
-    T next_candidate() override {
-      if (!initialized) {
-        candidates.sort([&](auto& item1, auto& item2) -> bool {return item1.FP->magnitude > item2.FP->magnitude;});
-        initialized = true;
-      }
-      update_matches(candidates.begin());
-      return candidates.front().candidate;
-    }
+    size_t toRank = 0;
+    if (matches.size() == 0)
+      return;
+    if (RankingThreshold <= 1)
+      toRank = 1;
+    else if (RankingThreshold < matches.size())
+      toRank = RankingThreshold;
+    else
+      toRank = matches.size();
 
-    std::vector<MatchInfo<T>>& get_matches(T candidate) override {
-      return matches;
-    }
-
-    size_t size() override {return candidates.size();}
-
-  private:
-    void update_matches(MatcherIt it) {
-      float best_distance = 1.0;
-      std::unordered_set<T> seen;
-      seen.reserve(candidates.size()/10);
-      matches.clear();
-      cache.clear();
-      cache.emplace_back(it->candidate, it);
-
-      auto FP = it->FP;
-      for (size_t i = 0; i < bands; ++i) {
-        assert(lsh.count(FP->bandHash[i]) > 0);
-        //if (lsh.count(FP->bandHash[i]) <= 0)
-        //  continue;
-
-        auto& foundFs = lsh.at(FP->bandHash[i]);
-        for (size_t j = 0; j < foundFs.size() && j < 100; ++j) {
-          MatcherIt match_it = foundFs[j];
-          if ((match_it->candidate == NULL) || (match_it->candidate == it->candidate))
-            continue;
-          //if (it->candidate->getCallingConv() != match_it->candidate->getCallingConv())
-          //  continue;
-          if ((!FM.validMergeTypes(it->candidate, match_it->candidate, Options) && !Options.EnableUnifiedReturnType) || !validMergePair(it->candidate, match_it->candidate))
-            continue;
-
-          if (seen.count(match_it->candidate) == 1)
-            continue;
-          seen.insert(match_it->candidate);
-
-          MatchInfo<T> new_match(match_it->candidate, match_it->size);
-          new_match.Distance = FP->distance(match_it->FP);
-          new_match.OtherSize = it->size;
-          matches.push_back(new_match);
-          cache.emplace_back(match_it->candidate, match_it);
-          best_distance = new_match.Distance < best_distance ? new_match.Distance: best_distance;
-        }
-        // If we've gone through i = 0 without finding a distance of 0.0
-        // the minimum distance we might ever find is 2.0 / (nHashes + 1)
-        if ((RankingThreshold <= 1) && (best_distance < (1/ 100.0)))
-          break;
-      }
-
-      size_t toRank;
-      if (matches.size() == 0)
-        return;
-      else if (RankingThreshold <= 1)
-        toRank = 1;
-      else if (RankingThreshold < matches.size())
-        toRank = RankingThreshold;
-      else
-        toRank = matches.size();
-
-      std::partial_sort(
-          matches.begin(),
-          matches.begin() + toRank,
-          matches.end(),
-          [&](auto& match1, auto& match2) -> bool {return match1.Distance < match2.Distance;}
-          );
-      matches.resize(toRank);
-    }
-
+    std::partial_sort(matches.begin(), matches.begin() + toRank, matches.end(),
+                      [&](auto &match1, auto &match2) -> bool {
+                        return match1.Distance < match2.Distance;
+                      });
+    matches.resize(toRank);
+  }
 };
-
 
 bool AcrossBlocks;
 
-FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const FunctionMergingOptions &Options) {
+FunctionMergeResult
+FunctionMerger::merge(Function *F1, Function *F2, std::string Name,
+                      const FunctionMergingOptions &Options) {
   LLVMContext &Context = *ContextPtr;
   FunctionMergeResult ErrorResponse(F1, F2, nullptr);
 
-  if (!validMergePair(F1,F2))
+  if (!validMergePair(F1, F2))
     return ErrorResponse;
 
-  SmallVector<Value*,8> F1Vec;
-  SmallVector<Value*,8> F2Vec;
+  SmallVector<Value *, 8> F1Vec;
+  SmallVector<Value *, 8> F2Vec;
 
-  //errs() << "Linearization\n";
-  if (ConservativeMode==0) {
+  // errs() << "Linearization\n";
+  if (ConservativeMode == 0) {
     linearize(F1, F1Vec);
     linearize(F2, F2Vec);
   }
@@ -1993,1073 +2030,1138 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   TimeAlign.startTimer();
 #endif
 
-  AlignedSequence<Value*> AlignedSeq;
-  if (ConservativeMode==3) {
-      
-      int TotalMatches = 0;
-      int TotalInsts = 0;
-      int TotalCoreMatches = 0;
+  AlignedSequence<Value *> AlignedSeq;
+  if (ConservativeMode == 3) {
 
+    int TotalMatches = 0;
+    int TotalInsts = 0;
+    int TotalCoreMatches = 0;
 
-      int B1Max = 0;
-      int B2Max = 0;
-      size_t MaxMem = 0;
+    int B1Max = 0;
+    int B2Max = 0;
+    size_t MaxMem = 0;
 
-      int NumBB1 = 0;
-      int NumBB2 = 0;
-      size_t MemSize = 0;
+    int NumBB1 = 0;
+    int NumBB2 = 0;
+    size_t MemSize = 0;
 
-      //std::map<size_t, std::vector<BlockData> > BlocksF1;
-      //std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
-      std::vector<BlockFingerprint> Blocks;
-      for (BasicBlock &BB1 : *F1) {
-        NumBB1 ++;
-        BlockFingerprint BD1(&BB1);
-        Blocks.push_back(BD1);
-        MemSize += BD1.footprint();
+    // std::map<size_t, std::vector<BlockData> > BlocksF1;
+    // std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
+    std::vector<BlockFingerprint> Blocks;
+    for (BasicBlock &BB1 : *F1) {
+      NumBB1++;
+      BlockFingerprint BD1(&BB1);
+      Blocks.push_back(BD1);
+      MemSize += BD1.footprint();
+    }
+
+    for (BasicBlock &BIt : *F2) {
+      NumBB2++;
+      BasicBlock *BB2 = &BIt;
+      // BlockData BD2(BB2, HashEncoder);
+      BlockFingerprint BD2(BB2);
+
+      // errs() << "NumBlocks: " << Blocks.size() << "\n";
+
+      auto BestIt = Blocks.end();
+      int BestDist = std::numeric_limits<int>::max();
+      for (auto BDIt = Blocks.begin(), E = Blocks.end(); BDIt != E; BDIt++) {
+        auto D = BD2.distance(*BDIt);
+        // errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+        if (D < BestDist) {
+          BestDist = D;
+          BestIt = BDIt;
+        }
       }
-      
-      for (BasicBlock &BIt : *F2) {
-        NumBB2 ++;
-        BasicBlock *BB2 = &BIt;
-        //BlockData BD2(BB2, HashEncoder);
-        BlockFingerprint BD2(BB2);
-  
-        //errs() << "NumBlocks: " << Blocks.size() << "\n";
+      bool MergedBlocks = false;
+      if (BestIt != Blocks.end()) {
+        auto &BD1 = *BestIt;
+        BasicBlock *BB1 = BD1.BB;
 
-        auto BestIt = Blocks.end();
-        int BestDist = std::numeric_limits<int>::max();
-        for (auto BDIt = Blocks.begin(), E = Blocks.end(); BDIt!=E; BDIt++) {
-          auto D = BD2.distance(&(*BDIt));
-          //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-          if (D<BestDist) {
-            BestDist = D;
-            BestIt = BDIt;
-          }
+        // auto D = BD2.distance(&BD1);
+        // errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+
+        SmallVector<Value *, 8> BB1Vec;
+        SmallVector<Value *, 8> BB2Vec;
+
+        BB1Vec.push_back(BB1);
+        for (auto &I : *BB1) {
+          if (!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
+            BB1Vec.push_back(&I);
         }
-        bool MergedBlocks = false;
-        if (BestIt!=Blocks.end()) {
-          auto &BD1 = *BestIt;
-          BasicBlock *BB1 = BD1.BB;
 
-          //auto D = BD2.distance(&BD1);
-          //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-    
-          SmallVector<Value*,8> BB1Vec;
-          SmallVector<Value*,8> BB2Vec;
+        BB2Vec.push_back(BB2);
+        for (auto &I : *BB2) {
+          if (!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
+            BB2Vec.push_back(&I);
+        }
 
-          BB1Vec.push_back(BB1);
-          for (auto &I : *BB1) {
-            if(!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
-              BB1Vec.push_back(&I);
-          }
+        NeedlemanWunschSA<SmallVectorImpl<Value *>> SA(ScoringSystem(-1, 2),
+                                                       FunctionMerger::match);
 
-          BB2Vec.push_back(BB2);
-          for (auto &I : *BB2) {
-            if(!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
-              BB2Vec.push_back(&I);
-          }
+        auto MemReq = SA.getMemoryRequirement(BB1Vec, BB2Vec);
+        // auto MemAvailable = getTotalSystemMemory();
+        // errs() << "PStats: " << BB1Vec.size() << " , " << BB2Vec.size() << "
+        // , " << MemReq  << "\n";
 
-          NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
+        if (MemReq > MaxMem) {
+          MaxMem = MemReq;
+          B1Max = BB1Vec.size();
+          B2Max = BB2Vec.size();
+        }
 
-          auto MemReq = SA.getMemoryRequirement(BB1Vec,BB2Vec);
-          //auto MemAvailable = getTotalSystemMemory();
-          //errs() << "PStats: " << BB1Vec.size() << " , " << BB2Vec.size() << " , " << MemReq  << "\n";
+        AlignedSequence<Value *> AlignedBlocks =
+            SA.getAlignment(BB1Vec, BB2Vec);
 
-          if (MemReq > MaxMem) {
-            MaxMem = MemReq;
-            B1Max = BB1Vec.size();
-            B2Max = BB2Vec.size();
-          }
+        bool Profitable = true;
+        if (HyFMProfitability) {
 
-          AlignedSequence<Value*> AlignedBlocks = SA.getAlignment(BB1Vec,BB2Vec);
-    
-          bool Profitable = true;
-          if (HyFMProfitability) {
+          // std::unordered_map<Value *, Value *> LocalMapped1To2;
+          int OriginalCost = 0;
+          int MergedCost = 0;
 
-            //std::unordered_map<Value *, Value *> LocalMapped1To2;
-            int OriginalCost = 0;
-            int MergedCost = 0;
+          bool InsideSplit = false;
 
-            bool InsideSplit = false;
-
-            for (auto &Entry : AlignedBlocks) {
-              Instruction *I1 = nullptr;
-              if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
-              Instruction *I2 = nullptr;
-              if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
-              bool IsInstruction = I1!=nullptr || I2!=nullptr;
-              if (Entry.match()) {
-                if (IsInstruction) {
-                  OriginalCost += 2;
-                  MergedCost += 1;
-                }
-                if (InsideSplit) {
-                  InsideSplit = false;
-                  MergedCost += 2;
-                }
-              } else {
-                if (IsInstruction) {
-                  OriginalCost += 1;
-                  MergedCost += 1;
-                }
-                if (!InsideSplit) {
-                  InsideSplit = true;
-                  MergedCost += 1;
-                }
-              }
-            }
-
-            //Profitable = (CountMatches>0);
-            //Profitable = (CoreMatches>0) || (NumInsts==1);
-            //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && ((float)CoreMatches)/((float)NumInsts)>0.2);
-            //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
-            Profitable = (MergedCost <= OriginalCost);
-            if (Verbose) {
-              errs() << ((Profitable)?"Profitable":"Unprofitable") << "\n";
-            }
-          }
-
-          //bool Profitable = (CountMatches>0);
-    
-
-
-          if (Profitable) {
-            for (auto &Entry : AlignedBlocks) {
-              Instruction *I1 = nullptr;
-              if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
-              Instruction *I2 = nullptr;
-              if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
-              bool IsInstruction = I1!=nullptr || I2!=nullptr;
-
-              AlignedSeq.Data.push_back( AlignedSequence<Value*>::Entry(Entry.get(0),Entry.get(1),Entry.match()) );
-
+          for (auto &Entry : AlignedBlocks) {
+            Instruction *I1 = nullptr;
+            if (Entry.get(0))
+              I1 = dyn_cast<Instruction>(Entry.get(0));
+            Instruction *I2 = nullptr;
+            if (Entry.get(1))
+              I2 = dyn_cast<Instruction>(Entry.get(1));
+            bool IsInstruction = I1 != nullptr || I2 != nullptr;
+            if (Entry.match()) {
               if (IsInstruction) {
-                TotalInsts++;
-                if (Entry.match()) TotalMatches++;
-                Instruction *I = I2;
-                if (I1) I = I1;
-                if (I->isTerminator()) TotalCoreMatches++;
+                OriginalCost += 2;
+                MergedCost += 1;
+              }
+              if (InsideSplit) {
+                InsideSplit = false;
+                MergedCost += 2;
+              }
+            } else {
+              if (IsInstruction) {
+                OriginalCost += 1;
+                MergedCost += 1;
+              }
+              if (!InsideSplit) {
+                InsideSplit = true;
+                MergedCost += 1;
               }
             }
-            //SetRef.erase(BestIt);
-            Blocks.erase(BestIt);
-            MergedBlocks = true;
+          }
+
+          // Profitable = (CountMatches>0);
+          // Profitable = (CoreMatches>0) || (NumInsts==1);
+          // Profitable = (CountMatches==NumInsts) || (NumInsts>1 &&
+          // ((float)CoreMatches)/((float)NumInsts)>0.2); Profitable =
+          // (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
+          Profitable = (MergedCost <= OriginalCost);
+          if (Verbose) {
+            errs() << ((Profitable) ? "Profitable" : "Unprofitable") << "\n";
           }
         }
-/*
 
-        unsigned CountMatches = 0;
-        for (auto &Entry : AlignedBlocks) {
-          Instruction *I1 = nullptr;
-          if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
-          Instruction *I2 = nullptr;
-          if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
-          if (Entry.match() && (I1 || I2)) CountMatches++;
-        }
-        bool Profitable = (CountMatches>0);
+        // bool Profitable = (CountMatches>0);
+
         if (Profitable) {
           for (auto &Entry : AlignedBlocks) {
             Instruction *I1 = nullptr;
-            if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
+            if (Entry.get(0))
+              I1 = dyn_cast<Instruction>(Entry.get(0));
             Instruction *I2 = nullptr;
-            if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
+            if (Entry.get(1))
+              I2 = dyn_cast<Instruction>(Entry.get(1));
+            bool IsInstruction = I1 != nullptr || I2 != nullptr;
 
-            AlignedSeq.Data.push_back( AlignedSequence<Value*>::Entry(Entry.get(0),Entry.get(1),Entry.match()) );
+            AlignedSeq.Data.emplace_back(Entry.get(0), Entry.get(1), Entry.match());
 
-            if (Entry.match() && (I1 || I2)) TotalMatches++;
+            if (IsInstruction) {
+              TotalInsts++;
+              if (Entry.match())
+                TotalMatches++;
+              Instruction *I = I2;
+              if (I1)
+                I = I1;
+              if (I->isTerminator())
+                TotalCoreMatches++;
+            }
           }
+          // SetRef.erase(BestIt);
           Blocks.erase(BestIt);
           MergedBlocks = true;
         }
       }
-*/
-        if (!MergedBlocks) {
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,BB2,false));
-          for (Instruction &I : *BB2) {
-            if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,&I,false));
-            TotalInsts++;
-          }
-        }
-      }
-      for (auto &BD1 : Blocks) {
-        BasicBlock *BB1 = BD1.BB;
-        AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,nullptr,false));
-        for (Instruction &I : *BB1) {
-          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(&I,nullptr,false));
+      /*
+
+              unsigned CountMatches = 0;
+              for (auto &Entry : AlignedBlocks) {
+                Instruction *I1 = nullptr;
+                if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
+                Instruction *I2 = nullptr;
+                if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
+                if (Entry.match() && (I1 || I2)) CountMatches++;
+              }
+              bool Profitable = (CountMatches>0);
+              if (Profitable) {
+                for (auto &Entry : AlignedBlocks) {
+                  Instruction *I1 = nullptr;
+                  if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
+                  Instruction *I2 = nullptr;
+                  if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
+
+                  AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(Entry.get(0),Entry.get(1),Entry.match()));
+
+                  if (Entry.match() && (I1 || I2)) TotalMatches++;
+                }
+                Blocks.erase(BestIt);
+                MergedBlocks = true;
+              }
+      */
+      if (!MergedBlocks) {
+        AlignedSeq.Data.emplace_back(nullptr, BB2, false);
+        for (Instruction &I : *BB2) {
+          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+            continue;
+          AlignedSeq.Data.emplace_back(nullptr, &I, false);
           TotalInsts++;
         }
       }
+    }
+    for (auto &BD1 : Blocks) {
+      BasicBlock *BB1 = BD1.BB;
+      AlignedSeq.Data.emplace_back(BB1, nullptr, false);
+      for (Instruction &I : *BB1) {
+        if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+          continue;
+        AlignedSeq.Data.emplace_back(&I, nullptr, false);
+        TotalInsts++;
+      }
+    }
 
-      errs() << "Stats: " << B1Max << " , " << B2Max  << " , " << MaxMem  << "\n";
-      errs() << "RStats: " << NumBB1 << " , " << NumBB2  << " , " << MemSize  << "\n";
+    errs() << "Stats: " << B1Max << " , " << B2Max << " , " << MaxMem << "\n";
+    errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize
+           << "\n";
 
-      bool Profitable = (TotalMatches==TotalInsts) || (TotalCoreMatches>0);
-      if (!Profitable) {
-      //if (TotalMatches==0) {
+    bool Profitable = (TotalMatches == TotalInsts) || (TotalCoreMatches > 0);
+    if (!Profitable) {
+      // if (TotalMatches==0)
 #ifdef TIME_STEPS_DEBUG
       TimeAlign.stopTimer();
 #endif
-        errs() << "Skipped: Not profitable enough!!\n";
-        return ErrorResponse;
-      }
-
-  } else if (ConservativeMode==4) {
-      ///TODO:: ignore seq. alignment. Perform n^2, pairing any two matching basic blocks. There is no need to linearize them either.
-
-      int TotalMatches = 0;
-      int TotalInsts = 0;
-      int TotalCoreMatches = 0;
-
-      //std::map<size_t, std::vector<BlockData> > BlocksF1;
-      std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
-      for (BasicBlock &BB1 : *F1) {
-        //BlockData BD1(&BB1, HashEncoder);
-        BlockFingerprint BD1(&BB1);
-        BlocksF1[BD1.Size].push_back(BD1);
-      }
-      
-      for (BasicBlock &BIt : *F2) {
-        BasicBlock *BB2 = &BIt;
-        //BlockData BD2(BB2, HashEncoder);
-        BlockFingerprint BD2(BB2);
-  
-  auto &SetRef = BlocksF1[BD2.Size];
-
-  /*
-  std::sort(SetRef.begin(), SetRef.end(), [&](auto &A, auto &B) -> bool {
-     int VA = std::abs(A.Encoding - BD2.Encoding);
-     int VB = std::abs(B.Encoding - BD2.Encoding);
-     return VA < VB;
-  });
-        */
-
-  //errs() << "NumBlocks: " << SetRef.size() << "\n";
-
-  auto BestIt = SetRef.end();
-  size_t BestDist = std::numeric_limits<size_t>::max();
-  for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt!=E; BDIt++) {
-    //auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
-    auto D = BD2.distance(&(*BDIt));
-    //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-    //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-    if (D<BestDist) {
-      BestDist = D;
-      BestIt = BDIt;
+      errs() << "Skipped: Not profitable enough!!\n";
+      return ErrorResponse;
     }
-  }
-  bool MergedBlocks = false;
-  if (BestIt!=SetRef.end()) {
-    auto &BD1 = *BestIt;
-    BasicBlock *BB1 = BD1.BB;
-    
-      //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist << "\n";
-      //auto D = BD2.distance(&BD1);
-      //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
 
-      auto It1 = BB1->begin();
-      auto It2 = BB2->begin();
+  } else if (ConservativeMode == 4) {
+    /// TODO:: ignore seq. alignment. Perform n^2, pairing any two matching
+    /// basic blocks. There is no need to linearize them either.
 
-      bool Profitable = true;
-      //if (BD1.Size+BD2.Size < 128) {
+    int TotalMatches = 0;
+    int TotalInsts = 0;
+    int TotalCoreMatches = 0;
 
-      if (HyFMProfitability) {
-              while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
-              while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
-
-        unsigned CountMatches = 0;
-        unsigned CoreMatches = 0;
-        unsigned NumInsts = 0;
-              while (It1!=BB1->end() && It2!=BB2->end()) {
-                Instruction *I1 = &*It1;
-                Instruction *I2 = &*It2;
-
-    NumInsts++;
-                if (matchInstructions(I1,I2)) {
-            CountMatches++;
-
-      if (!I1->isTerminator()) {
-        CoreMatches++;
-      }
-          }
-                It1++;
-                It2++;
-              }
-
-              if (It1!=BB1->end() || It2!=BB2->end()) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-                return ErrorResponse;
-        }
-
-        //Profitable = (CountMatches>0);
-        //Profitable = (CoreMatches>0) || (NumInsts==1);
-        //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && ((float)CoreMatches)/((float)NumInsts)>0.2);
-        Profitable = (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
-
-              It1 = BB1->begin();
-              It2 = BB2->begin();
-            }
-
-      if (Profitable) {
-              AlignedSeq.Data.push_back( AlignedSequence<Value*>::Entry(BB1,BB2, FunctionMerger::match(BB1,BB2)) );
-
-              while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
-              while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
-
-              while (It1!=BB1->end() && It2!=BB2->end()) {
-                Instruction *I1 = &*It1;
-                Instruction *I2 = &*It2;
-
-    TotalInsts++;
-                if (matchInstructions(I1,I2)) {
-                  AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,I2,true));
-                  TotalMatches++;
-      if (!I1->isTerminator()) {
-        TotalCoreMatches++;
-      }
-          } else {
-                  AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,nullptr,false));
-                  AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,I2,false));
-          }
-
-                It1++;
-                It2++;
-              }
-
-              if (It1!=BB1->end() || It2!=BB2->end()) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-                return ErrorResponse;
-        }
-        
-              SetRef.erase(BestIt);
-        MergedBlocks = true;
-      }
-  }
-  if (!MergedBlocks) {
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,BB2,false));
-    for (Instruction &I : *BB2) {
-      if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-            TotalInsts++;
-            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,&I,false));
+    // std::map<size_t, std::vector<BlockData> > BlocksF1;
+    std::map<size_t, std::vector<BlockFingerprint>> BlocksF1;
+    for (BasicBlock &BB1 : *F1) {
+      // BlockData BD1(&BB1, HashEncoder);
+      BlockFingerprint BD1(&BB1);
+      BlocksF1[BD1.Size].push_back(BD1);
     }
-  }
-      }
-      for (auto &Pair : BlocksF1) {
-        for (auto &BD1 : Pair.second) {
-    BasicBlock *BB1 = BD1.BB;
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,nullptr,false));
-    for (Instruction &I : *BB1) {
-      if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-            TotalInsts++;
-            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(&I,nullptr,false));
-    }
-  }
-      }
 
-      //bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 && TotalCoreMatches>0);
-      //if (!Profitable) {
-      if (TotalMatches==0) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-        errs() << "Skipped: Not profitable enough!!\n";
-        return ErrorResponse;
-      }
+    for (BasicBlock &BIt : *F2) {
+      BasicBlock *BB2 = &BIt;
+      // BlockData BD2(BB2, HashEncoder);
+      BlockFingerprint BD2(BB2);
 
-  } else if (ConservativeMode==5) {
-      ///TODO:: ignore seq. alignment. Perform n^2, pairing any two matching basic blocks. There is no need to linearize them either.
-
-      int TotalMatches = 0;
-      int TotalInsts = 0;
-      int TotalCoreMatches = 0;
-
-      //std::map<size_t, std::vector<BlockData> > BlocksF1;
-      std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
-      
-      int NumBB1 = 0;
-      int NumBB2 = 0;
-      size_t MemSize = 0;
-
-      for (BasicBlock &BB1 : *F1) {
-        NumBB1 ++;
-        //BlockData BD1(&BB1, HashEncoder);
-        BlockFingerprint BD1(&BB1);
-        BlocksF1[BD1.Size].push_back(BD1);
-        MemSize += BD1.footprint();
-      }
-      
-      for (BasicBlock &BIt : *F2) {
-        NumBB2 ++;
-        BasicBlock *BB2 = &BIt;
-        //BlockData BD2(BB2, HashEncoder);
-        BlockFingerprint BD2(BB2);
-  
-        auto &SetRef = BlocksF1[BD2.Size];
-
-  /*
-  std::sort(SetRef.begin(), SetRef.end(), [&](auto &A, auto &B) -> bool {
-     int VA = std::abs(A.Encoding - BD2.Encoding);
-     int VB = std::abs(B.Encoding - BD2.Encoding);
-     return VA < VB;
-  });
-        */
-
-  //errs() << "NumBlocks: " << SetRef.size() << "\n";
-
-  auto BestIt = SetRef.end();
-  size_t BestDist = std::numeric_limits<size_t>::max();
-  for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt!=E; BDIt++) {
-    //auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
-    auto D = BD2.distance(&(*BDIt));
-    //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-    //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-    if (D<BestDist) {
-      BestDist = D;
-      BestIt = BDIt;
-    }
-  }
-  bool MergedBlocks = false;
-  if (BestIt!=SetRef.end()) {
-          auto &BD1 = *BestIt;
-    BasicBlock *BB1 = BD1.BB;
-    
-      //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist << "\n";
-      //auto D = BD2.distance(&BD1);
-      //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-
-            auto It1 = BB1->begin();
-            auto It2 = BB2->begin();
-
-      bool Profitable = true;
-      //if (BD1.Size+BD2.Size < 128) {
-
-      if (HyFMProfitability) {
-
-        //std::unordered_map<Value *, Value *> LocalMapped1To2;
-        int OriginalCost = 0;
-        int MergedCost = 0;
-
-        bool InsideSplit = false;
-              if (FunctionMerger::match(BB1,BB2)) {
-                InsideSplit = false;
-        } else {
-                InsideSplit = true;
-          MergedCost += 1;
-        }
-
-              while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
-              while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
-
-              if (Verbose) {
-          errs() << GetValueName(BB1) << "x " << GetValueName(BB2) << "\n";
-          errs() << OriginalCost << " x " << MergedCost << "\n";
-              }
-
-        unsigned CountMatches = 0;
-        unsigned CoreMatches = 0;
-        unsigned NumInsts = 0;
-              while (It1!=BB1->end() && It2!=BB2->end()) {
-                Instruction *I1 = &*It1;
-                Instruction *I2 = &*It2;
-      
-    OriginalCost += 2;
-
-    NumInsts++;
-                if (matchInstructions(I1,I2)) {
-                  if (Verbose) errs() << "Matched:\n";
-
-            CountMatches++;
-      MergedCost += 1; //reduces 1 inst by merging two insts into one
-      if (InsideSplit) {
-                    InsideSplit = false;
-        MergedCost += 2; //two branches to converge
-      }
+      auto &SetRef = BlocksF1[BD2.Size];
 
       /*
-                  LocalMapped1To2[I1] = I2;
-                  if (I1->getNumOperands()==I2->getNumOperands()) {
-              for (unsigned i = 0; i<I1->getNumOperands(); i++) {
-          auto *V1 = I1->getOperand(i);
-          auto *V2 = I2->getOperand(i);
-          if (isa<Constant>(V1) || isa<Constant>(V2)) {
-            if (V1!=V2) MergedCost += 1; //one operand selection
-          } else {
-      auto VIt = LocalMapped1To2.find(V1);
-      if (VIt!=LocalMapped1To2.end()) {
-        if( (*VIt).second!=V2 ) MergedCost += 1; //one operand selection
+      std::sort(SetRef.begin(), SetRef.end(), [&](auto &A, auto &B) -> bool {
+         int VA = std::abs(A.Encoding - BD2.Encoding);
+         int VB = std::abs(B.Encoding - BD2.Encoding);
+         return VA < VB;
+      });
+            */
+
+      // errs() << "NumBlocks: " << SetRef.size() << "\n";
+
+      auto BestIt = SetRef.end();
+      size_t BestDist = std::numeric_limits<size_t>::max();
+      for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt != E; BDIt++) {
+        // auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
+        auto D = BD2.distance(*BDIt);
+        // errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+        // errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+        if (D < BestDist) {
+          BestDist = D;
+          BestIt = BDIt;
+        }
       }
+      bool MergedBlocks = false;
+      if (BestIt != SetRef.end()) {
+        auto &BD1 = *BestIt;
+        BasicBlock *BB1 = BD1.BB;
+
+        // errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist <<
+        // "\n"; auto D = BD2.distance(&BD1); errs() << "BEST: " <<
+        // GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) <<
+        // ": " <<  BD2.Size << ", Dist: " << D << "\n";
+
+        auto It1 = BB1->begin();
+        auto It2 = BB2->begin();
+
+        bool Profitable = true;
+        // if (BD1.Size+BD2.Size < 128) {
+
+        if (HyFMProfitability) {
+          while (isa<PHINode>(*It1) || isa<LandingPadInst>(*It1))
+            It1++;
+          while (isa<PHINode>(*It2) || isa<LandingPadInst>(*It2))
+            It2++;
+
+          unsigned CountMatches = 0;
+          unsigned CoreMatches = 0;
+          unsigned NumInsts = 0;
+          while (It1 != BB1->end() && It2 != BB2->end()) {
+            Instruction *I1 = &*It1;
+            Instruction *I2 = &*It2;
+
+            NumInsts++;
+            if (matchInstructions(I1, I2)) {
+              CountMatches++;
+
+              if (!I1->isTerminator()) {
+                CoreMatches++;
+              }
+            }
+            It1++;
+            It2++;
           }
+
+          if (It1 != BB1->end() || It2 != BB2->end()) {
+#ifdef TIME_STEPS_DEBUG
+            TimeAlign.stopTimer();
+#endif
+            return ErrorResponse;
+          }
+
+          // Profitable = (CountMatches>0);
+          // Profitable = (CoreMatches>0) || (NumInsts==1);
+          // Profitable = (CountMatches==NumInsts) || (NumInsts>1 &&
+          // ((float)CoreMatches)/((float)NumInsts)>0.2);
+          Profitable =
+              (CountMatches == NumInsts) || (NumInsts > 1 && CoreMatches > 0);
+
+          It1 = BB1->begin();
+          It2 = BB2->begin();
+        }
+
+        if (Profitable) {
+          AlignedSeq.Data.emplace_back(BB1, BB2, FunctionMerger::match(BB1, BB2));
+
+          while (isa<PHINode>(*It1) || isa<LandingPadInst>(*It1))
+            It1++;
+          while (isa<PHINode>(*It2) || isa<LandingPadInst>(*It2))
+            It2++;
+
+          while (It1 != BB1->end() && It2 != BB2->end()) {
+            Instruction *I1 = &*It1;
+            Instruction *I2 = &*It2;
+
+            TotalInsts++;
+            if (matchInstructions(I1, I2)) {
+              AlignedSeq.Data.emplace_back(I1, I2, true);
+              TotalMatches++;
+              if (!I1->isTerminator()) {
+                TotalCoreMatches++;
+              }
+            } else {
+              AlignedSeq.Data.emplace_back(I1, nullptr, false);
+              AlignedSeq.Data.emplace_back(nullptr, I2, false);
+            }
+
+            It1++;
+            It2++;
+          }
+
+          if (It1 != BB1->end() || It2 != BB2->end()) {
+#ifdef TIME_STEPS_DEBUG
+            TimeAlign.stopTimer();
+#endif
+            return ErrorResponse;
+          }
+
+          SetRef.erase(BestIt);
+          MergedBlocks = true;
+        }
+      }
+      if (!MergedBlocks) {
+        AlignedSeq.Data.emplace_back(nullptr, BB2, false);
+        for (Instruction &I : *BB2) {
+          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+            continue;
+          TotalInsts++;
+          AlignedSeq.Data.emplace_back(nullptr, &I, false);
+        }
+      }
+    }
+    for (auto &Pair : BlocksF1) {
+      for (auto &BD1 : Pair.second) {
+        BasicBlock *BB1 = BD1.BB;
+        AlignedSeq.Data.emplace_back(BB1, nullptr, false);
+        for (Instruction &I : *BB1) {
+          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+            continue;
+          TotalInsts++;
+          AlignedSeq.Data.emplace_back(&I, nullptr, false);
+        }
+      }
+    }
+
+    // bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 &&
+    // TotalCoreMatches>0); if (!Profitable) {
+    if (TotalMatches == 0) {
+#ifdef TIME_STEPS_DEBUG
+      TimeAlign.stopTimer();
+#endif
+      errs() << "Skipped: Not profitable enough!!\n";
+      return ErrorResponse;
+    }
+
+  } else if (ConservativeMode == 5) {
+    /// TODO:: ignore seq. alignment. Perform n^2, pairing any two matching
+    /// basic blocks. There is no need to linearize them either.
+
+    int TotalMatches = 0;
+    int TotalInsts = 0;
+    int TotalCoreMatches = 0;
+
+    // std::map<size_t, std::vector<BlockData> > BlocksF1;
+    std::map<size_t, std::vector<BlockFingerprint>> BlocksF1;
+
+    int NumBB1 = 0;
+    int NumBB2 = 0;
+    size_t MemSize = 0;
+
+    for (BasicBlock &BB1 : *F1) {
+      NumBB1++;
+      // BlockData BD1(&BB1, HashEncoder);
+      BlockFingerprint BD1(&BB1);
+      BlocksF1[BD1.Size].push_back(BD1);
+      MemSize += BD1.footprint();
+    }
+
+    for (BasicBlock &BIt : *F2) {
+      NumBB2++;
+      BasicBlock *BB2 = &BIt;
+      // BlockData BD2(BB2, HashEncoder);
+      BlockFingerprint BD2(BB2);
+
+      auto &SetRef = BlocksF1[BD2.Size];
+
+      /*
+      std::sort(SetRef.begin(), SetRef.end(), [&](auto &A, auto &B) -> bool {
+         int VA = std::abs(A.Encoding - BD2.Encoding);
+         int VB = std::abs(B.Encoding - BD2.Encoding);
+         return VA < VB;
+      });
+            */
+
+      // errs() << "NumBlocks: " << SetRef.size() << "\n";
+
+      auto BestIt = SetRef.end();
+      size_t BestDist = std::numeric_limits<size_t>::max();
+      for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt != E; BDIt++) {
+        // auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
+        auto D = BD2.distance(*BDIt);
+        // errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+        // errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+        if (D < BestDist) {
+          BestDist = D;
+          BestIt = BDIt;
+        }
+      }
+      bool MergedBlocks = false;
+      if (BestIt != SetRef.end()) {
+        auto &BD1 = *BestIt;
+        BasicBlock *BB1 = BD1.BB;
+
+        // errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist <<
+        // "\n"; auto D = BD2.distance(&BD1); errs() << "BEST: " <<
+        // GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) <<
+        // ": " <<  BD2.Size << ", Dist: " << D << "\n";
+
+        auto It1 = BB1->begin();
+        auto It2 = BB2->begin();
+
+        bool Profitable = true;
+        // if (BD1.Size+BD2.Size < 128) {
+
+        if (HyFMProfitability) {
+
+          // std::unordered_map<Value *, Value *> LocalMapped1To2;
+          int OriginalCost = 0;
+          int MergedCost = 0;
+
+          bool InsideSplit = false;
+          if (FunctionMerger::match(BB1, BB2)) {
+            InsideSplit = false;
+          } else {
+            InsideSplit = true;
+            MergedCost += 1;
+          }
+
+          while (isa<PHINode>(*It1) || isa<LandingPadInst>(*It1))
+            It1++;
+          while (isa<PHINode>(*It2) || isa<LandingPadInst>(*It2))
+            It2++;
+
+          if (Verbose) {
+            errs() << GetValueName(BB1) << "x " << GetValueName(BB2) << "\n";
+            errs() << OriginalCost << " x " << MergedCost << "\n";
+          }
+
+          unsigned CountMatches = 0;
+          unsigned CoreMatches = 0;
+          unsigned NumInsts = 0;
+          while (It1 != BB1->end() && It2 != BB2->end()) {
+            Instruction *I1 = &*It1;
+            Instruction *I2 = &*It2;
+
+            OriginalCost += 2;
+
+            NumInsts++;
+            if (matchInstructions(I1, I2)) {
+              if (Verbose)
+                errs() << "Matched:\n";
+
+              CountMatches++;
+              MergedCost += 1; // reduces 1 inst by merging two insts into one
+              if (InsideSplit) {
+                InsideSplit = false;
+                MergedCost += 2; // two branches to converge
+              }
+
+              /*
+                          LocalMapped1To2[I1] = I2;
+                          if (I1->getNumOperands()==I2->getNumOperands()) {
+                      for (unsigned i = 0; i<I1->getNumOperands(); i++) {
+                  auto *V1 = I1->getOperand(i);
+                  auto *V2 = I2->getOperand(i);
+                  if (isa<Constant>(V1) || isa<Constant>(V2)) {
+                    if (V1!=V2) MergedCost += 1; //one operand selection
+                  } else {
+              auto VIt = LocalMapped1To2.find(V1);
+              if (VIt!=LocalMapped1To2.end()) {
+                if( (*VIt).second!=V2 ) MergedCost += 1; //one operand selection
+              }
+                  }
+                }
+              }
+              */
+
+              if (!I1->isTerminator()) {
+                CoreMatches++;
+              }
+            } else {
+              if (Verbose)
+                errs() << "Mismatched:\n";
+              // LocalMapped1To2[I1] = I1;
+
+              if (!InsideSplit) {
+                InsideSplit = true;
+                MergedCost += 1; // one branch to split
+              }
+              MergedCost += 2; // two instructions
+            }
+            It1++;
+            It2++;
+
+            if (Verbose) {
+              I1->dump();
+              I2->dump();
+              errs() << OriginalCost << " x " << MergedCost << "\n";
+            }
+          }
+
+          if (It1 != BB1->end() || It2 != BB2->end()) {
+#ifdef TIME_STEPS_DEBUG
+            TimeAlign.stopTimer();
+#endif
+            return ErrorResponse;
+          }
+
+          // Profitable = (CountMatches>0);
+          // Profitable = (CoreMatches>0) || (NumInsts==1);
+          // Profitable = (CountMatches==NumInsts) || (NumInsts>1 &&
+          // ((float)CoreMatches)/((float)NumInsts)>0.2); Profitable =
+          // (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
+          Profitable = (MergedCost <= OriginalCost);
+          if (Verbose) {
+            errs() << ((Profitable) ? "Profitable" : "Unprofitable") << "\n";
+          }
+          It1 = BB1->begin();
+          It2 = BB2->begin();
+        }
+
+        if (Profitable) {
+          AlignedSeq.Data.emplace_back(BB1, BB2, FunctionMerger::match(BB1, BB2));
+
+          while (isa<PHINode>(*It1) || isa<LandingPadInst>(*It1))
+            It1++;
+          while (isa<PHINode>(*It2) || isa<LandingPadInst>(*It2))
+            It2++;
+
+          while (It1 != BB1->end() && It2 != BB2->end()) {
+            Instruction *I1 = &*It1;
+            Instruction *I2 = &*It2;
+
+            TotalInsts++;
+            if (matchInstructions(I1, I2)) {
+              AlignedSeq.Data.emplace_back(I1, I2, true);
+              TotalMatches++;
+              if (!I1->isTerminator()) {
+                TotalCoreMatches++;
+              }
+            } else {
+              AlignedSeq.Data.emplace_back(I1, nullptr, false);
+              AlignedSeq.Data.emplace_back(nullptr, I2, false);
+            }
+
+            It1++;
+            It2++;
+          }
+
+          if (It1 != BB1->end() || It2 != BB2->end()) {
+#ifdef TIME_STEPS_DEBUG
+            TimeAlign.stopTimer();
+#endif
+            return ErrorResponse;
+          }
+
+          SetRef.erase(BestIt);
+          MergedBlocks = true;
+        }
+      }
+      if (!MergedBlocks) {
+        AlignedSeq.Data.emplace_back(nullptr, BB2, false);
+        for (Instruction &I : *BB2) {
+          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+            continue;
+          TotalInsts++;
+          AlignedSeq.Data.emplace_back(nullptr, &I, false);
+        }
+      }
+    }
+    for (auto &Pair : BlocksF1) {
+      for (auto &BD1 : Pair.second) {
+        BasicBlock *BB1 = BD1.BB;
+        AlignedSeq.Data.emplace_back(BB1, nullptr, false);
+        for (Instruction &I : *BB1) {
+          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+            continue;
+          TotalInsts++;
+          AlignedSeq.Data.emplace_back(&I, nullptr, false);
+        }
+      }
+    }
+
+    errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize
+           << "\n";
+
+    // bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 &&
+    // TotalCoreMatches>0);
+    bool Profitable = (TotalMatches == TotalInsts) || (TotalCoreMatches > 0);
+    if (!Profitable) {
+      // if (TotalMatches==0) {
+#ifdef TIME_STEPS_DEBUG
+      TimeAlign.stopTimer();
+#endif
+      errs() << "Skipped: Not profitable enough!!\n";
+      return ErrorResponse;
+    }
+
+  } else if (ConservativeMode == 7) {
+    /// TODO:: ignore seq. alignment. Perform n^2, pairing any two matching
+    /// basic blocks. There is no need to linearize them either.
+
+    int TotalMatches = 0;
+    int TotalInsts = 0;
+    int TotalCoreMatches = 0;
+
+    int B1Max = 0;
+    int B2Max = 0;
+    size_t MaxMem = 0;
+
+    int NumBB1 = 0;
+    int NumBB2 = 0;
+    size_t MemSize = 0;
+
+    // std::map<size_t, std::vector<BlockData> > BlocksF1;
+    std::map<size_t, std::vector<BlockFingerprint>> BlocksF1;
+    for (BasicBlock &BB1 : *F1) {
+      NumBB1++;
+      // BlockData BD1(&BB1, HashEncoder);
+      BlockFingerprint BD1(&BB1);
+      BlocksF1[BD1.Size].push_back(BD1);
+      MemSize += BD1.footprint();
+    }
+
+    for (BasicBlock &BIt : *F2) {
+      NumBB2++;
+      BasicBlock *BB2 = &BIt;
+      // BlockData BD2(BB2, HashEncoder);
+      BlockFingerprint BD2(BB2);
+
+      auto &SetRef = BlocksF1[BD2.Size];
+
+      /*
+      std::sort(SetRef.begin(), SetRef.end(), [&](auto &A, auto &B) -> bool {
+         int VA = std::abs(A.Encoding - BD2.Encoding);
+         int VB = std::abs(B.Encoding - BD2.Encoding);
+         return VA < VB;
+      });
+            */
+
+      // errs() << "NumBlocks: " << SetRef.size() << "\n";
+
+      auto BestIt = SetRef.end();
+      size_t BestDist = std::numeric_limits<size_t>::max();
+      for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt != E; BDIt++) {
+        // auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
+        auto D = BD2.distance(*BDIt);
+        // errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+        // errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+        if (D < BestDist) {
+          BestDist = D;
+          BestIt = BDIt;
+        }
+      }
+      bool MergedBlocks = false;
+      if (BestIt != SetRef.end()) {
+        auto &BD1 = *BestIt;
+        BasicBlock *BB1 = BD1.BB;
+
+        // errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist <<
+        // "\n"; auto D = BD2.distance(&BD1); errs() << "BEST: " <<
+        // GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) <<
+        // ": " <<  BD2.Size << ", Dist: " << D << "\n";
+
+        SmallVector<Value *, 8> BB1Vec;
+        SmallVector<Value *, 8> BB2Vec;
+
+        BB1Vec.push_back(BB1);
+        for (auto &I : *BB1) {
+          if (!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
+            BB1Vec.push_back(&I);
+        }
+
+        BB2Vec.push_back(BB2);
+        for (auto &I : *BB2) {
+          if (!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
+            BB2Vec.push_back(&I);
+        }
+
+        NeedlemanWunschSA<SmallVectorImpl<Value *>> SA(ScoringSystem(-1, 2),
+                                                       FunctionMerger::match);
+
+        auto MemReq = SA.getMemoryRequirement(BB1Vec, BB2Vec);
+        // auto MemAvailable = getTotalSystemMemory();
+        errs() << "PStats: " << BB1Vec.size() << " , " << BB2Vec.size() << " , "
+               << MemReq << "\n";
+
+        if (MemReq > MaxMem) {
+          MaxMem = MemReq;
+          B1Max = BB1Vec.size();
+          B2Max = BB2Vec.size();
+        }
+        AlignedSequence<Value *> AlignedBlocks =
+            SA.getAlignment(BB1Vec, BB2Vec);
+
+        /*
+        unsigned CountMatches = 0;
+              for (auto &Entry : AlignedBlocks) {
+                Instruction *I1 = nullptr;
+          if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
+                Instruction *I2 = nullptr;
+          if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
+          if (Entry.match() && (I1 || I2)) CountMatches++;
+        }
+              */
+
+        bool Profitable = true;
+        if (HyFMProfitability) {
+
+          // std::unordered_map<Value *, Value *> LocalMapped1To2;
+          int OriginalCost = 0;
+          int MergedCost = 0;
+
+          bool InsideSplit = false;
+
+          for (auto &Entry : AlignedBlocks) {
+            Instruction *I1 = nullptr;
+            if (Entry.get(0))
+              I1 = dyn_cast<Instruction>(Entry.get(0));
+            Instruction *I2 = nullptr;
+            if (Entry.get(1))
+              I2 = dyn_cast<Instruction>(Entry.get(1));
+            bool IsInstruction = I1 != nullptr || I2 != nullptr;
+            if (Entry.match()) {
+              if (IsInstruction) {
+                OriginalCost += 2;
+                MergedCost += 1;
+              }
+              if (InsideSplit) {
+                InsideSplit = false;
+                MergedCost += 2;
+              }
+            } else {
+              if (IsInstruction) {
+                OriginalCost += 1;
+                MergedCost += 1;
+              }
+              if (!InsideSplit) {
+                InsideSplit = true;
+                MergedCost += 1;
+              }
+            }
+          }
+
+          // Profitable = (CountMatches>0);
+          // Profitable = (CoreMatches>0) || (NumInsts==1);
+          // Profitable = (CountMatches==NumInsts) || (NumInsts>1 &&
+          // ((float)CoreMatches)/((float)NumInsts)>0.2); Profitable =
+          // (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
+          Profitable = (MergedCost <= OriginalCost);
+          if (Verbose) {
+            errs() << ((Profitable) ? "Profitable" : "Unprofitable") << "\n";
+          }
+        }
+
+        // bool Profitable = (CountMatches>0);
+
+        if (Profitable) {
+          for (auto &Entry : AlignedBlocks) {
+            Instruction *I1 = nullptr;
+            if (Entry.get(0))
+              I1 = dyn_cast<Instruction>(Entry.get(0));
+            Instruction *I2 = nullptr;
+            if (Entry.get(1))
+              I2 = dyn_cast<Instruction>(Entry.get(1));
+            bool IsInstruction = I1 != nullptr || I2 != nullptr;
+
+            AlignedSeq.Data.emplace_back(Entry.get(0), Entry.get(1), Entry.match());
+
+            if (IsInstruction) {
+              TotalInsts++;
+              if (Entry.match())
+                TotalMatches++;
+              Instruction *I = I2;
+              if (I1)
+                I = I1;
+              if (I->isTerminator())
+                TotalCoreMatches++;
+            }
+          }
+          SetRef.erase(BestIt);
+          MergedBlocks = true;
+        }
+      }
+
+      if (!MergedBlocks) {
+        AlignedSeq.Data.emplace_back(nullptr, BB2, false);
+        for (Instruction &I : *BB2) {
+          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+            continue;
+          TotalInsts++;
+          AlignedSeq.Data.emplace_back(nullptr, &I, false);
+        }
+      }
+    }
+    for (auto &Pair : BlocksF1) {
+      for (auto &BD1 : Pair.second) {
+        BasicBlock *BB1 = BD1.BB;
+        AlignedSeq.Data.emplace_back(BB1, nullptr, false);
+        for (Instruction &I : *BB1) {
+          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+            continue;
+          TotalInsts++;
+          AlignedSeq.Data.emplace_back(&I, nullptr, false);
+        }
+      }
+    }
+
+    errs() << "Stats: " << B1Max << " , " << B2Max << " , " << MaxMem << "\n";
+    errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize
+           << "\n";
+
+    // bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 &&
+    // TotalCoreMatches>0);
+    bool Profitable = (TotalMatches == TotalInsts) || (TotalCoreMatches > 0);
+    if (!Profitable) {
+      // if (TotalMatches==0) {
+#ifdef TIME_STEPS_DEBUG
+      TimeAlign.stopTimer();
+#endif
+      errs() << "Skipped: Not profitable enough!!\n";
+      return ErrorResponse;
+    }
+
+  } else if (ConservativeMode == 6) {
+
+    int TotalMatches = 0;
+    int TotalInsts = 0;
+    int TotalCoreMatches = 0;
+
+    // std::map<size_t, std::vector<BlockData> > BlocksF1;
+    // std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
+    std::vector<BlockFingerprint> Blocks;
+    for (BasicBlock &BB1 : *F1) {
+      BlockFingerprint BD1(&BB1);
+      Blocks.push_back(BD1);
+    }
+
+    for (BasicBlock &BIt : *F2) {
+      BasicBlock *BB2 = &BIt;
+      // BlockData BD2(BB2, HashEncoder);
+      BlockFingerprint BD2(BB2);
+
+      // errs() << "NumBlocks: " << Blocks.size() << "\n";
+
+      auto BestIt = Blocks.end();
+      int BestDist = std::numeric_limits<int>::max();
+      for (auto BDIt = Blocks.begin(), E = Blocks.end(); BDIt != E; BDIt++) {
+        auto D = BD2.distance(*BDIt);
+        // errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
+        if (D < BestDist) {
+          BestDist = D;
+          BestIt = BDIt;
+        }
+      }
+      bool MergedBlocks = false;
+      if (BestIt != Blocks.end()) {
+        auto &BD1 = *BestIt;
+        BasicBlock *BB1 = BD1.BB;
+
+        // errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " <<
+        // GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist <<
+        // "\n"; auto D = BD2.distance(&BD1); errs() << "BEST: " <<
+        // GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) <<
+        // ": " <<  BD2.Size << ", Dist: " << D << "\n";
+
+        auto It1 = BB1->begin();
+        auto It2 = BB2->begin();
+
+        bool Profitable = true;
+        // if (BD1.Size+BD2.Size < 128) {
+        if (HyFMProfitability) {
+          while (isa<PHINode>(*It1) || isa<LandingPadInst>(*It1))
+            It1++;
+          while (isa<PHINode>(*It2) || isa<LandingPadInst>(*It2))
+            It2++;
+
+          unsigned CountMatches = 0;
+          unsigned CoreMatches = 0;
+          unsigned NumInsts = 0;
+
+          int BBSize1 = BD1.Size;
+          int BBSize2 = BD2.Size;
+
+          while (It1 != BB1->end() && It2 != BB2->end()) {
+            Instruction *I1 = &*It1;
+            Instruction *I2 = &*It2;
+
+            NumInsts++;
+            if (matchInstructions(I1, I2)) {
+              CountMatches++;
+              if (!I1->isTerminator()) {
+                CoreMatches++;
+              }
+            }
+            if (BBSize1 == BBSize2) {
+              It1++;
+              BBSize1--;
+              It2++;
+              BBSize2--;
+            } else if (BBSize1 < BBSize2) {
+              It2++;
+              BBSize2--;
+            } else if (BBSize1 > BBSize2) {
+              It1++;
+              BBSize1--;
+            }
+          }
+
+          if (It1 != BB1->end() || It2 != BB2->end()) {
+#ifdef TIME_STEPS_DEBUG
+            TimeAlign.stopTimer();
+#endif
+            return ErrorResponse;
+          }
+
+          // Profitable = (CountMatches>0);
+          // Profitable = (CoreMatches>0) || (NumInsts==1);
+          // Profitable = (CountMatches==NumInsts) || (NumInsts>1 &&
+          // ((float)CoreMatches)/((float)NumInsts)>0.2);
+          Profitable =
+              (CountMatches == NumInsts) || (NumInsts > 1 && CoreMatches > 0);
+
+          It1 = BB1->begin();
+          It2 = BB2->begin();
+        }
+
+        if (Profitable) {
+          AlignedSeq.Data.emplace_back(BB1, BB2, FunctionMerger::match(BB1, BB2));
+
+          while (isa<PHINode>(*It1) || isa<LandingPadInst>(*It1))
+            It1++;
+          while (isa<PHINode>(*It2) || isa<LandingPadInst>(*It2))
+            It2++;
+
+          int BBSize1 = BD1.Size;
+          int BBSize2 = BD2.Size;
+
+          while (It1 != BB1->end() && It2 != BB2->end()) {
+            Instruction *I1 = &*It1;
+            Instruction *I2 = &*It2;
+
+            TotalInsts++;
+            if (matchInstructions(I1, I2)) {
+              AlignedSeq.Data.emplace_back(I1, I2, true);
+              TotalMatches++;
+              if (!I1->isTerminator()) {
+                TotalCoreMatches++;
+              }
+            } else {
+              if (BBSize1 == BBSize2) {
+                AlignedSeq.Data.emplace_back(I1, nullptr, false);
+                AlignedSeq.Data.emplace_back(nullptr, I2, false);
+              } else if (BBSize1 < BBSize2) {
+                AlignedSeq.Data.emplace_back(nullptr, I2, false);
+              } else if (BBSize1 > BBSize2) {
+                AlignedSeq.Data.emplace_back(I1, nullptr, false);
+              }
+            }
+
+            if (BBSize1 == BBSize2) {
+              It1++;
+              BBSize1--;
+              It2++;
+              BBSize2--;
+            } else if (BBSize1 < BBSize2) {
+              It2++;
+              BBSize2--;
+            } else if (BBSize1 > BBSize2) {
+              It1++;
+              BBSize1--;
+            }
+          }
+
+          if (It1 != BB1->end() || It2 != BB2->end()) {
+#ifdef TIME_STEPS_DEBUG
+            TimeAlign.stopTimer();
+#endif
+            return ErrorResponse;
+          }
+
+          Blocks.erase(BestIt);
+          MergedBlocks = true;
+        }
+      }
+      if (!MergedBlocks) {
+        AlignedSeq.Data.emplace_back(nullptr, BB2, false);
+        for (Instruction &I : *BB2) {
+          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+            continue;
+          TotalInsts++;
+          AlignedSeq.Data.emplace_back(nullptr, &I, false);
+        }
+      }
+    }
+    for (auto &BD1 : Blocks) {
+      BasicBlock *BB1 = BD1.BB;
+      AlignedSeq.Data.emplace_back(BB1, nullptr, false);
+      for (Instruction &I : *BB1) {
+        if (isa<PHINode>(&I) || isa<LandingPadInst>(&I))
+          continue;
+        TotalInsts++;
+        AlignedSeq.Data.emplace_back(&I, nullptr, false);
+      }
+    }
+
+    // bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 &&
+    // TotalCoreMatches>0); if (!Profitable) {
+    if (TotalMatches == 0) {
+#ifdef TIME_STEPS_DEBUG
+      TimeAlign.stopTimer();
+#endif
+      errs() << "Skipped: Not profitable enough!!\n";
+      return ErrorResponse;
+    }
+
+  } else if (ConservativeMode == 0) {
+    /*
+    switch (SAMethod) {
+      case 2: {
+  */
+    // DiagonalWindowsSA<SmallVectorImpl<Value*>>
+    // SA(ScoringSystem(-1,2),FunctionMerger::match,256);
+    NeedlemanWunschSA<SmallVectorImpl<Value *>> SA(ScoringSystem(-1, 2),
+                                                   FunctionMerger::match);
+
+    auto MemReq = SA.getMemoryRequirement(F1Vec, F2Vec);
+    auto MemAvailable = getTotalSystemMemory();
+    errs() << "Stats: " << F1Vec.size() << " , " << F2Vec.size() << " , "
+           << MemReq << "\n";
+    // errs() << "Memory Available: " << MemAvailable << " (" <<
+    // ((float)MemAvailable/(1024.f*1024.f)) << "); Required: " << MemReq <<  "
+    // (" << ((float)MemReq/(1024.f*1024.f)) << ")\n";
+    if (MemReq > MemAvailable * 0.9) {
+      errs() << "Insufficient Memory\n";
+#ifdef TIME_STEPS_DEBUG
+      TimeAlign.stopTimer();
+#endif
+      return ErrorResponse;
+    }
+    AlignedSeq = SA.getAlignment(F1Vec, F2Vec);
+
+    /*
+          break;
+        }
+        case 1: {
+
+
+          NeedlemanWunschSA<SmallVectorImpl<Value*>>
+      SA(ScoringSystem(-1,2),FunctionMerger::match); AlignedSeq =
+      SA.getAlignment(F1Vec,F2Vec);
+
+
+          break;
+        }
+        default: {
+          HirschbergSA<SmallVectorImpl<Value*>>
+      SA(ScoringSystem(-1,2),FunctionMerger::match); AlignedSeq =
+      SA.getAlignment(F1Vec,F2Vec); break;
         }
       }
       */
-
-      if (!I1->isTerminator()) {
-        CoreMatches++;
-      }
-          } else {
-            if (Verbose) errs() << "Mismatched:\n";
-                  //LocalMapped1To2[I1] = I1;
-
-            if (!InsideSplit) {
-                    InsideSplit = true;
-        MergedCost += 1; //one branch to split
-      }
-      MergedCost += 2; //two instructions
-    }
-                It1++;
-                It2++;
-
-          if (Verbose) {
-            I1->dump();
-            I2->dump();
-            errs() << OriginalCost << " x " << MergedCost << "\n";
-    }
-              }
-
-              if (It1!=BB1->end() || It2!=BB2->end()) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-                return ErrorResponse;
-        }
-
-        //Profitable = (CountMatches>0);
-        //Profitable = (CoreMatches>0) || (NumInsts==1);
-        //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && ((float)CoreMatches)/((float)NumInsts)>0.2);
-        //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
-              Profitable = (MergedCost <= OriginalCost);
-        if (Verbose) {
-                errs() << ((Profitable)?"Profitable":"Unprofitable") << "\n";
-        }
-              It1 = BB1->begin();
-              It2 = BB2->begin();
-            }
-
-      if (Profitable) {
-              AlignedSeq.Data.push_back( AlignedSequence<Value*>::Entry(BB1,BB2, FunctionMerger::match(BB1,BB2)) );
-
-              while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
-              while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
-
-              while (It1!=BB1->end() && It2!=BB2->end()) {
-                Instruction *I1 = &*It1;
-                Instruction *I2 = &*It2;
-
-    TotalInsts++;
-                if (matchInstructions(I1,I2)) {
-                  AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,I2,true));
-                  TotalMatches++;
-      if (!I1->isTerminator()) {
-        TotalCoreMatches++;
-      }
-          } else {
-                  AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,nullptr,false));
-                  AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,I2,false));
-          }
-
-                It1++;
-                It2++;
-              }
-
-              if (It1!=BB1->end() || It2!=BB2->end()) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-                return ErrorResponse;
-        }
-        
-              SetRef.erase(BestIt);
-        MergedBlocks = true;
-      }
-  }
-  if (!MergedBlocks) {
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,BB2,false));
-    for (Instruction &I : *BB2) {
-      if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-            TotalInsts++;
-            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,&I,false));
-    }
-  }
-      }
-      for (auto &Pair : BlocksF1) {
-        for (auto &BD1 : Pair.second) {
-    BasicBlock *BB1 = BD1.BB;
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,nullptr,false));
-    for (Instruction &I : *BB1) {
-      if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-            TotalInsts++;
-            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(&I,nullptr,false));
-    }
-  }
-      }
-
-      errs() << "RStats: " << NumBB1 << " , " << NumBB2  << " , " << MemSize  << "\n";
-
-      //bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 && TotalCoreMatches>0);
-      bool Profitable = (TotalMatches==TotalInsts) || (TotalCoreMatches>0);
-      if (!Profitable) {
-      //if (TotalMatches==0) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-        errs() << "Skipped: Not profitable enough!!\n";
-        return ErrorResponse;
-      }
-
-
-  } else if (ConservativeMode==7) {
-      ///TODO:: ignore seq. alignment. Perform n^2, pairing any two matching basic blocks. There is no need to linearize them either.
-
-      int TotalMatches = 0;
-      int TotalInsts = 0;
-      int TotalCoreMatches = 0;
-
-      int B1Max = 0;
-      int B2Max = 0;
-      size_t MaxMem = 0;
-
-      int NumBB1 = 0;
-      int NumBB2 = 0;
-      size_t MemSize = 0;
-
-      //std::map<size_t, std::vector<BlockData> > BlocksF1;
-      std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
-      for (BasicBlock &BB1 : *F1) {
-  NumBB1 ++;
-        //BlockData BD1(&BB1, HashEncoder);
-        BlockFingerprint BD1(&BB1);
-        BlocksF1[BD1.Size].push_back(BD1);
-        MemSize += BD1.footprint();
-      }
-      
-      for (BasicBlock &BIt : *F2) {
-  NumBB2 ++;
-  BasicBlock *BB2 = &BIt;
-  //BlockData BD2(BB2, HashEncoder);
-        BlockFingerprint BD2(BB2);
-  
-  auto &SetRef = BlocksF1[BD2.Size];
-
-  /*
-  std::sort(SetRef.begin(), SetRef.end(), [&](auto &A, auto &B) -> bool {
-     int VA = std::abs(A.Encoding - BD2.Encoding);
-     int VB = std::abs(B.Encoding - BD2.Encoding);
-     return VA < VB;
-  });
-        */
-
-  //errs() << "NumBlocks: " << SetRef.size() << "\n";
-
-  auto BestIt = SetRef.end();
-  size_t BestDist = std::numeric_limits<size_t>::max();
-  for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt!=E; BDIt++) {
-    //auto D = std::abs((*BDIt).Encoding - BD2.Encoding);
-    auto D = BD2.distance(&(*BDIt));
-    //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-    //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-    if (D<BestDist) {
-      BestDist = D;
-      BestIt = BDIt;
-    }
-  }
-  bool MergedBlocks = false;
-  if (BestIt!=SetRef.end()) {
-    auto &BD1 = *BestIt;
-    BasicBlock *BB1 = BD1.BB;
-    
-      //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist << "\n";
-      //auto D = BD2.distance(&BD1);
-      //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-
-    SmallVector<Value*,8> BB1Vec;
-    SmallVector<Value*,8> BB2Vec;
-
-    BB1Vec.push_back(BB1);
-    for (auto &I : *BB1) {
-      if(!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
-        BB1Vec.push_back(&I);
-    }
-
-    BB2Vec.push_back(BB2);
-    for (auto &I : *BB2) {
-            if(!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
-        BB2Vec.push_back(&I);
-    }
-
-          NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
-
-          auto MemReq = SA.getMemoryRequirement(BB1Vec,BB2Vec);
-          //auto MemAvailable = getTotalSystemMemory();
-          errs() << "PStats: " << BB1Vec.size() << " , " << BB2Vec.size() << " , " << MemReq  << "\n";
-
-    if (MemReq > MaxMem) {
-      MaxMem = MemReq;
-                  B1Max = BB1Vec.size();
-                  B2Max = BB2Vec.size();
-    }
-          AlignedSequence<Value*> AlignedBlocks = SA.getAlignment(BB1Vec,BB2Vec);
-
-    /*
-    unsigned CountMatches = 0;
-          for (auto &Entry : AlignedBlocks) {
-            Instruction *I1 = nullptr;
-      if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
-            Instruction *I2 = nullptr;
-      if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
-      if (Entry.match() && (I1 || I2)) CountMatches++;
-    }
-          */
-
-    bool Profitable = true;
-      if (HyFMProfitability) {
-
-        //std::unordered_map<Value *, Value *> LocalMapped1To2;
-        int OriginalCost = 0;
-        int MergedCost = 0;
-
-        bool InsideSplit = false;
-
-              
-              for (auto &Entry : AlignedBlocks) {
-                Instruction *I1 = nullptr;
-            if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
-                Instruction *I2 = nullptr;
-            if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
-    bool IsInstruction = I1!=nullptr || I2!=nullptr;
-    if (Entry.match()) {
-      if (IsInstruction) {
-        OriginalCost += 2;
-        MergedCost += 1;
-      }
-      if (InsideSplit) {
-        InsideSplit = false;
-        MergedCost += 2;
-      }
-    } else {
-      if (IsInstruction) {
-        OriginalCost += 1;
-        MergedCost += 1;
-      }
-      if (!InsideSplit) {
-        InsideSplit = true;
-        MergedCost += 1;
-      }
-    }
-          }
-
-        //Profitable = (CountMatches>0);
-        //Profitable = (CoreMatches>0) || (NumInsts==1);
-        //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && ((float)CoreMatches)/((float)NumInsts)>0.2);
-        //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
-              Profitable = (MergedCost <= OriginalCost);
-        if (Verbose) {
-                errs() << ((Profitable)?"Profitable":"Unprofitable") << "\n";
-        }
-            }
-
-    //bool Profitable = (CountMatches>0);
-    
-
-
-    if (Profitable) {
-            for (auto &Entry : AlignedBlocks) {
-              Instruction *I1 = nullptr;
-        if (Entry.get(0)) I1 = dyn_cast<Instruction>(Entry.get(0));
-              Instruction *I2 = nullptr;
-        if (Entry.get(1)) I2 = dyn_cast<Instruction>(Entry.get(1));
-        bool IsInstruction = I1!=nullptr || I2!=nullptr;
-
-        AlignedSeq.Data.push_back( AlignedSequence<Value*>::Entry(Entry.get(0),Entry.get(1),Entry.match()) );
-
-        if (IsInstruction) {
-          TotalInsts++;
-          if (Entry.match()) TotalMatches++;
-                Instruction *I = I2;
-    if (I1) I = I1;
-    if (I->isTerminator()) TotalCoreMatches++;
-        }
-      }
-            SetRef.erase(BestIt);
-      MergedBlocks = true;
-    }
-  }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  if (!MergedBlocks) {
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,BB2,false));
-    for (Instruction &I : *BB2) {
-      if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-            TotalInsts++;
-            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,&I,false));
-    }
-  }
-      }
-      for (auto &Pair : BlocksF1) {
-        for (auto &BD1 : Pair.second) {
-    BasicBlock *BB1 = BD1.BB;
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,nullptr,false));
-    for (Instruction &I : *BB1) {
-      if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-            TotalInsts++;
-            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(&I,nullptr,false));
-    }
-  }
-      }
-
-      errs() << "Stats: " << B1Max << " , " << B2Max  << " , " << MaxMem  << "\n";
-      errs() << "RStats: " << NumBB1 << " , " << NumBB2  << " , " << MemSize  << "\n";
-
-      //bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 && TotalCoreMatches>0);
-      bool Profitable = (TotalMatches==TotalInsts) || (TotalCoreMatches>0);
-      if (!Profitable) {
-      //if (TotalMatches==0) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-        errs() << "Skipped: Not profitable enough!!\n";
-        return ErrorResponse;
-      }
-
-
-  } else if (ConservativeMode==6) {
-
-      int TotalMatches = 0;
-      int TotalInsts = 0;
-      int TotalCoreMatches = 0;
-
-      //std::map<size_t, std::vector<BlockData> > BlocksF1;
-      //std::map<size_t, std::vector<BlockFingerprint> > BlocksF1;
-      std::vector<BlockFingerprint> Blocks;
-      for (BasicBlock &BB1 : *F1) {
-        BlockFingerprint BD1(&BB1);
-        Blocks.push_back(BD1);
-      }
-      
-      for (BasicBlock &BIt : *F2) {
-  BasicBlock *BB2 = &BIt;
-  //BlockData BD2(BB2, HashEncoder);
-        BlockFingerprint BD2(BB2);
-  
-  //errs() << "NumBlocks: " << Blocks.size() << "\n";
-
-  auto BestIt = Blocks.end();
-  int BestDist = std::numeric_limits<int>::max();
-  for (auto BDIt = Blocks.begin(), E = Blocks.end(); BDIt!=E; BDIt++) {
-    auto D = BD2.distance(&(*BDIt));
-    //errs() << GetValueName((*BDIt).BB) <<": " << (*BDIt).Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-    if (D<BestDist) {
-      BestDist = D;
-      BestIt = BDIt;
-    }
-  }
-  bool MergedBlocks = false;
-  if (BestIt!=Blocks.end()) {
-          auto &BD1 = *BestIt;
-    BasicBlock *BB1 = BD1.BB;
-
-
-      //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << BestDist << "\n";
-      //auto D = BD2.distance(&BD1);
-      //errs() << "BEST: " << GetValueName(BB1) <<": " << BD1.Size << ", " << GetValueName(BB2) << ": " <<  BD2.Size << ", Dist: " << D << "\n";
-
-            auto It1 = BB1->begin();
-            auto It2 = BB2->begin();
-
-      bool Profitable = true;
-      //if (BD1.Size+BD2.Size < 128) {
-      if (HyFMProfitability) {
-              while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
-              while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
-
-        unsigned CountMatches = 0;
-        unsigned CoreMatches = 0;
-        unsigned NumInsts = 0;
-
-        int BBSize1 = BD1.Size;
-        int BBSize2 = BD2.Size;
-
-              while (It1!=BB1->end() && It2!=BB2->end()) {
-                Instruction *I1 = &*It1;
-                Instruction *I2 = &*It2;
-
-    NumInsts++;
-                if (matchInstructions(I1,I2)) {
-            CountMatches++;
-      if (!I1->isTerminator()) {
-        CoreMatches++;
-      }
-          }
-    if (BBSize1==BBSize2) {
-                  It1++; BBSize1--;
-                  It2++; BBSize2--;
-    } else if (BBSize1<BBSize2) {
-                  It2++; BBSize2--;
-    } else if (BBSize1>BBSize2) {
-                  It1++; BBSize1--;
-    }
-              }
-
-              if (It1!=BB1->end() || It2!=BB2->end()) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-                return ErrorResponse;
-        }
-
-        //Profitable = (CountMatches>0);
-        //Profitable = (CoreMatches>0) || (NumInsts==1);
-        //Profitable = (CountMatches==NumInsts) || (NumInsts>1 && ((float)CoreMatches)/((float)NumInsts)>0.2);
-        Profitable = (CountMatches==NumInsts) || (NumInsts>1 && CoreMatches>0);
-
-              It1 = BB1->begin();
-              It2 = BB2->begin();
-            }
-
-      if (Profitable) {
-              AlignedSeq.Data.push_back( AlignedSequence<Value*>::Entry(BB1,BB2, FunctionMerger::match(BB1,BB2)) );
-
-              while(isa<PHINode>(*It1) || isa<LandingPadInst>(*It1)) It1++;
-              while(isa<PHINode>(*It2) || isa<LandingPadInst>(*It2)) It2++;
-
-        int BBSize1 = BD1.Size;
-        int BBSize2 = BD2.Size;
-
-              while (It1!=BB1->end() && It2!=BB2->end()) {
-                Instruction *I1 = &*It1;
-                Instruction *I2 = &*It2;
-
-    TotalInsts++;
-                if (matchInstructions(I1,I2)) {
-                  AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,I2,true));
-                  TotalMatches++;
-      if (!I1->isTerminator()) {
-        TotalCoreMatches++;
-      }
-          } else {
-      if (BBSize1==BBSize2) {
-                    AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,nullptr,false));
-                    AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,I2,false));
-      } else if (BBSize1<BBSize2) {
-                    AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,I2,false));
-      } else if (BBSize1>BBSize2) {
-                    AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(I1,nullptr,false));
-      }
-          }
-
-    if (BBSize1==BBSize2) {
-                  It1++; BBSize1--;
-                  It2++; BBSize2--;
-    } else if (BBSize1<BBSize2) {
-                  It2++; BBSize2--;
-    } else if (BBSize1>BBSize2) {
-                  It1++; BBSize1--;
-    }
-              }
-
-              if (It1!=BB1->end() || It2!=BB2->end()) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-                return ErrorResponse;
-        }
-        
-              Blocks.erase(BestIt);
-        MergedBlocks = true;
-      }
-  }
-  if (!MergedBlocks) {
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,BB2,false));
-    for (Instruction &I : *BB2) {
-      if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-            TotalInsts++;
-            AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(nullptr,&I,false));
-    }
-  }
-      }
-      for (auto &BD1 : Blocks) {
-        BasicBlock *BB1 = BD1.BB;
-        AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(BB1,nullptr,false));
-        for (Instruction &I : *BB1) {
-          if (isa<PHINode>(&I) || isa<LandingPadInst>(&I)) continue;
-          TotalInsts++;
-          AlignedSeq.Data.push_back(AlignedSequence<Value*>::Entry(&I,nullptr,false));
-        }
-      }
-
-      //bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 && TotalCoreMatches>0);
-      //if (!Profitable) {
-      if (TotalMatches==0) {
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-        errs() << "Skipped: Not profitable enough!!\n";
-        return ErrorResponse;
-      }
-
-  } else if (ConservativeMode==0) {
-  /*
-  switch (SAMethod) {
-    case 2: {
-*/
-      //DiagonalWindowsSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match,256);
-      NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
-
-      auto MemReq = SA.getMemoryRequirement(F1Vec,F2Vec);
-      auto MemAvailable = getTotalSystemMemory();
-      errs() << "Stats: " << F1Vec.size() << " , " << F2Vec.size() << " , " << MemReq  << "\n";
-      //errs() << "Memory Available: " << MemAvailable << " (" << ((float)MemAvailable/(1024.f*1024.f)) << "); Required: " << MemReq <<  " (" << ((float)MemReq/(1024.f*1024.f)) << ")\n";
-      if ( MemReq > MemAvailable*0.9 ) {
-  errs() << "Insufficient Memory\n";
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.stopTimer();
-#endif
-        return ErrorResponse;
-      }
-      AlignedSeq = SA.getAlignment(F1Vec,F2Vec);
-
-/*
-      break;
-    }
-    case 1: {
-    
-
-      NeedlemanWunschSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
-      AlignedSeq = SA.getAlignment(F1Vec,F2Vec);
-
-      
-      break;
-    }
-    default: {
-      HirschbergSA<SmallVectorImpl<Value*>> SA(ScoringSystem(-1,2),FunctionMerger::match);
-      AlignedSeq = SA.getAlignment(F1Vec,F2Vec);
-      break;
-    }
-  }
-  */
   }
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.stopTimer();
 #endif
-
 
   unsigned NumMatches = 0;
   unsigned TotalEntries = 0;
@@ -3072,23 +3174,27 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
       NumMatches++;
       if (isa<BasicBlock>(Entry.get(1))) {
         CurrBB1 = dyn_cast<BasicBlock>(Entry.get(1));
-      } else if (Instruction *I = dyn_cast<Instruction>(Entry.get(1))) {
-        if (CurrBB1==nullptr) CurrBB1 = I->getParent();
-  else if (CurrBB1!=I->getParent()) {
+      } else if (auto *I = dyn_cast<Instruction>(Entry.get(1))) {
+        if (CurrBB1 == nullptr)
+          CurrBB1 = I->getParent();
+        else if (CurrBB1 != I->getParent()) {
           AcrossBlocks = true;
-  }
+        }
       }
       if (isa<BasicBlock>(Entry.get(0))) {
         CurrBB0 = dyn_cast<BasicBlock>(Entry.get(0));
-      } else if (Instruction *I = dyn_cast<Instruction>(Entry.get(0))) {
-        if (CurrBB0==nullptr) CurrBB0 = I->getParent();
-  else if (CurrBB0!=I->getParent()) {
+      } else if (auto *I = dyn_cast<Instruction>(Entry.get(0))) {
+        if (CurrBB0 == nullptr)
+          CurrBB0 = I->getParent();
+        else if (CurrBB0 != I->getParent()) {
           AcrossBlocks = true;
-  }
+        }
       }
     } else {
-      if (Entry.get(0) && isa<BasicBlock>(Entry.get(0))) CurrBB1 = nullptr;
-      if (Entry.get(1) && isa<BasicBlock>(Entry.get(1))) CurrBB0 = nullptr;
+      if (isa_and_nonnull<BasicBlock>(Entry.get(0)))
+        CurrBB1 = nullptr;
+      if (isa_and_nonnull<BasicBlock>(Entry.get(1)))
+        CurrBB0 = nullptr;
     }
   }
   if (AcrossBlocks) {
@@ -3096,7 +3202,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   }
   errs() << "Matches: " << NumMatches << ", " << TotalEntries << "\n";
 
-  //errs() << "Code Gen\n";
+  // errs() << "Code Gen\n";
 #ifdef ENABLE_DEBUG_CODE
   if (Verbose) {
     for (auto &Entry : AlignedSeq) {
@@ -3138,16 +3244,16 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   TimeParam.startTimer();
 #endif
 
-  //errs() << "Creating function type\n";
+  // errs() << "Creating function type\n";
 
   // Merging parameters
   std::map<unsigned, unsigned> ParamMap1;
   std::map<unsigned, unsigned> ParamMap2;
   std::vector<Type *> Args;
 
-
-  //errs() << "Merging arguments\n";
-  MergeArguments(Context, F1, F2, AlignedSeq, ParamMap1,ParamMap2,Args,Options);
+  // errs() << "Merging arguments\n";
+  MergeArguments(Context, F1, F2, AlignedSeq, ParamMap1, ParamMap2, Args,
+                 Options);
 
   Type *RetType1 = F1->getReturnType();
   Type *RetType2 = F2->getReturnType();
@@ -3155,18 +3261,18 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
 
   bool RequiresUnifiedReturn = false;
 
-  //Value *RetUnifiedAddr = nullptr;
-  //Value *RetAddr1 = nullptr;
-  //Value *RetAddr2 = nullptr;
-  
+  // Value *RetUnifiedAddr = nullptr;
+  // Value *RetAddr1 = nullptr;
+  // Value *RetAddr2 = nullptr;
+
   if (validMergeTypes(F1, F2, Options)) {
-    //errs() << "Simple return types\n";
+    // errs() << "Simple return types\n";
     ReturnType = RetType1;
     if (ReturnType->isVoidTy()) {
       ReturnType = RetType2;
     }
   } else if (Options.EnableUnifiedReturnType) {
-    //errs() << "Unifying return types\n";
+    // errs() << "Unifying return types\n";
     RequiresUnifiedReturn = true;
 
     auto SizeOfTy1 = DL->getTypeStoreSize(RetType1);
@@ -3178,29 +3284,29 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     }
   } else {
 #ifdef TIME_STEPS_DEBUG
-  TimeParam.stopTimer();
+    TimeParam.stopTimer();
 #endif
     return ErrorResponse;
   }
-  FunctionType *FTy = FunctionType::get(ReturnType, ArrayRef<Type*>(Args), false);
+  FunctionType *FTy =
+      FunctionType::get(ReturnType, ArrayRef<Type *>(Args), false);
 
   if (Name.empty()) {
-    //Name = ".m.f";
+    // Name = ".m.f";
     Name = "_m_f";
   }
-/*
-  if (!HasWholeProgram) {
-    Name = M->getModuleIdentifier() + std::string(".");
-  }
-  Name = Name + std::string("m.f");
-*/
+  /*
+    if (!HasWholeProgram) {
+      Name = M->getModuleIdentifier() + std::string(".");
+    }
+    Name = Name + std::string("m.f");
+  */
   Function *MergedFunc =
-    Function::Create(FTy, //GlobalValue::LinkageTypes::InternalLinkage,
-                          GlobalValue::LinkageTypes::PrivateLinkage,
-                       Twine(Name), M); // merged.function
+      Function::Create(FTy, // GlobalValue::LinkageTypes::InternalLinkage,
+                       GlobalValue::LinkageTypes::PrivateLinkage, Twine(Name),
+                       M); // merged.function
 
-  
-  //errs() << "Initializing VMap\n";
+  // errs() << "Initializing VMap\n";
   ValueToValueMapTy VMap;
 
   std::vector<Argument *> ArgsList;
@@ -3208,7 +3314,6 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
     ArgsList.push_back(&arg);
   }
   Value *FuncId = ArgsList[0];
-
 
   auto AttrList1 = F1->getAttributes();
   auto AttrList2 = F2->getAttributes();
@@ -3218,9 +3323,10 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   for (auto I = F1->arg_begin(), E = F1->arg_end(); I != E; I++) {
     VMap[&(*I)] = ArgsList[ParamMap1[ArgId]];
 
-    auto AttrSet1 = AttrList1.getParamAttributes( (*I).getArgNo() );
+    auto AttrSet1 = AttrList1.getParamAttributes((*I).getArgNo());
     AttrBuilder Attrs(AttrSet1);
-    AttrListM = AttrListM.addParamAttributes(Context, ArgsList[ParamMap1[ArgId]]->getArgNo(), Attrs );
+    AttrListM = AttrListM.addParamAttributes(
+        Context, ArgsList[ParamMap1[ArgId]]->getArgNo(), Attrs);
 
     ArgId++;
   }
@@ -3229,53 +3335,54 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   for (auto I = F2->arg_begin(), E = F2->arg_end(); I != E; I++) {
     VMap[&(*I)] = ArgsList[ParamMap2[ArgId]];
 
-    auto AttrSet2 = AttrList2.getParamAttributes( (*I).getArgNo() );
+    auto AttrSet2 = AttrList2.getParamAttributes((*I).getArgNo());
     AttrBuilder Attrs(AttrSet2);
-    AttrListM = AttrListM.addParamAttributes(Context, ArgsList[ParamMap2[ArgId]]->getArgNo(), Attrs );
+    AttrListM = AttrListM.addParamAttributes(
+        Context, ArgsList[ParamMap2[ArgId]]->getArgNo(), Attrs);
 
     ArgId++;
   }
   MergedFunc->setAttributes(AttrListM);
 
-
 #ifdef TIME_STEPS_DEBUG
   TimeParam.stopTimer();
 #endif
 
-  //errs() << "Setting attributes\n";
-  SetFunctionAttributes(F1,F2,MergedFunc);
+  // errs() << "Setting attributes\n";
+  SetFunctionAttributes(F1, F2, MergedFunc);
 
   Value *IsFunc1 = FuncId;
 
-  //errs() << "Running code generator\n";
+  // errs() << "Running code generator\n";
 
   auto Gen = [&](auto &CG) {
     CG.setFunctionIdentifier(IsFunc1)
-      .setEntryPoints(&F1->getEntryBlock(), &F2->getEntryBlock())
-      .setReturnTypes(RetType1,RetType2)
-      .setMergedFunction(MergedFunc)
-      .setMergedEntryPoint(BasicBlock::Create(Context, "entry", MergedFunc))
-      .setMergedReturnType(ReturnType, RequiresUnifiedReturn)
-      .setContext(ContextPtr)
-      .setIntPtrType(IntPtrTy);
+        .setEntryPoints(&F1->getEntryBlock(), &F2->getEntryBlock())
+        .setReturnTypes(RetType1, RetType2)
+        .setMergedFunction(MergedFunc)
+        .setMergedEntryPoint(BasicBlock::Create(Context, "entry", MergedFunc))
+        .setMergedReturnType(ReturnType, RequiresUnifiedReturn)
+        .setContext(ContextPtr)
+        .setIntPtrType(IntPtrTy);
     if (!CG.generate(AlignedSeq, VMap, Options)) {
-      //F1->dump();
-      //F2->dump();
-      //MergedFunc->dump();
+      // F1->dump();
+      // F2->dump();
+      // MergedFunc->dump();
       MergedFunc->eraseFromParent();
       MergedFunc = nullptr;
-      if (Debug) errs() << "ERROR: Failed to generate the merged function!\n";
+      if (Debug)
+        errs() << "ERROR: Failed to generate the merged function!\n";
     }
   };
 
-  SALSSACodeGen<Function::BasicBlockListType> CG(F1->getBasicBlockList(),F2->getBasicBlockList());
+  SALSSACodeGen<Function::BasicBlockListType> CG(F1->getBasicBlockList(),
+                                                 F2->getBasicBlockList());
   Gen(CG);
-
 
   /*
   if (!RequiresFuncId) {
     errs() << "Removing FuncId\n";
-    
+
     MergedFunc = RemoveFuncIdArg(MergedFunc, ArgsList);
 
     for (auto &kv : ParamMap1) {
@@ -3285,7 +3392,7 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
       ParamMap2[kv.first] = kv.second - 1;
     }
     FuncId = nullptr;
-    
+
   }
   */
 
@@ -3296,7 +3403,8 @@ FunctionMergeResult FunctionMerger::merge(Function *F1, Function *F2, std::strin
   return Result;
 }
 
-void FunctionMerger::replaceByCall(Function *F, FunctionMergeResult &MFR, const FunctionMergingOptions &Options) {
+void FunctionMerger::replaceByCall(Function *F, FunctionMergeResult &MFR,
+                                   const FunctionMergingOptions &Options) {
   LLVMContext &Context = M->getContext();
 
   Value *FuncId = MFR.getFunctionIdValue(F);
@@ -3340,20 +3448,24 @@ void FunctionMerger::replaceByCall(Function *F, FunctionMergeResult &MFR, const 
   if (F->getReturnType()->isVoidTy()) {
     Builder.CreateRetVoid();
   } else {
-    Value *CastedV = CI;
+    Value *CastedV;
     if (MFR.needUnifiedReturn()) {
       Value *AddrCI = Builder.CreateAlloca(CI->getType());
-      Builder.CreateStore(CI,AddrCI);
-      Value *CastedAddr = Builder.CreatePointerCast(AddrCI, PointerType::get(F->getReturnType(), DL->getAllocaAddrSpace()));
+      Builder.CreateStore(CI, AddrCI);
+      Value *CastedAddr = Builder.CreatePointerCast(
+          AddrCI,
+          PointerType::get(F->getReturnType(), DL->getAllocaAddrSpace()));
       CastedV = Builder.CreateLoad(CastedAddr);
     } else {
-      CastedV = createCastIfNeeded(CI, F->getReturnType(), Builder, IntPtrTy, Options);
+      CastedV = createCastIfNeeded(CI, F->getReturnType(), Builder, IntPtrTy,
+                                   Options);
     }
     Builder.CreateRet(CastedV);
   }
 }
 
-bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR, const FunctionMergingOptions &Options) {
+bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR,
+                                      const FunctionMergingOptions &Options) {
 
   Value *FuncId = MFR.getFunctionIdValue(F);
   Function *MergedF = MFR.getMergedFunction();
@@ -3362,21 +3474,21 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR, con
   std::vector<CallBase *> Calls;
   for (User *U : F->users()) {
     CountUsers++;
-    if (CallInst *CI = dyn_cast<CallInst>(U)) {
+    if (auto *CI = dyn_cast<CallInst>(U)) {
       if (CI->getCalledFunction() == F) {
         Calls.push_back(CI);
       }
-    } else if (InvokeInst *II = dyn_cast<InvokeInst>(U)) {
+    } else if (auto *II = dyn_cast<InvokeInst>(U)) {
       if (II->getCalledFunction() == F) {
-        //if (EnableSALSSA)
+        // if (EnableSALSSA)
         Calls.push_back(II);
       }
     }
   }
 
-  if (Calls.size()<CountUsers)
+  if (Calls.size() < CountUsers)
     return false;
-  
+
   for (CallBase *CI : Calls) {
     IRBuilder<> Builder(CI);
 
@@ -3400,18 +3512,19 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR, con
     }
 
     CallBase *NewCB = nullptr;
-    if (CI->getOpcode()==Instruction::Call) {
+    if (CI->getOpcode() == Instruction::Call) {
       NewCB = (CallInst *)Builder.CreateCall(MergedF->getFunctionType(),
-                                                      MergedF, args);
-    } else if (CI->getOpcode()==Instruction::Invoke) {
-      InvokeInst *II = dyn_cast<InvokeInst>(CI);
+                                             MergedF, args);
+    } else if (CI->getOpcode() == Instruction::Invoke) {
+      auto *II = dyn_cast<InvokeInst>(CI);
       NewCB = (InvokeInst *)Builder.CreateInvoke(MergedF->getFunctionType(),
-                                                      MergedF, II->getNormalDest(), II->getUnwindDest(), args);
-      //MergedF->dump();
-      //MergedF->getFunctionType()->dump();
-      //errs() << "Invoke CallUpdate:\n";
-      //II->dump();
-      //NewCB->dump();
+                                                 MergedF, II->getNormalDest(),
+                                                 II->getUnwindDest(), args);
+      // MergedF->dump();
+      // MergedF->getFunctionType()->dump();
+      // errs() << "Invoke CallUpdate:\n";
+      // II->dump();
+      // NewCB->dump();
     }
     NewCB->setCallingConv(MergedF->getCallingConv());
     NewCB->setAttributes(MergedF->getAttributes());
@@ -3420,11 +3533,14 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR, con
     if (!F->getReturnType()->isVoidTy()) {
       if (MFR.needUnifiedReturn()) {
         Value *AddrCI = Builder.CreateAlloca(NewCB->getType());
-        Builder.CreateStore(NewCB,AddrCI);
-        Value *CastedAddr = Builder.CreatePointerCast(AddrCI, PointerType::get(F->getReturnType(), DL->getAllocaAddrSpace()));
+        Builder.CreateStore(NewCB, AddrCI);
+        Value *CastedAddr = Builder.CreatePointerCast(
+            AddrCI,
+            PointerType::get(F->getReturnType(), DL->getAllocaAddrSpace()));
         CastedV = Builder.CreateLoad(CastedAddr);
       } else {
-        CastedV = createCastIfNeeded(NewCB, F->getReturnType(), Builder, IntPtrTy, Options);
+        CastedV = createCastIfNeeded(NewCB, F->getReturnType(), Builder,
+                                     IntPtrTy, Options);
       }
     }
 
@@ -3432,7 +3548,7 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR, con
     if (CI->getNumUses() > 0) {
       CI->replaceAllUsesWith(CastedV);
     }
-    //assert( (CI->getNumUses()>0) && "ERROR: Function Call has uses!");
+    // assert( (CI->getNumUses()>0) && "ERROR: Function Call has uses!");
     CI->eraseFromParent();
   }
 
@@ -3445,7 +3561,7 @@ static bool ShouldPreserveGV(const GlobalValue *GV) {
     return true;
 
   // Available externally is really just a "declaration with a body".
-  //if (GV->hasAvailableExternallyLinkage())
+  // if (GV->hasAvailableExternallyLinkage())
   //  return true;
 
   // Assume that dllexported symbols are referenced elsewhere
@@ -3459,40 +3575,49 @@ static bool ShouldPreserveGV(const GlobalValue *GV) {
   return false;
 }
 
-static int RequiresOriginalInterface(Function *F, FunctionMergeResult &MFR, StringSet<> &AlwaysPreserved) {
+static int RequiresOriginalInterface(Function *F, FunctionMergeResult &MFR,
+                                     StringSet<> &AlwaysPreserved) {
   bool CanErase = !F->hasAddressTaken();
-  CanErase = CanErase && (AlwaysPreserved.find(F->getName())==AlwaysPreserved.end());
+  CanErase =
+      CanErase && (AlwaysPreserved.find(F->getName()) == AlwaysPreserved.end());
   if (!HasWholeProgram) {
     CanErase = CanErase && F->isDiscardableIfUnused();
   }
   return !CanErase;
 }
 
-static int RequiresOriginalInterfaces(FunctionMergeResult &MFR, StringSet<> &AlwaysPreserved) {
+static int RequiresOriginalInterfaces(FunctionMergeResult &MFR,
+                                      StringSet<> &AlwaysPreserved) {
   auto FPair = MFR.getFunctions();
   Function *F1 = FPair.first;
   Function *F2 = FPair.second;
-  return (RequiresOriginalInterface(F1, MFR, AlwaysPreserved)?1:0) +
-         (RequiresOriginalInterface(F2, MFR, AlwaysPreserved)?1:0);
+  return (RequiresOriginalInterface(F1, MFR, AlwaysPreserved) ? 1 : 0) +
+         (RequiresOriginalInterface(F2, MFR, AlwaysPreserved) ? 1 : 0);
 }
 
-void FunctionMerger::updateCallGraph(Function *F, FunctionMergeResult &MFR, StringSet<> &AlwaysPreserved, const FunctionMergingOptions &Options) {
+void FunctionMerger::updateCallGraph(Function *F, FunctionMergeResult &MFR,
+                                     StringSet<> &AlwaysPreserved,
+                                     const FunctionMergingOptions &Options) {
   replaceByCall(F, MFR, Options);
-  if (!RequiresOriginalInterface(F,MFR, AlwaysPreserved)) {
-    ///TODO: don't update call graph when dynamically tracing calls
-    //bool CanErase = false; //replaceCallsWith(F, MFR, Options);
+  if (!RequiresOriginalInterface(F, MFR, AlwaysPreserved)) {
+    /// TODO: don't update call graph when dynamically tracing calls
+    // bool CanErase = false; //replaceCallsWith(F, MFR, Options);
     bool CanErase = replaceCallsWith(F, MFR, Options);
     CanErase = CanErase && F->use_empty();
-    CanErase = CanErase && (AlwaysPreserved.find(F->getName())==AlwaysPreserved.end());
+    CanErase = CanErase &&
+               (AlwaysPreserved.find(F->getName()) == AlwaysPreserved.end());
     if (!HasWholeProgram) {
       CanErase = CanErase && !ShouldPreserveGV(F);
       CanErase = CanErase && F->isDiscardableIfUnused();
     }
-    if (CanErase) F->eraseFromParent();
+    if (CanErase)
+      F->eraseFromParent();
   }
 }
 
-void FunctionMerger::updateCallGraph(FunctionMergeResult &MFR, StringSet<> &AlwaysPreserved, const FunctionMergingOptions &Options) {
+void FunctionMerger::updateCallGraph(FunctionMergeResult &MFR,
+                                     StringSet<> &AlwaysPreserved,
+                                     const FunctionMergingOptions &Options) {
   auto FPair = MFR.getFunctions();
   Function *F1 = FPair.first;
   Function *F2 = FPair.second;
@@ -3500,369 +3625,332 @@ void FunctionMerger::updateCallGraph(FunctionMergeResult &MFR, StringSet<> &Alwa
   updateCallGraph(F2, MFR, AlwaysPreserved, Options);
 }
 
-static int EstimateThunkOverhead(FunctionMergeResult &MFR, StringSet<> &AlwaysPreserved) {
-  //return RequiresOriginalInterfaces(MFR, AlwaysPreserved) * 3;
-  return RequiresOriginalInterfaces(MFR, AlwaysPreserved)*(2+MFR.getMergedFunction()->getFunctionType()->getNumParams());
+static int EstimateThunkOverhead(FunctionMergeResult &MFR,
+                                 StringSet<> &AlwaysPreserved) {
+  // return RequiresOriginalInterfaces(MFR, AlwaysPreserved) * 3;
+  return RequiresOriginalInterfaces(MFR, AlwaysPreserved) *
+         (2 + MFR.getMergedFunction()->getFunctionType()->getNumParams());
 }
-
-/*
-static bool CompareFunctionScores(const std::pair<Function *, unsigned> &F1,
-                                  const std::pair<Function *, unsigned> &F2) {
-  return F1.second > F2.second;
-}
-*/
 
 static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
   float size = 0;
   for (Instruction &I : instructions(F)) {
-    switch(I.getOpcode()) {
-    //case Instruction::Alloca:
+    switch (I.getOpcode()) {
+    // case Instruction::Alloca:
     case Instruction::PHI:
       size += 0.2;
       break;
-    //case Instruction::Select:
+    // case Instruction::Select:
     //  size += 1.2;
     //  break;
     default:
       size += TTI->getInstructionCost(
-        &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
+          &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
     }
   }
   return size_t(std::ceil(size));
 }
 
 unsigned instToInt(Instruction *I) {
-    uint32_t value = 0;
+  uint32_t value = 0;
 
-    //std::ofstream myfile;
-    //std::string newPath = "/home/sean/similarityChecker.txt";
+  // std::ofstream myfile;
+  // std::string newPath = "/home/sean/similarityChecker.txt";
 
-    // Opcodes must be equivalent for instructions to match -- use opcode value as base
-    value = I->getOpcode();
+  // Opcodes must be equivalent for instructions to match -- use opcode value as
+  // base
+  value = I->getOpcode();
 
-    // Number of operands must be equivalent -- except in the case where the instruction is a return instruction -- +1 to stop being zero
-    uint32_t operands = I->getOpcode() == Instruction::Ret ? 1 : I->getNumOperands();
-    value = value * (operands+1);
+  // Number of operands must be equivalent -- except in the case where the
+  // instruction is a return instruction -- +1 to stop being zero
+  uint32_t operands =
+      I->getOpcode() == Instruction::Ret ? 1 : I->getNumOperands();
+  value = value * (operands + 1);
 
-    // Instruction type must be equivalent, pairwise operand types must be equivalent -- use typeID casted to int -- This may not be perfect as my understanding of this is limited
-    uint32_t instTypeID = static_cast<uint32_t>(I->getType()->getTypeID());
-    value = value * (instTypeID+1);
-    auto ITypePtr = I->getType();
-    if (ITypePtr)
-    {
-        value = value * (reinterpret_cast<std::uintptr_t>(ITypePtr)+1);
+  // Instruction type must be equivalent, pairwise operand types must be
+  // equivalent -- use typeID casted to int -- This may not be perfect as my
+  // understanding of this is limited
+  auto instTypeID = static_cast<uint32_t>(I->getType()->getTypeID());
+  value = value * (instTypeID + 1);
+  auto *ITypePtr = I->getType();
+  if (ITypePtr) {
+    value = value * (reinterpret_cast<std::uintptr_t>(ITypePtr) + 1);
+  }
+
+  for (size_t i = 0; i < I->getNumOperands(); i++) {
+    auto operTypeID = static_cast<uint32_t>(I->getOperand(i)->getType()->getTypeID());
+    value = value * (operTypeID + 1);
+
+    auto *IOperTypePtr = I->getOperand(i)->getType();
+
+    if (IOperTypePtr) {
+      value =
+          value *
+          (reinterpret_cast<std::uintptr_t>(I->getOperand(i)->getType()) + 1);
     }
 
-    for (size_t i = 0; i < I->getNumOperands(); i++)
-    {
-        uint32_t operTypeID = static_cast<uint32_t>(I->getOperand(i)->getType()->getTypeID());
-        value = value*(operTypeID+1);
+    value = value * (i + 1);
+  }
 
-        auto IOperTypePtr = I->getOperand(i)->getType();
+  // Now for the funky stuff -- this is gonna be a wild ride
+  switch (I->getOpcode()) {
 
-        if (IOperTypePtr)
-        {
-            value = value * (reinterpret_cast<std::uintptr_t>(I->getOperand(i)->getType())+1);
-        }
+  case Instruction::Load: {
 
-        value = value * (i+1);
+    const LoadInst *LI = dyn_cast<LoadInst>(I);
+    uint32_t lValue = LI->isVolatile() ? 1 : 10;        // Volatility
+    lValue += LI->getAlignment();                       // Alignment
+    lValue += static_cast<unsigned>(LI->getOrdering()); // Ordering
+
+    value = value * lValue;
+
+    break;
+  }
+
+  case Instruction::Store: {
+
+    const StoreInst *SI = dyn_cast<StoreInst>(I);
+    uint32_t sValue = SI->isVolatile() ? 2 : 20;        // Volatility
+    sValue += SI->getAlignment();                       // Alignment
+    sValue += static_cast<unsigned>(SI->getOrdering()); // Ordering
+
+    value = value * sValue;
+
+    break;
+  }
+
+  case Instruction::Alloca: {
+    const AllocaInst *AI = dyn_cast<AllocaInst>(I);
+    uint32_t aValue = AI->getAlignment(); // Alignment
+
+    if (AI->getArraySize()) {
+      aValue += reinterpret_cast<std::uintptr_t>(AI->getArraySize());
     }
 
-    // Now for the funky stuff -- this is gonna be a wild ride
-    switch (I->getOpcode())
-    {
+    value = value * (aValue + 1);
 
-        case Instruction::Load:
-        {
+    break;
+  }
 
-            const LoadInst *LI = dyn_cast<LoadInst>(I);
-            uint32_t lValue = LI->isVolatile() ? 1 : 10;  // Volatility
-            lValue += LI->getAlignment();  // Alignment 
-            lValue += static_cast<unsigned>(LI->getOrdering());  // Ordering
+  case Instruction::GetElementPtr: // Important
+  {
 
-            value = value * lValue;
+    auto *GEP = dyn_cast<GetElementPtrInst>(I);
+    uint32_t gValue = 1;
 
-            break;
+    SmallVector<Value *, 8> Indices(GEP->idx_begin(), GEP->idx_end());
+    gValue = Indices.size() + 1;
+
+    gValue += GEP->isInBounds() ? 3 : 30;
+
+    Type *AggTy = GEP->getSourceElementType();
+    gValue += static_cast<unsigned>(AggTy->getTypeID());
+
+    unsigned curIndex = 1;
+    for (; curIndex != Indices.size(); ++curIndex) {
+      // CompositeType* CTy = dyn_cast<CompositeType>(AggTy);
+
+      if (!AggTy || AggTy->isPointerTy()) {
+        value = std::rand() % 10000 + 100;
+        break;
+      }
+
+      Value *Idx = Indices[curIndex];
+
+      if (isa<StructType>(AggTy)) {
+        if (!isa<ConstantInt>(Idx)) {
+          value = std::rand() % 10000 + 100; // Use a random number as we don't
+                                             // want this to match with anything
+          break;
         }
 
-        case Instruction::Store: 
-        {
-
-            const StoreInst *SI = dyn_cast<StoreInst>(I);
-            uint32_t sValue = SI->isVolatile() ? 2 : 20;  // Volatility
-            sValue += SI->getAlignment();  // Alignment 
-            sValue += static_cast<unsigned>(SI->getOrdering());  // Ordering
-
-            value = value * sValue;
-
-            break;
+        auto i = 0;
+        if (Idx) {
+          i = reinterpret_cast<std::uintptr_t>(Idx);
         }
-
-
-        case Instruction::Alloca:
-        {
-            const AllocaInst *AI = dyn_cast<AllocaInst>(I);
-            uint32_t aValue = AI->getAlignment();  // Alignment 
-
-            if (AI->getArraySize())
-            {
-                aValue += reinterpret_cast<std::uintptr_t>(AI->getArraySize());
-            }
-
-            value = value * (aValue+1);
-
-            break;
-        }
-
-        case Instruction::GetElementPtr:  // Important 
-        {
-
-            GetElementPtrInst *GEP = dyn_cast<GetElementPtrInst>(I);
-            uint32_t gValue = 1;
-
-            SmallVector<Value*, 8> Indices(GEP->idx_begin(), GEP->idx_end());
-            gValue = Indices.size() + 1;
-
-            gValue += GEP->isInBounds() ? 3 : 30;
-
-            Type* AggTy = GEP->getSourceElementType();
-            gValue += static_cast<unsigned>(AggTy->getTypeID());
-
-            unsigned curIndex = 1;
-            for (; curIndex != Indices.size(); ++curIndex)
-            {
-                //CompositeType* CTy = dyn_cast<CompositeType>(AggTy);
-
-                if (!AggTy || AggTy->isPointerTy())
-                {
-                    value = std::rand() % 10000 + 100;
-                    break;
-                }
-
-                Value *Idx = Indices[curIndex];
-
-                if (isa<StructType>(AggTy))
-                {
-                    if (!isa<ConstantInt>(Idx))
-                    {
-                        value = std::rand() % 10000 + 100;  // Use a random number as we don't want this to match with anything
-                        break;
-                    }
-
-                    auto i = 0;
-                    if (Idx)
-                    {
-                        i = reinterpret_cast<std::uintptr_t>(Idx);
-                    }
-                    gValue += i;
-                }
-            }
-
-            value = value * gValue;
-
-            break;
-
-        }
-
-        case Instruction::Switch:
-        {
-            SwitchInst* SI = dyn_cast<SwitchInst>(I);
-            uint32_t sValue = 1;
-            sValue = SI->getNumCases();
-
-            auto CaseIt = SI->case_begin(), CaseEnd = SI->case_end();
-
-            while (CaseIt != CaseEnd)
-            {
-                auto *Case = &*CaseIt;
-                if (Case)
-                {
-                    sValue += reinterpret_cast<std::uintptr_t>(Case);
-                }
-                CaseIt++;
-            }
-
-            value = value * sValue;
-
-            break;
-        }
-
-        case Instruction::Call:
-        {
-            CallInst* CI = dyn_cast<CallInst>(I);
-            uint32_t cValue = 1;
-
-            if (CI->isInlineAsm())
-            {
-                value = std::rand() % 10000 + 100;
-                break;
-            }
-
-            if (CI->getCalledFunction())
-            {
-                cValue = reinterpret_cast<std::uintptr_t>(CI->getCalledFunction());
-            }
-
-            if (Function *F = CI->getCalledFunction())
-            {
-                if (Intrinsic::ID ID = (Intrinsic::ID)F->getIntrinsicID())
-                {
-                    cValue += static_cast<unsigned>(ID);
-                }
-
-            }
-
-            cValue += static_cast<unsigned>(CI->getCallingConv());
-
-            value = value * cValue;
-
-            break;
-        }
-
-        case Instruction::Invoke:  // Need to look at matching landing pads
-        {
-            InvokeInst* II = dyn_cast<InvokeInst>(I);
-            uint32_t iValue = 1;
-
-            iValue = static_cast<unsigned>(II->getCallingConv());
-
-            if (II->getAttributes().getRawPointer())
-            {
-                iValue += reinterpret_cast<std::uintptr_t>(II->getAttributes().getRawPointer());
-            }
-
-            value = value * iValue;
-
-            break;
-
-        }
-
-        case Instruction::InsertValue: 
-        {
-            InsertValueInst* IVI = dyn_cast<InsertValueInst>(I);
-
-            uint32_t ivValue = 1;
-
-            ivValue = IVI->getNumIndices();
-
-            // check element wise equality
-            auto Idx = IVI->getIndices();
-            auto IdxIt = Idx.begin();
-            auto IdxEnd = Idx.end();
-
-            while (IdxIt != IdxEnd)
-            {
-                auto *val = &*IdxIt;
-                if (val)
-                {
-                    ivValue += reinterpret_cast<unsigned>(*val);
-                }
-                IdxIt++;
-            }
-
-            value = value * ivValue;
-
-            break;
-        }
-
-        case Instruction::ExtractValue: 
-        {
-            ExtractValueInst* EVI = dyn_cast<ExtractValueInst>(I);
-
-            uint32_t evValue = 1;
-
-            evValue = EVI->getNumIndices();
-
-            // check element wise equality
-            auto Idx = EVI->getIndices();
-            auto IdxIt = Idx.begin();
-            auto IdxEnd = Idx.end();
-
-            while (IdxIt != IdxEnd)
-            {
-                auto *val = &*IdxIt;
-                if (val)
-                {
-                    evValue += reinterpret_cast<unsigned>(*val);
-                }
-                IdxIt++;
-            }
-
-            value = value * evValue;
-
-            break;
-        }
-
-        case Instruction::Fence:
-        {
-            FenceInst* FI = dyn_cast<FenceInst>(I);
-
-            uint32_t fValue = 1;
-
-            fValue = static_cast<unsigned>(FI->getOrdering());
-
-            fValue += static_cast<unsigned>(FI->getSyncScopeID());
-
-            value = value * fValue;
-
-            break;
-
-        }
-
-        case Instruction::AtomicCmpXchg:
-        {
-            AtomicCmpXchgInst* AXI = dyn_cast<AtomicCmpXchgInst>(I);
-
-            uint32_t axValue = 1;
-
-            axValue = AXI->isVolatile() ? 4 : 40;
-            axValue += AXI->isWeak() ? 5 : 50;
-            axValue += static_cast<unsigned>(AXI->getSuccessOrdering());
-            axValue += static_cast<unsigned>(AXI->getFailureOrdering());
-            axValue += static_cast<unsigned>(AXI->getSyncScopeID());
-
-            value = value * axValue;
-
-            break;
-        }
-
-        case Instruction::AtomicRMW:
-        {
-            AtomicRMWInst* ARI = dyn_cast<AtomicRMWInst>(I);
-
-            uint32_t arValue = 1;
-
-            arValue = static_cast<unsigned>(ARI->getOperation());
-            arValue += ARI->isVolatile() ? 6 : 60;
-            arValue += static_cast<unsigned>(ARI->getOrdering());
-            arValue += static_cast<unsigned>(ARI->getSyncScopeID());
-
-            value = value * arValue;
-            break;
-        }
-
-        case Instruction::PHI:
-        {
-            value = std::rand() % 10000 + 100;
-            break;
-        }
-
-        default:
-            if (CmpInst* CI = dyn_cast<CmpInst>(I))
-            {
-                uint32_t cmpValue = 1;
-
-                cmpValue = static_cast<unsigned>(CI->getPredicate()) + 1;
-
-                value = value * cmpValue;
-            }
-
-
+        gValue += i;
+      }
     }
 
-    // Return
-    return value;
+    value = value * gValue;
 
+    break;
+  }
+
+  case Instruction::Switch: {
+    auto *SI = dyn_cast<SwitchInst>(I);
+    uint32_t sValue = 1;
+    sValue = SI->getNumCases();
+
+    auto CaseIt = SI->case_begin(), CaseEnd = SI->case_end();
+
+    while (CaseIt != CaseEnd) {
+      auto *Case = &*CaseIt;
+      if (Case) {
+        sValue += reinterpret_cast<std::uintptr_t>(Case);
+      }
+      CaseIt++;
+    }
+
+    value = value * sValue;
+
+    break;
+  }
+
+  case Instruction::Call: {
+    auto *CI = dyn_cast<CallInst>(I);
+    uint32_t cValue = 1;
+
+    if (CI->isInlineAsm()) {
+      value = std::rand() % 10000 + 100;
+      break;
+    }
+
+    if (CI->getCalledFunction()) {
+      cValue = reinterpret_cast<std::uintptr_t>(CI->getCalledFunction());
+    }
+
+    if (Function *F = CI->getCalledFunction()) {
+      if (auto ID = (Intrinsic::ID)F->getIntrinsicID()) {
+        cValue += static_cast<unsigned>(ID);
+      }
+    }
+
+    cValue += static_cast<unsigned>(CI->getCallingConv());
+
+    value = value * cValue;
+
+    break;
+  }
+
+  case Instruction::Invoke: // Need to look at matching landing pads
+  {
+    auto *II = dyn_cast<InvokeInst>(I);
+    uint32_t iValue = 1;
+
+    iValue = static_cast<unsigned>(II->getCallingConv());
+
+    if (II->getAttributes().getRawPointer()) {
+      iValue +=
+          reinterpret_cast<std::uintptr_t>(II->getAttributes().getRawPointer());
+    }
+
+    value = value * iValue;
+
+    break;
+  }
+
+  case Instruction::InsertValue: {
+    auto *IVI = dyn_cast<InsertValueInst>(I);
+
+    uint32_t ivValue = 1;
+
+    ivValue = IVI->getNumIndices();
+
+    // check element wise equality
+    auto Idx = IVI->getIndices();
+    const auto *IdxIt = Idx.begin();
+    const auto *IdxEnd = Idx.end();
+
+    while (IdxIt != IdxEnd) {
+      auto *val = &*IdxIt;
+      if (val) {
+        ivValue += reinterpret_cast<unsigned>(*val);
+      }
+      IdxIt++;
+    }
+
+    value = value * ivValue;
+
+    break;
+  }
+
+  case Instruction::ExtractValue: {
+    auto *EVI = dyn_cast<ExtractValueInst>(I);
+
+    uint32_t evValue = 1;
+
+    evValue = EVI->getNumIndices();
+
+    // check element wise equality
+    auto Idx = EVI->getIndices();
+    const auto *IdxIt = Idx.begin();
+    const auto *IdxEnd = Idx.end();
+
+    while (IdxIt != IdxEnd) {
+      auto *val = &*IdxIt;
+      if (val) {
+        evValue += reinterpret_cast<unsigned>(*val);
+      }
+      IdxIt++;
+    }
+
+    value = value * evValue;
+
+    break;
+  }
+
+  case Instruction::Fence: {
+    auto *FI = dyn_cast<FenceInst>(I);
+
+    uint32_t fValue = 1;
+
+    fValue = static_cast<unsigned>(FI->getOrdering());
+
+    fValue += static_cast<unsigned>(FI->getSyncScopeID());
+
+    value = value * fValue;
+
+    break;
+  }
+
+  case Instruction::AtomicCmpXchg: {
+    auto *AXI = dyn_cast<AtomicCmpXchgInst>(I);
+
+    uint32_t axValue = 1;
+
+    axValue = AXI->isVolatile() ? 4 : 40;
+    axValue += AXI->isWeak() ? 5 : 50;
+    axValue += static_cast<unsigned>(AXI->getSuccessOrdering());
+    axValue += static_cast<unsigned>(AXI->getFailureOrdering());
+    axValue += static_cast<unsigned>(AXI->getSyncScopeID());
+
+    value = value * axValue;
+
+    break;
+  }
+
+  case Instruction::AtomicRMW: {
+    auto *ARI = dyn_cast<AtomicRMWInst>(I);
+
+    uint32_t arValue = 1;
+
+    arValue = static_cast<unsigned>(ARI->getOperation());
+    arValue += ARI->isVolatile() ? 6 : 60;
+    arValue += static_cast<unsigned>(ARI->getOrdering());
+    arValue += static_cast<unsigned>(ARI->getSyncScopeID());
+
+    value = value * arValue;
+    break;
+  }
+
+  case Instruction::PHI: {
+    value = std::rand() % 10000 + 100;
+    break;
+  }
+
+  default:
+    if (auto *CI = dyn_cast<CmpInst>(I)) {
+      uint32_t cmpValue = 1;
+
+      cmpValue = static_cast<unsigned>(CI->getPredicate()) + 1;
+
+      value = value * cmpValue;
+    }
+  }
+
+  // Return
+  return value;
 }
 
 #ifdef TIME_STEPS_DEBUG
@@ -3874,25 +3962,26 @@ Timer TimeUpdate("Merge::Update", "Merge::Update");
 
 bool FunctionMerging::runOnModule(Module &M) {
 
-  //errs() << "Running FMSA\n";
+  // errs() << "Running FMSA\n";
 
   StringSet<> AlwaysPreserved;
   AlwaysPreserved.insert("main");
 
-  srand(time(NULL));
+  srand(time(nullptr));
 
-  FunctionMergingOptions Options = FunctionMergingOptions()
-                                    .maximizeParameterScore(MaxParamScore)
-                                    .matchOnlyIdenticalTypes(IdenticalType)
-                                    .enableUnifiedReturnTypes(EnableUnifiedReturnType);
+  FunctionMergingOptions Options =
+      FunctionMergingOptions()
+          .maximizeParameterScore(MaxParamScore)
+          .matchOnlyIdenticalTypes(IdenticalType)
+          .enableUnifiedReturnTypes(EnableUnifiedReturnType);
 
-  //auto *PSI = &this->getAnalysis<ProfileSummaryInfoWrapperPass>().getPSI();
-  //auto LookupBFI = [this](Function &F) {
+  // auto *PSI = &this->getAnalysis<ProfileSummaryInfoWrapperPass>().getPSI();
+  // auto LookupBFI = [this](Function &F) {
   //  return &this->getAnalysis<BlockFrequencyInfoWrapperPass>(F).getBFI();
   //};
 
-  //TODO: We could use a TTI ModulePass instead but current TTI analysis pass is
-  //a FunctionPass.
+  // TODO: We could use a TTI ModulePass instead but current TTI analysis pass
+  // is a FunctionPass.
   TargetTransformInfo TTI(M.getDataLayout());
 
 #ifdef TIME_STEPS_DEBUG
@@ -3902,19 +3991,21 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   FunctionMerger FM(&M);
 
-  FingerprintLSH<Function*>::initialize();
-  std::unique_ptr<Matcher<Function*>> matcher;
+  FingerprintLSH<Function *>::initialize();
+  std::unique_ptr<Matcher<Function *>> matcher;
   if (EnableSean)
-    matcher = std::make_unique<MatcherLSH<Function*>>(LSH_BANDS, FM, Options);
+    matcher = std::make_unique<MatcherLSH<Function *>>(LSHBands, FM, Options);
   else
-    matcher = std::make_unique<MatcherFQ<Function*>>(FM, Options);
+    matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options);
 
   for (auto &F : M) {
-    if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
+    if (F.isDeclaration() || F.isVarArg() ||
+        (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
 
-    errs() << "FNSize: " << F.getName() << " : " << F.getInstructionCount() << "\n";
-    matcher->add_candidate(&F, EstimateFunctionSize(&F, &TTI)); 
+    errs() << "FNSize: " << F.getName() << " : " << F.getInstructionCount()
+           << "\n";
+    matcher->add_candidate(&F, EstimateFunctionSize(&F, &TTI));
   }
   errs() << "Number of Functions: " << matcher->size() << "\n";
 
@@ -3931,9 +4022,8 @@ bool FunctionMerging::runOnModule(Module &M) {
     TimeRank.startTimer();
 #endif
 
-
-    Function* F1 = matcher->next_candidate();
-    auto& Rank = matcher->get_matches(F1);
+    Function *F1 = matcher->next_candidate();
+    auto &Rank = matcher->get_matches(F1);
     matcher->remove_candidate(F1);
 
 #ifdef TIME_STEPS_DEBUG
@@ -3943,28 +4033,29 @@ bool FunctionMerging::runOnModule(Module &M) {
     unsigned MergingTrialsCount = 0;
 
     while (!Rank.empty()) {
-      MatchInfo<Function*> match = Rank.back();
+      MatchInfo<Function *> match = Rank.back();
       Rank.pop_back();
       Function *F2 = match.candidate;
 
       MergingTrialsCount++;
 
       if (Debug || Verbose) {
-        errs() << "Attempting: " << GetValueName(F1) << ", " << GetValueName(F2) << " : " << match.Distance
-               << "\n";
+        errs() << "Attempting: " << GetValueName(F1) << ", " << GetValueName(F2)
+               << " : " << match.Distance << "\n";
       }
 
-      //std::string Name = ".m.f." + std::to_string(TotalMerges);
+      // std::string Name = ".m.f." + std::to_string(TotalMerges);
       std::string Name = "_m_f_" + std::to_string(TotalMerges);
-      FunctionMergeResult Result = FM.merge(F1,F2,Name,Options);
+      FunctionMergeResult Result = FM.merge(F1, F2, Name, Options);
 
       bool validFunction = true;
 
-      if (Result.getMergedFunction() != nullptr && verifyFunction(*Result.getMergedFunction())) {
+      if (Result.getMergedFunction() != nullptr &&
+          verifyFunction(*Result.getMergedFunction())) {
         if (Debug || Verbose) {
           errs() << "Invalid Function: " << GetValueName(F1) << ", "
                  << GetValueName(F2) << "\n";
-         // Result.getMergedFunction()->dump();
+          // Result.getMergedFunction()->dump();
         }
 #ifdef ENABLE_DEBUG_CODE
         if (Verbose) {
@@ -3986,11 +4077,12 @@ bool FunctionMerging::runOnModule(Module &M) {
         size_t SizeF1 = match.OtherSize;
         size_t SizeF2 = match.Size;
 
-  size_t MergedSize = EstimateFunctionSize(Result.getMergedFunction(), &TTI);
+        size_t MergedSize =
+            EstimateFunctionSize(Result.getMergedFunction(), &TTI);
         size_t Overhead = EstimateThunkOverhead(Result, AlwaysPreserved);
 
-        size_t SizeF12 = MergedSize+Overhead;
-                         
+        size_t SizeF12 = MergedSize + Overhead;
+
 #ifdef ENABLE_DEBUG_CODE
         if (Verbose) {
           errs() << "F1:\n";
@@ -4002,36 +4094,43 @@ bool FunctionMerging::runOnModule(Module &M) {
         }
 #endif
 
-        size_t SizeF1F2 = SizeF1+SizeF2;
+        size_t SizeF1F2 = SizeF1 + SizeF2;
 
-  bool Profitable = (SizeF12 + MergingOverheadThreshold) < SizeF1F2;
+        bool Profitable = (SizeF12 + MergingOverheadThreshold) < SizeF1F2;
 
         if (Debug || Verbose) {
-    //errs() << "FuncSize: " << MergedSize << "; Thunk Overhead: " << Overhead << "\n";
-          errs() << "Estimated Sizes: " << SizeF1 << " + " << SizeF2 << " <= " << SizeF12 << "? " << ( ((int)SizeF1F2)- ((int)SizeF12) ) << " (" << Profitable << ") ";
+          // errs() << "FuncSize: " << MergedSize << "; Thunk Overhead: " <<
+          // Overhead << "\n";
+          errs() << "Estimated Sizes: " << SizeF1 << " + " << SizeF2
+                 << " <= " << SizeF12 << "? "
+                 << (((int)SizeF1F2) - ((int)SizeF12)) << " (" << Profitable
+                 << ") ";
           errs() << "Reduction: "
-                 << (int)( (( ((double)SizeF1F2) - ((double)SizeF12) ) / SizeF1F2) * 100 )
-                 << "% "
-                 << MergingTrialsCount << " : " << GetValueName(F1)
+                 << (int)(((((double)SizeF1F2) - ((double)SizeF12)) /
+                           SizeF1F2) *
+                          100)
+                 << "% " << MergingTrialsCount << " : " << GetValueName(F1)
                  << "; " << GetValueName(F2) << "\n";
         }
 
         if (Profitable) {
 
-          //TotalOpReorder += CountOpReorder;
-          //TotalBinOps += CountBinOps;
+          // TotalOpReorder += CountOpReorder;
+          // TotalBinOps += CountBinOps;
 
           if (Debug || Verbose) {
             errs() << "Merged: " << GetValueName(F1) << ", " << GetValueName(F2)
-                   << " = " << GetValueName(Result.getMergedFunction()) << " : " <<
-       F1->getInstructionCount() << " , " << F2->getInstructionCount() << "\n";
-      errs() << "Profitable Distance: " << match.Distance << "\n";
-      if (AcrossBlocks) errs() << "Corss Block Merging\n";
+                   << " = " << GetValueName(Result.getMergedFunction()) << " : "
+                   << F1->getInstructionCount() << " , "
+                   << F2->getInstructionCount() << "\n";
+            errs() << "Profitable Distance: " << match.Distance << "\n";
+            if (AcrossBlocks)
+              errs() << "Corss Block Merging\n";
           }
-          //if (Verbose) {
-            //F1->dump();
-            //F2->dump();
-            //Result.getMergedFunction()->dump();
+          // if (Verbose) {
+          // F1->dump();
+          // F2->dump();
+          // Result.getMergedFunction()->dump();
           //}
 #ifdef TIME_STEPS_DEBUG
           TimeUpdate.startTimer();
@@ -4039,17 +4138,18 @@ bool FunctionMerging::runOnModule(Module &M) {
 
           FM.updateCallGraph(Result, AlwaysPreserved, Options);
 
-
           TotalMerges++;
 
-    matcher->remove_candidate(F2);
+          matcher->remove_candidate(F2);
 
-    if (ReuseMergedFunctions) {
-      // feed new function back into the working lists
-      matcher->add_candidate(Result.getMergedFunction(), EstimateFunctionSize(Result.getMergedFunction(), &TTI));
-    }
+          if (ReuseMergedFunctions) {
+            // feed new function back into the working lists
+            matcher->add_candidate(
+                Result.getMergedFunction(),
+                EstimateFunctionSize(Result.getMergedFunction(), &TTI));
+          }
 #ifdef TIME_STEPS_DEBUG
-    TimeUpdate.stopTimer();
+          TimeUpdate.stopTimer();
 #endif
 
           break; // end exploration with F1
@@ -4075,9 +4175,10 @@ bool FunctionMerging::runOnModule(Module &M) {
            << 100.0 * (((double)TotalOpReorder) / ((double)TotalBinOps))
            << " %)\n";
 
-//    errs() << "Total parameter score: " << TotalParamScore << "\n";
+    //    errs() << "Total parameter score: " << TotalParamScore << "\n";
 
-//    errs() << "Total number of merges: " << MergingDistance.size() << "\n";
+    //    errs() << "Total number of merges: " << MergingDistance.size() <<
+    //    "\n";
     errs() << "Average number of trials before merging: "
            << MergingAverageDistance << "\n";
     errs() << "Maximum number of trials before merging: " << MergingMaxDistance
@@ -4104,7 +4205,8 @@ bool FunctionMerging::runOnModule(Module &M) {
          << "\n";
   TimeCodeGenFix.clear();
 
-  errs() << "Timer:PostOpt: " << TimePostOpt.getTotalTime().getWallTime() << "\n";
+  errs() << "Timer:PostOpt: " << TimePostOpt.getTotalTime().getWallTime()
+         << "\n";
   TimePostOpt.clear();
 
   errs() << "Timer:PreProcess: " << TimePreProcess.getTotalTime().getWallTime()
@@ -4126,17 +4228,15 @@ bool FunctionMerging::runOnModule(Module &M) {
 
 void FunctionMerging::getAnalysisUsage(AnalysisUsage &AU) const {
   ModulePass::getAnalysisUsage(AU);
-  //AU.addRequired<ProfileSummaryInfoWrapperPass>();
-  //AU.addRequired<BlockFrequencyInfoWrapperPass>();
+  // AU.addRequired<ProfileSummaryInfoWrapperPass>();
+  // AU.addRequired<BlockFrequencyInfoWrapperPass>();
 }
 
 char FunctionMerging::ID = 0;
 INITIALIZE_PASS(FunctionMerging, "func-merging", "New Function Merging", false,
                 false)
 
-ModulePass *llvm::createFunctionMergingPass() {
-  return new FunctionMerging();
-}
+ModulePass *llvm::createFunctionMergingPass() { return new FunctionMerging(); }
 
 static std::string GetValueName(const Value *V) {
   if (V) {
@@ -4144,8 +4244,8 @@ static std::string GetValueName(const Value *V) {
     raw_string_ostream namestream(name);
     V->printAsOperand(namestream, false);
     return namestream.str();
-  } else
-    return "[null]";
+  }
+  return "[null]";
 }
 
 /// Create a cast instruction if needed to cast V to type DstType. We treat
@@ -4155,8 +4255,11 @@ static std::string GetValueName(const Value *V) {
 /// InsertBefore. The integer type equivalent to pointers must be passed as
 /// IntPtrType (get it from DataLayout). This is guaranteed to generate no-op
 /// casts, otherwise it will assert.
-//Value *FunctionMerger::createCastIfNeeded(Value *V, Type *DstType, IRBuilder<> &Builder, const FunctionMergingOptions &Options) {
-Value *createCastIfNeeded(Value *V, Type *DstType, IRBuilder<> &Builder, Type *IntPtrTy, const FunctionMergingOptions &Options) {
+// Value *FunctionMerger::createCastIfNeeded(Value *V, Type *DstType,
+// IRBuilder<> &Builder, const FunctionMergingOptions &Options) {
+Value *createCastIfNeeded(Value *V, Type *DstType, IRBuilder<> &Builder,
+                          Type *IntPtrTy,
+                          const FunctionMergingOptions &Options) {
 
   if (V->getType() == DstType || Options.IdenticalTypesOnly)
     return V;
@@ -4200,9 +4303,9 @@ Value *createCastIfNeeded(Value *V, Type *DstType, IRBuilder<> &Builder, Type *I
   return Result;
 }
 
-
-template<typename BlockListType>
-void FunctionMerger::CodeGenerator<BlockListType>::removeRedundantInstructions(std::vector<Instruction *> &WorkInst, DominatorTree &DT) {
+template <typename BlockListType>
+void FunctionMerger::CodeGenerator<BlockListType>::removeRedundantInstructions(
+    std::vector<Instruction *> &WorkInst, DominatorTree &DT) {
   std::set<Instruction *> SkipList;
 
   std::map<Instruction *, std::list<Instruction *>> UpdateList;
@@ -4241,126 +4344,121 @@ void FunctionMerger::CodeGenerator<BlockListType>::removeRedundantInstructions(s
   }
 }
 
-
 ////////////////////////////////////   SALSSA   ////////////////////////////////
 
 static void postProcessFunction(Function &F) {
   legacy::FunctionPassManager FPM(F.getParent());
 
-  //FPM.add(createPromoteMemoryToRegisterPass());
+  // FPM.add(createPromoteMemoryToRegisterPass());
   FPM.add(createCFGSimplificationPass());
-  //FPM.add(createInstructionCombiningPass(2));
-  //FPM.add(createCFGSimplificationPass());
+  // FPM.add(createInstructionCombiningPass(2));
+  // FPM.add(createCFGSimplificationPass());
 
   FPM.doInitialization();
   FPM.run(F);
   FPM.doFinalization();
 }
 
-template<typename BlockListType>
+template <typename BlockListType>
 static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
                     BasicBlock *EntryBB1, BasicBlock *EntryBB2,
                     Function *MergedFunc, Value *IsFunc1, BasicBlock *PreBB,
-                    AlignedSequence<Value*> &AlignedSeq,
+                    AlignedSequence<Value *> &AlignedSeq,
                     ValueToValueMapTy &VMap,
                     std::unordered_map<BasicBlock *, BasicBlock *> &BlocksF1,
                     std::unordered_map<BasicBlock *, BasicBlock *> &BlocksF2,
-                    std::unordered_map<Value *, BasicBlock *> &MaterialNodes
-        ) {
+                    std::unordered_map<Value *, BasicBlock *> &MaterialNodes) {
 
-
-  auto CloneInst = [](IRBuilder<> &Builder, Function *MF, Instruction *I) -> Instruction* {
+  auto CloneInst = [](IRBuilder<> &Builder, Function *MF,
+                      Instruction *I) -> Instruction * {
     Instruction *NewI = nullptr;
     if (I->getOpcode() == Instruction::Ret) {
       if (MF->getReturnType()->isVoidTy()) {
         NewI = Builder.CreateRetVoid();
       } else {
-        NewI = Builder.CreateRet(
-            UndefValue::get(MF->getReturnType()));
+        NewI = Builder.CreateRet(UndefValue::get(MF->getReturnType()));
       }
     } else {
-      //assert(I1->getNumOperands() == I2->getNumOperands() &&
+      // assert(I1->getNumOperands() == I2->getNumOperands() &&
       //      "Num of Operands SHOULD be EQUAL!");
       NewI = I->clone();
-      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
-  if (!isa<Constant>(I->getOperand(i)))
-          NewI->setOperand(i,nullptr);
+      for (unsigned i = 0; i < NewI->getNumOperands(); i++) {
+        if (!isa<Constant>(I->getOperand(i)))
+          NewI->setOperand(i, nullptr);
       }
       Builder.Insert(NewI);
-
     }
-    
-    //NewI->dropPoisonGeneratingFlags(); //TODO: NOT SURE IF THIS IS VALID
 
+    // NewI->dropPoisonGeneratingFlags(); //TODO: NOT SURE IF THIS IS VALID
 
     // TODO: temporarily removing metadata
-    
+
     SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
     NewI->getAllMetadata(MDs);
     for (std::pair<unsigned, MDNode *> MDPair : MDs) {
       NewI->setMetadata(MDPair.first, nullptr);
     }
 
-    //if (isa<GetElementPtrInst>(NewI)) {
-      //GetElementPtrInst * GEP = dyn_cast<GetElementPtrInst>(I);
-      //GetElementPtrInst * GEP2 = dyn_cast<GetElementPtrInst>(I2);
-      //dyn_cast<GetElementPtrInst>(NewI)->setIsInBounds(GEP->isInBounds());
+    // if (isa<GetElementPtrInst>(NewI)) {
+    // GetElementPtrInst * GEP = dyn_cast<GetElementPtrInst>(I);
+    // GetElementPtrInst * GEP2 = dyn_cast<GetElementPtrInst>(I2);
+    // dyn_cast<GetElementPtrInst>(NewI)->setIsInBounds(GEP->isInBounds());
     //}
-    
+
     /*
     if (auto *CB = dyn_cast<CallBase>(I)) {
       auto *NewCB = dyn_cast<CallBase>(NewI);
       auto AttrList = CB->getAttributes();
       NewCB->setAttributes(AttrList);
     }*/
-    
+
     return NewI;
   };
 
   for (auto &Entry : AlignedSeq) {
     if (Entry.match()) {
 
-      Instruction *I1 = dyn_cast<Instruction>(Entry.get(0));
-      Instruction *I2 = dyn_cast<Instruction>(Entry.get(1));
+      auto *I1 = dyn_cast<Instruction>(Entry.get(0));
+      auto *I2 = dyn_cast<Instruction>(Entry.get(1));
 
-      std::string BBName = (I1==nullptr)?"m.label.bb":(I1->isTerminator()?"m.term.bb":"m.inst.bb");
+      std::string BBName =
+          (I1 == nullptr) ? "m.label.bb"
+                          : (I1->isTerminator() ? "m.term.bb" : "m.inst.bb");
 
-      BasicBlock *MergedBB = BasicBlock::Create(MergedFunc->getContext(),
-                                                BBName, MergedFunc);
+      BasicBlock *MergedBB =
+          BasicBlock::Create(MergedFunc->getContext(), BBName, MergedFunc);
 
       MaterialNodes[Entry.get(0)] = MergedBB;
       MaterialNodes[Entry.get(1)] = MergedBB;
 
-
-      if (I1!=nullptr && I2!=nullptr) {
+      if (I1 != nullptr && I2 != nullptr) {
         IRBuilder<> Builder(MergedBB);
-        Instruction *NewI = CloneInst(Builder,MergedFunc,I1);
+        Instruction *NewI = CloneInst(Builder, MergedFunc, I1);
 
         VMap[I1] = NewI;
         VMap[I2] = NewI;
         BlocksF1[MergedBB] = I1->getParent();
         BlocksF2[MergedBB] = I2->getParent();
       } else {
-        assert(isa<BasicBlock>(Entry.get(0)) &&
-               isa<BasicBlock>(Entry.get(1)) &&
+        assert(isa<BasicBlock>(Entry.get(0)) && isa<BasicBlock>(Entry.get(1)) &&
                "Both nodes must be basic blocks!");
-        BasicBlock *BB1 = dyn_cast<BasicBlock>(Entry.get(0));
-        BasicBlock *BB2 = dyn_cast<BasicBlock>(Entry.get(1));
+        auto *BB1 = dyn_cast<BasicBlock>(Entry.get(0));
+        auto *BB2 = dyn_cast<BasicBlock>(Entry.get(1));
 
         VMap[BB1] = MergedBB;
         VMap[BB2] = MergedBB;
         BlocksF1[MergedBB] = BB1;
         BlocksF2[MergedBB] = BB2;
 
-        //IMPORTANT: make sure any use in a blockaddress constant
-        //operation is updated correctly
+        // IMPORTANT: make sure any use in a blockaddress constant
+        // operation is updated correctly
         for (User *U : BB1->users()) {
-          if (BlockAddress *BA = dyn_cast<BlockAddress>(U)) {
+          if (auto *BA = dyn_cast<BlockAddress>(U)) {
             VMap[BA] = BlockAddress::get(MergedFunc, MergedBB);
           }
         }
         for (User *U : BB2->users()) {
-          if (BlockAddress *BA = dyn_cast<BlockAddress>(U)) {
+          if (auto *BA = dyn_cast<BlockAddress>(U)) {
             VMap[BA] = BlockAddress::get(MergedFunc, MergedBB);
           }
         }
@@ -4376,98 +4474,108 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
             VMap[&I] = Builder.CreatePHI(I.getType(), 0);
           }
         }
-      } //end if(instruction)-else
+      } // end if(instruction)-else
     }
   }
 
-  auto ChainBlocks = [](BasicBlock *SrcBB, BasicBlock *TargetBB, Value *IsFunc1) {
+  auto ChainBlocks = [](BasicBlock *SrcBB, BasicBlock *TargetBB,
+                        Value *IsFunc1) {
     IRBuilder<> Builder(SrcBB);
-    if (SrcBB->getTerminator()==nullptr) {
+    if (SrcBB->getTerminator() == nullptr) {
       Builder.CreateBr(TargetBB);
     } else {
-      BranchInst *Br = dyn_cast<BranchInst>(SrcBB->getTerminator());
+      auto *Br = dyn_cast<BranchInst>(SrcBB->getTerminator());
       assert(Br && Br->isUnconditional() &&
-      "Branch should be unconditional at this point!");
+             "Branch should be unconditional at this point!");
       BasicBlock *SuccBB = Br->getSuccessor(0);
-      //if (SuccBB != TargetBB) {
-        Br->eraseFromParent();
-        Builder.CreateCondBr(IsFunc1, SuccBB, TargetBB);
+      // if (SuccBB != TargetBB) {
+      Br->eraseFromParent();
+      Builder.CreateCondBr(IsFunc1, SuccBB, TargetBB);
       //}
     }
   };
 
-  auto ProcessEachFunction = [&](BlockListType &Blocks, std::unordered_map<BasicBlock *, BasicBlock *> &BlocksFX, Value *IsFunc1) {
-    for (BasicBlock *BB : Blocks) {
-      BasicBlock *LastMergedBB = nullptr;
-      BasicBlock *NewBB = nullptr;
-      bool HasBeenMerged = MaterialNodes.find(BB) != MaterialNodes.end();
-      if (HasBeenMerged) {
-        LastMergedBB = MaterialNodes[BB];
-      } else {
-        std::string BBName = std::string("src.bb");
-        NewBB = BasicBlock::Create(MergedFunc->getContext(), BBName, MergedFunc);
-        VMap[BB] = NewBB;
-        BlocksFX[NewBB] = BB;
-
-        //IMPORTANT: make sure any use in a blockaddress constant
-        //operation is updated correctly
-        for (User *U : BB->users()) {
-          if (BlockAddress *BA = dyn_cast<BlockAddress>(U)) {
-            VMap[BA] = BlockAddress::get(MergedFunc, NewBB);
-          }
-        }
-
-        //errs() << "NewBB: " << NewBB->getName() << "\n";
-        IRBuilder<> Builder(NewBB);
-        for (Instruction &I : *BB) {
-          if (isa<PHINode>(&I)) {
-            VMap[&I] = Builder.CreatePHI(I.getType(), 0);
-          }
-        }
-      }
-      for (Instruction &I : *BB) {
-        if (isa<LandingPadInst>(&I))
-          continue;
-        if (isa<PHINode>(&I))
-          continue;
-
-        bool HasBeenMerged = MaterialNodes.find(&I) != MaterialNodes.end();
-        if (HasBeenMerged) {
-          BasicBlock *NodeBB = MaterialNodes[&I];
-          if (LastMergedBB) {    
-            //errs() << "Chaining last merged " << LastMergedBB->getName() << " with " << NodeBB->getName() << "\n";
-            ChainBlocks(LastMergedBB,NodeBB,IsFunc1);
+  auto ProcessEachFunction =
+      [&](BlockListType &Blocks,
+          std::unordered_map<BasicBlock *, BasicBlock *> &BlocksFX,
+          Value *IsFunc1) {
+        for (BasicBlock *BB : Blocks) {
+          BasicBlock *LastMergedBB = nullptr;
+          BasicBlock *NewBB = nullptr;
+          bool HasBeenMerged = MaterialNodes.find(BB) != MaterialNodes.end();
+          if (HasBeenMerged) {
+            LastMergedBB = MaterialNodes[BB];
           } else {
-            IRBuilder<> Builder(NewBB);
-            Builder.CreateBr(NodeBB);
-            //errs() << "Chaining newBB " << NewBB->getName() << " with " << NodeBB->getName() << "\n";
-          }
-          // end keep track
-          LastMergedBB = NodeBB;
-        } else {
-          if (LastMergedBB) {
-            std::string BBName = std::string("split.bb");
-            NewBB = BasicBlock::Create(MergedFunc->getContext(), BBName, MergedFunc);
-            ChainBlocks(LastMergedBB,NewBB,IsFunc1);
+            std::string BBName = std::string("src.bb");
+            NewBB = BasicBlock::Create(MergedFunc->getContext(), BBName,
+                                       MergedFunc);
+            VMap[BB] = NewBB;
             BlocksFX[NewBB] = BB;
-            //errs() << "Splitting last merged " << LastMergedBB->getName() << " into " << NewBB->getName() << "\n";
+
+            // IMPORTANT: make sure any use in a blockaddress constant
+            // operation is updated correctly
+            for (User *U : BB->users()) {
+              if (auto *BA = dyn_cast<BlockAddress>(U)) {
+                VMap[BA] = BlockAddress::get(MergedFunc, NewBB);
+              }
+            }
+
+            // errs() << "NewBB: " << NewBB->getName() << "\n";
+            IRBuilder<> Builder(NewBB);
+            for (Instruction &I : *BB) {
+              if (isa<PHINode>(&I)) {
+                VMap[&I] = Builder.CreatePHI(I.getType(), 0);
+              }
+            }
           }
-          LastMergedBB = nullptr;
+          for (Instruction &I : *BB) {
+            if (isa<LandingPadInst>(&I))
+              continue;
+            if (isa<PHINode>(&I))
+              continue;
 
-          IRBuilder<> Builder(NewBB);
-          Instruction *NewI = CloneInst(Builder,MergedFunc,&I);
-          VMap[&I] = NewI;
-          //errs() << "Cloned into " << NewBB->getName() << " : " << NewI->getName() << " " << NewI->getOpcodeName() << "\n";
-    //I.dump();
+            bool HasBeenMerged = MaterialNodes.find(&I) != MaterialNodes.end();
+            if (HasBeenMerged) {
+              BasicBlock *NodeBB = MaterialNodes[&I];
+              if (LastMergedBB) {
+                // errs() << "Chaining last merged " << LastMergedBB->getName()
+                // << " with " << NodeBB->getName() << "\n";
+                ChainBlocks(LastMergedBB, NodeBB, IsFunc1);
+              } else {
+                IRBuilder<> Builder(NewBB);
+                Builder.CreateBr(NodeBB);
+                // errs() << "Chaining newBB " << NewBB->getName() << " with "
+                // << NodeBB->getName() << "\n";
+              }
+              // end keep track
+              LastMergedBB = NodeBB;
+            } else {
+              if (LastMergedBB) {
+                std::string BBName = std::string("split.bb");
+                NewBB = BasicBlock::Create(MergedFunc->getContext(), BBName,
+                                           MergedFunc);
+                ChainBlocks(LastMergedBB, NewBB, IsFunc1);
+                BlocksFX[NewBB] = BB;
+                // errs() << "Splitting last merged " << LastMergedBB->getName()
+                // << " into " << NewBB->getName() << "\n";
+              }
+              LastMergedBB = nullptr;
+
+              IRBuilder<> Builder(NewBB);
+              Instruction *NewI = CloneInst(Builder, MergedFunc, &I);
+              VMap[&I] = NewI;
+              // errs() << "Cloned into " << NewBB->getName() << " : " <<
+              // NewI->getName() << " " << NewI->getOpcodeName() << "\n";
+              // I.dump();
+            }
+          }
         }
-      }
-    }
-  };
-  ProcessEachFunction(Blocks1,BlocksF1,IsFunc1);
-  ProcessEachFunction(Blocks2,BlocksF2,IsFunc1);
+      };
+  ProcessEachFunction(Blocks1, BlocksF1, IsFunc1);
+  ProcessEachFunction(Blocks2, BlocksF2, IsFunc1);
 
-  BasicBlock *BB1 = dyn_cast<BasicBlock>(VMap[EntryBB1]);
-  BasicBlock *BB2 = dyn_cast<BasicBlock>(VMap[EntryBB2]);
+  auto *BB1 = dyn_cast<BasicBlock>(VMap[EntryBB1]);
+  auto *BB2 = dyn_cast<BasicBlock>(VMap[EntryBB2]);
 
   BlocksF1[PreBB] = BB1;
   BlocksF2[PreBB] = BB2;
@@ -4481,10 +4589,10 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
   }
 }
 
-template<typename BlockListType>
-bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Value*> &AlignedSeq,
-                  ValueToValueMapTy &VMap,
-                  const FunctionMergingOptions &Options) {
+template <typename BlockListType>
+bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
+    AlignedSequence<Value *> &AlignedSeq, ValueToValueMapTy &VMap,
+    const FunctionMergingOptions &Options) {
 
 #ifdef TIME_STEPS_DEBUG
   TimeCodeGen.startTimer();
@@ -4494,24 +4602,28 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
   Function *MergedFunc = CodeGenerator<BlockListType>::getMergedFunction();
   Value *IsFunc1 = CodeGenerator<BlockListType>::getFunctionIdentifier();
   Type *ReturnType = CodeGenerator<BlockListType>::getMergedReturnType();
-  bool RequiresUnifiedReturn = CodeGenerator<BlockListType>::getRequiresUnifiedReturn();
+  bool RequiresUnifiedReturn =
+      CodeGenerator<BlockListType>::getRequiresUnifiedReturn();
   BasicBlock *EntryBB1 = CodeGenerator<BlockListType>::getEntryBlock1();
   BasicBlock *EntryBB2 = CodeGenerator<BlockListType>::getEntryBlock2();
   BasicBlock *PreBB = CodeGenerator<BlockListType>::getPreBlock();
-  
+
   Type *RetType1 = CodeGenerator<BlockListType>::getReturnType1();
   Type *RetType2 = CodeGenerator<BlockListType>::getReturnType2();
 
   Type *IntPtrTy = CodeGenerator<BlockListType>::getIntPtrType();
 
-  //BlockListType &Blocks1 = CodeGenerator<BlockListType>::getBlocks1();
-  //BlockListType &Blocks2 = CodeGenerator<BlockListType>::getBlocks2();
-  std::vector<BasicBlock*> &Blocks1 = CodeGenerator<BlockListType>::getBlocks1();
-  std::vector<BasicBlock*> &Blocks2 = CodeGenerator<BlockListType>::getBlocks2();
+  // BlockListType &Blocks1 = CodeGenerator<BlockListType>::getBlocks1();
+  // BlockListType &Blocks2 = CodeGenerator<BlockListType>::getBlocks2();
+  std::vector<BasicBlock *> &Blocks1 =
+      CodeGenerator<BlockListType>::getBlocks1();
+  std::vector<BasicBlock *> &Blocks2 =
+      CodeGenerator<BlockListType>::getBlocks2();
 
   std::list<Instruction *> LinearOffendingInsts;
   std::set<Instruction *> OffendingInsts;
-  std::map<Instruction *, std::map<Instruction *,unsigned>> CoalescingCandidates;
+  std::map<Instruction *, std::map<Instruction *, unsigned>>
+      CoalescingCandidates;
 
   std::vector<Instruction *> ListSelects;
 
@@ -4521,12 +4633,14 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
   Value *RetAddr1 = nullptr;
   Value *RetAddr2 = nullptr;
 
-  //maps new basic blocks in the merged function to their original correspondents
+  // maps new basic blocks in the merged function to their original
+  // correspondents
   std::unordered_map<BasicBlock *, BasicBlock *> BlocksF1;
   std::unordered_map<BasicBlock *, BasicBlock *> BlocksF2;
   std::unordered_map<Value *, BasicBlock *> MaterialNodes;
 
-  CodeGen(Blocks1,Blocks2,EntryBB1,EntryBB2,MergedFunc,IsFunc1,PreBB,AlignedSeq,VMap,BlocksF1,BlocksF2,MaterialNodes);
+  CodeGen(Blocks1, Blocks2, EntryBB1, EntryBB2, MergedFunc, IsFunc1, PreBB,
+          AlignedSeq, VMap, BlocksF1, BlocksF2, MaterialNodes);
 
   if (RequiresUnifiedReturn) {
     IRBuilder<> Builder(PreBB);
@@ -4539,51 +4653,54 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     CodeGenerator<BlockListType>::insert(dyn_cast<Instruction>(RetAddr2));
   }
 
+  // errs() << "Assigning label operands\n";
 
+  std::set<BranchInst *> XorBrConds;
+  // assigning label operands
 
-
-  //errs() << "Assigning label operands\n";
-  
-  std::set<BranchInst*> XorBrConds;
-  //assigning label operands
-  
   for (auto &Entry : AlignedSeq) {
     Instruction *I1 = nullptr;
     Instruction *I2 = nullptr;
 
-    if (Entry.get(0)!=nullptr) I1 = dyn_cast<Instruction>(Entry.get(0));
-    if (Entry.get(1)!=nullptr) I2 = dyn_cast<Instruction>(Entry.get(1));
+    if (Entry.get(0) != nullptr)
+      I1 = dyn_cast<Instruction>(Entry.get(0));
+    if (Entry.get(1) != nullptr)
+      I2 = dyn_cast<Instruction>(Entry.get(1));
 
     // Skip non-instructions
-    if (I1==nullptr && I2==nullptr) continue;
+    if (I1 == nullptr && I2 == nullptr)
+      continue;
 
     if (Entry.match()) {
 
       Instruction *I = I1;
       if (I1->getOpcode() == Instruction::Ret) {
-        I = (I1->getNumOperands() >= I2->getNumOperands())? I1 : I2 ;
+        I = (I1->getNumOperands() >= I2->getNumOperands()) ? I1 : I2;
       } else {
         assert(I1->getNumOperands() == I2->getNumOperands() &&
                "Num of Operands SHOULD be EQUAL\n");
       }
 
-      Instruction *NewI = dyn_cast<Instruction>(VMap[I]);
+      auto *NewI = dyn_cast<Instruction>(VMap[I]);
 
       bool Handled = false;
       /*
-      BranchInst *NewBr = dyn_cast<BranchInst>(NewI);    
-      if (EnableOperandReordering && NewBr!=nullptr && NewBr->isConditional()) { 
-         BranchInst *Br1 = dyn_cast<BranchInst>(I1);       
+      BranchInst *NewBr = dyn_cast<BranchInst>(NewI);
+      if (EnableOperandReordering && NewBr!=nullptr && NewBr->isConditional()) {
+         BranchInst *Br1 = dyn_cast<BranchInst>(I1);
          BranchInst *Br2 = dyn_cast<BranchInst>(I2);
-         
-         BasicBlock *SuccBB10 = dyn_cast<BasicBlock>(MapValue(Br1->getSuccessor(0), VMap));
-         BasicBlock *SuccBB11 = dyn_cast<BasicBlock>(MapValue(Br1->getSuccessor(1), VMap));
 
-         BasicBlock *SuccBB20 = dyn_cast<BasicBlock>(MapValue(Br2->getSuccessor(0), VMap));
-         BasicBlock *SuccBB21 = dyn_cast<BasicBlock>(MapValue(Br2->getSuccessor(1), VMap));
+         BasicBlock *SuccBB10 =
+      dyn_cast<BasicBlock>(MapValue(Br1->getSuccessor(0), VMap)); BasicBlock
+      *SuccBB11 = dyn_cast<BasicBlock>(MapValue(Br1->getSuccessor(1), VMap));
 
-         if (SuccBB10!=nullptr && SuccBB11!=nullptr && SuccBB10==SuccBB21 && SuccBB20==SuccBB11) {
-             if (Debug) errs() << "OptimizationTriggered: Labels of Conditional Branch Reordering\n";
+         BasicBlock *SuccBB20 =
+      dyn_cast<BasicBlock>(MapValue(Br2->getSuccessor(0), VMap)); BasicBlock
+      *SuccBB21 = dyn_cast<BasicBlock>(MapValue(Br2->getSuccessor(1), VMap));
+
+         if (SuccBB10!=nullptr && SuccBB11!=nullptr && SuccBB10==SuccBB21 &&
+      SuccBB20==SuccBB11) { if (Debug) errs() << "OptimizationTriggered: Labels
+      of Conditional Branch Reordering\n";
 
              XorBrConds.insert(NewBr);
              NewBr->setSuccessor(0,SuccBB20);
@@ -4602,12 +4719,13 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
             V1 = MapValue(F1V, VMap);
             // assert(V1!=nullptr && "Mapped value should NOT be NULL!");
             if (V1 == nullptr) {
-              if (Debug) errs() << "ERROR: Null value mapped: V1 = "
-                        "MapValue(I1->getOperand(i), "
-                        "VMap);\n";
-              //MergedFunc->eraseFromParent();
+              if (Debug)
+                errs() << "ERROR: Null value mapped: V1 = "
+                          "MapValue(I1->getOperand(i), "
+                          "VMap);\n";
+                // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-          TimeCodeGen.stopTimer();
+              TimeCodeGen.stopTimer();
 #endif
               return false;
             }
@@ -4623,12 +4741,13 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
             // assert(V2!=nullptr && "Mapped value should NOT be NULL!");
 
             if (V2 == nullptr) {
-              if (Debug) errs() << "ERROR: Null value mapped: V2 = "
-                        "MapValue(I2->getOperand(i), "
-                        "VMap);\n";
-              //MergedFunc->eraseFromParent();
+              if (Debug)
+                errs() << "ERROR: Null value mapped: V2 = "
+                          "MapValue(I2->getOperand(i), "
+                          "VMap);\n";
+                // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-          TimeCodeGen.stopTimer();
+              TimeCodeGen.stopTimer();
 #endif
               return false;
             }
@@ -4642,19 +4761,20 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
           Value *V = V1; // first assume that V1==V2
 
-          //handling just label operands for now
+          // handling just label operands for now
           if (!isa<BasicBlock>(V))
             continue;
 
-          BasicBlock *F1BB = dyn_cast<BasicBlock>(F1V);
-          BasicBlock *F2BB = dyn_cast<BasicBlock>(F2V);
+          auto *F1BB = dyn_cast<BasicBlock>(F1V);
+          auto *F2BB = dyn_cast<BasicBlock>(F2V);
 
           if (V1 != V2) {
-            BasicBlock *BB1 = dyn_cast<BasicBlock>(V1);
-            BasicBlock *BB2 = dyn_cast<BasicBlock>(V2);
+            auto *BB1 = dyn_cast<BasicBlock>(V1);
+            auto *BB2 = dyn_cast<BasicBlock>(V2);
 
-            //auto CacheKey = std::pair<BasicBlock *, BasicBlock *>(BB1, BB2);
-            BasicBlock *SelectBB = BasicBlock::Create(Context, "bb.select", MergedFunc);
+            // auto CacheKey = std::pair<BasicBlock *, BasicBlock *>(BB1, BB2);
+            BasicBlock *SelectBB =
+                BasicBlock::Create(Context, "bb.select", MergedFunc);
             IRBuilder<> BuilderBB(SelectBB);
 
             BlocksF1[SelectBB] = I1->getParent();
@@ -4663,28 +4783,29 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
             BuilderBB.CreateCondBr(IsFunc1, BB1, BB2);
             V = SelectBB;
           }
-          
+
           if (F1BB->isLandingPad() || F2BB->isLandingPad()) {
             LandingPadInst *LP1 = F1BB->getLandingPadInst();
             LandingPadInst *LP2 = F2BB->getLandingPadInst();
             assert((LP1 != nullptr && LP2 != nullptr) &&
                    "Should be both as per the BasicBlock match!");
 
-            BasicBlock *LPadBB = BasicBlock::Create(Context, "lpad.bb", MergedFunc);
+            BasicBlock *LPadBB =
+                BasicBlock::Create(Context, "lpad.bb", MergedFunc);
             IRBuilder<> BuilderBB(LPadBB);
 
             Instruction *NewLP = LP1->clone();
             BuilderBB.Insert(NewLP);
 
             BuilderBB.CreateBr(dyn_cast<BasicBlock>(V));
- 
+
             BlocksF1[LPadBB] = I1->getParent();
             BlocksF2[LPadBB] = I2->getParent();
 
             VMap[F1BB->getLandingPadInst()] = NewLP;
-            VMap[F2BB->getLandingPadInst()] = NewLP; 
-            
-            V = LPadBB;         
+            VMap[F2BB->getLandingPadInst()] = NewLP;
+
+            V = LPadBB;
           }
           NewI->setOperand(i, V);
         }
@@ -4692,14 +4813,19 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
     } else { // if(entry.match())-else
 
-      auto AssignLabelOperands = [&](Instruction *I, std::unordered_map<BasicBlock*, BasicBlock *> &BlocksReMap) -> bool {
-       Instruction *NewI = dyn_cast<Instruction>(VMap[I]);
-       //if (isa<BranchInst>(I))
-       //  errs() << "Setting operand in " << NewI->getParent()->getName() << " : " << NewI->getName() << " " << NewI->getOpcodeName() << "\n";
-       for (unsigned i = 0; i < I->getNumOperands(); i++) {
-          //handling just label operands for now
-          if (!isa<BasicBlock>(I->getOperand(i))) continue;
-          BasicBlock *FXBB = dyn_cast<BasicBlock>(I->getOperand(i));
+      auto AssignLabelOperands =
+          [&](Instruction *I,
+              std::unordered_map<BasicBlock *, BasicBlock *> &BlocksReMap)
+          -> bool {
+        auto *NewI = dyn_cast<Instruction>(VMap[I]);
+        // if (isa<BranchInst>(I))
+        //  errs() << "Setting operand in " << NewI->getParent()->getName() << "
+        //  : " << NewI->getName() << " " << NewI->getOpcodeName() << "\n";
+        for (unsigned i = 0; i < I->getNumOperands(); i++) {
+          // handling just label operands for now
+          if (!isa<BasicBlock>(I->getOperand(i)))
+            continue;
+          auto *FXBB = dyn_cast<BasicBlock>(I->getOperand(i));
 
           Value *V = MapValue(FXBB, VMap);
           // assert( V!=nullptr && "Mapped value should NOT be NULL!");
@@ -4709,73 +4835,75 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
           if (FXBB->isLandingPad()) {
 
             LandingPadInst *LP = FXBB->getLandingPadInst();
-            assert(LP != nullptr &&
-               "Should have a landingpad inst!");
- 
+            assert(LP != nullptr && "Should have a landingpad inst!");
 
-            BasicBlock *LPadBB = BasicBlock::Create(Context, "lpad.bb", MergedFunc);
+            BasicBlock *LPadBB =
+                BasicBlock::Create(Context, "lpad.bb", MergedFunc);
             IRBuilder<> BuilderBB(LPadBB);
- 
+
             Instruction *NewLP = LP->clone();
             BuilderBB.Insert(NewLP);
             VMap[LP] = NewLP;
-            BlocksReMap[LPadBB] = FXBB; //I->getParent();
- 
+            BlocksReMap[LPadBB] = FXBB; // I->getParent();
+
             BuilderBB.CreateBr(dyn_cast<BasicBlock>(V));
- 
+
             V = LPadBB;
           }
 
           NewI->setOperand(i, V);
-    //if (isa<BranchInst>(NewI))
-    //  errs() << "Operand " << i << ": " << V->getName() << "\n";
+          // if (isa<BranchInst>(NewI))
+          //  errs() << "Operand " << i << ": " << V->getName() << "\n";
         }
         return true;
       };
 
       if (I1 != nullptr && !AssignLabelOperands(I1, BlocksF1)) {
-        if (Debug) errs() << "ERROR: Value should NOT be null\n";
-        //MergedFunc->eraseFromParent();
+        if (Debug)
+          errs() << "ERROR: Value should NOT be null\n";
+          // MergedFunc->eraseFromParent();
 
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
         return false;
       }
       if (I2 != nullptr && !AssignLabelOperands(I2, BlocksF2)) {
-        if (Debug) errs() << "ERROR: Value should NOT be null\n";
-        //MergedFunc->eraseFromParent();
+        if (Debug)
+          errs() << "ERROR: Value should NOT be null\n";
+          // MergedFunc->eraseFromParent();
 
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen.stopTimer();
+        TimeCodeGen.stopTimer();
 #endif
         return false;
       }
     }
   }
 
-  //errs() << "Assigning value operands\n";
+  // errs() << "Assigning value operands\n";
 
   auto MergeValues = [&](Value *V1, Value *V2,
                          Instruction *InsertPt) -> Value * {
     if (V1 == V2)
       return V1;
 
-    if (V1 == ConstantInt::getTrue(Context) &&
-        V2 == ConstantInt::getFalse(Context)) {
+    if (V1 == ConstantInt::getTrue(Context) && V2 == ConstantInt::getFalse(Context))
       return IsFunc1;
-    } else if (V1 == ConstantInt::getFalse(Context) &&
-               V2 == ConstantInt::getTrue(Context)) {
+
+    if (V1 == ConstantInt::getFalse(Context) && V2 == ConstantInt::getTrue(Context)) {
       IRBuilder<> Builder(InsertPt);
-      return Builder.CreateNot(IsFunc1); /// TODO: create a single not(IsFunc1) for each merged function that needs it
+      /// TODO: create a single not(IsFunc1) for each merged function that needs it
+      return Builder.CreateNot(IsFunc1);
     }
 
-    Instruction *IV1 = dyn_cast<Instruction>(V1);
-    Instruction *IV2 = dyn_cast<Instruction>(V2);
+    auto *IV1 = dyn_cast<Instruction>(V1);
+    auto *IV2 = dyn_cast<Instruction>(V2);
 
     if (IV1 && IV2) {
       // if both IV1 and IV2 are non-merged values
-      if( BlocksF2.find(IV1->getParent())==BlocksF2.end() && BlocksF1.find(IV2->getParent())==BlocksF1.end() ) {
+      if (BlocksF2.find(IV1->getParent()) == BlocksF2.end() &&
+          BlocksF1.find(IV2->getParent()) == BlocksF1.end()) {
         CoalescingCandidates[IV1][IV2]++;
         CoalescingCandidates[IV2][IV1]++;
       }
@@ -4785,57 +4913,59 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     Instruction *Sel = (Instruction *)Builder.CreateSelect(IsFunc1, V1, V2);
     ListSelects.push_back(dyn_cast<Instruction>(Sel));
     return Sel;
-    
   };
 
   auto AssignOperands = [&](Instruction *I, bool IsFuncId1) -> bool {
-      Instruction *NewI = dyn_cast<Instruction>(VMap[I]);
-      IRBuilder<> Builder(NewI);
+    auto *NewI = dyn_cast<Instruction>(VMap[I]);
+    IRBuilder<> Builder(NewI);
 
-      if (I->getOpcode() == Instruction::Ret && RequiresUnifiedReturn) {
-        Value *V = MapValue(I->getOperand(0), VMap);
+    if (I->getOpcode() == Instruction::Ret && RequiresUnifiedReturn) {
+      Value *V = MapValue(I->getOperand(0), VMap);
+      if (V == nullptr) {
+        return false; // ErrorResponse;
+      }
+      if (V->getType() != ReturnType) {
+        // Value *Addr = (IsFuncId1 ? RetAddr1 : RetAddr2);
+        Value *Addr = Builder.CreateAlloca(V->getType());
+        Builder.CreateStore(V, Addr);
+        Value *CastedAddr =
+            Builder.CreatePointerCast(Addr, RetUnifiedAddr->getType());
+        V = Builder.CreateLoad(ReturnType, CastedAddr);
+      }
+      NewI->setOperand(0, V);
+    } else {
+      for (unsigned i = 0; i < I->getNumOperands(); i++) {
+        if (isa<BasicBlock>(I->getOperand(i)))
+          continue;
+
+        Value *V = MapValue(I->getOperand(i), VMap);
+        // assert( V!=nullptr && "Mapped value should NOT be NULL!");
         if (V == nullptr) {
           return false; // ErrorResponse;
         }
-        if (V->getType() != ReturnType) {
-          //Value *Addr = (IsFuncId1 ? RetAddr1 : RetAddr2);
-          Value *Addr = Builder.CreateAlloca(V->getType());
-          Builder.CreateStore(V, Addr);
-          Value *CastedAddr = Builder.CreatePointerCast(Addr, RetUnifiedAddr->getType());
-          V = Builder.CreateLoad(ReturnType, CastedAddr);
-        }
-        NewI->setOperand(0, V);
-      } else {
-        for (unsigned i = 0; i < I->getNumOperands(); i++) {
-          if (isa<BasicBlock>(I->getOperand(i)))
-            continue;
 
-          Value *V = MapValue(I->getOperand(i), VMap);
-          // assert( V!=nullptr && "Mapped value should NOT be NULL!");
-          if (V == nullptr) {
-            return false; // ErrorResponse;
-          }
-
-          //Value *CastedV = createCastIfNeeded(V, NewI->getOperand(i)->getType(), Builder, IntPtrTy);
-          NewI->setOperand(i, V);
-        }
+        // Value *CastedV = createCastIfNeeded(V,
+        // NewI->getOperand(i)->getType(), Builder, IntPtrTy);
+        NewI->setOperand(i, V);
       }
-    
+    }
+
     return true;
   };
-
 
   for (auto &Entry : AlignedSeq) {
     Instruction *I1 = nullptr;
     Instruction *I2 = nullptr;
 
-    if (Entry.get(0)!=nullptr) I1 = dyn_cast<Instruction>(Entry.get(0));
-    if (Entry.get(1)!=nullptr) I2 = dyn_cast<Instruction>(Entry.get(1));
+    if (Entry.get(0) != nullptr)
+      I1 = dyn_cast<Instruction>(Entry.get(0));
+    if (Entry.get(1) != nullptr)
+      I2 = dyn_cast<Instruction>(Entry.get(1));
 
-    if (I1!=nullptr && I2!=nullptr) {
+    if (I1 != nullptr && I2 != nullptr) {
 
-      //Instruction *I1 = dyn_cast<Instruction>(MN->N1->getValue());
-      //Instruction *I2 = dyn_cast<Instruction>(MN->N2->getValue());
+      // Instruction *I1 = dyn_cast<Instruction>(MN->N1->getValue());
+      // Instruction *I2 = dyn_cast<Instruction>(MN->N2->getValue());
 
       Instruction *I = I1;
       if (I1->getOpcode() == Instruction::Ret) {
@@ -4845,14 +4975,15 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
                "Num of Operands SHOULD be EQUAL\n");
       }
 
-      Instruction *NewI = dyn_cast<Instruction>(VMap[I]);
+      auto *NewI = dyn_cast<Instruction>(VMap[I]);
 
       IRBuilder<> Builder(NewI);
 
-      if (EnableOperandReordering && isa<BinaryOperator>(NewI) && I->isCommutative()) {
+      if (EnableOperandReordering && isa<BinaryOperator>(NewI) &&
+          I->isCommutative()) {
 
-        BinaryOperator *BO1 = dyn_cast<BinaryOperator>(I1);
-        BinaryOperator *BO2 = dyn_cast<BinaryOperator>(I2);
+        auto *BO1 = dyn_cast<BinaryOperator>(I1);
+        auto *BO2 = dyn_cast<BinaryOperator>(I2);
         Value *VL1 = MapValue(BO1->getOperand(0), VMap);
         Value *VL2 = MapValue(BO2->getOperand(0), VMap);
         Value *VR1 = MapValue(BO1->getOperand(1), VMap);
@@ -4865,8 +4996,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         }
 
         std::vector<std::pair<Value *, Value *>> Vs;
-        Vs.push_back(std::pair<Value *, Value *>(VL1, VL2));
-        Vs.push_back(std::pair<Value *, Value *>(VR1, VR2));
+        Vs.emplace_back(VL1, VL2);
+        Vs.emplace_back(VR1, VR2);
 
         for (unsigned i = 0; i < Vs.size(); i++) {
           Value *V1 = Vs[i].first;
@@ -4877,17 +5008,19 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
             if (Debug) {
               errs() << "Could Not select:\n";
               errs() << "ERROR: Value should NOT be null\n";
-      }
-            //MergedFunc->eraseFromParent();
+            }
+            // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen.stopTimer();
+            TimeCodeGen.stopTimer();
 #endif
             return false; // ErrorResponse;
           }
 
           // TODO: cache the created instructions
-          //Value *CastedV = CreateCast(Builder, V, NewI->getOperand(i)->getType());
-          Value *CastedV = createCastIfNeeded(V, NewI->getOperand(i)->getType(), Builder, IntPtrTy); 
+          // Value *CastedV = CreateCast(Builder, V,
+          // NewI->getOperand(i)->getType());
+          Value *CastedV = createCastIfNeeded(V, NewI->getOperand(i)->getType(),
+                                              Builder, IntPtrTy);
           NewI->setOperand(i, CastedV);
         }
       } else {
@@ -4900,12 +5033,13 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
             V1 = MapValue(I1->getOperand(i), VMap);
             // assert(V1!=nullptr && "Mapped value should NOT be NULL!");
             if (V1 == nullptr) {
-              if (Debug) errs() << "ERROR: Null value mapped: V1 = "
-                        "MapValue(I1->getOperand(i), "
-                        "VMap);\n";
-              //MergedFunc->eraseFromParent();
+              if (Debug)
+                errs() << "ERROR: Null value mapped: V1 = "
+                          "MapValue(I1->getOperand(i), "
+                          "VMap);\n";
+                // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen.stopTimer();
+              TimeCodeGen.stopTimer();
 #endif
               return false;
             }
@@ -4919,12 +5053,13 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
             // assert(V2!=nullptr && "Mapped value should NOT be NULL!");
 
             if (V2 == nullptr) {
-              if (Debug) errs() << "ERROR: Null value mapped: V2 = "
-                        "MapValue(I2->getOperand(i), "
-                        "VMap);\n";
-              //MergedFunc->eraseFromParent();
+              if (Debug)
+                errs() << "ERROR: Null value mapped: V2 = "
+                          "MapValue(I2->getOperand(i), "
+                          "VMap);\n";
+                // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen.stopTimer();
+              TimeCodeGen.stopTimer();
 #endif
               return false;
             }
@@ -4939,17 +5074,18 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
           Value *V = MergeValues(V1, V2, NewI);
           if (V == nullptr) {
             if (Debug) {
-               errs() << "Could Not select:\n";
-               errs() << "ERROR: Value should NOT be null\n";
-      }
-            //MergedFunc->eraseFromParent();
+              errs() << "Could Not select:\n";
+              errs() << "ERROR: Value should NOT be null\n";
+            }
+            // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-        TimeCodeGen.stopTimer();
+            TimeCodeGen.stopTimer();
 #endif
             return false; // ErrorResponse;
           }
 
-          //Value *CastedV = createCastIfNeeded(V, NewI->getOperand(i)->getType(), Builder, IntPtrTy);
+          // Value *CastedV = createCastIfNeeded(V,
+          // NewI->getOperand(i)->getType(), Builder, IntPtrTy);
           NewI->setOperand(i, V);
 
         } // end for operands
@@ -4958,16 +5094,18 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     else {
       // PDGNode *N = MN->getUniqueNode();
       if (I1 != nullptr && !AssignOperands(I1, true)) {
-        if (Debug) errs() << "ERROR: Value should NOT be null\n";
-        //MergedFunc->eraseFromParent();
+        if (Debug)
+          errs() << "ERROR: Value should NOT be null\n";
+          // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
         TimeCodeGen.stopTimer();
 #endif
         return false;
       }
       if (I2 != nullptr && !AssignOperands(I2, false)) {
-        if (Debug) errs() << "ERROR: Value should NOT be null\n";
-        //MergedFunc->eraseFromParent();
+        if (Debug)
+          errs() << "ERROR: Value should NOT be null\n";
+          // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
         TimeCodeGen.stopTimer();
 #endif
@@ -4977,21 +5115,23 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
   } // end for nodes
 
-  //errs() << "NumSelects: " << ListSelects.size() << "\n";
-  if (ListSelects.size() > MaxNumSelection ) {
+  // errs() << "NumSelects: " << ListSelects.size() << "\n";
+  if (ListSelects.size() > MaxNumSelection) {
     errs() << "Bailing out: Operand selection threshold\n";
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen.stopTimer();
+    TimeCodeGen.stopTimer();
 #endif
     return false;
   }
- 
-  //errs() << "Assigning PHI operands\n";
-  
-  auto AssignPHIOperandsInBlock = [&](BasicBlock *BB, std::unordered_map<BasicBlock*, BasicBlock *> &BlocksReMap) -> bool {
+
+  // errs() << "Assigning PHI operands\n";
+
+  auto AssignPHIOperandsInBlock =
+      [&](BasicBlock *BB,
+          std::unordered_map<BasicBlock *, BasicBlock *> &BlocksReMap) -> bool {
     for (Instruction &I : *BB) {
-      if (PHINode *PHI = dyn_cast<PHINode>(&I)) {
-        PHINode *NewPHI = dyn_cast<PHINode>(VMap[PHI]);
+      if (auto *PHI = dyn_cast<PHINode>(&I)) {
+        auto *NewPHI = dyn_cast<PHINode>(VMap[PHI]);
 
         std::set<int> FoundIndices;
 
@@ -5003,21 +5143,23 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
           Value *V = nullptr;
 
-          if (BlocksReMap.find(NewPredBB)!=BlocksReMap.end()) {
+          if (BlocksReMap.find(NewPredBB) != BlocksReMap.end()) {
             int Index = PHI->getBasicBlockIndex(BlocksReMap[NewPredBB]);
-            if (Index>=0) {
+            if (Index >= 0) {
               V = MapValue(PHI->getIncomingValue(Index), VMap);
               FoundIndices.insert(Index);
             }
           }
 
-          if (V==nullptr) V = UndefValue::get(NewPHI->getType());
+          if (V == nullptr)
+            V = UndefValue::get(NewPHI->getType());
 
-          //IRBuilder<> Builder(NewPredBB->getTerminator());
-          //Value *CastedV = createCastIfNeeded(V, NewPHI->getType(), Builder, IntPtrTy);
+          // IRBuilder<> Builder(NewPredBB->getTerminator());
+          // Value *CastedV = createCastIfNeeded(V, NewPHI->getType(), Builder,
+          // IntPtrTy);
           NewPHI->addIncoming(V, NewPredBB);
         }
-        if (FoundIndices.size()!=PHI->getNumIncomingValues())
+        if (FoundIndices.size() != PHI->getNumIncomingValues())
           return false;
       }
     }
@@ -5025,67 +5167,79 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
   };
 
   for (BasicBlock *BB1 : Blocks1) {
-      if (!AssignPHIOperandsInBlock(BB1, BlocksF1)) {
-          if (Debug) errs() << "ERROR: PHI assignment\n";
-          //MergedFunc->eraseFromParent();
+    if (!AssignPHIOperandsInBlock(BB1, BlocksF1)) {
+      if (Debug)
+        errs() << "ERROR: PHI assignment\n";
+        // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen.stopTimer();
+      TimeCodeGen.stopTimer();
 #endif
-          return false;
-      }
+      return false;
+    }
   }
   for (BasicBlock *BB2 : Blocks2) {
-      if (!AssignPHIOperandsInBlock(BB2, BlocksF2)) {
-          if (Debug) errs() << "ERROR: PHI assignment\n";
-          //MergedFunc->eraseFromParent();
+    if (!AssignPHIOperandsInBlock(BB2, BlocksF2)) {
+      if (Debug)
+        errs() << "ERROR: PHI assignment\n";
+        // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen.stopTimer();
+      TimeCodeGen.stopTimer();
 #endif
-          return false;
-      }
+      return false;
+    }
   }
 
-  //errs() << "Collecting offending instructions\n";
+  // errs() << "Collecting offending instructions\n";
   DominatorTree DT(*MergedFunc);
 
   for (Instruction &I : instructions(MergedFunc)) {
-    if (PHINode *PHI = dyn_cast<PHINode>(&I)) {
-      for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
+    if (auto *PHI = dyn_cast<PHINode>(&I)) {
+      for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
         BasicBlock *BB = PHI->getIncomingBlock(i);
-  if (BB==nullptr) errs() << "Null incoming block\n";
-  Value *V = PHI->getIncomingValue(i);
-  if (V==nullptr) errs() << "Null incoming value\n";
-        if (Instruction *IV = dyn_cast<Instruction>(V)) {
-    if (BB->getTerminator()==nullptr) {
-            if (Debug) errs() << "ERROR: Null terminator\n";
-          //MergedFunc->eraseFromParent();
+        if (BB == nullptr)
+          errs() << "Null incoming block\n";
+        Value *V = PHI->getIncomingValue(i);
+        if (V == nullptr)
+          errs() << "Null incoming value\n";
+        if (auto *IV = dyn_cast<Instruction>(V)) {
+          if (BB->getTerminator() == nullptr) {
+            if (Debug)
+              errs() << "ERROR: Null terminator\n";
+              // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen.stopTimer();
+            TimeCodeGen.stopTimer();
 #endif
             return false;
-    }
-          if (!DT.dominates(IV,BB->getTerminator())) {
-            if (OffendingInsts.count(IV)==0) { OffendingInsts.insert(IV); LinearOffendingInsts.push_back(IV); }
-    }
-  }
+          }
+          if (!DT.dominates(IV, BB->getTerminator())) {
+            if (OffendingInsts.count(IV) == 0) {
+              OffendingInsts.insert(IV);
+              LinearOffendingInsts.push_back(IV);
+            }
+          }
+        }
       }
     } else {
-      for (unsigned i = 0; i<I.getNumOperands(); i++) {
-  if (I.getOperand(i)==nullptr) {
-    //MergedFunc->dump();
-    //I.getParent()->dump();
-    //errs() << "Null operand\n";
-    //I.dump();
-          if (Debug) errs() << "ERROR: Null operand\n";
-          //MergedFunc->eraseFromParent();
+      for (unsigned i = 0; i < I.getNumOperands(); i++) {
+        if (I.getOperand(i) == nullptr) {
+          // MergedFunc->dump();
+          // I.getParent()->dump();
+          // errs() << "Null operand\n";
+          // I.dump();
+          if (Debug)
+            errs() << "ERROR: Null operand\n";
+            // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGen.stopTimer();
+          TimeCodeGen.stopTimer();
 #endif
           return false;
-  }
-        if (Instruction *IV = dyn_cast<Instruction>(I.getOperand(i))) {
-    if (!DT.dominates(IV, &I)) {
-            if (OffendingInsts.count(IV)==0) { OffendingInsts.insert(IV); LinearOffendingInsts.push_back(IV); }
+        }
+        if (auto *IV = dyn_cast<Instruction>(I.getOperand(i))) {
+          if (!DT.dominates(IV, &I)) {
+            if (OffendingInsts.count(IV) == 0) {
+              OffendingInsts.insert(IV);
+              LinearOffendingInsts.push_back(IV);
+            }
           }
         }
       }
@@ -5094,9 +5248,9 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
   for (BranchInst *NewBr : XorBrConds) {
     IRBuilder<> Builder(NewBr);
-    Value *XorCond = Builder.CreateXor(NewBr->getCondition(),IsFunc1);
+    Value *XorCond = Builder.CreateXor(NewBr->getCondition(), IsFunc1);
     NewBr->setCondition(XorCond);
-  }           
+  }
 
 #ifdef TIME_STEPS_DEBUG
   TimeCodeGen.stopTimer();
@@ -5110,13 +5264,14 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     IRBuilder<> Builder(IV->getParent());
     if (IV->isTerminator()) {
       BasicBlock *SrcBB = IV->getParent();
-      if (InvokeInst *II = dyn_cast<InvokeInst>(IV)) {
+      if (auto *II = dyn_cast<InvokeInst>(IV)) {
         BasicBlock *DestBB = II->getNormalDest();
 
         Builder.SetInsertPoint(&*DestBB->getFirstInsertionPt());
         // create PHI
         PHINode *PHI = Builder.CreatePHI(IV->getType(), 0);
-        for (auto PredIt = pred_begin(DestBB), PredE = pred_end(DestBB); PredIt != PredE; PredIt++) {
+        for (auto PredIt = pred_begin(DestBB), PredE = pred_end(DestBB);
+             PredIt != PredE; PredIt++) {
           BasicBlock *PredBB = *PredIt;
           if (PredBB == SrcBB) {
             PHI->addIncoming(IV, PredBB);
@@ -5126,13 +5281,15 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         }
         Builder.CreateStore(PHI, Addr);
       } else {
-        for (auto SuccIt = succ_begin(SrcBB), SuccE = succ_end(SrcBB); SuccIt!=SuccE; SuccIt++) {
+        for (auto SuccIt = succ_begin(SrcBB), SuccE = succ_end(SrcBB);
+             SuccIt != SuccE; SuccIt++) {
           BasicBlock *DestBB = *SuccIt;
 
           Builder.SetInsertPoint(&*DestBB->getFirstInsertionPt());
           // create PHI
           PHINode *PHI = Builder.CreatePHI(IV->getType(), 0);
-          for (auto PredIt = pred_begin(DestBB), PredE = pred_end(DestBB); PredIt != PredE; PredIt++) {
+          for (auto PredIt = pred_begin(DestBB), PredE = pred_end(DestBB);
+               PredIt != PredE; PredIt++) {
             BasicBlock *PredBB = *PredIt;
             if (PredBB == SrcBB) {
               PHI->addIncoming(IV, PredBB);
@@ -5153,7 +5310,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         LastI = &I;
       }
       if (isa<PHINode>(InsertPt) || isa<LandingPadInst>(InsertPt)) {
-        //Builder.SetInsertPoint(&*IV->getParent()->getFirstInsertionPt());
+        // Builder.SetInsertPoint(&*IV->getParent()->getFirstInsertionPt());
         Builder.SetInsertPoint(IV->getParent()->getTerminator());
       } else
         Builder.SetInsertPoint(InsertPt);
@@ -5162,8 +5319,9 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
     }
   };
 
-  auto MemfyInst = [&](std::set<Instruction *> &InstSet) -> AllocaInst* {
-    if (InstSet.empty()) return nullptr;
+  auto MemfyInst = [&](std::set<Instruction *> &InstSet) -> AllocaInst * {
+    if (InstSet.empty())
+      return nullptr;
     IRBuilder<> Builder(&*PreBB->getFirstInsertionPt());
     AllocaInst *Addr = Builder.CreateAlloca((*InstSet.begin())->getType());
 
@@ -5172,11 +5330,12 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
         Use &UI = *UIt;
         UIt++;
 
-        Instruction *User = cast<Instruction>(UI.getUser());
+        auto *User = cast<Instruction>(UI.getUser());
 
-        if (PHINode *PHI = dyn_cast<PHINode>(User)) {
-          ///TODO: make sure getOperandNo is getting the correct incoming edge
-          IRBuilder<> Builder(PHI->getIncomingBlock(UI.getOperandNo())->getTerminator());
+        if (auto *PHI = dyn_cast<PHINode>(User)) {
+          /// TODO: make sure getOperandNo is getting the correct incoming edge
+          IRBuilder<> Builder(
+              PHI->getIncomingBlock(UI.getOperandNo())->getTerminator());
           UI.set(Builder.CreateLoad(Addr));
         } else {
           IRBuilder<> Builder(User);
@@ -5192,10 +5351,10 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
   };
 
   auto isCoalescingProfitable = [&](Instruction *I1, Instruction *I2) -> bool {
-    std::set<BasicBlock*> BBSet1;
-    std::set<BasicBlock*> UnionBB;
+    std::set<BasicBlock *> BBSet1;
+    std::set<BasicBlock *> UnionBB;
     for (User *U : I1->users()) {
-      if (Instruction *UI = dyn_cast<Instruction>(U)) {
+      if (auto *UI = dyn_cast<Instruction>(U)) {
         BasicBlock *BB1 = UI->getParent();
         BBSet1.insert(BB1);
         UnionBB.insert(BB1);
@@ -5204,116 +5363,121 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(AlignedSequence<Valu
 
     unsigned Intersection = 0;
     for (User *U : I2->users()) {
-      if (Instruction *UI = dyn_cast<Instruction>(U)) {
+      if (auto *UI = dyn_cast<Instruction>(U)) {
         BasicBlock *BB2 = UI->getParent();
         UnionBB.insert(BB2);
-        if (BBSet1.find(BB2)!=BBSet1.end())
+        if (BBSet1.find(BB2) != BBSet1.end())
           Intersection++;
       }
     }
 
     const float Threshold = 0.7;
-    return ( float(Intersection)/float(UnionBB.size()) > Threshold );
+    return (float(Intersection) / float(UnionBB.size()) > Threshold);
   };
 
-  auto OptimizeCoalescing = [&](Instruction *I, std::set<Instruction *> &InstSet, std::map<Instruction*,std::map<Instruction*,unsigned> > &CoalescingCandidates, std::set<Instruction *> &Visited) {    
-    Instruction *OtherI = nullptr;
-    unsigned Score = 0;
-    if (CoalescingCandidates.find(I)!=CoalescingCandidates.end()) {
-      for (auto &Pair : CoalescingCandidates[I]) {
-        if (Pair.second>Score && Visited.find(Pair.first)==Visited.end()) {
-          if (isCoalescingProfitable(I,Pair.first)) {
-            OtherI = Pair.first;
-            Score = Pair.second;
+  auto OptimizeCoalescing =
+      [&](Instruction *I, std::set<Instruction *> &InstSet,
+          std::map<Instruction *, std::map<Instruction *, unsigned>>
+              &CoalescingCandidates,
+          std::set<Instruction *> &Visited) {
+        Instruction *OtherI = nullptr;
+        unsigned Score = 0;
+        if (CoalescingCandidates.find(I) != CoalescingCandidates.end()) {
+          for (auto &Pair : CoalescingCandidates[I]) {
+            if (Pair.second > Score &&
+                Visited.find(Pair.first) == Visited.end()) {
+              if (isCoalescingProfitable(I, Pair.first)) {
+                OtherI = Pair.first;
+                Score = Pair.second;
+              }
+            }
           }
         }
-      }
-    }
-    /*
-    if (OtherI==nullptr) {
-      for (Instruction *OI : OffendingInsts) {
-        if (OI->getType()!=I->getType()) continue;
-        if (Visited.find(OI)!=Visited.end()) continue;
-        if (CoalescingCandidates.find(OI)!=CoalescingCandidates.end()) continue;
-        if( (BlocksF2.find(I->getParent())==BlocksF2.end() && BlocksF1.find(OI->getParent())==BlocksF1.end()) ||
-            (BlocksF2.find(OI->getParent())==BlocksF2.end() && BlocksF1.find(I->getParent())==BlocksF1.end()) ) {
-          OtherI = OI;
-          break;
+        /*
+        if (OtherI==nullptr) {
+          for (Instruction *OI : OffendingInsts) {
+            if (OI->getType()!=I->getType()) continue;
+            if (Visited.find(OI)!=Visited.end()) continue;
+            if (CoalescingCandidates.find(OI)!=CoalescingCandidates.end())
+        continue; if( (BlocksF2.find(I->getParent())==BlocksF2.end() &&
+        BlocksF1.find(OI->getParent())==BlocksF1.end()) ||
+                (BlocksF2.find(OI->getParent())==BlocksF2.end() &&
+        BlocksF1.find(I->getParent())==BlocksF1.end()) ) { OtherI = OI; break;
+            }
+          }
         }
-      }
-    }
-    */
-    if (OtherI) {
-      InstSet.insert(OtherI);
-      //errs() << "Coalescing: " << GetValueName(I->getParent()) << ":"; I->dump();
-      //errs() << "With: " << GetValueName(OtherI->getParent()) << ":"; OtherI->dump();
-    }
-  };
+        */
+        if (OtherI) {
+          InstSet.insert(OtherI);
+          // errs() << "Coalescing: " << GetValueName(I->getParent()) << ":";
+          // I->dump(); errs() << "With: " << GetValueName(OtherI->getParent())
+          // << ":"; OtherI->dump();
+        }
+      };
 
-  //errs() << "Finishing code\n";
-  if (MergedFunc!=nullptr) {
-    //errs() << "Offending: " << OffendingInsts.size() << " ";
-    //errs() << ((float)OffendingInsts.size())/((float)AlignedSeq.size()) << " : ";
-    //if (OffendingInsts.size()>1000) {
-    //if (false) {
-    if ( ((float)OffendingInsts.size())/((float)AlignedSeq.size()) > 4.5 ) {
-      if (Debug) errs() << "Bailing out\n";
+  // errs() << "Finishing code\n";
+  if (MergedFunc != nullptr) {
+    // errs() << "Offending: " << OffendingInsts.size() << " ";
+    // errs() << ((float)OffendingInsts.size())/((float)AlignedSeq.size()) << "
+    // : "; if (OffendingInsts.size()>1000) { if (false) {
+    if (((float)OffendingInsts.size()) / ((float)AlignedSeq.size()) > 4.5) {
+      if (Debug)
+        errs() << "Bailing out\n";
 #ifdef TIME_STEPS_DEBUG
-  TimeCodeGenFix.stopTimer();
+      TimeCodeGenFix.stopTimer();
 #endif
       return false;
-    } else {
-      std::set<Instruction*> Visited;
-      for (Instruction *I : LinearOffendingInsts) {
-        if (Visited.find(I)!=Visited.end()) continue;
+    } 
+    std::set<Instruction *> Visited;
+    for (Instruction *I : LinearOffendingInsts) {
+      if (Visited.find(I) != Visited.end())
+        continue;
 
-        std::set<Instruction*> InstSet;
-        InstSet.insert(I);
+      std::set<Instruction *> InstSet;
+      InstSet.insert(I);
 
-        //Create a coalescing group in InstSet
-        if (EnableSALSSACoalescing)
-          OptimizeCoalescing(I,InstSet,CoalescingCandidates,Visited);
+      // Create a coalescing group in InstSet
+      if (EnableSALSSACoalescing)
+        OptimizeCoalescing(I, InstSet, CoalescingCandidates, Visited);
 
-        for (Instruction *OtherI : InstSet)
-          Visited.insert(OtherI);
+      for (Instruction *OtherI : InstSet)
+        Visited.insert(OtherI);
 
-        AllocaInst *Addr = MemfyInst(InstSet);
-        if (Addr) Allocas.push_back( Addr );
-      }
-
-      //errs() << "Fixed Domination:\n";
-      //MergedFunc->dump();
-      
-      #ifdef OPTIMIZE_SALSSA_CODEGEN
-      DominatorTree DT(*MergedFunc);
-      PromoteMemToReg(Allocas, DT, nullptr);
-
-      //errs() << "Mem2Reg:\n";
-      //MergedFunc->dump();
-
-      if ( verifyFunction(*MergedFunc) ) {
-  errs() << "ERROR: Produced Broken Function!\n";
-#ifdef TIME_STEPS_DEBUG
-  TimeCodeGenFix.stopTimer();
-#endif
-        return false;
-      }
-#ifdef TIME_STEPS_DEBUG
-  TimeCodeGenFix.stopTimer();
-#endif
-#ifdef TIME_STEPS_DEBUG
-  TimePostOpt.startTimer();
-#endif
-      postProcessFunction(*MergedFunc);
-#ifdef TIME_STEPS_DEBUG
-  TimePostOpt.stopTimer();
-#endif
-      //errs() << "PostProcessing:\n";
-      //MergedFunc->dump();
-      #endif
+      AllocaInst *Addr = MemfyInst(InstSet);
+      if (Addr)
+        Allocas.push_back(Addr);
     }
+
+    // errs() << "Fixed Domination:\n";
+    // MergedFunc->dump();
+
+#ifdef OPTIMIZE_SALSSA_CODEGEN
+    DominatorTree DT(*MergedFunc);
+    PromoteMemToReg(Allocas, DT, nullptr);
+
+    // errs() << "Mem2Reg:\n";
+    // MergedFunc->dump();
+
+    if (verifyFunction(*MergedFunc)) {
+      errs() << "ERROR: Produced Broken Function!\n";
+#ifdef TIME_STEPS_DEBUG
+      TimeCodeGenFix.stopTimer();
+#endif
+      return false;
+    }
+#ifdef TIME_STEPS_DEBUG
+    TimeCodeGenFix.stopTimer();
+#endif
+#ifdef TIME_STEPS_DEBUG
+    TimePostOpt.startTimer();
+#endif
+    postProcessFunction(*MergedFunc);
+#ifdef TIME_STEPS_DEBUG
+    TimePostOpt.stopTimer();
+#endif
+    // errs() << "PostProcessing:\n";
+    // MergedFunc->dump();
+#endif
   }
-
-
-  return MergedFunc!=nullptr;
+  return MergedFunc != nullptr;
 }
