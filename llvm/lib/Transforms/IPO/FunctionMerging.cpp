@@ -215,9 +215,13 @@ static cl::opt<bool> EnableSean(
     "func-merging-sean", cl::init(false), cl::Hidden,
     cl::desc("Enable Sean's Contributions LSH or Alternative Alignment Algos"));
 
+static cl::opt<unsigned> LSHRows(
+    "hyfm-lsh-rows", cl::init(2), cl::Hidden,
+    cl::desc("Number of rows in the LSH structure"));
+
 static cl::opt<unsigned> LSHBands(
     "hyfm-lsh-bands", cl::init(100), cl::Hidden,
-  cl::desc("Number of bands in the LSH structure"));
+    cl::desc("Number of bands in the LSH structure"));
 
 //////////////////////////// Tests
 
@@ -1562,23 +1566,13 @@ iterator_range<BasicBlock::iterator> getInstructions(BasicBlock *BB) {
 
 template <class T> class FingerprintLSH {
 private:
-  static const size_t rows = 2;
-  // nHashes determines accuracy of similarity estimation -- 200 hashes
-  // around 0.07 error estimation -- e = 1/(sqrt(nHashes)) This can
-  // also depend on the hashing scheme being used but for now is just
-  // the multiple hash function variant
-  static const size_t nHashes = 200;
   // The number of instructions defining a shingle. 2 or 3 is best.
   static constexpr size_t K = 2;
   static constexpr double threshold = 0.3;
   static constexpr size_t MaxOpcode = 68;
-
-  inline static std::vector<uint32_t> randomHashFuncs;
-  inline static SearchStrategy<std::vector<uint32_t>> searchStrategy;
+  const uint32_t _footprint;
 
 public:
-  static const size_t bands = 100; // e.g. 4 rows and 50 bands -- threshold
-                                   // around 40% similarity -- t = (1/b)^(1/r)
   uint64_t magnitude{0};
   std::vector<uint32_t> hash;
   std::vector<uint32_t> bandHash;
@@ -1586,11 +1580,9 @@ public:
 public:
   FingerprintLSH() = default;
 
-  FingerprintLSH(T owner) {
-    hash.resize(nHashes);
-    bandHash.resize(bands);
+  FingerprintLSH(T owner, SearchStrategy &searchStrategy) : _footprint(searchStrategy.item_footprint()) {
     std::vector<uint32_t> opcodes;
-  std::array<uint32_t, MaxOpcode> OpcodeFreq;
+    std::array<uint32_t, MaxOpcode> OpcodeFreq;
 
     for (Instruction &I : getInstructions(owner)) {
       opcodes.push_back(instToInt(&I));
@@ -1602,26 +1594,17 @@ public:
     for (size_t i = 0; i < MaxOpcode; ++i)
       magnitude += OpcodeFreq[i] * OpcodeFreq[i];
 
-    updateHashes(opcodes);
+    searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(opcodes, hash);
+    searchStrategy.generateBands(hash, bandHash);
   }
 
-  static void initialize() {
-    randomHashFuncs.resize(nHashes - 1);
-    searchStrategy.generateRandomHashFunctions(nHashes - 1, randomHashFuncs);
-  }
-
-  void updateHashes(std::vector<uint32_t> &opcodes) {
-    searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(
-        opcodes, nHashes, hash, randomHashFuncs);
-    searchStrategy.generateBands(hash, rows, bands, bandHash);
-  }
-
-  uint32_t footprint() const { return sizeof(uint32_t) * (nHashes + bands); }
+  uint32_t footprint() const { return _footprint; }
 
   float distance(const FingerprintLSH &FP2) const {
     size_t nintersect = 0;
     size_t pos1 = 0;
     size_t pos2 = 0;
+    size_t nHashes = hash.size();
 
     while (pos1 != nHashes && pos2 != nHashes) {
       if (hash[pos1] == FP2.hash[pos2]) {
@@ -1812,6 +1795,8 @@ public:
   MatcherFQ(FunctionMerger &FM, FunctionMergingOptions &Options)
       : FM(FM), Options(Options){};
 
+  virtual ~MatcherFQ() = default;
+
   void add_candidate(T candidate, size_t size) override {
     candidates.emplace_front(candidate, size);
     cache[candidate] = candidates.begin();
@@ -1873,16 +1858,19 @@ private:
     size_t size;
     FingerprintLSH<T> FP;
     MatcherEntry() : MatcherEntry(nullptr, 0){};
-    MatcherEntry(T candidate, size_t size)
+    MatcherEntry(T candidate, size_t size, SearchStrategy &strategy)
         : candidate(candidate), size(size),
-        FP(candidate){};
+        FP(candidate, strategy){};
   };
   using MatcherIt = typename std::list<MatcherEntry>::iterator;
 
   bool initialized{false};
-  size_t bands{1};
+  const size_t rows{2};
+  const size_t bands{100};
   FunctionMerger &FM;
   FunctionMergingOptions &Options;
+  SearchStrategy strategy;
+
   std::list<MatcherEntry> candidates;
   tsl::robin_map<uint32_t, std::vector<MatcherIt>> lsh;
   std::vector<std::pair<T, MatcherIt>> cache;
@@ -1890,11 +1878,13 @@ private:
 
 public:
   MatcherLSH() = default;
-  MatcherLSH(size_t bands, FunctionMerger &FM, FunctionMergingOptions &Options)
-      : bands(bands), FM(FM), Options(Options){};
+  MatcherLSH(size_t rows, size_t bands, FunctionMerger &FM, FunctionMergingOptions &Options)
+      : rows(rows), bands(bands), FM(FM), Options(Options), strategy(rows, bands) {};
+
+  virtual ~MatcherLSH() = default;
 
   void add_candidate(T candidate, size_t size) override {
-    candidates.emplace_front(candidate, size);
+    candidates.emplace_front(candidate, size, strategy);
 
     auto it = candidates.begin();
     auto &bandHash = it->FP.bandHash;
@@ -1984,7 +1974,7 @@ private:
       }
       // If we've gone through i = 0 without finding a distance of 0.0
       // the minimum distance we might ever find is 2.0 / (nHashes + 1)
-      if ((RankingThreshold <= 1) && (best_distance < (1 / 100.0)))
+      if ((RankingThreshold <= 1) && (best_distance < (2.0 / (rows * bands) )))
         break;
     }
 
@@ -3991,10 +3981,9 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   FunctionMerger FM(&M);
 
-  FingerprintLSH<Function *>::initialize();
   std::unique_ptr<Matcher<Function *>> matcher;
   if (EnableSean)
-    matcher = std::make_unique<MatcherLSH<Function *>>(LSHBands, FM, Options);
+    matcher = std::make_unique<MatcherLSH<Function *>>(LSHRows, LSHBands, FM, Options);
   else
     matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options);
 

@@ -3,19 +3,23 @@
 #include <unordered_set>
 #include <random>
 
-template <typename ContainerType, typename Ty = typename ContainerType::value_type, Ty Blank = Ty(0), typename MatchFnTy = std::function<bool(Ty, Ty)>>
 class SearchStrategy
 {
 private:
-
-    std::vector<uint32_t> hashes;
+  const size_t nHashes{200};
+  const size_t rows{2};
+  const size_t bands{100};
+  std::vector<uint32_t> randomHashFuncs;
 
 public:
+  SearchStrategy() = default;
 
-    SearchStrategy() {};
+  SearchStrategy(size_t rows, size_t bands) : nHashes(rows * bands), rows(rows), bands(bands) {
+    updateRandomHashFunctions(nHashes - 1);
+  };
 
 
-    uint32_t fnv1a(const ContainerType &Seq)
+    uint32_t fnv1a(const std::vector<uint32_t> &Seq)
     {
         uint32_t hash = 2166136261;
         int len = Seq.size();
@@ -29,7 +33,7 @@ public:
         return hash;
     }
 
-    uint32_t fnv1a(const ContainerType &Seq, uint32_t newHash)
+    uint32_t fnv1a(const std::vector<uint32_t> &Seq, uint32_t newHash)
     {
         uint32_t hash = newHash;
         int len = Seq.size();
@@ -44,7 +48,7 @@ public:
     }
 
     template<uint32_t K>
-    std::vector<uint32_t>& generateShinglesSingleHashPipelineTurbo(const ContainerType &Seq, uint32_t nHashes, std::vector<uint32_t> &ret)
+    std::vector<uint32_t>& generateShinglesSingleHashPipelineTurbo(const std::vector<uint32_t> &Seq, uint32_t nHashes, std::vector<uint32_t> &ret)
     {
         uint32_t pipeline[K] = { 0 };
         int len = Seq.size();
@@ -100,7 +104,7 @@ public:
     }
 
     template<uint32_t K>
-    std::vector<uint32_t>& generateShinglesMultipleHashPipelineTurbo(const ContainerType& Seq, uint32_t nHashes, std::vector<uint32_t>& ret, std::vector<uint32_t>& ranHash)
+    std::vector<uint32_t>& generateShinglesMultipleHashPipelineTurbo(const std::vector<uint32_t> &Seq, std::vector<uint32_t> &ret)
     {
         uint32_t pipeline[K] = { 0 };
         uint32_t len = Seq.size();
@@ -108,6 +112,8 @@ public:
         uint32_t smallest = std::numeric_limits<uint32_t>::max();
 
         std::vector<uint32_t> shingleHashes(len);
+
+        ret.resize(nHashes);
 
         // Pipeline to hash all shingles using fnv1a
         // Store all hashes
@@ -142,13 +148,13 @@ public:
         ret[0] = smallest;
 
         // Now for each hash function, rehash each shingle and store the smallest each time
-        for (uint32_t i = 0; i < ranHash.size(); i++)
+        for (uint32_t i = 0; i < randomHashFuncs.size(); i++)
         {
             smallest = std::numeric_limits<uint32_t>::max();
 
             for (uint32_t j = 0; j < shingleHashes.size(); j++)
             {
-                uint32_t temp = shingleHashes[j] ^ ranHash[i];
+                uint32_t temp = shingleHashes[j] ^ randomHashFuncs[i];
                 
                 if (temp < smallest)
                 {
@@ -164,34 +170,42 @@ public:
         return ret;
     }
 
-    std::vector<uint32_t>& generateRandomHashFunctions(int num, std::vector<uint32_t>& ret)
+    void updateRandomHashFunctions(size_t num)
     {
-        //std::random_device rd;
-        //std::mt19937 gen(rd());
-        std::mt19937 gen(0);
+      size_t old_num = randomHashFuncs.size();
+      randomHashFuncs.resize(num);
+  
+      // if we shrunk the vector, there is nothing more to do
+      if (num <= old_num)
+        return;
 
-        std::uniform_real_distribution<> distribution(0, std::numeric_limits<uint32_t>::max());
+      // If we enlarged it, we need to generate new random numbers
 
-        //generating a random integer:
-        for (int i = 0; i < num; i++)
-        {
-            ret[i] = distribution(gen);
-        }
-        return ret;
+      std::random_device rd;
+      std::mt19937 gen(rd());
+      // std::mt19937 gen(0);
+      std::uniform_real_distribution<> distribution(0, std::numeric_limits<uint32_t>::max());
+
+      //generating a random integer:
+      for (size_t i = old_num; i < num; i++)
+        randomHashFuncs[i] = distribution(gen);
     }
 
-    std::vector<uint32_t>& generateBands(const std::vector<uint32_t> &minHashes, uint32_t rows, uint32_t bands, std::vector<uint32_t> &lsh)
+    std::vector<uint32_t>& generateBands(const std::vector<uint32_t> &minHashes, std::vector<uint32_t> &lsh)
     {
-        // Generate a hash for each band
-        for (uint32_t i = 0; i < bands; i++)
-        {
-            // Perform fnv1a on the rows
-            auto first = minHashes.begin() + (i*rows);
-            auto last = minHashes.begin() + (i*rows) + rows;
-            lsh[i] = fnv1a(std::vector<uint32_t>{first, last});
-        }
+      lsh.resize(bands);
 
-        return lsh;
+      // Generate a hash for each band
+      for (size_t i = 0; i < bands; i++) {
+        // Perform fnv1a on the rows
+        auto first = minHashes.begin() + (i*rows);
+        auto last = minHashes.begin() + (i*rows) + rows;
+        lsh[i] = fnv1a(std::vector<uint32_t>{first, last});
+      }
+
+      return lsh;
     }
+
+    uint32_t item_footprint() {return sizeof(uint32_t) * bands * (rows + 1);}
 
 };
