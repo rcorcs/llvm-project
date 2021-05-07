@@ -1872,7 +1872,8 @@ private:
   SearchStrategy strategy;
 
   std::list<MatcherEntry> candidates;
-  tsl::robin_map<uint32_t, std::vector<MatcherIt>> lsh;
+  //tsl::robin_map<uint32_t, std::vector<MatcherIt>> lsh;
+  std::unordered_map<uint32_t, std::vector<MatcherIt>> lsh;
   std::vector<std::pair<T, MatcherIt>> cache;
   std::vector<MatchInfo<T>> matches;
 
@@ -3952,7 +3953,10 @@ Timer TimeUpdate("Merge::Update", "Merge::Update");
 
 bool FunctionMerging::runOnModule(Module &M) {
 
-  // errs() << "Running FMSA\n";
+#ifdef TIME_STEPS_DEBUG
+  TimeTotal.startTimer();
+  TimePreProcess.startTimer();
+#endif
 
   StringSet<> AlwaysPreserved;
   AlwaysPreserved.insert("main");
@@ -3973,11 +3977,6 @@ bool FunctionMerging::runOnModule(Module &M) {
   // TODO: We could use a TTI ModulePass instead but current TTI analysis pass
   // is a FunctionPass.
   TargetTransformInfo TTI(M.getDataLayout());
-
-#ifdef TIME_STEPS_DEBUG
-  TimePreProcess.startTimer();
-  TimeTotal.startTimer();
-#endif
 
   FunctionMerger FM(&M);
 
@@ -4066,8 +4065,7 @@ bool FunctionMerging::runOnModule(Module &M) {
         size_t SizeF1 = match.OtherSize;
         size_t SizeF2 = match.Size;
 
-        size_t MergedSize =
-            EstimateFunctionSize(Result.getMergedFunction(), &TTI);
+        size_t MergedSize = EstimateFunctionSize(Result.getMergedFunction(), &TTI);
         size_t Overhead = EstimateThunkOverhead(Result, AlwaysPreserved);
 
         size_t SizeF12 = MergedSize + Overhead;
