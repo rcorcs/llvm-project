@@ -1621,6 +1621,34 @@ public:
     int nunion = 2 * nHashes - nintersect;
     return 1.f - (nintersect / (float)nunion);
   }
+
+  float distance_under(const FingerprintLSH &FP2, float best_distance) const {
+    size_t mismatches = 0;
+    size_t pos1 = 0;
+    size_t pos2 = 0;
+    size_t nHashes = hash.size();
+    size_t best_nintersect = static_cast<size_t>(2.0 * nHashes  * (1.f - best_distance) / (2.f - best_distance));
+    size_t best_mismatches = 2 * (nHashes - best_nintersect);
+
+    while (pos1 != nHashes && pos2 != nHashes) {
+      if (hash[pos1] == FP2.hash[pos2]) {
+        pos1++;
+        pos2++;
+      } else if (hash[pos1] < FP2.hash[pos2]) {
+        mismatches++;
+        pos1++;
+      } else {
+        mismatches++;
+        pos2++;
+      }
+      if (mismatches > best_mismatches)
+        break;
+    }
+
+    size_t nintersect = nHashes - (mismatches / 2);
+    int nunion = 2 * nHashes - nintersect;
+    return 1.f - (nintersect / (float)nunion);
+  }
 };
 
 template <class T> class Fingerprint {
@@ -1769,6 +1797,7 @@ public:
   virtual T next_candidate() = 0;
   virtual std::vector<MatchInfo<T>> &get_matches(T candidate) = 0;
   virtual size_t size() = 0;
+  virtual void print_stats() = 0;
 };
 
 template <class T> class MatcherFQ : public Matcher<T> {
@@ -1824,6 +1853,61 @@ public:
   }
 
   size_t size() override { return candidates.size(); }
+
+  void print_stats() override {
+    int Sum = 0;
+    int Count = 0;
+    float MinDistance = std::numeric_limits<float>::max();
+    float MaxDistance = 0;
+
+    int Index1 = 0;
+    for (auto It1 = candidates.begin(), E1 = candidates.end(); It1!=E1; It1++) {
+
+      int BestIndex = 0;
+      bool FoundCandidate = false;
+      float BestDist = std::numeric_limits<float>::max();
+
+      unsigned CountCandidates = 0;
+      int Index2 = Index1;
+      for (auto It2 = It1, E2 = candidates.end(); It2 != E2; It2++) {
+
+	      if (It1->candidate == It2->candidate || Index1 == Index2) {
+          Index2++;
+	        continue;
+	      }
+
+        if ((!FM.validMergeTypes(It1->candidate, It2->candidate, Options) &&
+             !Options.EnableUnifiedReturnType) ||
+            !validMergePair(It1->candidate, It2->candidate))
+          continue;
+
+	      auto Dist = It1->FP.distance(It2->FP);
+	      if (Dist < BestDist) {
+	        BestDist = Dist;
+          FoundCandidate = true;
+	        BestIndex = Index2;
+        }
+        if (RankingThreshold && CountCandidates > RankingThreshold) {
+          break;
+        }
+        CountCandidates++;
+        Index2++;
+      }
+      if (FoundCandidate) {
+	      int Distance = std::abs(Index1 - BestIndex);
+        Sum += Distance;
+	      if (Distance > MaxDistance) MaxDistance = Distance;
+	      if (Distance < MinDistance) MinDistance = Distance;
+	      Count++;
+      }
+      Index1++;
+    }
+    errs() << "Total: " << Count << "\n";
+    errs() << "Min Distance: " << MinDistance << "\n";
+    errs() << "Max Distance: " << MaxDistance << "\n";
+    errs() << "Average Distance: " << (((double)Sum)/((double)Count)) << "\n";
+  }
+
 
 private:
   void update_matches(MatcherIt it) {
@@ -1937,6 +2021,60 @@ public:
 
   size_t size() override { return candidates.size(); }
 
+  void print_stats() override {
+    std::unordered_set<T> seen;
+    std::vector<uint32_t> hist_bucket_size(15);
+    std::vector<uint32_t> hist_distances(21);
+    std::vector<uint32_t> hist_distances_diff(21);
+    uint32_t duplicate_hashes = 0;
+
+    for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+      seen.clear();
+      seen.reserve(candidates.size() / 10);
+
+      float best_distance = std::numeric_limits<float>::max();
+      std::unordered_set<uint32_t> temp(it->FP.hash.begin(), it->FP.hash.end());
+      duplicate_hashes += it->FP.hash.size() - temp.size();
+
+      for (size_t i = 0; i < bands; ++i) {
+        auto &foundFs = lsh.at(it->FP.bandHash[i]);
+        size_t idx = 31 - __builtin_clz(foundFs.size());
+        idx = idx < 15 ? idx : 14;
+        hist_bucket_size[idx]++;
+        for (size_t j = 0; j < foundFs.size(); ++j) {
+          auto match_it = foundFs[j];
+          if ((match_it->candidate == NULL) ||
+              (match_it->candidate == it->candidate))
+            continue;
+          if ((!FM.validMergeTypes(it->candidate, match_it->candidate, Options) &&
+               !Options.EnableUnifiedReturnType) ||
+              !validMergePair(it->candidate, match_it->candidate))
+            continue;
+
+          if (seen.count(match_it->candidate) == 1)
+            continue;
+          seen.insert(match_it->candidate);
+
+          auto distance = it->FP.distance(match_it->FP);
+          best_distance = distance < best_distance ? distance : best_distance;
+          auto idx2 = static_cast<size_t>(distance * 20);
+          idx2 = idx2 < 21 ? idx2 : 20;
+          hist_distances[idx2]++;
+          auto idx3 = static_cast<size_t>((distance - best_distance) * 20);
+          idx3 = idx3 < 21 ? idx3 : 20;
+          hist_distances_diff[idx3]++;
+        }
+      }
+    }
+    errs() << "STATS: Avg Duplicate Hashes: " << (1.0*duplicate_hashes) / candidates.size() << "\n";
+    for (size_t i = 0; i < 15; i++)
+      errs() << "STATS: Histogram Bucket Size " << (1 << i) << " : " << hist_bucket_size[i] << "\n";
+    for (size_t i = 0; i < 21; i++)
+      errs() << "STATS: Histogram Distances " << i * 0.05 << " : " << hist_distances[i] << "\n";
+    for (size_t i = 0; i < 21; i++)
+      errs() << "STATS: Histogram Distances Diff " << i * 0.05 << " : " << hist_distances_diff[i] << "\n";
+  }
+
 private:
   void update_matches(MatcherIt it) {
     float best_distance = 1.0;
@@ -1966,7 +2104,10 @@ private:
         seen.insert(match_it->candidate);
 
         MatchInfo<T> new_match(match_it->candidate, match_it->size);
-        new_match.Distance = FP.distance(match_it->FP);
+        if (best_distance < 0.1)
+          new_match.Distance = FP.distance_under(match_it->FP, best_distance);
+        else
+          new_match.Distance = FP.distance(match_it->FP);
         new_match.OtherSize = it->size;
         matches.push_back(new_match);
         cache.emplace_back(match_it->candidate, match_it);
@@ -3996,6 +4137,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     matcher->add_candidate(&F, EstimateFunctionSize(&F, &TTI));
   }
   errs() << "Number of Functions: " << matcher->size() << "\n";
+  //matcher->print_stats();
 
 #ifdef TIME_STEPS_DEBUG
   TimePreProcess.stopTimer();
