@@ -1189,11 +1189,14 @@ bool FunctionMerger::validMergeTypes(Function *F1, Function *F2,
 }
 
 #ifdef TIME_STEPS_DEBUG
-Timer TimeAlign("Merge::Align", "Merge::Align");
-Timer TimeParam("Merge::Param", "Merge::Param");
-Timer TimeCodeGen("Merge::CodeGen", "Merge::CodeGen");
-Timer TimeCodeGenFix("Merge::CodeGenFix", "Merge::CodeGenFix");
-Timer TimePostOpt("Merge::PostOpt", "Merge::PostOpt");
+Timer TimeCodeGenTotal("Merge::CodeGen::Total", "Merge::CodeGen::Total");
+Timer TimeAlign("Merge::CodeGen::Align", "Merge::CodeGen::Align");
+Timer TimeParam("Merge::CodeGen::Param", "Merge::CodeGen::Param");
+Timer TimeCodeGen("Merge::CodeGen::Gen", "Merge::CodeGen::Gen");
+Timer TimeCodeGenFix("Merge::CodeGen::Fix", "Merge::CodeGen::Fix");
+Timer TimePostOpt("Merge::CodeGen::PostOpt", "Merge::CodeGen::PostOpt");
+
+Timer TimeVerify("Merge::Verify", "Merge::Verify");
 Timer TimeTotal("Merge::Total", "Merge::Total");
 #endif
 
@@ -1871,21 +1874,21 @@ public:
       int Index2 = Index1;
       for (auto It2 = It1, E2 = candidates.end(); It2 != E2; It2++) {
 
-	      if (It1->candidate == It2->candidate || Index1 == Index2) {
+        if (It1->candidate == It2->candidate || Index1 == Index2) {
           Index2++;
-	        continue;
-	      }
+          continue;
+        }
 
         if ((!FM.validMergeTypes(It1->candidate, It2->candidate, Options) &&
              !Options.EnableUnifiedReturnType) ||
             !validMergePair(It1->candidate, It2->candidate))
           continue;
 
-	      auto Dist = It1->FP.distance(It2->FP);
-	      if (Dist < BestDist) {
-	        BestDist = Dist;
+        auto Dist = It1->FP.distance(It2->FP);
+        if (Dist < BestDist) {
+          BestDist = Dist;
           FoundCandidate = true;
-	        BestIndex = Index2;
+          BestIndex = Index2;
         }
         if (RankingThreshold && CountCandidates > RankingThreshold) {
           break;
@@ -1894,11 +1897,11 @@ public:
         Index2++;
       }
       if (FoundCandidate) {
-	      int Distance = std::abs(Index1 - BestIndex);
+        int Distance = std::abs(Index1 - BestIndex);
         Sum += Distance;
-	      if (Distance > MaxDistance) MaxDistance = Distance;
-	      if (Distance < MinDistance) MinDistance = Distance;
-	      Count++;
+        if (Distance > MaxDistance) MaxDistance = Distance;
+        if (Distance < MinDistance) MinDistance = Distance;
+        Count++;
       }
       Index1++;
     }
@@ -2373,9 +2376,10 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name,
       }
     }
 
-    errs() << "Stats: " << B1Max << " , " << B2Max << " , " << MaxMem << "\n";
-    errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize
-           << "\n";
+    if (Verbose) {
+      errs() << "Stats: " << B1Max << " , " << B2Max << " , " << MaxMem << "\n";
+      errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize << "\n";
+    }
 
     bool Profitable = (TotalMatches == TotalInsts) || (TotalCoreMatches > 0);
     if (!Profitable) {
@@ -2383,7 +2387,9 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name,
 #ifdef TIME_STEPS_DEBUG
       TimeAlign.stopTimer();
 #endif
-      errs() << "Skipped: Not profitable enough!!\n";
+      if (Verbose) {
+        errs() << "Skipped: Not profitable enough!!\n";
+      }
       return ErrorResponse;
     }
 
@@ -2807,8 +2813,9 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name,
       }
     }
 
-    errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize
-           << "\n";
+    if (Verbose) {
+      errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize << "\n";
+    }
 
     // bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 &&
     // TotalCoreMatches>0);
@@ -2818,7 +2825,9 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name,
 #ifdef TIME_STEPS_DEBUG
       TimeAlign.stopTimer();
 #endif
-      errs() << "Skipped: Not profitable enough!!\n";
+      if (Verbose) {
+        errs() << "Skipped: Not profitable enough!!\n";
+      }
       return ErrorResponse;
     }
 
@@ -3035,9 +3044,10 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name,
       }
     }
 
-    errs() << "Stats: " << B1Max << " , " << B2Max << " , " << MaxMem << "\n";
-    errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize
-           << "\n";
+    if (Verbose) {
+      errs() << "Stats: " << B1Max << " , " << B2Max << " , " << MaxMem << "\n";
+      errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize << "\n";
+    }
 
     // bool Profitable = (TotalMatches==TotalInsts) || (TotalInsts>1 &&
     // TotalCoreMatches>0);
@@ -3047,7 +3057,9 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name,
 #ifdef TIME_STEPS_DEBUG
       TimeAlign.stopTimer();
 #endif
-      errs() << "Skipped: Not profitable enough!!\n";
+      if (Verbose) {
+        errs() << "Skipped: Not profitable enough!!\n";
+      }
       return ErrorResponse;
     }
 
@@ -3330,9 +3342,13 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name,
     }
   }
   if (AcrossBlocks) {
-    errs() << "Across Basic Blocks\n";
+    if (Verbose) {
+      errs() << "Across Basic Blocks\n";
+    }
   }
-  errs() << "Matches: " << NumMatches << ", " << TotalEntries << "\n";
+  if (Verbose) {
+    errs() << "Matches: " << NumMatches << ", " << TotalEntries << "\n";
+  }
 
   // errs() << "Code Gen\n";
 #ifdef ENABLE_DEBUG_CODE
@@ -4128,12 +4144,10 @@ bool FunctionMerging::runOnModule(Module &M) {
     matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options);
 
   for (auto &F : M) {
-    if (F.isDeclaration() || F.isVarArg() ||
-        (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
+    if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
 
-    errs() << "FNSize: " << F.getName() << " : " << F.getInstructionCount()
-           << "\n";
+    //errs() << "FNSize: " << F.getName() << " : " << F.getInstructionCount() << "\n";
     matcher->add_candidate(&F, EstimateFunctionSize(&F, &TTI));
   }
   errs() << "Number of Functions: " << matcher->size() << "\n";
@@ -4159,7 +4173,6 @@ bool FunctionMerging::runOnModule(Module &M) {
 #ifdef TIME_STEPS_DEBUG
     TimeRank.stopTimer();
 #endif
-
     unsigned MergingTrialsCount = 0;
 
     while (!Rank.empty()) {
@@ -4174,12 +4187,21 @@ bool FunctionMerging::runOnModule(Module &M) {
                << " : " << match.Distance << "\n";
       }
 
+#ifdef TIME_STEPS_DEBUG
+      TimeCodeGenTotal.startTimer();
+#endif
       // std::string Name = ".m.f." + std::to_string(TotalMerges);
       std::string Name = "_m_f_" + std::to_string(TotalMerges);
       FunctionMergeResult Result = FM.merge(F1, F2, Name, Options);
+#ifdef TIME_STEPS_DEBUG
+    TimeCodeGenTotal.stopTimer();
+#endif
 
       bool validFunction = true;
 
+#ifdef TIME_STEPS_DEBUG
+      TimeVerify.startTimer();
+#endif
       if (Result.getMergedFunction() != nullptr &&
           verifyFunction(*Result.getMergedFunction())) {
         if (Debug || Verbose) {
@@ -4201,6 +4223,9 @@ bool FunctionMerging::runOnModule(Module &M) {
         Result.getMergedFunction()->eraseFromParent();
         validFunction = false;
       }
+#ifdef TIME_STEPS_DEBUG
+    TimeVerify.stopTimer();
+#endif
 
       if (Result.getMergedFunction() && validFunction) {
 
@@ -4256,11 +4281,6 @@ bool FunctionMerging::runOnModule(Module &M) {
             if (AcrossBlocks)
               errs() << "Corss Block Merging\n";
           }
-          // if (Verbose) {
-          // F1->dump();
-          // F2->dump();
-          // Result.getMergedFunction()->dump();
-          //}
 #ifdef TIME_STEPS_DEBUG
           TimeUpdate.startTimer();
 #endif
@@ -4280,18 +4300,24 @@ bool FunctionMerging::runOnModule(Module &M) {
 #ifdef TIME_STEPS_DEBUG
           TimeUpdate.stopTimer();
 #endif
-
           break; // end exploration with F1
         } else {
+#ifdef TIME_STEPS_DEBUG
+          TimeUpdate.startTimer();
+#endif
           if (Result.getMergedFunction() != nullptr)
             Result.getMergedFunction()->eraseFromParent();
+#ifdef TIME_STEPS_DEBUG
+          TimeUpdate.stopTimer();
+#endif
         }
       }
-      errs() << "Unprofitable Distance: " << match.Distance << "\n";
-
-      if (MergingTrialsCount >= ExplorationThreshold) {
-        break;
+      if (Verbose) {
+        errs() << "Unprofitable Distance: " << match.Distance << "\n";
       }
+
+      if (MergingTrialsCount >= ExplorationThreshold)
+        break;
     }
   }
 
@@ -4320,23 +4346,29 @@ bool FunctionMerging::runOnModule(Module &M) {
   errs() << "Timer:Rank: " << TimeRank.getTotalTime().getWallTime() << "\n";
   TimeRank.clear();
 
-  errs() << "Timer:Align: " << TimeAlign.getTotalTime().getWallTime() << "\n";
+  errs() << "Timer:CodeGen:Total: " << TimeCodeGenTotal.getTotalTime().getWallTime() << "\n";
+  TimeCodeGenTotal.clear();
+
+  errs() << "Timer:CodeGen:Align: " << TimeAlign.getTotalTime().getWallTime() << "\n";
   TimeAlign.clear();
 
-  errs() << "Timer:Param: " << TimeParam.getTotalTime().getWallTime() << "\n";
+  errs() << "Timer:CodeGen:Param: " << TimeParam.getTotalTime().getWallTime() << "\n";
   TimeParam.clear();
 
-  errs() << "Timer:CodeGen: " << TimeCodeGen.getTotalTime().getWallTime()
+  errs() << "Timer:CodeGen:Gen: " << TimeCodeGen.getTotalTime().getWallTime()
          << "\n";
   TimeCodeGen.clear();
 
-  errs() << "Timer:CodeGenFix: " << TimeCodeGenFix.getTotalTime().getWallTime()
+  errs() << "Timer:CodeGen:Fix: " << TimeCodeGenFix.getTotalTime().getWallTime()
          << "\n";
   TimeCodeGenFix.clear();
 
-  errs() << "Timer:PostOpt: " << TimePostOpt.getTotalTime().getWallTime()
+  errs() << "Timer:CodeGen:PostOpt: " << TimePostOpt.getTotalTime().getWallTime()
          << "\n";
   TimePostOpt.clear();
+
+  errs() << "Timer:Verify: " << TimeVerify.getTotalTime().getWallTime() << "\n";
+  TimeVerify.clear();
 
   errs() << "Timer:PreProcess: " << TimePreProcess.getTotalTime().getWallTime()
          << "\n";
@@ -4350,6 +4382,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   errs() << "Timer:Total: " << TimeTotal.getTotalTime().getWallTime() << "\n";
   TimeTotal.clear();
+
 #endif
 
   return true;
@@ -5588,7 +5621,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
     // MergedFunc->dump();
 
     if (verifyFunction(*MergedFunc)) {
-      errs() << "ERROR: Produced Broken Function!\n";
+      if (Verbose)
+        errs() << "ERROR: Produced Broken Function!\n";
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGenFix.stopTimer();
 #endif
