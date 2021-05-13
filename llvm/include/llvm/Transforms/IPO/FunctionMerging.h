@@ -227,6 +227,9 @@ public:
 
   static bool areTypesEquivalent(Type *Ty1, Type *Ty2, const DataLayout *DL,
                                  const FunctionMergingOptions &Options = {});
+
+  static bool isAlignmentProfitable(AlignedSequence<Value *> &AlignedBlocks);
+
   static bool match(Value *V1, Value *V2);
 
   void updateCallGraph(FunctionMergeResult &Result,
