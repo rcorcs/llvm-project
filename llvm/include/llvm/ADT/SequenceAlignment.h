@@ -142,6 +142,8 @@ public:
   SequenceAligner(ScoringSystem Scoring, MatchFnTy Match = nullptr)
     : Scoring(Scoring), Match(Match) {}  
 
+  virtual ~SequenceAligner() = default;
+
   ScoringSystem &getScoring() { return Scoring; }
 
   bool match(Ty Val1, Ty Val2) {

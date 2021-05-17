@@ -240,6 +240,8 @@ public:
   NeedlemanWunschSA(ScoringSystem Scoring, MatchFnTy Match = nullptr)
       : BaseType(Scoring, Match), Matrix(nullptr), Matches(nullptr) {}
 
+  ~NeedlemanWunschSA() {clearAll();}
+
   virtual size_t getMemoryRequirement(ContainerType &Seq1,
                                       ContainerType &Seq2) override {
     const size_t SizeSeq1 = Seq1.size();
