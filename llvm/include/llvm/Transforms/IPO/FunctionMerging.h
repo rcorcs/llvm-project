@@ -171,6 +171,14 @@ public:
   //  static const FunctionMergeResult Error;
 };
 
+struct AlignmentStats {
+  int Insts{0};
+  int Matches{0};
+  int CoreMatches{0};
+  bool isProfitable() const {return (Matches == Insts) || (CoreMatches > 0);};
+};
+
+
 class FunctionMerger {
 private:
   Module *M;
@@ -228,7 +236,11 @@ public:
   static bool areTypesEquivalent(Type *Ty1, Type *Ty2, const DataLayout *DL,
                                  const FunctionMergingOptions &Options = {});
 
-  static bool isAlignmentProfitable(AlignedSequence<Value *> &AlignedBlocks);
+  static bool isSAProfitable(AlignedSequence<Value *> &AlignedBlocks);
+  static bool isPAProfitable(BasicBlock *BB1, BasicBlock *BB2);
+
+  static void extendAlignedSeq(AlignedSequence<Value *> &AlignedSeq, AlignedSequence<Value *> &AlignedSubSeq, AlignmentStats &stats);
+  static void extendAlignedSeq(AlignedSequence<Value *> &AlignedSeq, BasicBlock *BB1, BasicBlock *BB2, AlignmentStats &stats);
 
   static bool match(Value *V1, Value *V2);
 

@@ -1591,7 +1591,10 @@ public:
 
   FingerprintMH(T owner, SearchStrategy &searchStrategy) : _footprint(searchStrategy.item_footprint()) {
     std::vector<uint32_t> opcodes;
-    std::array<uint32_t, MaxOpcode> OpcodeFreq;
+    std::array<uint64_t, MaxOpcode> OpcodeFreq;
+
+    for (size_t i = 0; i < MaxOpcode; i++)
+      OpcodeFreq[i] = 0;
 
     for (Instruction &I : getInstructions(owner)) {
       opcodes.push_back(instToInt(&I));
@@ -1664,7 +1667,7 @@ template <class T> class Fingerprint {
 public:
   uint64_t magnitude{0};
   static const size_t MaxOpcode = 68;
-  std::array<int, MaxOpcode> OpcodeFreq;
+  std::array<uint64_t, MaxOpcode> OpcodeFreq;
 
   Fingerprint() = default;
 
@@ -1715,6 +1718,8 @@ public:
   size_t Size{0};
   size_t OtherSize{0};
   size_t MergedSize{0};
+  size_t Magnitude{0};
+  size_t OtherMagnitude{0};
   float Distance{0};
   bool Valid{false};
   bool Profitable{false};
@@ -1853,7 +1858,7 @@ private:
     matches.clear();
 
     MatchInfo<T> best_match;
-	best_match.Distance = std::numeric_limits<float>::max();
+    best_match.Distance = std::numeric_limits<float>::max();
     if (ExplorationThreshold == 1) {
       for (auto &entry : candidates) {
         if (entry.candidate == it->candidate)
@@ -1865,6 +1870,8 @@ private:
         MatchInfo<T> new_match(entry.candidate, entry.size);
         new_match.Distance = it->FP.distance(entry.FP);
         new_match.OtherSize = it->size;
+        new_match.OtherMagnitude = it->FP.magnitude;
+        new_match.Magnitude = entry.FP.magnitude;
         if (new_match.Distance < best_match.Distance)
           best_match = new_match;
         if (RankingThreshold && (CountCandidates > RankingThreshold))
@@ -1886,6 +1893,8 @@ private:
       MatchInfo<T> new_match(entry.candidate, entry.size);
       new_match.Distance = it->FP.distance(entry.FP);
       new_match.OtherSize = it->size;
+      new_match.OtherMagnitude = it->FP.magnitude;
+      new_match.Magnitude = entry.FP.magnitude;
       matches.push_back(std::move(new_match));
       if (RankingThreshold && (CountCandidates > RankingThreshold))
         break;
@@ -2085,6 +2094,8 @@ private:
         else
           new_match.Distance = FP.distance(match_it->FP);
         new_match.OtherSize = it->size;
+        new_match.OtherMagnitude = FP.magnitude;
+        new_match.Magnitude = match_it->FP.magnitude;
         if (new_match.Distance < best_match.Distance)
           best_match = new_match;
         if (ExplorationThreshold > 1)
@@ -3558,7 +3569,8 @@ bool FunctionMerging::runOnModule(Module &M) {
       errs() << GetValueName(F1) << " + " << GetValueName(F2) << " <= " << Name
              << " Tries: " << MergingTrialsCount
              << " Valid: " << match.Valid
-             << " Sizes: " << match.OtherSize << " + " << match.Size << " <= " << match.MergedSize
+             << " BinSizes: " << match.OtherSize << " + " << match.Size << " <= " << match.MergedSize
+             << " IRSizes: " << match.OtherMagnitude << " + " << match.Magnitude
              << " AcrossBlocks: " << AcrossBlocks
              << " Profitable: " << match.Profitable
              << " Distance: " << match.Distance;
