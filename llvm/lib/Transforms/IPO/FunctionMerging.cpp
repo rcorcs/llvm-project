@@ -1591,7 +1591,7 @@ public:
 
   FingerprintMH(T owner, SearchStrategy &searchStrategy) : _footprint(searchStrategy.item_footprint()) {
     std::vector<uint32_t> opcodes;
-    std::array<uint64_t, MaxOpcode> OpcodeFreq;
+    std::array<uint32_t, MaxOpcode> OpcodeFreq;
 
     for (size_t i = 0; i < MaxOpcode; i++)
       OpcodeFreq[i] = 0;
@@ -1603,8 +1603,10 @@ public:
         OpcodeFreq[0] += I.getNumSuccessors();
     }
 
-    for (size_t i = 0; i < MaxOpcode; ++i)
-      magnitude += OpcodeFreq[i] * OpcodeFreq[i];
+    for (size_t i = 0; i < MaxOpcode; ++i) {
+      uint64_t val = OpcodeFreq[i];
+      magnitude += val * val;
+    }
 
     searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(opcodes, hash);
     searchStrategy.generateBands(hash, bandHash);
@@ -1667,7 +1669,7 @@ template <class T> class Fingerprint {
 public:
   uint64_t magnitude{0};
   static const size_t MaxOpcode = 68;
-  std::array<uint64_t, MaxOpcode> OpcodeFreq;
+  std::array<uint32_t, MaxOpcode> OpcodeFreq;
 
   Fingerprint() = default;
 
@@ -1681,8 +1683,10 @@ public:
       if (I.isTerminator())
         OpcodeFreq[0] += I.getNumSuccessors();
     }
-    for (size_t i = 0; i < MaxOpcode; i++)
-      magnitude += OpcodeFreq[i] * OpcodeFreq[i];
+    for (size_t i = 0; i < MaxOpcode; i++) {
+      uint64_t val = OpcodeFreq[i];
+      magnitude += val * val;
+    }
   }
 
   uint32_t footprint() const { return sizeof(int) * MaxOpcode; }
@@ -1858,7 +1862,10 @@ private:
     matches.clear();
 
     MatchInfo<T> best_match;
+    best_match.OtherSize = it->size;
+    best_match.OtherMagnitude = it->FP.magnitude;
     best_match.Distance = std::numeric_limits<float>::max();
+
     if (ExplorationThreshold == 1) {
       for (auto &entry : candidates) {
         if (entry.candidate == it->candidate)
@@ -1867,13 +1874,13 @@ private:
              !Options.EnableUnifiedReturnType) ||
             !validMergePair(it->candidate, entry.candidate))
           continue;
-        MatchInfo<T> new_match(entry.candidate, entry.size);
-        new_match.Distance = it->FP.distance(entry.FP);
-        new_match.OtherSize = it->size;
-        new_match.OtherMagnitude = it->FP.magnitude;
-        new_match.Magnitude = entry.FP.magnitude;
-        if (new_match.Distance < best_match.Distance)
-          best_match = new_match;
+        auto new_distance = it->FP.distance(entry.FP);
+        if (new_distance < best_match.Distance) {
+          best_match.candidate = entry.candidate;
+          best_match.Size = entry.size;
+          best_match.Distance = new_distance;
+          best_match.Magnitude = entry.FP.magnitude;
+        }
         if (RankingThreshold && (CountCandidates > RankingThreshold))
           break;
         CountCandidates++;
@@ -3649,7 +3656,6 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   errs() << "Timer:Total: " << TimeTotal.getTotalTime().getWallTime() << "\n";
   TimeTotal.clear();
-
 #endif
 
   return true;
