@@ -1751,8 +1751,8 @@ template <class T> class MatcherFQ : public Matcher<T> {
 private:
   struct MatcherEntry {
     T candidate;
-    size_t size;
     Fingerprint<T> FP;
+    size_t size;
     MatcherEntry() : MatcherEntry(nullptr, 0){};
     MatcherEntry(T candidate, size_t size)
         : candidate(candidate), size(size), FP(candidate){};
@@ -1867,19 +1867,17 @@ private:
     best_match.Distance = std::numeric_limits<float>::max();
 
     if (ExplorationThreshold == 1) {
-      for (auto &entry : candidates) {
-        if (entry.candidate == it->candidate)
-          continue;
-        if ((!FM.validMergeTypes(it->candidate, entry.candidate, Options) &&
+      for (auto entry = std::next(candidates.cbegin()); entry != candidates.cend(); ++entry) {
+        if ((!FM.validMergeTypes(it->candidate, entry->candidate, Options) &&
              !Options.EnableUnifiedReturnType) ||
-            !validMergePair(it->candidate, entry.candidate))
+            !validMergePair(it->candidate, entry->candidate))
           continue;
-        auto new_distance = it->FP.distance(entry.FP);
+        auto new_distance = it->FP.distance(entry->FP);
         if (new_distance < best_match.Distance) {
-          best_match.candidate = entry.candidate;
-          best_match.Size = entry.size;
+          best_match.candidate = entry->candidate;
+          best_match.Size = entry->size;
+          best_match.Magnitude = entry->FP.magnitude;
           best_match.Distance = new_distance;
-          best_match.Magnitude = entry.FP.magnitude;
         }
         if (RankingThreshold && (CountCandidates > RankingThreshold))
           break;
@@ -1929,8 +1927,8 @@ template <class T> class MatcherLSH : public Matcher<T> {
 private:
   struct MatcherEntry {
     T candidate;
-    size_t size;
     FingerprintMH<T> FP;
+    size_t size;
     MatcherEntry() : MatcherEntry(nullptr, 0){};
     MatcherEntry(T candidate, size_t size, SearchStrategy &strategy)
         : candidate(candidate), size(size),
