@@ -3138,8 +3138,6 @@ void FunctionMerger::updateCallGraph(Function *F, FunctionMergeResult &MFR,
                                      const FunctionMergingOptions &Options) {
   replaceByCall(F, MFR, Options);
   if (!RequiresOriginalInterface(F, MFR, AlwaysPreserved)) {
-    /// TODO: don't update call graph when dynamically tracing calls
-    // bool CanErase = false; //replaceCallsWith(F, MFR, Options);
     bool CanErase = replaceCallsWith(F, MFR, Options);
     CanErase = CanErase && F->use_empty();
     CanErase = CanErase &&
@@ -3685,14 +3683,11 @@ bool FunctionMerging::runOnModule(Module &M) {
           match.MergedSize = SizeF12;
           match.Profitable = (SizeF12 + MergingOverheadThreshold) < SizeF1F2;
 
-      
-
-
           if (match.Profitable) {
             TotalMerges++;
-            FM.updateCallGraph(Result, AlwaysPreserved, Options);
-
             matcher->remove_candidate(F2);
+
+            FM.updateCallGraph(Result, AlwaysPreserved, Options);
 
             if (ReuseMergedFunctions) {
               // feed new function back into the working lists
