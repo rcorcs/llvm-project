@@ -3623,6 +3623,9 @@ bool FunctionMerging::runOnModule(Module &M) {
       Rank.pop_back();
       Function *F2 = match.candidate;
 
+      auto F1Name = GetValueName(F1);
+      auto F2Name = GetValueName(F2);
+
       if (Verbose) {
         if (EnableSean) {
           Fingerprint<Function *> FP1(F1);
@@ -3665,6 +3668,7 @@ bool FunctionMerging::runOnModule(Module &M) {
           Result.getMergedFunction()->dump();
         }
 #endif
+      
 
 #ifdef TIME_STEPS_DEBUG
         TimeUpdate.startTimer();
@@ -3680,6 +3684,9 @@ bool FunctionMerging::runOnModule(Module &M) {
 
           match.MergedSize = SizeF12;
           match.Profitable = (SizeF12 + MergingOverheadThreshold) < SizeF1F2;
+
+      
+
 
           if (match.Profitable) {
             TotalMerges++;
@@ -3702,8 +3709,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 #endif
       }
 
-
-      errs() << GetValueName(F1) << " + " << GetValueName(F2) << " <= " << Name
+      errs() << F1Name << " + " << F2Name << " <= " << Name
              << " Tries: " << MergingTrialsCount
              << " Valid: " << match.Valid
              << " BinSizes: " << match.OtherSize << " + " << match.Size << " <= " << match.MergedSize
@@ -3711,13 +3717,13 @@ bool FunctionMerging::runOnModule(Module &M) {
              << " AcrossBlocks: " << AcrossBlocks
              << " Profitable: " << match.Profitable
              << " Distance: " << match.Distance;
-
       if (Verbose)
         errs() << " OtherDistance: " << OtherDistance << "\n";
       else
         errs() << "\n";
 
-      if (match.Profitable || (MergingTrialsCount >= ExplorationThreshold))
+      //if (match.Profitable || (MergingTrialsCount >= ExplorationThreshold))
+      if (MergingTrialsCount >= ExplorationThreshold)
         break;
     }
   }
@@ -4409,7 +4415,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
             Instruction *NewLP = LP->clone();
             BuilderBB.Insert(NewLP);
             VMap[LP] = NewLP;
-            BlocksReMap[LPadBB] = FXBB; // I->getParent();
+            BlocksReMap[LPadBB] = I->getParent(); //FXBB;
 
             BuilderBB.CreateBr(dyn_cast<BasicBlock>(V));
 
