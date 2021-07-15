@@ -5,6 +5,8 @@
 
 class SearchStrategy {
 private:
+  
+  // Default values
   const size_t nHashes{200};
   const size_t rows{2};
   const size_t bands{100};
@@ -13,8 +15,7 @@ private:
 public:
   SearchStrategy() = default;
 
-  SearchStrategy(size_t rows, size_t bands)
-      : nHashes(rows * bands), rows(rows), bands(bands) {
+  SearchStrategy(size_t rows, size_t bands) : nHashes(rows * bands), rows(rows), bands(bands) {
     updateRandomHashFunctions(nHashes - 1);
   };
 
@@ -42,10 +43,10 @@ public:
     return hash;
   }
 
-  template <uint32_t K>
-  std::vector<uint32_t> &
-  generateShinglesSingleHashPipelineTurbo(const std::vector<uint32_t> &Seq,
-                                          std::vector<uint32_t> &ret) {
+  // Generate shingles using a single hash -- unused as not effective for function merging
+  template <uint32_t K> 
+  std::vector<uint32_t>& 
+  generateShinglesSingleHashPipelineTurbo(const std::vector<uint32_t> &Seq, std::vector<uint32_t> &ret) {
     uint32_t pipeline[K] = {0};
     int len = Seq.size();
 
@@ -92,10 +93,10 @@ public:
     return ret;
   }
 
+  // Generate MinHash fingerprint with multiple hash functions
   template <uint32_t K>
   std::vector<uint32_t> &
-  generateShinglesMultipleHashPipelineTurbo(const std::vector<uint32_t> &Seq,
-                                            std::vector<uint32_t> &ret) {
+  generateShinglesMultipleHashPipelineTurbo(const std::vector<uint32_t> &Seq, std::vector<uint32_t> &ret) {
     uint32_t pipeline[K] = {0};
     uint32_t len = Seq.size();
 
@@ -172,17 +173,23 @@ public:
   }
 
   std::vector<uint32_t> &generateBands(const std::vector<uint32_t> &minHashes,
-                                       std::vector<uint32_t> &lsh) {
-    lsh.resize(bands);
+                                       std::vector<uint32_t> &LSHBands) {
+    LSHBands.resize(bands);
 
     // Generate a hash for each band
     for (size_t i = 0; i < bands; i++) {
       // Perform fnv1a on the rows
       auto first = minHashes.begin() + (i * rows);
       auto last = minHashes.begin() + (i * rows) + rows;
-      lsh[i] = fnv1a(std::vector<uint32_t>{first, last});
+      LSHBands[i] = fnv1a(std::vector<uint32_t>{first, last});
     }
-    return lsh;
+
+    // Remove duplicate bands -- no need to place twice in the same bucket
+    std::sort(LSHBands.begin(), LSHBands.end());
+    auto last = std::unique(LSHBands.begin(), LSHBands.end());
+    LSHBands.erase(last, LSHBands.end());
+    
+    return LSHBands;
   }
 
   uint32_t item_footprint() { return sizeof(uint32_t) * bands * (rows + 1); }
