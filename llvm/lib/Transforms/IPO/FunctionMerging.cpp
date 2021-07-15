@@ -223,6 +223,22 @@ static cl::opt<unsigned> LSHBands(
     "hyfm-lsh-bands", cl::init(100), cl::Hidden,
     cl::desc("Number of bands in the LSH structure"));
 
+static cl::opt<bool> ShingleCrossBBs(
+    "shingling-cross-basic-blocks", cl::init(true), cl::Hidden,
+    cl::desc("Do shingles in MinHash cross basic blocks"));
+
+static cl::opt<bool> AdaptiveThreshold(
+    "adaptive-threshold", cl::init(false), cl::Hidden,
+    cl::desc("Adaptively define a new threshold based on the application"));
+
+static cl::opt<double> RankingDistance(
+    "ranking-distance", cl::init(1.0), cl::Hidden,
+    cl::desc("Define a threshold to be used"));
+
+static cl::opt<bool> EnableThunkPrediction(
+    "thunk-predictor", cl::init(false), cl::Hidden,
+    cl::desc("Enable dismissal of candidates caused by thunk non-profitability"));
+
 //////////////////////////// Tests
 
 // static cl::opt<bool> TestFM_CompilationCostModel("fm-built-size-cost",
@@ -1573,6 +1589,7 @@ iterator_range<BasicBlock::iterator> getInstructions(BasicBlock *BB) {
   return make_range(BB->begin(), BB->end());
 }
 
+
 template <class T> class FingerprintMH {
 private:
   // The number of instructions defining a shingle. 2 or 3 is best.
@@ -1590,17 +1607,43 @@ public:
   FingerprintMH() = default;
 
   FingerprintMH(T owner, SearchStrategy &searchStrategy) : _footprint(searchStrategy.item_footprint()) {
-    std::vector<uint32_t> opcodes;
+    std::vector<uint32_t> integers;
     std::array<uint32_t, MaxOpcode> OpcodeFreq;
 
     for (size_t i = 0; i < MaxOpcode; i++)
       OpcodeFreq[i] = 0;
 
-    for (Instruction &I : getInstructions(owner)) {
-      opcodes.push_back(instToInt(&I));
-      OpcodeFreq[I.getOpcode()]++;
-      if (I.isTerminator())
-        OpcodeFreq[0] += I.getNumSuccessors();
+    if (ShingleCrossBBs)
+    {
+      for (Instruction &I : getInstructions(owner)) {
+        integers.push_back(instToInt(&I));
+        OpcodeFreq[I.getOpcode()]++;
+        if (I.isTerminator())
+            OpcodeFreq[0] += I.getNumSuccessors();
+      }
+    }
+    else
+    {
+      for (BasicBlock &BB : *owner)
+      {
+
+        // Process normal instructions
+        for (Instruction &I : BB)
+        {
+          integers.push_back(instToInt(&I));
+          OpcodeFreq[I.getOpcode()]++;
+          if(I.isTerminator())
+            OpcodeFreq[0] += I.getNumSuccessors();
+        }
+        
+        // Add dummy instructions between basic blocks
+        for (size_t i = 0; i<K-1;i++)
+        {
+            integers.push_back(1);
+        }
+
+      }
+
     }
 
     for (size_t i = 0; i < MaxOpcode; ++i) {
@@ -1608,7 +1651,7 @@ public:
       magnitude += val * val;
     }
 
-    searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(opcodes, hash);
+    searchStrategy.generateShinglesMultipleHashPipelineTurbo<K>(integers, hash);
     searchStrategy.generateBands(hash, bandHash);
   }
 
@@ -1664,6 +1707,7 @@ public:
     return 1.f - (nintersect / (float)nunion);
   }
 };
+
 
 template <class T> class Fingerprint {
 public:
@@ -1747,15 +1791,23 @@ public:
   virtual void print_stats() = 0;
 };
 
-template <class T> class MatcherFQ : public Matcher<T> {
+template <class T, template<typename> class FPTy = Fingerprint> class MatcherFQ : public Matcher<T>{
 private:
   struct MatcherEntry {
     T candidate;
-    Fingerprint<T> FP;
+    FPTy<T> FP;
     size_t size;
     MatcherEntry() : MatcherEntry(nullptr, 0){};
-    MatcherEntry(T candidate, size_t size)
-        : candidate(candidate), size(size), FP(candidate){};
+
+    template<typename T1 = FPTy<T>, typename T2 = Fingerprint<T>>
+    MatcherEntry(T candidate, size_t size, 
+    typename std::enable_if_t<std::is_same<T1,T2>::value, int> * = nullptr)
+        : candidate(candidate), size(size), FP(candidate){}
+    
+    template <typename T1 = FPTy<T>, typename T2 = FingerprintMH<T>>
+    MatcherEntry(T candidate, size_t size, SearchStrategy &strategy,
+    typename std::enable_if_t<std::is_same<T1, T2>::value, int> * = nullptr)
+        : candidate(candidate), size(size), FP(candidate, strategy){}
   };
   using MatcherIt = typename std::list<MatcherEntry>::iterator;
 
@@ -1765,17 +1817,32 @@ private:
   std::list<MatcherEntry> candidates;
   std::unordered_map<T, MatcherIt> cache;
   std::vector<MatchInfo<T>> matches;
+  SearchStrategy strategy;
 
 public:
   MatcherFQ() = default;
-  MatcherFQ(FunctionMerger &FM, FunctionMergingOptions &Options)
-      : FM(FM), Options(Options){};
+  MatcherFQ(FunctionMerger &FM, FunctionMergingOptions &Options, size_t rows=2, size_t bands=100)
+      : FM(FM), Options(Options), strategy(rows, bands){};
 
   virtual ~MatcherFQ() = default;
 
   void add_candidate(T candidate, size_t size) override {
-    candidates.emplace_front(candidate, size);
+    add_candidate_helper(candidate, size);
     cache[candidate] = candidates.begin();
+  }
+
+  template<typename T1 = FPTy<T>, typename T2 = Fingerprint<T>>
+  void add_candidate_helper(T candidate, size_t size, 
+  typename std::enable_if_t<std::is_same<T1,T2>::value, int> * = nullptr)
+  {
+      candidates.emplace_front(candidate, size);
+  }
+
+  template<typename T1 = FPTy<T>, typename T2 = Fingerprint<T>>
+  void add_candidate_helper(T candidate, size_t size, 
+  typename std::enable_if_t<!std::is_same<T1,T2>::value, int> * = nullptr)
+  {
+      candidates.emplace_front(candidate, size, strategy);
   }
 
   void remove_candidate(T candidate) override {
@@ -1884,7 +1951,13 @@ private:
         CountCandidates++;
       }
       if (best_match.candidate != nullptr)
-        matches.push_back(std::move(best_match));
+        if (!EnableSean || best_match.Distance < RankingDistance)
+          /*if (EnableThunkPrediction)
+          {
+              if (std::max(best_match.size, best_match.OtherSize) + EstimateThunkOverhead(it->candidate, best_match->candidate)) // Needs AlwaysPreserved
+                return;
+          }*/
+          matches.push_back(std::move(best_match));
       return;
     }
 
@@ -1900,7 +1973,8 @@ private:
       new_match.OtherSize = it->size;
       new_match.OtherMagnitude = it->FP.magnitude;
       new_match.Magnitude = entry.FP.magnitude;
-      matches.push_back(std::move(new_match));
+      if (!EnableSean || new_match.Distance < RankingDistance)
+        matches.push_back(std::move(new_match));
       if (RankingThreshold && (CountCandidates > RankingThreshold))
         break;
       CountCandidates++;
@@ -1951,7 +2025,7 @@ private:
 
 public:
   MatcherLSH() = default;
-  MatcherLSH(size_t rows, size_t bands, FunctionMerger &FM, FunctionMergingOptions &Options)
+  MatcherLSH(FunctionMerger &FM, FunctionMergingOptions &Options, size_t rows, size_t bands)
       : rows(rows), bands(bands), FM(FM), Options(Options), strategy(rows, bands) {};
 
   virtual ~MatcherLSH() = default;
@@ -2101,10 +2175,11 @@ private:
         new_match.OtherSize = it->size;
         new_match.OtherMagnitude = FP.magnitude;
         new_match.Magnitude = match_it->FP.magnitude;
-        if (new_match.Distance < best_match.Distance)
+        if (new_match.Distance < best_match.Distance && new_match.Distance < RankingDistance )
           best_match = new_match;
         if (ExplorationThreshold > 1)
-          matches.push_back(new_match);
+          if (new_match.Distance < RankingDistance)
+            matches.push_back(new_match);
         cache.emplace_back(match_it->candidate, match_it);
         if (RankingThreshold && (CountCandidates > RankingThreshold))
           break;
@@ -2608,7 +2683,9 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
 #endif
       return ErrorResponse;
     }
+    
     AlignedSeq = SA.getAlignment(F1Vec, F2Vec);
+
   }
 
 #ifdef TIME_STEPS_DEBUG
@@ -3093,6 +3170,12 @@ static int EstimateThunkOverhead(FunctionMergeResult &MFR,
          (2 + MFR.getMergedFunction()->getFunctionType()->getNumParams());
 }
 
+/*static int EstimateThunkOverhead(Function* F1, Function* F2,
+                                 StringSet<> &AlwaysPreserved) {
+  int fParams = F1->getFunctionType()->getNumParams() + F2->getFunctionType()->getNumParams();
+  return RequiresOriginalInterfaces(F1, F2, AlwaysPreserved) * (2 + fParams);
+}*/
+
 static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
   float size = 0;
   for (Instruction &I : instructions(F)) {
@@ -3445,17 +3528,66 @@ bool FunctionMerging::runOnModule(Module &M) {
   FunctionMerger FM(&M);
 
   std::unique_ptr<Matcher<Function *>> matcher;
-  if (EnableSean) 
-    matcher = std::make_unique<MatcherLSH<Function *>>(LSHRows, LSHBands, FM, Options);
-  else
-    matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options);
+
+  // Check whether to use a linear scan instead
+  int size = 0;
+  for (auto &F : M) {
+    if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
+      continue;
+    size++;
+  }
+  bool linearScan = size > 100 ? false : true;
+
+  // Create a threshold based on the application's size
+  if (AdaptiveThreshold)
+  {
+    double x = std::log10(size) / 10;
+    RankingDistance = (double) (1.0 / (2.0 + std::pow(x/(1.0-x),-3.0))) + 0.125;
+    if (RankingDistance < 0.15)
+    {
+        LSHRows = 1;
+        LSHBands = 200;
+    }
+    else if (RankingDistance >= 0.15 && RankingDistance < 0.4)
+    {
+        LSHRows = 2;
+        LSHBands = 100;
+    }
+    else if (RankingDistance >= 0.4 && RankingDistance < 0.5)
+    {
+        LSHRows = 4;
+        LSHBands = 50;
+    }
+    else
+    {
+        LSHRows = 5;
+        LSHBands = 40;
+    }
+
+    RankingDistance = 1 - RankingDistance;
+  }
+
+  errs() << "Threshold: " << RankingDistance << "\n";
+  errs() << "LSHRows: " << LSHRows << "\n";
+  errs() << "LSHBands: " << LSHBands << "\n";
+
+
+
+  if (EnableSean && !linearScan){
+    matcher = std::make_unique<MatcherLSH<Function *>>(FM, Options, LSHRows, LSHBands); errs() << "LSH MH\n";}
+  else if (EnableSean && linearScan){
+    matcher = std::make_unique<MatcherFQ<Function *, FingerprintMH>>(FM, Options); errs() << "LIN SCAN MH\n";}
+  else{
+    matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options); errs() << "LIN SCAN FP\n";}
+    
 
   SearchStrategy strategy(LSHRows, LSHBands);
-
+  size_t count=0;
   for (auto &F : M) {
     if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
     matcher->add_candidate(&F, EstimateFunctionSize(&F, &TTI));
+    count++;
   }
   errs() << "Number of Functions: " << matcher->size() << "\n";
   //matcher->print_stats();
