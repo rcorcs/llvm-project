@@ -144,10 +144,6 @@ static cl::opt<unsigned> ExplorationThreshold(
     "func-merging-explore", cl::init(1), cl::Hidden,
     cl::desc("Exploration threshold of evaluated functions"));
 
-static cl::opt<unsigned>
-    SAMethod("func-merging-sa-method", cl::init(0), cl::Hidden,
-             cl::desc("(0) hirschberg; (1) needleman-wunsch;"));
-
 static cl::opt<unsigned> RankingThreshold(
     "func-merging-ranking-threshold", cl::init(0), cl::Hidden,
     cl::desc("Threshold of how many candidates should be ranked"));
@@ -169,10 +165,6 @@ static cl::opt<bool> Verbose("func-merging-verbose", cl::init(false),
 static cl::opt<bool>
     IdenticalType("func-merging-identic-type", cl::init(true), cl::Hidden,
                   cl::desc("Match only values with identical types"));
-
-static cl::opt<bool> ApplySimilarityHeuristic(
-    "func-merging-similarity-pruning", cl::init(true), cl::Hidden,
-    cl::desc("Prune the candidates based on their fingerprint similarity"));
 
 static cl::opt<bool>
     EnableUnifiedReturnType("func-merging-unify-return", cl::init(false),
@@ -238,6 +230,10 @@ static cl::opt<double> RankingDistance(
 static cl::opt<bool> EnableThunkPrediction(
     "thunk-predictor", cl::init(false), cl::Hidden,
     cl::desc("Enable dismissal of candidates caused by thunk non-profitability"));
+
+static cl::opt<bool> ReportStats(
+    "func-merging-report", cl::init(false), cl::Hidden,
+    cl::desc("Only report the distances and alignment between all allowed function pairs"));
 
 //////////////////////////// Tests
 
@@ -2001,8 +1997,8 @@ template <class T> class MatcherLSH : public Matcher<T> {
 private:
   struct MatcherEntry {
     T candidate;
-    FingerprintMH<T> FP;
     size_t size;
+    FingerprintMH<T> FP;
     MatcherEntry() : MatcherEntry(nullptr, 0){};
     MatcherEntry(T candidate, size_t size, SearchStrategy &strategy)
         : candidate(candidate), size(size),
@@ -2208,6 +2204,66 @@ private:
                       });
     matches.resize(toRank);
     std::reverse(matches.begin(), matches.end());
+  }
+};
+
+
+template <class T> class MatcherReport {
+private:
+  struct MatcherEntry {
+    T candidate;
+    Fingerprint<T> FPF;
+    FingerprintMH<T> FPMH;
+    MatcherEntry(T candidate, SearchStrategy &strategy)
+        : candidate(candidate), FPF(candidate), FPMH(candidate, strategy){};
+  };
+  using MatcherIt = typename std::list<MatcherEntry>::iterator;
+
+  FunctionMerger &FM;
+  FunctionMergingOptions &Options;
+  SearchStrategy strategy;
+  std::vector<MatcherEntry> candidates;
+
+public:
+  MatcherReport() = default;
+  MatcherReport(size_t rows, size_t bands, FunctionMerger &FM, FunctionMergingOptions &Options)
+      : FM(FM), Options(Options), strategy(rows, bands) {};
+
+  ~MatcherReport() = default;
+
+  void add_candidate(T candidate) {
+    candidates.emplace_back(candidate, strategy);
+  }
+
+  void report() const {
+    char distance_mh_str[20];
+
+    for (auto &entry: candidates) {
+      uint64_t val = 0;
+      for (auto &num: entry.FPF.OpcodeFreq)
+        val += num;
+      errs() << "Function Name: " << GetValueName(entry.candidate)
+             << " Fingerprint Size: " << val << "\n";
+    }
+
+    std::string Name("_m_f_");
+    for (auto it1 = candidates.cbegin(); it1 != candidates.cend(); ++it1) {
+      for (auto it2 = std::next(it1); it2 != candidates.cend(); ++it2) {
+        if ((!FM.validMergeTypes(it1->candidate, it2->candidate, Options) &&
+             !Options.EnableUnifiedReturnType) ||
+            !validMergePair(it1->candidate, it2->candidate))
+          continue;
+
+        auto distance_fq = it1->FPF.distance(it2->FPF);
+        auto distance_mh = it1->FPMH.distance(it2->FPMH);
+        std::snprintf(distance_mh_str, 20, "%.5f", distance_mh);
+        errs() << "F1: " << it1 - candidates.cbegin() << " + "
+               << "F2: " << it2 - candidates.cbegin() << " "
+               << "FQ: " << static_cast<int>(distance_fq) << " "
+               << "MH: " << distance_mh_str << "\n";
+        FunctionMergeResult Result = FM.merge(it1->candidate, it2->candidate, Name, Options);
+      }
+    }
   }
 };
 
@@ -2691,7 +2747,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.stopTimer();
 #endif
-  if (!ProfitableFn) {
+  if (!ProfitableFn && !ReportStats) {
     if (Verbose)
       errs() << "Skipped: Not profitable enough!!\n";
     return ErrorResponse;
@@ -2736,9 +2792,12 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
       errs() << "Across Basic Blocks\n";
     }
   }
-  if (Verbose) {
+  if (Verbose || ReportStats) {
     errs() << "Matches: " << NumMatches << ", " << TotalEntries << "\n";
   }
+  
+  if (ReportStats)
+    return ErrorResponse;
 
   // errs() << "Code Gen\n";
 #ifdef ENABLE_DEBUG_CODE
@@ -3526,6 +3585,17 @@ bool FunctionMerging::runOnModule(Module &M) {
   TargetTransformInfo TTI(M.getDataLayout());
 
   FunctionMerger FM(&M);
+
+  if (ReportStats) {
+    MatcherReport<Function *> reporter(LSHRows, LSHBands, FM, Options);
+    for (auto &F : M) {
+      if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
+        continue;
+      reporter.add_candidate(&F);
+    }
+    reporter.report();
+    return false;
+  }
 
   std::unique_ptr<Matcher<Function *>> matcher;
 
