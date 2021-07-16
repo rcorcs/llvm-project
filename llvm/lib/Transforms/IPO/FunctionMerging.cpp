@@ -1791,8 +1791,8 @@ template <class T, template<typename> class FPTy = Fingerprint> class MatcherFQ 
 private:
   struct MatcherEntry {
     T candidate;
-    FPTy<T> FP;
     size_t size;
+    FPTy<T> FP;
     MatcherEntry() : MatcherEntry(nullptr, 0){};
 
     template<typename T1 = FPTy<T>, typename T2 = Fingerprint<T>>
@@ -3707,8 +3707,11 @@ bool FunctionMerging::runOnModule(Module &M) {
 
       MergingTrialsCount++;
 
+      std::string F1Name(GetValueName(F1));
+      std::string F2Name(GetValueName(F2));
+
       if (Debug)
-        errs() << "Attempting: " << GetValueName(F1) << ", " << GetValueName(F2) << " : " << match.Distance << "\n";
+        errs() << "Attempting: " << F1Name << ", " << F2Name << " : " << match.Distance << "\n";
 
       std::string Name = "_m_f_" + std::to_string(TotalMerges);
       FunctionMergeResult Result = FM.merge(F1, F2, Name, Options);
@@ -3773,7 +3776,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       }
 
 
-      errs() << GetValueName(F1) << " + " << GetValueName(F2) << " <= " << Name
+      errs() << F1Name << " + " << F2Name << " <= " << Name
              << " Tries: " << MergingTrialsCount
              << " Valid: " << match.Valid
              << " BinSizes: " << match.OtherSize << " + " << match.Size << " <= " << match.MergedSize
