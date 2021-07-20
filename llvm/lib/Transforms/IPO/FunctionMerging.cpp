@@ -175,16 +175,16 @@ static cl::opt<bool>
                     cl::desc("Function merging applied on whole program"));
 
 static cl::opt<bool>
-    EnableSALSSA("func-merging-salssa", cl::init(false), cl::Hidden,
-                 cl::desc("Enable full support of the SSA form with SalSSA"));
+    EnableHyFMPA("func-merging-hyfm-pa", cl::init(false), cl::Hidden,
+                 cl::desc("Enable HyFM with the Pairwise Alignment"));
+
+static cl::opt<bool>
+    EnableHyFMNW("func-merging-hyfm-nw", cl::init(false), cl::Hidden,
+                 cl::desc("Enable HyFM with the Needleman-Wunsch alignment"));
 
 static cl::opt<bool> EnableSALSSACoalescing(
     "func-merging-coalescing", cl::init(true), cl::Hidden,
     cl::desc("Enable phi-node coalescing during SSA reconstruction"));
-
-static cl::opt<unsigned> ConservativeMode(
-    "func-merging-conservative", cl::init(0), cl::Hidden,
-    cl::desc("Enable conservative mode to avoid runtime overhead"));
 
 static cl::opt<bool> ReuseMergedFunctions(
     "func-merging-reuse-merges", cl::init(true), cl::Hidden,
@@ -198,9 +198,9 @@ static cl::opt<bool> HyFMProfitability(
     "hyfm-profitability", cl::init(true), cl::Hidden,
     cl::desc("Try to reuse merged functions for another merge operation"));
 
-static cl::opt<bool> EnableSean(
-    "func-merging-sean", cl::init(false), cl::Hidden,
-    cl::desc("Enable Sean's Contributions LSH or Alternative Alignment Algos"));
+static cl::opt<bool> EnableLSH(
+    "func-merging-lsh", cl::init(false), cl::Hidden,
+    cl::desc("Enable function pairing based on LSH"));
 
 static cl::opt<unsigned> LSHRows(
     "hyfm-lsh-rows", cl::init(2), cl::Hidden,
@@ -1931,7 +1931,7 @@ private:
         CountCandidates++;
       }
       if (best_match.candidate != nullptr)
-        if (!EnableSean || best_match.Distance < RankingDistance)
+        if (!EnableLSH || best_match.Distance < RankingDistance)
           /*if (EnableThunkPrediction)
           {
               if (std::max(best_match.size, best_match.OtherSize) + EstimateThunkOverhead(it->candidate, best_match->candidate)) // Needs AlwaysPreserved
@@ -1953,7 +1953,7 @@ private:
       new_match.OtherSize = it->size;
       new_match.OtherMagnitude = it->FP.magnitude;
       new_match.Magnitude = entry.FP.magnitude;
-      if (!EnableSean || new_match.Distance < RankingDistance)
+      if (!EnableLSH || new_match.Distance < RankingDistance)
         matches.push_back(std::move(new_match));
       if (RankingThreshold && (CountCandidates > RankingThreshold))
         break;
@@ -2431,7 +2431,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
 #endif
 
   AlignedSequence<Value *> AlignedSeq;
-  if (ConservativeMode == 3) {
+  if (EnableHyFMNW) { // HyFM [NW]
     AlignmentStats TotalAlignmentStats;
 
     int B1Max = 0;
@@ -2529,7 +2529,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     }
 
     ProfitableFn = TotalAlignmentStats.isProfitable();
-  } else if (ConservativeMode == 5) {
+  } else if (EnableHyFMPA) { // HyFM [PA]
     AlignmentStats TotalAlignmentStats;
 
     int NumBB1 = 0;
@@ -2597,108 +2597,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
       errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize << "\n";
 
     ProfitableFn = TotalAlignmentStats.isProfitable();
-  } else if (ConservativeMode == 7) {
-    AlignmentStats TotalAlignmentStats;
-
-    int B1Max = 0;
-    int B2Max = 0;
-    size_t MaxMem = 0;
-
-    int NumBB1 = 0;
-    int NumBB2 = 0;
-    size_t MemSize = 0;
-
-#ifdef TIME_STEPS_DEBUG
-    TimeAlignRank.startTimer();
-#endif
-    std::map<size_t, std::vector<BlockFingerprint>> BlocksF1;
-    for (BasicBlock &BB1 : *F1) {
-      BlockFingerprint BD1(&BB1);
-      NumBB1++;
-      MemSize += BD1.footprint();
-      BlocksF1[BD1.Size].push_back(std::move(BD1));
-    }
-#ifdef TIME_STEPS_DEBUG
-    TimeAlignRank.stopTimer();
-#endif
-
-    for (BasicBlock &BIt : *F2) {
-#ifdef TIME_STEPS_DEBUG
-      TimeAlignRank.startTimer();
-#endif
-      NumBB2++;
-      BasicBlock *BB2 = &BIt;
-      BlockFingerprint BD2(BB2);
-
-      auto &SetRef = BlocksF1[BD2.Size];
-
-      auto BestIt = SetRef.end();
-      float BestDist = std::numeric_limits<float>::max();
-      for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt != E; BDIt++) {
-        auto D = BD2.distance(*BDIt);
-        if (D < BestDist) {
-          BestDist = D;
-          BestIt = BDIt;
-        }
-      }
-#ifdef TIME_STEPS_DEBUG
-      TimeAlignRank.stopTimer();
-#endif
-
-      bool MergedBlock = false;
-      if (BestIt != SetRef.end()) {
-        auto &BD1 = *BestIt;
-        BasicBlock *BB1 = BD1.BB;
-
-        SmallVector<Value *, 8> BB1Vec;
-        SmallVector<Value *, 8> BB2Vec;
-
-        BB1Vec.push_back(BB1);
-        for (auto &I : *BB1) {
-          if (!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
-            BB1Vec.push_back(&I);
-        }
-
-        BB2Vec.push_back(BB2);
-        for (auto &I : *BB2) {
-          if (!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
-            BB2Vec.push_back(&I);
-        }
-
-        NeedlemanWunschSA<SmallVectorImpl<Value *>> SA(ScoringSystem(-1, 2), FunctionMerger::match);
-
-        auto MemReq = SA.getMemoryRequirement(BB1Vec, BB2Vec);
-        if (Verbose)
-          errs() << "PStats: " << BB1Vec.size() << " , " << BB2Vec.size() << " , " << MemReq << "\n";
-
-        if (MemReq > MaxMem) {
-          MaxMem = MemReq;
-          B1Max = BB1Vec.size();
-          B2Max = BB2Vec.size();
-        }
-        AlignedSequence<Value *> AlignedBlocks = SA.getAlignment(BB1Vec, BB2Vec);
-
-        if (!HyFMProfitability || isSAProfitable(AlignedBlocks)) {
-          extendAlignedSeq(AlignedSeq, AlignedBlocks, TotalAlignmentStats);
-          SetRef.erase(BestIt);
-          MergedBlock = true;
-        }
-      }
-      if (!MergedBlock)
-        extendAlignedSeq(AlignedSeq, nullptr, BB2, TotalAlignmentStats);
-    }
-
-    for (auto &Pair : BlocksF1)
-      for (auto &BD1 : Pair.second)
-        extendAlignedSeq(AlignedSeq, BD1.BB, nullptr, TotalAlignmentStats);
-
-    if (Verbose) {
-      errs() << "Stats: " << B1Max << " , " << B2Max << " , " << MaxMem << "\n";
-      errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize << "\n";
-    }
-
-    ProfitableFn = TotalAlignmentStats.isProfitable();
-  } else if (ConservativeMode == 0) {
+  } else { //default SALSSA
     SmallVector<Value *, 8> F1Vec;
     SmallVector<Value *, 8> F2Vec;
 
@@ -3061,7 +2960,6 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR,
       }
     } else if (auto *II = dyn_cast<InvokeInst>(U)) {
       if (II->getCalledFunction() == F) {
-        // if (EnableSALSSA)
         Calls.push_back(II);
       }
     }
@@ -3625,9 +3523,9 @@ bool FunctionMerging::runOnModule(Module &M) {
 
 
 
-  if (EnableSean && !linearScan){
+  if (EnableLSH && !linearScan){
     matcher = std::make_unique<MatcherLSH<Function *>>(FM, Options, LSHRows, LSHBands); errs() << "LSH MH\n";}
-  else if (EnableSean && linearScan){
+  else if (EnableLSH && linearScan){
     matcher = std::make_unique<MatcherFQ<Function *, FingerprintMH>>(FM, Options); errs() << "LIN SCAN MH\n";}
   else{
     matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options); errs() << "LIN SCAN FP\n";}
@@ -3679,7 +3577,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       std::string F2Name(GetValueName(F2));
 
       if (Verbose) {
-        if (EnableSean) {
+        if (EnableLSH) {
           Fingerprint<Function *> FP1(F1);
           Fingerprint<Function *> FP2(F2);
           OtherDistance = FP1.distance(FP2);
@@ -3809,7 +3707,7 @@ bool FunctionMerging::runOnModule(Module &M) {
   errs() << "Timer:CodeGen:Align: " << TimeAlign.getTotalTime().getWallTime() << "\n";
   TimeAlign.clear();
 
-  errs() << "Timer:CodeGen:Align:Rank " << TimeAlignRank.getTotalTime().getWallTime() << "\n";
+  errs() << "Timer:CodeGen:Align:Rank: " << TimeAlignRank.getTotalTime().getWallTime() << "\n";
   TimeAlignRank.clear();
 
   errs() << "Timer:CodeGen:Param: " << TimeParam.getTotalTime().getWallTime() << "\n";
