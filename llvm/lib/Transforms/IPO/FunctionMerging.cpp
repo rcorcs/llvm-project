@@ -2777,7 +2777,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     }
   }
   if (Verbose || ReportStats) {
-    errs() << "Matches: " << NumMatches << ", " << TotalEntries << "\n";
+    errs() << "Matches: " << NumMatches << ", " << TotalEntries << ", " << ( (double) NumMatches/ (double) TotalEntries) << "\n";
   }
   
   if (ReportStats)
@@ -3277,6 +3277,8 @@ unsigned instToInt(Instruction *I) {
     value = value * (i + 1);
   }
 
+  return value;
+
   // Now for the funky stuff -- this is gonna be a wild ride
   switch (I->getOpcode()) {
 
@@ -3588,7 +3590,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       continue;
     size++;
   }
-  bool linearScan = size > 100 ? false : true;
+  bool linearScan = size < 100 ? true : false;
 
   // Create a threshold based on the application's size
   if (AdaptiveThreshold)
@@ -3693,8 +3695,8 @@ bool FunctionMerging::runOnModule(Module &M) {
       MergingTrialsCount++;
 
 
-      if (Debug)
-        errs() << "Attempting: " << F1Name << ", " << F2Name << " : " << match.Distance << "\n";
+      //if (Debug)
+        //errs() << "Attempting: " << F1Name << ", " << F2Name << " : " << match.Distance << "\n";
 
       std::string Name = "_m_f_" + std::to_string(TotalMerges);
       FunctionMergeResult Result = FM.merge(F1, F2, Name, Options);
