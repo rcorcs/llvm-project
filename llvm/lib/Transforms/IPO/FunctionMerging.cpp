@@ -3695,8 +3695,8 @@ bool FunctionMerging::runOnModule(Module &M) {
       MergingTrialsCount++;
 
 
-      //if (Debug)
-        //errs() << "Attempting: " << F1Name << ", " << F2Name << " : " << match.Distance << "\n";
+      if (Debug)
+        errs() << "Attempting: " << F1Name << ", " << F2Name << " : " << match.Distance << "\n";
 
       std::string Name = "_m_f_" + std::to_string(TotalMerges);
       FunctionMergeResult Result = FM.merge(F1, F2, Name, Options);
