@@ -2795,6 +2795,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
   }
   Value *FuncId = ArgsList[0];
 
+  /*
   auto AttrList1 = F1->getAttributes();
   auto AttrList2 = F2->getAttributes();
   auto AttrListM = MergedFunc->getAttributes();
@@ -2823,7 +2824,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     ArgId++;
   }
   //MergedFunc->setAttributes(AttrListM);
-
+  */
 #ifdef TIME_STEPS_DEBUG
   TimeParam.stopTimer();
 #endif
@@ -4203,7 +4204,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
       auto *NewI = dyn_cast<Instruction>(VMap[I]);
 
       bool Handled = false;
-      /*
+      
       BranchInst *NewBr = dyn_cast<BranchInst>(NewI);
       if (EnableOperandReordering && NewBr!=nullptr && NewBr->isConditional()) {
          BranchInst *Br1 = dyn_cast<BranchInst>(I1);
@@ -4218,15 +4219,14 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
       *SuccBB21 = dyn_cast<BasicBlock>(MapValue(Br2->getSuccessor(1), VMap));
 
          if (SuccBB10!=nullptr && SuccBB11!=nullptr && SuccBB10==SuccBB21 &&
-      SuccBB20==SuccBB11) { if (Debug) errs() << "OptimizationTriggered: Labels
-      of Conditional Branch Reordering\n";
+      SuccBB20==SuccBB11) { if (Debug) errs() << "OptimizationTriggered: Labels of Conditional Branch Reordering\n";
 
              XorBrConds.insert(NewBr);
              NewBr->setSuccessor(0,SuccBB20);
              NewBr->setSuccessor(1,SuccBB21);
              Handled = true;
          }
-      }*/
+      }
 
       if (!Handled) {
         for (unsigned i = 0; i < I->getNumOperands(); i++) {
