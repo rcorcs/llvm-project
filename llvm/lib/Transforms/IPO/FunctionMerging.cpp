@@ -4226,15 +4226,6 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
                "Num of Operands SHOULD be EQUAL\n");
       }
 
-      if (I1->getOpcode() == Instruction::CallBr) {
-        // CallBr is used almost exclusively for inline asm
-        // Merging linux functions with asm code usually breaks code generation
-#ifdef TIME_STEPS_DEBUG
-              TimeCodeGen.stopTimer();
-#endif
-              return false;
-      }
-
       auto *NewI = dyn_cast<Instruction>(VMap[I]);
 
       bool Handled = false;
