@@ -230,6 +230,10 @@ static cl::opt<bool> ReportStats(
     "func-merging-report", cl::init(false), cl::Hidden,
     cl::desc("Only report the distances and alignment between all allowed function pairs"));
 
+static cl::opt<bool> Deterministic(
+    "func-merging-deterministic", cl::init(true), cl::Hidden,
+    cl::desc("Replace all random number generators with deterministic values"));
+
 
 static std::string GetValueName(const Value *V);
 
@@ -3135,8 +3139,13 @@ static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
   return size_t(std::ceil(size));
 }
 
+
 unsigned instToInt(Instruction *I) {
   uint32_t value = 0;
+  static uint32_t pseudorand_value = 100;
+
+  if (pseudorand_value > 10000)
+    pseudorand_value = 100;
 
   // std::ofstream myfile;
   // std::string newPath = "/home/sean/similarityChecker.txt";
@@ -3175,7 +3184,6 @@ unsigned instToInt(Instruction *I) {
 
     value = value * (i + 1);
   }
-
   return value;
 
   // Now for the funky stuff -- this is gonna be a wild ride
@@ -3237,7 +3245,10 @@ unsigned instToInt(Instruction *I) {
       // CompositeType* CTy = dyn_cast<CompositeType>(AggTy);
 
       if (!AggTy || AggTy->isPointerTy()) {
-        value = std::rand() % 10000 + 100;
+        if (Deterministic)
+          value = pseudorand_value++;
+        else
+          value = std::rand() % 10000 + 100;
         break;
       }
 
@@ -3245,8 +3256,11 @@ unsigned instToInt(Instruction *I) {
 
       if (isa<StructType>(AggTy)) {
         if (!isa<ConstantInt>(Idx)) {
-          value = std::rand() % 10000 + 100; // Use a random number as we don't
-                                             // want this to match with anything
+          if (Deterministic)
+            value = pseudorand_value++;
+          else
+            value = std::rand() % 10000 + 100; // Use a random number as we don't
+                                               // want this to match with anything
           break;
         }
 
@@ -3288,7 +3302,10 @@ unsigned instToInt(Instruction *I) {
     uint32_t cValue = 1;
 
     if (CI->isInlineAsm()) {
-      value = std::rand() % 10000 + 100;
+      if (Deterministic)
+        value = pseudorand_value++;
+      else
+        value = std::rand() % 10000 + 100;
       break;
     }
 
@@ -3421,7 +3438,10 @@ unsigned instToInt(Instruction *I) {
   }
 
   case Instruction::PHI: {
-    value = std::rand() % 10000 + 100;
+    if (Deterministic)
+      value = pseudorand_value++;
+    else
+      value = std::rand() % 10000 + 100;
     break;
   }
 
