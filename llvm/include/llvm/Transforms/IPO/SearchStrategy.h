@@ -161,9 +161,9 @@ public:
       return;
 
     // If we enlarged it, we need to generate new random numbers
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    // std::mt19937 gen(0);
+    // std::random_device rd;
+    // std::mt19937 gen(rd());
+    std::mt19937 gen(0);
     std::uniform_real_distribution<> distribution(
         0, std::numeric_limits<uint32_t>::max());
 
