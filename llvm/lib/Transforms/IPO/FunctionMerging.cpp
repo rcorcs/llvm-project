@@ -906,6 +906,9 @@ bool FunctionMerger::matchInstructions(Instruction *I1, Instruction *I2,
   if (I1->getOpcode() != I2->getOpcode())
     return false;
 
+  if (I1->getOpcode() == Instruction::CallBr)
+    return false;
+
   // Returns are special cases that can differ in the number of operands
   if (I1->getOpcode() == Instruction::Ret)
     return true;
@@ -2795,7 +2798,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
   }
   Value *FuncId = ArgsList[0];
 
-  /*
+  
   auto AttrList1 = F1->getAttributes();
   auto AttrList2 = F2->getAttributes();
   auto AttrListM = MergedFunc->getAttributes();
@@ -2824,7 +2827,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     ArgId++;
   }
   //MergedFunc->setAttributes(AttrListM);
-  */
+  
 #ifdef TIME_STEPS_DEBUG
   TimeParam.stopTimer();
 #endif
@@ -4206,7 +4209,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
       auto *NewI = dyn_cast<Instruction>(VMap[I]);
 
       bool Handled = false;
-      
+      /*
       BranchInst *NewBr = dyn_cast<BranchInst>(NewI);
       if (EnableOperandReordering && NewBr!=nullptr && NewBr->isConditional()) {
          BranchInst *Br1 = dyn_cast<BranchInst>(I1);
@@ -4229,7 +4232,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
              Handled = true;
          }
       }
-
+      */
       if (!Handled) {
         for (unsigned i = 0; i < I->getNumOperands(); i++) {
 
@@ -4495,6 +4498,16 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
         assert(I1->getNumOperands() == I2->getNumOperands() &&
                "Num of Operands SHOULD be EQUAL\n");
       }
+      /*
+      if (I1->getOpcode() == Instruction::CallBr) {
+        // CallBr is used almost exclusively for inline asm
+        // Merging linux functions with asm code usually breaks code generation
+#ifdef TIME_STEPS_DEBUG
+              TimeCodeGen.stopTimer();
+#endif
+              return false;
+      }
+      */
 
       auto *NewI = dyn_cast<Instruction>(VMap[I]);
 
