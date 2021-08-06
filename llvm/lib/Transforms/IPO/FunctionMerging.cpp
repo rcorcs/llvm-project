@@ -2943,7 +2943,7 @@ void FunctionMerger::replaceByCall(Function *F, FunctionMergeResult &MFR,
       Value *CastedAddr = Builder.CreatePointerCast(
           AddrCI,
           PointerType::get(F->getReturnType(), DL->getAllocaAddrSpace()));
-      CastedV = Builder.CreateLoad(CastedAddr);
+      CastedV = Builder.CreateLoad(F->getReturnType(), CastedAddr);
     } else {
       CastedV = createCastIfNeeded(CI, F->getReturnType(), Builder, IntPtrTy,
                                    Options);
@@ -3024,7 +3024,7 @@ bool FunctionMerger::replaceCallsWith(Function *F, FunctionMergeResult &MFR,
         Value *CastedAddr = Builder.CreatePointerCast(
             AddrCI,
             PointerType::get(F->getReturnType(), DL->getAllocaAddrSpace()));
-        CastedV = Builder.CreateLoad(CastedAddr);
+        CastedV = Builder.CreateLoad(F->getReturnType(), CastedAddr);
       } else {
         CastedV = createCastIfNeeded(NewCB, F->getReturnType(), Builder,
                                      IntPtrTy, Options);
@@ -3135,8 +3135,8 @@ static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
     //  size += 1.2;
     //  break;
     default:
-      size += TTI->getInstructionCost(
-          &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
+      auto cost = TTI->getInstructionCost(&I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
+	  size += cost.getValue().getValue();
     }
   }
   return size_t(std::ceil(size));
@@ -4890,10 +4890,10 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
           /// TODO: make sure getOperandNo is getting the correct incoming edge
           IRBuilder<> Builder(
               PHI->getIncomingBlock(UI.getOperandNo())->getTerminator());
-          UI.set(Builder.CreateLoad(Addr));
+          UI.set(Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr));
         } else {
           IRBuilder<> Builder(User);
-          UI.set(Builder.CreateLoad(Addr));
+          UI.set(Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr));
         }
       }
     }

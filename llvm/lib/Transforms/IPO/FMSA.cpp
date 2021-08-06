@@ -430,12 +430,12 @@ promoteMemoryToRegister(Function &F,
 }
 
 static int estimateFunctionSize(Function &F, TargetTransformInfo *TTI) {
-  int size = 0;
+  InstructionCost size(0);
   for (Instruction &I : instructions(&F)) {
     size += TTI->getInstructionCost(
         &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
   }
-  return size;
+  return size.getValue().getValue();
 }
 
 static bool fixNotDominatedUses(Function *F, DominatorTree &DT) {

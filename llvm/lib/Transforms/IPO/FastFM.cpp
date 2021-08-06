@@ -2072,7 +2072,7 @@ static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
       break;
     default:
       size += TTI->getInstructionCost(
-        &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
+        &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize).getValue().getValue();
     }
   }
   

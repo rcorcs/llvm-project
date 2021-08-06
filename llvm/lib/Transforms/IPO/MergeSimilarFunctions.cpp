@@ -1890,7 +1890,7 @@ static Function *cloneAndAddArgument(Function *F1, ValueToValueMapTy &VMap) {
   (*DestI).setName("__merge_arg");
 
   SmallVector<ReturnInst*, 8> Returns;
-  CloneFunctionInto(NewF, F1, VMap, false, Returns);
+  CloneFunctionInto(NewF, F1, VMap, CloneFunctionChangeType::LocalChangesOnly, Returns);
   // Set linkage to set visibility to default.
   NewF->setLinkage(GlobalValue::InternalLinkage);
 
