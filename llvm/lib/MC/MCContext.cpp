@@ -25,6 +25,7 @@
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCSectionCOFF.h"
 #include "llvm/MC/MCSectionELF.h"
+#include "llvm/MC/MCSectionGOFF.h"
 #include "llvm/MC/MCSectionMachO.h"
 #include "llvm/MC/MCSectionWasm.h"
 #include "llvm/MC/MCSectionXCOFF.h"
@@ -32,6 +33,7 @@
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/MCSymbolCOFF.h"
 #include "llvm/MC/MCSymbolELF.h"
+#include "llvm/MC/MCSymbolGOFF.h"
 #include "llvm/MC/MCSymbolMachO.h"
 #include "llvm/MC/MCSymbolWasm.h"
 #include "llvm/MC/MCSymbolXCOFF.h"
@@ -63,12 +65,12 @@ static void defaultDiagHandler(const SMDiagnostic &SMD, bool, const SourceMgr &,
 }
 
 MCContext::MCContext(const Triple &TheTriple, const MCAsmInfo *mai,
-                     const MCRegisterInfo *mri, const MCObjectFileInfo *mofi,
-                     const MCSubtargetInfo *msti, const SourceMgr *mgr,
-                     MCTargetOptions const *TargetOpts, bool DoAutoReset)
+                     const MCRegisterInfo *mri, const MCSubtargetInfo *msti,
+                     const SourceMgr *mgr, MCTargetOptions const *TargetOpts,
+                     bool DoAutoReset)
     : TT(TheTriple), SrcMgr(mgr), InlineSrcMgr(nullptr),
-      DiagHandler(defaultDiagHandler), MAI(mai), MRI(mri), MOFI(mofi),
-      MSTI(msti), Symbols(Allocator), UsedNames(Allocator),
+      DiagHandler(defaultDiagHandler), MAI(mai), MRI(mri), MSTI(msti),
+      Symbols(Allocator), UsedNames(Allocator),
       InlineAsmUsedLabelNames(Allocator),
       CurrentDwarfLoc(0, 0, 0, DWARF2_FLAG_IS_STMT, 0, 0),
       AutoReset(DoAutoReset), TargetOptions(TargetOpts) {
@@ -99,7 +101,7 @@ MCContext::MCContext(const Triple &TheTriple, const MCAsmInfo *mai,
     Env = IsXCOFF;
     break;
   case Triple::GOFF:
-    report_fatal_error("Cannot initialize MC for GOFF object file format");
+    Env = IsGOFF;
     break;
   case Triple::UnknownObjectFormat:
     report_fatal_error("Cannot initialize MC for unknown object file format.");
@@ -133,6 +135,7 @@ void MCContext::reset() {
   // Call the destructors so the fragments are freed
   COFFAllocator.DestroyAll();
   ELFAllocator.DestroyAll();
+  GOFFAllocator.DestroyAll();
   MachOAllocator.DestroyAll();
   XCOFFAllocator.DestroyAll();
   MCInstAllocator.DestroyAll();
@@ -156,6 +159,7 @@ void MCContext::reset() {
 
   MachOUniquingMap.clear();
   ELFUniquingMap.clear();
+  GOFFUniquingMap.clear();
   COFFUniquingMap.clear();
   WasmUniquingMap.clear();
   XCOFFUniquingMap.clear();
@@ -231,6 +235,8 @@ MCSymbol *MCContext::createSymbolImpl(const StringMapEntry<bool> *Name,
     return new (Name, *this) MCSymbolCOFF(Name, IsTemporary);
   case MCContext::IsELF:
     return new (Name, *this) MCSymbolELF(Name, IsTemporary);
+  case MCContext::IsGOFF:
+    return new (Name, *this) MCSymbolGOFF(Name, IsTemporary);
   case MCContext::IsMachO:
     return new (Name, *this) MCSymbolMachO(Name, IsTemporary);
   case MCContext::IsWasm:
@@ -261,7 +267,7 @@ MCSymbol *MCContext::createSymbol(StringRef Name, bool AlwaysAddSuffix,
       NewName.resize(Name.size());
       raw_svector_ostream(NewName) << NextUniqueID++;
     }
-    auto NameEntry = UsedNames.insert(std::make_pair(NewName, true));
+    auto NameEntry = UsedNames.insert(std::make_pair(NewName.str(), true));
     if (NameEntry.second || !NameEntry.first->second) {
       // Ok, we found a name.
       // Mark it as used for a non-section symbol.
@@ -394,7 +400,7 @@ MCContext::createXCOFFSymbolImpl(const StringMapEntry<bool> *Name,
   else
     ValidName.append(InvalidName);
 
-  auto NameEntry = UsedNames.insert(std::make_pair(ValidName, true));
+  auto NameEntry = UsedNames.insert(std::make_pair(ValidName.str(), true));
   assert((NameEntry.second || !NameEntry.first->second) &&
          "This name is used somewhere else.");
   // Mark the name as used for a non-section symbol.
@@ -580,7 +586,7 @@ void MCContext::recordELFMergeableSectionInfo(StringRef SectionName,
                                               unsigned Flags, unsigned UniqueID,
                                               unsigned EntrySize) {
   bool IsMergeable = Flags & ELF::SHF_MERGE;
-  if (IsMergeable && (UniqueID == GenericSectionID))
+  if (UniqueID == GenericSectionID)
     ELFSeenGenericMergeableSections.insert(SectionName);
 
   // For mergeable sections or non-mergeable sections with a generic mergeable
@@ -608,6 +614,15 @@ Optional<unsigned> MCContext::getELFUniqueIDForEntsize(StringRef SectionName,
   auto I = ELFEntrySizeMap.find(
       MCContext::ELFEntrySizeKey{SectionName, Flags, EntrySize});
   return (I != ELFEntrySizeMap.end()) ? Optional<unsigned>(I->second) : None;
+}
+
+MCSectionGOFF *MCContext::getGOFFSection(StringRef Section, SectionKind Kind) {
+  // Do the lookup. If we don't have a hit, return a new section.
+  auto &GOFFSection = GOFFUniquingMap[Section.str()];
+  if (!GOFFSection)
+    GOFFSection = new (GOFFAllocator.Allocate()) MCSectionGOFF(Section, Kind);
+
+  return GOFFSection;
 }
 
 MCSectionCOFF *MCContext::getCOFFSection(StringRef Section,

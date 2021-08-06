@@ -52,8 +52,7 @@ EXTERN __kmpc_impl_lanemask_t __kmpc_impl_activemask() {
   return __builtin_amdgcn_read_exec();
 }
 
-static void pteam_mem_barrier(uint32_t num_threads, uint32_t * barrier_state)
-{
+static void pteam_mem_barrier(uint32_t num_threads, uint32_t *barrier_state) {
   __atomic_thread_fence(__ATOMIC_ACQUIRE);
 
   uint32_t num_waves = (num_threads + WARPSIZE - 1) / WARPSIZE;
@@ -123,25 +122,25 @@ uint32_t get_workgroup_dim(uint32_t group_id, uint32_t grid_size,
 }
 } // namespace
 
-EXTERN int GetNumberOfBlocksInKernel() {
+EXTERN int __kmpc_get_hardware_num_blocks() {
   return get_grid_dim(__builtin_amdgcn_grid_size_x(),
                       __builtin_amdgcn_workgroup_size_x());
 }
 
-EXTERN int GetNumberOfThreadsInBlock() {
+EXTERN int __kmpc_get_hardware_num_threads_in_block() {
   return get_workgroup_dim(__builtin_amdgcn_workgroup_id_x(),
                            __builtin_amdgcn_grid_size_x(),
                            __builtin_amdgcn_workgroup_size_x());
 }
 
-EXTERN unsigned GetWarpId() { return GetThreadIdInBlock() / WARPSIZE; }
+EXTERN unsigned GetWarpId() { return __kmpc_get_hardware_thread_id_in_block() / WARPSIZE; }
 EXTERN unsigned GetWarpSize() { return WARPSIZE; }
 EXTERN unsigned GetLaneId() {
   return __builtin_amdgcn_mbcnt_hi(~0u, __builtin_amdgcn_mbcnt_lo(~0u, 0u));
 }
 
 EXTERN uint32_t __kmpc_amdgcn_gpu_num_threads() {
-  return GetNumberOfThreadsInBlock();
+  return __kmpc_get_hardware_num_threads_in_block();
 }
 
 // Atomics
@@ -178,8 +177,12 @@ unsigned long long __kmpc_atomic_add(unsigned long long *Address,
 }
 
 // Stub implementations
-EXTERN void *__kmpc_impl_malloc(size_t) { return nullptr; }
-EXTERN void __kmpc_impl_free(void *) {}
+// Weak to allow overriding by local versions while comparing different
+// potential implementations
+__attribute__((weak)) EXTERN void *__kmpc_impl_malloc(size_t) {
+  return nullptr;
+}
+__attribute__((weak)) EXTERN void __kmpc_impl_free(void *) {}
 
 EXTERN void __kmpc_impl_unpack(uint64_t val, uint32_t &lo, uint32_t &hi) {
   lo = (uint32_t)(val & UINT64_C(0x00000000FFFFFFFF));
@@ -209,7 +212,7 @@ EXTERN void __kmpc_impl_threadfence_system() {
 }
 
 // Calls to the AMDGCN layer (assuming 1D layout)
-EXTERN int GetThreadIdInBlock() { return __builtin_amdgcn_workitem_id_x(); }
+EXTERN int __kmpc_get_hardware_thread_id_in_block() { return __builtin_amdgcn_workitem_id_x(); }
 EXTERN int GetBlockIdInKernel() { return __builtin_amdgcn_workgroup_id_x(); }
 
 #pragma omp end declare target

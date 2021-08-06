@@ -326,6 +326,10 @@ mlirOpPrintingFlagsUseLocalScope(MlirOpPrintingFlags flags);
 ///   - Result type inference is enabled and cannot be performed.
 MLIR_CAPI_EXPORTED MlirOperation mlirOperationCreate(MlirOperationState *state);
 
+/// Creates a deep copy of an operation. The operation is not inserted and
+/// ownership is transferred to the caller.
+MLIR_CAPI_EXPORTED MlirOperation mlirOperationClone(MlirOperation op);
+
 /// Takes an operation owned by the caller and destroys it.
 MLIR_CAPI_EXPORTED void mlirOperationDestroy(MlirOperation op);
 
@@ -553,7 +557,7 @@ mlirBlockPrint(MlirBlock block, MlirStringCallback callback, void *userData);
 static inline bool mlirValueIsNull(MlirValue value) { return !value.ptr; }
 
 /// Returns 1 if two values are equal, 0 otherwise.
-bool mlirValueEqual(MlirValue value1, MlirValue value2);
+MLIR_CAPI_EXPORTED bool mlirValueEqual(MlirValue value1, MlirValue value2);
 
 /// Returns 1 if the value is a block argument, 0 otherwise.
 MLIR_CAPI_EXPORTED bool mlirValueIsABlockArgument(MlirValue value);

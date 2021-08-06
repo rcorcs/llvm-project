@@ -1904,10 +1904,10 @@ bool AArch64InstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
   }
 
   Register Reg = MI.getOperand(0).getReg();
-  TargetOptions Options = MI.getParent()->getParent()->getTarget().Options;
-  if (Options.StackProtectorGuard == StackProtectorGuards::SysReg) {
+  Module &M = *MBB.getParent()->getFunction().getParent();
+  if (M.getStackProtectorGuard() == "sysreg") {
     const AArch64SysReg::SysReg *SrcReg =
-        AArch64SysReg::lookupSysRegByName(Options.StackProtectorGuardReg);
+        AArch64SysReg::lookupSysRegByName(M.getStackProtectorGuardReg());
     if (!SrcReg)
       report_fatal_error("Unknown SysReg for Stack Protector Guard Register");
 
@@ -1915,7 +1915,7 @@ bool AArch64InstrInfo::expandPostRAPseudo(MachineInstr &MI) const {
     BuildMI(MBB, MI, DL, get(AArch64::MRS))
         .addDef(Reg, RegState::Renamable)
         .addImm(SrcReg->Encoding);
-    int Offset = Options.StackProtectorGuardOffset;
+    int Offset = M.getStackProtectorGuardOffset();
     if (Offset >= 0 && Offset <= 32760 && Offset % 8 == 0) {
       // ldr xN, [xN, #offset]
       BuildMI(MBB, MI, DL, get(AArch64::LDRXui))
@@ -2099,10 +2099,8 @@ bool AArch64InstrInfo::isFPRCopy(const MachineInstr &MI) {
   default:
     break;
   case TargetOpcode::COPY: {
-    // FPR64 copies will by lowered to ORR.16b
     Register DstReg = MI.getOperand(0).getReg();
-    return (AArch64::FPR64RegClass.contains(DstReg) ||
-            AArch64::FPR128RegClass.contains(DstReg));
+    return AArch64::FPR128RegClass.contains(DstReg);
   }
   case AArch64::ORRv16i8:
     if (MI.getOperand(1).getReg() == MI.getOperand(2).getReg()) {
@@ -2300,6 +2298,22 @@ unsigned AArch64InstrInfo::getLoadStoreImmIdx(unsigned Opc) {
   case AArch64::LD1B_D_IMM:
   case AArch64::LD1SB_D_IMM:
   case AArch64::ST1B_D_IMM:
+  case AArch64::LD1RB_IMM:
+  case AArch64::LD1RB_H_IMM:
+  case AArch64::LD1RB_S_IMM:
+  case AArch64::LD1RB_D_IMM:
+  case AArch64::LD1RSB_H_IMM:
+  case AArch64::LD1RSB_S_IMM:
+  case AArch64::LD1RSB_D_IMM:
+  case AArch64::LD1RH_IMM:
+  case AArch64::LD1RH_S_IMM:
+  case AArch64::LD1RH_D_IMM:
+  case AArch64::LD1RSH_S_IMM:
+  case AArch64::LD1RSH_D_IMM:
+  case AArch64::LD1RW_IMM:
+  case AArch64::LD1RW_D_IMM:
+  case AArch64::LD1RSW_IMM:
+  case AArch64::LD1RD_IMM:
     return 3;
   case AArch64::ADDG:
   case AArch64::STGOffset:
@@ -2913,6 +2927,42 @@ bool AArch64InstrInfo::getMemOpInfo(unsigned Opcode, TypeSize &Scale,
     MinOffset = -64;
     MaxOffset = 63;
     break;
+  case AArch64::LD1RB_IMM:
+  case AArch64::LD1RB_H_IMM:
+  case AArch64::LD1RB_S_IMM:
+  case AArch64::LD1RB_D_IMM:
+  case AArch64::LD1RSB_H_IMM:
+  case AArch64::LD1RSB_S_IMM:
+  case AArch64::LD1RSB_D_IMM:
+    Scale = TypeSize::Fixed(1);
+    Width = 1;
+    MinOffset = 0;
+    MaxOffset = 63;
+    break;
+  case AArch64::LD1RH_IMM:
+  case AArch64::LD1RH_S_IMM:
+  case AArch64::LD1RH_D_IMM:
+  case AArch64::LD1RSH_S_IMM:
+  case AArch64::LD1RSH_D_IMM:
+    Scale = TypeSize::Fixed(2);
+    Width = 2;
+    MinOffset = 0;
+    MaxOffset = 63;
+    break;
+  case AArch64::LD1RW_IMM:
+  case AArch64::LD1RW_D_IMM:
+  case AArch64::LD1RSW_IMM:
+    Scale = TypeSize::Fixed(4);
+    Width = 4;
+    MinOffset = 0;
+    MaxOffset = 63;
+    break;
+  case AArch64::LD1RD_IMM:
+    Scale = TypeSize::Fixed(8);
+    Width = 8;
+    MinOffset = 0;
+    MaxOffset = 63;
+    break;
   }
 
   return true;
@@ -3451,77 +3501,37 @@ void AArch64InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
 
   if (AArch64::FPR64RegClass.contains(DestReg) &&
       AArch64::FPR64RegClass.contains(SrcReg)) {
-    if (Subtarget.hasNEON()) {
-      DestReg = RI.getMatchingSuperReg(DestReg, AArch64::dsub,
-                                       &AArch64::FPR128RegClass);
-      SrcReg = RI.getMatchingSuperReg(SrcReg, AArch64::dsub,
-                                      &AArch64::FPR128RegClass);
-      BuildMI(MBB, I, DL, get(AArch64::ORRv16i8), DestReg)
-          .addReg(SrcReg)
-          .addReg(SrcReg, getKillRegState(KillSrc));
-    } else {
-      BuildMI(MBB, I, DL, get(AArch64::FMOVDr), DestReg)
-          .addReg(SrcReg, getKillRegState(KillSrc));
-    }
+    BuildMI(MBB, I, DL, get(AArch64::FMOVDr), DestReg)
+        .addReg(SrcReg, getKillRegState(KillSrc));
     return;
   }
 
   if (AArch64::FPR32RegClass.contains(DestReg) &&
       AArch64::FPR32RegClass.contains(SrcReg)) {
-    if (Subtarget.hasNEON()) {
-      DestReg = RI.getMatchingSuperReg(DestReg, AArch64::ssub,
-                                       &AArch64::FPR128RegClass);
-      SrcReg = RI.getMatchingSuperReg(SrcReg, AArch64::ssub,
-                                      &AArch64::FPR128RegClass);
-      BuildMI(MBB, I, DL, get(AArch64::ORRv16i8), DestReg)
-          .addReg(SrcReg)
-          .addReg(SrcReg, getKillRegState(KillSrc));
-    } else {
-      BuildMI(MBB, I, DL, get(AArch64::FMOVSr), DestReg)
-          .addReg(SrcReg, getKillRegState(KillSrc));
-    }
+    BuildMI(MBB, I, DL, get(AArch64::FMOVSr), DestReg)
+        .addReg(SrcReg, getKillRegState(KillSrc));
     return;
   }
 
   if (AArch64::FPR16RegClass.contains(DestReg) &&
       AArch64::FPR16RegClass.contains(SrcReg)) {
-    if (Subtarget.hasNEON()) {
-      DestReg = RI.getMatchingSuperReg(DestReg, AArch64::hsub,
-                                       &AArch64::FPR128RegClass);
-      SrcReg = RI.getMatchingSuperReg(SrcReg, AArch64::hsub,
-                                      &AArch64::FPR128RegClass);
-      BuildMI(MBB, I, DL, get(AArch64::ORRv16i8), DestReg)
-          .addReg(SrcReg)
-          .addReg(SrcReg, getKillRegState(KillSrc));
-    } else {
-      DestReg = RI.getMatchingSuperReg(DestReg, AArch64::hsub,
-                                       &AArch64::FPR32RegClass);
-      SrcReg = RI.getMatchingSuperReg(SrcReg, AArch64::hsub,
-                                      &AArch64::FPR32RegClass);
-      BuildMI(MBB, I, DL, get(AArch64::FMOVSr), DestReg)
-          .addReg(SrcReg, getKillRegState(KillSrc));
-    }
+    DestReg =
+        RI.getMatchingSuperReg(DestReg, AArch64::hsub, &AArch64::FPR32RegClass);
+    SrcReg =
+        RI.getMatchingSuperReg(SrcReg, AArch64::hsub, &AArch64::FPR32RegClass);
+    BuildMI(MBB, I, DL, get(AArch64::FMOVSr), DestReg)
+        .addReg(SrcReg, getKillRegState(KillSrc));
     return;
   }
 
   if (AArch64::FPR8RegClass.contains(DestReg) &&
       AArch64::FPR8RegClass.contains(SrcReg)) {
-    if (Subtarget.hasNEON()) {
-      DestReg = RI.getMatchingSuperReg(DestReg, AArch64::bsub,
-                                       &AArch64::FPR128RegClass);
-      SrcReg = RI.getMatchingSuperReg(SrcReg, AArch64::bsub,
-                                      &AArch64::FPR128RegClass);
-      BuildMI(MBB, I, DL, get(AArch64::ORRv16i8), DestReg)
-          .addReg(SrcReg)
-          .addReg(SrcReg, getKillRegState(KillSrc));
-    } else {
-      DestReg = RI.getMatchingSuperReg(DestReg, AArch64::bsub,
-                                       &AArch64::FPR32RegClass);
-      SrcReg = RI.getMatchingSuperReg(SrcReg, AArch64::bsub,
-                                      &AArch64::FPR32RegClass);
-      BuildMI(MBB, I, DL, get(AArch64::FMOVSr), DestReg)
-          .addReg(SrcReg, getKillRegState(KillSrc));
-    }
+    DestReg =
+        RI.getMatchingSuperReg(DestReg, AArch64::bsub, &AArch64::FPR32RegClass);
+    SrcReg =
+        RI.getMatchingSuperReg(SrcReg, AArch64::bsub, &AArch64::FPR32RegClass);
+    BuildMI(MBB, I, DL, get(AArch64::FMOVSr), DestReg)
+        .addReg(SrcReg, getKillRegState(KillSrc));
     return;
   }
 
@@ -3569,6 +3579,11 @@ void AArch64InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     return;
   }
 
+#ifndef NDEBUG
+  const TargetRegisterInfo &TRI = getRegisterInfo();
+  errs() << TRI.getRegAsmName(DestReg) << " = COPY "
+         << TRI.getRegAsmName(SrcReg) << "\n";
+#endif
   llvm_unreachable("unimplemented reg-to-reg copy");
 }
 
@@ -7132,15 +7147,22 @@ static void signOutlinedFunction(MachineFunction &MF, MachineBasicBlock &MBB,
     //    PACIASP                   EMITBKEY
     //    CFI_INSTRUCTION           PACIBSP
     //                              CFI_INSTRUCTION
+    unsigned PACI;
     if (ShouldSignReturnAddrWithAKey) {
-      BuildMI(MBB, MBBPAC, DebugLoc(), TII->get(AArch64::PACIASP))
-          .setMIFlag(MachineInstr::FrameSetup);
+      PACI = Subtarget.hasPAuth() ? AArch64::PACIA : AArch64::PACIASP;
     } else {
       BuildMI(MBB, MBBPAC, DebugLoc(), TII->get(AArch64::EMITBKEY))
           .setMIFlag(MachineInstr::FrameSetup);
-      BuildMI(MBB, MBBPAC, DebugLoc(), TII->get(AArch64::PACIBSP))
-          .setMIFlag(MachineInstr::FrameSetup);
+      PACI = Subtarget.hasPAuth() ? AArch64::PACIB : AArch64::PACIBSP;
     }
+
+    auto MI = BuildMI(MBB, MBBPAC, DebugLoc(), TII->get(PACI));
+    if (Subtarget.hasPAuth())
+      MI.addReg(AArch64::LR, RegState::Define)
+          .addReg(AArch64::LR)
+          .addReg(AArch64::SP, RegState::InternalRead);
+    MI.setMIFlag(MachineInstr::FrameSetup);
+
     unsigned CFIIndex =
         MF.addFrameInst(MCCFIInstruction::createNegateRAState(nullptr));
     BuildMI(MBB, MBBPAC, DebugLoc(), TII->get(AArch64::CFI_INSTRUCTION))

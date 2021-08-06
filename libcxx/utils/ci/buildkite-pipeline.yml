@@ -28,6 +28,7 @@ steps:
       - "**/clang-format.patch"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -39,8 +40,10 @@ steps:
     command: "libcxx/utils/ci/run-buildbot check-generated-output"
     artifact_paths:
       - "**/generated_output.patch"
+      - "**/generated_output.status"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -60,6 +63,7 @@ steps:
       - "**/*.abilist"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -72,6 +76,7 @@ steps:
       - "**/*.abilist"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -84,6 +89,7 @@ steps:
       - "**/*.abilist"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -96,6 +102,7 @@ steps:
       - "**/*.abilist"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -107,6 +114,7 @@ steps:
       - "**/*.abilist"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -119,17 +127,19 @@ steps:
       - "**/*.abilist"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
           limit: 2
 
-  - label: "GCC/C++20"
+  - label: "GCC 11 / C++latest"
     command: "libcxx/utils/ci/run-buildbot generic-gcc"
     artifact_paths:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -140,12 +150,61 @@ steps:
   #
   - wait
 
+  - label: "GCC 11 / C++11"
+    command: "libcxx/utils/ci/run-buildbot generic-gcc-cxx11"
+    artifact_paths:
+      - "**/test-results.xml"
+    agents:
+      queue: "libcxx-builders"
+      os: "linux"
+    retry:
+      automatic:
+        - exit_status: -1  # Agent was lost
+          limit: 2
+
+  - label: "Clang 11"
+    command: "libcxx/utils/ci/run-buildbot generic-clang-11"
+    artifact_paths:
+      - "**/test-results.xml"
+    agents:
+      queue: "libcxx-builders"
+      os: "linux"
+    retry:
+      automatic:
+        - exit_status: -1  # Agent was lost
+          limit: 2
+
+  - label: "Clang 12"
+    command: "libcxx/utils/ci/run-buildbot generic-clang-12"
+    artifact_paths:
+      - "**/test-results.xml"
+    agents:
+      queue: "libcxx-builders"
+      os: "linux"
+    retry:
+      automatic:
+        - exit_status: -1  # Agent was lost
+          limit: 2
+
   - label: "-fno-exceptions"
     command: "libcxx/utils/ci/run-buildbot generic-noexceptions"
     artifact_paths:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
+    retry:
+      automatic:
+        - exit_status: -1  # Agent was lost
+          limit: 2
+
+  - label: "Modular build"
+    command: "libcxx/utils/ci/run-buildbot generic-modules"
+    artifact_paths:
+      - "**/test-results.xml"
+    agents:
+      queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -157,6 +216,20 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
+    retry:
+      automatic:
+        - exit_status: -1  # Agent was lost
+          limit: 2
+
+  - label: "Assertions enabled"
+    command: "libcxx/utils/ci/run-buildbot generic-assertions"
+    artifact_paths:
+      - "**/test-results.xml"
+      - "**/*.abilist"
+    agents:
+      queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -169,6 +242,7 @@ steps:
       - "**/*.abilist"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -180,6 +254,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -191,6 +266,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -202,6 +278,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -213,6 +290,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -224,6 +302,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -235,6 +314,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -246,6 +326,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -257,6 +338,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -268,6 +350,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -279,6 +362,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -290,6 +374,19 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
+    retry:
+      automatic:
+        - exit_status: -1  # Agent was lost
+          limit: 2
+
+  - label: "Legacy Lit configuration"
+    command: "libcxx/utils/ci/run-buildbot legacy-test-config"
+    artifact_paths:
+      - "**/test-results.xml"
+    agents:
+      queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -301,6 +398,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -312,6 +410,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -323,6 +422,7 @@ steps:
       - "**/test-results.xml"
     agents:
       queue: "libcxx-builders"
+      os: "linux"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -350,13 +450,41 @@ steps:
         - exit_status: -1  # Agent was lost
           limit: 2
 
-  - label: "MacOS C++20"
+  - label: "32 bit"
+    command: "libcxx/utils/ci/run-buildbot generic-32bit"
+    artifact_paths:
+      - "**/test-results.xml"
+    agents:
+      queue: "libcxx-builders"
+      os: "linux"
+    retry:
+      automatic:
+        - exit_status: -1  # Agent was lost
+          limit: 2
+
+  - label: "MacOS x86_64"
     command: "libcxx/utils/ci/run-buildbot generic-cxx20"
     artifact_paths:
       - "**/test-results.xml"
       - "**/*.abilist"
     agents:
-      queue: "libcxx-builders-macos"
+      queue: "libcxx-builders"
+      os: "macos"
+      arch: "x86_64"
+    retry:
+      automatic:
+        - exit_status: -1  # Agent was lost
+          limit: 2
+
+  - label: "MacOS arm64"
+    command: "libcxx/utils/ci/run-buildbot generic-cxx20"
+    artifact_paths:
+      - "**/test-results.xml"
+      - "**/*.abilist"
+    agents:
+      queue: "libcxx-builders"
+      os: "macos"
+      arch: "arm64"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -368,7 +496,8 @@ steps:
     artifact_paths:
       - "**/test-results.xml"
     agents:
-      queue: "libcxx-builders-macos"
+      queue: "libcxx-builders"
+      os: "macos"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -379,7 +508,8 @@ steps:
     artifact_paths:
       - "**/test-results.xml"
     agents:
-      queue: "libcxx-builders-macos"
+      queue: "libcxx-builders"
+      os: "macos"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -391,7 +521,9 @@ steps:
     artifact_paths:
       - "**/test-results.xml"
     agents:
-      queue: "libcxx-builders-macos10.15" # TODO: For now, we're running the back-deployment tests for 10.9 on 10.15, because we don't have proper 10.9 machines
+      queue: "libcxx-builders"
+      os: "macos10.15" # TODO: For now, we're running the back-deployment tests for 10.9 on 10.15, because we don't have proper 10.9 machines
+      arch: "x86_64"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost
@@ -402,7 +534,9 @@ steps:
     artifact_paths:
       - "**/test-results.xml"
     agents:
-      queue: "libcxx-builders-macos10.15"
+      queue: "libcxx-builders"
+      os: "macos10.15"
+      arch: "x86_64"
     retry:
       automatic:
         - exit_status: -1  # Agent was lost

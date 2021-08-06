@@ -379,7 +379,7 @@ llvm.func @wsloop_simple(%arg0: !llvm.ptr<f32>) {
       llvm.store %3, %4 : !llvm.ptr<f32>
       omp.yield
       // CHECK: call void @__kmpc_for_static_fini(%struct.ident_t* @[[$wsloop_loc_struct]],
-    }) {operand_segment_sizes = dense<[1, 1, 1, 0, 0, 0, 0, 0, 0]> : vector<9xi32>} : (i64, i64, i64) -> ()
+    }) {operand_segment_sizes = dense<[1, 1, 1, 0, 0, 0, 0, 0, 0, 0]> : vector<10xi32>} : (i64, i64, i64) -> ()
     omp.terminator
   }
   llvm.return
@@ -397,7 +397,7 @@ llvm.func @wsloop_inclusive_1(%arg0: !llvm.ptr<f32>) {
     %4 = llvm.getelementptr %arg0[%arg1] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
     llvm.store %3, %4 : !llvm.ptr<f32>
     omp.yield
-  }) {operand_segment_sizes = dense<[1, 1, 1, 0, 0, 0, 0, 0, 0]> : vector<9xi32>} : (i64, i64, i64) -> ()
+  }) {operand_segment_sizes = dense<[1, 1, 1, 0, 0, 0, 0, 0, 0, 0]> : vector<10xi32>} : (i64, i64, i64) -> ()
   llvm.return
 }
 
@@ -413,7 +413,7 @@ llvm.func @wsloop_inclusive_2(%arg0: !llvm.ptr<f32>) {
     %4 = llvm.getelementptr %arg0[%arg1] : (!llvm.ptr<f32>, i64) -> !llvm.ptr<f32>
     llvm.store %3, %4 : !llvm.ptr<f32>
     omp.yield
-  }) {inclusive, operand_segment_sizes = dense<[1, 1, 1, 0, 0, 0, 0, 0, 0]> : vector<9xi32>} : (i64, i64, i64) -> ()
+  }) {inclusive, operand_segment_sizes = dense<[1, 1, 1, 0, 0, 0, 0, 0, 0, 0]> : vector<10xi32>} : (i64, i64, i64) -> ()
   llvm.return
 }
 
@@ -465,4 +465,29 @@ llvm.func @test_omp_wsloop_guided(%lb : i64, %ub : i64, %step : i64) -> () {
    omp.yield
  }
  llvm.return
+}
+
+// CHECK-LABEL: @omp_critical
+llvm.func @omp_critical(%x : !llvm.ptr<i32>, %xval : i32) -> () {
+  // CHECK: call void @__kmpc_critical_with_hint({{.*}}critical_user_.var{{.*}}, i32 0)
+  // CHECK: br label %omp.critical.region
+  // CHECK: omp.critical.region
+  omp.critical {
+  // CHECK: store
+    llvm.store %xval, %x : !llvm.ptr<i32>
+    omp.terminator
+  }
+  // CHECK: call void @__kmpc_end_critical({{.*}}critical_user_.var{{.*}})
+
+  // CHECK: call void @__kmpc_critical_with_hint({{.*}}critical_user_mutex.var{{.*}}, i32 2)
+  // CHECK: br label %omp.critical.region
+  // CHECK: omp.critical.region
+  omp.critical(@mutex) hint(contended) {
+  // CHECK: store
+    llvm.store %xval, %x : !llvm.ptr<i32>
+    omp.terminator
+  }
+  // CHECK: call void @__kmpc_end_critical({{.*}}critical_user_mutex.var{{.*}})
+
+  llvm.return
 }

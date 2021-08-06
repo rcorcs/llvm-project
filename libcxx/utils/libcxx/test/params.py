@@ -53,20 +53,12 @@ def getStdFlag(cfg, std):
   return None
 
 DEFAULT_PARAMETERS = [
-  # Core parameters of the test suite
-  Parameter(name='target_triple', type=str, default=getHostTriple,
+  Parameter(name='target_triple', type=str,
             help="The target triple to compile the test suite for. This must be "
                  "compatible with the target that the tests will be run on.",
             actions=lambda triple: filter(None, [
-              AddFeature(triple),
+              AddFeature('target={}'.format(triple)),
               AddFlagIfSupported('--target={}'.format(triple)),
-              AddFeature('linux-gnu') if re.match(r'^.*-linux-gnu', triple) else None,
-              AddFeature('x86_64-linux') if re.match(r'^x86_64.*-linux', triple) else None,
-              AddFeature('x86_64-apple') if re.match(r'^x86_64.*-apple', triple) else None,
-              AddFeature('target-x86') if re.match(r'^i.86.*', triple) else None,
-              AddFeature('target-x86_64') if re.match(r'^x86_64.*', triple) else None,
-              AddFeature('target-aarch64') if re.match(r'^aarch64.*', triple) else None,
-              AddFeature('target-arm') if re.match(r'^arm.*', triple) else None,
             ])),
 
   Parameter(name='std', choices=_allStandards, type=str,
@@ -76,6 +68,14 @@ DEFAULT_PARAMETERS = [
               AddFeature(std),
               AddCompileFlag(lambda cfg: getStdFlag(cfg, std)),
             ]),
+
+  Parameter(name='enable_modules', choices=[True, False], type=bool, default=False,
+            help="Whether to build the test suite with Clang modules enabled.",
+            actions=lambda modules: [
+              AddFeature('modules-build'),
+              AddCompileFlag('-fmodules'),
+              AddCompileFlag('-Xclang -fmodules-local-submodule-visibility'),
+            ] if modules else []),
 
   Parameter(name='enable_exceptions', choices=[True, False], type=bool, default=True,
             help="Whether to enable exceptions when compiling the test suite.",
@@ -110,8 +110,31 @@ DEFAULT_PARAMETERS = [
               AddCompileFlag('-D_LIBCPP_DEBUG={}'.format(debugLevel))
             ]),
 
-  # Parameters to enable or disable parts of the test suite
-  Parameter(name='enable_experimental', choices=[True, False], type=bool, default=False,
+  Parameter(name='use_sanitizer', choices=['', 'Address', 'Undefined', 'Memory', 'MemoryWithOrigins', 'Thread', 'DataFlow', 'Leaks'], type=str, default='',
+            help="An optional sanitizer to enable when building and running the test suite.",
+            actions=lambda sanitizer: filter(None, [
+              AddFlag('-g -fno-omit-frame-pointer') if sanitizer else None,
+
+              AddFlag('-fsanitize=undefined -fno-sanitize=float-divide-by-zero -fno-sanitize-recover=all') if sanitizer == 'Undefined' else None,
+              AddFeature('ubsan')                                                                          if sanitizer == 'Undefined' else None,
+
+              AddFlag('-fsanitize=address') if sanitizer == 'Address' else None,
+              AddFeature('asan')            if sanitizer == 'Address' else None,
+
+              AddFlag('-fsanitize=memory')               if sanitizer in ['Memory', 'MemoryWithOrigins'] else None,
+              AddFeature('msan')                         if sanitizer in ['Memory', 'MemoryWithOrigins'] else None,
+              AddFlag('-fsanitize-memory-track-origins') if sanitizer == 'MemoryWithOrigins' else None,
+
+              AddFlag('-fsanitize=thread') if sanitizer == 'Thread' else None,
+              AddFeature('tsan')           if sanitizer == 'Thread' else None,
+
+              AddFlag('-fsanitize=dataflow') if sanitizer == 'DataFlow' else None,
+              AddFlag('-fsanitize=leaks') if sanitizer == 'Leaks' else None,
+
+              AddFeature('sanitizer-new-delete') if sanitizer in ['Address', 'Memory', 'MemoryWithOrigins', 'Thread'] else None,
+            ])),
+
+  Parameter(name='enable_experimental', choices=[True, False], type=bool, default=True,
             help="Whether to enable tests for experimental C++ libraries (typically Library Fundamentals TSes).",
             actions=lambda experimental: [] if not experimental else [
               AddFeature('c++experimental'),
@@ -134,6 +157,19 @@ DEFAULT_PARAMETERS = [
             actions=lambda enabled: [] if enabled else [
               AddFeature('libcxx-no-debug-mode')
             ]),
+
+  Parameter(name='enable_32bit', choices=[True, False], type=bool, default=False,
+            help="Whether to build the test suite in 32 bit mode even on a 64 bit target. This basically controls "
+                 "whether -m32 is used when building the test suite.",
+            actions=lambda enabled: [] if not enabled else [
+              AddFlag('-m32')
+            ]),
+
+  Parameter(name='additional_features', type=list, default=[],
+            help="A comma-delimited list of additional features that will be enabled when running the tests. "
+                 "This should be used sparingly since specifying ad-hoc features manually is error-prone and "
+                 "brittle in the long run as changes are made to the test suite.",
+            actions=lambda features: [AddFeature(f) for f in features]),
 ]
 
 DEFAULT_PARAMETERS += [

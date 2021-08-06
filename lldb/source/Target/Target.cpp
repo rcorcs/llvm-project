@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "lldb/Target/Target.h"
-#include "Plugins/ExpressionParser/Clang/ClangModulesDeclVendor.h"
 #include "lldb/Breakpoint/BreakpointIDList.h"
 #include "lldb/Breakpoint/BreakpointPrecondition.h"
 #include "lldb/Breakpoint/BreakpointResolver.h"
@@ -42,6 +41,7 @@
 #include "lldb/Symbol/Function.h"
 #include "lldb/Symbol/ObjectFile.h"
 #include "lldb/Symbol/Symbol.h"
+#include "lldb/Target/ABI.h"
 #include "lldb/Target/Language.h"
 #include "lldb/Target/LanguageRuntime.h"
 #include "lldb/Target/Process.h"
@@ -95,6 +95,7 @@ Target::Target(Debugger &debugger, const ArchSpec &target_arch,
       m_watchpoint_list(), m_process_sp(), m_search_filter_sp(),
       m_image_search_paths(ImageSearchPathsChanged, this),
       m_source_manager_up(), m_stop_hooks(), m_stop_hook_next_id(0),
+      m_latest_stop_hook_id(0),
       m_valid(true), m_suppress_stop_hooks(false),
       m_is_dummy_target(is_dummy_target),
       m_frame_recognizer_manager_up(
@@ -181,6 +182,7 @@ void Target::CleanupProcess() {
   DisableAllWatchpoints(false);
   ClearAllWatchpointHitCounts();
   ClearAllWatchpointHistoricValues();
+  m_latest_stop_hook_id = 0;
 }
 
 void Target::DeleteCurrentProcess() {
@@ -824,6 +826,11 @@ WatchpointSP Target::CreateWatchpoint(lldb::addr_t addr, size_t size,
   // Grab the list mutex while doing operations.
   const bool notify = false; // Don't notify about all the state changes we do
                              // on creating the watchpoint.
+
+  // Mask off ignored bits from watchpoint address.
+  if (ABISP abi = m_process_sp->GetABI())
+    addr = abi->FixDataAddress(addr);
+
   std::unique_lock<std::recursive_mutex> lock;
   this->GetWatchpointList().GetListMutex(lock);
   WatchpointSP matched_sp = m_watchpoint_list.FindByAddress(addr);
@@ -1154,9 +1161,7 @@ bool Target::RemoveAllWatchpoints(bool end_to_end) {
   if (!ProcessIsValid())
     return false;
 
-  size_t num_watchpoints = m_watchpoint_list.GetSize();
-  for (size_t i = 0; i < num_watchpoints; ++i) {
-    WatchpointSP wp_sp = m_watchpoint_list.GetByIndex(i);
+  for (WatchpointSP wp_sp : m_watchpoint_list.Watchpoints()) {
     if (!wp_sp)
       return false;
 
@@ -1185,9 +1190,7 @@ bool Target::DisableAllWatchpoints(bool end_to_end) {
   if (!ProcessIsValid())
     return false;
 
-  size_t num_watchpoints = m_watchpoint_list.GetSize();
-  for (size_t i = 0; i < num_watchpoints; ++i) {
-    WatchpointSP wp_sp = m_watchpoint_list.GetByIndex(i);
+  for (WatchpointSP wp_sp : m_watchpoint_list.Watchpoints()) {
     if (!wp_sp)
       return false;
 
@@ -1214,9 +1217,7 @@ bool Target::EnableAllWatchpoints(bool end_to_end) {
   if (!ProcessIsValid())
     return false;
 
-  size_t num_watchpoints = m_watchpoint_list.GetSize();
-  for (size_t i = 0; i < num_watchpoints; ++i) {
-    WatchpointSP wp_sp = m_watchpoint_list.GetByIndex(i);
+  for (WatchpointSP wp_sp : m_watchpoint_list.Watchpoints()) {
     if (!wp_sp)
       return false;
 
@@ -1232,9 +1233,7 @@ bool Target::ClearAllWatchpointHitCounts() {
   Log *log(lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_WATCHPOINTS));
   LLDB_LOGF(log, "Target::%s\n", __FUNCTION__);
 
-  size_t num_watchpoints = m_watchpoint_list.GetSize();
-  for (size_t i = 0; i < num_watchpoints; ++i) {
-    WatchpointSP wp_sp = m_watchpoint_list.GetByIndex(i);
+  for (WatchpointSP wp_sp : m_watchpoint_list.Watchpoints()) {
     if (!wp_sp)
       return false;
 
@@ -1248,9 +1247,7 @@ bool Target::ClearAllWatchpointHistoricValues() {
   Log *log(lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_WATCHPOINTS));
   LLDB_LOGF(log, "Target::%s\n", __FUNCTION__);
 
-  size_t num_watchpoints = m_watchpoint_list.GetSize();
-  for (size_t i = 0; i < num_watchpoints; ++i) {
-    WatchpointSP wp_sp = m_watchpoint_list.GetByIndex(i);
+  for (WatchpointSP wp_sp : m_watchpoint_list.Watchpoints()) {
     if (!wp_sp)
       return false;
 
@@ -1268,9 +1265,7 @@ bool Target::IgnoreAllWatchpoints(uint32_t ignore_count) {
   if (!ProcessIsValid())
     return false;
 
-  size_t num_watchpoints = m_watchpoint_list.GetSize();
-  for (size_t i = 0; i < num_watchpoints; ++i) {
-    WatchpointSP wp_sp = m_watchpoint_list.GetByIndex(i);
+  for (WatchpointSP wp_sp : m_watchpoint_list.Watchpoints()) {
     if (!wp_sp)
       return false;
 
@@ -1692,6 +1687,7 @@ bool Target::ModuleIsExcludedForUnconstrainedSearches(
 
 size_t Target::ReadMemoryFromFileCache(const Address &addr, void *dst,
                                        size_t dst_len, Status &error) {
+  LLDB_SCOPED_TIMER();
   SectionSP section_sp(addr.GetSection());
   if (section_sp) {
     // If the contents of this section are encrypted, the on-disk file is
@@ -2546,23 +2542,6 @@ SourceManager &Target::GetSourceManager() {
   return *m_source_manager_up;
 }
 
-ClangModulesDeclVendor *Target::GetClangModulesDeclVendor() {
-  static std::mutex s_clang_modules_decl_vendor_mutex; // If this is contended
-                                                       // we can make it
-                                                       // per-target
-
-  {
-    std::lock_guard<std::mutex> guard(s_clang_modules_decl_vendor_mutex);
-
-    if (!m_clang_modules_decl_vendor_up) {
-      m_clang_modules_decl_vendor_up.reset(
-          ClangModulesDeclVendor::Create(*this));
-    }
-  }
-
-  return m_clang_modules_decl_vendor_up.get();
-}
-
 Target::StopHookSP Target::CreateStopHook(StopHook::StopHookKind kind) {
   lldb::user_id_t new_uid = ++m_stop_hook_next_id;
   Target::StopHookSP stop_hook_sp;
@@ -2632,12 +2611,6 @@ bool Target::RunStopHooks() {
   if (m_process_sp->GetState() != eStateStopped)
     return false;
 
-  // <rdar://problem/12027563> make sure we check that we are not stopped
-  // because of us running a user expression since in that case we do not want
-  // to run the stop-hooks
-  if (m_process_sp->GetModIDRef().IsLastResumeForUserExpression())
-    return false;
-
   if (m_stop_hooks.empty())
     return false;
 
@@ -2651,6 +2624,18 @@ bool Target::RunStopHooks() {
   }
   if (!any_active_hooks)
     return false;
+
+  // <rdar://problem/12027563> make sure we check that we are not stopped
+  // because of us running a user expression since in that case we do not want
+  // to run the stop-hooks.  Note, you can't just check whether the last stop
+  // was for a User Expression, because breakpoint commands get run before
+  // stop hooks, and one of them might have run an expression.  You have
+  // to ensure you run the stop hooks once per natural stop.
+  uint32_t last_natural_stop = m_process_sp->GetModIDRef().GetLastNaturalStopID();
+  if (last_natural_stop != 0 && m_latest_stop_hook_id == last_natural_stop)
+    return false;
+
+  m_latest_stop_hook_id = last_natural_stop;
 
   std::vector<ExecutionContext> exc_ctx_with_reasons;
 
@@ -2997,7 +2982,7 @@ Status Target::Launch(ProcessLaunchInfo &launch_info, Stream *stream) {
   // If we're not already connected to the process, and if we have a platform
   // that can launch a process for debugging, go ahead and do that here.
   if (state != eStateConnected && platform_sp &&
-      platform_sp->CanDebugProcess()) {
+      platform_sp->CanDebugProcess() && !launch_info.IsScriptedProcess()) {
     LLDB_LOGF(log, "Target::%s asking the platform to debug the process",
               __FUNCTION__);
 
@@ -3100,26 +3085,37 @@ Status Target::Launch(ProcessLaunchInfo &launch_info, Stream *stream) {
 
 void Target::SetTrace(const TraceSP &trace_sp) { m_trace_sp = trace_sp; }
 
-TraceSP &Target::GetTrace() { return m_trace_sp; }
+TraceSP Target::GetTrace() { return m_trace_sp; }
 
-llvm::Expected<TraceSP &> Target::GetTraceOrCreate() {
-  if (!m_trace_sp && m_process_sp) {
-    llvm::Expected<TraceSupportedResponse> trace_type =
-        m_process_sp->TraceSupported();
-    if (!trace_type)
-      return llvm::createStringError(
-          llvm::inconvertibleErrorCode(), "Tracing is not supported. %s",
-          llvm::toString(trace_type.takeError()).c_str());
-    if (llvm::Expected<TraceSP> trace_sp =
-            Trace::FindPluginForLiveProcess(trace_type->name, *m_process_sp))
-      m_trace_sp = *trace_sp;
-    else
-      return llvm::createStringError(
-          llvm::inconvertibleErrorCode(),
-          "Couldn't start tracing the process. %s",
-          llvm::toString(trace_sp.takeError()).c_str());
-  }
+llvm::Expected<TraceSP> Target::CreateTrace() {
+  if (!m_process_sp)
+    return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                   "A process is required for tracing");
+  if (m_trace_sp)
+    return llvm::createStringError(llvm::inconvertibleErrorCode(),
+                                   "A trace already exists for the target");
+
+  llvm::Expected<TraceSupportedResponse> trace_type =
+      m_process_sp->TraceSupported();
+  if (!trace_type)
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(), "Tracing is not supported. %s",
+        llvm::toString(trace_type.takeError()).c_str());
+  if (llvm::Expected<TraceSP> trace_sp =
+          Trace::FindPluginForLiveProcess(trace_type->name, *m_process_sp))
+    m_trace_sp = *trace_sp;
+  else
+    return llvm::createStringError(
+        llvm::inconvertibleErrorCode(),
+        "Couldn't create a Trace object for the process. %s",
+        llvm::toString(trace_sp.takeError()).c_str());
   return m_trace_sp;
+}
+
+llvm::Expected<TraceSP> Target::GetTraceOrCreate() {
+  if (m_trace_sp)
+    return m_trace_sp;
+  return CreateTrace();
 }
 
 Status Target::Attach(ProcessAttachInfo &attach_info, Stream *stream) {

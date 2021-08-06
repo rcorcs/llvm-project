@@ -460,6 +460,10 @@ template <typename TO> Expr<TO> ConvertToType(BOZLiteralConstant &&x) {
   }
 }
 
+template <typename T> bool IsBOZLiteral(const Expr<T> &expr) {
+  return std::holds_alternative<BOZLiteralConstant>(expr.u);
+}
+
 // Conversions to dynamic types
 std::optional<Expr<SomeType>> ConvertToType(
     const DynamicType &, Expr<SomeType> &&);
@@ -643,6 +647,16 @@ std::optional<Expr<SomeType>> Negation(
 // relational operator (e.g., .LT.), possibly with data type conversion.
 std::optional<Expr<LogicalResult>> Relate(parser::ContextualMessages &,
     RelationalOperator, Expr<SomeType> &&, Expr<SomeType> &&);
+
+// Create a relational operation between two identically-typed operands
+// and wrap it up in an Expr<LogicalResult>.
+template <typename T>
+Expr<LogicalResult> PackageRelation(
+    RelationalOperator opr, Expr<T> &&x, Expr<T> &&y) {
+  static_assert(IsSpecificIntrinsicType<T>);
+  return Expr<LogicalResult>{
+      Relational<SomeType>{Relational<T>{opr, std::move(x), std::move(y)}}};
+}
 
 template <int K>
 Expr<Type<TypeCategory::Logical, K>> LogicalNegation(

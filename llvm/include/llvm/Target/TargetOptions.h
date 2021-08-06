@@ -73,8 +73,6 @@ namespace llvm {
     None    // Do not use Basic Block Sections.
   };
 
-  enum class StackProtectorGuards { None, TLS, Global, SysReg };
-
   enum class EABI {
     Unknown,
     Default, // Default means not specified
@@ -203,9 +201,6 @@ namespace llvm {
     /// as their parent function, etc.), using an alternate ABI if necessary.
     unsigned GuaranteedTailCallOpt : 1;
 
-    /// StackAlignmentOverride - Override default stack alignment for target.
-    unsigned StackAlignmentOverride = 0;
-
     /// StackSymbolOrdering - When true, this will allow CodeGen to order
     /// the local stack symbols (for code size, code locality, or any other
     /// heuristics). When false, the local symbols are left in whatever order
@@ -328,20 +323,13 @@ namespace llvm {
     /// By default, it is set to false.
     unsigned DebugStrictDwarf : 1;
 
-    /// Stack protector guard offset to use.
-    int StackProtectorGuardOffset = INT_MAX;
-
-    /// Stack protector guard mode to use, e.g. tls, global, sysreg.
-    StackProtectorGuards StackProtectorGuard =
-                                         StackProtectorGuards::None;
-
-    /// Stack protector guard reg to use, e.g. usually fs or gs in X86.
-    std::string StackProtectorGuardReg = "None";
-
     /// Name of the stack usage file (i.e., .su file) if user passes
     /// -fstack-usage. If empty, it can be implied that -fstack-usage is not
     /// passed on the command line.
     std::string StackUsageOutput;
+
+    /// If greater than 0, override TargetLoweringBase::PrefLoopAlignment.
+    unsigned LoopAlignment = 0;
 
     /// FloatABIType - This setting is set by -float-abi=xxx option is specfied
     /// on the command line. This setting may either be Default, Soft, or Hard.
@@ -351,7 +339,7 @@ namespace llvm {
     /// arm-apple-darwin). Hard presumes that the normal FP ABI is used.
     FloatABI::ABIType FloatABIType = FloatABI::Default;
 
-    /// AllowFPOpFusion - This flag is set by the -fuse-fp-ops=xxx option.
+    /// AllowFPOpFusion - This flag is set by the -fp-contract=xxx option.
     /// This controls the creation of fused FP ops that store intermediate
     /// results in higher precision than IEEE allows (E.g. FMAs).
     ///

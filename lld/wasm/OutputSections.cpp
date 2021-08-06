@@ -8,6 +8,7 @@
 
 #include "OutputSections.h"
 #include "InputChunks.h"
+#include "InputElement.h"
 #include "InputFiles.h"
 #include "OutputSegment.h"
 #include "WriterUtils.h"
@@ -48,8 +49,8 @@ static StringRef sectionTypeToString(uint32_t sectionType) {
     return "MEMORY";
   case WASM_SEC_GLOBAL:
     return "GLOBAL";
-  case WASM_SEC_EVENT:
-    return "EVENT";
+  case WASM_SEC_TAG:
+    return "TAG";
   case WASM_SEC_EXPORT:
     return "EXPORT";
   case WASM_SEC_START:
@@ -143,8 +144,8 @@ void DataSection::finalizeContents() {
       });
 #endif
 
-  assert((!config->isPic || activeCount <= 1) &&
-         "Currenly only a single data segment is supported in PIC mode");
+  assert((config->sharedMemory || !config->isPic || activeCount <= 1) &&
+         "output segments should have been combined by now");
 
   writeUleb128(os, segmentCount, "data segment count");
   os.flush();
@@ -162,12 +163,8 @@ void DataSection::finalizeContents() {
       if (config->isPic) {
         initExpr.Opcode = WASM_OPCODE_GLOBAL_GET;
         initExpr.Value.Global = WasmSym::memoryBase->getGlobalIndex();
-      } else if (config->is64.getValueOr(false)) {
-        initExpr.Opcode = WASM_OPCODE_I64_CONST;
-        initExpr.Value.Int64 = static_cast<int64_t>(segment->startVA);
       } else {
-        initExpr.Opcode = WASM_OPCODE_I32_CONST;
-        initExpr.Value.Int32 = static_cast<int32_t>(segment->startVA);      
+        initExpr = intConst(segment->startVA, config->is64.getValueOr(false));
       }
       writeInitExpr(os, initExpr);
     }

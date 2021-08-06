@@ -47,6 +47,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Compiler.h"
@@ -668,6 +669,11 @@ void StmtPrinter::VisitOMPTileDirective(OMPTileDirective *Node) {
   PrintOMPExecutableDirective(Node);
 }
 
+void StmtPrinter::VisitOMPUnrollDirective(OMPUnrollDirective *Node) {
+  Indent() << "#pragma omp unroll";
+  PrintOMPExecutableDirective(Node);
+}
+
 void StmtPrinter::VisitOMPForDirective(OMPForDirective *Node) {
   Indent() << "#pragma omp for";
   PrintOMPExecutableDirective(Node);
@@ -1081,6 +1087,13 @@ void StmtPrinter::VisitObjCSubscriptRefExpr(ObjCSubscriptRefExpr *Node) {
   OS << "]";
 }
 
+void StmtPrinter::VisitSYCLUniqueStableNameExpr(
+    SYCLUniqueStableNameExpr *Node) {
+  OS << "__builtin_sycl_unique_stable_name(";
+  Node->getTypeSourceInfo()->getType().print(OS, Policy);
+  OS << ")";
+}
+
 void StmtPrinter::VisitPredefinedExpr(PredefinedExpr *Node) {
   OS << PredefinedExpr::getIdentKindName(Node->getIdentKind());
 }
@@ -1110,7 +1123,7 @@ void StmtPrinter::VisitIntegerLiteral(IntegerLiteral *Node) {
   if (Policy.ConstantsAsWritten && printExprAsWritten(OS, Node, Context))
     return;
   bool isSigned = Node->getType()->isSignedIntegerType();
-  OS << Node->getValue().toString(10, isSigned);
+  OS << toString(Node->getValue(), 10, isSigned);
 
   // Emit suffixes.  Integer literals are always a builtin integer type.
   switch (Node->getType()->castAs<BuiltinType>()->getKind()) {
@@ -1855,7 +1868,7 @@ void StmtPrinter::VisitUserDefinedLiteral(UserDefinedLiteral *Node) {
   case UserDefinedLiteral::LOK_Integer: {
     // Print integer literal without suffix.
     const auto *Int = cast<IntegerLiteral>(Node->getCookedLiteral());
-    OS << Int->getValue().toString(10, /*isSigned*/false);
+    OS << toString(Int->getValue(), 10, /*isSigned*/false);
     break;
   }
   case UserDefinedLiteral::LOK_Floating: {

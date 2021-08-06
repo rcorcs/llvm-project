@@ -7228,8 +7228,7 @@ static void DisassembleMachO(StringRef Filename, MachOObjectFile *MachOOF,
   std::unique_ptr<const MCSubtargetInfo> STI(
       TheTarget->createMCSubtargetInfo(TripleName, MachOMCPU, FeaturesStr));
   CHECK_TARGET_INFO_CREATION(STI);
-  MCContext Ctx(Triple(TripleName), AsmInfo.get(), MRI.get(), /*MOFI=*/nullptr,
-                STI.get());
+  MCContext Ctx(Triple(TripleName), AsmInfo.get(), MRI.get(), STI.get());
   std::unique_ptr<MCDisassembler> DisAsm(
       TheTarget->createMCDisassembler(*STI, Ctx));
   CHECK_TARGET_INFO_CREATION(DisAsm);
@@ -7280,8 +7279,7 @@ static void DisassembleMachO(StringRef Filename, MachOObjectFile *MachOOF,
                                            FeaturesStr));
     CHECK_THUMB_TARGET_INFO_CREATION(ThumbSTI);
     ThumbCtx.reset(new MCContext(Triple(ThumbTripleName), ThumbAsmInfo.get(),
-                                 ThumbMRI.get(), /*MOFI=*/nullptr,
-                                 ThumbSTI.get()));
+                                 ThumbMRI.get(), ThumbSTI.get()));
     ThumbDisAsm.reset(ThumbTarget->createMCDisassembler(*ThumbSTI, *ThumbCtx));
     CHECK_THUMB_TARGET_INFO_CREATION(ThumbDisAsm);
     MCContext *PtrThumbCtx = ThumbCtx.get();
@@ -7320,7 +7318,7 @@ static void DisassembleMachO(StringRef Filename, MachOObjectFile *MachOOF,
                         BaseSegmentAddress);
 
   // Sort the symbols by address, just in case they didn't come in that way.
-  llvm::sort(Symbols, SymbolSorter());
+  llvm::stable_sort(Symbols, SymbolSorter());
 
   // Build a data in code table that is sorted on by the address of each entry.
   uint64_t BaseAddress = 0;

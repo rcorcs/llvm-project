@@ -68,14 +68,20 @@ enum {
   HasMergeOpMask = 1 << HasMergeOpShift,
 
   // Does this instruction have a SEW operand. It will be the last explicit
-  // operand. Used by RVV Pseudos.
+  // operand unless there is a vector policy operand. Used by RVV Pseudos.
   HasSEWOpShift = HasMergeOpShift + 1,
   HasSEWOpMask = 1 << HasSEWOpShift,
 
   // Does this instruction have a VL operand. It will be the second to last
-  // explicit operand. Used by RVV Pseudos.
+  // explicit operand unless there is a vector policy operand. Used by RVV
+  // Pseudos.
   HasVLOpShift = HasSEWOpShift + 1,
   HasVLOpMask = 1 << HasVLOpShift,
+
+  // Does this instruction have a vector policy operand. It will be the last
+  // explicit operand. Used by RVV Pseudos.
+  HasVecPolicyOpShift = HasVLOpShift + 1,
+  HasVecPolicyOpMask = 1 << HasVecPolicyOpShift,
 };
 
 // Match with the definitions in RISCVInstrFormatsV.td
@@ -86,7 +92,7 @@ enum VConstraintType {
   VMConstraint = 0b100,
 };
 
-enum VLMUL {
+enum VLMUL : uint8_t {
   LMUL_1 = 0,
   LMUL_2,
   LMUL_4,
@@ -130,6 +136,10 @@ static inline bool hasSEWOp(uint64_t TSFlags) {
 /// \returns true if there is a VL operand for the instruction.
 static inline bool hasVLOp(uint64_t TSFlags) {
   return TSFlags & HasVLOpMask;
+}
+/// \returns true if there is a vector policy operand for this instruction.
+static inline bool hasVecPolicyOp(uint64_t TSFlags) {
+  return TSFlags & HasVecPolicyOpMask;
 }
 
 // RISC-V Specific Machine Operand Flags
@@ -242,8 +252,9 @@ inline static bool isValidRoundingMode(unsigned Mode) {
 namespace RISCVSysReg {
 struct SysReg {
   const char *Name;
-  unsigned Encoding;
   const char *AltName;
+  const char *DeprecatedName;
+  unsigned Encoding;
   // FIXME: add these additional fields when needed.
   // Privilege Access: Read, Write, Read-Only.
   // unsigned ReadWrite;
@@ -256,7 +267,7 @@ struct SysReg {
   FeatureBitset FeaturesRequired;
   bool isRV32Only;
 
-  bool haveRequiredFeatures(FeatureBitset ActiveFeatures) const {
+  bool haveRequiredFeatures(const FeatureBitset &ActiveFeatures) const {
     // Not in 32-bit mode.
     if (isRV32Only && ActiveFeatures[RISCV::Feature64Bit])
       return false;
@@ -325,6 +336,9 @@ inline static RISCVII::VLMUL getVLMUL(unsigned VType) {
   unsigned VLMUL = VType & 0x7;
   return static_cast<RISCVII::VLMUL>(VLMUL);
 }
+
+// Decode VLMUL into 1,2,4,8 and fractional indicator.
+std::pair<unsigned, bool> decodeVLMUL(RISCVII::VLMUL VLMUL);
 
 inline static unsigned decodeVSEW(unsigned VSEW) {
   assert(VSEW < 8 && "Unexpected VSEW value");

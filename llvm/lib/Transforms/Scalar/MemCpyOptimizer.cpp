@@ -673,7 +673,12 @@ bool MemCpyOptPass::processStore(StoreInst *SI, BasicBlock::iterator &BBI) {
         LI->getParent() == SI->getParent()) {
 
       auto *T = LI->getType();
-      if (T->isAggregateType()) {
+      // Don't introduce calls to memcpy/memmove intrinsics out of thin air if
+      // the corresponding libcalls are not available.
+      // TODO: We should really distinguish between libcall availability and
+      // our ability to introduce intrinsics.
+      if (T->isAggregateType() && TLI->has(LibFunc_memcpy) &&
+          TLI->has(LibFunc_memmove)) {
         MemoryLocation LoadLoc = MemoryLocation::get(LI);
 
         // We use alias analysis to check if an instruction may store to
@@ -691,7 +696,7 @@ bool MemCpyOptPass::processStore(StoreInst *SI, BasicBlock::iterator &BBI) {
 
         // We found an instruction that may write to the loaded memory.
         // We can try to promote at this position instead of the store
-        // position if nothing alias the store memory after this and the store
+        // position if nothing aliases the store memory after this and the store
         // destination is not in the range.
         if (P && P != SI) {
           if (!moveUp(SI, P, LI))
@@ -795,6 +800,13 @@ bool MemCpyOptPass::processStore(StoreInst *SI, BasicBlock::iterator &BBI) {
       }
     }
   }
+
+  // The following code creates memset intrinsics out of thin air. Don't do
+  // this if the corresponding libfunc is not available.
+  // TODO: We should really distinguish between libcall availability and
+  // our ability to introduce intrinsics.
+  if (!TLI->has(LibFunc_memset))
+    return false;
 
   // There are two cases that are interesting for this code to handle: memcpy
   // and memset.  Right now we only handle memset.
@@ -1109,7 +1121,14 @@ bool MemCpyOptPass::processMemCpyMemCpyDependence(MemCpyInst *M,
     NewM = Builder.CreateMemMove(M->getRawDest(), M->getDestAlign(),
                                  MDep->getRawSource(), MDep->getSourceAlign(),
                                  M->getLength(), M->isVolatile());
-  else
+  else if (isa<MemCpyInlineInst>(M)) {
+    // llvm.memcpy may be promoted to llvm.memcpy.inline, but the converse is
+    // never allowed since that would allow the latter to be lowered as a call
+    // to an external function.
+    NewM = Builder.CreateMemCpyInline(
+        M->getRawDest(), M->getDestAlign(), MDep->getRawSource(),
+        MDep->getSourceAlign(), M->getLength(), M->isVolatile());
+  } else
     NewM = Builder.CreateMemCpy(M->getRawDest(), M->getDestAlign(),
                                 MDep->getRawSource(), MDep->getSourceAlign(),
                                 M->getLength(), M->isVolatile());
@@ -1214,8 +1233,11 @@ bool MemCpyOptPass::processMemSetMemCpyDependence(MemCpyInst *MemCpy,
   Value *SizeDiff = Builder.CreateSub(DestSize, SrcSize);
   Value *MemsetLen = Builder.CreateSelect(
       Ule, ConstantInt::getNullValue(DestSize->getType()), SizeDiff);
+  unsigned DestAS = Dest->getType()->getPointerAddressSpace();
   Instruction *NewMemSet = Builder.CreateMemSet(
-      Builder.CreateGEP(Dest->getType()->getPointerElementType(), Dest,
+      Builder.CreateGEP(Builder.getInt8Ty(),
+                        Builder.CreatePointerCast(Dest,
+                                                  Builder.getInt8PtrTy(DestAS)),
                         SrcSize),
       MemSet->getOperand(1), MemsetLen, MaybeAlign(Align));
 
@@ -1275,7 +1297,7 @@ static bool hasUndefContentsMSSA(MemorySSA *MSSA, AliasAnalysis *AA, Value *V,
       // The size also doesn't matter, as an out-of-bounds access would be UB.
       AllocaInst *Alloca = dyn_cast<AllocaInst>(getUnderlyingObject(V));
       if (getUnderlyingObject(II->getArgOperand(1)) == Alloca) {
-        DataLayout DL = Alloca->getModule()->getDataLayout();
+        const DataLayout &DL = Alloca->getModule()->getDataLayout();
         if (Optional<TypeSize> AllocaSize = Alloca->getAllocationSizeInBits(DL))
           if (*AllocaSize == LTSize->getValue() * 8)
             return true;
@@ -1538,9 +1560,6 @@ bool MemCpyOptPass::processMemCpy(MemCpyInst *M, BasicBlock::iterator &BBI) {
 /// Transforms memmove calls to memcpy calls when the src/dst are guaranteed
 /// not to alias.
 bool MemCpyOptPass::processMemMove(MemMoveInst *M) {
-  if (!TLI->has(LibFunc_memmove))
-    return false;
-
   // See if the pointers alias.
   if (!AA->isNoAlias(MemoryLocation::getForDest(M),
                      MemoryLocation::getForSource(M)))
@@ -1573,7 +1592,7 @@ bool MemCpyOptPass::processByValArgument(CallBase &CB, unsigned ArgNo) {
   const DataLayout &DL = CB.getCaller()->getParent()->getDataLayout();
   // Find out what feeds this byval argument.
   Value *ByValArg = CB.getArgOperand(ArgNo);
-  Type *ByValTy = cast<PointerType>(ByValArg->getType())->getElementType();
+  Type *ByValTy = CB.getParamByValType(ArgNo);
   uint64_t ByValSize = DL.getTypeAllocSize(ByValTy);
   MemoryLocation Loc(ByValArg, LocationSize::precise(ByValSize));
   MemCpyInst *MDep = nullptr;
@@ -1744,11 +1763,6 @@ bool MemCpyOptPass::runImpl(Function &F, MemoryDependenceResults *MD_,
   MSSA = MSSA_;
   MemorySSAUpdater MSSAU_(MSSA_);
   MSSAU = MSSA_ ? &MSSAU_ : nullptr;
-  // If we don't have at least memset and memcpy, there is little point of doing
-  // anything here.  These are required by a freestanding implementation, so if
-  // even they are disabled, there is no point in trying hard.
-  if (!TLI->has(LibFunc_memset) || !TLI->has(LibFunc_memcpy))
-    return false;
 
   while (true) {
     if (!iterateOnFunction(F))

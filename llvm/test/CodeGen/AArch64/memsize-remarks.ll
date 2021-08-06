@@ -1,4 +1,4 @@
-; RUN: llc %s -pass-remarks-missed=memsize -pass-remarks-output=%t.opt.yaml -pass-remarks-filter=memsize -global-isel -o /dev/null 2>&1 | FileCheck %s --check-prefix=GISEL --implicit-check-not=GISEL
+; RUN: llc %s -pass-remarks-analysis=gisel-irtranslator-memsize -pass-remarks-output=%t.opt.yaml -pass-remarks-filter=gisel-irtranslator-memsize -global-isel -o /dev/null 2>&1 | FileCheck %s --check-prefix=GISEL --implicit-check-not=GISEL
 ; RUN: cat %t.opt.yaml | FileCheck -check-prefix=YAML %s
 
 source_filename = "memsize.c"
@@ -141,10 +141,10 @@ entry:
 ; sizes to an object of known size.
 define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst, i8* dereferenceable(314) %src) {
 ; GISEL: Call to memset. Memory operation size: 1 bytes.
-; GISEL-NOT: Read Variables:
-; GISEL-NEXT: Written Variables: <unknown> (42 bytes).
-; YAML:       --- !Missed
-; YAML:       Pass:            memsize
+; GISEL-NOT:  Read Variables:
+; GISEL-NEXT:  Written Variables: <unknown> (42 bytes).
+; YAML:       --- !Analysis
+; YAML:       gisel-irtranslator-memsize
 ; YAML:       Name:            MemoryOpIntrinsicCall
 ; YAML-LABEL: Function:        known_call_with_dereferenceable_bytes
 ; YAML-NEXT:  Args:
@@ -154,7 +154,7 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
 ; YAML-NEXT:    - String:          ' Memory operation size: '
 ; YAML-NEXT:    - StoreSize:       '1'
 ; YAML-NEXT:    - String:          ' bytes.'
-; YAML-NEXT:    - String:          "\nWritten Variables: "
+; YAML-NEXT:    - String:          "\n Written Variables: "
 ; YAML-NEXT:    - WVarName:        '<unknown>'
 ; YAML-NEXT:    - String:          ' ('
 ; YAML-NEXT:    - WVarSize:        '42'
@@ -173,10 +173,10 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
   call void @llvm.memset.p0i8.i64(i8* %dst, i8 0, i64 1, i1 false)
 
 ; GISEL: Call to memcpy. Memory operation size: 1 bytes.
-; GISEL-NEXT: Read Variables: <unknown> (314 bytes).
-; GISEL-NEXT: Written Variables: <unknown> (42 bytes).
-; YAML:       --- !Missed
-; YAML:       Pass:            memsize
+; GISEL-NEXT:  Read Variables: <unknown> (314 bytes).
+; GISEL-NEXT:  Written Variables: <unknown> (42 bytes).
+; YAML:       --- !Analysis
+; YAML:       gisel-irtranslator-memsize
 ; YAML:       Name:            MemoryOpIntrinsicCall
 ; YAML-LABEL: Function:        known_call_with_dereferenceable_bytes
 ; YAML-NEXT:  Args:
@@ -186,13 +186,13 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
 ; YAML-NEXT:    - String:          ' Memory operation size: '
 ; YAML-NEXT:    - StoreSize:       '1'
 ; YAML-NEXT:    - String:          ' bytes.'
-; YAML-NEXT:    - String:          "\nRead Variables: "
+; YAML-NEXT:    - String:          "\n Read Variables: "
 ; YAML-NEXT:    - RVarName:        '<unknown>'
 ; YAML-NEXT:    - String:          ' ('
 ; YAML-NEXT:    - RVarSize:        '314'
 ; YAML-NEXT:    - String:          ' bytes)'
 ; YAML-NEXT:    - String:          .
-; YAML-NEXT:    - String:          "\nWritten Variables: "
+; YAML-NEXT:    - String:          "\n Written Variables: "
 ; YAML-NEXT:    - WVarName:        '<unknown>'
 ; YAML-NEXT:    - String:          ' ('
 ; YAML-NEXT:    - WVarSize:        '42'
@@ -211,10 +211,10 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
   call void @llvm.memcpy.p0i8.p0i8.i64(i8* %dst, i8* %src, i64 1, i1 false)
 
 ; GISEL: Call to memmove. Memory operation size: 1 bytes.
-; GISEL-NEXT: Read Variables: <unknown> (314 bytes).
-; GISEL-NEXT: Written Variables: <unknown> (42 bytes).
-; YAML:       --- !Missed
-; YAML:       Pass:            memsize
+; GISEL-NEXT:  Read Variables: <unknown> (314 bytes).
+; GISEL-NEXT:  Written Variables: <unknown> (42 bytes).
+; YAML:       --- !Analysis
+; YAML:       gisel-irtranslator-memsize
 ; YAML:       Name:            MemoryOpIntrinsicCall
 ; YAML-LABEL: Function:        known_call_with_dereferenceable_bytes
 ; YAML-NEXT:  Args:
@@ -224,13 +224,13 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
 ; YAML-NEXT:    - String:          ' Memory operation size: '
 ; YAML-NEXT:    - StoreSize:       '1'
 ; YAML-NEXT:    - String:          ' bytes.'
-; YAML-NEXT:    - String:          "\nRead Variables: "
+; YAML-NEXT:    - String:          "\n Read Variables: "
 ; YAML-NEXT:    - RVarName:        '<unknown>'
 ; YAML-NEXT:    - String:          ' ('
 ; YAML-NEXT:    - RVarSize:        '314'
 ; YAML-NEXT:    - String:          ' bytes)'
 ; YAML-NEXT:    - String:          .
-; YAML-NEXT:    - String:          "\nWritten Variables: "
+; YAML-NEXT:    - String:          "\n Written Variables: "
 ; YAML-NEXT:    - WVarName:        '<unknown>'
 ; YAML-NEXT:    - String:          ' ('
 ; YAML-NEXT:    - WVarSize:        '42'
@@ -249,10 +249,10 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
   call void @llvm.memmove.p0i8.p0i8.i64(i8* %dst, i8* %src, i64 1, i1 false)
 
 ; GISEL: Call to bzero. Memory operation size: 1 bytes.
-; GISEL-NOT: Read Variables:
-; GISEL-NEXT: Written Variables: <unknown> (42 bytes).
-; YAML:       --- !Missed
-; YAML:       Pass:            memsize
+; GISEL-NOT:  Read Variables:
+; GISEL-NEXT:  Written Variables: <unknown> (42 bytes).
+; YAML:       --- !Analysis
+; YAML:       gisel-irtranslator-memsize
 ; YAML:       Name:            MemoryOpCall
 ; YAML-LABEL: Function:        known_call_with_dereferenceable_bytes
 ; YAML-NEXT:  Args:
@@ -262,7 +262,7 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
 ; YAML-NEXT:    - String:          ' Memory operation size: '
 ; YAML-NEXT:    - StoreSize:       '1'
 ; YAML-NEXT:    - String:          ' bytes.'
-; YAML-NEXT:    - String:          "\nWritten Variables: "
+; YAML-NEXT:    - String:          "\n Written Variables: "
 ; YAML-NEXT:    - WVarName:        '<unknown>'
 ; YAML-NEXT:    - String:          ' ('
 ; YAML-NEXT:    - WVarSize:        '42'
@@ -272,10 +272,10 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
   call void @bzero(i8* %dst, i64 1)
 
 ; GISEL: Call to bcopy. Memory operation size: 1 bytes.
-; GISEL-NEXT: Read Variables: <unknown> (314 bytes).
-; GISEL-NEXT: Written Variables: <unknown> (42 bytes).
-; YAML:       --- !Missed
-; YAML:       Pass:            memsize
+; GISEL-NEXT:  Read Variables: <unknown> (314 bytes).
+; GISEL-NEXT:  Written Variables: <unknown> (42 bytes).
+; YAML:       --- !Analysis
+; YAML:       gisel-irtranslator-memsize
 ; YAML:       Name:            MemoryOpCall
 ; YAML-LABEL: Function:        known_call_with_dereferenceable_bytes
 ; YAML-NEXT:  Args:
@@ -285,13 +285,13 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
 ; YAML-NEXT:    - String:          ' Memory operation size: '
 ; YAML-NEXT:    - StoreSize:       '1'
 ; YAML-NEXT:    - String:          ' bytes.'
-; YAML-NEXT:    - String:          "\nRead Variables: "
+; YAML-NEXT:    - String:          "\n Read Variables: "
 ; YAML-NEXT:    - RVarName:        '<unknown>'
 ; YAML-NEXT:    - String:          ' ('
 ; YAML-NEXT:    - RVarSize:        '314'
 ; YAML-NEXT:    - String:          ' bytes)'
 ; YAML-NEXT:    - String:          .
-; YAML-NEXT:    - String:          "\nWritten Variables: "
+; YAML-NEXT:    - String:          "\n Written Variables: "
 ; YAML-NEXT:    - WVarName:        '<unknown>'
 ; YAML-NEXT:    - String:          ' ('
 ; YAML-NEXT:    - WVarSize:        '42'
@@ -299,6 +299,19 @@ define void @known_call_with_dereferenceable_bytes(i8* dereferenceable(42) %dst,
 ; YAML-NEXT:    - String:          .
 ; YAML-NEXT:  ...
   call void @bcopy(i8* %dst, i8* %src, i64 1)
+  ret void
+}
+
+@dropbear = external unnamed_addr constant [3 x i8], align 1
+@koala = external unnamed_addr constant [7 x i8], align 1
+
+define void @slicePun() {
+bb:
+; GISEL: remark: <unknown>:0:0: Call to memcpy. Memory operation size: 24 bytes.{{$}}
+; GISEL-NEXT: Read Variables: koala (56 bytes).
+; GISEL-NEXT: Written Variables: dropbear (24 bytes).
+  tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 1 getelementptr inbounds ([3 x i8], [3 x i8]* @dropbear, i64 0, i64 0),
+                                            i8* getelementptr inbounds ([7 x i8], [7 x i8]* @koala, i64 0, i64 0), i64 24, i1 false)
   ret void
 }
 

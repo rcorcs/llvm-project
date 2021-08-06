@@ -599,6 +599,16 @@ void kmp_topology_t::canonicalize() {
   _set_globals();
   _set_last_level_cache();
 
+#if KMP_MIC_SUPPORTED
+  // Manually Add L2 = Tile equivalence
+  if (__kmp_mic_type == mic3) {
+    if (get_level(KMP_HW_L2) != -1)
+      set_equivalent_type(KMP_HW_TILE, KMP_HW_L2);
+    else if (get_level(KMP_HW_TILE) != -1)
+      set_equivalent_type(KMP_HW_L2, KMP_HW_TILE);
+  }
+#endif
+
   // Perform post canonicalization checking
   KMP_ASSERT(depth > 0);
   for (int level = 0; level < depth; ++level) {
@@ -2598,12 +2608,6 @@ restart_radix_check:
   nCoresPerPkg = maxCt[coreIdIndex];
   nPackages = totals[pkgIdIndex];
 
-  // Check to see if the machine topology is uniform
-  unsigned prod = totals[maxIndex];
-  for (index = threadIdIndex; index < maxIndex; index++) {
-    prod *= maxCt[index];
-  }
-
   // When affinity is off, this routine will still be called to set
   // __kmp_ncores, as well as __kmp_nThreadsPerCore, nCoresPerPkg, & nPackages.
   // Make sure all these vars are set correctly, and return now if affinity is
@@ -4141,14 +4145,19 @@ int __kmp_aux_set_affinity(void **mask) {
 int __kmp_aux_get_affinity(void **mask) {
   int gtid;
   int retval;
+#if KMP_OS_WINDOWS || KMP_DEBUG
   kmp_info_t *th;
-
+#endif
   if (!KMP_AFFINITY_CAPABLE()) {
     return -1;
   }
 
   gtid = __kmp_entry_gtid();
+#if KMP_OS_WINDOWS || KMP_DEBUG
   th = __kmp_threads[gtid];
+#else
+  (void)gtid; // unused variable
+#endif
   KMP_DEBUG_ASSERT(th->th.th_affin_mask != NULL);
 
   KA_TRACE(

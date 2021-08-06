@@ -117,6 +117,11 @@ public:
     return TargetInfo::VoidPtrBuiltinVaList;
   }
 
+  Optional<unsigned>
+  getDWARFAddressSpace(unsigned AddressSpace) const override {
+    return AddressSpace;
+  }
+
   CallingConvCheckResult checkCallingConvention(CallingConv CC) const override {
     return (CC == CC_SpirFunction || CC == CC_OpenCLKernel) ? CCCR_OK
                                                             : CCCR_Warning;
@@ -130,8 +135,8 @@ public:
     AddrSpaceMap = DefaultIsGeneric ? &SPIRDefIsGenMap : &SPIRDefIsPrivMap;
   }
 
-  void adjust(LangOptions &Opts) override {
-    TargetInfo::adjust(Opts);
+  void adjust(DiagnosticsEngine &Diags, LangOptions &Opts) override {
+    TargetInfo::adjust(Diags, Opts);
     // FIXME: SYCL specification considers unannotated pointers and references
     // to be pointing to the generic address space. See section 5.9.3 of
     // SYCL 2020 specification.

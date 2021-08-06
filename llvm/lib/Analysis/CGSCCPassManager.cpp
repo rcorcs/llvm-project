@@ -44,8 +44,6 @@ static cl::opt<bool> AbortOnMaxDevirtIterationsReached(
     cl::desc("Abort when the max iterations for devirtualization CGSCC repeat "
              "pass is reached"));
 
-AnalysisKey FunctionStatusAnalysis::Key;
-
 // Explicit instantiations for the core proxy templates.
 template class AllAnalysesOn<LazyCallGraph::SCC>;
 template class AnalysisManager<LazyCallGraph::SCC, LazyCallGraph &>;
@@ -434,8 +432,13 @@ PreservedAnalyses DevirtSCCRepeatedPass::run(LazyCallGraph::SCC &InitialC,
       break;
     }
 
-    // Check that we didn't miss any update scenario.
-    assert(!UR.InvalidatedSCCs.count(C) && "Processing an invalid SCC!");
+    // If the CGSCC pass wasn't able to provide a valid updated SCC, the
+    // current SCC may simply need to be skipped if invalid.
+    if (UR.InvalidatedSCCs.count(C)) {
+      LLVM_DEBUG(dbgs() << "Skipping invalidated root or island SCC!\n");
+      break;
+    }
+
     assert(C->begin() != C->end() && "Cannot have an empty SCC!");
 
     // Check whether any of the handles were devirtualized.
@@ -543,13 +546,6 @@ PreservedAnalyses CGSCCToFunctionPassAdaptor::run(LazyCallGraph::SCC &C,
       continue;
 
     Function &F = N->getFunction();
-    // The expectation here is that FunctionStatusAnalysis was required at the
-    // end of the function passes pipeline managed by this adaptor. Then, if any
-    // CGSCC passes were re-run because CGSCCs changed (or devirtualization),
-    // and none changed F, then FunctionStatusAnalysis would still be cached
-    // here and we don't need to rerun the passes managed by this adaptor.
-    if (FAM.getCachedResult<FunctionStatusAnalysis>(F))
-      continue;
 
     PassInstrumentation PI = FAM.getResult<PassInstrumentationAnalysis>(F);
     if (!PI.runBeforePass<Function>(*Pass, F))
@@ -867,7 +863,7 @@ incorporateNewSCCRange(const SCCRangeT &NewSCCRange, LazyCallGraph &G,
   // split-off SCCs.
   // We know however that this will preserve any FAM proxy so go ahead and mark
   // that.
-  auto PA = PreservedAnalyses::allInSet<AllAnalysesOn<Function>>();
+  PreservedAnalyses PA;
   PA.preserve<FunctionAnalysisManagerCGSCCProxy>();
   AM.invalidate(*OldC, PA);
 

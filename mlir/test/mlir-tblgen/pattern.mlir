@@ -37,7 +37,7 @@ func @verifyZeroArg() -> i32 {
 }
 
 // CHECK-LABEL: testIgnoreArgMatch
-// CHECK-SAME: (%{{[a-z0-9]*}}: i32, %[[ARG1:[a-z0-9]*]]: i32
+// CHECK-SAME: (%{{[a-z0-9]*}}: i32 loc({{[^)]*}}), %[[ARG1:[a-z0-9]*]]: i32 loc({{[^)]*}}),
 func @testIgnoreArgMatch(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: f32) {
   // CHECK: "test.ignore_arg_match_dst"(%[[ARG1]]) {f = 15 : i64}
   "test.ignore_arg_match_src"(%arg0, %arg1, %arg2) {d = 42, e = 24, f = 15} : (i32, i32, i32) -> ()
@@ -53,7 +53,7 @@ func @testIgnoreArgMatch(%arg0: i32, %arg1: i32, %arg2: i32, %arg3: f32) {
 }
 
 // CHECK-LABEL: verifyInterleavedOperandAttribute
-// CHECK-SAME:    %[[ARG0:.*]]: i32, %[[ARG1:.*]]: i32
+// CHECK-SAME:    %[[ARG0:.*]]: i32 loc({{[^)]*}}), %[[ARG1:.*]]: i32 loc({{[^)]*}})
 func @verifyInterleavedOperandAttribute(%arg0: i32, %arg1: i32) {
   // CHECK: "test.interleaved_operand_attr2"(%[[ARG0]], %[[ARG1]]) {attr1 = 15 : i64, attr2 = 42 : i64}
   "test.interleaved_operand_attr1"(%arg0, %arg1) {attr1 = 15, attr2 = 42} : (i32, i32) -> ()
@@ -102,6 +102,16 @@ func @verifyNativeCodeCallBinding(%arg0 : i32) -> (i32) {
   return %1 : i32
 }
 
+// CHECK-LABEL: verifyMultipleNativeCodeCallBinding
+func@verifyMultipleNativeCodeCallBinding(%arg0 : i32) -> (i32) {
+  %0 = "test.op_k"() : () -> (i32)
+  %1 = "test.op_k"() : () -> (i32)
+  // CHECK: %[[A:.*]] = "test.native_code_call7"(%1) : (i32) -> i32
+  // CHECK: %[[A:.*]] = "test.native_code_call7"(%0) : (i32) -> i32
+  %2, %3 = "test.native_code_call6"(%0, %1) : (i32, i32) -> (i32, i32)
+  return %2 : i32
+}
+
 // CHECK-LABEL: verifyAllAttrConstraintOf
 func @verifyAllAttrConstraintOf() -> (i32, i32, i32) {
   // CHECK: "test.all_attr_constraint_of2"
@@ -114,7 +124,7 @@ func @verifyAllAttrConstraintOf() -> (i32, i32, i32) {
 }
 
 // CHECK-LABEL: verifyManyArgs
-// CHECK-SAME: (%[[ARG:.*]]: i32)
+// CHECK-SAME: (%[[ARG:.*]]: i32 loc({{[^)]*}}))
 func @verifyManyArgs(%arg: i32) {
   // CHECK: "test.many_arguments"(%[[ARG]], %[[ARG]], %[[ARG]], %[[ARG]], %[[ARG]], %[[ARG]], %[[ARG]], %[[ARG]], %[[ARG]])
   // CHECK-SAME: {attr1 = 24 : i64, attr2 = 42 : i64, attr3 = 42 : i64, attr4 = 42 : i64, attr5 = 42 : i64, attr6 = 42 : i64, attr7 = 42 : i64, attr8 = 42 : i64, attr9 = 42 : i64}
@@ -156,6 +166,17 @@ func @verifyNestedOpEqualArgs(
   %3 = "test.op_n"(%arg0, %2) : (i32, i32) -> (i32)
 
   return
+}
+
+// CHECK-LABEL: verifyNestedSameOpAndSameArgEquality
+func @verifyNestedSameOpAndSameArgEquality(%arg0: i32, %arg1: i32) -> i32 {
+  // def TestNestedSameOpAndSameArgEqualityPattern:
+  //   Pat<(OpN (OpN $_, $x), $x), (replaceWithValue $x)>;
+
+  %0 = "test.op_n"(%arg1, %arg0) : (i32, i32) -> (i32)
+  %1 = "test.op_n"(%0, %arg0) : (i32, i32) -> (i32)
+  // CHECK: return %arg0 : i32
+  return %1 : i32
 }
 
 // CHECK-LABEL: verifyMultipleEqualArgs

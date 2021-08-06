@@ -523,6 +523,64 @@ float matrices and add the result to a third 4x4 matrix.
     return a + b * c;
   }
 
+The matrix type extension also supports operations on a matrix and a scalar.
+
+.. code-block:: c++
+
+  typedef float m4x4_t __attribute__((matrix_type(4, 4)));
+
+  m4x4_t f(m4x4_t a) {
+    return (a + 23) * 12;
+  }
+
+The matrix type extension supports division on a matrix and a scalar but not on a matrix and a matrix.
+
+.. code-block:: c++
+
+  typedef float m4x4_t __attribute__((matrix_type(4, 4)));
+
+  m4x4_t f(m4x4_t a) {
+    a = a / 3.0;
+    return a;
+  }
+
+The matrix type extension supports compound assignments for addition, subtraction, and multiplication on matrices
+and on a matrix and a scalar, provided their types are consistent.
+
+.. code-block:: c++
+
+  typedef float m4x4_t __attribute__((matrix_type(4, 4)));
+
+  m4x4_t f(m4x4_t a, m4x4_t b) {
+    a += b;
+    a -= b;
+    a *= b;
+    a += 23;
+    a -= 12;
+    return a;
+  }
+
+The matrix type extension supports explicit casts. Implicit type conversion between matrix types is not allowed.
+
+.. code-block:: c++
+
+  typedef int ix5x5 __attribute__((matrix_type(5, 5)));
+  typedef float fx5x5 __attribute__((matrix_type(5, 5)));
+
+  fx5x5 f1(ix5x5 i, fx5x5 f) {
+    return (fx5x5) i;
+  }
+
+
+  template <typename X>
+  using matrix_4_4 = X __attribute__((matrix_type(4, 4)));
+
+  void f2() {
+    matrix_5_5<double> d;
+    matrix_5_5<int> i;
+    i = (matrix_5_5<int>)d;
+    i = static_cast<matrix_5_5<int>>(d);
+  }
 
 Half-Precision Floating Point
 =============================
@@ -631,6 +689,20 @@ after the enumerator name and before any initializer, like so:
 Attributes on the ``enum`` declaration do not apply to individual enumerators.
 
 Query for this feature with ``__has_extension(enumerator_attributes)``.
+
+C++11 Attributes on using-declarations
+======================================
+
+Clang allows C++-style ``[[]]`` attributes to be written on using-declarations.
+For instance:
+
+.. code-block:: c++
+
+  [[clang::using_if_exists]] using foo::bar;
+  using foo::baz [[clang::using_if_exists]];
+
+You can test for support for this extension with
+``__has_extension(cxx_attributes_on_using_declarations)``.
 
 'User-Specified' System Frameworks
 ==================================
@@ -1741,6 +1813,34 @@ OpenCL Features
 
 Clang supports internal OpenCL extensions documented below.
 
+``__cl_clang_bitfields``
+--------------------------------
+
+With this extension it is possible to enable bitfields in structs
+or unions using the OpenCL extension pragma mechanism detailed in
+`the OpenCL Extension Specification, section 1.2
+<https://www.khronos.org/registry/OpenCL/specs/3.0-unified/html/OpenCL_Ext.html#extensions-overview>`_.
+
+Use of bitfields in OpenCL kernels can result in reduced portability as struct
+layout is not guaranteed to be consistent when compiled by different compilers.
+If structs with bitfields are used as kernel function parameters, it can result
+in incorrect functionality when the layout is different between the host and
+device code.
+
+**Example of Use**:
+
+.. code-block:: c++
+
+  #pragma OPENCL EXTENSION __cl_clang_bitfields : enable
+  struct with_bitfield {
+    unsigned int i : 5; // compiled - no diagnostic generated
+  };
+
+  #pragma OPENCL EXTENSION __cl_clang_bitfields : disable
+  struct without_bitfield {
+    unsigned int i : 5; // error - bitfields are not supported
+  };
+
 ``__cl_clang_function_pointers``
 --------------------------------
 
@@ -1766,7 +1866,7 @@ correctly in any circumstances. It can be used if:
   metaprogramming algorithms to be able to specify/detect types generically.
 
 - the generated kernel binary does not contain indirect calls because they
-  are eliminated using compiler optimizations e.g. devirtualization. 
+  are eliminated using compiler optimizations e.g. devirtualization.
 
 - the selected target supports the function pointer like functionality e.g.
   most CPU targets.
@@ -1860,6 +1960,30 @@ between the host and device is known to be compatible.
   #pragma OPENCL EXTENSION __cl_clang_non_portable_kernel_param_types : disable
     global OnlySL *d,
   );
+
+Remove address space builtin function
+-------------------------------------
+
+``__remove_address_space`` allows to derive types in C++ for OpenCL
+that have address space qualifiers removed. This utility only affects
+address space qualifiers, therefore, other type qualifiers such as
+``const`` or ``volatile`` remain unchanged.
+
+**Example of Use**:
+
+.. code-block:: c++
+
+  template<typename T>
+  void foo(T *par){
+    T var1; // error - local function variable with global address space
+    __private T var2; // error - conflicting address space qualifiers
+    __private __remove_address_space<T> var3; // var3 is __private int
+  }
+
+  void bar(){
+    __global int* ptr;
+    foo(ptr);
+  }
 
 Legacy 1.x atomics with generic address space
 ---------------------------------------------
@@ -2376,6 +2500,40 @@ argument.
   int *pb =__builtin_preserve_access_index(&v->c[3].b);
   __builtin_preserve_access_index(v->j);
 
+``__builtin_sycl_unique_stable_name``
+-------------------------------------
+
+``__builtin_sycl_unique_stable_name()`` is a builtin that takes a type and
+produces a string literal containing a unique name for the type that is stable
+across split compilations, mainly to support SYCL/Data Parallel C++ language.
+
+In cases where the split compilation needs to share a unique token for a type
+across the boundary (such as in an offloading situation), this name can be used
+for lookup purposes, such as in the SYCL Integration Header.
+
+The value of this builtin is computed entirely at compile time, so it can be
+used in constant expressions. This value encodes lambda functions based on a
+stable numbering order in which they appear in their local declaration contexts.
+Once this builtin is evaluated in a constexpr context, it is erroneous to use
+it in an instantiation which changes its value.
+
+In order to produce the unique name, the current implementation of the bultin
+uses Itanium mangling even if the host compilation uses a different name
+mangling scheme at runtime. The mangler marks all the lambdas required to name
+the SYCL kernel and emits a stable local ordering of the respective lambdas,
+starting from ``10000``. The initial value of ``10000`` serves as an obvious
+differentiator from ordinary lambda mangling numbers but does not serve any
+other purpose and may change in the future. The resulting pattern is
+demanglable. When non-lambda types are passed to the builtin, the mangler emits
+their usual pattern without any special treatment.
+
+**Syntax**:
+
+.. code-block:: c
+
+  // Computes a unique stable name for the given type.
+  constexpr const char * __builtin_sycl_unique_stable_name( type-id );
+
 Multiprecision Arithmetic Builtins
 ----------------------------------
 
@@ -2570,7 +2728,7 @@ Guaranteed inlined copy
 ``__builtin_memcpy_inline`` has been designed as a building block for efficient
 ``memcpy`` implementations. It is identical to ``__builtin_memcpy`` but also
 guarantees not to call any external functions. See LLVM IR `llvm.memcpy.inline
-<https://llvm.org/docs/LangRef.html#llvm-memcpy-inline-intrinsic>`_ intrinsic 
+<https://llvm.org/docs/LangRef.html#llvm-memcpy-inline-intrinsic>`_ intrinsic
 for more information.
 
 This is useful to implement a custom version of ``memcpy``, implement a
@@ -3276,6 +3434,9 @@ to the same code size limit as with ``unroll(enable)``.
 
 Unrolling of a loop can be prevented by specifying ``unroll(disable)``.
 
+Loop unroll parameters can be controlled by options
+`-mllvm -unroll-count=n` and `-mllvm -pragma-unroll-threshold=n`.
+
 Loop Distribution
 -----------------
 
@@ -3407,15 +3568,17 @@ A ``#pragma clang fp`` pragma may contain any number of options:
 
 The ``#pragma float_control`` pragma allows precise floating-point
 semantics and floating-point exception behavior to be specified
-for a section of the source code. This pragma can only appear at file scope or
-at the start of a compound statement (excluding comments). When using within a
-compound statement, the pragma is active within the scope of the compound
-statement.  This pragma is modeled after a Microsoft pragma with the
-same spelling and syntax.  For pragmas specified at file scope, a stack
-is supported so that the ``pragma float_control`` settings can be pushed or popped.
+for a section of the source code. This pragma can only appear at file or
+namespace scope, within a language linkage specification or at the start of a
+compound statement (excluding comments). When used within a compound statement,
+the pragma is active within the scope of the compound statement.  This pragma
+is modeled after a Microsoft pragma with the same spelling and syntax.  For
+pragmas specified at file or namespace scope, or within a language linkage
+specification, a stack is supported so that the ``pragma float_control``
+settings can be pushed or popped.
 
 When ``pragma float_control(precise, on)`` is enabled, the section of code
-governed by the pragma uses precise floating point semantics, effectively
+governed by the pragma uses precise floating-point semantics, effectively
 ``-ffast-math`` is disabled and ``-ffp-contract=on``
 (fused multiply add) is enabled.
 
@@ -3426,8 +3589,29 @@ when ``pragma float_control(precise, off)`` is enabled, the section of code
 governed by the pragma behaves as though the command-line option
 ``-ffp-exception-behavior=ignore`` is enabled.
 
+When ``pragma float_control(source, on)`` is enabled, the section of code governed
+by the pragma behaves as though the command-line option
+``-ffp-eval-method=source`` is enabled. Note: The default
+floating-point evaluation method is target-specific, typically ``source``.
+
+When ``pragma float_control(double, on)`` is enabled, the section of code governed
+by the pragma behaves as though the command-line option
+``-ffp-eval-method=double`` is enabled.
+
+When ``pragma float_control(extended, on)`` is enabled, the section of code governed
+by the pragma behaves as though the command-line option
+``-ffp-eval-method=extended`` is enabled.
+
+When ``pragma float_control(source, off)`` or
+``pragma float_control(double, off)`` or
+``pragma float_control(extended, off)`` is enabled,
+the section of code governed
+by the pragma behaves as though the command-line option
+``-ffp-eval-method=source`` is enabled, returning floating-point evaluation
+method to the default setting.
+
 The full syntax this pragma supports is
-``float_control(except|precise, on|off [, push])`` and
+``float_control(except|precise|source|double|extended, on|off [, push])`` and
 ``float_control(push|pop)``.
 The ``push`` and ``pop`` forms, including using ``push`` as the optional
 third argument, can only occur at file scope.
@@ -3726,6 +3910,25 @@ Since the size of ``buffer`` can't be known at compile time, Clang will fold
 ``__builtin_object_size(buffer, 0)`` into ``-1``. However, if this was written
 as ``__builtin_dynamic_object_size(buffer, 0)``, Clang will fold it into
 ``size``, providing some extra runtime safety.
+
+Deprecating Macros
+==================
+
+Clang supports the pragma ``#pragma clang deprecated``, which can be used to
+provide deprecation warnings for macro uses. For example:
+
+.. code-block:: c
+
+   #define MIN(x, y) x < y ? x : y
+   #pragma clang deprecated(MIN, "use std::min instead")
+
+   void min(int a, int b) {
+     return MIN(a, b); // warning: MIN is deprecated: use std::min instead
+   }
+
+``#pragma clang deprecated`` should be preferred for this purpose over
+``#pragma GCC warning`` because the warning can be controlled with
+``-Wdeprecated``.
 
 Extended Integer Types
 ======================

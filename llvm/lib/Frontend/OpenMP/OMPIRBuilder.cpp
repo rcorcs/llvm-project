@@ -20,6 +20,7 @@
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/MDBuilder.h"
+#include "llvm/IR/Value.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
@@ -417,9 +418,18 @@ OpenMPIRBuilder::createCancel(const LocationDescription &Loc,
   Value *Args[] = {Ident, getOrCreateThreadID(Ident), CancelKind};
   Value *Result = Builder.CreateCall(
       getOrCreateRuntimeFunctionPtr(OMPRTL___kmpc_cancel), Args);
+  auto ExitCB = [this, CanceledDirective, Loc](InsertPointTy IP) {
+    if (CanceledDirective == OMPD_parallel) {
+      IRBuilder<>::InsertPointGuard IPG(Builder);
+      Builder.restoreIP(IP);
+      createBarrier(LocationDescription(Builder.saveIP(), Loc.DL),
+                    omp::Directive::OMPD_unknown, /* ForceSimpleCall */ false,
+                    /* CheckCancelFlag */ false);
+    }
+  };
 
   // The actual cancel logic is shared with others, e.g., cancel_barriers.
-  emitCancelationCheckImpl(Result, CanceledDirective);
+  emitCancelationCheckImpl(Result, CanceledDirective, ExitCB);
 
   // Update the insertion point and remove the terminator we introduced.
   Builder.SetInsertPoint(UI->getParent());
@@ -428,8 +438,9 @@ OpenMPIRBuilder::createCancel(const LocationDescription &Loc,
   return Builder.saveIP();
 }
 
-void OpenMPIRBuilder::emitCancelationCheckImpl(
-    Value *CancelFlag, omp::Directive CanceledDirective) {
+void OpenMPIRBuilder::emitCancelationCheckImpl(Value *CancelFlag,
+                                               omp::Directive CanceledDirective,
+                                               FinalizeCallbackTy ExitCB) {
   assert(isLastFinalizationInfoCancellable(CanceledDirective) &&
          "Unexpected cancellation!");
 
@@ -457,6 +468,8 @@ void OpenMPIRBuilder::emitCancelationCheckImpl(
   // From the cancellation block we finalize all variables and go to the
   // post finalization block that is known to the FiniCB callback.
   Builder.SetInsertPoint(CancellationBlock);
+  if (ExitCB)
+    ExitCB(Builder.saveIP());
   auto &FI = FinalizationStack.back();
   FI.FiniCB(Builder.saveIP());
 
@@ -1009,6 +1022,179 @@ OpenMPIRBuilder::createSection(const LocationDescription &Loc,
                               /*IsCancellable*/ true);
 }
 
+/// Create a function with a unique name and a "void (i8*, i8*)" signature in
+/// the given module and return it.
+Function *getFreshReductionFunc(Module &M) {
+  Type *VoidTy = Type::getVoidTy(M.getContext());
+  Type *Int8PtrTy = Type::getInt8PtrTy(M.getContext());
+  auto *FuncTy =
+      FunctionType::get(VoidTy, {Int8PtrTy, Int8PtrTy}, /* IsVarArg */ false);
+  return Function::Create(FuncTy, GlobalVariable::InternalLinkage,
+                          M.getDataLayout().getDefaultGlobalsAddressSpace(),
+                          ".omp.reduction.func", &M);
+}
+
+OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::createReductions(
+    const LocationDescription &Loc, InsertPointTy AllocaIP,
+    ArrayRef<ReductionInfo> ReductionInfos, bool IsNoWait) {
+  for (const ReductionInfo &RI : ReductionInfos) {
+    (void)RI;
+    assert(RI.Variable && "expected non-null variable");
+    assert(RI.PrivateVariable && "expected non-null private variable");
+    assert(RI.ReductionGen && "expected non-null reduction generator callback");
+    assert(RI.Variable->getType() == RI.PrivateVariable->getType() &&
+           "expected variables and their private equivalents to have the same "
+           "type");
+    assert(RI.Variable->getType()->isPointerTy() &&
+           "expected variables to be pointers");
+  }
+
+  if (!updateToLocation(Loc))
+    return InsertPointTy();
+
+  BasicBlock *InsertBlock = Loc.IP.getBlock();
+  BasicBlock *ContinuationBlock =
+      InsertBlock->splitBasicBlock(Loc.IP.getPoint(), "reduce.finalize");
+  InsertBlock->getTerminator()->eraseFromParent();
+
+  // Create and populate array of type-erased pointers to private reduction
+  // values.
+  unsigned NumReductions = ReductionInfos.size();
+  Type *RedArrayTy = ArrayType::get(Builder.getInt8PtrTy(), NumReductions);
+  Builder.restoreIP(AllocaIP);
+  Value *RedArray = Builder.CreateAlloca(RedArrayTy, nullptr, "red.array");
+
+  Builder.SetInsertPoint(InsertBlock, InsertBlock->end());
+
+  for (auto En : enumerate(ReductionInfos)) {
+    unsigned Index = En.index();
+    const ReductionInfo &RI = En.value();
+    Value *RedArrayElemPtr = Builder.CreateConstInBoundsGEP2_64(
+        RedArrayTy, RedArray, 0, Index, "red.array.elem." + Twine(Index));
+    Value *Casted =
+        Builder.CreateBitCast(RI.PrivateVariable, Builder.getInt8PtrTy(),
+                              "private.red.var." + Twine(Index) + ".casted");
+    Builder.CreateStore(Casted, RedArrayElemPtr);
+  }
+
+  // Emit a call to the runtime function that orchestrates the reduction.
+  // Declare the reduction function in the process.
+  Function *Func = Builder.GetInsertBlock()->getParent();
+  Module *Module = Func->getParent();
+  Value *RedArrayPtr =
+      Builder.CreateBitCast(RedArray, Builder.getInt8PtrTy(), "red.array.ptr");
+  Constant *SrcLocStr = getOrCreateSrcLocStr(Loc);
+  bool CanGenerateAtomic =
+      llvm::all_of(ReductionInfos, [](const ReductionInfo &RI) {
+        return RI.AtomicReductionGen;
+      });
+  Value *Ident = getOrCreateIdent(
+      SrcLocStr, CanGenerateAtomic ? IdentFlag::OMP_IDENT_FLAG_ATOMIC_REDUCE
+                                   : IdentFlag(0));
+  Value *ThreadId = getOrCreateThreadID(Ident);
+  Constant *NumVariables = Builder.getInt32(NumReductions);
+  const DataLayout &DL = Module->getDataLayout();
+  unsigned RedArrayByteSize = DL.getTypeStoreSize(RedArrayTy);
+  Constant *RedArraySize = Builder.getInt64(RedArrayByteSize);
+  Function *ReductionFunc = getFreshReductionFunc(*Module);
+  Value *Lock = getOMPCriticalRegionLock(".reduction");
+  Function *ReduceFunc = getOrCreateRuntimeFunctionPtr(
+      IsNoWait ? RuntimeFunction::OMPRTL___kmpc_reduce_nowait
+               : RuntimeFunction::OMPRTL___kmpc_reduce);
+  CallInst *ReduceCall =
+      Builder.CreateCall(ReduceFunc,
+                         {Ident, ThreadId, NumVariables, RedArraySize,
+                          RedArrayPtr, ReductionFunc, Lock},
+                         "reduce");
+
+  // Create final reduction entry blocks for the atomic and non-atomic case.
+  // Emit IR that dispatches control flow to one of the blocks based on the
+  // reduction supporting the atomic mode.
+  BasicBlock *NonAtomicRedBlock =
+      BasicBlock::Create(Module->getContext(), "reduce.switch.nonatomic", Func);
+  BasicBlock *AtomicRedBlock =
+      BasicBlock::Create(Module->getContext(), "reduce.switch.atomic", Func);
+  SwitchInst *Switch =
+      Builder.CreateSwitch(ReduceCall, ContinuationBlock, /* NumCases */ 2);
+  Switch->addCase(Builder.getInt32(1), NonAtomicRedBlock);
+  Switch->addCase(Builder.getInt32(2), AtomicRedBlock);
+
+  // Populate the non-atomic reduction using the elementwise reduction function.
+  // This loads the elements from the global and private variables and reduces
+  // them before storing back the result to the global variable.
+  Builder.SetInsertPoint(NonAtomicRedBlock);
+  for (auto En : enumerate(ReductionInfos)) {
+    const ReductionInfo &RI = En.value();
+    Type *ValueType = RI.getElementType();
+    Value *RedValue = Builder.CreateLoad(ValueType, RI.Variable,
+                                         "red.value." + Twine(En.index()));
+    Value *PrivateRedValue =
+        Builder.CreateLoad(ValueType, RI.PrivateVariable,
+                           "red.private.value." + Twine(En.index()));
+    Value *Reduced;
+    Builder.restoreIP(
+        RI.ReductionGen(Builder.saveIP(), RedValue, PrivateRedValue, Reduced));
+    if (!Builder.GetInsertBlock())
+      return InsertPointTy();
+    Builder.CreateStore(Reduced, RI.Variable);
+  }
+  Function *EndReduceFunc = getOrCreateRuntimeFunctionPtr(
+      IsNoWait ? RuntimeFunction::OMPRTL___kmpc_end_reduce_nowait
+               : RuntimeFunction::OMPRTL___kmpc_end_reduce);
+  Builder.CreateCall(EndReduceFunc, {Ident, ThreadId, Lock});
+  Builder.CreateBr(ContinuationBlock);
+
+  // Populate the atomic reduction using the atomic elementwise reduction
+  // function. There are no loads/stores here because they will be happening
+  // inside the atomic elementwise reduction.
+  Builder.SetInsertPoint(AtomicRedBlock);
+  if (CanGenerateAtomic) {
+    for (const ReductionInfo &RI : ReductionInfos) {
+      Builder.restoreIP(RI.AtomicReductionGen(Builder.saveIP(), RI.Variable,
+                                              RI.PrivateVariable));
+      if (!Builder.GetInsertBlock())
+        return InsertPointTy();
+    }
+    Builder.CreateBr(ContinuationBlock);
+  } else {
+    Builder.CreateUnreachable();
+  }
+
+  // Populate the outlined reduction function using the elementwise reduction
+  // function. Partial values are extracted from the type-erased array of
+  // pointers to private variables.
+  BasicBlock *ReductionFuncBlock =
+      BasicBlock::Create(Module->getContext(), "", ReductionFunc);
+  Builder.SetInsertPoint(ReductionFuncBlock);
+  Value *LHSArrayPtr = Builder.CreateBitCast(ReductionFunc->getArg(0),
+                                             RedArrayTy->getPointerTo());
+  Value *RHSArrayPtr = Builder.CreateBitCast(ReductionFunc->getArg(1),
+                                             RedArrayTy->getPointerTo());
+  for (auto En : enumerate(ReductionInfos)) {
+    const ReductionInfo &RI = En.value();
+    Value *LHSI8PtrPtr = Builder.CreateConstInBoundsGEP2_64(
+        RedArrayTy, LHSArrayPtr, 0, En.index());
+    Value *LHSI8Ptr = Builder.CreateLoad(Builder.getInt8PtrTy(), LHSI8PtrPtr);
+    Value *LHSPtr = Builder.CreateBitCast(LHSI8Ptr, RI.Variable->getType());
+    Value *LHS = Builder.CreateLoad(RI.getElementType(), LHSPtr);
+    Value *RHSI8PtrPtr = Builder.CreateConstInBoundsGEP2_64(
+        RedArrayTy, RHSArrayPtr, 0, En.index());
+    Value *RHSI8Ptr = Builder.CreateLoad(Builder.getInt8PtrTy(), RHSI8PtrPtr);
+    Value *RHSPtr =
+        Builder.CreateBitCast(RHSI8Ptr, RI.PrivateVariable->getType());
+    Value *RHS = Builder.CreateLoad(RI.getElementType(), RHSPtr);
+    Value *Reduced;
+    Builder.restoreIP(RI.ReductionGen(Builder.saveIP(), LHS, RHS, Reduced));
+    if (!Builder.GetInsertBlock())
+      return InsertPointTy();
+    Builder.CreateStore(Reduced, LHSPtr);
+  }
+  Builder.CreateRetVoid();
+
+  Builder.SetInsertPoint(ContinuationBlock);
+  return Builder.saveIP();
+}
+
 OpenMPIRBuilder::InsertPointTy
 OpenMPIRBuilder::createMaster(const LocationDescription &Loc,
                               BodyGenCallbackTy BodyGenCB,
@@ -1431,10 +1617,8 @@ OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::createDynamicWorkshareLoop(
 
   Value *ThreadNum = getOrCreateThreadID(SrcLoc);
 
-  OMPScheduleType DynamicSchedType =
-      SchedType | OMPScheduleType::ModifierNonmonotonic;
   Constant *SchedulingType =
-      ConstantInt::get(I32Type, static_cast<int>(DynamicSchedType));
+      ConstantInt::get(I32Type, static_cast<int>(SchedType));
 
   // Call the "init" function.
   Builder.CreateCall(DynamicInit,
@@ -2181,6 +2365,70 @@ CallInst *OpenMPIRBuilder::createCachedThreadPrivate(
   return Builder.CreateCall(Fn, Args);
 }
 
+OpenMPIRBuilder::InsertPointTy
+OpenMPIRBuilder::createTargetInit(const LocationDescription &Loc, bool IsSPMD, bool RequiresFullRuntime) {
+  if (!updateToLocation(Loc))
+    return Loc.IP;
+
+  Constant *SrcLocStr = getOrCreateSrcLocStr(Loc);
+  Value *Ident = getOrCreateIdent(SrcLocStr);
+  ConstantInt *IsSPMDVal = ConstantInt::getBool(Int32->getContext(), IsSPMD);
+  ConstantInt *UseGenericStateMachine =
+      ConstantInt::getBool(Int32->getContext(), !IsSPMD);
+  ConstantInt *RequiresFullRuntimeVal = ConstantInt::getBool(Int32->getContext(), RequiresFullRuntime);
+
+  Function *Fn = getOrCreateRuntimeFunctionPtr(
+      omp::RuntimeFunction::OMPRTL___kmpc_target_init);
+
+  CallInst *ThreadKind =
+      Builder.CreateCall(Fn, {Ident, IsSPMDVal, UseGenericStateMachine, RequiresFullRuntimeVal});
+
+  Value *ExecUserCode = Builder.CreateICmpEQ(
+      ThreadKind, ConstantInt::get(ThreadKind->getType(), -1), "exec_user_code");
+
+  // ThreadKind = __kmpc_target_init(...)
+  // if (ThreadKind == -1)
+  //   user_code
+  // else
+  //   return;
+
+  auto *UI = Builder.CreateUnreachable();
+  BasicBlock *CheckBB = UI->getParent();
+  BasicBlock *UserCodeEntryBB = CheckBB->splitBasicBlock(UI, "user_code.entry");
+
+  BasicBlock *WorkerExitBB = BasicBlock::Create(
+      CheckBB->getContext(), "worker.exit", CheckBB->getParent());
+  Builder.SetInsertPoint(WorkerExitBB);
+  Builder.CreateRetVoid();
+
+  auto *CheckBBTI = CheckBB->getTerminator();
+  Builder.SetInsertPoint(CheckBBTI);
+  Builder.CreateCondBr(ExecUserCode, UI->getParent(), WorkerExitBB);
+
+  CheckBBTI->eraseFromParent();
+  UI->eraseFromParent();
+
+  // Continue in the "user_code" block, see diagram above and in
+  // openmp/libomptarget/deviceRTLs/common/include/target.h .
+  return InsertPointTy(UserCodeEntryBB, UserCodeEntryBB->getFirstInsertionPt());
+}
+
+void OpenMPIRBuilder::createTargetDeinit(const LocationDescription &Loc,
+                                         bool IsSPMD, bool RequiresFullRuntime) {
+  if (!updateToLocation(Loc))
+    return;
+
+  Constant *SrcLocStr = getOrCreateSrcLocStr(Loc);
+  Value *Ident = getOrCreateIdent(SrcLocStr);
+  ConstantInt *IsSPMDVal = ConstantInt::getBool(Int32->getContext(), IsSPMD);
+  ConstantInt *RequiresFullRuntimeVal = ConstantInt::getBool(Int32->getContext(), RequiresFullRuntime);
+
+  Function *Fn = getOrCreateRuntimeFunctionPtr(
+      omp::RuntimeFunction::OMPRTL___kmpc_target_deinit);
+
+  Builder.CreateCall(Fn, {Ident, IsSPMDVal, RequiresFullRuntimeVal});
+}
+
 std::string OpenMPIRBuilder::getNameWithSeparators(ArrayRef<StringRef> Parts,
                                                    StringRef FirstSeparator,
                                                    StringRef Separator) {
@@ -2241,6 +2489,373 @@ OpenMPIRBuilder::createOffloadMaptypes(SmallVectorImpl<uint64_t> &Mappings,
       VarName);
   MaptypesArrayGlobal->setUnnamedAddr(llvm::GlobalValue::UnnamedAddr::Global);
   return MaptypesArrayGlobal;
+}
+
+void OpenMPIRBuilder::createMapperAllocas(const LocationDescription &Loc,
+                                          InsertPointTy AllocaIP,
+                                          unsigned NumOperands,
+                                          struct MapperAllocas &MapperAllocas) {
+  if (!updateToLocation(Loc))
+    return;
+
+  auto *ArrI8PtrTy = ArrayType::get(Int8Ptr, NumOperands);
+  auto *ArrI64Ty = ArrayType::get(Int64, NumOperands);
+  Builder.restoreIP(AllocaIP);
+  AllocaInst *ArgsBase = Builder.CreateAlloca(ArrI8PtrTy);
+  AllocaInst *Args = Builder.CreateAlloca(ArrI8PtrTy);
+  AllocaInst *ArgSizes = Builder.CreateAlloca(ArrI64Ty);
+  Builder.restoreIP(Loc.IP);
+  MapperAllocas.ArgsBase = ArgsBase;
+  MapperAllocas.Args = Args;
+  MapperAllocas.ArgSizes = ArgSizes;
+}
+
+void OpenMPIRBuilder::emitMapperCall(const LocationDescription &Loc,
+                                     Function *MapperFunc, Value *SrcLocInfo,
+                                     Value *MaptypesArg, Value *MapnamesArg,
+                                     struct MapperAllocas &MapperAllocas,
+                                     int64_t DeviceID, unsigned NumOperands) {
+  if (!updateToLocation(Loc))
+    return;
+
+  auto *ArrI8PtrTy = ArrayType::get(Int8Ptr, NumOperands);
+  auto *ArrI64Ty = ArrayType::get(Int64, NumOperands);
+  Value *ArgsBaseGEP =
+      Builder.CreateInBoundsGEP(ArrI8PtrTy, MapperAllocas.ArgsBase,
+                                {Builder.getInt32(0), Builder.getInt32(0)});
+  Value *ArgsGEP =
+      Builder.CreateInBoundsGEP(ArrI8PtrTy, MapperAllocas.Args,
+                                {Builder.getInt32(0), Builder.getInt32(0)});
+  Value *ArgSizesGEP =
+      Builder.CreateInBoundsGEP(ArrI64Ty, MapperAllocas.ArgSizes,
+                                {Builder.getInt32(0), Builder.getInt32(0)});
+  Value *NullPtr = Constant::getNullValue(Int8Ptr->getPointerTo());
+  Builder.CreateCall(MapperFunc,
+                     {SrcLocInfo, Builder.getInt64(DeviceID),
+                      Builder.getInt32(NumOperands), ArgsBaseGEP, ArgsGEP,
+                      ArgSizesGEP, MaptypesArg, MapnamesArg, NullPtr});
+}
+
+bool OpenMPIRBuilder::checkAndEmitFlushAfterAtomic(
+    const LocationDescription &Loc, llvm::AtomicOrdering AO, AtomicKind AK) {
+  assert(!(AO == AtomicOrdering::NotAtomic ||
+           AO == llvm::AtomicOrdering::Unordered) &&
+         "Unexpected Atomic Ordering.");
+
+  bool Flush = false;
+  llvm::AtomicOrdering FlushAO = AtomicOrdering::Monotonic;
+
+  switch (AK) {
+  case Read:
+    if (AO == AtomicOrdering::Acquire || AO == AtomicOrdering::AcquireRelease ||
+        AO == AtomicOrdering::SequentiallyConsistent) {
+      FlushAO = AtomicOrdering::Acquire;
+      Flush = true;
+    }
+    break;
+  case Write:
+  case Update:
+    if (AO == AtomicOrdering::Release || AO == AtomicOrdering::AcquireRelease ||
+        AO == AtomicOrdering::SequentiallyConsistent) {
+      FlushAO = AtomicOrdering::Release;
+      Flush = true;
+    }
+    break;
+  case Capture:
+    switch (AO) {
+    case AtomicOrdering::Acquire:
+      FlushAO = AtomicOrdering::Acquire;
+      Flush = true;
+      break;
+    case AtomicOrdering::Release:
+      FlushAO = AtomicOrdering::Release;
+      Flush = true;
+      break;
+    case AtomicOrdering::AcquireRelease:
+    case AtomicOrdering::SequentiallyConsistent:
+      FlushAO = AtomicOrdering::AcquireRelease;
+      Flush = true;
+      break;
+    default:
+      // do nothing - leave silently.
+      break;
+    }
+  }
+
+  if (Flush) {
+    // Currently Flush RT call still doesn't take memory_ordering, so for when
+    // that happens, this tries to do the resolution of which atomic ordering
+    // to use with but issue the flush call
+    // TODO: pass `FlushAO` after memory ordering support is added
+    (void)FlushAO;
+    emitFlush(Loc);
+  }
+
+  // for AO == AtomicOrdering::Monotonic and  all other case combinations
+  // do nothing
+  return Flush;
+}
+
+OpenMPIRBuilder::InsertPointTy
+OpenMPIRBuilder::createAtomicRead(const LocationDescription &Loc,
+                                  AtomicOpValue &X, AtomicOpValue &V,
+                                  AtomicOrdering AO) {
+  if (!updateToLocation(Loc))
+    return Loc.IP;
+
+  Type *XTy = X.Var->getType();
+  assert(XTy->isPointerTy() && "OMP Atomic expects a pointer to target memory");
+  Type *XElemTy = XTy->getPointerElementType();
+  assert((XElemTy->isFloatingPointTy() || XElemTy->isIntegerTy() ||
+          XElemTy->isPointerTy()) &&
+         "OMP atomic read expected a scalar type");
+
+  Value *XRead = nullptr;
+
+  if (XElemTy->isIntegerTy()) {
+    LoadInst *XLD =
+        Builder.CreateLoad(XElemTy, X.Var, X.IsVolatile, "omp.atomic.read");
+    XLD->setAtomic(AO);
+    XRead = cast<Value>(XLD);
+  } else {
+    // We need to bitcast and perform atomic op as integer
+    unsigned Addrspace = cast<PointerType>(XTy)->getAddressSpace();
+    IntegerType *IntCastTy =
+        IntegerType::get(M.getContext(), XElemTy->getScalarSizeInBits());
+    Value *XBCast = Builder.CreateBitCast(
+        X.Var, IntCastTy->getPointerTo(Addrspace), "atomic.src.int.cast");
+    LoadInst *XLoad =
+        Builder.CreateLoad(IntCastTy, XBCast, X.IsVolatile, "omp.atomic.load");
+    XLoad->setAtomic(AO);
+    if (XElemTy->isFloatingPointTy()) {
+      XRead = Builder.CreateBitCast(XLoad, XElemTy, "atomic.flt.cast");
+    } else {
+      XRead = Builder.CreateIntToPtr(XLoad, XElemTy, "atomic.ptr.cast");
+    }
+  }
+  checkAndEmitFlushAfterAtomic(Loc, AO, AtomicKind::Read);
+  Builder.CreateStore(XRead, V.Var, V.IsVolatile);
+  return Builder.saveIP();
+}
+
+OpenMPIRBuilder::InsertPointTy
+OpenMPIRBuilder::createAtomicWrite(const LocationDescription &Loc,
+                                   AtomicOpValue &X, Value *Expr,
+                                   AtomicOrdering AO) {
+  if (!updateToLocation(Loc))
+    return Loc.IP;
+
+  Type *XTy = X.Var->getType();
+  assert(XTy->isPointerTy() && "OMP Atomic expects a pointer to target memory");
+  Type *XElemTy = XTy->getPointerElementType();
+  assert((XElemTy->isFloatingPointTy() || XElemTy->isIntegerTy() ||
+          XElemTy->isPointerTy()) &&
+         "OMP atomic write expected a scalar type");
+
+  if (XElemTy->isIntegerTy()) {
+    StoreInst *XSt = Builder.CreateStore(Expr, X.Var, X.IsVolatile);
+    XSt->setAtomic(AO);
+  } else {
+    // We need to bitcast and perform atomic op as integers
+    unsigned Addrspace = cast<PointerType>(XTy)->getAddressSpace();
+    IntegerType *IntCastTy =
+        IntegerType::get(M.getContext(), XElemTy->getScalarSizeInBits());
+    Value *XBCast = Builder.CreateBitCast(
+        X.Var, IntCastTy->getPointerTo(Addrspace), "atomic.dst.int.cast");
+    Value *ExprCast =
+        Builder.CreateBitCast(Expr, IntCastTy, "atomic.src.int.cast");
+    StoreInst *XSt = Builder.CreateStore(ExprCast, XBCast, X.IsVolatile);
+    XSt->setAtomic(AO);
+  }
+
+  checkAndEmitFlushAfterAtomic(Loc, AO, AtomicKind::Write);
+  return Builder.saveIP();
+}
+
+OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::createAtomicUpdate(
+    const LocationDescription &Loc, Instruction *AllocIP, AtomicOpValue &X,
+    Value *Expr, AtomicOrdering AO, AtomicRMWInst::BinOp RMWOp,
+    AtomicUpdateCallbackTy &UpdateOp, bool IsXLHSInRHSPart) {
+  if (!updateToLocation(Loc))
+    return Loc.IP;
+
+  LLVM_DEBUG({
+    Type *XTy = X.Var->getType();
+    assert(XTy->isPointerTy() &&
+           "OMP Atomic expects a pointer to target memory");
+    Type *XElemTy = XTy->getPointerElementType();
+    assert((XElemTy->isFloatingPointTy() || XElemTy->isIntegerTy() ||
+            XElemTy->isPointerTy()) &&
+           "OMP atomic update expected a scalar type");
+    assert((RMWOp != AtomicRMWInst::Max) && (RMWOp != AtomicRMWInst::Min) &&
+           (RMWOp != AtomicRMWInst::UMax) && (RMWOp != AtomicRMWInst::UMin) &&
+           "OpenMP atomic does not support LT or GT operations");
+  });
+
+  emitAtomicUpdate(AllocIP, X.Var, Expr, AO, RMWOp, UpdateOp, X.IsVolatile,
+                   IsXLHSInRHSPart);
+  checkAndEmitFlushAfterAtomic(Loc, AO, AtomicKind::Update);
+  return Builder.saveIP();
+}
+
+Value *OpenMPIRBuilder::emitRMWOpAsInstruction(Value *Src1, Value *Src2,
+                                               AtomicRMWInst::BinOp RMWOp) {
+  switch (RMWOp) {
+  case AtomicRMWInst::Add:
+    return Builder.CreateAdd(Src1, Src2);
+  case AtomicRMWInst::Sub:
+    return Builder.CreateSub(Src1, Src2);
+  case AtomicRMWInst::And:
+    return Builder.CreateAnd(Src1, Src2);
+  case AtomicRMWInst::Nand:
+    return Builder.CreateNeg(Builder.CreateAnd(Src1, Src2));
+  case AtomicRMWInst::Or:
+    return Builder.CreateOr(Src1, Src2);
+  case AtomicRMWInst::Xor:
+    return Builder.CreateXor(Src1, Src2);
+  case AtomicRMWInst::Xchg:
+  case AtomicRMWInst::FAdd:
+  case AtomicRMWInst::FSub:
+  case AtomicRMWInst::BAD_BINOP:
+  case AtomicRMWInst::Max:
+  case AtomicRMWInst::Min:
+  case AtomicRMWInst::UMax:
+  case AtomicRMWInst::UMin:
+    llvm_unreachable("Unsupported atomic update operation");
+  }
+  llvm_unreachable("Unsupported atomic update operation");
+}
+
+std::pair<Value *, Value *>
+OpenMPIRBuilder::emitAtomicUpdate(Instruction *AllocIP, Value *X, Value *Expr,
+                                  AtomicOrdering AO, AtomicRMWInst::BinOp RMWOp,
+                                  AtomicUpdateCallbackTy &UpdateOp,
+                                  bool VolatileX, bool IsXLHSInRHSPart) {
+  Type *XElemTy = X->getType()->getPointerElementType();
+
+  bool DoCmpExch =
+      ((RMWOp == AtomicRMWInst::BAD_BINOP) || (RMWOp == AtomicRMWInst::FAdd)) ||
+      (RMWOp == AtomicRMWInst::FSub) ||
+      (RMWOp == AtomicRMWInst::Sub && !IsXLHSInRHSPart);
+
+  std::pair<Value *, Value *> Res;
+  if (XElemTy->isIntegerTy() && !DoCmpExch) {
+    Res.first = Builder.CreateAtomicRMW(RMWOp, X, Expr, llvm::MaybeAlign(), AO);
+    // not needed except in case of postfix captures. Generate anyway for
+    // consistency with the else part. Will be removed with any DCE pass.
+    Res.second = emitRMWOpAsInstruction(Res.first, Expr, RMWOp);
+  } else {
+    unsigned Addrspace = cast<PointerType>(X->getType())->getAddressSpace();
+    IntegerType *IntCastTy =
+        IntegerType::get(M.getContext(), XElemTy->getScalarSizeInBits());
+    Value *XBCast =
+        Builder.CreateBitCast(X, IntCastTy->getPointerTo(Addrspace));
+    LoadInst *OldVal =
+        Builder.CreateLoad(IntCastTy, XBCast, X->getName() + ".atomic.load");
+    OldVal->setAtomic(AO);
+    // CurBB
+    // |     /---\
+		// ContBB    |
+    // |     \---/
+    // ExitBB
+    BasicBlock *CurBB = Builder.GetInsertBlock();
+    Instruction *CurBBTI = CurBB->getTerminator();
+    CurBBTI = CurBBTI ? CurBBTI : Builder.CreateUnreachable();
+    BasicBlock *ExitBB =
+        CurBB->splitBasicBlock(CurBBTI, X->getName() + ".atomic.exit");
+    BasicBlock *ContBB = CurBB->splitBasicBlock(CurBB->getTerminator(),
+                                                X->getName() + ".atomic.cont");
+    ContBB->getTerminator()->eraseFromParent();
+    Builder.SetInsertPoint(ContBB);
+    llvm::PHINode *PHI = Builder.CreatePHI(OldVal->getType(), 2);
+    PHI->addIncoming(OldVal, CurBB);
+    AllocaInst *NewAtomicAddr = Builder.CreateAlloca(XElemTy);
+    NewAtomicAddr->setName(X->getName() + "x.new.val");
+    NewAtomicAddr->moveBefore(AllocIP);
+    IntegerType *NewAtomicCastTy =
+        IntegerType::get(M.getContext(), XElemTy->getScalarSizeInBits());
+    bool IsIntTy = XElemTy->isIntegerTy();
+    Value *NewAtomicIntAddr =
+        (IsIntTy)
+            ? NewAtomicAddr
+            : Builder.CreateBitCast(NewAtomicAddr,
+                                    NewAtomicCastTy->getPointerTo(Addrspace));
+    Value *OldExprVal = PHI;
+    if (!IsIntTy) {
+      if (XElemTy->isFloatingPointTy()) {
+        OldExprVal = Builder.CreateBitCast(PHI, XElemTy,
+                                           X->getName() + ".atomic.fltCast");
+      } else {
+        OldExprVal = Builder.CreateIntToPtr(PHI, XElemTy,
+                                            X->getName() + ".atomic.ptrCast");
+      }
+    }
+
+    Value *Upd = UpdateOp(OldExprVal, Builder);
+    Builder.CreateStore(Upd, NewAtomicAddr);
+    LoadInst *DesiredVal = Builder.CreateLoad(XElemTy, NewAtomicIntAddr);
+    Value *XAddr =
+        (IsIntTy)
+            ? X
+            : Builder.CreateBitCast(X, IntCastTy->getPointerTo(Addrspace));
+    AtomicOrdering Failure =
+        llvm::AtomicCmpXchgInst::getStrongestFailureOrdering(AO);
+    AtomicCmpXchgInst *Result = Builder.CreateAtomicCmpXchg(
+        XAddr, OldExprVal, DesiredVal, llvm::MaybeAlign(), AO, Failure);
+    Result->setVolatile(VolatileX);
+    Value *PreviousVal = Builder.CreateExtractValue(Result, /*Idxs=*/0);
+    Value *SuccessFailureVal = Builder.CreateExtractValue(Result, /*Idxs=*/1);
+    PHI->addIncoming(PreviousVal, Builder.GetInsertBlock());
+    Builder.CreateCondBr(SuccessFailureVal, ExitBB, ContBB);
+
+    Res.first = OldExprVal;
+    Res.second = Upd;
+
+    // set Insertion point in exit block
+    if (UnreachableInst *ExitTI =
+            dyn_cast<UnreachableInst>(ExitBB->getTerminator())) {
+      CurBBTI->eraseFromParent();
+      Builder.SetInsertPoint(ExitBB);
+    } else {
+      Builder.SetInsertPoint(ExitTI);
+    }
+  }
+
+  return Res;
+}
+
+OpenMPIRBuilder::InsertPointTy OpenMPIRBuilder::createAtomicCapture(
+    const LocationDescription &Loc, Instruction *AllocIP, AtomicOpValue &X,
+    AtomicOpValue &V, Value *Expr, AtomicOrdering AO,
+    AtomicRMWInst::BinOp RMWOp, AtomicUpdateCallbackTy &UpdateOp,
+    bool UpdateExpr, bool IsPostfixUpdate, bool IsXLHSInRHSPart) {
+  if (!updateToLocation(Loc))
+    return Loc.IP;
+
+  LLVM_DEBUG({
+    Type *XTy = X.Var->getType();
+    assert(XTy->isPointerTy() &&
+           "OMP Atomic expects a pointer to target memory");
+    Type *XElemTy = XTy->getPointerElementType();
+    assert((XElemTy->isFloatingPointTy() || XElemTy->isIntegerTy() ||
+            XElemTy->isPointerTy()) &&
+           "OMP atomic capture expected a scalar type");
+    assert((RMWOp != AtomicRMWInst::Max) && (RMWOp != AtomicRMWInst::Min) &&
+           "OpenMP atomic does not support LT or GT operations");
+  });
+
+  // If UpdateExpr is 'x' updated with some `expr` not based on 'x',
+  // 'x' is simply atomically rewritten with 'expr'.
+  AtomicRMWInst::BinOp AtomicOp = (UpdateExpr ? RMWOp : AtomicRMWInst::Xchg);
+  std::pair<Value *, Value *> Result =
+      emitAtomicUpdate(AllocIP, X.Var, Expr, AO, AtomicOp, UpdateOp,
+                       X.IsVolatile, IsXLHSInRHSPart);
+
+  Value *CapturedVal = (IsPostfixUpdate ? Result.first : Result.second);
+  Builder.CreateStore(CapturedVal, V.Var, V.IsVolatile);
+
+  checkAndEmitFlushAfterAtomic(Loc, AO, AtomicKind::Capture);
+  return Builder.saveIP();
 }
 
 GlobalVariable *

@@ -16,6 +16,7 @@
 #include "IncrementalExecutor.h"
 #include "IncrementalParser.h"
 
+#include "clang/AST/ASTContext.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/CodeGen/ObjectFilePCHContainerOperations.h"
@@ -109,7 +110,7 @@ CreateCI(const llvm::opt::ArgStringList &Argv) {
                                    "Initialization failed. "
                                    "Target is missing");
 
-  Clang->getTarget().adjust(Clang->getLangOpts());
+  Clang->getTarget().adjust(Clang->getDiagnostics(), Clang->getLangOpts());
 
   return std::move(Clang);
 }
@@ -197,15 +198,19 @@ const CompilerInstance *Interpreter::getCompilerInstance() const {
   return IncrParser->getCI();
 }
 
-llvm::Expected<Transaction &> Interpreter::Parse(llvm::StringRef Code) {
+llvm::Expected<PartialTranslationUnit &>
+Interpreter::Parse(llvm::StringRef Code) {
   return IncrParser->Parse(Code);
 }
 
-llvm::Error Interpreter::Execute(Transaction &T) {
+llvm::Error Interpreter::Execute(PartialTranslationUnit &T) {
   assert(T.TheModule);
   if (!IncrExecutor) {
+    const llvm::Triple &Triple =
+        getCompilerInstance()->getASTContext().getTargetInfo().getTriple();
     llvm::Error Err = llvm::Error::success();
-    IncrExecutor = std::make_unique<IncrementalExecutor>(*TSCtx, Err);
+    IncrExecutor = std::make_unique<IncrementalExecutor>(*TSCtx, Err, Triple);
+
     if (Err)
       return Err;
   }

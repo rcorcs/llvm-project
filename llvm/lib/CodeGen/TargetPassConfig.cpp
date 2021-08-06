@@ -857,8 +857,8 @@ void TargetPassConfig::addIRPasses() {
 
   // Run GC lowering passes for builtin collectors
   // TODO: add a pass insertion point here
-  addPass(createGCLoweringPass());
-  addPass(createShadowStackGCLoweringPass());
+  addPass(&GCLoweringID);
+  addPass(&ShadowStackGCLoweringID);
   addPass(createLowerConstantIntrinsicsPass());
 
   // Make sure that no unreachable blocks are instruction selected.
@@ -939,7 +939,6 @@ void TargetPassConfig::addPassesToHandleExceptions() {
 void TargetPassConfig::addCodeGenPrepare() {
   if (getOptLevel() != CodeGenOpt::None && !DisableCGP)
     addPass(createCodeGenPreparePass());
-  addPass(createRewriteSymbolsPass());
 }
 
 /// Add common passes that perform LLVM IR to IR transforms in preparation for
@@ -1124,6 +1123,8 @@ void TargetPassConfig::addMachinePasses() {
   // Run post-ra passes.
   addPostRegAlloc();
 
+  addPass(&RemoveRedundantDebugValuesID, false);
+
   addPass(&FixupStatepointCallerSavedID);
 
   // Insert prolog/epilog code.  Eliminate abstract frame index references...
@@ -1178,8 +1179,12 @@ void TargetPassConfig::addMachinePasses() {
   addPass(&PatchableFunctionID);
 
   if (EnableFSDiscriminator && !FSNoFinalDiscrim)
-    addPass(createMIRAddFSDiscriminatorsPass(PASS_LAST_DIS_BIT_BEG,
-                                             PASS_LAST_DIS_BIT_END));
+    // Add FS discriminators here so that all the instruction duplicates
+    // in different BBs get their own discriminators. With this, we can "sum"
+    // the SampleFDO counters instead of using MAX. This will improve the
+    // SampleFDO profile quality.
+    addPass(createMIRAddFSDiscriminatorsPass(
+        sampleprof::FSDiscriminatorPass::PassLast));
 
   addPreEmitPass();
 
@@ -1330,8 +1335,8 @@ FunctionPass *TargetPassConfig::createRegAllocPass(bool Optimized) {
 }
 
 bool TargetPassConfig::addRegAssignAndRewriteFast() {
-  if (RegAlloc != &useDefaultRegisterAllocator &&
-      RegAlloc != &createFastRegisterAllocator)
+  if (RegAlloc != (RegisterRegAlloc::FunctionPassCtor)&useDefaultRegisterAllocator &&
+      RegAlloc != (RegisterRegAlloc::FunctionPassCtor)&createFastRegisterAllocator)
     report_fatal_error("Must use fast (default) register allocator for unoptimized regalloc.");
 
   addPass(createRegAllocPass(false));

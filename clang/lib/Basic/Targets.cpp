@@ -743,7 +743,11 @@ bool TargetInfo::validateOpenCLTarget(const LangOptions &Opts,
   diagnoseNotSupportedCore(#Ext, __VA_ARGS__);
 #include "clang/Basic/OpenCLExtensions.def"
 
-  // For now assume that OpenCL target is always
-  // valid and just provide necessary diagnostics
-  return true;
+  // Validate that feature macros are set properly for OpenCL C 3.0.
+  // In other cases assume that target is always valid.
+  if (Opts.OpenCLCPlusPlus || Opts.OpenCLVersion < 300)
+    return true;
+
+  return OpenCLOptions::diagnoseUnsupportedFeatureDependencies(*this, Diags) &&
+         OpenCLOptions::diagnoseFeatureExtensionDifferences(*this, Diags);
 }

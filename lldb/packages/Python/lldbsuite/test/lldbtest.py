@@ -1291,14 +1291,18 @@ class Base(unittest2.TestCase):
 
         return cpuinfo
 
+    def isAArch64(self):
+        """Returns true if the architecture is AArch64."""
+        return self.getArchitecture().lower() == "aarch64"
+
     def isAArch64SVE(self):
-        return "sve" in self.getCPUInfo()
+        return self.isAArch64() and "sve" in self.getCPUInfo()
 
     def isAArch64MTE(self):
-        return "mte" in self.getCPUInfo()
+        return self.isAArch64() and "mte" in self.getCPUInfo()
 
     def isAArch64PAuth(self):
-        return "paca" in self.getCPUInfo()
+        return self.isAArch64() and "paca" in self.getCPUInfo()
 
     def getArchitecture(self):
         """Returns the architecture in effect the test suite is running with."""
@@ -2653,6 +2657,31 @@ FileCheck output:
             error = obj.GetCString()
             self.fail(self._formatMessage(msg,
                 "'{}' is not success".format(error)))
+
+    def createTestTarget(self, file_path=None, msg=None):
+        """
+        Creates a target from the file found at the given file path.
+        Asserts that the resulting target is valid.
+        :param file_path: The file path that should be used to create the target.
+                          The default argument opens the current default test
+                          executable in the current test directory.
+        :param msg: A custom error message.
+        """
+        if file_path is None:
+            file_path = self.getBuildArtifact("a.out")
+        error = lldb.SBError()
+        triple = ""
+        platform = ""
+        load_dependent_modules = True
+        target = self.dbg.CreateTarget(file_path, triple, platform,
+                                       load_dependent_modules, error)
+        if error.Fail():
+            err = "Couldn't create target for path '{}': {}".format(file_path,
+                                                                    str(error))
+            self.fail(self._formatMessage(msg, err))
+
+        self.assertTrue(target.IsValid(), "Got invalid target without error")
+        return target
 
     # =================================================
     # Misc. helper methods for debugging test execution

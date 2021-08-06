@@ -630,6 +630,8 @@ static uint64_t getAttrKindEncoding(Attribute::AttrKind Kind) {
     return bitc::ATTR_KIND_COLD;
   case Attribute::Hot:
     return bitc::ATTR_KIND_HOT;
+  case Attribute::ElementType:
+    return bitc::ATTR_KIND_ELEMENTTYPE;
   case Attribute::InaccessibleMemOnly:
     return bitc::ATTR_KIND_INACCESSIBLEMEM_ONLY;
   case Attribute::InaccessibleMemOrArgMemOnly:
@@ -686,6 +688,8 @@ static uint64_t getAttrKindEncoding(Attribute::AttrKind Kind) {
     return bitc::ATTR_KIND_NO_PROFILE;
   case Attribute::NoUnwind:
     return bitc::ATTR_KIND_NO_UNWIND;
+  case Attribute::NoSanitizeCoverage:
+    return bitc::ATTR_KIND_NO_SANITIZE_COVERAGE;
   case Attribute::NullPointerIsValid:
     return bitc::ATTR_KIND_NULL_POINTER_IS_VALID;
   case Attribute::OptForFuzzing:
@@ -1128,7 +1132,7 @@ static unsigned getEncodedComdatSelectionKind(const Comdat &C) {
     return bitc::COMDAT_SELECTION_KIND_EXACT_MATCH;
   case Comdat::Largest:
     return bitc::COMDAT_SELECTION_KIND_LARGEST;
-  case Comdat::NoDuplicates:
+  case Comdat::NoDeduplicate:
     return bitc::COMDAT_SELECTION_KIND_NO_DUPLICATES;
   case Comdat::SameSize:
     return bitc::COMDAT_SELECTION_KIND_SAME_SIZE;
@@ -3101,7 +3105,7 @@ void ModuleBitcodeWriter::writeInstruction(const Instruction &I,
   case Instruction::AtomicRMW:
     Code = bitc::FUNC_CODE_INST_ATOMICRMW;
     pushValueAndType(I.getOperand(0), InstID, Vals); // ptrty + ptr
-    pushValue(I.getOperand(1), InstID, Vals);        // val.
+    pushValueAndType(I.getOperand(1), InstID, Vals); // valty + val
     Vals.push_back(
         getEncodedRMWOperation(cast<AtomicRMWInst>(I).getOperation()));
     Vals.push_back(cast<AtomicRMWInst>(I).isVolatile());

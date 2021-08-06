@@ -1251,6 +1251,17 @@ bool DIExpression::extractIfOffset(int64_t &Offset) const {
   return false;
 }
 
+bool DIExpression::hasAllLocationOps(unsigned N) const {
+  SmallDenseSet<uint64_t, 4> SeenOps;
+  for (auto ExprOp : expr_ops())
+    if (ExprOp.getOp() == dwarf::DW_OP_LLVM_arg)
+      SeenOps.insert(ExprOp.getArg(0));
+  for (uint64_t Idx = 0; Idx < N; ++Idx)
+    if (!is_contained(SeenOps, Idx))
+      return false;
+  return true;
+}
+
 const DIExpression *DIExpression::extractAddressClass(const DIExpression *Expr,
                                                       unsigned &AddrClass) {
   // FIXME: This seems fragile. Nothing that verifies that these elements
@@ -1463,6 +1474,55 @@ Optional<DIExpression *> DIExpression::createFragmentExpression(
   Ops.push_back(OffsetInBits);
   Ops.push_back(SizeInBits);
   return DIExpression::get(Expr->getContext(), Ops);
+}
+
+std::pair<DIExpression *, const ConstantInt *>
+DIExpression::constantFold(const ConstantInt *CI) {
+  // Copy the APInt so we can modify it.
+  APInt NewInt = CI->getValue();
+  SmallVector<uint64_t, 8> Ops;
+
+  // Fold operators only at the beginning of the expression.
+  bool First = true;
+  bool Changed = false;
+  for (auto Op : expr_ops()) {
+    switch (Op.getOp()) {
+    default:
+      // We fold only the leading part of the expression; if we get to a part
+      // that we're going to copy unchanged, and haven't done any folding,
+      // then the entire expression is unchanged and we can return early.
+      if (!Changed)
+        return {this, CI};
+      First = false;
+      break;
+    case dwarf::DW_OP_LLVM_convert:
+      if (!First)
+        break;
+      Changed = true;
+      if (Op.getArg(1) == dwarf::DW_ATE_signed)
+        NewInt = NewInt.sextOrTrunc(Op.getArg(0));
+      else {
+        assert(Op.getArg(1) == dwarf::DW_ATE_unsigned && "Unexpected operand");
+        NewInt = NewInt.zextOrTrunc(Op.getArg(0));
+      }
+      continue;
+    }
+    Op.appendToVector(Ops);
+  }
+  if (!Changed)
+    return {this, CI};
+  return {DIExpression::get(getContext(), Ops),
+          ConstantInt::get(getContext(), NewInt)};
+}
+
+uint64_t DIExpression::getNumLocationOperands() const {
+  uint64_t Result = 0;
+  for (auto ExprOp : expr_ops())
+    if (ExprOp.getOp() == dwarf::DW_OP_LLVM_arg)
+      Result = std::max(Result, ExprOp.getArg(0) + 1);
+  assert(hasAllLocationOps(Result) &&
+         "Expression is missing one or more location operands.");
+  return Result;
 }
 
 llvm::Optional<DIExpression::SignedOrUnsignedConstant>

@@ -20,6 +20,7 @@ add_llvm_component_library(LLVMipo
   MinSizeAttr.cpp
   FMSA.cpp
   FastFM.cpp
+  FunctionSpecialization.cpp
   GlobalDCE.cpp
   GlobalOpt.cpp
   GlobalSplit.cpp

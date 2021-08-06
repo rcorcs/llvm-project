@@ -10,6 +10,7 @@
 #define LLVM_TOOLS_LLVM_OBJCOPY_COMMONCONFIG_H
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/CachedHashString.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallVector.h"
@@ -113,6 +114,11 @@ public:
          llvm::function_ref<Error(Error)> ErrorCallback);
 
   bool isPositiveMatch() const { return IsPositiveMatch; }
+  Optional<StringRef> getName() const {
+    if (!R && !G)
+      return Name;
+    return None;
+  }
   bool operator==(StringRef S) const {
     return R ? R->match(S) : G ? G->match(S) : Name == S;
   }
@@ -122,23 +128,62 @@ public:
 // Matcher that checks symbol or section names against the command line flags
 // provided for that option.
 class NameMatcher {
-  std::vector<NameOrPattern> PosMatchers;
+  DenseSet<CachedHashStringRef> PosNames;
+  std::vector<NameOrPattern> PosPatterns;
   std::vector<NameOrPattern> NegMatchers;
 
 public:
   Error addMatcher(Expected<NameOrPattern> Matcher) {
     if (!Matcher)
       return Matcher.takeError();
-    if (Matcher->isPositiveMatch())
-      PosMatchers.push_back(std::move(*Matcher));
-    else
+    if (Matcher->isPositiveMatch()) {
+      if (Optional<StringRef> MaybeName = Matcher->getName())
+        PosNames.insert(CachedHashStringRef(*MaybeName));
+      else
+        PosPatterns.push_back(std::move(*Matcher));
+    } else {
       NegMatchers.push_back(std::move(*Matcher));
+    }
     return Error::success();
   }
   bool matches(StringRef S) const {
-    return is_contained(PosMatchers, S) && !is_contained(NegMatchers, S);
+    return (PosNames.contains(CachedHashStringRef(S)) ||
+            is_contained(PosPatterns, S)) &&
+           !is_contained(NegMatchers, S);
   }
-  bool empty() const { return PosMatchers.empty() && NegMatchers.empty(); }
+  bool empty() const {
+    return PosNames.empty() && PosPatterns.empty() && NegMatchers.empty();
+  }
+};
+
+enum class SymbolFlag {
+  Global,
+  Local,
+  Weak,
+  Default,
+  Hidden,
+  Protected,
+  File,
+  Section,
+  Object,
+  Function,
+  IndirectFunction,
+  Debug,
+  Constructor,
+  Warning,
+  Indirect,
+  Synthetic,
+  UniqueObject,
+};
+
+// Symbol info specified by --add-symbol option. Symbol flags not supported
+// by a concrete format should be ignored.
+struct NewSymbolInfo {
+  StringRef SymbolName;
+  StringRef SectionName;
+  uint64_t Value = 0;
+  std::vector<SymbolFlag> Flags;
+  std::vector<StringRef> BeforeSyms;
 };
 
 // Configuration for copying/stripping a single file.
@@ -199,6 +244,9 @@ struct CommonConfig {
   // calculated with EntryExpr(input_address), when either --set-start or
   // --change-start is used.
   std::function<uint64_t(uint64_t)> EntryExpr;
+
+  // Symbol info specified by --add-symbol option.
+  std::vector<NewSymbolInfo> SymbolsToAdd;
 
   // Boolean options
   bool AllowBrokenLinks = false;

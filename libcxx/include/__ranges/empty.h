@@ -11,7 +11,9 @@
 
 #include <__config>
 #include <__iterator/concepts.h>
+#include <__ranges/access.h>
 #include <__ranges/size.h>
+#include <__utility/forward.h>
 #include <type_traits>
 
 #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
@@ -50,19 +52,19 @@ namespace __empty {
 
   struct __fn {
     template <__member_empty _Tp>
-    [[nodiscard]] constexpr bool operator()(_Tp&& __t) const
+    [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr bool operator()(_Tp&& __t) const
         noexcept(noexcept(bool(__t.empty()))) {
       return __t.empty();
     }
 
     template <__can_invoke_size _Tp>
-    [[nodiscard]] constexpr bool operator()(_Tp&& __t) const
+    [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr bool operator()(_Tp&& __t) const
         noexcept(noexcept(ranges::size(_VSTD::forward<_Tp>(__t)))) {
       return ranges::size(_VSTD::forward<_Tp>(__t)) == 0;
     }
 
     template<__can_compare_begin_end _Tp>
-    [[nodiscard]] constexpr bool operator()(_Tp&& __t) const
+    [[nodiscard]] _LIBCPP_HIDE_FROM_ABI constexpr bool operator()(_Tp&& __t) const
         noexcept(noexcept(bool(ranges::begin(__t) == ranges::end(__t)))) {
       return ranges::begin(__t) == ranges::end(__t);
     }

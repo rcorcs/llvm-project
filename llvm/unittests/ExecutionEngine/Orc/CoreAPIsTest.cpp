@@ -1249,10 +1249,17 @@ TEST_F(CoreAPIsStandardTest, TestLookupWithUnthreadedMaterialization) {
 TEST_F(CoreAPIsStandardTest, TestLookupWithThreadedMaterialization) {
 #if LLVM_ENABLE_THREADS
 
+  std::mutex WorkThreadsMutex;
   std::vector<std::thread> WorkThreads;
   ES.setDispatchTask([&](std::unique_ptr<Task> T) {
+    std::promise<void> WaitP;
+    std::lock_guard<std::mutex> Lock(WorkThreadsMutex);
     WorkThreads.push_back(
-        std::thread([T = std::move(T)]() mutable { T->run(); }));
+        std::thread([T = std::move(T), WaitF = WaitP.get_future()]() mutable {
+          WaitF.get();
+          T->run();
+        }));
+    WaitP.set_value();
   });
 
   cantFail(JD.define(absoluteSymbols({{Foo, FooSym}})));
@@ -1402,7 +1409,7 @@ TEST(JITDylibTest, GetDFSLinkOrderTree) {
   // Test that DFS ordering behaves as expected when the linkage relationships
   // form a tree.
 
-  ExecutionSession ES;
+  ExecutionSession ES{std::make_unique<UnsupportedExecutorProcessControl>()};
 
   auto &LibA = ES.createBareJITDylib("A");
   auto &LibB = ES.createBareJITDylib("B");
@@ -1443,7 +1450,7 @@ TEST(JITDylibTest, GetDFSLinkOrderDiamond) {
   // Test that DFS ordering behaves as expected when the linkage relationships
   // contain a diamond.
 
-  ExecutionSession ES;
+  ExecutionSession ES{std::make_unique<UnsupportedExecutorProcessControl>()};
   auto &LibA = ES.createBareJITDylib("A");
   auto &LibB = ES.createBareJITDylib("B");
   auto &LibC = ES.createBareJITDylib("C");
@@ -1465,7 +1472,7 @@ TEST(JITDylibTest, GetDFSLinkOrderCycle) {
   // Test that DFS ordering behaves as expected when the linkage relationships
   // contain a cycle.
 
-  ExecutionSession ES;
+  ExecutionSession ES{std::make_unique<UnsupportedExecutorProcessControl>()};
   auto &LibA = ES.createBareJITDylib("A");
   auto &LibB = ES.createBareJITDylib("B");
   auto &LibC = ES.createBareJITDylib("C");

@@ -33,7 +33,7 @@ def main():
   parser.add_argument(
       '--no_x86_scrub_sp', action='store_false', dest='x86_scrub_sp')
   parser.add_argument(
-      '--x86_scrub_rip', action='store_true', default=True,
+      '--x86_scrub_rip', action='store_true', default=False,
       help='Use more regex for x86 rip matching to reduce diffs between various subtargets')
   parser.add_argument(
       '--no_x86_scrub_rip', action='store_false', dest='x86_scrub_rip')
@@ -114,7 +114,8 @@ def main():
             'function_signature': False,
             'check_attributes': False,
             'replace_value_regex': []}),
-        scrubber_args=[ti.args])
+        scrubber_args=[ti.args],
+        path=ti.path)
 
     for prefixes, llc_tool, llc_args, preprocess_cmd, triple_in_cmd, march_in_cmd in run_list:
       common.debug('Extracted LLC cmd:', llc_tool, llc_args)
@@ -128,7 +129,7 @@ def main():
         triple = asm.get_triple_from_march(march_in_cmd)
 
       scrubber, function_re = asm.get_run_handler(triple)
-      builder.process_run_line(function_re, scrubber, raw_tool_output, prefixes)
+      builder.process_run_line(function_re, scrubber, raw_tool_output, prefixes, True)
 
     func_dict = builder.finish_and_get_func_dict()
 

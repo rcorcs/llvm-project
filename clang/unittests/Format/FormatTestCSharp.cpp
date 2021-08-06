@@ -247,6 +247,37 @@ TEST_F(FormatTestCSharp, Attributes) {
   verifyFormat("[TestMethod]\n"
                "public string Host { set; get; }");
 
+  // Adjacent properties should not cause line wrapping issues
+  verifyFormat("[JsonProperty(\"foo\")]\n"
+               "public string Foo { set; get; }\n"
+               "[JsonProperty(\"bar\")]\n"
+               "public string Bar { set; get; }\n"
+               "[JsonProperty(\"bar\")]\n"
+               "protected string Bar { set; get; }\n"
+               "[JsonProperty(\"bar\")]\n"
+               "internal string Bar { set; get; }");
+
+  // Multiple attributes should always be split (not just the first ones)
+  verifyFormat("[XmlIgnore]\n"
+               "[JsonProperty(\"foo\")]\n"
+               "public string Foo { set; get; }");
+
+  verifyFormat("[XmlIgnore]\n"
+               "[JsonProperty(\"foo\")]\n"
+               "public string Foo { set; get; }\n"
+               "[XmlIgnore]\n"
+               "[JsonProperty(\"bar\")]\n"
+               "public string Bar { set; get; }");
+
+  verifyFormat("[XmlIgnore]\n"
+               "[ScriptIgnore]\n"
+               "[JsonProperty(\"foo\")]\n"
+               "public string Foo { set; get; }\n"
+               "[XmlIgnore]\n"
+               "[ScriptIgnore]\n"
+               "[JsonProperty(\"bar\")]\n"
+               "public string Bar { set; get; }");
+
   verifyFormat("[TestMethod(\"start\", HelpText = \"Starts the server "
                "listening on provided host\")]\n"
                "public string Host { set; get; }");
@@ -268,6 +299,34 @@ TEST_F(FormatTestCSharp, Attributes) {
 
   // Attributes in a method declaration do not cause line wrapping.
   verifyFormat("void MethodA([In][Out] ref double x)\n"
+               "{\n"
+               "}");
+
+  verifyFormat("void MethodA([In, Out] ref double x)\n"
+               "{\n"
+               "}");
+
+  verifyFormat("void MethodA([In, Out] double[] x)\n"
+               "{\n"
+               "}");
+
+  verifyFormat("void MethodA([In] double[] x)\n"
+               "{\n"
+               "}");
+
+  verifyFormat("void MethodA(int[] x)\n"
+               "{\n"
+               "}");
+  verifyFormat("void MethodA(int[][] x)\n"
+               "{\n"
+               "}");
+  verifyFormat("void MethodA([] x)\n"
+               "{\n"
+               "}");
+
+  verifyFormat("public void Log([CallerLineNumber] int line = -1, "
+               "[CallerFilePath] string path = null,\n"
+               "                [CallerMemberName] string name = null)\n"
                "{\n"
                "}");
 
@@ -343,8 +402,7 @@ TEST_F(FormatTestCSharp, CSharpRegions) {
 }
 
 TEST_F(FormatTestCSharp, CSharpKeyWordEscaping) {
-  verifyFormat("public enum var\n"
-               "{\n"
+  verifyFormat("public enum var {\n"
                "    none,\n"
                "    @string,\n"
                "    bool,\n"
@@ -581,6 +639,122 @@ class MyClass
     };
 })",
                MicrosoftStyle);
+
+  verifyFormat("void bar()\n"
+               "{\n"
+               "    Function(Val, (Action)(() =>\n"
+               "                           {\n"
+               "                               lock (mylock)\n"
+               "                               {\n"
+               "                                   if (true)\n"
+               "                                   {\n"
+               "                                       A.Remove(item);\n"
+               "                                   }\n"
+               "                               }\n"
+               "                           }));\n"
+               "}",
+               MicrosoftStyle);
+
+  verifyFormat("void baz()\n"
+               "{\n"
+               "    Function(Val, (Action)(() =>\n"
+               "                           {\n"
+               "                               using (var a = new Lock())\n"
+               "                               {\n"
+               "                                   if (true)\n"
+               "                                   {\n"
+               "                                       A.Remove(item);\n"
+               "                                   }\n"
+               "                               }\n"
+               "                           }));\n"
+               "}",
+               MicrosoftStyle);
+
+  verifyFormat("void baz()\n"
+               "{\n"
+               "    Function(Val, (Action)(() =>\n"
+               "                           {\n"
+               "                               if (true)\n"
+               "                               {\n"
+               "                                   A.Remove(item);\n"
+               "                               }\n"
+               "                           }));\n"
+               "}",
+               MicrosoftStyle);
+
+  verifyFormat("void baz()\n"
+               "{\n"
+               "    Function(Val, (Action)(() =>\n"
+               "                           {\n"
+               "                               do\n"
+               "                               {\n"
+               "                                   A.Remove(item);\n"
+               "                               } while (true)\n"
+               "                           }));\n"
+               "}",
+               MicrosoftStyle);
+
+  verifyFormat("void baz()\n"
+               "{\n"
+               "    Function(Val, (Action)(() =>\n"
+               "                           { A.Remove(item); }));\n"
+               "}",
+               MicrosoftStyle);
+
+  verifyFormat("void bar()\n"
+               "{\n"
+               "    Function(Val, (() =>\n"
+               "                   {\n"
+               "                       lock (mylock)\n"
+               "                       {\n"
+               "                           if (true)\n"
+               "                           {\n"
+               "                               A.Remove(item);\n"
+               "                           }\n"
+               "                       }\n"
+               "                   }));\n"
+               "}",
+               MicrosoftStyle);
+  verifyFormat("void bar()\n"
+               "{\n"
+               "    Function((() =>\n"
+               "              {\n"
+               "                  lock (mylock)\n"
+               "                  {\n"
+               "                      if (true)\n"
+               "                      {\n"
+               "                          A.Remove(item);\n"
+               "                      }\n"
+               "                  }\n"
+               "              }));\n"
+               "}",
+               MicrosoftStyle);
+
+  MicrosoftStyle.IndentWidth = 2;
+  verifyFormat("void bar()\n"
+               "{\n"
+               "  Function((() =>\n"
+               "            {\n"
+               "              lock (mylock)\n"
+               "              {\n"
+               "                if (true)\n"
+               "                {\n"
+               "                  A.Remove(item);\n"
+               "                }\n"
+               "              }\n"
+               "            }));\n"
+               "}",
+               MicrosoftStyle);
+  verifyFormat("void bar() {\n"
+               "  Function((() => {\n"
+               "    lock (mylock) {\n"
+               "      if (true) {\n"
+               "        A.Remove(item);\n"
+               "      }\n"
+               "    }\n"
+               "  }));\n"
+               "}",
+               GoogleStyle);
 }
 
 TEST_F(FormatTestCSharp, CSharpObjectInitializers) {

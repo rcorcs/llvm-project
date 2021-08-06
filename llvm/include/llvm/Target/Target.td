@@ -1125,6 +1125,12 @@ def DBG_INSTR_REF : StandardPseudoInstruction {
   let AsmString = "DBG_INSTR_REF";
   let hasSideEffects = false;
 }
+def DBG_PHI : StandardPseudoInstruction {
+  let OutOperandList = (outs);
+  let InOperandList = (ins variable_ops);
+  let AsmString = "DBG_PHI";
+  let hasSideEffects = 0;
+}
 def DBG_LABEL : StandardPseudoInstruction {
   let OutOperandList = (outs);
   let InOperandList = (ins unknown:$label);
@@ -1169,6 +1175,13 @@ def PSEUDO_PROBE : StandardPseudoInstruction {
   let InOperandList = (ins i64imm:$guid, i64imm:$index, i8imm:$type, i32imm:$attr);
   let AsmString = "PSEUDO_PROBE";
   let hasSideEffects = 1;
+}
+def ARITH_FENCE : StandardPseudoInstruction {
+  let OutOperandList = (outs unknown:$dst);
+  let InOperandList = (ins unknown:$src);
+  let AsmString = "";
+  let hasSideEffects = false;
+  let Constraints = "$src = $dst";
 }
 
 def STACKMAP : StandardPseudoInstruction {

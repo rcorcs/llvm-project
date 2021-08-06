@@ -846,6 +846,8 @@ StringRef clang::getParameterABISpelling(ParameterABI ABI) {
     llvm_unreachable("asking for spelling of ordinary parameter ABI");
   case ParameterABI::SwiftContext:
     return "swift_context";
+  case ParameterABI::SwiftAsyncContext:
+    return "swift_async_context";
   case ParameterABI::SwiftErrorResult:
     return "swift_error_result";
   case ParameterABI::SwiftIndirectResult:
@@ -973,6 +975,9 @@ void TypePrinter::printFunctionAfter(const FunctionType::ExtInfo &Info,
       break;
     case CC_Swift:
       OS << " __attribute__((swiftcall))";
+      break;
+    case CC_SwiftAsync:
+      OS << "__attribute__((swiftasynccall))";
       break;
     case CC_PreserveMost:
       OS << " __attribute__((preserve_most))";
@@ -1447,15 +1452,14 @@ void TypePrinter::printTemplateId(const TemplateSpecializationType *T,
     T->getTemplateName().print(OS, Policy);
   }
 
-  const TemplateParameterList *TPL = TD ? TD->getTemplateParameters() : nullptr;
-  printTemplateArgumentList(OS, T->template_arguments(), Policy, TPL);
+  printTemplateArgumentList(OS, T->template_arguments(), Policy);
   spaceBeforePlaceHolder(OS);
 }
 
 void TypePrinter::printTemplateSpecializationBefore(
                                             const TemplateSpecializationType *T,
                                             raw_ostream &OS) {
-  printTemplateId(T, OS, false);
+  printTemplateId(T, OS, Policy.FullyQualifiedName);
 }
 
 void TypePrinter::printTemplateSpecializationAfter(
@@ -1705,6 +1709,7 @@ void TypePrinter::printAttributedAfter(const AttributedType *T,
   case attr::StdCall: OS << "stdcall"; break;
   case attr::ThisCall: OS << "thiscall"; break;
   case attr::SwiftCall: OS << "swiftcall"; break;
+  case attr::SwiftAsyncCall: OS << "swiftasynccall"; break;
   case attr::VectorCall: OS << "vectorcall"; break;
   case attr::Pascal: OS << "pascal"; break;
   case attr::MSABI: OS << "ms_abi"; break;

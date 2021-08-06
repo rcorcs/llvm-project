@@ -130,6 +130,7 @@ namespace std {
 */
 
 #include <__config>
+#include <__functional/invoke.h>
 #include <__functional_base>
 #include <type_traits>
 #include <utility>
@@ -149,7 +150,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD
 // [concept.same]
 
 template<class _Tp, class _Up>
-concept __same_as_impl = _VSTD::_IsSame<_Tp, _Up>::value;
+concept __same_as_impl = _IsSame<_Tp, _Up>::value;
 
 template<class _Tp, class _Up>
 concept same_as = __same_as_impl<_Tp, _Up> && __same_as_impl<_Up, _Tp>;
@@ -441,6 +442,9 @@ concept equivalence_relation = relation<_Rp, _Tp, _Up>;
 // [concept.strictweakorder]
 template<class _Rp, class _Tp, class _Up>
 concept strict_weak_order = relation<_Rp, _Tp, _Up>;
+
+template<class _Tp, class _Up>
+concept __different_from = !same_as<remove_cvref_t<_Tp>, remove_cvref_t<_Up>>;
 
 #endif // _LIBCPP_STD_VER > 17 && !defined(_LIBCPP_HAS_NO_CONCEPTS)
 

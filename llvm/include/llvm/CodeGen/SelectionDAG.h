@@ -835,7 +835,11 @@ public:
 
   /// Returns a vector of type ResVT whose elements contain the linear sequence
   ///   <0, Step, Step * 2, Step * 3, ...>
-  SDValue getStepVector(const SDLoc &DL, EVT ResVT, SDValue Step);
+  SDValue getStepVector(const SDLoc &DL, EVT ResVT, APInt StepVal);
+
+  /// Returns a vector of type ResVT whose elements contain the linear sequence
+  ///   <0, 1, 2, 3, ...>
+  SDValue getStepVector(const SDLoc &DL, EVT ResVT);
 
   /// Returns an ISD::VECTOR_SHUFFLE node semantically equivalent to
   /// the shuffle node in input but with swapped operands.
@@ -1018,16 +1022,19 @@ public:
                     SDValue Size, Align Alignment, bool isVol,
                     bool AlwaysInline, bool isTailCall,
                     MachinePointerInfo DstPtrInfo,
-                    MachinePointerInfo SrcPtrInfo);
+                    MachinePointerInfo SrcPtrInfo,
+                    const AAMDNodes &AAInfo = AAMDNodes());
 
   SDValue getMemmove(SDValue Chain, const SDLoc &dl, SDValue Dst, SDValue Src,
                      SDValue Size, Align Alignment, bool isVol, bool isTailCall,
                      MachinePointerInfo DstPtrInfo,
-                     MachinePointerInfo SrcPtrInfo);
+                     MachinePointerInfo SrcPtrInfo,
+                     const AAMDNodes &AAInfo = AAMDNodes());
 
   SDValue getMemset(SDValue Chain, const SDLoc &dl, SDValue Dst, SDValue Src,
                     SDValue Size, Align Alignment, bool isVol, bool isTailCall,
-                    MachinePointerInfo DstPtrInfo);
+                    MachinePointerInfo DstPtrInfo,
+                    const AAMDNodes &AAInfo = AAMDNodes());
 
   SDValue getAtomicMemcpy(SDValue Chain, const SDLoc &dl, SDValue Dst,
                           unsigned DstAlign, SDValue Src, unsigned SrcAlign,
@@ -1313,10 +1320,10 @@ public:
   SDValue getIndexedMaskedStore(SDValue OrigStore, const SDLoc &dl,
                                 SDValue Base, SDValue Offset,
                                 ISD::MemIndexedMode AM);
-  SDValue getMaskedGather(SDVTList VTs, EVT VT, const SDLoc &dl,
+  SDValue getMaskedGather(SDVTList VTs, EVT MemVT, const SDLoc &dl,
                           ArrayRef<SDValue> Ops, MachineMemOperand *MMO,
                           ISD::MemIndexType IndexType, ISD::LoadExtType ExtTy);
-  SDValue getMaskedScatter(SDVTList VTs, EVT VT, const SDLoc &dl,
+  SDValue getMaskedScatter(SDVTList VTs, EVT MemVT, const SDLoc &dl,
                            ArrayRef<SDValue> Ops, MachineMemOperand *MMO,
                            ISD::MemIndexType IndexType,
                            bool IsTruncating = false);
@@ -1704,11 +1711,6 @@ public:
   bool MaskedValueIsZero(SDValue Op, const APInt &Mask,
                          const APInt &DemandedElts, unsigned Depth = 0) const;
 
-  /// Return true if the DemandedElts of the vector Op are all zero.  We
-  /// use this predicate to simplify operations downstream.
-  bool MaskedElementsAreZero(SDValue Op, const APInt &DemandedElts,
-                             unsigned Depth = 0) const;
-
   /// Return true if '(Op & Mask) == Mask'.
   /// Op and Mask are known to be the same type.
   bool MaskedValueIsAllOnes(SDValue Op, const APInt &Mask,
@@ -1767,6 +1769,31 @@ public:
   unsigned ComputeNumSignBits(SDValue Op, const APInt &DemandedElts,
                               unsigned Depth = 0) const;
 
+  /// Return true if this function can prove that \p Op is never poison
+  /// and, if \p PoisonOnly is false, does not have undef bits.
+  bool isGuaranteedNotToBeUndefOrPoison(SDValue Op, bool PoisonOnly = false,
+                                        unsigned Depth = 0) const;
+
+  /// Return true if this function can prove that \p Op is never poison
+  /// and, if \p PoisonOnly is false, does not have undef bits. The DemandedElts
+  /// argument limits the check to the requested vector elements.
+  bool isGuaranteedNotToBeUndefOrPoison(SDValue Op, const APInt &DemandedElts,
+                                        bool PoisonOnly = false,
+                                        unsigned Depth = 0) const;
+
+  /// Return true if this function can prove that \p Op is never poison.
+  bool isGuaranteedNotToBePoison(SDValue Op, unsigned Depth = 0) const {
+    return isGuaranteedNotToBeUndefOrPoison(Op, /*PoisonOnly*/ true, Depth);
+  }
+
+  /// Return true if this function can prove that \p Op is never poison. The
+  /// DemandedElts argument limits the check to the requested vector elements.
+  bool isGuaranteedNotToBePoison(SDValue Op, const APInt &DemandedElts,
+                                 unsigned Depth = 0) const {
+    return isGuaranteedNotToBeUndefOrPoison(Op, DemandedElts,
+                                            /*PoisonOnly*/ true, Depth);
+  }
+
   /// Return true if the specified operand is an ISD::ADD with a ConstantSDNode
   /// on the right-hand side, or if it is an ISD::OR with a ConstantSDNode that
   /// is guaranteed to have the same semantics as an ADD. This handles the
@@ -1817,8 +1844,10 @@ public:
   SDValue getSplatSourceVector(SDValue V, int &SplatIndex);
 
   /// If V is a splat vector, return its scalar source operand by extracting
-  /// that element from the source vector.
-  SDValue getSplatValue(SDValue V);
+  /// that element from the source vector. If LegalTypes is true, this method
+  /// may only return a legally-typed splat value. If it cannot legalize the
+  /// splatted value it will return SDValue().
+  SDValue getSplatValue(SDValue V, bool LegalTypes = false);
 
   /// If a SHL/SRA/SRL node \p V has a constant or splat constant shift amount
   /// that is less than the element bit-width of the shift node, return it.

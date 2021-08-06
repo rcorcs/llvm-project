@@ -1,5 +1,7 @@
 @AUTO_GEN_COMMENT@
 
+@SERIALIZED_LIT_PARAMS@
+
 LIBCXX_ROOT = "@LIBCXX_SOURCE_DIR@"
 INSTALL_ROOT = "@CMAKE_BINARY_DIR@"
 COMPILER = "@CMAKE_CXX_COMPILER@"
@@ -35,9 +37,8 @@ config.substitutions.append(('%{compile_flags}',
         os.path.join(LIBCXX_ROOT, 'test', 'support'))
 ))
 config.substitutions.append(('%{link_flags}',
-    '-nostdlib++ {} {}'.format(
-        os.path.join(INSTALL_ROOT, 'lib', 'libc++.a'),
-        os.path.join(INSTALL_ROOT, 'lib', 'libc++abi.a'))
+    '-nostdlib++ -L {} -lc++ -lc++abi -pthread'.format(
+        os.path.join(INSTALL_ROOT, 'lib'))
 ))
 config.substitutions.append(('%{exec}',
     '{} {} --execdir %T -- '.format(

@@ -580,6 +580,17 @@ void ASTStmtWriter::VisitConstantExpr(ConstantExpr *E) {
   Code = serialization::EXPR_CONSTANT;
 }
 
+void ASTStmtWriter::VisitSYCLUniqueStableNameExpr(SYCLUniqueStableNameExpr *E) {
+  VisitExpr(E);
+
+  Record.AddSourceLocation(E->getLocation());
+  Record.AddSourceLocation(E->getLParenLocation());
+  Record.AddSourceLocation(E->getRParenLocation());
+  Record.AddTypeSourceInfo(E->getTypeSourceInfo());
+
+  Code = serialization::EXPR_SYCL_UNIQUE_STABLE_NAME;
+}
+
 void ASTStmtWriter::VisitPredefinedExpr(PredefinedExpr *E) {
   VisitExpr(E);
 
@@ -2209,6 +2220,11 @@ void ASTStmtWriter::VisitOMPSimdDirective(OMPSimdDirective *D) {
 void ASTStmtWriter::VisitOMPTileDirective(OMPTileDirective *D) {
   VisitOMPLoopBasedDirective(D);
   Code = serialization::STMT_OMP_TILE_DIRECTIVE;
+}
+
+void ASTStmtWriter::VisitOMPUnrollDirective(OMPUnrollDirective *D) {
+  VisitOMPLoopBasedDirective(D);
+  Code = serialization::STMT_OMP_UNROLL_DIRECTIVE;
 }
 
 void ASTStmtWriter::VisitOMPForDirective(OMPForDirective *D) {

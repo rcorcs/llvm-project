@@ -939,14 +939,17 @@ void DwarfUnit::constructTypeDIE(DIE &Buffer, const DICompositeType *CTy) {
       addFlag(Buffer, dwarf::DW_AT_APPLE_objc_complete_type);
 
     // Add the type's non-standard calling convention.
-    uint8_t CC = 0;
-    if (CTy->isTypePassByValue())
-      CC = dwarf::DW_CC_pass_by_value;
-    else if (CTy->isTypePassByReference())
-      CC = dwarf::DW_CC_pass_by_reference;
-    if (CC)
-      addUInt(Buffer, dwarf::DW_AT_calling_convention, dwarf::DW_FORM_data1,
-              CC);
+    // DW_CC_pass_by_value/DW_CC_pass_by_reference are introduced in DWARF 5.
+    if (!Asm->TM.Options.DebugStrictDwarf || DD->getDwarfVersion() >= 5) {
+      uint8_t CC = 0;
+      if (CTy->isTypePassByValue())
+        CC = dwarf::DW_CC_pass_by_value;
+      else if (CTy->isTypePassByReference())
+        CC = dwarf::DW_CC_pass_by_reference;
+      if (CC)
+        addUInt(Buffer, dwarf::DW_AT_calling_convention, dwarf::DW_FORM_data1,
+                CC);
+    }
     break;
   }
   default:
@@ -1127,32 +1130,34 @@ DIE *DwarfUnit::getOrCreateSubprogramDIE(const DISubprogram *SP, bool Minimal) {
 }
 
 bool DwarfUnit::applySubprogramDefinitionAttributes(const DISubprogram *SP,
-                                                    DIE &SPDie) {
+                                                    DIE &SPDie, bool Minimal) {
   DIE *DeclDie = nullptr;
   StringRef DeclLinkageName;
   if (auto *SPDecl = SP->getDeclaration()) {
-    DITypeRefArray DeclArgs, DefinitionArgs;
-    DeclArgs = SPDecl->getType()->getTypeArray();
-    DefinitionArgs = SP->getType()->getTypeArray();
+    if (!Minimal) {
+      DITypeRefArray DeclArgs, DefinitionArgs;
+      DeclArgs = SPDecl->getType()->getTypeArray();
+      DefinitionArgs = SP->getType()->getTypeArray();
 
-    if (DeclArgs.size() && DefinitionArgs.size())
-      if (DefinitionArgs[0] != NULL && DeclArgs[0] != DefinitionArgs[0])
-        addType(SPDie, DefinitionArgs[0]);
+      if (DeclArgs.size() && DefinitionArgs.size())
+        if (DefinitionArgs[0] != NULL && DeclArgs[0] != DefinitionArgs[0])
+          addType(SPDie, DefinitionArgs[0]);
 
-    DeclDie = getDIE(SPDecl);
-    assert(DeclDie && "This DIE should've already been constructed when the "
-                      "definition DIE was created in "
-                      "getOrCreateSubprogramDIE");
-    // Look at the Decl's linkage name only if we emitted it.
-    if (DD->useAllLinkageNames())
-      DeclLinkageName = SPDecl->getLinkageName();
-    unsigned DeclID = getOrCreateSourceID(SPDecl->getFile());
-    unsigned DefID = getOrCreateSourceID(SP->getFile());
-    if (DeclID != DefID)
-      addUInt(SPDie, dwarf::DW_AT_decl_file, None, DefID);
+      DeclDie = getDIE(SPDecl);
+      assert(DeclDie && "This DIE should've already been constructed when the "
+                        "definition DIE was created in "
+                        "getOrCreateSubprogramDIE");
+      // Look at the Decl's linkage name only if we emitted it.
+      if (DD->useAllLinkageNames())
+        DeclLinkageName = SPDecl->getLinkageName();
+      unsigned DeclID = getOrCreateSourceID(SPDecl->getFile());
+      unsigned DefID = getOrCreateSourceID(SP->getFile());
+      if (DeclID != DefID)
+        addUInt(SPDie, dwarf::DW_AT_decl_file, None, DefID);
 
-    if (SP->getLine() != SPDecl->getLine())
-      addUInt(SPDie, dwarf::DW_AT_decl_line, None, SP->getLine());
+      if (SP->getLine() != SPDecl->getLine())
+        addUInt(SPDie, dwarf::DW_AT_decl_line, None, SP->getLine());
+    }
   }
 
   // Add function template parameters.
@@ -1184,7 +1189,7 @@ void DwarfUnit::applySubprogramAttributes(const DISubprogram *SP, DIE &SPDie,
   bool SkipSPSourceLocation = SkipSPAttributes &&
                               !CUNode->getDebugInfoForProfiling();
   if (!SkipSPSourceLocation)
-    if (applySubprogramDefinitionAttributes(SP, SPDie))
+    if (applySubprogramDefinitionAttributes(SP, SPDie, SkipSPAttributes))
       return;
 
   // Constructors and operators for anonymous aggregates do not have names.
@@ -1613,9 +1618,18 @@ DIE &DwarfUnit::constructMemberDIE(DIE &Buffer, const DIDerivedType *DT) {
       addUInt(*MemLocationDie, dwarf::DW_FORM_data1, dwarf::DW_OP_plus_uconst);
       addUInt(*MemLocationDie, dwarf::DW_FORM_udata, OffsetInBytes);
       addBlock(MemberDie, dwarf::DW_AT_data_member_location, MemLocationDie);
-    } else if (!IsBitfield || DD->useDWARF2Bitfields())
-      addUInt(MemberDie, dwarf::DW_AT_data_member_location, None,
-              OffsetInBytes);
+    } else if (!IsBitfield || DD->useDWARF2Bitfields()) {
+      // In DWARF v3, DW_FORM_data4/8 in DW_AT_data_member_location are
+      // interpreted as location-list pointers. Interpreting constants as
+      // pointers is not expected, so we use DW_FORM_udata to encode the
+      // constants here.
+      if (DD->getDwarfVersion() == 3)
+        addUInt(MemberDie, dwarf::DW_AT_data_member_location,
+                dwarf::DW_FORM_udata, OffsetInBytes);
+      else
+        addUInt(MemberDie, dwarf::DW_AT_data_member_location, None,
+                OffsetInBytes);
+    }
   }
 
   if (DT->isProtected())

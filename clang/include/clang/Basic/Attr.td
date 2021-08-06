@@ -856,6 +856,8 @@ def Availability : InheritableAttr {
              .Case("macos_app_extension", "macOS (App Extension)")
              .Case("tvos_app_extension", "tvOS (App Extension)")
              .Case("watchos_app_extension", "watchOS (App Extension)")
+             .Case("maccatalyst", "macCatalyst")
+             .Case("maccatalyst_app_extension", "macCatalyst (App Extension)")
              .Case("swift", "Swift")
              .Default(llvm::StringRef());
 }
@@ -869,6 +871,8 @@ static llvm::StringRef getPlatformNameSourceSpelling(llvm::StringRef Platform) {
              .Case("macos_app_extension", "macOSApplicationExtension")
              .Case("tvos_app_extension", "tvOSApplicationExtension")
              .Case("watchos_app_extension", "watchOSApplicationExtension")
+             .Case("maccatalyst", "macCatalyst")
+             .Case("maccatalyst_app_extension", "macCatalystApplicationExtension")
              .Case("zos", "z/OS")
              .Default(Platform);
 }
@@ -882,6 +886,8 @@ static llvm::StringRef canonicalizePlatformName(llvm::StringRef Platform) {
              .Case("macOSApplicationExtension", "macos_app_extension")
              .Case("tvOSApplicationExtension", "tvos_app_extension")
              .Case("watchOSApplicationExtension", "watchos_app_extension")
+             .Case("macCatalyst", "maccatalyst")
+             .Case("macCatalystApplicationExtension", "maccatalyst_app_extension")
              .Default(Platform);
 } }];
   let HasCustomParsing = 1;
@@ -1970,6 +1976,13 @@ def NoInstrumentFunction : InheritableAttr {
   let SimpleHandler = 1;
 }
 
+def NoProfileFunction : InheritableAttr {
+  let Spellings = [GCC<"no_profile_instrument_function">];
+  let Subjects = SubjectList<[Function]>;
+  let Documentation = [NoProfileInstrumentFunctionDocs];
+  let SimpleHandler = 1;
+}
+
 def NotTailCalled : InheritableAttr {
   let Spellings = [Clang<"not_tail_called">];
   let Subjects = SubjectList<[Function]>;
@@ -2452,9 +2465,19 @@ def SwiftCall : DeclOrTypeAttr {
   let Documentation = [SwiftCallDocs];
 }
 
+def SwiftAsyncCall : DeclOrTypeAttr {
+  let Spellings = [Clang<"swiftasynccall">];
+  let Documentation = [SwiftAsyncCallDocs];
+}
+
 def SwiftContext : ParameterABIAttr {
   let Spellings = [Clang<"swift_context">];
   let Documentation = [SwiftContextDocs];
+}
+
+def SwiftAsyncContext : ParameterABIAttr {
+  let Spellings = [Clang<"swift_async_context">];
+  let Documentation = [SwiftAsyncContextDocs];
 }
 
 def SwiftErrorResult : ParameterABIAttr {
@@ -2896,6 +2919,10 @@ def NoSanitize : InheritableAttr {
         Mask |= expandSanitizerGroups(ParsedMask);
       }
       return Mask;
+    }
+
+    bool hasCoverage() const {
+      return llvm::is_contained(sanitizers(), "coverage");
     }
   }];
 }
@@ -3739,6 +3766,14 @@ def NoBuiltin : Attr {
   let Args = [VariadicStringArgument<"BuiltinNames">];
   let Subjects = SubjectList<[Function]>;
   let Documentation = [NoBuiltinDocs];
+}
+
+def UsingIfExists : InheritableAttr {
+  let Spellings = [Clang<"using_if_exists", 0>];
+  let Subjects = SubjectList<[Using,
+                              UnresolvedUsingTypename,
+                              UnresolvedUsingValue], ErrorDiag>;
+  let Documentation = [UsingIfExistsDocs];
 }
 
 // FIXME: This attribute is not inheritable, it will not be propagated to

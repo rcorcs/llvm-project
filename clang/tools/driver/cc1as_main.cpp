@@ -383,10 +383,6 @@ static bool ExecuteAssemblerImpl(AssemblerInvocation &Opts,
   if (!Opts.SplitDwarfOutput.empty())
     DwoOS = getOutputStream(Opts.SplitDwarfOutput, Diags, IsBinary);
 
-  // FIXME: This is not pretty. MCContext has a ptr to MCObjectFileInfo and
-  // MCObjectFileInfo needs a MCContext reference in order to initialize itself.
-  std::unique_ptr<MCObjectFileInfo> MOFI(new MCObjectFileInfo());
-
   // Build up the feature string from the target feature list.
   std::string FS = llvm::join(Opts.Features, ",");
 
@@ -394,8 +390,8 @@ static bool ExecuteAssemblerImpl(AssemblerInvocation &Opts,
       TheTarget->createMCSubtargetInfo(Opts.Triple, Opts.CPU, FS));
   assert(STI && "Unable to create subtarget info!");
 
-  MCContext Ctx(Triple(Opts.Triple), MAI.get(), MRI.get(), MOFI.get(),
-                STI.get(), &SrcMgr, &MCOptions);
+  MCContext Ctx(Triple(Opts.Triple), MAI.get(), MRI.get(), STI.get(), &SrcMgr,
+                &MCOptions);
 
   bool PIC = false;
   if (Opts.RelocationModel == "static") {
@@ -408,7 +404,12 @@ static bool ExecuteAssemblerImpl(AssemblerInvocation &Opts,
     PIC = false;
   }
 
-  MOFI->initMCObjectFileInfo(Ctx, PIC);
+  // FIXME: This is not pretty. MCContext has a ptr to MCObjectFileInfo and
+  // MCObjectFileInfo needs a MCContext reference in order to initialize itself.
+  std::unique_ptr<MCObjectFileInfo> MOFI(
+      TheTarget->createMCObjectFileInfo(Ctx, PIC));
+  Ctx.setObjectFileInfo(MOFI.get());
+
   if (Opts.SaveTemporaryLabels)
     Ctx.setAllowTemporaryLabels(false);
   if (Opts.GenDwarfForAssembly)
@@ -584,7 +585,7 @@ int cc1as_main(ArrayRef<const char *> Argv, const char *Argv0, void *MainAddr) {
     return 1;
 
   if (Asm.ShowHelp) {
-    getDriverOptTable().PrintHelp(
+    getDriverOptTable().printHelp(
         llvm::outs(), "clang -cc1as [options] file...",
         "Clang Integrated Assembler",
         /*Include=*/driver::options::CC1AsOption, /*Exclude=*/0,

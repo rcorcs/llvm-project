@@ -37,6 +37,8 @@
 
 using namespace llvm;
 
+static mc::RegisterMCTargetOptionsFlags MOF;
+
 static cl::opt<std::string>
     TripleName("triple", cl::desc("Target triple to assemble for, "
                                   "see -version for available targets"));
@@ -173,10 +175,10 @@ int AssembleOneInput(const uint8_t *Data, size_t Size) {
   std::unique_ptr<MCSubtargetInfo> STI(
       TheTarget->createMCSubtargetInfo(TripleName, MCPU, FeaturesStr));
 
-  MCObjectFileInfo MOFI;
-  MCContext Ctx(TheTriple, MAI.get(), MRI.get(), &MOFI, STI.get(), &SrcMgr);
-  static const bool UsePIC = false;
-  MOFI.initMCObjectFileInfo(Ctx, UsePIC);
+  MCContext Ctx(TheTriple, MAI.get(), MRI.get(), STI.get(), &SrcMgr);
+  std::unique_ptr<MCObjectFileInfo> MOFI(
+      TheTarget->createMCObjectFileInfo(Ctx, /*PIC=*/false));
+  Ctx.setObjectFileInfo(MOFI.get());
 
   const unsigned OutputAsmVariant = 0;
   std::unique_ptr<MCInstrInfo> MCII(TheTarget->createMCInstrInfo());

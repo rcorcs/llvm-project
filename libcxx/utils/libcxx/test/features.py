@@ -42,15 +42,7 @@ DEFAULT_FEATURES = [
   Feature(name='has-fobjc-arc',                 when=lambda cfg: hasCompileFlag(cfg, '-xobjective-c++ -fobjc-arc') and
                                                                  sys.platform.lower().strip() == 'darwin'), # TODO: this doesn't handle cross-compiling to Apple platforms.
   Feature(name='objective-c++',                 when=lambda cfg: hasCompileFlag(cfg, '-xobjective-c++ -fobjc-arc')),
-
-  # Note: We use a custom modules cache path to make sure that we don't reuse
-  #       the default one, which can be shared across builds. This is important
-  #       because we define macros in headers files, and a change in these macros
-  #       doesn't seem to invalidate modules cache entries, which means we could
-  #       build against now-invalid cached headers from a previous build.
-  Feature(name='modules-support',
-          when=lambda cfg: hasCompileFlag(cfg, '-fmodules'),
-          actions=lambda cfg: [AddCompileFlag('-fmodules-cache-path=%t/ModuleCache')]),
+  Feature(name='no-noexcept-function-type',     when=lambda cfg: featureTestMacros(cfg).get('__cpp_noexcept_function_type', 0) < 201510),
 
   Feature(name='non-lockfree-atomics',
           when=lambda cfg: sourceBuilds(cfg, """
@@ -74,7 +66,8 @@ DEFAULT_FEATURES = [
   Feature(name=lambda cfg: 'apple-clang-{__clang_major__}.{__clang_minor__}'.format(**compilerMacros(cfg)),                        when=_isAppleClang),
   Feature(name=lambda cfg: 'apple-clang-{__clang_major__}.{__clang_minor__}.{__clang_patchlevel__}'.format(**compilerMacros(cfg)), when=_isAppleClang),
 
-  Feature(name='clang',                                                                                                            when=_isClang),
+  Feature(name='clang',                                                                                                            when=_isClang,
+          actions=[AddCompileFlag('-D_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER')]),
   Feature(name=lambda cfg: 'clang-{__clang_major__}'.format(**compilerMacros(cfg)),                                                when=_isClang),
   Feature(name=lambda cfg: 'clang-{__clang_major__}.{__clang_minor__}'.format(**compilerMacros(cfg)),                              when=_isClang),
   Feature(name=lambda cfg: 'clang-{__clang_major__}.{__clang_minor__}.{__clang_patchlevel__}'.format(**compilerMacros(cfg)),       when=_isClang),
@@ -111,6 +104,8 @@ macros = {
   '_LIBCPP_HAS_NO_FILESYSTEM_LIBRARY': 'libcpp-has-no-filesystem-library',
   '_LIBCPP_HAS_NO_RANDOM_DEVICE': 'libcpp-has-no-random-device',
   '_LIBCPP_HAS_NO_LOCALIZATION': 'libcpp-has-no-localization',
+  '_LIBCPP_HAS_NO_INCOMPLETE_FORMAT': 'libcpp-has-no-incomplete-format',
+  '_LIBCPP_HAS_NO_INCOMPLETE_RANGES': 'libcpp-has-no-incomplete-ranges',
 }
 for macro, feature in macros.items():
   DEFAULT_FEATURES += [

@@ -47,6 +47,7 @@ class ExtractElementInst;
 class Function;
 class GlobalValue;
 class InstCombiner;
+class OptimizationRemarkEmitter;
 class IntrinsicInst;
 class LoadInst;
 class LoopAccessInfo;
@@ -506,7 +507,8 @@ public:
   /// transformation. The caller will initialize UP with the current
   /// target-independent defaults.
   void getUnrollingPreferences(Loop *L, ScalarEvolution &,
-                               UnrollingPreferences &UP) const;
+                               UnrollingPreferences &UP,
+                               OptimizationRemarkEmitter *ORE) const;
 
   /// Query the target whether it would be profitable to convert the given loop
   /// into a hardware loop.
@@ -709,7 +711,7 @@ public:
   bool isTypeLegal(Type *Ty) const;
 
   /// Returns the estimated number of registers required to represent \p Ty.
-  unsigned getRegUsageForType(Type *Ty) const;
+  InstructionCost getRegUsageForType(Type *Ty) const;
 
   /// Return true if switches should be turned into lookup tables for the
   /// target.
@@ -839,8 +841,8 @@ public:
   /// with another such as Thumb. This return value is used as a penalty when
   /// the total costs for a constant is calculated (the bigger the cost, the
   /// more beneficial constant hoisting is).
-  int getIntImmCodeSizeCost(unsigned Opc, unsigned Idx, const APInt &Imm,
-                            Type *Ty) const;
+  InstructionCost getIntImmCodeSizeCost(unsigned Opc, unsigned Idx,
+                                        const APInt &Imm, Type *Ty) const;
   /// @}
 
   /// \name Vector Target Information
@@ -858,43 +860,12 @@ public:
     SK_ExtractSubvector, ///< ExtractSubvector Index indicates start offset.
     SK_PermuteTwoSrc,    ///< Merge elements from two source vectors into one
                          ///< with any shuffle mask.
-    SK_PermuteSingleSrc  ///< Shuffle elements of single source vector with any
+    SK_PermuteSingleSrc, ///< Shuffle elements of single source vector with any
                          ///< shuffle mask.
+    SK_Splice            ///< Concatenates elements from the first input vector
+                         ///< with elements of the second input vector. Returning
+                         ///< a vector of the same type as the input vectors.
   };
-
-  /// Kind of the reduction data.
-  enum ReductionKind {
-    RK_None,           /// Not a reduction.
-    RK_Arithmetic,     /// Binary reduction data.
-    RK_MinMax,         /// Min/max reduction data.
-    RK_UnsignedMinMax, /// Unsigned min/max reduction data.
-  };
-
-  /// Contains opcode + LHS/RHS parts of the reduction operations.
-  struct ReductionData {
-    ReductionData() = delete;
-    ReductionData(ReductionKind Kind, unsigned Opcode, Value *LHS, Value *RHS)
-        : Opcode(Opcode), LHS(LHS), RHS(RHS), Kind(Kind) {
-      assert(Kind != RK_None && "expected binary or min/max reduction only.");
-    }
-    unsigned Opcode = 0;
-    Value *LHS = nullptr;
-    Value *RHS = nullptr;
-    ReductionKind Kind = RK_None;
-    bool hasSameData(ReductionData &RD) const {
-      return Kind == RD.Kind && Opcode == RD.Opcode;
-    }
-  };
-
-  static ReductionKind matchPairwiseReduction(
-    const ExtractElementInst *ReduxRoot, unsigned &Opcode, VectorType *&Ty);
-
-  static ReductionKind matchVectorSplittingReduction(
-    const ExtractElementInst *ReduxRoot, unsigned &Opcode, VectorType *&Ty);
-
-  static ReductionKind matchVectorReduction(const ExtractElementInst *ReduxRoot,
-                                            unsigned &Opcode, VectorType *&Ty,
-                                            bool &IsPairwise);
 
   /// Additional information about an operand's possible values.
   enum OperandValueKind {
@@ -1177,25 +1148,42 @@ public:
       TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput,
       bool UseMaskForCond = false, bool UseMaskForGaps = false) const;
 
-  /// Calculate the cost of performing a vector reduction.
+  /// A helper function to determine the type of reduction algorithm used
+  /// for a given \p Opcode and set of FastMathFlags \p FMF.
+  static bool requiresOrderedReduction(Optional<FastMathFlags> FMF) {
+    return FMF != None && !(*FMF).allowReassoc();
+  }
+
+  /// Calculate the cost of vector reduction intrinsics.
   ///
   /// This is the cost of reducing the vector value of type \p Ty to a scalar
-  /// value using the operation denoted by \p Opcode. The form of the reduction
-  /// can either be a pairwise reduction or a reduction that splits the vector
-  /// at every reduction level.
+  /// value using the operation denoted by \p Opcode. The FastMathFlags
+  /// parameter \p FMF indicates what type of reduction we are performing:
+  ///   1. Tree-wise. This is the typical 'fast' reduction performed that
+  ///   involves successively splitting a vector into half and doing the
+  ///   operation on the pair of halves until you have a scalar value. For
+  ///   example:
+  ///     (v0, v1, v2, v3)
+  ///     ((v0+v2), (v1+v3), undef, undef)
+  ///     ((v0+v2+v1+v3), undef, undef, undef)
+  ///   This is the default behaviour for integer operations, whereas for
+  ///   floating point we only do this if \p FMF indicates that
+  ///   reassociation is allowed.
+  ///   2. Ordered. For a vector with N elements this involves performing N
+  ///   operations in lane order, starting with an initial scalar value, i.e.
+  ///     result = InitVal + v0
+  ///     result = result + v1
+  ///     result = result + v2
+  ///     result = result + v3
+  ///   This is only the case for FP operations and when reassociation is not
+  ///   allowed.
   ///
-  /// Pairwise:
-  ///  (v0, v1, v2, v3)
-  ///  ((v0+v1), (v2+v3), undef, undef)
-  /// Split:
-  ///  (v0, v1, v2, v3)
-  ///  ((v0+v2), (v1+v3), undef, undef)
   InstructionCost getArithmeticReductionCost(
-      unsigned Opcode, VectorType *Ty, bool IsPairwiseForm,
+      unsigned Opcode, VectorType *Ty, Optional<FastMathFlags> FMF,
       TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput) const;
 
   InstructionCost getMinMaxReductionCost(
-      VectorType *Ty, VectorType *CondTy, bool IsPairwiseForm, bool IsUnsigned,
+      VectorType *Ty, VectorType *CondTy, bool IsUnsigned,
       TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput) const;
 
   /// Calculate the cost of an extended reduction pattern, similar to
@@ -1239,7 +1227,7 @@ public:
   ///
   /// Some types may require the use of register classes that do not have
   /// any callee-saved registers, so would require a spill and fill.
-  unsigned getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) const;
+  InstructionCost getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) const;
 
   /// \returns True if the intrinsic is a supported memory intrinsic.  Info
   /// will contain additional information - whether the intrinsic may write
@@ -1321,8 +1309,11 @@ public:
                                     unsigned AddrSpace) const;
 
   /// \returns True if it is legal to vectorize the given reduction kind.
-  bool isLegalToVectorizeReduction(RecurrenceDescriptor RdxDesc,
+  bool isLegalToVectorizeReduction(const RecurrenceDescriptor &RdxDesc,
                                    ElementCount VF) const;
+
+  /// \returns True if the given type is supported for scalable vectors
+  bool isElementTypeLegalForScalableVector(Type *Ty) const;
 
   /// \returns The new vector factor value if the target doesn't support \p
   /// SizeInBytes loads or has a better vector factor.
@@ -1469,7 +1460,8 @@ public:
                                                   Value *NewV) const = 0;
   virtual bool isLoweredToCall(const Function *F) = 0;
   virtual void getUnrollingPreferences(Loop *L, ScalarEvolution &,
-                                       UnrollingPreferences &UP) = 0;
+                                       UnrollingPreferences &UP,
+                                       OptimizationRemarkEmitter *ORE) = 0;
   virtual void getPeelingPreferences(Loop *L, ScalarEvolution &SE,
                                      PeelingPreferences &PP) = 0;
   virtual bool isHardwareLoopProfitable(Loop *L, ScalarEvolution &SE,
@@ -1528,7 +1520,7 @@ public:
   virtual bool isProfitableToHoist(Instruction *I) = 0;
   virtual bool useAA() = 0;
   virtual bool isTypeLegal(Type *Ty) = 0;
-  virtual unsigned getRegUsageForType(Type *Ty) = 0;
+  virtual InstructionCost getRegUsageForType(Type *Ty) = 0;
   virtual bool shouldBuildLookupTables() = 0;
   virtual bool shouldBuildLookupTablesForConstant(Constant *C) = 0;
   virtual bool shouldBuildRelLookupTables() = 0;
@@ -1556,8 +1548,8 @@ public:
   virtual bool haveFastSqrt(Type *Ty) = 0;
   virtual bool isFCmpOrdCheaperThanFCmpZero(Type *Ty) = 0;
   virtual InstructionCost getFPOpCost(Type *Ty) = 0;
-  virtual int getIntImmCodeSizeCost(unsigned Opc, unsigned Idx,
-                                    const APInt &Imm, Type *Ty) = 0;
+  virtual InstructionCost getIntImmCodeSizeCost(unsigned Opc, unsigned Idx,
+                                                const APInt &Imm, Type *Ty) = 0;
   virtual InstructionCost getIntImmCost(const APInt &Imm, Type *Ty,
                                         TargetCostKind CostKind) = 0;
   virtual InstructionCost getIntImmCostInst(unsigned Opc, unsigned Idx,
@@ -1572,7 +1564,7 @@ public:
                                            Type *Ty = nullptr) const = 0;
   virtual const char *getRegisterClassName(unsigned ClassID) const = 0;
   virtual TypeSize getRegisterBitWidth(RegisterKind K) const = 0;
-  virtual unsigned getMinVectorRegisterBitWidth() = 0;
+  virtual unsigned getMinVectorRegisterBitWidth() const = 0;
   virtual Optional<unsigned> getMaxVScale() const = 0;
   virtual bool shouldMaximizeVectorBandwidth() const = 0;
   virtual ElementCount getMinimumVF(unsigned ElemWidth,
@@ -1655,11 +1647,10 @@ public:
       bool UseMaskForCond = false, bool UseMaskForGaps = false) = 0;
   virtual InstructionCost
   getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
-                             bool IsPairwiseForm,
+                             Optional<FastMathFlags> FMF,
                              TTI::TargetCostKind CostKind) = 0;
   virtual InstructionCost
-  getMinMaxReductionCost(VectorType *Ty, VectorType *CondTy,
-                         bool IsPairwiseForm, bool IsUnsigned,
+  getMinMaxReductionCost(VectorType *Ty, VectorType *CondTy, bool IsUnsigned,
                          TTI::TargetCostKind CostKind) = 0;
   virtual InstructionCost getExtendedAddReductionCost(
       bool IsMLA, bool IsUnsigned, Type *ResTy, VectorType *Ty,
@@ -1673,7 +1664,8 @@ public:
   virtual unsigned getNumberOfParts(Type *Tp) = 0;
   virtual InstructionCost
   getAddressComputationCost(Type *Ty, ScalarEvolution *SE, const SCEV *Ptr) = 0;
-  virtual unsigned getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) = 0;
+  virtual InstructionCost
+  getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) = 0;
   virtual bool getTgtMemIntrinsic(IntrinsicInst *Inst,
                                   MemIntrinsicInfo &Info) = 0;
   virtual unsigned getAtomicMemIntrinsicMaxElementSize() const = 0;
@@ -1704,8 +1696,9 @@ public:
   virtual bool isLegalToVectorizeStoreChain(unsigned ChainSizeInBytes,
                                             Align Alignment,
                                             unsigned AddrSpace) const = 0;
-  virtual bool isLegalToVectorizeReduction(RecurrenceDescriptor RdxDesc,
+  virtual bool isLegalToVectorizeReduction(const RecurrenceDescriptor &RdxDesc,
                                            ElementCount VF) const = 0;
+  virtual bool isElementTypeLegalForScalableVector(Type *Ty) const = 0;
   virtual unsigned getLoadVectorFactor(unsigned VF, unsigned LoadSize,
                                        unsigned ChainSizeInBytes,
                                        VectorType *VecTy) const = 0;
@@ -1798,8 +1791,9 @@ public:
     return Impl.isLoweredToCall(F);
   }
   void getUnrollingPreferences(Loop *L, ScalarEvolution &SE,
-                               UnrollingPreferences &UP) override {
-    return Impl.getUnrollingPreferences(L, SE, UP);
+                               UnrollingPreferences &UP,
+                               OptimizationRemarkEmitter *ORE) override {
+    return Impl.getUnrollingPreferences(L, SE, UP, ORE);
   }
   void getPeelingPreferences(Loop *L, ScalarEvolution &SE,
                              PeelingPreferences &PP) override {
@@ -1921,7 +1915,7 @@ public:
   }
   bool useAA() override { return Impl.useAA(); }
   bool isTypeLegal(Type *Ty) override { return Impl.isTypeLegal(Ty); }
-  unsigned getRegUsageForType(Type *Ty) override {
+  InstructionCost getRegUsageForType(Type *Ty) override {
     return Impl.getRegUsageForType(Ty);
   }
   bool shouldBuildLookupTables() override {
@@ -1987,8 +1981,8 @@ public:
     return Impl.getFPOpCost(Ty);
   }
 
-  int getIntImmCodeSizeCost(unsigned Opc, unsigned Idx, const APInt &Imm,
-                            Type *Ty) override {
+  InstructionCost getIntImmCodeSizeCost(unsigned Opc, unsigned Idx,
+                                        const APInt &Imm, Type *Ty) override {
     return Impl.getIntImmCodeSizeCost(Opc, Idx, Imm, Ty);
   }
   InstructionCost getIntImmCost(const APInt &Imm, Type *Ty,
@@ -2019,7 +2013,7 @@ public:
   TypeSize getRegisterBitWidth(RegisterKind K) const override {
     return Impl.getRegisterBitWidth(K);
   }
-  unsigned getMinVectorRegisterBitWidth() override {
+  unsigned getMinVectorRegisterBitWidth() const override {
     return Impl.getMinVectorRegisterBitWidth();
   }
   Optional<unsigned> getMaxVScale() const override {
@@ -2156,17 +2150,14 @@ public:
   }
   InstructionCost
   getArithmeticReductionCost(unsigned Opcode, VectorType *Ty,
-                             bool IsPairwiseForm,
+                             Optional<FastMathFlags> FMF,
                              TTI::TargetCostKind CostKind) override {
-    return Impl.getArithmeticReductionCost(Opcode, Ty, IsPairwiseForm,
-                                           CostKind);
+    return Impl.getArithmeticReductionCost(Opcode, Ty, FMF, CostKind);
   }
   InstructionCost
-  getMinMaxReductionCost(VectorType *Ty, VectorType *CondTy,
-                         bool IsPairwiseForm, bool IsUnsigned,
+  getMinMaxReductionCost(VectorType *Ty, VectorType *CondTy, bool IsUnsigned,
                          TTI::TargetCostKind CostKind) override {
-    return Impl.getMinMaxReductionCost(Ty, CondTy, IsPairwiseForm, IsUnsigned,
-                                       CostKind);
+    return Impl.getMinMaxReductionCost(Ty, CondTy, IsUnsigned, CostKind);
   }
   InstructionCost getExtendedAddReductionCost(
       bool IsMLA, bool IsUnsigned, Type *ResTy, VectorType *Ty,
@@ -2190,7 +2181,7 @@ public:
                                             const SCEV *Ptr) override {
     return Impl.getAddressComputationCost(Ty, SE, Ptr);
   }
-  unsigned getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) override {
+  InstructionCost getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) override {
     return Impl.getCostOfKeepingLiveOverCall(Tys);
   }
   bool getTgtMemIntrinsic(IntrinsicInst *Inst,
@@ -2253,9 +2244,12 @@ public:
     return Impl.isLegalToVectorizeStoreChain(ChainSizeInBytes, Alignment,
                                              AddrSpace);
   }
-  bool isLegalToVectorizeReduction(RecurrenceDescriptor RdxDesc,
+  bool isLegalToVectorizeReduction(const RecurrenceDescriptor &RdxDesc,
                                    ElementCount VF) const override {
     return Impl.isLegalToVectorizeReduction(RdxDesc, VF);
+  }
+  bool isElementTypeLegalForScalableVector(Type *Ty) const override {
+    return Impl.isElementTypeLegalForScalableVector(Ty);
   }
   unsigned getLoadVectorFactor(unsigned VF, unsigned LoadSize,
                                unsigned ChainSizeInBytes,

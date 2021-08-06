@@ -6,18 +6,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "lldb/Host/Config.h"
-
 #include "ClangUtilityFunction.h"
 #include "ClangExpressionDeclMap.h"
 #include "ClangExpressionParser.h"
 #include "ClangExpressionSourceCode.h"
 #include "ClangPersistentVariables.h"
 
-#include <stdio.h>
-#if HAVE_SYS_TYPES_H
+#include <cstdio>
 #include <sys/types.h>
-#endif
 
 
 #include "lldb/Core/Module.h"
@@ -65,7 +61,7 @@ ClangUtilityFunction::ClangUtilityFunction(ExecutionContextScope &exe_scope,
   }
 }
 
-ClangUtilityFunction::~ClangUtilityFunction() {}
+ClangUtilityFunction::~ClangUtilityFunction() = default;
 
 /// Install the utility function into a process
 ///

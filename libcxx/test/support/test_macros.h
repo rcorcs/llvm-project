@@ -139,7 +139,7 @@
 # define TEST_NOEXCEPT_COND(...)
 #endif
 
-#if TEST_STD_VER >= 17
+#if TEST_STD_VER >= 11
 # define TEST_THROW_SPEC(...)
 #else
 # define TEST_THROW_SPEC(...) throw(__VA_ARGS__)
@@ -209,7 +209,6 @@
 #  elif defined(_WIN32)
 #    if defined(_MSC_VER) && !defined(__MINGW32__)
 #      define TEST_HAS_QUICK_EXIT
-#      define TEST_HAS_ALIGNED_ALLOC
 #      define TEST_HAS_TIMESPEC_GET
 #    endif
 #  elif defined(__APPLE__)

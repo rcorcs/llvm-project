@@ -3867,8 +3867,12 @@ bool X86DAGToDAGISel::tryShiftAmountMod(SDNode *N) {
           Add1 = Add1.getOperand(0);
           SubVT = Add1.getValueType();
         }
-        X = CurDAG->getNode(ISD::ADD, DL, SubVT, Add1,
-                            CurDAG->getZExtOrTrunc(Add0, DL, SubVT));
+        if (Add0.getValueType() != SubVT) {
+          Add0 = CurDAG->getZExtOrTrunc(Add0, DL, SubVT);
+          insertDAGNode(*CurDAG, OrigShiftAmt, Add0);
+        }
+
+        X = CurDAG->getNode(ISD::ADD, DL, SubVT, Add1, Add0);
         insertDAGNode(*CurDAG, OrigShiftAmt, X);
       } else
         return false;
@@ -4613,10 +4617,13 @@ void X86DAGToDAGISel::Select(SDNode *Node) {
       ReplaceNode(Node, Res);
       return;
     }
-    case Intrinsic::x86_tileloadd64_internal: {
+    case Intrinsic::x86_tileloadd64_internal:
+    case Intrinsic::x86_tileloaddt164_internal: {
       if (!Subtarget->hasAMXTILE())
         break;
-      unsigned Opc = X86::PTILELOADDV;
+      unsigned Opc = IntNo == Intrinsic::x86_tileloadd64_internal
+                         ? X86::PTILELOADDV
+                         : X86::PTILELOADDT1V;
       // _tile_loadd_internal(row, col, buf, STRIDE)
       SDValue Base = Node->getOperand(4);
       SDValue Scale = getI8Imm(1, dl);
@@ -5363,24 +5370,20 @@ void X86DAGToDAGISel::Select(SDNode *Node) {
       break;
     }
 
-    SDValue Cmp;
     SDValue Chain =
         IsStrictCmp ? Node->getOperand(0) : CurDAG->getEntryNode();
+    SDValue Glue;
     if (IsStrictCmp) {
-      SDVTList VTs = CurDAG->getVTList(MVT::i16, MVT::Other);
-      Cmp = SDValue(CurDAG->getMachineNode(Opc, dl, VTs, {N0, N1, Chain}), 0);
-      Chain = Cmp.getValue(1);
+      SDVTList VTs = CurDAG->getVTList(MVT::Other, MVT::Glue);
+      Chain = SDValue(CurDAG->getMachineNode(Opc, dl, VTs, {N0, N1, Chain}), 0);
+      Glue = Chain.getValue(1);
     } else {
-      Cmp = SDValue(CurDAG->getMachineNode(Opc, dl, MVT::i16, N0, N1), 0);
+      Glue = SDValue(CurDAG->getMachineNode(Opc, dl, MVT::Glue, N0, N1), 0);
     }
 
     // Move FPSW to AX.
-    SDValue FPSW = CurDAG->getCopyToReg(Chain, dl, X86::FPSW, Cmp, SDValue());
-    Chain = FPSW;
     SDValue FNSTSW =
-        SDValue(CurDAG->getMachineNode(X86::FNSTSW16r, dl, MVT::i16, FPSW,
-                                       FPSW.getValue(1)),
-                0);
+        SDValue(CurDAG->getMachineNode(X86::FNSTSW16r, dl, MVT::i16, Glue), 0);
 
     // Extract upper 8-bits of AX.
     SDValue Extract =
@@ -5443,6 +5446,9 @@ void X86DAGToDAGISel::Select(SDNode *Node) {
       ConstantSDNode *C = dyn_cast<ConstantSDNode>(N0.getOperand(1));
       if (!C) break;
       uint64_t Mask = C->getZExtValue();
+      // We may have looked through a truncate so mask off any bits that
+      // shouldn't be part of the compare.
+      Mask &= maskTrailingOnes<uint64_t>(CmpVT.getScalarSizeInBits());
 
       // Check if we can replace AND+IMM64 with a shift. This is possible for
       // masks/ like 0xFF000000 or 0x00FFFFFF and if we care only about the zero

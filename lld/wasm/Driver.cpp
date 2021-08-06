@@ -344,17 +344,10 @@ static UnresolvedPolicy getUnresolvedSymbolPolicy(opt::InputArgList &args) {
     StringRef s = arg->getValue();
     if (s == "ignore-all")
       return UnresolvedPolicy::Ignore;
-    if (s == "import-functions")
-      return UnresolvedPolicy::ImportFuncs;
     if (s == "report-all")
       return errorOrWarn;
     error("unknown --unresolved-symbols value: " + s);
   }
-
-  // Legacy --allow-undefined flag which is equivalent to
-  // --unresolve-symbols=ignore-all
-  if (args.hasArg(OPT_allow_undefined))
-    return UnresolvedPolicy::ImportFuncs;
 
   return errorOrWarn;
 }
@@ -378,6 +371,7 @@ static void readConfigs(opt::InputArgList &args) {
   config->importMemory = args.hasArg(OPT_import_memory);
   config->sharedMemory = args.hasArg(OPT_shared_memory);
   config->importTable = args.hasArg(OPT_import_table);
+  config->importUndefined = args.hasArg(OPT_import_undefined);
   config->ltoo = args::getInteger(args, OPT_lto_O, 2);
   config->ltoPartitions = args::getInteger(args, OPT_lto_partitions, 1);
   config->ltoNewPassManager =
@@ -453,6 +447,13 @@ static void readConfigs(opt::InputArgList &args) {
       config->features->push_back(std::string(s));
   }
 
+  // Legacy --allow-undefined flag which is equivalent to
+  // --unresolve-symbols=ignore + --import-undefined
+  if (args.hasArg(OPT_allow_undefined)) {
+    config->importUndefined = true;
+    config->unresolvedSymbols = UnresolvedPolicy::Ignore;
+  }
+
   if (args.hasArg(OPT_print_map))
     config->mapFile = "-";
 }
@@ -481,7 +482,8 @@ static void setConfigs() {
 
   if (config->shared) {
     config->importMemory = true;
-    config->unresolvedSymbols = UnresolvedPolicy::ImportFuncs;
+    config->importUndefined = true;
+    config->unresolvedSymbols = UnresolvedPolicy::Ignore;
   }
 }
 
@@ -584,15 +586,9 @@ createUndefinedGlobal(StringRef name, llvm::wasm::WasmGlobalType *type) {
 
 static InputGlobal *createGlobal(StringRef name, bool isMutable) {
   llvm::wasm::WasmGlobal wasmGlobal;
-  if (config->is64.getValueOr(false)) {
-    wasmGlobal.Type = {WASM_TYPE_I64, isMutable};
-    wasmGlobal.InitExpr.Opcode = WASM_OPCODE_I64_CONST;
-    wasmGlobal.InitExpr.Value.Int64 = 0;
-  } else {
-    wasmGlobal.Type = {WASM_TYPE_I32, isMutable};
-    wasmGlobal.InitExpr.Opcode = WASM_OPCODE_I32_CONST;
-    wasmGlobal.InitExpr.Value.Int32 = 0;
-  }
+  bool is64 = config->is64.getValueOr(false);
+  wasmGlobal.Type = {uint8_t(is64 ? WASM_TYPE_I64 : WASM_TYPE_I32), isMutable};
+  wasmGlobal.InitExpr = intConst(0, is64);
   wasmGlobal.SymbolName = name;
   return make<InputGlobal>(wasmGlobal, nullptr);
 }
@@ -625,6 +621,8 @@ static void createSyntheticSymbols() {
       "__wasm_call_ctors", WASM_SYMBOL_VISIBILITY_HIDDEN,
       make<SyntheticFunction>(nullSignature, "__wasm_call_ctors"));
 
+    bool is64 = config->is64.getValueOr(false);
+
   if (config->isPic) {
     WasmSym::stackPointer =
         createUndefinedGlobal("__stack_pointer", config->is64.getValueOr(false)
@@ -635,12 +633,18 @@ static void createSyntheticSymbols() {
     // which to load our static data and function table.
     // See:
     // https://github.com/WebAssembly/tool-conventions/blob/master/DynamicLinking.md
-    WasmSym::memoryBase = createUndefinedGlobal(
-        "__memory_base",
-        config->is64.getValueOr(false) ? &globalTypeI64 : &globalTypeI32);
-    WasmSym::tableBase = createUndefinedGlobal("__table_base", &globalTypeI32);
+    auto *globalType = is64 ? &globalTypeI64 : &globalTypeI32;
+    WasmSym::memoryBase = createUndefinedGlobal("__memory_base", globalType);
+    WasmSym::tableBase = createUndefinedGlobal("__table_base", globalType);
     WasmSym::memoryBase->markLive();
     WasmSym::tableBase->markLive();
+    if (is64) {
+      WasmSym::tableBase32 =
+          createUndefinedGlobal("__table_base32", &globalTypeI32);
+      WasmSym::tableBase32->markLive();
+    } else {
+      WasmSym::tableBase32 = nullptr;
+    }
   } else {
     // For non-PIC code
     WasmSym::stackPointer = createGlobalVariable("__stack_pointer", true);
@@ -654,7 +658,7 @@ static void createSyntheticSymbols() {
     WasmSym::initTLS = symtab->addSyntheticFunction(
         "__wasm_init_tls", WASM_SYMBOL_VISIBILITY_HIDDEN,
         make<SyntheticFunction>(
-            config->is64.getValueOr(false) ? i64ArgSignature : i32ArgSignature,
+            is64 ? i64ArgSignature : i32ArgSignature,
             "__wasm_init_tls"));
   }
 }
@@ -673,6 +677,9 @@ static void createOptionalSymbols() {
     WasmSym::heapBase = symtab->addOptionalDataSymbol("__heap_base");
     WasmSym::definedMemoryBase = symtab->addOptionalDataSymbol("__memory_base");
     WasmSym::definedTableBase = symtab->addOptionalDataSymbol("__table_base");
+    if (config->is64.getValueOr(false))
+      WasmSym::definedTableBase32 =
+          symtab->addOptionalDataSymbol("__table_base32");
   }
 
   // For non-shared memory programs we still need to define __tls_base since we
@@ -817,7 +824,7 @@ void LinkerDriver::linkerMain(ArrayRef<const char *> argsArr) {
 
   // Handle --help
   if (args.hasArg(OPT_help)) {
-    parser.PrintHelp(lld::outs(),
+    parser.printHelp(lld::outs(),
                      (std::string(argsArr[0]) + " [options] file...").c_str(),
                      "LLVM Linker", false);
     return;

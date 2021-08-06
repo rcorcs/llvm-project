@@ -99,6 +99,7 @@ void CodeGenFunction::EmitDecl(const Decl &D) {
   case Decl::ConstructorUsingShadow:
   case Decl::ObjCTypeParam:
   case Decl::Binding:
+  case Decl::UnresolvedUsingIfExists:
     llvm_unreachable("Declaration should not be in declstmts!");
   case Decl::Record:    // struct/union/class X;
   case Decl::CXXRecord: // struct/union/class X; [C++]
@@ -136,6 +137,10 @@ void CodeGenFunction::EmitDecl(const Decl &D) {
   case Decl::Using:          // using X; [C++]
     if (CGDebugInfo *DI = getDebugInfo())
         DI->EmitUsingDecl(cast<UsingDecl>(D));
+    return;
+  case Decl::UsingEnum: // using enum X; [C++]
+    if (CGDebugInfo *DI = getDebugInfo())
+      DI->EmitUsingEnumDecl(cast<UsingEnumDecl>(D));
     return;
   case Decl::UsingPack:
     for (auto *Using : cast<UsingPackDecl>(D).expansions())
@@ -709,10 +714,10 @@ static bool tryEmitARCCopyWeakInit(CodeGenFunction &CGF,
       }
 
       // If it was an l-value, use objc_copyWeak.
-      if (srcExpr->getValueKind() == VK_LValue) {
+      if (srcExpr->isLValue()) {
         CGF.EmitARCCopyWeak(destLV.getAddress(CGF), srcAddr);
       } else {
-        assert(srcExpr->getValueKind() == VK_XValue);
+        assert(srcExpr->isXValue());
         CGF.EmitARCMoveWeak(destLV.getAddress(CGF), srcAddr);
       }
       return true;
@@ -1317,7 +1322,7 @@ void CodeGenFunction::EmitAutoVarDecl(const VarDecl &D) {
 /// Emit a lifetime.begin marker if some criteria are satisfied.
 /// \return a pointer to the temporary size Value if a marker was emitted, null
 /// otherwise
-llvm::Value *CodeGenFunction::EmitLifetimeStart(uint64_t Size,
+llvm::Value *CodeGenFunction::EmitLifetimeStart(llvm::TypeSize Size,
                                                 llvm::Value *Addr) {
   if (!ShouldEmitLifetimeMarkers)
     return nullptr;
@@ -1325,7 +1330,8 @@ llvm::Value *CodeGenFunction::EmitLifetimeStart(uint64_t Size,
   assert(Addr->getType()->getPointerAddressSpace() ==
              CGM.getDataLayout().getAllocaAddrSpace() &&
          "Pointer should be in alloca address space");
-  llvm::Value *SizeV = llvm::ConstantInt::get(Int64Ty, Size);
+  llvm::Value *SizeV = llvm::ConstantInt::get(
+      Int64Ty, Size.isScalable() ? -1 : Size.getFixedValue());
   Addr = Builder.CreateBitCast(Addr, AllocaInt8PtrTy);
   llvm::CallInst *C =
       Builder.CreateCall(CGM.getLLVMLifetimeStartFn(), {SizeV, Addr});
@@ -1548,12 +1554,9 @@ CodeGenFunction::EmitAutoVarAlloca(const VarDecl &D) {
         // is rare.
         if (!Bypasses.IsBypassed(&D) &&
             !(!getLangOpts().CPlusPlus && hasLabelBeenSeenInCurrentScope())) {
-          llvm::TypeSize size =
-              CGM.getDataLayout().getTypeAllocSize(allocaTy);
+          llvm::TypeSize Size = CGM.getDataLayout().getTypeAllocSize(allocaTy);
           emission.SizeForLifetimeMarkers =
-              size.isScalable() ? EmitLifetimeStart(-1, AllocaAddr.getPointer())
-                                : EmitLifetimeStart(size.getFixedSize(),
-                                                    AllocaAddr.getPointer());
+              EmitLifetimeStart(Size, AllocaAddr.getPointer());
         }
       } else {
         assert(!emission.useLifetimeMarkers());
@@ -2243,8 +2246,9 @@ void CodeGenFunction::emitArrayDestroy(llvm::Value *begin,
 
   // Shift the address back by one element.
   llvm::Value *negativeOne = llvm::ConstantInt::get(SizeTy, -1, true);
-  llvm::Value *element = Builder.CreateInBoundsGEP(elementPast, negativeOne,
-                                                   "arraydestroy.element");
+  llvm::Value *element = Builder.CreateInBoundsGEP(
+      elementPast->getType()->getPointerElementType(), elementPast, negativeOne,
+      "arraydestroy.element");
 
   if (useEHCleanup)
     pushRegularPartialArrayCleanup(begin, element, elementType, elementAlign,
@@ -2284,8 +2288,11 @@ static void emitPartialArrayDestroy(CodeGenFunction &CGF,
     llvm::Value *zero = llvm::ConstantInt::get(CGF.SizeTy, 0);
 
     SmallVector<llvm::Value*,4> gepIndices(arrayDepth+1, zero);
-    begin = CGF.Builder.CreateInBoundsGEP(begin, gepIndices, "pad.arraybegin");
-    end = CGF.Builder.CreateInBoundsGEP(end, gepIndices, "pad.arrayend");
+    llvm::Type *elemTy = begin->getType()->getPointerElementType();
+    begin = CGF.Builder.CreateInBoundsGEP(
+        elemTy, begin, gepIndices, "pad.arraybegin");
+    end = CGF.Builder.CreateInBoundsGEP(
+        elemTy, end, gepIndices, "pad.arrayend");
   }
 
   // Destroy the array.  We don't ever need an EH cleanup because we

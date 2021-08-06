@@ -40,6 +40,15 @@ public:
   /// operation.
   virtual void printNewline() = 0;
 
+  /// Print a block argument in the usual format of:
+  ///   %ssaName : type {attr1=42} loc("here")
+  /// where location printing is controlled by the standard internal option.
+  /// You may pass omitType=true to not print a type, and pass an empty
+  /// attribute list if you don't care for attributes.
+  virtual void printRegionArgument(BlockArgument arg,
+                                   ArrayRef<NamedAttribute> argAttrs = {},
+                                   bool omitType = false) = 0;
+
   /// Print implementations for various things an operation contains.
   virtual void printOperand(Value value) = 0;
   virtual void printOperand(Value value, raw_ostream &os) = 0;
@@ -578,6 +587,10 @@ public:
                                               StringRef attrName,
                                               NamedAttrList &attrs) = 0;
 
+  /// Parse a loc(...) specifier if present, filling in result if so.
+  virtual ParseResult
+  parseOptionalLocationSpecifier(Optional<Location> &result) = 0;
+
   //===--------------------------------------------------------------------===//
   // Operand Parsing
   //===--------------------------------------------------------------------===//
@@ -915,18 +928,29 @@ using OpAsmSetValueNameFn = function_ref<void(Value, StringRef)>;
 class OpAsmDialectInterface
     : public DialectInterface::Base<OpAsmDialectInterface> {
 public:
+  /// Holds the result of `getAlias` hook call.
+  enum class AliasResult {
+    /// The object (type or attribute) is not supported by the hook
+    /// and an alias was not provided.
+    NoAlias,
+    /// An alias was provided, but it might be overriden by other hook.
+    OverridableAlias,
+    /// An alias was provided and it should be used
+    /// (no other hooks will be checked).
+    FinalAlias
+  };
+
   OpAsmDialectInterface(Dialect *dialect) : Base(dialect) {}
 
   /// Hooks for getting an alias identifier alias for a given symbol, that is
   /// not necessarily a part of this dialect. The identifier is used in place of
   /// the symbol when printing textual IR. These aliases must not contain `.` or
-  /// end with a numeric digit([0-9]+). Returns success if an alias was
-  /// provided, failure otherwise.
-  virtual LogicalResult getAlias(Attribute attr, raw_ostream &os) const {
-    return failure();
+  /// end with a numeric digit([0-9]+).
+  virtual AliasResult getAlias(Attribute attr, raw_ostream &os) const {
+    return AliasResult::NoAlias;
   }
-  virtual LogicalResult getAlias(Type type, raw_ostream &os) const {
-    return failure();
+  virtual AliasResult getAlias(Type type, raw_ostream &os) const {
+    return AliasResult::NoAlias;
   }
 
   /// Get a special name to use when printing the given operation. See

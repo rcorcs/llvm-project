@@ -91,7 +91,7 @@ define void @store_alloca() {
 ; YAML-NEXT:   - String:          "\nStore size: "
 ; YAML-NEXT:   - StoreSize:       '4'
 ; YAML-NEXT:   - String:          ' bytes.'
-; YAML-NEXT:   - String:          "\nWritten Variables: "
+; YAML-NEXT:   - String:          "\n Written Variables: "
 ; YAML-NEXT:   - WVarName:        dst
 ; YAML-NEXT:   - String:          ' ('
 ; YAML-NEXT:   - WVarSize:        '4'
@@ -117,6 +117,19 @@ define void @store_alloca_gep() {
   %dst = alloca i32
   %gep = getelementptr i32, i32* %dst, i32 0
   store i32 0, i32* %gep, !annotation !0, !dbg !DILocation(scope: !4)
+  ret void
+}
+
+; Emit a remark that reports a store to an alloca through a GEP, with ptrtoint+inttoptr in the way.
+define void @store_alloca_gep_inttoptr() {
+; CHECK-NEXT: Store inserted by -ftrivial-auto-var-init.
+; CHECK-NEXT: Store size: 4 bytes.
+; CHECK-NEXT: Variables: dst (4 bytes).
+  %dst = alloca i32
+  %gep = getelementptr i32, i32* %dst, i32 0
+  %p2i = ptrtoint i32* %gep to i64
+  %i2p = inttoptr i64 %p2i to i32*
+  store i32 0, i32* %i2p, !annotation !0, !dbg !DILocation(scope: !4)
   ret void
 }
 

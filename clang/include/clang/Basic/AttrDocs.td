@@ -2559,17 +2559,33 @@ This attribute accepts a single parameter that must be one of the following:
   }];
 }
 
+def NoProfileInstrumentFunctionDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Use the ``no_profile_instrument_function`` attribute on a function declaration
+to denote that the compiler should not instrument the function with
+profile-related instrumentation, such as via the
+``-fprofile-generate`` / ``-fprofile-instr-generate`` /
+``-fcs-profile-generate`` / ``-fprofile-arcs`` flags.
+}];
+}
+
 def NoSanitizeDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
 Use the ``no_sanitize`` attribute on a function or a global variable
 declaration to specify that a particular instrumentation or set of
-instrumentations should not be applied. The attribute takes a list of
-string literals, which have the same meaning as values accepted by the
-``-fno-sanitize=`` flag. For example,
-``__attribute__((no_sanitize("address", "thread")))`` specifies that
-AddressSanitizer and ThreadSanitizer should not be applied to the
-function or variable.
+instrumentations should not be applied.
+
+The attribute takes a list of string literals with the following accepted
+values:
+* all values accepted by ``-fno-sanitize=``;
+* ``coverage``, to disable SanitizerCoverage instrumentation.
+
+For example, ``__attribute__((no_sanitize("address", "thread")))`` specifies
+that AddressSanitizer and ThreadSanitizer should not be applied to the function
+or variable. Using ``__attribute__((no_sanitize("coverage")))`` specifies that
+SanitizerCoverage should not be applied to the function.
 
 See :ref:`Controlling Code Generation <controlling-code-generation>` for a
 full list of supported sanitizer flags.
@@ -4511,7 +4527,8 @@ def SwiftContextDocs : Documentation {
   let Category = DocCatVariable;
   let Content = [{
 The ``swift_context`` attribute marks a parameter of a ``swiftcall``
-function as having the special context-parameter ABI treatment.
+or ``swiftasynccall`` function as having the special context-parameter
+ABI treatment.
 
 This treatment generally passes the context value in a special register
 which is normally callee-preserved.
@@ -4519,6 +4536,47 @@ which is normally callee-preserved.
 A ``swift_context`` parameter must either be the last parameter or must be
 followed by a ``swift_error_result`` parameter (which itself must always be
 the last parameter).
+
+A context parameter must have pointer or reference type.
+  }];
+}
+
+def SwiftAsyncCallDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``swiftasynccall`` attribute indicates that a function is
+compatible with the low-level conventions of Swift async functions,
+provided it declares the right formal arguments.
+
+In most respects, this is similar to the ``swiftcall`` attribute, except for
+the following:
+
+- A parameter may be marked ``swift_async_context``, ``swift_context``
+  or ``swift_indirect_result`` (with the same restrictions on parameter
+  ordering as ``swiftcall``) but the parameter attribute
+  ``swift_error_result`` is not permitted.
+
+- A ``swiftasynccall`` function must have return type ``void``.
+
+- Within a ``swiftasynccall`` function, a call to a ``swiftasynccall``
+  function that is the immediate operand of a ``return`` statement is
+  guaranteed to be performed as a tail call. This syntax is allowed even
+  in C as an extension (a call to a void-returning function cannot be a
+  return operand in standard C). If something in the calling function would
+  semantically be performed after a guaranteed tail call, such as the
+  non-trivial destruction of a local variable or temporary,
+  then the program is ill-formed.
+  }];
+}
+
+def SwiftAsyncContextDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``swift_async_context`` attribute marks a parameter of a ``swiftasynccall``
+function as having the special asynchronous context-parameter ABI treatment.
+
+If the function is not ``swiftasynccall``, this attribute only generates
+extended frame information.
 
 A context parameter must have pointer or reference type.
   }];
@@ -4563,7 +4621,8 @@ def SwiftIndirectResultDocs : Documentation {
   let Category = DocCatVariable;
   let Content = [{
 The ``swift_indirect_result`` attribute marks a parameter of a ``swiftcall``
-function as having the special indirect-result ABI treatment.
+or ``swiftasynccall`` function as having the special indirect-result ABI
+treatment.
 
 This treatment gives the parameter the target's normal indirect-result
 ABI treatment, which may involve passing it differently from an ordinary
@@ -5754,6 +5813,31 @@ once.
     for (size_t i = 0; i < count; ++i)
       data[i] = 0xFE;
   }
+  }];
+}
+
+def UsingIfExistsDocs : Documentation {
+  let Category = DocCatDecl;
+  let Content = [{
+The ``using_if_exists`` attribute applies to a using-declaration. It allows
+programmers to import a declaration that potentially does not exist, instead
+deferring any errors to the point of use. For instance:
+
+.. code-block:: c++
+
+  namespace empty_namespace {};
+  __attribute__((using_if_exists))
+  using empty_namespace::does_not_exist; // no error!
+
+  does_not_exist x; // error: use of unresolved 'using_if_exists'
+
+The C++ spelling of the attribte (`[[clang::using_if_exists]]`) is also
+supported as a clang extension, since ISO C++ doesn't support attributes in this
+position. If the entity referred to by the using-declaration is found by name
+lookup, the attribute has no effect. This attribute is useful for libraries
+(primarily, libc++) that wish to redeclare a set of declarations in another
+namespace, when the availability of those declarations is difficult or
+impossible to detect at compile time with the preprocessor.
   }];
 }
 

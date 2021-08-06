@@ -59,6 +59,7 @@
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/CodeGen/TargetOpcodes.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
+#include "llvm/Config/config.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Comdat.h"
 #include "llvm/IR/Constant.h"
@@ -297,11 +298,24 @@ bool AsmPrinter::doInitialization(Module &M) {
   // don't, this at least helps the user find where a global came from.
   if (MAI->hasSingleParameterDotFile()) {
     // .file "foo.c"
+
+    SmallString<128> FileName;
     if (MAI->hasBasenameOnlyForFileDirective())
-      OutStreamer->emitFileDirective(
-          llvm::sys::path::filename(M.getSourceFileName()));
+      FileName = llvm::sys::path::filename(M.getSourceFileName());
     else
-      OutStreamer->emitFileDirective(M.getSourceFileName());
+      FileName = M.getSourceFileName();
+    if (MAI->hasFourStringsDotFile()) {
+#ifdef PACKAGE_VENDOR
+      const char VerStr[] =
+          PACKAGE_VENDOR " " PACKAGE_NAME " version " PACKAGE_VERSION;
+#else
+      const char VerStr[] = PACKAGE_NAME " version " PACKAGE_VERSION;
+#endif
+      // TODO: Add timestamp and description.
+      OutStreamer->emitFileDirective(FileName, VerStr, "", "");
+    } else {
+      OutStreamer->emitFileDirective(FileName);
+    }
   }
 
   GCModuleInfo *MI = getAnalysisIfAvailable<GCModuleInfo>();
@@ -345,7 +359,7 @@ bool AsmPrinter::doInitialization(Module &M) {
   }
 
   if (M.getNamedMetadata(PseudoProbeDescMetadataName)) {
-    PP = new PseudoProbeHandler(this, &M);
+    PP = new PseudoProbeHandler(this);
     Handlers.emplace_back(std::unique_ptr<PseudoProbeHandler>(PP), PPTimerName,
                           PPTimerDescription, PPGroupName, PPGroupDescription);
   }
@@ -953,9 +967,9 @@ static bool emitDebugValueComment(const MachineInstr *MI, AsmPrinter &AP) {
     switch (Op.getType()) {
     case MachineOperand::MO_FPImmediate: {
       APFloat APF = APFloat(Op.getFPImm()->getValueAPF());
-      if (Op.getFPImm()->getType()->isFloatTy()) {
-        OS << (double)APF.convertToFloat();
-      } else if (Op.getFPImm()->getType()->isDoubleTy()) {
+      Type *ImmTy = Op.getFPImm()->getType();
+      if (ImmTy->isBFloatTy() || ImmTy->isHalfTy() || ImmTy->isFloatTy() ||
+          ImmTy->isDoubleTy()) {
         OS << APF.convertToDouble();
       } else {
         // There is no good way to print long double.  Convert a copy to
@@ -1313,6 +1327,10 @@ void AsmPrinter::emitFunctionBody() {
         // location, and a nearby DBG_VALUE created. We can safely ignore
         // the instruction reference.
         break;
+      case TargetOpcode::DBG_PHI:
+        // This instruction is only used to label a program point, it's purely
+        // meta information.
+        break;
       case TargetOpcode::DBG_LABEL:
         if (isVerbose()) {
           if (!emitDebugLabelComment(&MI, *this))
@@ -1327,6 +1345,10 @@ void AsmPrinter::emitFunctionBody() {
         break;
       case TargetOpcode::PSEUDO_PROBE:
         emitPseudoProbe(MI);
+        break;
+      case TargetOpcode::ARITH_FENCE:
+        if (isVerbose())
+          OutStreamer->emitRawComment("ARITH_FENCE");
         break;
       default:
         emitInstruction(&MI);
@@ -1353,11 +1375,9 @@ void AsmPrinter::emitFunctionBody() {
 
     // We must emit temporary symbol for the end of this basic block, if either
     // we have BBLabels enabled or if this basic blocks marks the end of a
-    // section (except the section containing the entry basic block as the end
-    // symbol for that section is CurrentFnEnd).
+    // section.
     if (MF->hasBBLabels() ||
-        (MAI->hasDotTypeDotSizeDirective() && MBB.isEndSection() &&
-         !MBB.sameSection(&MF->front())))
+        (MAI->hasDotTypeDotSizeDirective() && MBB.isEndSection()))
       OutStreamer->emitLabel(MBB.getEndSymbol());
 
     if (MBB.isEndSection()) {
@@ -1678,7 +1698,7 @@ void AsmPrinter::emitRemarksSection(remarks::RemarkStreamer &RS) {
   std::string Buf;
   raw_string_ostream OS(Buf);
   std::unique_ptr<remarks::MetaSerializer> MetaSerializer =
-      Filename ? RemarkSerializer.metaSerializer(OS, StringRef(*Filename))
+      Filename ? RemarkSerializer.metaSerializer(OS, Filename->str())
                : RemarkSerializer.metaSerializer(OS);
   MetaSerializer->emit();
 
@@ -1794,6 +1814,11 @@ bool AsmPrinter::doFinalization(Module &M) {
       }
     }
   }
+
+  // This needs to happen before emitting debug information since that can end
+  // arbitrary sections.
+  if (auto *TS = OutStreamer->getTargetStreamer())
+    TS->emitConstantPools();
 
   // Finalize debug and EH information.
   for (const HandlerInfo &HI : Handlers) {
@@ -2303,6 +2328,11 @@ void AsmPrinter::emitXXStructorList(const DataLayout &DL, const Constant *List,
   preprocessXXStructorList(DL, List, Structors);
   if (Structors.empty())
     return;
+
+  // Emit the structors in reverse order if we are using the .ctor/.dtor
+  // initialization scheme.
+  if (!TM.Options.UseInitArray)
+    std::reverse(Structors.begin(), Structors.end());
 
   const Align Align = DL.getPointerPrefAlignment();
   for (Structor &S : Structors) {

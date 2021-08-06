@@ -82,7 +82,6 @@
 #include <iterator>
 #include <map>
 #include <set>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -140,7 +139,7 @@ doPromotion(Function *F, SmallPtrSetImpl<Argument *> &ArgsToPromote,
        ++I, ++ArgNo) {
     if (ByValArgsToTransform.count(&*I)) {
       // Simple byval argument? Just add all the struct element types.
-      Type *AgTy = cast<PointerType>(I->getType())->getElementType();
+      Type *AgTy = I->getParamByValType();
       StructType *STy = cast<StructType>(AgTy);
       llvm::append_range(Params, STy->elements());
       ArgAttrVec.insert(ArgAttrVec.end(), STy->getNumElements(),
@@ -261,7 +260,7 @@ doPromotion(Function *F, SmallPtrSetImpl<Argument *> &ArgsToPromote,
         ArgAttrVec.push_back(CallPAL.getParamAttributes(ArgNo));
       } else if (ByValArgsToTransform.count(&*I)) {
         // Emit a GEP and load for each element of the struct.
-        Type *AgTy = cast<PointerType>(I->getType())->getElementType();
+        Type *AgTy = I->getParamByValType();
         StructType *STy = cast<StructType>(AgTy);
         Value *Idxs[2] = {
             ConstantInt::get(Type::getInt32Ty(F->getContext()), 0), nullptr};
@@ -388,7 +387,7 @@ doPromotion(Function *F, SmallPtrSetImpl<Argument *> &ArgsToPromote,
       Instruction *InsertPt = &NF->begin()->front();
 
       // Just add all the struct element types.
-      Type *AgTy = cast<PointerType>(I->getType())->getElementType();
+      Type *AgTy = I->getParamByValType();
       Align StructAlign = *I->getParamAlign();
       Value *TheAlloca = new AllocaInst(AgTy, DL.getAllocaAddrSpace(), nullptr,
                                         StructAlign, "", InsertPt);
@@ -1019,12 +1018,11 @@ PreservedAnalyses ArgumentPromotionPass::run(LazyCallGraph::SCC &C,
   do {
     LocalChange = false;
 
-    FunctionAnalysisManager &FAM =
-        AM.getResult<FunctionAnalysisManagerCGSCCProxy>(C, CG).getManager();
-
     for (LazyCallGraph::Node &N : C) {
       Function &OldF = N.getFunction();
 
+      FunctionAnalysisManager &FAM =
+          AM.getResult<FunctionAnalysisManagerCGSCCProxy>(C, CG).getManager();
       // FIXME: This lambda must only be used with this function. We should
       // skip the lambda and just get the AA results directly.
       auto AARGetter = [&](Function &F) -> AAResults & {
@@ -1047,13 +1045,6 @@ PreservedAnalyses ArgumentPromotionPass::run(LazyCallGraph::SCC &C,
       C.getOuterRefSCC().replaceNodeFunction(N, *NewF);
       FAM.clear(OldF, OldF.getName());
       OldF.eraseFromParent();
-
-      PreservedAnalyses FuncPA;
-      FuncPA.preserveSet<CFGAnalyses>();
-      for (auto *U : NewF->users()) {
-        auto *UserF = cast<CallBase>(U)->getParent()->getParent();
-        FAM.invalidate(*UserF, FuncPA);
-      }
     }
 
     Changed |= LocalChange;
@@ -1062,10 +1053,7 @@ PreservedAnalyses ArgumentPromotionPass::run(LazyCallGraph::SCC &C,
   if (!Changed)
     return PreservedAnalyses::all();
 
-  PreservedAnalyses PA;
-  PA.preserve<FunctionAnalysisManagerCGSCCProxy>();
-  PA.preserveSet<AllAnalysesOn<Function>>();
-  return PA;
+  return PreservedAnalyses::none();
 }
 
 namespace {

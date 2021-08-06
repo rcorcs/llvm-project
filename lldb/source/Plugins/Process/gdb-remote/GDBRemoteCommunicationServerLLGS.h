@@ -216,6 +216,10 @@ protected:
 
   PacketResult Handle_g(StringExtractorGDBRemote &packet);
 
+  PacketResult Handle_qMemTags(StringExtractorGDBRemote &packet);
+
+  PacketResult Handle_QMemTags(StringExtractorGDBRemote &packet);
+
   void SetCurrentThreadID(lldb::tid_t tid);
 
   lldb::tid_t GetCurrentThreadID() const;

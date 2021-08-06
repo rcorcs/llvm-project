@@ -132,7 +132,7 @@ public:
   typedef GlobalQuarantine<QuarantineCallback, void> QuarantineT;
   typedef typename QuarantineT::CacheT QuarantineCacheT;
 
-  void initLinkerInitialized() {
+  void init() {
     performSanityChecks();
 
     // Check if hardware CRC32 is supported in the binary and by the platform,
@@ -166,11 +166,10 @@ public:
     QuarantineMaxChunkSize =
         static_cast<u32>(getFlags()->quarantine_max_chunk_size);
 
-    Stats.initLinkerInitialized();
+    Stats.init();
     const s32 ReleaseToOsIntervalMs = getFlags()->release_to_os_interval_ms;
-    Primary.initLinkerInitialized(ReleaseToOsIntervalMs);
-    Secondary.initLinkerInitialized(&Stats, ReleaseToOsIntervalMs);
-
+    Primary.init(ReleaseToOsIntervalMs);
+    Secondary.init(&Stats, ReleaseToOsIntervalMs);
     Quarantine.init(
         static_cast<uptr>(getFlags()->quarantine_size_kb << 10),
         static_cast<uptr>(getFlags()->thread_local_quarantine_size_kb << 10));
@@ -210,11 +209,10 @@ public:
     TSDRegistry.initThreadMaybe(this, MinimalInit);
   }
 
-  void reset() { memset(this, 0, sizeof(*this)); }
-
   void unmapTestOnly() {
-    TSDRegistry.unmapTestOnly();
+    TSDRegistry.unmapTestOnly(this);
     Primary.unmapTestOnly();
+    Secondary.unmapTestOnly();
 #ifdef GWP_ASAN_HOOKS
     if (getFlags()->GWP_ASAN_InstallSignalHandlers)
       gwp_asan::segv_handler::uninstallSignalHandlers();
@@ -225,9 +223,7 @@ public:
   TSDRegistryT *getTSDRegistry() { return &TSDRegistry; }
 
   // The Cache must be provided zero-initialized.
-  void initCache(CacheT *Cache) {
-    Cache->initLinkerInitialized(&Stats, &Primary);
-  }
+  void initCache(CacheT *Cache) { Cache->init(&Stats, &Primary); }
 
   // Release the resources used by a TSD, which involves:
   // - draining the local quarantine cache to the global quarantine;
@@ -573,9 +569,6 @@ public:
       reportAllocationSizeTooBig(NewSize, 0, MaxAllowedMallocSize);
     }
 
-    void *OldTaggedPtr = OldPtr;
-    OldPtr = getHeaderTaggedPointer(OldPtr);
-
     // The following cases are handled by the C wrappers.
     DCHECK_NE(OldPtr, nullptr);
     DCHECK_NE(NewSize, 0);
@@ -594,6 +587,9 @@ public:
       return NewPtr;
     }
 #endif // GWP_ASAN_HOOKS
+
+    void *OldTaggedPtr = OldPtr;
+    OldPtr = getHeaderTaggedPointer(OldPtr);
 
     if (UNLIKELY(!isAligned(reinterpret_cast<uptr>(OldPtr), MinAlignment)))
       reportMisalignedPointer(AllocatorAction::Reallocating, OldPtr);
@@ -643,7 +639,7 @@ public:
           if (ClassId) {
             resizeTaggedChunk(reinterpret_cast<uptr>(OldTaggedPtr) + OldSize,
                               reinterpret_cast<uptr>(OldTaggedPtr) + NewSize,
-                              NewSize, BlockEnd);
+                              NewSize, untagPointer(BlockEnd));
             storePrimaryAllocationStackMaybe(Options, OldPtr);
           } else {
             storeSecondaryAllocationStackMaybe(Options, OldPtr, NewSize);
@@ -698,7 +694,7 @@ public:
   // function. This can be called with a null buffer or zero size for buffer
   // sizing purposes.
   uptr getStats(char *Buffer, uptr Size) {
-    ScopedString Str(1024);
+    ScopedString Str;
     disable();
     const uptr Length = getStats(&Str) + 1;
     enable();
@@ -712,7 +708,7 @@ public:
   }
 
   void printStats() {
-    ScopedString Str(1024);
+    ScopedString Str;
     disable();
     getStats(&Str);
     enable();
@@ -731,6 +727,8 @@ public:
   void iterateOverChunks(uptr Base, uptr Size, iterate_callback Callback,
                          void *Arg) {
     initThreadMaybe();
+    if (archSupportsMemoryTagging())
+      Base = untagPointer(Base);
     const uptr From = Base;
     const uptr To = Base + Size;
     bool MayHaveTaggedPrimary = allocatorSupportsMemoryTagging<Params>() &&
@@ -1156,6 +1154,7 @@ private:
   // address tags against chunks. To allow matching in this case we store the
   // address tag in the first byte of the chunk.
   void storeEndMarker(uptr End, uptr Size, uptr BlockEnd) {
+    DCHECK_EQ(BlockEnd, untagPointer(BlockEnd));
     uptr UntaggedEnd = untagPointer(End);
     if (UntaggedEnd != BlockEnd) {
       storeTag(UntaggedEnd);

@@ -3,17 +3,31 @@
 # ORC runtime library implementation files.
 set(ORC_SOURCES
   extensible_rtti.cpp
+  log_error_to_stderr.cpp
+  macho_platform.cpp
+  run_program_wrapper.cpp
   )
 
 # Implementation files for all ORC architectures.
 set(x86_64_SOURCES
 # x86-64 specific assembly files will go here.
+  macho_tlv.x86-64.S
 )
 
 set(ORC_IMPL_HEADERS
 # Implementation headers will go here.
+  adt.h
+  c_api.h
+  common.h
+  compiler.h
+  endianness.h
   error.h
+  executor_address.h
   extensible_rtti.h
+  macho_platform.h
+  simple_packed_serialization.h
+  stl_extras.h
+  wrapper_function_utils.h
 )
 
 # Create list of all source files for

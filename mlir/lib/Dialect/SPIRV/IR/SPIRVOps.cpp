@@ -1650,6 +1650,54 @@ spirv::ConstantOp spirv::ConstantOp::getOne(Type type, Location loc,
   llvm_unreachable("unimplemented types for ConstantOp::getOne()");
 }
 
+void mlir::spirv::ConstantOp::getAsmResultNames(
+    llvm::function_ref<void(mlir::Value, llvm::StringRef)> setNameFn) {
+  Type type = getType();
+
+  SmallString<32> specialNameBuffer;
+  llvm::raw_svector_ostream specialName(specialNameBuffer);
+  specialName << "cst";
+
+  IntegerType intTy = type.dyn_cast<IntegerType>();
+
+  if (IntegerAttr intCst = value().dyn_cast<IntegerAttr>()) {
+    if (intTy && intTy.getWidth() == 1) {
+      return setNameFn(getResult(), (intCst.getInt() ? "true" : "false"));
+    }
+
+    if (intTy.isSignless()) {
+      specialName << intCst.getInt();
+    } else {
+      specialName << intCst.getSInt();
+    }
+  }
+
+  if (intTy || type.isa<FloatType>()) {
+    specialName << '_' << type;
+  }
+
+  if (auto vecType = type.dyn_cast<VectorType>()) {
+    specialName << "_vec_";
+    specialName << vecType.getDimSize(0);
+
+    Type elementType = vecType.getElementType();
+
+    if (elementType.isa<IntegerType>() || elementType.isa<FloatType>()) {
+      specialName << "x" << elementType;
+    }
+  }
+
+  setNameFn(getResult(), specialName.str());
+}
+
+void mlir::spirv::AddressOfOp::getAsmResultNames(
+    llvm::function_ref<void(mlir::Value, llvm::StringRef)> setNameFn) {
+  SmallString<32> specialNameBuffer;
+  llvm::raw_svector_ostream specialName(specialNameBuffer);
+  specialName << variable() << "_addr";
+  setNameFn(getResult(), specialName.str());
+}
+
 //===----------------------------------------------------------------------===//
 // spv.EntryPoint
 //===----------------------------------------------------------------------===//
@@ -2481,7 +2529,8 @@ static LogicalResult verify(spirv::MergeOp mergeOp) {
 
 void spirv::ModuleOp::build(OpBuilder &builder, OperationState &state,
                             Optional<StringRef> name) {
-  ensureTerminator(*state.addRegion(), builder, state.location);
+  OpBuilder::InsertionGuard guard(builder);
+  builder.createBlock(state.addRegion());
   if (name) {
     state.attributes.append(mlir::SymbolTable::getSymbolAttrName(),
                             builder.getStringAttr(*name));
@@ -2491,17 +2540,20 @@ void spirv::ModuleOp::build(OpBuilder &builder, OperationState &state,
 void spirv::ModuleOp::build(OpBuilder &builder, OperationState &state,
                             spirv::AddressingModel addressingModel,
                             spirv::MemoryModel memoryModel,
+                            Optional<VerCapExtAttr> vceTriple,
                             Optional<StringRef> name) {
   state.addAttribute(
       "addressing_model",
       builder.getI32IntegerAttr(static_cast<int32_t>(addressingModel)));
   state.addAttribute("memory_model", builder.getI32IntegerAttr(
                                          static_cast<int32_t>(memoryModel)));
-  ensureTerminator(*state.addRegion(), builder, state.location);
-  if (name) {
-    state.attributes.append(mlir::SymbolTable::getSymbolAttrName(),
-                            builder.getStringAttr(*name));
-  }
+  OpBuilder::InsertionGuard guard(builder);
+  builder.createBlock(state.addRegion());
+  if (vceTriple)
+    state.addAttribute(getVCETripleAttrName(), *vceTriple);
+  if (name)
+    state.addAttribute(mlir::SymbolTable::getSymbolAttrName(),
+                       builder.getStringAttr(*name));
 }
 
 static ParseResult parseModuleOp(OpAsmParser &parser, OperationState &state) {
@@ -2533,7 +2585,10 @@ static ParseResult parseModuleOp(OpAsmParser &parser, OperationState &state) {
   if (parser.parseRegion(*body, /*arguments=*/{}, /*argTypes=*/{}))
     return failure();
 
-  spirv::ModuleOp::ensureTerminator(*body, parser.getBuilder(), state.location);
+  // Make sure we have at least one block.
+  if (body->empty())
+    body->push_back(new Block());
+
   return success();
 }
 
@@ -2560,8 +2615,7 @@ static void print(spirv::ModuleOp moduleOp, OpAsmPrinter &printer) {
   }
 
   printer.printOptionalAttrDictWithKeyword(moduleOp->getAttrs(), elidedAttrs);
-  printer.printRegion(moduleOp.body(), /*printEntryBlockArgs=*/false,
-                      /*printBlockTerminators=*/false);
+  printer.printRegion(moduleOp.getRegion());
 }
 
 static LogicalResult verify(spirv::ModuleOp moduleOp) {
@@ -2571,7 +2625,7 @@ static LogicalResult verify(spirv::ModuleOp moduleOp) {
       entryPoints;
   SymbolTable table(moduleOp);
 
-  for (auto &op : moduleOp.getBlock()) {
+  for (auto &op : *moduleOp.getBody()) {
     if (op.getDialect() != dialect)
       return op.emitError("'spv.module' can only contain spv.* ops");
 

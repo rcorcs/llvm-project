@@ -474,7 +474,7 @@ registerPollyScalarOptimizerLatePasses(const llvm::PassManagerBuilder &Builder,
 ///                     the analysis passes are added, skipping Polly itself.
 ///                     The IR may still be modified.
 static void buildCommonPollyPipeline(FunctionPassManager &PM,
-                                     PassBuilder::OptimizationLevel Level,
+                                     OptimizationLevel Level,
                                      bool EnableForOpt) {
   PassBuilder PB;
   ScopPassManager SPM;
@@ -574,7 +574,7 @@ static void buildCommonPollyPipeline(FunctionPassManager &PM,
 }
 
 static void buildEarlyPollyPipeline(ModulePassManager &MPM,
-                                    PassBuilder::OptimizationLevel Level) {
+                                    OptimizationLevel Level) {
   bool EnableForOpt =
       shouldEnablePollyForOptimization() && Level.isOptimizingForSpeed();
   if (!shouldEnablePollyForDiagnostic() && !EnableForOpt)
@@ -603,7 +603,7 @@ static void buildEarlyPollyPipeline(ModulePassManager &MPM,
 }
 
 static void buildLatePollyPipeline(FunctionPassManager &PM,
-                                   PassBuilder::OptimizationLevel Level) {
+                                   OptimizationLevel Level) {
   bool EnableForOpt =
       shouldEnablePollyForOptimization() && Level.isOptimizingForSpeed();
   if (!shouldEnablePollyForDiagnostic() && !EnableForOpt)
@@ -830,8 +830,6 @@ void registerPollyPasses(PassBuilder &PB) {
   case POSITION_BEFORE_VECTORIZER:
     PB.registerVectorizerStartEPCallback(buildLatePollyPipeline);
     break;
-  default:
-    llvm_unreachable("Unknown -polly-position option");
   }
 }
 } // namespace polly

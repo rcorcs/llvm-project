@@ -47,6 +47,8 @@ option(COMPILER_RT_BUILD_XRAY_NO_PREINIT "Build xray with no preinit patching" O
 mark_as_advanced(COMPILER_RT_BUILD_XRAY_NO_PREINIT)
 option(COMPILER_RT_BUILD_ORC "Build ORC runtime" ON)
 mark_as_advanced(COMPILER_RT_BUILD_ORC)
+option(COMPILER_RT_BUILD_GWP_ASAN "Build GWP-ASan, and link it into SCUDO" ON)
+mark_as_advanced(COMPILER_RT_BUILD_GWP_ASAN)
 
 set(COMPILER_RT_ASAN_SHADOW_SCALE ""
     CACHE STRING "Override the shadow scale to be used in ASan runtime")
@@ -67,8 +69,12 @@ if (NOT COMPILER_RT_ASAN_SHADOW_SCALE STREQUAL "")
       -D${COMPILER_RT_ASAN_SHADOW_SCALE_DEFINITION})
 endif()
 
-set(COMPILER_RT_HWASAN_WITH_INTERCEPTORS ON CACHE BOOL
-    "Enable libc interceptors in HWASan (testing mode)")
+if(FUCHSIA)
+  set(COMPILER_RT_HWASAN_WITH_INTERCEPTORS_DEFAULT OFF)
+else()
+  set(COMPILER_RT_HWASAN_WITH_INTERCEPTORS_DEFAULT ON)
+endif()
+set(COMPILER_RT_HWASAN_WITH_INTERCEPTORS ${COMPILER_RT_HWASAN_WITH_INTERCEPTORS_DEFAULT} CACHE BOOL "Enable libc interceptors in HWASan (testing mode)")
 
 set(COMPILER_RT_BAREMETAL_BUILD OFF CACHE BOOL
   "Build for a bare-metal target.")
@@ -274,8 +280,8 @@ if(NOT COMPILER_RT_HAS_FUNC_SYMBOL)
   add_definitions(-D__func__=__FUNCTION__)
 endif()
 
-# Provide some common commmandline flags for Sanitizer runtimes.
-if("${ANDROID_API_LEVEL}" GREATER_EQUAL 28)
+# Provide some common commandline flags for Sanitizer runtimes.
+if("${ANDROID_API_LEVEL}" GREATER_EQUAL 29)
   list(APPEND SANITIZER_COMMON_CFLAGS -fno-emulated-tls)
   string(APPEND COMPILER_RT_TEST_COMPILER_CFLAGS " -fno-emulated-tls")
 endif()
@@ -355,6 +361,17 @@ endif()
 
 append_list_if(COMPILER_RT_DEBUG -DSANITIZER_DEBUG=1 SANITIZER_COMMON_CFLAGS)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
+  list(APPEND THREAD_SAFETY_FLAGS
+      "-Werror=thread-safety"
+      "-Werror=thread-safety-reference"
+      "-Werror=thread-safety-beta"
+  )
+  list(APPEND SANITIZER_COMMON_CFLAGS ${THREAD_SAFETY_FLAGS})
+  string(REPLACE ";" " " thread_safety_flags_space_sep "${THREAD_SAFETY_FLAGS}")
+  string(APPEND COMPILER_RT_TEST_COMPILER_CFLAGS " ${thread_safety_flags_space_sep}")
+endif()
+
 # If we're using MSVC,
 # always respect the optimization flags set by CMAKE_BUILD_TYPE instead.
 if (NOT MSVC)
@@ -398,6 +415,13 @@ if(MSVC)
     string(REGEX REPLACE "(^| )/Z[i7I]($| )" " /Z7 "
            "${var_to_update}" "${${var_to_update}}")
   endforeach()
+elseif(APPLE)
+  # On Apple platforms use full debug info (i.e. not `-gline-tables-only`)
+  # for all build types so that the runtime can be debugged.
+  if(NOT COMPILER_RT_HAS_G_FLAG)
+    message(FATAL_ERROR "-g is not supported by host compiler")
+  endif()
+  list(APPEND SANITIZER_COMMON_CFLAGS -g)
 elseif(COMPILER_RT_HAS_GLINE_TABLES_ONLY_FLAG AND NOT COMPILER_RT_DEBUG)
   list(APPEND SANITIZER_COMMON_CFLAGS -gline-tables-only)
 elseif(COMPILER_RT_HAS_G_FLAG)
@@ -437,10 +461,18 @@ else()
 endif()
 
 append_list_if(COMPILER_RT_HAS_LIBC c SANITIZER_COMMON_LINK_LIBS)
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Fuchsia")
+  list(APPEND SANITIZER_COMMON_LINK_LIBS zircon)
+endif()
 
 if("${CMAKE_SYSTEM_NAME}" STREQUAL "Fuchsia")
-  list(APPEND SANITIZER_COMMON_LINK_FLAGS -Wl,-z,defs,-z,now,-z,relro)
-  list(APPEND SANITIZER_COMMON_LINK_LIBS zircon)
+  set(SANITIZER_NO_UNDEFINED_SYMBOLS_DEFAULT ON)
+else()
+  set(SANITIZER_NO_UNDEFINED_SYMBOLS_DEFAULT OFF)
+endif()
+option(SANITIZER_NO_UNDEFINED_SYMBOLS "Report error on unresolved symbol references" ${SANITIZER_NO_UNDEFINED_SYMBOLS_DEFAULT})
+if (SANITIZER_NO_UNDEFINED_SYMBOLS)
+  list(APPEND SANITIZER_COMMON_LINK_FLAGS -Wl,-z,defs)
 endif()
 
 # TODO: COMPILER_RT_COMMON_CFLAGS and COMPILER_RT_COMMON_LINK_FLAGS are
@@ -514,6 +546,14 @@ set(COMPILER_RT_GTEST_CFLAGS
   -I${COMPILER_RT_GTEST_PATH}/include
   -I${COMPILER_RT_GTEST_PATH}
 )
+if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+  # FreeBSD has its pthread functions marked with thread safety annotations, but
+  # googletest is not compatible with such annotations. Disable the thread
+  # safety warnings-as-errors until googletest has been fixed.
+  list(APPEND NO_THREAD_SAFETY_FLAGS ${THREAD_SAFETY_FLAGS})
+  list(TRANSFORM NO_THREAD_SAFETY_FLAGS REPLACE "error=" "no-")
+  list(APPEND COMPILER_RT_GTEST_CFLAGS ${NO_THREAD_SAFETY_FLAGS})
+endif()
 
 # Mocking support.
 set(COMPILER_RT_GMOCK_PATH ${LLVM_MAIN_SRC_DIR}/utils/unittest/googlemock)
@@ -525,6 +565,9 @@ set(COMPILER_RT_GMOCK_CFLAGS
   -I${COMPILER_RT_GMOCK_PATH}
 )
 
+if(COMPILER_RT_HAS_G_FLAG)
+  list(APPEND COMPILER_RT_UNITTEST_CFLAGS -g)
+endif()
 append_list_if(COMPILER_RT_DEBUG -DSANITIZER_DEBUG=1 COMPILER_RT_UNITTEST_CFLAGS)
 append_list_if(COMPILER_RT_HAS_WCOVERED_SWITCH_DEFAULT_FLAG -Wno-covered-switch-default COMPILER_RT_UNITTEST_CFLAGS)
 append_list_if(COMPILER_RT_HAS_WSUGGEST_OVERRIDE_FLAG -Wno-suggest-override COMPILER_RT_UNITTEST_CFLAGS)

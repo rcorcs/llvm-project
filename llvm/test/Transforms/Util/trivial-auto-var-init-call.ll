@@ -342,7 +342,7 @@ define void @known_call_with_size_alloca(i8* %src) {
 ; YAML-NEXT:   - String:          ' Memory operation size: '
 ; YAML-NEXT:   - StoreSize:       '1'
 ; YAML-NEXT:   - String:          ' bytes.'
-; YAML-NEXT:   - String:          "\nWritten Variables: "
+; YAML-NEXT:   - String:          "\n Written Variables: "
 ; YAML-NEXT:   - WVarName:        dst
 ; YAML-NEXT:   - String:          ' ('
 ; YAML-NEXT:   - WVarSize:        '1'
@@ -374,7 +374,7 @@ define void @known_call_with_size_alloca(i8* %src) {
 ; YAML-NEXT:   - String:          ' Memory operation size: '
 ; YAML-NEXT:   - StoreSize:       '1'
 ; YAML-NEXT:   - String:          ' bytes.'
-; YAML-NEXT:   - String:          "\nWritten Variables: "
+; YAML-NEXT:   - String:          "\n Written Variables: "
 ; YAML-NEXT:   - WVarName:        dst
 ; YAML-NEXT:   - String:          ' ('
 ; YAML-NEXT:   - WVarSize:        '1'
@@ -405,7 +405,7 @@ define void @known_call_with_size_alloca(i8* %src) {
 ; YAML-NEXT:   - String:          ' Memory operation size: '
 ; YAML-NEXT:   - StoreSize:       '1'
 ; YAML-NEXT:   - String:          ' bytes.'
-; YAML-NEXT:   - String:          "\nWritten Variables: "
+; YAML-NEXT:   - String:          "\n Written Variables: "
 ; YAML-NEXT:   - WVarName:        dst
 ; YAML-NEXT:   - String:          ' ('
 ; YAML-NEXT:   - WVarSize:        '1'
@@ -436,7 +436,7 @@ define void @known_call_with_size_alloca(i8* %src) {
 ; YAML-NEXT:   - String:          ' Memory operation size: '
 ; YAML-NEXT:   - StoreSize:       '1'
 ; YAML-NEXT:   - String:          ' bytes.'
-; YAML-NEXT:   - String:          "\nWritten Variables: "
+; YAML-NEXT:   - String:          "\n Written Variables: "
 ; YAML-NEXT:   - WVarName:        dst
 ; YAML-NEXT:   - String:          ' ('
 ; YAML-NEXT:   - WVarSize:        '1'

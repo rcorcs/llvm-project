@@ -1873,20 +1873,20 @@ TEST_STRTO_FLOAT_LOC(__wcstold_l, wchar_t, L)
 #endif  // __GLIBC__
 
 TEST(MemorySanitizer, modf) {
-  double x, y;
-  x = modf(2.1, &y);
+  double y;
+  modf(2.1, &y);
   EXPECT_NOT_POISONED(y);
 }
 
 TEST(MemorySanitizer, modff) {
-  float x, y;
-  x = modff(2.1, &y);
+  float y;
+  modff(2.1, &y);
   EXPECT_NOT_POISONED(y);
 }
 
 TEST(MemorySanitizer, modfl) {
-  long double x, y;
-  x = modfl(2.1, &y);
+  long double y;
+  modfl(2.1, &y);
   EXPECT_NOT_POISONED(y);
 }
 
@@ -4318,8 +4318,8 @@ TEST(MemorySanitizerOrigins, InitializedStoreDoesNotChangeOrigin) {
 template<class T, class BinaryOp>
 ALWAYS_INLINE
 void BinaryOpOriginTest(BinaryOp op) {
-  U4 ox = rand();  //NOLINT
-  U4 oy = rand();  //NOLINT
+  U4 ox = rand();
+  U4 oy = rand();
   T *x = GetPoisonedO<T>(0, ox, 0);
   T *y = GetPoisonedO<T>(1, oy, 0);
   T *z = GetPoisonedO<T>(2, 0, 0);

@@ -22,6 +22,7 @@ MCAsmInfoXCOFF::MCAsmInfoXCOFF() {
   IsLittleEndian = false;
   HasVisibilityOnlyWithLinkage = true;
   HasBasenameOnlyForFileDirective = false;
+  HasFourStringsDotFile = true;
 
   // For XCOFF, string constant consists of any number of characters enclosed in
   // "" (double quotation marks).
@@ -40,6 +41,7 @@ MCAsmInfoXCOFF::MCAsmInfoXCOFF() {
   AsciiDirective = nullptr; // not supported
   AscizDirective = nullptr; // not supported
   ByteListDirective = "\t.byte\t";
+  PlainStringDirective = "\t.string\t";
   CharacterLiteralSyntax = ACLS_SingleQuotePrefix;
 
   // Use .vbyte for data definition to avoid directives that apply an implicit
@@ -51,6 +53,7 @@ MCAsmInfoXCOFF::MCAsmInfoXCOFF() {
   LCOMMDirectiveAlignmentType = LCOMM::Log2Alignment;
   HasDotTypeDotSizeDirective = false;
   UseIntegratedAssembler = false;
+  ParseInlineAsmUsingAsmParser = true;
   NeedsFunctionDescriptors = true;
 
   ExceptionsType = ExceptionHandling::AIX;

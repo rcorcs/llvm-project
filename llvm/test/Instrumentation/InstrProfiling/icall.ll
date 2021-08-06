@@ -44,7 +44,7 @@ declare void @llvm.instrprof.value.profile(i8*, i64, i64, i32, i32) #0
 attributes #0 = { nounwind }
 
 ; STATIC: @__profvp_foo = private global [1 x i64] zeroinitializer, section "{{[^"]+}}"
-; STATIC: @__profvp_bar = private global [1 x i64] zeroinitializer, section "{{[^"]+}}", comdat($__profd_bar)
+; STATIC: @__profvp_bar = private global [1 x i64] zeroinitializer, section "{{[^"]+}}", comdat($__profc_bar)
 ; STATIC: @__llvm_prf_vnodes
 
 ; DYN-NOT: @__profvp_foo
@@ -56,9 +56,9 @@ attributes #0 = { nounwind }
 ; STATIC-SAME:   @__llvm_prf_vnodes
 ; STATIC-SAME:   @__llvm_prf_nm
 
-; STATIC: call void @__llvm_profile_instrument_target(i64 %3, i8* bitcast ({ i64, i64, i64*, i8*, i8*, i32, [2 x i16] }* @__profd_foo to i8*), i32 0)
-; STATIC-EXT: call void @__llvm_profile_instrument_target(i64 %3, i8* bitcast ({ i64, i64, i64*, i8*, i8*, i32, [2 x i16] }* @__profd_foo to i8*), i32 zeroext 0)
-; STATIC-SEXT: call void @__llvm_profile_instrument_target(i64 %3, i8* bitcast ({ i64, i64, i64*, i8*, i8*, i32, [2 x i16] }* @__profd_foo to i8*), i32 signext 0)
+; STATIC: call void @__llvm_profile_instrument_target(i64 %3, i8* bitcast ({ i64, i64, i64, i8*, i8*, i32, [2 x i16] }* @__profd_foo to i8*), i32 0)
+; STATIC-EXT: call void @__llvm_profile_instrument_target(i64 %3, i8* bitcast ({ i64, i64, i64, i8*, i8*, i32, [2 x i16] }* @__profd_foo to i8*), i32 zeroext 0)
+; STATIC-SEXT: call void @__llvm_profile_instrument_target(i64 %3, i8* bitcast ({ i64, i64, i64, i8*, i8*, i32, [2 x i16] }* @__profd_foo to i8*), i32 signext 0)
 
 ; STATIC: declare void @__llvm_profile_instrument_target(i64, i8*, i32)
 ; STATIC-EXT: declare void @__llvm_profile_instrument_target(i64, i8*, i32 zeroext)

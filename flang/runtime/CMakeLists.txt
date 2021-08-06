@@ -35,10 +35,13 @@ add_flang_library(FortranRuntime
   allocatable.cpp
   buffer.cpp
   complex-reduction.c
+  copy.cpp
   character.cpp
   connection.cpp
   derived.cpp
+  derived-api.cpp
   descriptor.cpp
+  descriptor-io.cpp
   dot-product.cpp
   edit-input.cpp
   edit-output.cpp
@@ -60,14 +63,17 @@ add_flang_library(FortranRuntime
   numeric.cpp
   random.cpp
   reduction.cpp
+  pointer.cpp
   product.cpp
   stat.cpp
   stop.cpp
   sum.cpp
   terminator.cpp
+  time-intrinsic.cpp
   tools.cpp
   transformational.cpp
   type-code.cpp
+  type-info.cpp
   unit.cpp
   unit-map.cpp
 

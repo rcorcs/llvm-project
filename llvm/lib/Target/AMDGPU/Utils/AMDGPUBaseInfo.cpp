@@ -1344,6 +1344,17 @@ unsigned getInitialPSInputAddr(const Function &F) {
   return getIntegerAttribute(F, "InitialPSInputAddr", 0);
 }
 
+bool getHasColorExport(const Function &F) {
+  // As a safe default always respond as if PS has color exports.
+  return getIntegerAttribute(
+             F, "amdgpu-color-export",
+             F.getCallingConv() == CallingConv::AMDGPU_PS ? 1 : 0) != 0;
+}
+
+bool getHasDepthExport(const Function &F) {
+  return getIntegerAttribute(F, "amdgpu-depth-export", 0) != 0;
+}
+
 bool isShader(CallingConv::ID cc) {
   switch(cc) {
     case CallingConv::AMDGPU_VS:
@@ -1445,6 +1456,10 @@ bool isGFX10Plus(const MCSubtargetInfo &STI) { return isGFX10(STI); }
 
 bool isGCN3Encoding(const MCSubtargetInfo &STI) {
   return STI.getFeatureBits()[AMDGPU::FeatureGCN3Encoding];
+}
+
+bool isGFX10_AEncoding(const MCSubtargetInfo &STI) {
+  return STI.getFeatureBits()[AMDGPU::FeatureGFX10_AEncoding];
 }
 
 bool isGFX10_BEncoding(const MCSubtargetInfo &STI) {
@@ -1646,6 +1661,13 @@ unsigned getRegBitWidth(unsigned RCID) {
   case AMDGPU::VReg_192_Align2RegClassID:
   case AMDGPU::AReg_192_Align2RegClassID:
     return 192;
+  case AMDGPU::SGPR_224RegClassID:
+  case AMDGPU::SReg_224RegClassID:
+  case AMDGPU::VReg_224RegClassID:
+  case AMDGPU::AReg_224RegClassID:
+  case AMDGPU::VReg_224_Align2RegClassID:
+  case AMDGPU::AReg_224_Align2RegClassID:
+    return 224;
   case AMDGPU::SGPR_256RegClassID:
   case AMDGPU::SReg_256RegClassID:
   case AMDGPU::VReg_256RegClassID:

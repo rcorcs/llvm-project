@@ -705,21 +705,31 @@ defm VLD1d16Twb : VLD1D3WB<{0,1,0,?}, "16", addrmode6align64>;
 defm VLD1d32Twb : VLD1D3WB<{1,0,0,?}, "32", addrmode6align64>;
 defm VLD1d64Twb : VLD1D3WB<{1,1,0,?}, "64", addrmode6align64>;
 
-def VLD1d8TPseudo  : VLDQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1d16TPseudo : VLDQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1d32TPseudo : VLDQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1d64TPseudo : VLDQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1d64TPseudoWB_fixed : VLDQQWBfixedPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d8TPseudo             : VLDQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d8TPseudoWB_fixed     : VLDQQWBfixedPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d8TPseudoWB_register  : VLDQQWBregisterPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d16TPseudo            : VLDQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d16TPseudoWB_fixed    : VLDQQWBfixedPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d16TPseudoWB_register : VLDQQWBregisterPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d32TPseudo            : VLDQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d32TPseudoWB_fixed    : VLDQQWBfixedPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d32TPseudoWB_register : VLDQQWBregisterPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d64TPseudo            : VLDQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1d64TPseudoWB_fixed    : VLDQQWBfixedPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
 def VLD1d64TPseudoWB_register : VLDQQWBregisterPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
 
-def VLD1q8HighTPseudo     : VLDQQQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1q8LowTPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1q16HighTPseudo    : VLDQQQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1q16LowTPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1q32HighTPseudo    : VLDQQQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1q32LowTPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1q64HighTPseudo    : VLDQQQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
-def VLD1q64LowTPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q8HighTPseudo      : VLDQQQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q8HighTPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q8LowTPseudo_UPD   : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q16HighTPseudo     : VLDQQQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q16HighTPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q16LowTPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q32HighTPseudo     : VLDQQQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q32HighTPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q32LowTPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q64HighTPseudo     : VLDQQQQPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q64HighTPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
+def VLD1q64LowTPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x3>, Sched<[WriteVLD3]>;
 
 // ...with 4 registers
 class VLD1D4<bits<4> op7_4, string Dt, Operand AddrMode>
@@ -758,21 +768,31 @@ defm VLD1d16Qwb  : VLD1D4WB<{0,1,?,?}, "16", addrmode6align64or128or256>;
 defm VLD1d32Qwb  : VLD1D4WB<{1,0,?,?}, "32", addrmode6align64or128or256>;
 defm VLD1d64Qwb  : VLD1D4WB<{1,1,?,?}, "64", addrmode6align64or128or256>;
 
-def VLD1d8QPseudo  : VLDQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1d16QPseudo : VLDQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1d32QPseudo : VLDQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1d64QPseudo : VLDQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1d64QPseudoWB_fixed : VLDQQWBfixedPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d8QPseudo             : VLDQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d8QPseudoWB_fixed     : VLDQQWBfixedPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d8QPseudoWB_register  : VLDQQWBregisterPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d16QPseudo            : VLDQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d16QPseudoWB_fixed    : VLDQQWBfixedPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d16QPseudoWB_register : VLDQQWBregisterPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d32QPseudo            : VLDQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d32QPseudoWB_fixed    : VLDQQWBfixedPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d32QPseudoWB_register : VLDQQWBregisterPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d64QPseudo            : VLDQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1d64QPseudoWB_fixed    : VLDQQWBfixedPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
 def VLD1d64QPseudoWB_register : VLDQQWBregisterPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
 
-def VLD1q8LowQPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1q8HighQPseudo     : VLDQQQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1q16LowQPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1q16HighQPseudo    : VLDQQQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1q32LowQPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1q32HighQPseudo    : VLDQQQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1q64LowQPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
-def VLD1q64HighQPseudo    : VLDQQQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q8LowQPseudo_UPD   : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q8HighQPseudo      : VLDQQQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q8HighQPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q16LowQPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q16HighQPseudo     : VLDQQQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q16HighQPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q32LowQPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q32HighQPseudo     : VLDQQQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q32HighQPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q64LowQPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q64HighQPseudo     : VLDQQQQPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
+def VLD1q64HighQPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD1x4>, Sched<[WriteVLD4]>;
 
 //   VLD2     : Vector Load (multiple 2-element structures)
 class VLD2<bits<4> op11_8, bits<4> op7_4, string Dt, RegisterOperand VdTy,
@@ -1514,6 +1534,13 @@ defm VLD2DUPd16x2wb : VLD2DUPWB<{0,1,1,?}, "16", VecListDPairSpacedAllLanes,
 defm VLD2DUPd32x2wb : VLD2DUPWB<{1,0,1,?}, "32", VecListDPairSpacedAllLanes,
                                 addrmode6dupalign64>;
 
+def VLD2DUPq8OddPseudoWB_fixed     : VLDQQWBfixedPseudo<IIC_VLD2dup>, Sched<[WriteVLD2]>;
+def VLD2DUPq16OddPseudoWB_fixed    : VLDQQWBfixedPseudo<IIC_VLD2dup>, Sched<[WriteVLD2]>;
+def VLD2DUPq32OddPseudoWB_fixed    : VLDQQWBfixedPseudo<IIC_VLD2dup>, Sched<[WriteVLD2]>;
+def VLD2DUPq8OddPseudoWB_register  : VLDQQWBPseudo<IIC_VLD2dup>, Sched<[WriteVLD2]>;
+def VLD2DUPq16OddPseudoWB_register : VLDQQWBPseudo<IIC_VLD2dup>, Sched<[WriteVLD2]>;
+def VLD2DUPq32OddPseudoWB_register : VLDQQWBPseudo<IIC_VLD2dup>, Sched<[WriteVLD2]>;
+
 //   VLD3DUP  : Vector Load (single 3-element structure to all lanes)
 class VLD3DUP<bits<4> op7_4, string Dt>
   : NLdSt<1, 0b10, 0b1110, op7_4, (outs DPR:$Vd, DPR:$dst2, DPR:$dst3),
@@ -1566,6 +1593,10 @@ def VLD3DUPq32_UPD : VLD3DUPWB<{1,0,1,?}, "32", addrmode6dupalign64>;
 def VLD3DUPd8Pseudo_UPD  : VLDQQWBPseudo<IIC_VLD3dupu>, Sched<[WriteVLD2]>;
 def VLD3DUPd16Pseudo_UPD : VLDQQWBPseudo<IIC_VLD3dupu>, Sched<[WriteVLD2]>;
 def VLD3DUPd32Pseudo_UPD : VLDQQWBPseudo<IIC_VLD3dupu>, Sched<[WriteVLD2]>;
+
+def VLD3DUPq8OddPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD3dupu>, Sched<[WriteVLD2]>;
+def VLD3DUPq16OddPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD3dupu>, Sched<[WriteVLD2]>;
+def VLD3DUPq32OddPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD3dupu>, Sched<[WriteVLD2]>;
 
 //   VLD4DUP  : Vector Load (single 4-element structure to all lanes)
 class VLD4DUP<bits<4> op7_4, string Dt>
@@ -1620,6 +1651,10 @@ def VLD4DUPq32_UPD : VLD4DUPWB<{1,?,1,?}, "32"> { let Inst{6} = Rn{5}; }
 def VLD4DUPd8Pseudo_UPD  : VLDQQWBPseudo<IIC_VLD4dupu>, Sched<[WriteVLD2]>;
 def VLD4DUPd16Pseudo_UPD : VLDQQWBPseudo<IIC_VLD4dupu>, Sched<[WriteVLD2]>;
 def VLD4DUPd32Pseudo_UPD : VLDQQWBPseudo<IIC_VLD4dupu>, Sched<[WriteVLD2]>;
+
+def VLD4DUPq8OddPseudo_UPD  : VLDQQQQWBPseudo<IIC_VLD4dupu>, Sched<[WriteVLD2]>;
+def VLD4DUPq16OddPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD4dupu>, Sched<[WriteVLD2]>;
+def VLD4DUPq32OddPseudo_UPD : VLDQQQQWBPseudo<IIC_VLD4dupu>, Sched<[WriteVLD2]>;
 
 } // mayLoad = 1, hasSideEffects = 0, hasExtraDefRegAllocReq = 1
 
@@ -5306,6 +5341,29 @@ def  VORRd    : N3VDX<0, 0, 0b10, 0b0001, 1, IIC_VBINiD, "vorr",
 def  VORRq    : N3VQX<0, 0, 0b10, 0b0001, 1, IIC_VBINiQ, "vorr",
                       v4i32, v4i32, or, 1>;
 
+multiclass BitwisePatterns<string Name, SDPatternOperator OpNodeD,
+                           SDPatternOperator OpNodeQ> {
+  def : Pat<(v8i8 (OpNodeD DPR:$LHS, DPR:$RHS)),
+            (!cast<Instruction>(Name#"d") DPR:$LHS, DPR:$RHS)>;
+  def : Pat<(v4i16 (OpNodeD DPR:$LHS, DPR:$RHS)),
+            (!cast<Instruction>(Name#"d") DPR:$LHS, DPR:$RHS)>;
+  def : Pat<(v1i64 (OpNodeD DPR:$LHS, DPR:$RHS)),
+            (!cast<Instruction>(Name#"d") DPR:$LHS, DPR:$RHS)>;
+
+  def : Pat<(v16i8 (OpNodeQ QPR:$LHS, QPR:$RHS)),
+            (!cast<Instruction>(Name#"q") QPR:$LHS, QPR:$RHS)>;
+  def : Pat<(v8i16 (OpNodeQ QPR:$LHS, QPR:$RHS)),
+            (!cast<Instruction>(Name#"q") QPR:$LHS, QPR:$RHS)>;
+  def : Pat<(v2i64 (OpNodeQ QPR:$LHS, QPR:$RHS)),
+            (!cast<Instruction>(Name#"q") QPR:$LHS, QPR:$RHS)>;
+}
+
+let Predicates = [HasNEON] in {
+  defm : BitwisePatterns<"VAND", and, and>;
+  defm : BitwisePatterns<"VORR", or, or>;
+  defm : BitwisePatterns<"VEOR", xor, xor>;
+}
+
 def VORRiv4i16 : N1ModImm<1, 0b000, {1,0,?,1}, 0, 0, 0, 1,
                           (outs DPR:$Vd), (ins nImmSplatI16:$SIMM, DPR:$src),
                           IIC_VMOVImm,
@@ -5357,6 +5415,11 @@ def  VBICq    : N3VX<0, 0, 0b01, 0b0001, 1, 1, (outs QPR:$Vd),
                                                  (vnotq QPR:$Vm))))]>;
 }
 
+let Predicates = [HasNEON] in {
+  defm : BitwisePatterns<"VBIC", BinOpFrag<(and node:$LHS, (vnotd node:$RHS))>,
+                                 BinOpFrag<(and node:$LHS, (vnotq node:$RHS))>>;
+}
+
 def VBICiv4i16 : N1ModImm<1, 0b000, {1,0,?,1}, 0, 0, 1, 1,
                           (outs DPR:$Vd), (ins nImmSplatI16:$SIMM, DPR:$src),
                           IIC_VMOVImm,
@@ -5405,6 +5468,11 @@ def  VORNq    : N3VX<0, 0, 0b11, 0b0001, 1, 1, (outs QPR:$Vd),
                      [(set QPR:$Vd, (v4i32 (or QPR:$Vn,
                                                 (vnotq QPR:$Vm))))]>;
 
+let Predicates = [HasNEON] in {
+  defm : BitwisePatterns<"VORN", BinOpFrag<(or node:$LHS, (vnotd node:$RHS))>,
+                                 BinOpFrag<(or node:$LHS, (vnotq node:$RHS))>>;
+}
+
 //   VMVN     : Vector Bitwise NOT (Immediate)
 
 let isReMaterializable = 1 in {
@@ -5448,8 +5516,18 @@ def  VMVNq    : N2VX<0b11, 0b11, 0b00, 0b00, 0b01011, 1, 0,
                      "vmvn", "$Vd, $Vm", "",
                      [(set QPR:$Vd, (v4i32 (vnotq QPR:$Vm)))]>;
 let Predicates = [HasNEON] in {
-def : Pat<(v2i32 (vnotd DPR:$src)), (VMVNd DPR:$src)>;
-def : Pat<(v4i32 (vnotq QPR:$src)), (VMVNq QPR:$src)>;
+def : Pat<(v1i64 (vnotd DPR:$src)),
+          (VMVNd DPR:$src)>;
+def : Pat<(v4i16 (vnotd DPR:$src)),
+          (VMVNd DPR:$src)>;
+def : Pat<(v8i8 (vnotd DPR:$src)),
+          (VMVNd DPR:$src)>;
+def : Pat<(v2i64 (vnotq QPR:$src)),
+          (VMVNq QPR:$src)>;
+def : Pat<(v8i16 (vnotq QPR:$src)),
+          (VMVNq QPR:$src)>;
+def : Pat<(v16i8 (vnotq QPR:$src)),
+          (VMVNq QPR:$src)>;
 }
 
 // The TwoAddress pass will not go looking for equivalent operations
@@ -5478,10 +5556,15 @@ def : Pat<(v1i64 (int_arm_neon_vbsl (v1i64 DPR:$src1),
                                     (v1i64 DPR:$Vn), (v1i64 DPR:$Vm))),
           (VBSPd DPR:$src1, DPR:$Vn, DPR:$Vm)>;
 
+def : Pat<(v8i8 (or (and DPR:$Vn, DPR:$Vd),
+                    (and DPR:$Vm, (vnotd DPR:$Vd)))),
+          (VBSPd DPR:$Vd, DPR:$Vn, DPR:$Vm)>;
+def : Pat<(v4i16 (or (and DPR:$Vn, DPR:$Vd),
+                     (and DPR:$Vm, (vnotd DPR:$Vd)))),
+          (VBSPd DPR:$Vd, DPR:$Vn, DPR:$Vm)>;
 def : Pat<(v2i32 (or (and DPR:$Vn, DPR:$Vd),
                      (and DPR:$Vm, (vnotd DPR:$Vd)))),
           (VBSPd DPR:$Vd, DPR:$Vn, DPR:$Vm)>;
-
 def : Pat<(v1i64 (or (and DPR:$Vn, DPR:$Vd),
                      (and DPR:$Vm, (vnotd DPR:$Vd)))),
           (VBSPd DPR:$Vd, DPR:$Vn, DPR:$Vm)>;
@@ -5509,6 +5592,12 @@ def : Pat<(v2i64 (int_arm_neon_vbsl (v2i64 QPR:$src1),
                                     (v2i64 QPR:$Vn), (v2i64 QPR:$Vm))),
           (VBSPq QPR:$src1, QPR:$Vn, QPR:$Vm)>;
 
+def : Pat<(v16i8 (or (and QPR:$Vn, QPR:$Vd),
+                     (and QPR:$Vm, (vnotq QPR:$Vd)))),
+          (VBSPq QPR:$Vd, QPR:$Vn, QPR:$Vm)>;
+def : Pat<(v8i16 (or (and QPR:$Vn, QPR:$Vd),
+                     (and QPR:$Vm, (vnotq QPR:$Vd)))),
+          (VBSPq QPR:$Vd, QPR:$Vn, QPR:$Vm)>;
 def : Pat<(v4i32 (or (and QPR:$Vn, QPR:$Vd),
                      (and QPR:$Vm, (vnotq QPR:$Vd)))),
           (VBSPq QPR:$Vd, QPR:$Vn, QPR:$Vm)>;
@@ -5598,10 +5687,10 @@ def abd_shr :
                             (zext node:$in2)), (i32 $shift))>;
 
 let Predicates = [HasNEON] in {
-def : Pat<(xor (v4i32 (bitconvert (v2i64 (abd_shr (v2i32 DPR:$opA), (v2i32 DPR:$opB), 63)))),
-               (v4i32 (bitconvert (v2i64 (add (sub (zext (v2i32 DPR:$opA)),
-                                                   (zext (v2i32 DPR:$opB))),
-                                         (abd_shr (v2i32 DPR:$opA), (v2i32 DPR:$opB), 63)))))),
+def : Pat<(xor (v2i64 (abd_shr (v2i32 DPR:$opA), (v2i32 DPR:$opB), 63)),
+               (v2i64 (add (sub (zext (v2i32 DPR:$opA)),
+                                (zext (v2i32 DPR:$opB))),
+                           (abd_shr (v2i32 DPR:$opA), (v2i32 DPR:$opB), 63)))),
           (VABDLuv2i64 DPR:$opA, DPR:$opB)>;
 }
 

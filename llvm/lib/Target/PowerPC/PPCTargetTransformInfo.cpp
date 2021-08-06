@@ -371,7 +371,7 @@ bool PPCTTIImpl::mightUseCTR(BasicBlock *BB, TargetLibraryInfo *LibInfo,
       InlineAsm::ConstraintInfo &C = CIV[i];
       if (C.Type != InlineAsm::isInput)
         for (unsigned j = 0, je = C.Codes.size(); j < je; ++j)
-          if (StringRef(C.Codes[j]).equals_lower("{ctr}"))
+          if (StringRef(C.Codes[j]).equals_insensitive("{ctr}"))
             return true;
     }
     return false;
@@ -787,7 +787,8 @@ bool PPCTTIImpl::isHardwareLoopProfitable(Loop *L, ScalarEvolution &SE,
 }
 
 void PPCTTIImpl::getUnrollingPreferences(Loop *L, ScalarEvolution &SE,
-                                         TTI::UnrollingPreferences &UP) {
+                                         TTI::UnrollingPreferences &UP,
+                                         OptimizationRemarkEmitter *ORE) {
   if (ST->getCPUDirective() == PPC::DIR_A2) {
     // The A2 is in-order with a deep pipeline, and concatenation unrolling
     // helps expose latency-hiding opportunities to the instruction scheduler.
@@ -798,7 +799,7 @@ void PPCTTIImpl::getUnrollingPreferences(Loop *L, ScalarEvolution &SE,
     UP.AllowExpensiveTripCount = true;
   }
 
-  BaseT::getUnrollingPreferences(L, SE, UP);
+  BaseT::getUnrollingPreferences(L, SE, UP, ORE);
 }
 
 void PPCTTIImpl::getPeelingPreferences(Loop *L, ScalarEvolution &SE,

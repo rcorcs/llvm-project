@@ -12,6 +12,7 @@
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Dialect/Linalg/Transforms/Transforms.h"
 #include "mlir/Dialect/Linalg/Utils/Utils.h"
+#include "mlir/Dialect/StandardOps/Utils/Utils.h"
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BlockAndValueMapping.h"
@@ -23,41 +24,6 @@
 
 using namespace mlir;
 using namespace mlir::linalg;
-
-namespace {
-/// Helper struct to build simple arithmetic quantities with minimal type
-/// inference support.
-struct ArithBuilder {
-  ArithBuilder(OpBuilder &b, Location loc) : b(b), loc(loc) {}
-
-  Value select(Value cmp, Value lhs, Value rhs) {
-    return b.create<SelectOp>(loc, cmp, lhs, rhs);
-  }
-  Value slt(Value lhs, Value rhs) {
-    if (lhs.getType().isa<IntegerType>())
-      return b.create<CmpIOp>(loc, CmpIPredicate::slt, lhs, rhs);
-    return b.create<CmpFOp>(loc, CmpFPredicate::OLT, lhs, rhs);
-  }
-  Value sgt(Value lhs, Value rhs) {
-    if (lhs.getType().isa<IntegerType>())
-      return b.create<CmpIOp>(loc, CmpIPredicate::sgt, lhs, rhs);
-    return b.create<CmpFOp>(loc, CmpFPredicate::OGT, lhs, rhs);
-  }
-  Value add(Value lhs, Value rhs) {
-    if (lhs.getType().isa<IntegerType>())
-      return b.create<AddIOp>(loc, lhs, rhs);
-    return b.create<AddFOp>(loc, lhs, rhs);
-  }
-  Value mul(Value lhs, Value rhs) {
-    if (lhs.getType().isa<IntegerType>())
-      return b.create<MulIOp>(loc, lhs, rhs);
-    return b.create<MulFOp>(loc, lhs, rhs);
-  }
-
-  OpBuilder &b;
-  Location loc;
-};
-} // namespace
 
 static SmallVector<Value> makeCanonicalAffineApplies(OpBuilder &b, Location loc,
                                                      AffineMap map,
@@ -153,28 +119,30 @@ static void emitScalarImplementation(OpBuilder &b, Location loc,
                                      LinalgOp linalgOp) {
   assert(linalgOp.hasBufferSemantics() &&
          "expected linalg op with buffer semantics");
-  unsigned nInputs = linalgOp.getNumInputs();
-  unsigned nOutputs = linalgOp.getNumOutputs();
   SmallVector<Value> indexedValues;
-  indexedValues.reserve(nInputs + nOutputs);
+  indexedValues.reserve(linalgOp.getNumInputsAndOutputs());
 
   auto allIvsPlusDims = SmallVector<Value>(allIvs.begin(), allIvs.end());
 
   // TODO: Avoid the loads if the corresponding argument of the
   // region has no uses.
-  // 1.a. Emit load from input views.
-  for (unsigned i = 0; i < nInputs; ++i) {
+  // 1.a. Emit load from input operand or for scalars access the operand itself.
+  for (OpOperand *inputOperand : linalgOp.getInputOperands()) {
+    if (linalgOp.isScalar(inputOperand)) {
+      indexedValues.push_back(inputOperand->get());
+      continue;
+    }
     auto indexing = makeCanonicalAffineApplies(
-        b, loc, linalgOp.getInputIndexingMap(i), allIvsPlusDims);
+        b, loc, linalgOp.getTiedIndexingMap(inputOperand), allIvsPlusDims);
     indexedValues.push_back(
-        b.create<LoadOpTy>(loc, linalgOp.getInput(i), indexing));
+        b.create<LoadOpTy>(loc, inputOperand->get(), indexing));
   }
   // 1.b. Emit load from output views.
-  for (unsigned i = 0; i < nOutputs; ++i) {
-    auto indexing = makeCanonicalAffineApplies(
-        b, loc, linalgOp.getOutputIndexingMap(i), allIvsPlusDims);
+  for (OpOperand *outputOperand : linalgOp.getOutputOperands()) {
+    SmallVector<Value> indexing = makeCanonicalAffineApplies(
+        b, loc, linalgOp.getTiedIndexingMap(outputOperand), allIvsPlusDims);
     indexedValues.push_back(
-        b.create<LoadOpTy>(loc, linalgOp.getOutputBuffer(i), indexing));
+        b.create<LoadOpTy>(loc, outputOperand->get(), indexing));
   }
 
   // TODO: When a region inliner exists, use it.
@@ -182,10 +150,10 @@ static void emitScalarImplementation(OpBuilder &b, Location loc,
   // 3. Emit store.
   SmallVector<SmallVector<Value>, 8> indexing;
   SmallVector<Value> outputBuffers;
-  for (unsigned i = 0; i < nOutputs; ++i) {
+  for (OpOperand *outputOperand : linalgOp.getOutputBufferOperands()) {
     indexing.push_back(makeCanonicalAffineApplies(
-        b, loc, linalgOp.getOutputIndexingMap(i), allIvsPlusDims));
-    outputBuffers.push_back(linalgOp.getOutputBuffer(i));
+        b, loc, linalgOp.getTiedIndexingMap(outputOperand), allIvsPlusDims));
+    outputBuffers.push_back(outputOperand->get());
   }
   inlineRegionAndEmitStore<LoadOpTy, StoreOpTy>(b, loc, linalgOp, indexedValues,
                                                 indexing, outputBuffers);
@@ -214,7 +182,7 @@ Value getPaddedInput(OpBuilder &b, Location loc, Value input,
       conds.push_back(leftOutOfBound);
     else
       conds.push_back(b.create<OrOp>(loc, conds.back(), leftOutOfBound));
-    Value rightBound = b.create<memref::DimOp>(loc, input, idx);
+    Value rightBound = createOrFoldDimOp(b, loc, input, idx);
     Value rightOutOfBound =
         b.create<CmpIOp>(loc, CmpIPredicate::sge, dim, rightBound);
     conds.push_back(b.create<OrOp>(loc, conds.back(), rightOutOfBound));
@@ -450,10 +418,6 @@ static Optional<LinalgLoops> linalgOpToLoopsImpl(PatternRewriter &rewriter,
       typename std::conditional<std::is_same<LoopTy, AffineForOp>::value,
                                 AffineStoreOp, memref::StoreOp>::type;
 
-  // Canonicalize indexed_generic operations before lowering them to loops.
-  if (isa<IndexedGenericOp>(linalgOp))
-    return llvm::None;
-
   // The flattened loopToOperandRangesMaps is expected to be an invertible
   // permutation map (which is asserted in the inverse calculation).
   assert(linalgOp.hasBufferSemantics() &&
@@ -594,6 +558,7 @@ static void lowerLinalgToLoopsImpl(FuncOp funcOp) {
   RewritePatternSet patterns(context);
   patterns.add<LinalgRewritePattern<LoopType>>(context);
   memref::DimOp::getCanonicalizationPatterns(patterns, context);
+  tensor::DimOp::getCanonicalizationPatterns(patterns, context);
   AffineApplyOp::getCanonicalizationPatterns(patterns, context);
   patterns.add<FoldAffineOp>(context);
   // Just apply the patterns greedily.
@@ -631,11 +596,15 @@ struct LowerTiledLoopsToSCF
   void runOnFunction() override {
     MLIRContext *context = &getContext();
     RewritePatternSet patterns(context);
-    patterns.add<TiledLoopToSCFPattern>(context);
+    populateTiledLoopToSCFPattern(patterns);
     (void)applyPatternsAndFoldGreedily(getFunction(), std::move(patterns));
   }
 };
 } // namespace
+
+void mlir::linalg::populateTiledLoopToSCFPattern(RewritePatternSet &patterns) {
+  patterns.add<TiledLoopToSCFPattern>(patterns.getContext());
+}
 
 std::unique_ptr<OperationPass<FuncOp>>
 mlir::createConvertLinalgTiledLoopsToSCFPass() {

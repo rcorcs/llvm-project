@@ -23,6 +23,7 @@
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/CharInfo.h"
+#include "clang/Basic/DarwinSDKInfo.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TargetBuiltins.h"
@@ -229,7 +230,7 @@ static bool checkUInt32Argument(Sema &S, const AttrInfo &AI, const Expr *Expr,
 
   if (!I->isIntN(32)) {
     S.Diag(Expr->getExprLoc(), diag::err_ice_too_large)
-        << I->toString(10, false) << 32 << /* Unsigned */ 1;
+        << toString(*I, 10, false) << 32 << /* Unsigned */ 1;
     return false;
   }
 
@@ -257,7 +258,7 @@ static bool checkPositiveIntArgument(Sema &S, const AttrInfo &AI, const Expr *Ex
     llvm::APSInt I(32); // for toString
     I = UVal;
     S.Diag(Expr->getExprLoc(), diag::err_ice_too_large)
-        << I.toString(10, false) << 32 << /* Unsigned */ 0;
+        << toString(I, 10, false) << 32 << /* Unsigned */ 0;
     return false;
   }
 
@@ -2093,7 +2094,7 @@ static void handleAnalyzerNoReturnAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
     ValueDecl *VD = dyn_cast<ValueDecl>(D);
     if (!VD || (!VD->getType()->isBlockPointerType() &&
                 !VD->getType()->isFunctionPointerType())) {
-      S.Diag(AL.getLoc(), AL.isCXX11Attribute()
+      S.Diag(AL.getLoc(), AL.isStandardAttributeSyntax()
                               ? diag::err_attribute_wrong_decl_type
                               : diag::warn_attribute_wrong_decl_type)
           << AL << ExpectedFunctionMethodOrBlock;
@@ -2446,6 +2447,13 @@ AvailabilityAttr *Sema::mergeAvailabilityAttr(
 }
 
 static void handleAvailabilityAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
+  if (isa<UsingDecl, UnresolvedUsingTypenameDecl, UnresolvedUsingValueDecl>(
+          D)) {
+    S.Diag(AL.getRange().getBegin(), diag::warn_deprecated_ignored_on_using)
+        << AL;
+    return;
+  }
+
   if (!AL.checkExactlyNumArgs(S, 1))
     return;
   IdentifierLoc *Platform = AL.getArgAsIdent(0);
@@ -2549,6 +2557,83 @@ static void handleAvailabilityAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
       if (NewAttr)
         D->addAttr(NewAttr);
       }
+  } else if (S.Context.getTargetInfo().getTriple().getOS() ==
+                 llvm::Triple::IOS &&
+             S.Context.getTargetInfo().getTriple().isMacCatalystEnvironment()) {
+    auto GetSDKInfo = [&]() {
+      return S.getDarwinSDKInfoForAvailabilityChecking(AL.getRange().getBegin(),
+                                                       "macOS");
+    };
+
+    // Transcribe "ios" to "maccatalyst" (and add a new attribute).
+    IdentifierInfo *NewII = nullptr;
+    if (II->getName() == "ios")
+      NewII = &S.Context.Idents.get("maccatalyst");
+    else if (II->getName() == "ios_app_extension")
+      NewII = &S.Context.Idents.get("maccatalyst_app_extension");
+    if (NewII) {
+      auto MinMacCatalystVersion = [](const VersionTuple &V) {
+        if (V.empty())
+          return V;
+        if (V.getMajor() < 13 ||
+            (V.getMajor() == 13 && V.getMinor() && *V.getMinor() < 1))
+          return VersionTuple(13, 1); // The min Mac Catalyst version is 13.1.
+        return V;
+      };
+      AvailabilityAttr *NewAttr = S.mergeAvailabilityAttr(
+          ND, AL.getRange(), NewII, true /*Implicit*/,
+          MinMacCatalystVersion(Introduced.Version),
+          MinMacCatalystVersion(Deprecated.Version),
+          MinMacCatalystVersion(Obsoleted.Version), IsUnavailable, Str,
+          IsStrict, Replacement, Sema::AMK_None,
+          PriorityModifier + Sema::AP_InferredFromOtherPlatform);
+      if (NewAttr)
+        D->addAttr(NewAttr);
+    } else if (II->getName() == "macos" && GetSDKInfo() &&
+               (!Introduced.Version.empty() || !Deprecated.Version.empty() ||
+                !Obsoleted.Version.empty())) {
+      if (const auto *MacOStoMacCatalystMapping =
+              GetSDKInfo()->getVersionMapping(
+                  DarwinSDKInfo::OSEnvPair::macOStoMacCatalystPair())) {
+        // Infer Mac Catalyst availability from the macOS availability attribute
+        // if it has versioned availability. Don't infer 'unavailable'. This
+        // inferred availability has lower priority than the other availability
+        // attributes that are inferred from 'ios'.
+        NewII = &S.Context.Idents.get("maccatalyst");
+        auto RemapMacOSVersion =
+            [&](const VersionTuple &V) -> Optional<VersionTuple> {
+          if (V.empty())
+            return None;
+          // API_TO_BE_DEPRECATED is 100000.
+          if (V.getMajor() == 100000)
+            return VersionTuple(100000);
+          // The minimum iosmac version is 13.1
+          return MacOStoMacCatalystMapping->map(V, VersionTuple(13, 1), None);
+        };
+        Optional<VersionTuple> NewIntroduced =
+                                   RemapMacOSVersion(Introduced.Version),
+                               NewDeprecated =
+                                   RemapMacOSVersion(Deprecated.Version),
+                               NewObsoleted =
+                                   RemapMacOSVersion(Obsoleted.Version);
+        if (NewIntroduced || NewDeprecated || NewObsoleted) {
+          auto VersionOrEmptyVersion =
+              [](const Optional<VersionTuple> &V) -> VersionTuple {
+            return V ? *V : VersionTuple();
+          };
+          AvailabilityAttr *NewAttr = S.mergeAvailabilityAttr(
+              ND, AL.getRange(), NewII, true /*Implicit*/,
+              VersionOrEmptyVersion(NewIntroduced),
+              VersionOrEmptyVersion(NewDeprecated),
+              VersionOrEmptyVersion(NewObsoleted), /*IsUnavailable=*/false, Str,
+              IsStrict, Replacement, Sema::AMK_None,
+              PriorityModifier + Sema::AP_InferredFromOtherPlatform +
+                  Sema::AP_InferredFromOtherPlatform);
+          if (NewAttr)
+            D->addAttr(NewAttr);
+        }
+      }
+    }
   }
 }
 
@@ -2856,7 +2941,7 @@ static void handleWarnUnusedResult(Sema &S, Decl *D, const ParsedAttr &AL) {
     }
 
   StringRef Str;
-  if ((AL.isCXX11Attribute() || AL.isC2xAttribute()) && !AL.getScopeName()) {
+  if (AL.isStandardAttributeSyntax() && !AL.getScopeName()) {
     // The standard attribute cannot be applied to variable declarations such
     // as a function pointer.
     if (isa<VarDecl>(D))
@@ -3464,7 +3549,7 @@ static void handleFormatAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   } else if (Kind == NSStringFormat) {
     // FIXME: do we need to check if the type is NSString*?  What are the
     // semantics?
-    if (!isNSStringType(Ty, S.Context)) {
+    if (!isNSStringType(Ty, S.Context, /*AllowNSAttributedString=*/true)) {
       S.Diag(AL.getLoc(), diag::err_format_attribute_not)
         << "an NSString" << IdxExpr->getSourceRange()
         << getFunctionOrMethodParamRange(D, ArgIdx);
@@ -3762,11 +3847,11 @@ void Sema::AddAnnotationAttr(Decl *D, const AttributeCommonInfo &CI,
       E = ImplicitCastExpr::Create(Context,
                                    Context.getPointerType(E->getType()),
                                    clang::CK_FunctionToPointerDecay, E, nullptr,
-                                   VK_RValue, FPOptionsOverride());
+                                   VK_PRValue, FPOptionsOverride());
     if (E->isLValue())
       E = ImplicitCastExpr::Create(Context, E->getType().getNonReferenceType(),
                                    clang::CK_LValueToRValue, E, nullptr,
-                                   VK_RValue, FPOptionsOverride());
+                                   VK_PRValue, FPOptionsOverride());
 
     Expr::EvalResult Eval;
     Notes.clear();
@@ -3946,6 +4031,12 @@ void Sema::AddAlignedAttr(Decl *D, const AttributeCommonInfo &CI, Expr *E,
     return;
 
   uint64_t AlignVal = Alignment.getZExtValue();
+  // 16 byte ByVal alignment not due to a vector member is not honoured by XL
+  // on AIX. Emit a warning here that users are generating binary incompatible
+  // code to be safe.
+  if (AlignVal >= 16 && isa<FieldDecl>(D) &&
+      Context.getTargetInfo().getTriple().isOSAIX())
+    Diag(AttrLoc, diag::warn_not_xl_compatible) << E->getSourceRange();
 
   // C++11 [dcl.align]p2:
   //   -- if the constant expression evaluates to zero, the alignment
@@ -3963,21 +4054,35 @@ void Sema::AddAlignedAttr(Decl *D, const AttributeCommonInfo &CI, Expr *E,
   unsigned MaximumAlignment = Sema::MaximumAlignment;
   if (Context.getTargetInfo().getTriple().isOSBinFormatCOFF())
     MaximumAlignment = std::min(MaximumAlignment, 8192u);
+  else if (Context.getTargetInfo().getTriple().isOSAIX())
+    MaximumAlignment = std::min(MaximumAlignment, 4096u);
+
   if (AlignVal > MaximumAlignment) {
     Diag(AttrLoc, diag::err_attribute_aligned_too_great)
         << MaximumAlignment << E->getSourceRange();
     return;
   }
 
-  if (Context.getTargetInfo().isTLSSupported()) {
+  const auto *VD = dyn_cast<VarDecl>(D);
+  if (VD && Context.getTargetInfo().isTLSSupported()) {
     unsigned MaxTLSAlign =
         Context.toCharUnitsFromBits(Context.getTargetInfo().getMaxTLSAlign())
             .getQuantity();
-    const auto *VD = dyn_cast<VarDecl>(D);
-    if (MaxTLSAlign && AlignVal > MaxTLSAlign && VD &&
+    if (MaxTLSAlign && AlignVal > MaxTLSAlign &&
         VD->getTLSKind() != VarDecl::TLS_None) {
       Diag(VD->getLocation(), diag::err_tls_var_aligned_over_maximum)
           << (unsigned)AlignVal << VD << MaxTLSAlign;
+      return;
+    }
+  }
+
+  // On AIX, an aligned attribute can not decrease the alignment when applied
+  // to a variable declaration with vector type.
+  if (VD && Context.getTargetInfo().getTriple().isOSAIX()) {
+    const Type *Ty = VD->getType().getTypePtr();
+    if (Ty->isVectorType() && AlignVal < 16) {
+      Diag(VD->getLocation(), diag::warn_aligned_attr_underaligned)
+          << VD->getType() << 16;
       return;
     }
   }
@@ -4419,6 +4524,13 @@ static void handleConstantAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
     S.Diag(AL.getLoc(), diag::err_cuda_nonstatic_constdev);
     return;
   }
+  // constexpr variable may already get an implicit constant attr, which should
+  // be replaced by the explicit constant attr.
+  if (auto *A = D->getAttr<CUDAConstantAttr>()) {
+    if (!A->isImplicit())
+      return;
+    D->dropAttr<CUDAConstantAttr>();
+  }
   D->addAttr(::new (S.Context) CUDAConstantAttr(S.Context, AL));
 }
 
@@ -4546,6 +4658,9 @@ static void handleCallConvAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
     return;
   case ParsedAttr::AT_SwiftCall:
     D->addAttr(::new (S.Context) SwiftCallAttr(S.Context, AL));
+    return;
+  case ParsedAttr::AT_SwiftAsyncCall:
+    D->addAttr(::new (S.Context) SwiftAsyncCallAttr(S.Context, AL));
     return;
   case ParsedAttr::AT_VectorCall:
     D->addAttr(::new (S.Context) VectorCallAttr(S.Context, AL));
@@ -4710,6 +4825,9 @@ bool Sema::CheckCallingConvAttr(const ParsedAttr &Attrs, CallingConv &CC,
     break;
   case ParsedAttr::AT_SwiftCall:
     CC = CC_Swift;
+    break;
+  case ParsedAttr::AT_SwiftAsyncCall:
+    CC = CC_SwiftAsync;
     break;
   case ParsedAttr::AT_VectorCall:
     CC = CC_X86VectorCall;
@@ -4889,6 +5007,14 @@ void Sema::AddParameterABIAttr(Decl *D, const AttributeCommonInfo &CI,
     D->addAttr(::new (Context) SwiftContextAttr(Context, CI));
     return;
 
+  case ParameterABI::SwiftAsyncContext:
+    if (!isValidSwiftContextType(type)) {
+      Diag(CI.getLoc(), diag::err_swift_abi_parameter_wrong_type)
+          << getParameterABISpelling(abi) << /*pointer to pointer */ 0 << type;
+    }
+    D->addAttr(::new (Context) SwiftAsyncContextAttr(Context, CI));
+    return;
+
   case ParameterABI::SwiftErrorResult:
     if (!isValidSwiftErrorResultType(type)) {
       Diag(CI.getLoc(), diag::err_swift_abi_parameter_wrong_type)
@@ -4968,7 +5094,7 @@ static Expr *makeLaunchBoundsArgExpr(Sema &S, Expr *E,
   // Make sure we can fit it in 32 bits.
   if (!I->isIntN(32)) {
     S.Diag(E->getExprLoc(), diag::err_ice_too_large)
-        << I->toString(10, false) << 32 << /* Unsigned */ 1;
+        << toString(*I, 10, false) << 32 << /* Unsigned */ 1;
     return nullptr;
   }
   if (*I < 0)
@@ -5141,7 +5267,10 @@ static bool ArmCdeAliasValid(unsigned BuiltinID, StringRef AliasName) {
   return ArmBuiltinAliasValid(BuiltinID, AliasName, Map, IntrinNames);
 }
 
-static bool ArmSveAliasValid(unsigned BuiltinID, StringRef AliasName) {
+static bool ArmSveAliasValid(ASTContext &Context, unsigned BuiltinID,
+                             StringRef AliasName) {
+  if (Context.BuiltinInfo.isAuxBuiltinID(BuiltinID))
+    BuiltinID = Context.BuiltinInfo.getAuxBuiltinID(BuiltinID);
   return BuiltinID >= AArch64::FirstSVEBuiltin &&
          BuiltinID <= AArch64::LastSVEBuiltin;
 }
@@ -5158,7 +5287,7 @@ static void handleArmBuiltinAliasAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
   StringRef AliasName = cast<FunctionDecl>(D)->getIdentifier()->getName();
 
   bool IsAArch64 = S.Context.getTargetInfo().getTriple().isAArch64();
-  if ((IsAArch64 && !ArmSveAliasValid(BuiltinID, AliasName)) ||
+  if ((IsAArch64 && !ArmSveAliasValid(S.Context, BuiltinID, AliasName)) ||
       (!IsAArch64 && !ArmMveAliasValid(BuiltinID, AliasName) &&
        !ArmCdeAliasValid(BuiltinID, AliasName))) {
     S.Diag(AL.getLoc(), diag::err_attribute_arm_builtin_alias);
@@ -5188,7 +5317,7 @@ static void handleBuiltinAliasAttr(Sema &S, Decl *D,
   bool IsAArch64 = S.Context.getTargetInfo().getTriple().isAArch64();
   bool IsARM = S.Context.getTargetInfo().getTriple().isARM();
   bool IsRISCV = S.Context.getTargetInfo().getTriple().isRISCV();
-  if ((IsAArch64 && !ArmSveAliasValid(BuiltinID, AliasName)) ||
+  if ((IsAArch64 && !ArmSveAliasValid(S.Context, BuiltinID, AliasName)) ||
       (IsARM && !ArmMveAliasValid(BuiltinID, AliasName) &&
        !ArmCdeAliasValid(BuiltinID, AliasName)) ||
       (IsRISCV && !RISCVAliasValid(BuiltinID, AliasName)) ||
@@ -7242,6 +7371,11 @@ static void handleDeprecatedAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
       // namespace.
       return;
     }
+  } else if (isa<UsingDecl, UnresolvedUsingTypenameDecl,
+                 UnresolvedUsingValueDecl>(D)) {
+    S.Diag(AL.getRange().getBegin(), diag::warn_deprecated_ignored_on_using)
+        << AL;
+    return;
   }
 
   // Handle the cases where the attribute has a text message.
@@ -7250,8 +7384,8 @@ static void handleDeprecatedAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
       !S.checkStringLiteralArgumentAttr(AL, 0, Str))
     return;
 
-  // Only support a single optional message for Declspec and CXX11.
-  if (AL.isDeclspecAttribute() || AL.isCXX11Attribute())
+  // Support a single optional message only for Declspec and [[]] spellings.
+  if (AL.isDeclspecAttribute() || AL.isStandardAttributeSyntax())
     AL.checkAtMostNumArgs(S, 1);
   else if (AL.isArgExpr(1) && AL.getArgAsExpr(1) &&
            !S.checkStringLiteralArgumentAttr(AL, 1, Replacement))
@@ -7283,7 +7417,8 @@ static void handleNoSanitizeAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
       return;
 
     if (parseSanitizerValue(SanitizerName, /*AllowGroups=*/true) ==
-        SanitizerMask())
+            SanitizerMask() &&
+        SanitizerName != "coverage")
       S.Diag(LiteralLoc, diag::warn_unknown_sanitizer_ignored) << SanitizerName;
     else if (isGlobalVar(D) && SanitizerName != "address")
       S.Diag(D->getLocation(), diag::err_attribute_wrong_decl_type)
@@ -7317,7 +7452,7 @@ static void handleNoSanitizeSpecificAttr(Sema &S, Decl *D,
   // getSpelling() or prettyPrint() on the resulting semantic attribute object
   // without failing assertions.
   unsigned TranslatedSpellingIndex = 0;
-  if (AL.isC2xAttribute() || AL.isCXX11Attribute())
+  if (AL.isStandardAttributeSyntax())
     TranslatedSpellingIndex = 1;
 
   AttributeCommonInfo Info = AL;
@@ -7358,16 +7493,24 @@ static void handleOpenCLAccessAttr(Sema &S, Decl *D, const ParsedAttr &AL) {
     }
   }
 
-  // OpenCL v2.0 s6.6 - read_write can be used for image types to specify that an
-  // image object can be read and written.
-  // OpenCL v2.0 s6.13.6 - A kernel cannot read from and write to the same pipe
-  // object. Using the read_write (or __read_write) qualifier with the pipe
-  // qualifier is a compilation error.
+  // OpenCL v2.0 s6.6 - read_write can be used for image types to specify that
+  // an image object can be read and written. OpenCL v2.0 s6.13.6 - A kernel
+  // cannot read from and write to the same pipe object. Using the read_write
+  // (or __read_write) qualifier with the pipe qualifier is a compilation error.
+  // OpenCL v3.0 s6.8 - For OpenCL C 2.0, or with the
+  // __opencl_c_read_write_images feature, image objects specified as arguments
+  // to a kernel can additionally be declared to be read-write.
+  // C++ for OpenCL inherits rule from OpenCL C v2.0.
   if (const auto *PDecl = dyn_cast<ParmVarDecl>(D)) {
     const Type *DeclTy = PDecl->getType().getCanonicalType().getTypePtr();
     if (AL.getAttrName()->getName().find("read_write") != StringRef::npos) {
+      bool ReadWriteImagesUnsupportedForOCLC =
+          (S.getLangOpts().OpenCLVersion < 200) ||
+          (S.getLangOpts().OpenCLVersion == 300 &&
+           !S.getOpenCLOptions().isSupported("__opencl_c_read_write_images",
+                                             S.getLangOpts()));
       if ((!S.getLangOpts().OpenCLCPlusPlus &&
-           S.getLangOpts().OpenCLVersion < 200) ||
+           ReadWriteImagesUnsupportedForOCLC) ||
           DeclTy->isPipeType()) {
         S.Diag(AL.getLoc(), diag::err_opencl_invalid_read_write)
             << AL << PDecl->getType() << DeclTy->isImageType();
@@ -8070,6 +8213,7 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case ParsedAttr::AT_Pascal:
   case ParsedAttr::AT_RegCall:
   case ParsedAttr::AT_SwiftCall:
+  case ParsedAttr::AT_SwiftAsyncCall:
   case ParsedAttr::AT_VectorCall:
   case ParsedAttr::AT_MSABI:
   case ParsedAttr::AT_SysVABI:
@@ -8095,6 +8239,9 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
     break;
   case ParsedAttr::AT_SwiftContext:
     S.AddParameterABIAttr(D, AL, ParameterABI::SwiftContext);
+    break;
+  case ParsedAttr::AT_SwiftAsyncContext:
+    S.AddParameterABIAttr(D, AL, ParameterABI::SwiftAsyncContext);
     break;
   case ParsedAttr::AT_SwiftErrorResult:
     S.AddParameterABIAttr(D, AL, ParameterABI::SwiftErrorResult);
@@ -8301,6 +8448,10 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case ParsedAttr::AT_BuiltinAlias:
     handleBuiltinAliasAttr(S, D, AL);
     break;
+
+  case ParsedAttr::AT_UsingIfExists:
+    handleSimpleAttribute<UsingIfExistsAttr>(S, D, AL);
+    break;
   }
 }
 
@@ -8455,8 +8606,9 @@ NamedDecl * Sema::DeclClonePragmaWeak(NamedDecl *ND, IdentifierInfo *II,
     NewFD = FunctionDecl::Create(
         FD->getASTContext(), FD->getDeclContext(), Loc, Loc,
         DeclarationName(II), FD->getType(), FD->getTypeSourceInfo(), SC_None,
-        false /*isInlineSpecified*/, FD->hasPrototype(),
-        ConstexprSpecKind::Unspecified, FD->getTrailingRequiresClause());
+        getCurFPFeatures().isFPConstrained(), false /*isInlineSpecified*/,
+        FD->hasPrototype(), ConstexprSpecKind::Unspecified,
+        FD->getTrailingRequiresClause());
     NewD = NewFD;
 
     if (FD->getQualifier())

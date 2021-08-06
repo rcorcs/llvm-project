@@ -486,6 +486,128 @@ public:
   /// \param Loc The location where the taskyield directive was encountered.
   void createTaskyield(const LocationDescription &Loc);
 
+  /// Functions used to generate reductions. Such functions take two Values
+  /// representing LHS and RHS of the reduction, respectively, and a reference
+  /// to the value that is updated to refer to the reduction result.
+  using ReductionGenTy =
+      function_ref<InsertPointTy(InsertPointTy, Value *, Value *, Value *&)>;
+
+  /// Functions used to generate atomic reductions. Such functions take two
+  /// Values representing pointers to LHS and RHS of the reduction. They are
+  /// expected to atomically update the LHS to the reduced value.
+  using AtomicReductionGenTy =
+      function_ref<InsertPointTy(InsertPointTy, Value *, Value *)>;
+
+  /// Information about an OpenMP reduction.
+  struct ReductionInfo {
+    ReductionInfo(Value *Variable, Value *PrivateVariable,
+                  ReductionGenTy ReductionGen,
+                  AtomicReductionGenTy AtomicReductionGen)
+        : Variable(Variable), PrivateVariable(PrivateVariable),
+          ReductionGen(ReductionGen), AtomicReductionGen(AtomicReductionGen) {}
+
+    /// Returns the type of the element being reduced.
+    Type *getElementType() const {
+      return Variable->getType()->getPointerElementType();
+    }
+
+    /// Reduction variable of pointer type.
+    Value *Variable;
+
+    /// Thread-private partial reduction variable.
+    Value *PrivateVariable;
+
+    /// Callback for generating the reduction body. The IR produced by this will
+    /// be used to combine two values in a thread-safe context, e.g., under
+    /// lock or within the same thread, and therefore need not be atomic.
+    ReductionGenTy ReductionGen;
+
+    /// Callback for generating the atomic reduction body, may be null. The IR
+    /// produced by this will be used to atomically combine two values during
+    /// reduction. If null, the implementation will use the non-atomic version
+    /// along with the appropriate synchronization mechanisms.
+    AtomicReductionGenTy AtomicReductionGen;
+  };
+
+  // TODO: provide atomic and non-atomic reduction generators for reduction
+  // operators defined by the OpenMP specification.
+
+  /// Generator for '#omp reduction'.
+  ///
+  /// Emits the IR instructing the runtime to perform the specific kind of
+  /// reductions. Expects reduction variables to have been privatized and
+  /// initialized to reduction-neutral values separately. Emits the calls to
+  /// runtime functions as well as the reduction function and the basic blocks
+  /// performing the reduction atomically and non-atomically.
+  ///
+  /// The code emitted for the following:
+  ///
+  /// \code
+  ///   type var_1;
+  ///   type var_2;
+  ///   #pragma omp <directive> reduction(reduction-op:var_1,var_2)
+  ///   /* body */;
+  /// \endcode
+  ///
+  /// corresponds to the following sketch.
+  ///
+  /// \code
+  /// void _outlined_par() {
+  ///   // N is the number of different reductions.
+  ///   void *red_array[] = {privatized_var_1, privatized_var_2, ...};
+  ///   switch(__kmpc_reduce(..., N, /*size of data in red array*/, red_array,
+  ///                        _omp_reduction_func,
+  ///                        _gomp_critical_user.reduction.var)) {
+  ///   case 1: {
+  ///     var_1 = var_1 <reduction-op> privatized_var_1;
+  ///     var_2 = var_2 <reduction-op> privatized_var_2;
+  ///     // ...
+  ///    __kmpc_end_reduce(...);
+  ///     break;
+  ///   }
+  ///   case 2: {
+  ///     _Atomic<ReductionOp>(var_1, privatized_var_1);
+  ///     _Atomic<ReductionOp>(var_2, privatized_var_2);
+  ///     // ...
+  ///     break;
+  ///   }
+  ///   default: break;
+  ///   }
+  /// }
+  ///
+  /// void _omp_reduction_func(void **lhs, void **rhs) {
+  ///   *(type *)lhs[0] = *(type *)lhs[0] <reduction-op> *(type *)rhs[0];
+  ///   *(type *)lhs[1] = *(type *)lhs[1] <reduction-op> *(type *)rhs[1];
+  ///   // ...
+  /// }
+  /// \endcode
+  ///
+  /// \param Loc                The location where the reduction was
+  ///                           encountered. Must be within the associate
+  ///                           directive and after the last local access to the
+  ///                           reduction variables.
+  /// \param AllocaIP           An insertion point suitable for allocas usable
+  ///                           in reductions.
+  /// \param Variables          A list of variables in which the reduction
+  ///                           results will be stored (values of pointer type).
+  /// \param PrivateVariables   A list of variables in which the partial
+  ///                           reduction results are stored (values of pointer
+  ///                           type). Coindexed with Variables. Privatization
+  ///                           must be handled separately from this call.
+  /// \param ReductionGen       A list of generators for non-atomic reduction
+  ///                           bodies. Each takes a pair of partially reduced
+  ///                           values and sets a new one.
+  /// \param AtomicReductionGen A list of generators for atomic reduction
+  ///                           bodies, empty if the reduction cannot be
+  ///                           performed with atomics. Each takes a pair of
+  ///                           _pointers_ to paritally reduced values and
+  ///                           atomically stores the result into the first.
+  /// \param IsNoWait           A flag set if the reduction is marked as nowait.
+  InsertPointTy createReductions(const LocationDescription &Loc,
+                                 InsertPointTy AllocaIP,
+                                 ArrayRef<ReductionInfo> ReductionInfos,
+                                 bool IsNoWait = false);
+
   ///}
 
   /// Return the insertion point used by the underlying IRBuilder.
@@ -531,8 +653,10 @@ public:
   ///
   /// \param CancelFlag Flag indicating if the cancellation is performed.
   /// \param CanceledDirective The kind of directive that is cancled.
+  /// \param ExitCB Extra code to be generated in the exit block.
   void emitCancelationCheckImpl(Value *CancelFlag,
-                                omp::Directive CanceledDirective);
+                                omp::Directive CanceledDirective,
+                                FinalizeCallbackTy ExitCB = {});
 
   /// Generate a barrier runtime call.
   ///
@@ -633,6 +757,31 @@ public:
   GlobalVariable *
   createOffloadMapnames(SmallVectorImpl<llvm::Constant *> &Names,
                         std::string VarName);
+
+  struct MapperAllocas {
+    AllocaInst *ArgsBase = nullptr;
+    AllocaInst *Args = nullptr;
+    AllocaInst *ArgSizes = nullptr;
+  };
+
+  /// Create the allocas instruction used in call to mapper functions.
+  void createMapperAllocas(const LocationDescription &Loc,
+                           InsertPointTy AllocaIP, unsigned NumOperands,
+                           struct MapperAllocas &MapperAllocas);
+
+  /// Create the call for the target mapper function.
+  /// \param Loc The source location description.
+  /// \param MapperFunc Function to be called.
+  /// \param SrcLocInfo Source location information global.
+  /// \param MaptypesArgs
+  /// \param MapnamesArg
+  /// \param MapperAllocas The AllocaInst used for the call.
+  /// \param DeviceID Device ID for the call.
+  /// \param TotalNbOperand Number of operand in the call.
+  void emitMapperCall(const LocationDescription &Loc, Function *MapperFunc,
+                      Value *SrcLocInfo, Value *MaptypesArg, Value *MapnamesArg,
+                      struct MapperAllocas &MapperAllocas, int64_t DeviceID,
+                      unsigned NumOperands);
 
 public:
   /// Generator for __kmpc_copyprivate
@@ -777,6 +926,29 @@ public:
                                       llvm::ConstantInt *Size,
                                       const llvm::Twine &Name = Twine(""));
 
+  /// The `omp target` interface
+  ///
+  /// For more information about the usage of this interface,
+  /// \see openmp/libomptarget/deviceRTLs/common/include/target.h
+  ///
+  ///{
+
+  /// Create a runtime call for kmpc_target_init
+  ///
+  /// \param Loc The insert and source location description.
+  /// \param IsSPMD Flag to indicate if the kernel is an SPMD kernel or not.
+  /// \param RequiresFullRuntime Indicate if a full device runtime is necessary.
+  InsertPointTy createTargetInit(const LocationDescription &Loc, bool IsSPMD, bool RequiresFullRuntime);
+
+  /// Create a runtime call for kmpc_target_deinit
+  ///
+  /// \param Loc The insert and source location description.
+  /// \param IsSPMD Flag to indicate if the kernel is an SPMD kernel or not.
+  /// \param RequiresFullRuntime Indicate if a full device runtime is necessary.
+  void createTargetDeinit(const LocationDescription &Loc, bool IsSPMD, bool RequiresFullRuntime);
+
+  ///}
+
   /// Declarations for LLVM-IR types (simple, array, function and structure) are
   /// generated below. Their names are defined and used in OpenMPKinds.def. Here
   /// we provide the declarations, the initializeTypes function will provide the
@@ -881,6 +1053,167 @@ private:
   /// \param CriticalName Name of the critical region.
   ///
   Value *getOMPCriticalRegionLock(StringRef CriticalName);
+
+  /// Callback type for Atomic Expression update
+  /// ex:
+  /// \code{.cpp}
+  /// unsigned x = 0;
+  /// #pragma omp atomic update
+  /// x = Expr(x_old);  //Expr() is any legal operation
+  /// \endcode
+  ///
+  /// \param XOld the value of the atomic memory address to use for update
+  /// \param IRB reference to the IRBuilder to use
+  ///
+  /// \returns Value to update X to.
+  using AtomicUpdateCallbackTy =
+      const function_ref<Value *(Value *XOld, IRBuilder<> &IRB)>;
+
+private:
+  enum AtomicKind { Read, Write, Update, Capture };
+
+  /// Determine whether to emit flush or not
+  ///
+  /// \param Loc    The insert and source location description.
+  /// \param AO     The required atomic ordering
+  /// \param AK     The OpenMP atomic operation kind used.
+  ///
+  /// \returns		wether a flush was emitted or not
+  bool checkAndEmitFlushAfterAtomic(const LocationDescription &Loc,
+                                    AtomicOrdering AO, AtomicKind AK);
+
+  /// Emit atomic update for constructs: X = X BinOp Expr ,or X = Expr BinOp X
+  /// For complex Operations: X = UpdateOp(X) => CmpExch X, old_X, UpdateOp(X)
+  /// Only Scalar data types.
+  ///
+  /// \param AllocIP	  Instruction to create AllocaInst before.
+  /// \param X			    The target atomic pointer to be updated
+  /// \param Expr		    The value to update X with.
+  /// \param AO			    Atomic ordering of the generated atomic
+  ///                   instructions.
+  /// \param RMWOp		  The binary operation used for update. If
+  ///                   operation is not supported by atomicRMW,
+  ///                   or belong to {FADD, FSUB, BAD_BINOP}.
+  ///                   Then a `cmpExch` based	atomic will be generated.
+  /// \param UpdateOp 	Code generator for complex expressions that cannot be
+  ///                   expressed through atomicrmw instruction.
+  /// \param VolatileX	     true if \a X volatile?
+  /// \param IsXLHSInRHSPart true if \a X is Left H.S. in Right H.S. part of
+  ///                        the update expression, false otherwise.
+  ///                        (e.g. true for X = X BinOp Expr)
+  ///
+  /// \returns A pair of the old value of X before the update, and the value
+  ///          used for the update.
+  std::pair<Value *, Value *> emitAtomicUpdate(Instruction *AllocIP, Value *X,
+                                               Value *Expr, AtomicOrdering AO,
+                                               AtomicRMWInst::BinOp RMWOp,
+                                               AtomicUpdateCallbackTy &UpdateOp,
+                                               bool VolatileX,
+                                               bool IsXLHSInRHSPart);
+
+  /// Emit the binary op. described by \p RMWOp, using \p Src1 and \p Src2 .
+  ///
+  /// \Return The instruction
+  Value *emitRMWOpAsInstruction(Value *Src1, Value *Src2,
+                                AtomicRMWInst::BinOp RMWOp);
+
+public:
+  /// a struct to pack relevant information while generating atomic Ops
+  struct AtomicOpValue {
+    Value *Var = nullptr;
+    bool IsSigned = false;
+    bool IsVolatile = false;
+  };
+
+  /// Emit atomic Read for : V = X --- Only Scalar data types.
+  ///
+  /// \param Loc    The insert and source location description.
+  /// \param X			The target pointer to be atomically read
+  /// \param V			Memory address where to store atomically read
+  /// 					    value
+  /// \param AO			Atomic ordering of the generated atomic
+  /// 					    instructions.
+  ///
+  /// \return Insertion point after generated atomic read IR.
+  InsertPointTy createAtomicRead(const LocationDescription &Loc,
+                                 AtomicOpValue &X, AtomicOpValue &V,
+                                 AtomicOrdering AO);
+
+  /// Emit atomic write for : X = Expr --- Only Scalar data types.
+  ///
+  /// \param Loc    The insert and source location description.
+  /// \param X			The target pointer to be atomically written to
+  /// \param Expr		The value to store.
+  /// \param AO			Atomic ordering of the generated atomic
+  ///               instructions.
+  ///
+  /// \return Insertion point after generated atomic Write IR.
+  InsertPointTy createAtomicWrite(const LocationDescription &Loc,
+                                  AtomicOpValue &X, Value *Expr,
+                                  AtomicOrdering AO);
+
+  /// Emit atomic update for constructs: X = X BinOp Expr ,or X = Expr BinOp X
+  /// For complex Operations: X = UpdateOp(X) => CmpExch X, old_X, UpdateOp(X)
+  /// Only Scalar data types.
+  ///
+  /// \param Loc      The insert and source location description.
+  /// \param AllocIP  Instruction to create AllocaInst before.
+  /// \param X        The target atomic pointer to be updated
+  /// \param Expr     The value to update X with.
+  /// \param AO       Atomic ordering of the generated atomic instructions.
+  /// \param RMWOp    The binary operation used for update. If operation
+  ///                 is	not supported by atomicRMW, or belong to
+  ///	                {FADD, FSUB, BAD_BINOP}. Then a `cmpExch` based
+  ///                 atomic will be generated.
+  /// \param UpdateOp 	Code generator for complex expressions that cannot be
+  ///                   expressed through atomicrmw instruction.
+  /// \param IsXLHSInRHSPart true if \a X is Left H.S. in Right H.S. part of
+  ///                        the update expression, false otherwise.
+  ///	                       (e.g. true for X = X BinOp Expr)
+  ///
+  /// \return Insertion point after generated atomic update IR.
+  InsertPointTy createAtomicUpdate(const LocationDescription &Loc,
+                                   Instruction *AllocIP, AtomicOpValue &X,
+                                   Value *Expr, AtomicOrdering AO,
+                                   AtomicRMWInst::BinOp RMWOp,
+                                   AtomicUpdateCallbackTy &UpdateOp,
+                                   bool IsXLHSInRHSPart);
+
+  /// Emit atomic update for constructs: --- Only Scalar data types
+  /// V = X; X = X BinOp Expr ,
+  /// X = X BinOp Expr; V = X,
+  /// V = X; X = Expr BinOp X,
+  /// X = Expr BinOp X; V = X,
+  /// V = X; X = UpdateOp(X),
+  /// X = UpdateOp(X); V = X,
+  ///
+  /// \param Loc        The insert and source location description.
+  /// \param AllocIP    Instruction to create AllocaInst before.
+  /// \param X          The target atomic pointer to be updated
+  /// \param V          Memory address where to store captured value
+  /// \param Expr       The value to update X with.
+  /// \param AO         Atomic ordering of the generated atomic instructions
+  /// \param RMWOp      The binary operation used for update. If
+  ///                   operation is not supported by atomicRMW, or belong to
+  ///	                  {FADD, FSUB, BAD_BINOP}. Then a cmpExch based
+  ///                   atomic will be generated.
+  /// \param UpdateOp   Code generator for complex expressions that cannot be
+  ///                   expressed through atomicrmw instruction.
+  /// \param UpdateExpr true if X is an in place update of the form
+  ///                   X = X BinOp Expr or X = Expr BinOp X
+  /// \param IsXLHSInRHSPart true if X is Left H.S. in Right H.S. part of the
+  ///                        update expression, false otherwise.
+  ///                        (e.g. true for X = X BinOp Expr)
+  /// \param IsPostfixUpdate true if original value of 'x' must be stored in
+  ///                        'v', not an updated one.
+  ///
+  /// \return Insertion point after generated atomic capture IR.
+  InsertPointTy
+  createAtomicCapture(const LocationDescription &Loc, Instruction *AllocIP,
+                      AtomicOpValue &X, AtomicOpValue &V, Value *Expr,
+                      AtomicOrdering AO, AtomicRMWInst::BinOp RMWOp,
+                      AtomicUpdateCallbackTy &UpdateOp, bool UpdateExpr,
+                      bool IsPostfixUpdate, bool IsXLHSInRHSPart);
 
   /// Create the control flow structure of a canonical OpenMP loop.
   ///

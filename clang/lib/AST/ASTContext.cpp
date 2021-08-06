@@ -966,7 +966,7 @@ static bool isAddrSpaceMapManglingEnabled(const TargetInfo &TI,
 
 ASTContext::ASTContext(LangOptions &LOpts, SourceManager &SM,
                        IdentifierTable &idents, SelectorTable &sels,
-                       Builtin::Context &builtins)
+                       Builtin::Context &builtins, TranslationUnitKind TUKind)
     : ConstantArrayTypes(this_()), FunctionProtoTypes(this_()),
       TemplateSpecializationTypes(this_()),
       DependentTemplateSpecializationTypes(this_()), AutoTypes(this_()),
@@ -978,11 +978,10 @@ ASTContext::ASTContext(LangOptions &LOpts, SourceManager &SM,
                                         LangOpts.XRayAttrListFiles, SM)),
       ProfList(new ProfileList(LangOpts.ProfileListFiles, SM)),
       PrintingPolicy(LOpts), Idents(idents), Selectors(sels),
-      BuiltinInfo(builtins), DeclarationNames(*this), Comments(SM),
-      CommentCommandTraits(BumpAlloc, LOpts.CommentOpts),
+      BuiltinInfo(builtins), TUKind(TUKind), DeclarationNames(*this),
+      Comments(SM), CommentCommandTraits(BumpAlloc, LOpts.CommentOpts),
       CompCategories(this_()), LastSDM(nullptr, 0) {
-  TUDecl = TranslationUnitDecl::Create(*this);
-  TraversalScope = {TUDecl};
+  addTranslationUnitDecl();
 }
 
 ASTContext::~ASTContext() {
@@ -1196,9 +1195,10 @@ ExternCContextDecl *ASTContext::getExternCContextDecl() const {
 BuiltinTemplateDecl *
 ASTContext::buildBuiltinTemplateDecl(BuiltinTemplateKind BTK,
                                      const IdentifierInfo *II) const {
-  auto *BuiltinTemplate = BuiltinTemplateDecl::Create(*this, TUDecl, II, BTK);
+  auto *BuiltinTemplate =
+      BuiltinTemplateDecl::Create(*this, getTranslationUnitDecl(), II, BTK);
   BuiltinTemplate->setImplicit();
-  TUDecl->addDecl(BuiltinTemplate);
+  getTranslationUnitDecl()->addDecl(BuiltinTemplate);
 
   return BuiltinTemplate;
 }
@@ -1485,7 +1485,7 @@ void ASTContext::InitBuiltinTypes(const TargetInfo &Target,
   // MSVC predeclares struct _GUID, and we need it to create MSGuidDecls.
   if (LangOpts.MicrosoftExt || LangOpts.Borland) {
     MSGuidTagDecl = buildImplicitRecord("_GUID");
-    TUDecl->addDecl(MSGuidTagDecl);
+    getTranslationUnitDecl()->addDecl(MSGuidTagDecl);
   }
 }
 
@@ -1569,6 +1569,21 @@ ASTContext::setInstantiatedFromUsingDecl(NamedDecl *Inst, NamedDecl *Pattern) {
          "instantiation did not produce a using decl");
   assert(!InstantiatedFromUsingDecl[Inst] && "pattern already exists");
   InstantiatedFromUsingDecl[Inst] = Pattern;
+}
+
+UsingEnumDecl *
+ASTContext::getInstantiatedFromUsingEnumDecl(UsingEnumDecl *UUD) {
+  auto Pos = InstantiatedFromUsingEnumDecl.find(UUD);
+  if (Pos == InstantiatedFromUsingEnumDecl.end())
+    return nullptr;
+
+  return Pos->second;
+}
+
+void ASTContext::setInstantiatedFromUsingEnumDecl(UsingEnumDecl *Inst,
+                                                  UsingEnumDecl *Pattern) {
+  assert(!InstantiatedFromUsingEnumDecl[Inst] && "pattern already exists");
+  InstantiatedFromUsingEnumDecl[Inst] = Pattern;
 }
 
 UsingShadowDecl *
@@ -2458,16 +2473,21 @@ unsigned ASTContext::getPreferredTypeAlign(const Type *T) const {
   // The preferred alignment of member pointers is that of a pointer.
   if (T->isMemberPointerType())
     return getPreferredTypeAlign(getPointerDiffType().getTypePtr());
- 
+
   if (!Target->allowsLargerPreferedTypeAlignment())
     return ABIAlign;
 
   if (const auto *RT = T->getAs<RecordType>()) {
-    if (TI.AlignIsRequired || RT->getDecl()->isInvalidDecl())
+    const RecordDecl *RD = RT->getDecl();
+
+    // When used as part of a typedef, or together with a 'packed' attribute,
+    // the 'aligned' attribute can be used to decrease alignment.
+    if ((TI.AlignIsRequired && T->getAs<TypedefType>() != nullptr) ||
+        RD->isInvalidDecl())
       return ABIAlign;
 
     unsigned PreferredAlign = static_cast<unsigned>(
-        toBits(getASTRecordLayout(RT->getDecl()).PreferredAlignment));
+        toBits(getASTRecordLayout(RD).PreferredAlignment));
     assert(PreferredAlign >= ABIAlign &&
            "PreferredAlign should be at least as large as ABIAlign.");
     return PreferredAlign;
@@ -3854,7 +3874,7 @@ ASTContext::getBuiltinVectorTypeInfo(const BuiltinType *Ty) const {
             llvm::ElementCount::getScalable(NumEls), NF};
 #define RVV_VECTOR_TYPE_FLOAT(Name, Id, SingletonId, NumEls, ElBits, NF)       \
   case BuiltinType::Id:                                                        \
-    return {ElBits == 16 ? HalfTy : (ElBits == 32 ? FloatTy : DoubleTy),       \
+    return {ElBits == 16 ? Float16Ty : (ElBits == 32 ? FloatTy : DoubleTy),    \
             llvm::ElementCount::getScalable(NumEls), NF};
 #define RVV_PREDICATE_TYPE(Name, Id, SingletonId, NumEls)                      \
   case BuiltinType::Id:                                                        \
@@ -5439,6 +5459,29 @@ QualType ASTContext::getTypeOfType(QualType tofType) const {
   return QualType(tot, 0);
 }
 
+/// getReferenceQualifiedType - Given an expr, will return the type for
+/// that expression, as in [dcl.type.simple]p4 but without taking id-expressions
+/// and class member access into account.
+QualType ASTContext::getReferenceQualifiedType(const Expr *E) const {
+  // C++11 [dcl.type.simple]p4:
+  //   [...]
+  QualType T = E->getType();
+  switch (E->getValueKind()) {
+  //     - otherwise, if e is an xvalue, decltype(e) is T&&, where T is the
+  //       type of e;
+  case VK_XValue:
+    return getRValueReferenceType(T);
+  //     - otherwise, if e is an lvalue, decltype(e) is T&, where T is the
+  //       type of e;
+  case VK_LValue:
+    return getLValueReferenceType(T);
+  //  - otherwise, decltype(e) is the type of e.
+  case VK_PRValue:
+    return T;
+  }
+  llvm_unreachable("Unknown value kind");
+}
+
 /// Unlike many "get<Type>" functions, we don't unique DecltypeType
 /// nodes. This would never be helpful, since each such type has its own
 /// expression, and would not give a significant memory saving, since there
@@ -6051,9 +6094,11 @@ ASTContext::getCanonicalNestedNameSpecifier(NestedNameSpecifier *NNS) const {
                                     NNS->getAsNamespaceAlias()->getNamespace()
                                                       ->getOriginalNamespace());
 
+  // The difference between TypeSpec and TypeSpecWithTemplate is that the
+  // latter will have the 'template' keyword when printed.
   case NestedNameSpecifier::TypeSpec:
   case NestedNameSpecifier::TypeSpecWithTemplate: {
-    QualType T = getCanonicalType(QualType(NNS->getAsType(), 0));
+    const Type *T = getCanonicalType(NNS->getAsType());
 
     // If we have some kind of dependent-named type (e.g., "typename T::type"),
     // break it apart into its prefix and identifier, then reconsititute those
@@ -6063,14 +6108,16 @@ ASTContext::getCanonicalNestedNameSpecifier(NestedNameSpecifier *NNS) const {
     //   typedef typename T::type T1;
     //   typedef typename T1::type T2;
     if (const auto *DNT = T->getAs<DependentNameType>())
-      return NestedNameSpecifier::Create(*this, DNT->getQualifier(),
-                           const_cast<IdentifierInfo *>(DNT->getIdentifier()));
+      return NestedNameSpecifier::Create(
+          *this, DNT->getQualifier(),
+          const_cast<IdentifierInfo *>(DNT->getIdentifier()));
+    if (const auto *DTST = T->getAs<DependentTemplateSpecializationType>())
+      return NestedNameSpecifier::Create(*this, DTST->getQualifier(), true,
+                                         const_cast<Type *>(T));
 
-    // Otherwise, just canonicalize the type, and force it to be a TypeSpec.
-    // FIXME: Why are TypeSpec and TypeSpecWithTemplate distinct in the
-    // first place?
+    // TODO: Set 'Template' parameter to true for other template types.
     return NestedNameSpecifier::Create(*this, nullptr, false,
-                                       const_cast<Type *>(T.getTypePtr()));
+                                       const_cast<Type *>(T));
   }
 
   case NestedNameSpecifier::Global:
@@ -6607,7 +6654,7 @@ QualType ASTContext::getCFConstantStringType() const {
 QualType ASTContext::getObjCSuperType() const {
   if (ObjCSuperType.isNull()) {
     RecordDecl *ObjCSuperTypeDecl = buildImplicitRecord("objc_super");
-    TUDecl->addDecl(ObjCSuperTypeDecl);
+    getTranslationUnitDecl()->addDecl(ObjCSuperTypeDecl);
     ObjCSuperType = getTagDeclType(ObjCSuperTypeDecl);
   }
   return ObjCSuperType;
@@ -7983,19 +8030,21 @@ static TypedefDecl *CreateVoidPtrBuiltinVaListDecl(const ASTContext *Context) {
 
 static TypedefDecl *
 CreateAArch64ABIBuiltinVaListDecl(const ASTContext *Context) {
-  // struct __va_list
   RecordDecl *VaListTagDecl = Context->buildImplicitRecord("__va_list");
-  if (Context->getLangOpts().CPlusPlus) {
-    // namespace std { struct __va_list {
-    NamespaceDecl *NS;
-    NS = NamespaceDecl::Create(const_cast<ASTContext &>(*Context),
-                               Context->getTranslationUnitDecl(),
-                               /*Inline*/ false, SourceLocation(),
-                               SourceLocation(), &Context->Idents.get("std"),
-                               /*PrevDecl*/ nullptr);
-    NS->setImplicit();
-    VaListTagDecl->setDeclContext(NS);
-  }
+  // namespace std { struct __va_list {
+  // Note that we create the namespace even in C. This is intentional so that
+  // the type is consistent between C and C++, which is important in cases where
+  // the types need to match between translation units (e.g. with
+  // -fsanitize=cfi-icall). Ideally we wouldn't have created this namespace at
+  // all, but it's now part of the ABI (e.g. in mangled names), so we can't
+  // change it.
+  auto *NS = NamespaceDecl::Create(
+      const_cast<ASTContext &>(*Context), Context->getTranslationUnitDecl(),
+      /*Inline*/ false, SourceLocation(), SourceLocation(),
+      &Context->Idents.get("std"),
+      /*PrevDecl*/ nullptr);
+  NS->setImplicit();
+  VaListTagDecl->setDeclContext(NS);
 
   VaListTagDecl->startDefinition();
 
@@ -8653,6 +8702,14 @@ bool ASTContext::areCompatibleVectorTypes(QualType FirstVec,
   return false;
 }
 
+/// getSVETypeSize - Return SVE vector or predicate register size.
+static uint64_t getSVETypeSize(ASTContext &Context, const BuiltinType *Ty) {
+  assert(Ty->isVLSTBuiltinType() && "Invalid SVE Type");
+  return Ty->getKind() == BuiltinType::SveBool
+             ? Context.getLangOpts().ArmSveVectorBits / Context.getCharWidth()
+             : Context.getLangOpts().ArmSveVectorBits;
+}
+
 bool ASTContext::areCompatibleSveTypes(QualType FirstType,
                                        QualType SecondType) {
   assert(((FirstType->isSizelessBuiltinType() && SecondType->isVectorType()) ||
@@ -8670,7 +8727,7 @@ bool ASTContext::areCompatibleSveTypes(QualType FirstType,
           return VT->getElementType().getCanonicalType() ==
                  FirstType->getSveEltType(*this);
         else if (VT->getVectorKind() == VectorType::GenericVector)
-          return getTypeSize(SecondType) == getLangOpts().ArmSveVectorBits &&
+          return getTypeSize(SecondType) == getSVETypeSize(*this, BT) &&
                  hasSameType(VT->getElementType(),
                              getBuiltinVectorTypeInfo(BT).ElementType);
       }
@@ -8689,7 +8746,8 @@ bool ASTContext::areLaxCompatibleSveTypes(QualType FirstType,
          "Expected SVE builtin type and vector type!");
 
   auto IsLaxCompatible = [this](QualType FirstType, QualType SecondType) {
-    if (!FirstType->getAs<BuiltinType>())
+    const auto *BT = FirstType->getAs<BuiltinType>();
+    if (!BT)
       return false;
 
     const auto *VecTy = SecondType->getAs<VectorType>();
@@ -8699,13 +8757,19 @@ bool ASTContext::areLaxCompatibleSveTypes(QualType FirstType,
       const LangOptions::LaxVectorConversionKind LVCKind =
           getLangOpts().getLaxVectorConversions();
 
+      // Can not convert between sve predicates and sve vectors because of
+      // different size.
+      if (BT->getKind() == BuiltinType::SveBool &&
+          VecTy->getVectorKind() == VectorType::SveFixedLengthDataVector)
+        return false;
+
       // If __ARM_FEATURE_SVE_BITS != N do not allow GNU vector lax conversion.
       // "Whenever __ARM_FEATURE_SVE_BITS==N, GNUT implicitly
       // converts to VLAT and VLAT implicitly converts to GNUT."
       // ACLE Spec Version 00bet6, 3.7.3.2. Behavior common to vectors and
       // predicates.
       if (VecTy->getVectorKind() == VectorType::GenericVector &&
-          getTypeSize(SecondType) != getLangOpts().ArmSveVectorBits)
+          getTypeSize(SecondType) != getSVETypeSize(*this, BT))
         return false;
 
       // If -flax-vector-conversions=all is specified, the types are
@@ -10353,6 +10417,11 @@ static QualType DecodeTypeFromStr(const char *&Str, const ASTContext &Context,
   // Read the base type.
   switch (*Str++) {
   default: llvm_unreachable("Unknown builtin type letter!");
+  case 'x':
+    assert(HowLong == 0 && !Signed && !Unsigned &&
+           "Bad modifiers used with 'x'!");
+    Type = Context.Float16Ty;
+    break;
   case 'y':
     assert(HowLong == 0 && !Signed && !Unsigned &&
            "Bad modifiers used with 'y'!");
@@ -11075,6 +11144,33 @@ MangleContext *ASTContext::createMangleContext(const TargetInfo *T) {
   llvm_unreachable("Unsupported ABI");
 }
 
+MangleContext *ASTContext::createDeviceMangleContext(const TargetInfo &T) {
+  assert(T.getCXXABI().getKind() != TargetCXXABI::Microsoft &&
+         "Device mangle context does not support Microsoft mangling.");
+  switch (T.getCXXABI().getKind()) {
+  case TargetCXXABI::AppleARM64:
+  case TargetCXXABI::Fuchsia:
+  case TargetCXXABI::GenericAArch64:
+  case TargetCXXABI::GenericItanium:
+  case TargetCXXABI::GenericARM:
+  case TargetCXXABI::GenericMIPS:
+  case TargetCXXABI::iOS:
+  case TargetCXXABI::WebAssembly:
+  case TargetCXXABI::WatchOS:
+  case TargetCXXABI::XL:
+    return ItaniumMangleContext::create(
+        *this, getDiagnostics(),
+        [](ASTContext &, const NamedDecl *ND) -> llvm::Optional<unsigned> {
+          if (const auto *RD = dyn_cast<CXXRecordDecl>(ND))
+            return RD->getDeviceLambdaManglingNumber();
+          return llvm::None;
+        });
+  case TargetCXXABI::Microsoft:
+    return MicrosoftMangleContext::create(*this, getDiagnostics());
+  }
+  llvm_unreachable("Unsupported ABI");
+}
+
 CXXABI::~CXXABI() = default;
 
 size_t ASTContext::getSideTableAllocatedMemory() const {
@@ -11647,4 +11743,87 @@ StringRef ASTContext::getCUIDHash() const {
     return StringRef();
   CUIDHash = llvm::utohexstr(llvm::MD5Hash(LangOpts.CUID), /*LowerCase=*/true);
   return CUIDHash;
+}
+
+// Get the closest named parent, so we can order the sycl naming decls somewhere
+// that mangling is meaningful.
+static const DeclContext *GetNamedParent(const CXXRecordDecl *RD) {
+  const DeclContext *DC = RD->getDeclContext();
+
+  while (!isa<NamedDecl, TranslationUnitDecl>(DC))
+    DC = DC->getParent();
+  return DC;
+}
+
+void ASTContext::AddSYCLKernelNamingDecl(const CXXRecordDecl *RD) {
+  assert(getLangOpts().isSYCL() && "Only valid for SYCL programs");
+  RD = RD->getCanonicalDecl();
+  const DeclContext *DC = GetNamedParent(RD);
+
+  assert(RD->getLocation().isValid() &&
+         "Invalid location on kernel naming decl");
+
+  (void)SYCLKernelNamingTypes[DC].insert(RD);
+}
+
+bool ASTContext::IsSYCLKernelNamingDecl(const NamedDecl *ND) const {
+  assert(getLangOpts().isSYCL() && "Only valid for SYCL programs");
+  const auto *RD = dyn_cast<CXXRecordDecl>(ND);
+  if (!RD)
+    return false;
+  RD = RD->getCanonicalDecl();
+  const DeclContext *DC = GetNamedParent(RD);
+
+  auto Itr = SYCLKernelNamingTypes.find(DC);
+
+  if (Itr == SYCLKernelNamingTypes.end())
+    return false;
+
+  return Itr->getSecond().count(RD);
+}
+
+// Filters the Decls list to those that share the lambda mangling with the
+// passed RD.
+void ASTContext::FilterSYCLKernelNamingDecls(
+    const CXXRecordDecl *RD,
+    llvm::SmallVectorImpl<const CXXRecordDecl *> &Decls) {
+
+  if (!SYCLKernelFilterContext)
+    SYCLKernelFilterContext.reset(
+        ItaniumMangleContext::create(*this, getDiagnostics()));
+
+  llvm::SmallString<128> LambdaSig;
+  llvm::raw_svector_ostream Out(LambdaSig);
+  SYCLKernelFilterContext->mangleLambdaSig(RD, Out);
+
+  llvm::erase_if(Decls, [this, &LambdaSig](const CXXRecordDecl *LocalRD) {
+    llvm::SmallString<128> LocalLambdaSig;
+    llvm::raw_svector_ostream LocalOut(LocalLambdaSig);
+    SYCLKernelFilterContext->mangleLambdaSig(LocalRD, LocalOut);
+    return LambdaSig != LocalLambdaSig;
+  });
+}
+
+unsigned ASTContext::GetSYCLKernelNamingIndex(const NamedDecl *ND) {
+  assert(getLangOpts().isSYCL() && "Only valid for SYCL programs");
+  assert(IsSYCLKernelNamingDecl(ND) &&
+         "Lambda not involved in mangling asked for a naming index?");
+
+  const CXXRecordDecl *RD = cast<CXXRecordDecl>(ND)->getCanonicalDecl();
+  const DeclContext *DC = GetNamedParent(RD);
+
+  auto Itr = SYCLKernelNamingTypes.find(DC);
+  assert(Itr != SYCLKernelNamingTypes.end() && "Not a valid DeclContext?");
+
+  const llvm::SmallPtrSet<const CXXRecordDecl *, 4> &Set = Itr->getSecond();
+
+  llvm::SmallVector<const CXXRecordDecl *> Decls{Set.begin(), Set.end()};
+
+  FilterSYCLKernelNamingDecls(RD, Decls);
+
+  llvm::sort(Decls, [](const CXXRecordDecl *LHS, const CXXRecordDecl *RHS) {
+    return LHS->getLambdaManglingNumber() < RHS->getLambdaManglingNumber();
+  });
+
+  return llvm::find(Decls, RD) - Decls.begin();
 }

@@ -581,6 +581,16 @@ void ASTStmtReader::VisitConstantExpr(ConstantExpr *E) {
   E->setSubExpr(Record.readSubExpr());
 }
 
+void ASTStmtReader::VisitSYCLUniqueStableNameExpr(SYCLUniqueStableNameExpr *E) {
+  VisitExpr(E);
+
+  E->setLocation(readSourceLocation());
+  E->setLParenLocation(readSourceLocation());
+  E->setRParenLocation(readSourceLocation());
+
+  E->setTypeSourceInfo(Record.readTypeSourceInfo());
+}
+
 void ASTStmtReader::VisitPredefinedExpr(PredefinedExpr *E) {
   VisitExpr(E);
   bool HasFunctionName = Record.readInt();
@@ -2311,6 +2321,10 @@ void ASTStmtReader::VisitOMPTileDirective(OMPTileDirective *D) {
   VisitOMPLoopBasedDirective(D);
 }
 
+void ASTStmtReader::VisitOMPUnrollDirective(OMPUnrollDirective *D) {
+  VisitOMPLoopBasedDirective(D);
+}
+
 void ASTStmtReader::VisitOMPForDirective(OMPForDirective *D) {
   VisitOMPLoopDirective(D);
   D->setHasCancel(Record.readBool());
@@ -2802,6 +2816,10 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
                        /*StorageKind=*/Record[ASTStmtReader::NumExprFields]));
       break;
 
+    case EXPR_SYCL_UNIQUE_STABLE_NAME:
+      S = SYCLUniqueStableNameExpr::CreateEmpty(Context);
+      break;
+
     case EXPR_PREDEFINED:
       S = PredefinedExpr::CreateEmpty(
           Context,
@@ -3184,6 +3202,13 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
       unsigned NumLoops = Record[ASTStmtReader::NumStmtFields];
       unsigned NumClauses = Record[ASTStmtReader::NumStmtFields + 1];
       S = OMPTileDirective::CreateEmpty(Context, NumClauses, NumLoops);
+      break;
+    }
+
+    case STMT_OMP_UNROLL_DIRECTIVE: {
+      assert(Record[ASTStmtReader::NumStmtFields] == 1 && "Unroll directive accepts only a single loop");
+      unsigned NumClauses = Record[ASTStmtReader::NumStmtFields + 1];
+      S = OMPUnrollDirective::CreateEmpty(Context, NumClauses);
       break;
     }
 

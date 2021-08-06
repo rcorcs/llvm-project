@@ -7,6 +7,7 @@ set(DFSAN_RTL_SOURCES
   dfsan_chained_origin_depot.cpp
   dfsan_custom.cpp
   dfsan_interceptors.cpp
+  dfsan_new_delete.cpp
   dfsan_thread.cpp
   )
 
@@ -64,4 +65,4 @@ add_custom_command(OUTPUT ${dfsan_abilist_filename}
                    DEPENDS done_abilist.txt libc_ubuntu1404_abilist.txt)
 add_dependencies(dfsan dfsan_abilist)
 install(FILES ${dfsan_abilist_filename}
-        DESTINATION ${COMPILER_RT_INSTALL_PATH}/share)
+        DESTINATION ${COMPILER_RT_INSTALL_DATA_DIR})

@@ -475,6 +475,9 @@ protected:
   /// Harden against Straight Line Speculation for indirect calls.
   bool HardenSlsBlr = false;
 
+  /// Generate thunk code for SLS mitigation in the normal text section.
+  bool HardenSlsNoComdat = false;
+
   /// stackAlignment - The minimum alignment known to hold of the stack frame on
   /// entry to the function and which must be maintained by every function.
   Align stackAlignment = Align(4);
@@ -817,8 +820,10 @@ public:
     return isTargetMachO() ? (ReserveR9 || !HasV6Ops) : ReserveR9;
   }
 
-  bool useR7AsFramePointer() const {
-    return isTargetDarwin() || (!isTargetWindows() && isThumb());
+  MCPhysReg getFramePointerReg() const {
+    if (isTargetDarwin() || (!isTargetWindows() && isThumb()))
+      return ARM::R7;
+    return ARM::R11;
   }
 
   /// Returns true if the frame setup is split into two separate pushes (first
@@ -826,7 +831,7 @@ public:
   /// to lr. This is always required on Thumb1-only targets, as the push and
   /// pop instructions can't access the high registers.
   bool splitFramePushPop(const MachineFunction &MF) const {
-    return (useR7AsFramePointer() &&
+    return (getFramePointerReg() == ARM::R7 &&
             MF.getTarget().Options.DisableFramePointerElim(MF)) ||
            isThumb1Only();
   }
@@ -931,6 +936,7 @@ public:
 
   bool hardenSlsRetBr() const { return HardenSlsRetBr; }
   bool hardenSlsBlr() const { return HardenSlsBlr; }
+  bool hardenSlsNoComdat() const { return HardenSlsNoComdat; }
 };
 
 } // end namespace llvm

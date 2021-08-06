@@ -72,13 +72,13 @@ def SDT_WebAssemblyCallSeqEnd :
     SDCallSeqEnd<[SDTCisVT<0, iPTR>, SDTCisVT<1, iPTR>]>;
 def SDT_WebAssemblyBrTable    : SDTypeProfile<0, -1, [SDTCisPtrTy<0>]>;
 def SDT_WebAssemblyArgument   : SDTypeProfile<1, 1, [SDTCisVT<1, i32>]>;
+def SDT_WebAssemblyLocalGet   : SDTypeProfile<1, 1, [SDTCisVT<1, i32>]>;
+def SDT_WebAssemblyLocalSet   : SDTypeProfile<0, 2, [SDTCisVT<0, i32>]>;
 def SDT_WebAssemblyReturn     : SDTypeProfile<0, -1, []>;
 def SDT_WebAssemblyWrapper    : SDTypeProfile<1, 1, [SDTCisSameAs<0, 1>,
                                                      SDTCisPtrTy<0>]>;
 def SDT_WebAssemblyWrapperPIC : SDTypeProfile<1, 1, [SDTCisSameAs<0, 1>,
                                                      SDTCisPtrTy<0>]>;
-def SDT_WebAssemblyThrow      : SDTypeProfile<0, -1, []>;
-def SDT_WebAssemblyCatch      : SDTypeProfile<1, 1, [SDTCisPtrTy<0>]>;
 def SDT_WebAssemblyGlobalGet  : SDTypeProfile<1, 1, [SDTCisPtrTy<1>]>;
 def SDT_WebAssemblyGlobalSet  : SDTypeProfile<0, 2, [SDTCisPtrTy<1>]>;
 
@@ -104,16 +104,18 @@ def WebAssemblywrapper  : SDNode<"WebAssemblyISD::Wrapper",
                                  SDT_WebAssemblyWrapper>;
 def WebAssemblywrapperPIC  : SDNode<"WebAssemblyISD::WrapperPIC",
                                      SDT_WebAssemblyWrapperPIC>;
-def WebAssemblythrow : SDNode<"WebAssemblyISD::THROW", SDT_WebAssemblyThrow,
-                              [SDNPHasChain, SDNPVariadic]>;
-def WebAssemblycatch : SDNode<"WebAssemblyISD::CATCH", SDT_WebAssemblyCatch,
-                              [SDNPHasChain, SDNPSideEffect]>;
 def WebAssemblyglobal_get :
     SDNode<"WebAssemblyISD::GLOBAL_GET", SDT_WebAssemblyGlobalGet,
            [SDNPHasChain, SDNPMayLoad, SDNPMemOperand]>;
 def WebAssemblyglobal_set :
     SDNode<"WebAssemblyISD::GLOBAL_SET", SDT_WebAssemblyGlobalSet,
            [SDNPHasChain, SDNPMayStore, SDNPMemOperand]>;
+def WebAssemblylocal_get :
+    SDNode<"WebAssemblyISD::LOCAL_GET", SDT_WebAssemblyLocalGet,
+           [SDNPHasChain, SDNPMayLoad]>;
+def WebAssemblylocal_set :
+    SDNode<"WebAssemblyISD::LOCAL_SET", SDT_WebAssemblyLocalSet,
+           [SDNPHasChain, SDNPMayStore]>;
 
 //===----------------------------------------------------------------------===//
 // WebAssembly-specific Operands.
@@ -188,8 +190,8 @@ def P2Align : Operand<i32> {
   let PrintMethod = "printWebAssemblyP2AlignOperand";
 }
 
-let OperandType = "OPERAND_EVENT" in
-def event_op : Operand<i32>;
+let OperandType = "OPERAND_TAG" in
+def tag_op : Operand<i32>;
 
 } // OperandType = "OPERAND_P2ALIGN"
 
@@ -224,6 +226,19 @@ def getStackOpcode : InstrMapping {
   let ColFields = ["StackBased"];
   let KeyCol = ["false"];
   let ValueCols = [["true"]];
+}
+
+//===----------------------------------------------------------------------===//
+// WebAssembly Stack to Register instruction mapping
+//===----------------------------------------------------------------------===//
+
+class RegisterRel;
+def getRegisterOpcode : InstrMapping {
+  let FilterClass = "RegisterRel";
+  let RowFields = ["BaseName"];
+  let ColFields = ["StackBased"];
+  let KeyCol = ["true"];
+  let ValueCols = [["false"]];
 }
 
 //===----------------------------------------------------------------------===//
@@ -332,6 +347,10 @@ multiclass LOCAL<WebAssemblyRegClass rc, Operand global_op> {
     def : Pat<(WebAssemblyglobal_set
                vt:$src, (WebAssemblywrapper tglobaladdr:$addr)),
               (!cast<NI>("GLOBAL_SET_" # rc) tglobaladdr:$addr, vt:$src)>;
+    def : Pat<(vt (WebAssemblylocal_get (i32 timm:$local))),
+              (!cast<NI>("LOCAL_GET_" # rc) timm:$local)>;
+    def : Pat<(WebAssemblylocal_set timm:$local, vt:$src),
+              (!cast<NI>("LOCAL_SET_" # rc) timm:$local, vt:$src)>;
   }
 }
 defm "" : LOCAL<I32, global_op32>;

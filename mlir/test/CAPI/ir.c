@@ -21,6 +21,7 @@
 #include "mlir-c/Registration.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,8 +97,8 @@ MlirModule makeAndDumpAdd(MlirContext ctx, MlirLocation location) {
       mlirNamedAttributeGet(
           mlirIdentifierGet(ctx, mlirStringRefCreateFromCString("sym_name")),
           funcNameAttr)};
-  MlirOperationState funcState =
-      mlirOperationStateGet(mlirStringRefCreateFromCString("func"), location);
+  MlirOperationState funcState = mlirOperationStateGet(
+      mlirStringRefCreateFromCString("builtin.func"), location);
   mlirOperationStateAddAttributes(&funcState, 2, funcAttrs);
   mlirOperationStateAddOwnedRegions(&funcState, 1, &funcBodyRegion);
   MlirOperation func = mlirOperationCreate(&funcState);
@@ -478,6 +479,7 @@ static int constructAndTraverseIr(MlirContext ctx) {
 /// block/operation-relative API and their final order is checked.
 static void buildWithInsertionsAndPrint(MlirContext ctx) {
   MlirLocation loc = mlirLocationUnknownGet(ctx);
+  mlirContextSetAllowUnregisteredDialects(ctx, true);
 
   MlirRegion owningRegion = mlirRegionCreate();
   MlirBlock nullBlock = mlirRegionGetFirstBlock(owningRegion);
@@ -541,6 +543,7 @@ static void buildWithInsertionsAndPrint(MlirContext ctx) {
 
   mlirOperationDump(op);
   mlirOperationDestroy(op);
+  mlirContextSetAllowUnregisteredDialects(ctx, false);
   // clang-format off
   // CHECK-LABEL:  "insertion.order.test"
   // CHECK:      ^{{.*}}(%{{.*}}: i1
@@ -1560,6 +1563,8 @@ int testOperands() {
   // CHECK-LABEL: @testOperands
 
   MlirContext ctx = mlirContextCreate();
+  mlirRegisterAllDialects(ctx);
+  mlirContextGetOrLoadDialect(ctx, mlirStringRefCreateFromCString("test"));
   MlirLocation loc = mlirLocationUnknownGet(ctx);
   MlirType indexType = mlirIndexTypeGet(ctx);
 
@@ -1589,6 +1594,7 @@ int testOperands() {
   MlirValue constOneValue = mlirOperationGetResult(constOne, 0);
 
   // Create the operation under test.
+  mlirContextSetAllowUnregisteredDialects(ctx, true);
   MlirOperationState opState =
       mlirOperationStateGet(mlirStringRefCreateFromCString("dummy.op"), loc);
   MlirValue initialOperands[] = {constZeroValue};
@@ -1597,19 +1603,19 @@ int testOperands() {
 
   // Test operand APIs.
   intptr_t numOperands = mlirOperationGetNumOperands(op);
-  fprintf(stderr, "Num Operands: %ld\n", numOperands);
+  fprintf(stderr, "Num Operands: %" PRIdPTR "\n", numOperands);
   // CHECK: Num Operands: 1
 
   MlirValue opOperand = mlirOperationGetOperand(op, 0);
   fprintf(stderr, "Original operand: ");
   mlirValuePrint(opOperand, printToStderr, NULL);
-  // CHECK: Original operand: {{.+}} {value = 0 : index}
+  // CHECK: Original operand: {{.+}} constant 0 : index
 
   mlirOperationSetOperand(op, 0, constOneValue);
   opOperand = mlirOperationGetOperand(op, 0);
   fprintf(stderr, "Updated operand: ");
   mlirValuePrint(opOperand, printToStderr, NULL);
-  // CHECK: Updated operand: {{.+}} {value = 1 : index}
+  // CHECK: Updated operand: {{.+}} constant 1 : index
 
   mlirOperationDestroy(op);
   mlirOperationDestroy(constZero);
@@ -1619,21 +1625,58 @@ int testOperands() {
   return 0;
 }
 
+/// Tests clone APIs.
+int testClone() {
+  fprintf(stderr, "@testClone\n");
+  // CHECK-LABEL: @testClone
+
+  MlirContext ctx = mlirContextCreate();
+  mlirRegisterAllDialects(ctx);
+  mlirContextGetOrLoadDialect(ctx, mlirStringRefCreateFromCString("std"));
+  MlirLocation loc = mlirLocationUnknownGet(ctx);
+  MlirType indexType = mlirIndexTypeGet(ctx);
+  MlirStringRef valueStringRef =  mlirStringRefCreateFromCString("value");
+
+  MlirAttribute indexZeroLiteral =
+      mlirAttributeParseGet(ctx, mlirStringRefCreateFromCString("0 : index"));
+  MlirNamedAttribute indexZeroValueAttr = mlirNamedAttributeGet(mlirIdentifierGet(ctx, valueStringRef), indexZeroLiteral);
+  MlirOperationState constZeroState = mlirOperationStateGet(
+      mlirStringRefCreateFromCString("std.constant"), loc);
+  mlirOperationStateAddResults(&constZeroState, 1, &indexType);
+  mlirOperationStateAddAttributes(&constZeroState, 1, &indexZeroValueAttr);
+  MlirOperation constZero = mlirOperationCreate(&constZeroState);
+
+  MlirAttribute indexOneLiteral =
+      mlirAttributeParseGet(ctx, mlirStringRefCreateFromCString("1 : index"));
+  MlirOperation constOne = mlirOperationClone(constZero);
+  mlirOperationSetAttributeByName(constOne, valueStringRef, indexOneLiteral);
+
+  mlirOperationPrint(constZero, printToStderr, NULL);
+  mlirOperationPrint(constOne, printToStderr, NULL);
+  // CHECK: constant 0 : index
+  // CHECK: constant 1 : index
+
+  return 0;
+}
+
 // Wraps a diagnostic into additional text we can match against.
 MlirLogicalResult errorHandler(MlirDiagnostic diagnostic, void *userData) {
-  fprintf(stderr, "processing diagnostic (userData: %ld) <<\n", (long)userData);
+  fprintf(stderr, "processing diagnostic (userData: %" PRIdPTR ") <<\n",
+          (intptr_t)userData);
   mlirDiagnosticPrint(diagnostic, printToStderr, NULL);
   fprintf(stderr, "\n");
   MlirLocation loc = mlirDiagnosticGetLocation(diagnostic);
   mlirLocationPrint(loc, printToStderr, NULL);
   assert(mlirDiagnosticGetNumNotes(diagnostic) == 0);
-  fprintf(stderr, "\n>> end of diagnostic (userData: %ld)\n", (long)userData);
+  fprintf(stderr, "\n>> end of diagnostic (userData: %" PRIdPTR ")\n",
+          (intptr_t)userData);
   return mlirLogicalResultSuccess();
 }
 
 // Logs when the delete user data callback is called
 static void deleteUserData(void *userData) {
-  fprintf(stderr, "deleting user data (userData: %ld)\n", (long)userData);
+  fprintf(stderr, "deleting user data (userData: %" PRIdPTR ")\n",
+          (intptr_t)userData);
 }
 
 void testDiagnostics() {
@@ -1698,6 +1741,8 @@ int main() {
     return 10;
   if (testOperands())
     return 11;
+  if (testClone())
+    return 12;
 
   mlirContextDestroy(ctx);
 

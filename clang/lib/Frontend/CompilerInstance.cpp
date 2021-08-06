@@ -135,13 +135,14 @@ bool CompilerInstance::createTarget() {
 
   // We should do it here because target knows nothing about
   // language options when it's being created.
-  if (getLangOpts().OpenCL)
-    getTarget().validateOpenCLTarget(getLangOpts(), getDiagnostics());
+  if (getLangOpts().OpenCL &&
+      !getTarget().validateOpenCLTarget(getLangOpts(), getDiagnostics()))
+    return false;
 
   // Inform the target of the language options.
   // FIXME: We shouldn't need to do this, the target should be immutable once
   // created. This complexity should be lifted elsewhere.
-  getTarget().adjust(getLangOpts());
+  getTarget().adjust(getDiagnostics(), getLangOpts());
 
   // Adjust target options based on codegen options.
   getTarget().adjustTargetOptions(getCodeGenOpts(), getTargetOpts());
@@ -456,7 +457,7 @@ void CompilerInstance::createPreprocessor(TranslationUnitKind TUKind) {
                                       getSourceManager(), *HeaderInfo, *this,
                                       /*IdentifierInfoLookup=*/nullptr,
                                       /*OwnsHeaderSearch=*/true, TUKind);
-  getTarget().adjust(getLangOpts());
+  getTarget().adjust(getDiagnostics(), getLangOpts());
   PP->Initialize(getTarget(), getAuxTarget());
 
   if (PPOpts.DetailedRecord)
@@ -550,7 +551,7 @@ void CompilerInstance::createASTContext() {
   Preprocessor &PP = getPreprocessor();
   auto *Context = new ASTContext(getLangOpts(), PP.getSourceManager(),
                                  PP.getIdentifierTable(), PP.getSelectorTable(),
-                                 PP.getBuiltinInfo());
+                                 PP.getBuiltinInfo(), PP.TUKind);
   Context->InitBuiltinTypes(getTarget(), getAuxTarget());
   setASTContext(Context);
 }
@@ -702,31 +703,37 @@ void CompilerInstance::createSema(TranslationUnitKind TUKind,
 // Output Files
 
 void CompilerInstance::clearOutputFiles(bool EraseFiles) {
+  // Ignore errors that occur when trying to discard the temp file.
   for (OutputFile &OF : OutputFiles) {
     if (EraseFiles) {
-      if (!OF.TempFilename.empty()) {
-        llvm::sys::fs::remove(OF.TempFilename);
-        continue;
-      }
+      if (OF.File)
+        consumeError(OF.File->discard());
       if (!OF.Filename.empty())
         llvm::sys::fs::remove(OF.Filename);
       continue;
     }
 
-    if (OF.TempFilename.empty())
+    if (!OF.File)
       continue;
+
+    if (OF.File->TmpName.empty()) {
+      consumeError(OF.File->discard());
+      continue;
+    }
 
     // If '-working-directory' was passed, the output filename should be
     // relative to that.
     SmallString<128> NewOutFile(OF.Filename);
     FileMgr->FixupRelativePath(NewOutFile);
-    std::error_code EC = llvm::sys::fs::rename(OF.TempFilename, NewOutFile);
-    if (!EC)
-      continue;
-    getDiagnostics().Report(diag::err_unable_to_rename_temp)
-        << OF.TempFilename << OF.Filename << EC.message();
 
-    llvm::sys::fs::remove(OF.TempFilename);
+    llvm::Error E = OF.File->keep(NewOutFile);
+    if (!E)
+      continue;
+
+    getDiagnostics().Report(diag::err_unable_to_rename_temp)
+        << OF.File->TmpName << OF.Filename << std::move(E);
+
+    llvm::sys::fs::remove(OF.File->TmpName);
   }
   OutputFiles.clear();
   if (DeleteBuiltModules) {
@@ -736,11 +743,9 @@ void CompilerInstance::clearOutputFiles(bool EraseFiles) {
   }
 }
 
-std::unique_ptr<raw_pwrite_stream>
-CompilerInstance::createDefaultOutputFile(bool Binary, StringRef InFile,
-                                          StringRef Extension,
-                                          bool RemoveFileOnSignal,
-                                          bool CreateMissingDirectories) {
+std::unique_ptr<raw_pwrite_stream> CompilerInstance::createDefaultOutputFile(
+    bool Binary, StringRef InFile, StringRef Extension, bool RemoveFileOnSignal,
+    bool CreateMissingDirectories, bool ForceUseTemporary) {
   StringRef OutputPath = getFrontendOpts().OutputFile;
   Optional<SmallString<128>> PathStorage;
   if (OutputPath.empty()) {
@@ -753,9 +758,8 @@ CompilerInstance::createDefaultOutputFile(bool Binary, StringRef InFile,
     }
   }
 
-  // Force a temporary file if RemoveFileOnSignal was disabled.
   return createOutputFile(OutputPath, Binary, RemoveFileOnSignal,
-                          getFrontendOpts().UseTemporary || !RemoveFileOnSignal,
+                          getFrontendOpts().UseTemporary || ForceUseTemporary,
                           CreateMissingDirectories);
 }
 
@@ -808,7 +812,7 @@ CompilerInstance::createOutputFileImpl(StringRef OutputPath, bool Binary,
     }
   }
 
-  std::string TempFile;
+  Optional<llvm::sys::fs::TempFile> Temp;
   if (UseTemporary) {
     // Create a temporary file.
     // Insert -%%%%%%%% before the extension (if any), and because some tools
@@ -820,25 +824,34 @@ CompilerInstance::createOutputFileImpl(StringRef OutputPath, bool Binary,
     TempPath += "-%%%%%%%%";
     TempPath += OutputExtension;
     TempPath += ".tmp";
-    int fd;
-    std::error_code EC = llvm::sys::fs::createUniqueFile(
-        TempPath, fd, TempPath,
-        Binary ? llvm::sys::fs::OF_None : llvm::sys::fs::OF_Text);
+    Expected<llvm::sys::fs::TempFile> ExpectedFile =
+        llvm::sys::fs::TempFile::create(
+            TempPath, llvm::sys::fs::all_read | llvm::sys::fs::all_write,
+            Binary ? llvm::sys::fs::OF_None : llvm::sys::fs::OF_Text);
 
-    if (CreateMissingDirectories &&
-        EC == llvm::errc::no_such_file_or_directory) {
-      StringRef Parent = llvm::sys::path::parent_path(OutputPath);
-      EC = llvm::sys::fs::create_directories(Parent);
-      if (!EC) {
-        EC = llvm::sys::fs::createUniqueFile(TempPath, fd, TempPath,
-                                             Binary ? llvm::sys::fs::OF_None
-                                                    : llvm::sys::fs::OF_Text);
-      }
-    }
+    llvm::Error E = handleErrors(
+        ExpectedFile.takeError(), [&](const llvm::ECError &E) -> llvm::Error {
+          std::error_code EC = E.convertToErrorCode();
+          if (CreateMissingDirectories &&
+              EC == llvm::errc::no_such_file_or_directory) {
+            StringRef Parent = llvm::sys::path::parent_path(OutputPath);
+            EC = llvm::sys::fs::create_directories(Parent);
+            if (!EC) {
+              ExpectedFile = llvm::sys::fs::TempFile::create(TempPath);
+              if (!ExpectedFile)
+                return llvm::errorCodeToError(
+                    llvm::errc::no_such_file_or_directory);
+            }
+          }
+          return llvm::errorCodeToError(EC);
+        });
 
-    if (!EC) {
-      OS.reset(new llvm::raw_fd_ostream(fd, /*shouldClose=*/true));
-      OSFile = TempFile = std::string(TempPath.str());
+    if (E) {
+      consumeError(std::move(E));
+    } else {
+      Temp = std::move(ExpectedFile.get());
+      OS.reset(new llvm::raw_fd_ostream(Temp->FD, /*shouldClose=*/false));
+      OSFile = Temp->TmpName;
     }
     // If we failed to create the temporary, fallback to writing to the file
     // directly. This handles the corner case where we cannot write to the
@@ -855,14 +868,10 @@ CompilerInstance::createOutputFileImpl(StringRef OutputPath, bool Binary,
       return llvm::errorCodeToError(EC);
   }
 
-  // Make sure the out stream file gets removed if we crash.
-  if (RemoveFileOnSignal)
-    llvm::sys::RemoveFileOnSignal(*OSFile);
-
   // Add the output file -- but don't try to remove "-", since this means we are
   // using stdin.
   OutputFiles.emplace_back(((OutputPath != "-") ? OutputPath : "").str(),
-                           std::move(TempFile));
+                           std::move(Temp));
 
   if (!Binary || OS->supportsSeeking())
     return std::move(OS);
@@ -1044,6 +1053,15 @@ compileModuleImpl(CompilerInstance &ImportingInstance, SourceLocation ImportLoc,
                   llvm::function_ref<void(CompilerInstance &)> PostBuildStep =
                       [](CompilerInstance &) {}) {
   llvm::TimeTraceScope TimeScope("Module Compile", ModuleName);
+
+  // Never compile a module that's already finalized - this would cause the
+  // existing module to be freed, causing crashes if it is later referenced
+  if (ImportingInstance.getModuleCache().isPCMFinal(ModuleFileName)) {
+    ImportingInstance.getDiagnostics().Report(
+        ImportLoc, diag::err_module_rebuild_finalized)
+        << ModuleName;
+    return false;
+  }
 
   // Construct a compiler invocation for creating this module.
   auto Invocation =
