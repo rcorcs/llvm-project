@@ -197,26 +197,38 @@ void Message::Emit(llvm::raw_ostream &o, const AllCookedSources &allCooked,
   text += ToString();
   const AllSources &sources{allCooked.allSources()};
   sources.EmitMessage(o, provenanceRange, text, echoSourceLine);
-  if (attachmentIsContext_) {
-    for (const Message *context{attachment_.get()}; context;
-         context = context->attachment_.get()) {
-      std::optional<ProvenanceRange> contextProvenance{
-          context->GetProvenanceRange(allCooked)};
+  bool isContext{attachmentIsContext_};
+  for (const Message *attachment{attachment_.get()}; attachment;
+       attachment = attachment->attachment_.get()) {
+    text.clear();
+    if (isContext) {
       text = "in the context: ";
-      text += context->ToString();
-      // TODO: don't echo the source lines of a context when it's the
-      // same line (or maybe just never echo source for context)
-      sources.EmitMessage(o, contextProvenance, text,
-          echoSourceLine && contextProvenance != provenanceRange);
-      provenanceRange = contextProvenance;
     }
-  } else {
-    for (const Message *attachment{attachment_.get()}; attachment;
-         attachment = attachment->attachment_.get()) {
-      sources.EmitMessage(o, attachment->GetProvenanceRange(allCooked),
-          attachment->ToString(), echoSourceLine);
-    }
+    text += attachment->ToString();
+    sources.EmitMessage(
+        o, attachment->GetProvenanceRange(allCooked), text, echoSourceLine);
+    isContext = attachment->attachmentIsContext_;
   }
+}
+
+// Messages are equal if they're for the same location and text, and the user
+// visible aspects of their attachments are the same
+bool Message::operator==(const Message &that) const {
+  if (!AtSameLocation(that) || ToString() != that.ToString()) {
+    return false;
+  }
+  const Message *thatAttachment{that.attachment_.get()};
+  for (const Message *attachment{attachment_.get()}; attachment;
+       attachment = attachment->attachment_.get()) {
+    if (!thatAttachment ||
+        attachment->attachmentIsContext_ !=
+            thatAttachment->attachmentIsContext_ ||
+        *attachment != *thatAttachment) {
+      return false;
+    }
+    thatAttachment = thatAttachment->attachment_.get();
+  }
+  return true;
 }
 
 bool Message::Merge(const Message &that) {
@@ -237,6 +249,10 @@ Message &Message::Attach(Message *m) {
   if (!attachment_) {
     attachment_ = m;
   } else {
+    if (attachment_->references() > 1) {
+      // Don't attach to a shared context attachment; copy it first.
+      attachment_ = new Message{*attachment_};
+    }
     attachment_->Attach(m);
   }
   return *this;
@@ -309,8 +325,14 @@ void Messages::Emit(llvm::raw_ostream &o, const AllCookedSources &allCooked,
   }
   std::stable_sort(sorted.begin(), sorted.end(),
       [](const Message *x, const Message *y) { return x->SortBefore(*y); });
+  const Message *lastMsg{nullptr};
   for (const Message *msg : sorted) {
+    if (lastMsg && *msg == *lastMsg) {
+      // Don't emit two identical messages for the same location
+      continue;
+    }
     msg->Emit(o, allCooked, echoSourceLines);
+    lastMsg = msg;
   }
 }
 

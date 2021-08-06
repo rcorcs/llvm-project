@@ -92,10 +92,10 @@ public:
                                            char const *envp[],
                                            MachProcess *process, DNBError &err);
   static pid_t PosixSpawnChildForPTraceDebugging(
-      const char *path, cpu_type_t cpu_type, char const *argv[],
-      char const *envp[], const char *working_directory, const char *stdin_path,
-      const char *stdout_path, const char *stderr_path, bool no_stdio,
-      MachProcess *process, int disable_aslr, DNBError &err);
+      const char *path, cpu_type_t cpu_type, cpu_subtype_t cpu_subtype,
+      char const *argv[], char const *envp[], const char *working_directory,
+      const char *stdin_path, const char *stdout_path, const char *stderr_path,
+      bool no_stdio, MachProcess *process, int disable_aslr, DNBError &err);
   nub_addr_t GetDYLDAllImageInfosAddress();
   static const void *PrepareForAttach(const char *path,
                                       nub_launch_flavor_t launch_flavor,
@@ -342,6 +342,9 @@ public:
   bool ProcessUsingBackBoard();
 
   bool ProcessUsingFrontBoard();
+
+  // Size of addresses in the inferior process (4 or 8).
+  int GetInferiorAddrSize(pid_t pid);
 
   Genealogy::ThreadActivitySP GetGenealogyInfoForThread(nub_thread_t tid,
                                                         bool &timed_out);

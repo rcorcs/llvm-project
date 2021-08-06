@@ -17,9 +17,9 @@ def sub_un : SubRegIndex<1, 3>;
 def sub_32 : SubRegIndex<32>;
 def sub_64 : SubRegIndex<64>;
 def sub_vsx0 : SubRegIndex<128>;
-def sub_vsx1 : SubRegIndex<128>;
+def sub_vsx1 : SubRegIndex<128, 128>;
 def sub_pair0 : SubRegIndex<256>;
-def sub_pair1 : SubRegIndex<256>;
+def sub_pair1 : SubRegIndex<256, 256>;
 }
 
 
@@ -406,6 +406,13 @@ def CTRRC : RegisterClass<"PPC", [i32], 32, (add CTR)> {
   let isAllocatable = 0;
 }
 def CTRRC8 : RegisterClass<"PPC", [i64], 64, (add CTR8)> {
+  let isAllocatable = 0;
+}
+
+def LRRC : RegisterClass<"PPC", [i32], 32, (add LR)> {
+  let isAllocatable = 0;
+}
+def LR8RC : RegisterClass<"PPC", [i64], 64, (add LR8)> {
   let isAllocatable = 0;
 }
 

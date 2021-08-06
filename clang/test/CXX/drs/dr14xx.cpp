@@ -4,6 +4,29 @@
 // RUN: %clang_cc1 -std=c++17 %s -verify -fexceptions -fcxx-exceptions -pedantic-errors
 // RUN: %clang_cc1 -std=c++2a %s -verify -fexceptions -fcxx-exceptions -pedantic-errors
 
+namespace dr1413 { // dr1413: 12
+  template<int> struct Check {
+    typedef int type;
+  };
+  template<typename T> struct A : T {
+    static const int a = 1;
+    static const int b;
+    static void c();
+    void d();
+
+    void f() {
+      Check<true ? 0 : A::unknown_spec>::type *var1; // expected-error {{undeclared identifier 'var1'}}
+      Check<true ? 0 : a>::type *var2; // ok, variable declaration  expected-note 0+{{here}}
+      Check<true ? 0 : b>::type *var3; // expected-error {{undeclared identifier 'var3'}}
+      Check<true ? 0 : (c, 0)>::type *var4; // expected-error {{undeclared identifier 'var4'}}
+      // value-dependent because of the implied type-dependent 'this->', not because of 'd'
+      Check<true ? 0 : (d(), 0)>::type *var5; // expected-error {{undeclared identifier 'var5'}}
+      // value-dependent because of the value-dependent '&' operator, not because of 'A::d'
+      Check<true ? 0 : (&A::d(), 0)>::type *var5; // expected-error {{undeclared identifier 'var5'}}
+    }
+  };
+}
+
 namespace dr1423 { // dr1423: 11
 #if __cplusplus >= 201103L
   bool b1 = nullptr; // expected-error {{cannot initialize}}
@@ -273,6 +296,9 @@ namespace std {
 } // std
 
 namespace dr1467 {  // dr1467: 3.7 c++11
+  // Note that the change to [over.best.ics] was partially undone by DR2076;
+  // the resulting rule is tested with the tests for that change.
+
   // List-initialization of aggregate from same-type object
 
   namespace basic0 {
@@ -396,7 +422,7 @@ namespace dr1467 {  // dr1467: 3.7 c++11
     void f() { Value{{{1,2},{3,4}}}; }
   }
   namespace NonAmbiguous {
-  // The original implementation made this case ambigious due to the special
+  // The original implementation made this case ambiguous due to the special
   // handling of one element initialization lists.
   void f(int(&&)[1]);
   void f(unsigned(&&)[1]);

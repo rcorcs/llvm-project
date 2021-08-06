@@ -102,9 +102,15 @@ void parseGuard(StringRef fullArg) {
     if (arg.equals_lower("no"))
       config->guardCF = GuardCFLevel::Off;
     else if (arg.equals_lower("nolongjmp"))
-      config->guardCF = GuardCFLevel::NoLongJmp;
-    else if (arg.equals_lower("cf") || arg.equals_lower("longjmp"))
-      config->guardCF = GuardCFLevel::Full;
+      config->guardCF &= ~GuardCFLevel::LongJmp;
+    else if (arg.equals_lower("noehcont"))
+      config->guardCF &= ~GuardCFLevel::EHCont;
+    else if (arg.equals_lower("cf"))
+      config->guardCF = GuardCFLevel::CF;
+    else if (arg.equals_lower("longjmp"))
+      config->guardCF |= GuardCFLevel::CF | GuardCFLevel::LongJmp;
+    else if (arg.equals_lower("ehcont"))
+      config->guardCF |= GuardCFLevel::CF | GuardCFLevel::EHCont;
     else
       fatal("invalid argument to /guard: " + arg);
   }
@@ -350,7 +356,7 @@ public:
   // is called (you cannot remove an opened file on Windows.)
   std::unique_ptr<MemoryBuffer> getMemoryBuffer() {
     // IsVolatile=true forces MemoryBuffer to not use mmap().
-    return CHECK(MemoryBuffer::getFile(path, /*FileSize=*/-1,
+    return CHECK(MemoryBuffer::getFile(path, /*IsText=*/false,
                                        /*RequiresNullTerminator=*/false,
                                        /*IsVolatile=*/true),
                  "could not open " + path);
@@ -414,7 +420,7 @@ static std::string createManifestXmlWithExternalMt(StringRef defaultXml) {
   // Create the default manifest file as a temporary file.
   TemporaryFile Default("defaultxml", "manifest");
   std::error_code ec;
-  raw_fd_ostream os(Default.path, ec, sys::fs::OF_Text);
+  raw_fd_ostream os(Default.path, ec, sys::fs::OF_TextWithCRLF);
   if (ec)
     fatal("failed to open " + Default.path + ": " + ec.message());
   os << defaultXml;
@@ -516,7 +522,7 @@ void createSideBySideManifest() {
   if (path == "")
     path = config->outputFile + ".manifest";
   std::error_code ec;
-  raw_fd_ostream out(path, ec, sys::fs::OF_Text);
+  raw_fd_ostream out(path, ec, sys::fs::OF_TextWithCRLF);
   if (ec)
     fatal("failed to create manifest: " + ec.message());
   out << createManifestXml();
@@ -852,7 +858,7 @@ opt::InputArgList ArgParser::parse(ArrayRef<const char *> argv) {
 
   handleColorDiagnostics(args);
 
-  for (auto *arg : args.filtered(OPT_UNKNOWN)) {
+  for (opt::Arg *arg : args.filtered(OPT_UNKNOWN)) {
     std::string nearest;
     if (optTable.findNearest(arg->getAsString(args), nearest) > 1)
       warn("ignoring unknown argument '" + arg->getAsString(args) + "'");
@@ -883,8 +889,10 @@ ParsedDirectives ArgParser::parseDirectives(StringRef s) {
              tok.startswith_lower("-include:"))
       result.includes.push_back(tok.substr(strlen("/include:")));
     else {
-      // Save non-null-terminated strings to make proper C strings.
-      bool HasNul = tok.data()[tok.size()] == '\0';
+      // Copy substrings that are not valid C strings. The tokenizer may have
+      // already copied quoted arguments for us, so those do not need to be
+      // copied again.
+      bool HasNul = tok.end() != s.end() && tok.data()[tok.size()] == '\0';
       rest.push_back(HasNul ? tok.data() : saver.save(tok).data());
     }
   }

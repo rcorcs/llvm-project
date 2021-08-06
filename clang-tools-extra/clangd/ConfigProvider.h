@@ -38,13 +38,16 @@ struct Params {
   llvm::StringRef Path;
   /// Hint that stale data is OK to improve performance (e.g. avoid IO).
   /// FreshTime sets a bound for how old the data can be.
-  /// If not set, providers should validate caches against the data source.
-  llvm::Optional<std::chrono::steady_clock::time_point> FreshTime;
+  /// By default, providers should validate caches against the data source.
+  std::chrono::steady_clock::time_point FreshTime =
+      std::chrono::steady_clock::time_point::max();
 };
 
 /// Used to report problems in parsing or interpreting a config.
 /// Errors reflect structurally invalid config that should be user-visible.
 /// Warnings reflect e.g. unknown properties that are recoverable.
+/// Notes are used to report files and fragments.
+/// (This can be used to track when previous warnings/errors have been "fixed").
 using DiagnosticCallback = llvm::function_ref<void(const llvm::SMDiagnostic &)>;
 
 /// A chunk of configuration that has been fully analyzed and is ready to apply.
@@ -66,7 +69,8 @@ public:
   /// Directory will be used to resolve relative paths in the fragments.
   static std::unique_ptr<Provider> fromYAMLFile(llvm::StringRef AbsPath,
                                                 llvm::StringRef Directory,
-                                                const ThreadsafeFS &);
+                                                const ThreadsafeFS &,
+                                                bool Trusted = false);
   // Reads fragments from YAML files found relative to ancestors of Params.Path.
   //
   // All fragments that exist are returned, starting from distant ancestors.
@@ -75,7 +79,8 @@ public:
   //
   // If Params does not specify a path, no fragments are returned.
   static std::unique_ptr<Provider>
-  fromAncestorRelativeYAMLFiles(llvm::StringRef RelPath, const ThreadsafeFS &);
+  fromAncestorRelativeYAMLFiles(llvm::StringRef RelPath, const ThreadsafeFS &,
+                                bool Trusted = false);
 
   /// A provider that includes fragments from all the supplied providers.
   /// Order is preserved; later providers take precedence over earlier ones.

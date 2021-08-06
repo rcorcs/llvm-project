@@ -16,6 +16,7 @@
 #include "SyncAPI.h"
 #include "TestFS.h"
 #include "TestTU.h"
+#include "TidyProvider.h"
 #include "URI.h"
 #include "support/MemoryTree.h"
 #include "support/Path.h"
@@ -347,7 +348,8 @@ TEST(ClangdServerTest, RespectsConfig) {
   } CfgProvider;
 
   auto Opts = ClangdServer::optsForTest();
-  Opts.ConfigProvider = &CfgProvider;
+  Opts.ContextProvider =
+      ClangdServer::createConfiguredContextProvider(&CfgProvider, nullptr);
   OverlayCDB CDB(/*Base=*/nullptr, /*FallbackFlags=*/{},
                  tooling::ArgumentsAdjuster(CommandMangler::forTests()));
   MockFS FS;
@@ -405,9 +407,9 @@ TEST(ClangdServerTest, SearchLibDir) {
 
   // Put crtbegin.o into LibDir/64 to trick clang into thinking there's a gcc
   // installation there.
-  SmallString<64> DummyLibFile;
-  llvm::sys::path::append(DummyLibFile, LibDir, "64", "crtbegin.o");
-  FS.Files[DummyLibFile] = "";
+  SmallString<64> MockLibFile;
+  llvm::sys::path::append(MockLibFile, LibDir, "64", "crtbegin.o");
+  FS.Files[MockLibFile] = "";
 
   SmallString<64> IncludeDir("/randomusr/include/c++");
   llvm::sys::path::append(IncludeDir, Version);
@@ -943,7 +945,7 @@ void f() {}
   FS.Files[Path] = Code;
   runAddDocument(Server, Path, Code);
 
-  auto Replaces = runFormatFile(Server, Path, Code);
+  auto Replaces = runFormatFile(Server, Path, /*Rng=*/llvm::None);
   EXPECT_TRUE(static_cast<bool>(Replaces));
   auto Changed = tooling::applyAllReplacements(Code, *Replaces);
   EXPECT_TRUE(static_cast<bool>(Changed));
@@ -1215,16 +1217,19 @@ TEST(ClangdServer, TidyOverrideTest) {
   } DiagConsumer;
 
   MockFS FS;
+  // These checks don't work well in clangd, even if configured they shouldn't
+  // run.
+  FS.Files[testPath(".clang-tidy")] = R"(
+    Checks: -*,bugprone-use-after-move,llvm-header-guard
+  )";
   MockCompilationDatabase CDB;
+  std::vector<TidyProvider> Stack;
+  Stack.push_back(provideClangTidyFiles(FS));
+  Stack.push_back(disableUnusableChecks());
+  TidyProvider Provider = combine(std::move(Stack));
   CDB.ExtraClangFlags = {"-xc++"};
   auto Opts = ClangdServer::optsForTest();
-  Opts.GetClangTidyOptions = [](llvm::vfs::FileSystem &, llvm::StringRef) {
-    auto Opts = tidy::ClangTidyOptions::getDefaults();
-    // These checks don't work well in clangd, even if configured they shouldn't
-    // run.
-    Opts.Checks = "bugprone-use-after-move,llvm-header-guard";
-    return Opts;
-  };
+  Opts.ClangTidyProvider = Provider;
   ClangdServer Server(CDB, FS, Opts, &DiagConsumer);
   const char *SourceContents = R"cpp(
     struct Foo { Foo(); Foo(Foo&); Foo(Foo&&); };

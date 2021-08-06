@@ -55,6 +55,14 @@ void WinException::endModule() {
   for (const Function &F : *M)
     if (F.hasFnAttribute("safeseh"))
       OS.EmitCOFFSafeSEH(Asm->getSymbol(&F));
+
+  if (M->getModuleFlag("ehcontguard") && !EHContTargets.empty()) {
+    // Emit the symbol index of each ehcont target.
+    OS.SwitchSection(Asm->OutContext.getObjectFileInfo()->getGEHContSection());
+    for (const MCSymbol *S : EHContTargets) {
+      OS.EmitCOFFSymbolIndex(S);
+    }
+  }
 }
 
 void WinException::beginFunction(const MachineFunction *MF) {
@@ -164,6 +172,12 @@ void WinException::endFunction(const MachineFunction *MF) {
 
     Asm->OutStreamer->PopSection();
   }
+
+  if (!MF->getCatchretTargets().empty()) {
+    // Copy the function's catchret targets to a module-level list.
+    EHContTargets.insert(EHContTargets.end(), MF->getCatchretTargets().begin(),
+                         MF->getCatchretTargets().end());
+  }
 }
 
 /// Retrieve the MCSymbol for a GlobalValue or MachineBasicBlock.
@@ -258,11 +272,11 @@ void WinException::endFuncletImpl() {
     if (F.hasPersonalityFn())
       Per = classifyEHPersonality(F.getPersonalityFn()->stripPointerCasts());
 
-    // Emit an UNWIND_INFO struct describing the prologue.
-    Asm->OutStreamer->EmitWinEHHandlerData();
-
     if (Per == EHPersonality::MSVC_CXX && shouldEmitPersonality &&
         !CurrentFuncletEntry->isCleanupFuncletEntry()) {
+      // Emit an UNWIND_INFO struct describing the prologue.
+      Asm->OutStreamer->EmitWinEHHandlerData();
+
       // If this is a C++ catch funclet (or the parent function),
       // emit a reference to the LSDA for the parent function.
       StringRef FuncLinkageName = GlobalValue::dropLLVMManglingEscape(F.getName());
@@ -271,9 +285,22 @@ void WinException::endFuncletImpl() {
       Asm->OutStreamer->emitValue(create32bitRef(FuncInfoXData), 4);
     } else if (Per == EHPersonality::MSVC_TableSEH && MF->hasEHFunclets() &&
                !CurrentFuncletEntry->isEHFuncletEntry()) {
+      // Emit an UNWIND_INFO struct describing the prologue.
+      Asm->OutStreamer->EmitWinEHHandlerData();
+
       // If this is the parent function in Win64 SEH, emit the LSDA immediately
       // following .seh_handlerdata.
       emitCSpecificHandlerTable(MF);
+    } else if (shouldEmitPersonality || shouldEmitLSDA) {
+      // Emit an UNWIND_INFO struct describing the prologue.
+      Asm->OutStreamer->EmitWinEHHandlerData();
+      // In these cases, no further info is written to the .xdata section
+      // right here, but is written by e.g. emitExceptionTable in endFunction()
+      // above.
+    } else {
+      // No need to emit the EH handler data right here if nothing needs
+      // writing to the .xdata section; it will be emitted for all
+      // functions that need it in the end anyway.
     }
 
     // Switch back to the funclet start .text section now that we are done

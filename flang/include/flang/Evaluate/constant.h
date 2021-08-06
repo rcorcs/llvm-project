@@ -140,7 +140,8 @@ public:
     }
   }
 
-  // Apply subscripts.
+  // Apply subscripts.  An empty subscript list is allowed for
+  // a scalar constant.
   Element At(const ConstantSubscripts &) const;
 
   Constant Reshape(ConstantSubscripts &&) const;
@@ -167,6 +168,7 @@ public:
   bool empty() const;
   std::size_t size() const;
 
+  const Scalar<Result> &values() const { return values_; }
   ConstantSubscript LEN() const { return length_; }
 
   std::optional<Scalar<Result>> GetScalarValue() const {
@@ -177,7 +179,7 @@ public:
     }
   }
 
-  // Apply subscripts
+  // Apply subscripts, if any.
   Scalar<Result> At(const ConstantSubscripts &) const;
 
   Constant Reshape(ConstantSubscripts &&) const;
@@ -194,8 +196,11 @@ private:
 };
 
 class StructureConstructor;
-using StructureConstructorValues =
-    std::map<SymbolRef, common::CopyableIndirection<Expr<SomeType>>>;
+struct ComponentCompare {
+  bool operator()(SymbolRef x, SymbolRef y) const;
+};
+using StructureConstructorValues = std::map<SymbolRef,
+    common::CopyableIndirection<Expr<SomeType>>, ComponentCompare>;
 
 template <>
 class Constant<SomeDerived>

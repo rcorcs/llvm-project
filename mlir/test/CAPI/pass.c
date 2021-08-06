@@ -25,13 +25,14 @@ void testRunPassOnModule() {
   MlirContext ctx = mlirContextCreate();
   mlirRegisterAllDialects(ctx);
 
-  MlirModule module =
-      mlirModuleCreateParse(ctx,
-                            // clang-format off
+  MlirModule module = mlirModuleCreateParse(
+      ctx,
+      // clang-format off
+                            mlirStringRefCreateFromCString(
 "func @foo(%arg0 : i32) -> i32 {                                            \n"
 "  %res = addi %arg0, %arg0 : i32                                           \n"
 "  return %res : i32                                                        \n"
-"}");
+"}"));
   // clang-format on
   if (mlirModuleIsNull(module)) {
     fprintf(stderr, "Unexpected failure parsing module.\n");
@@ -41,7 +42,6 @@ void testRunPassOnModule() {
   // Run the print-op-stats pass on the top-level module:
   // CHECK-LABEL: Operations encountered:
   // CHECK: func              , 1
-  // CHECK: module_terminator , 1
   // CHECK: std.addi          , 1
   // CHECK: std.return        , 1
   {
@@ -63,9 +63,10 @@ void testRunPassOnNestedModule() {
   MlirContext ctx = mlirContextCreate();
   mlirRegisterAllDialects(ctx);
 
-  MlirModule module =
-      mlirModuleCreateParse(ctx,
-                            // clang-format off
+  MlirModule module = mlirModuleCreateParse(
+      ctx,
+      // clang-format off
+                            mlirStringRefCreateFromCString(
 "func @foo(%arg0 : i32) -> i32 {                                            \n"
 "  %res = addi %arg0, %arg0 : i32                                           \n"
 "  return %res : i32                                                        \n"
@@ -75,14 +76,13 @@ void testRunPassOnNestedModule() {
 "    %res = addf %arg0, %arg0 : f32                                         \n"
 "    return %res : f32                                                      \n"
 "  }                                                                        \n"
-"}");
+"}"));
   // clang-format on
   if (mlirModuleIsNull(module))
     exit(1);
 
   // Run the print-op-stats pass on functions under the top-level module:
   // CHECK-LABEL: Operations encountered:
-  // CHECK-NOT: module_terminator
   // CHECK: func              , 1
   // CHECK: std.addi          , 1
   // CHECK: std.return        , 1
@@ -99,7 +99,6 @@ void testRunPassOnNestedModule() {
   }
   // Run the print-op-stats pass on functions under the nested module:
   // CHECK-LABEL: Operations encountered:
-  // CHECK-NOT: module_terminator
   // CHECK: func              , 1
   // CHECK: std.addf          , 1
   // CHECK: std.return        , 1
@@ -121,9 +120,9 @@ void testRunPassOnNestedModule() {
   mlirContextDestroy(ctx);
 }
 
-static void printToStderr(const char *str, intptr_t len, void *userData) {
+static void printToStderr(MlirStringRef str, void *userData) {
   (void)userData;
-  fwrite(str, 1, len, stderr);
+  fwrite(str.data, 1, str.length, stderr);
 }
 
 void testPrintPassPipeline() {

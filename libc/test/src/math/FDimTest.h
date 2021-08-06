@@ -6,11 +6,11 @@
 //
 //===---------------------------------------------------------------------===//
 
-#include "include/math.h"
 #include "utils/FPUtil/BasicOperations.h"
 #include "utils/FPUtil/FPBits.h"
 #include "utils/FPUtil/TestHelpers.h"
 #include "utils/UnitTest/Test.h"
+#include <math.h>
 
 template <typename T>
 class FDimTestTemplate : public __llvm_libc::testing::Test {
@@ -26,7 +26,7 @@ public:
     EXPECT_FP_EQ(nan, func(negZero, nan));
     EXPECT_FP_EQ(nan, func(nan, T(-1.2345)));
     EXPECT_FP_EQ(nan, func(T(1.2345), nan));
-    EXPECT_NE(isnan(func(nan, nan)), 0);
+    EXPECT_FP_EQ(func(nan, nan), nan);
   }
 
   void testInfArg(FuncPtr func) {
@@ -57,7 +57,7 @@ public:
     constexpr UIntType step = UIntType(-1) / count;
     for (UIntType i = 0, v = 0, w = UIntType(-1); i <= count;
          ++i, v += step, w -= step) {
-      T x = FPBits(v), y = FPBits(w);
+      T x = T(FPBits(v)), y = T(FPBits(w));
       if (isnan(x) || isinf(x))
         continue;
       if (isnan(y) || isinf(y))
@@ -74,9 +74,9 @@ public:
 private:
   // constexpr does not work on FPBits yet, so we cannot have these constants as
   // static.
-  const T nan = __llvm_libc::fputil::FPBits<T>::buildNaN(1);
-  const T inf = __llvm_libc::fputil::FPBits<T>::inf();
-  const T negInf = __llvm_libc::fputil::FPBits<T>::negInf();
-  const T zero = __llvm_libc::fputil::FPBits<T>::zero();
-  const T negZero = __llvm_libc::fputil::FPBits<T>::negZero();
+  const T nan = T(__llvm_libc::fputil::FPBits<T>::buildNaN(1));
+  const T inf = T(__llvm_libc::fputil::FPBits<T>::inf());
+  const T negInf = T(__llvm_libc::fputil::FPBits<T>::negInf());
+  const T zero = T(__llvm_libc::fputil::FPBits<T>::zero());
+  const T negZero = T(__llvm_libc::fputil::FPBits<T>::negZero());
 };

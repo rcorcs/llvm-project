@@ -290,6 +290,11 @@ bool mingw::link(ArrayRef<const char *> argsArr, bool canExitEarly,
     add("-debug:dwarf");
   }
 
+  if (args.hasFlag(OPT_fatal_warnings, OPT_no_fatal_warnings, false))
+    add("-WX");
+  else
+    add("-WX:no");
+
   if (args.hasArg(OPT_shared))
     add("-dll");
   if (args.hasArg(OPT_verbose))
@@ -319,6 +324,11 @@ bool mingw::link(ArrayRef<const char *> argsArr, bool canExitEarly,
     add("-opt:ref");
   else
     add("-opt:noref");
+
+  if (args.hasFlag(OPT_demangle, OPT_no_demangle, true))
+    add("-demangle");
+  else
+    add("-demangle:no");
 
   if (args.hasFlag(OPT_enable_auto_import, OPT_disable_auto_import, true))
     add("-auto-import");
@@ -427,5 +437,5 @@ bool mingw::link(ArrayRef<const char *> argsArr, bool canExitEarly,
   std::vector<const char *> vec;
   for (const std::string &s : linkArgs)
     vec.push_back(s.c_str());
-  return coff::link(vec, true, stdoutOS, stderrOS);
+  return coff::link(vec, canExitEarly, stdoutOS, stderrOS);
 }

@@ -82,11 +82,11 @@ namespace {
   private:
     bool insaneIntVal(int V) { return V > 4 || V < -4; }
 
-    APFloat *getFpValPtr()
-      { return reinterpret_cast<APFloat *>(&FpValBuf.buffer[0]); }
+    APFloat *getFpValPtr() { return reinterpret_cast<APFloat *>(&FpValBuf); }
 
-    const APFloat *getFpValPtr() const
-      { return reinterpret_cast<const APFloat *>(&FpValBuf.buffer[0]); }
+    const APFloat *getFpValPtr() const {
+      return reinterpret_cast<const APFloat *>(&FpValBuf);
+    }
 
     const APFloat &getFpVal() const {
       assert(IsFp && BufHasFpVal && "Incorret state");
@@ -864,7 +864,7 @@ static Instruction *foldNoWrapAdd(BinaryOperator &Add,
 Instruction *InstCombinerImpl::foldAddWithConstant(BinaryOperator &Add) {
   Value *Op0 = Add.getOperand(0), *Op1 = Add.getOperand(1);
   Constant *Op1C;
-  if (!match(Op1, m_Constant(Op1C)))
+  if (!match(Op1, m_ImmConstant(Op1C)))
     return nullptr;
 
   if (Instruction *NV = foldBinOpIntoSelectOrPhi(Add))
@@ -900,6 +900,12 @@ Instruction *InstCombinerImpl::foldAddWithConstant(BinaryOperator &Add) {
   const APInt *C;
   if (!match(Op1, m_APInt(C)))
     return nullptr;
+
+  // (X | Op01C) + Op1C --> X + (Op01C + Op1C) iff the `or` is actually an `add`
+  Constant *Op01C;
+  if (match(Op0, m_Or(m_Value(X), m_ImmConstant(Op01C))) &&
+      haveNoCommonBitsSet(X, Op01C, DL, &AC, &Add, &DT))
+    return BinaryOperator::CreateAdd(X, ConstantExpr::getAdd(Op01C, Op1C));
 
   // (X | C2) + C --> (X | C2) ^ C2 iff (C2 == -C)
   const APInt *C2;
@@ -1442,6 +1448,14 @@ Instruction *InstCombinerImpl::visitAdd(BinaryOperator &I) {
         Builder.CreateIntrinsic(Intrinsic::umax, {I.getType()}, {A, B}));
   }
 
+  // ctpop(A) + ctpop(B) => ctpop(A | B) if A and B have no bits set in common.
+  if (match(LHS, m_OneUse(m_Intrinsic<Intrinsic::ctpop>(m_Value(A)))) &&
+      match(RHS, m_OneUse(m_Intrinsic<Intrinsic::ctpop>(m_Value(B)))) &&
+      haveNoCommonBitsSet(A, B, DL, &AC, &I, &DT))
+    return replaceInstUsesWith(
+        I, Builder.CreateIntrinsic(Intrinsic::ctpop, {I.getType()},
+                                   {Builder.CreateOr(A, B)}));
+
   return Changed ? &I : nullptr;
 }
 
@@ -1678,11 +1692,12 @@ Value *InstCombinerImpl::OptimizePointerDifference(Value *LHS, Value *RHS,
         I->getOpcode() == Instruction::Mul)
       I->setHasNoUnsignedWrap();
 
-  // If we had a constant expression GEP on the other side offsetting the
-  // pointer, subtract it from the offset we have.
+  // If we have a 2nd GEP of the same base pointer, subtract the offsets.
+  // If both GEPs are inbounds, then the subtract does not have signed overflow.
   if (GEP2) {
     Value *Offset = EmitGEPOffset(GEP2);
-    Result = Builder.CreateSub(Result, Offset, "gepdiff");
+    Result = Builder.CreateSub(Result, Offset, "gepdiff", /* NUW */ false,
+                               GEP1->isInBounds() && GEP2->isInBounds());
   }
 
   // If we have p - gep(p, ...)  then we have to negate the result.
@@ -1721,12 +1736,17 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
     return Res;
   }
 
-  if (Constant *C = dyn_cast<Constant>(Op0)) {
+  // Try this before Negator to preserve NSW flag.
+  if (Instruction *R = factorizeMathWithShlOps(I, Builder))
+    return R;
+
+  Constant *C;
+  if (match(Op0, m_ImmConstant(C))) {
     Value *X;
     Constant *C2;
 
     // C-(X+C2) --> (C-C2)-X
-    if (match(Op1, m_Add(m_Value(X), m_Constant(C2))))
+    if (match(Op1, m_Add(m_Value(X), m_ImmConstant(C2))))
       return BinaryOperator::CreateSub(ConstantExpr::getSub(C, C2), X);
   }
 
@@ -1769,9 +1789,6 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
   if (Value *V = SimplifyUsingDistributiveLaws(I))
     return replaceInstUsesWith(I, V);
 
-  if (Instruction *R = factorizeMathWithShlOps(I, Builder))
-    return R;
-
   if (I.getType()->isIntOrIntVectorTy(1))
     return BinaryOperator::CreateXor(Op0, Op1);
 
@@ -1797,6 +1814,12 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
     Value *XZ = Builder.CreateAdd(X, Z);
     Value *YW = Builder.CreateAdd(Y, Op1);
     return BinaryOperator::CreateSub(XZ, YW);
+  }
+
+  // ((X - Y) - Op1)  -->  X - (Y + Op1)
+  if (match(Op0, m_OneUse(m_Sub(m_Value(X), m_Value(Y))))) {
+    Value *Add = Builder.CreateAdd(Y, Op1);
+    return BinaryOperator::CreateSub(X, Add);
   }
 
   auto m_AddRdx = [](Value *&Vec) {
@@ -1839,7 +1862,7 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
     Constant *C2;
 
     // C-(C2-X) --> X+(C-C2)
-    if (match(Op1, m_Sub(m_Constant(C2), m_Value(X))) && !isa<ConstantExpr>(C2))
+    if (match(Op1, m_Sub(m_ImmConstant(C2), m_Value(X))))
       return BinaryOperator::CreateAdd(X, ConstantExpr::getSub(C, C2));
   }
 
@@ -1869,6 +1892,22 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
     if (match(Op1, m_And(m_Value(A), m_Value(B))) &&
         match(Op0, m_c_Or(m_Specific(A), m_Specific(B))))
       return BinaryOperator::CreateXor(A, B);
+  }
+
+  // (sub (add A, B) (or A, B)) --> (and A, B)
+  {
+    Value *A, *B;
+    if (match(Op0, m_Add(m_Value(A), m_Value(B))) &&
+        match(Op1, m_c_Or(m_Specific(A), m_Specific(B))))
+      return BinaryOperator::CreateAnd(A, B);
+  }
+
+  // (sub (add A, B) (and A, B)) --> (or A, B)
+  {
+    Value *A, *B;
+    if (match(Op0, m_Add(m_Value(A), m_Value(B))) &&
+        match(Op1, m_c_And(m_Specific(A), m_Specific(B))))
+      return BinaryOperator::CreateOr(A, B);
   }
 
   // (sub (and A, B) (or A, B)) --> neg (xor A, B)
@@ -2067,6 +2106,19 @@ Instruction *InstCombinerImpl::visitSub(BinaryOperator &I) {
           canonicalizeCondSignextOfHighBitExtractToSignextHighBitExtract(I))
     return V;
 
+  // X - usub.sat(X, Y) => umin(X, Y)
+  if (match(Op1, m_OneUse(m_Intrinsic<Intrinsic::usub_sat>(m_Specific(Op0),
+                                                           m_Value(Y)))))
+    return replaceInstUsesWith(
+        I, Builder.CreateIntrinsic(Intrinsic::umin, {I.getType()}, {Op0, Y}));
+
+  // C - ctpop(X) => ctpop(~X) if C is bitwidth
+  if (match(Op0, m_SpecificInt(Ty->getScalarSizeInBits())) &&
+      match(Op1, m_OneUse(m_Intrinsic<Intrinsic::ctpop>(m_Value(X)))))
+    return replaceInstUsesWith(
+        I, Builder.CreateIntrinsic(Intrinsic::ctpop, {I.getType()},
+                                   {Builder.CreateNot(X)}));
+
   return TryToNarrowDeduceFlags();
 }
 
@@ -2135,6 +2187,25 @@ Instruction *InstCombinerImpl::visitFNeg(UnaryOperator &I) {
   if (Instruction *R = hoistFNegAboveFMulFDiv(I, Builder))
     return R;
 
+  Value *Cond;
+  if (match(Op, m_OneUse(m_Select(m_Value(Cond), m_Value(X), m_Value(Y))))) {
+    Value *P;
+    if (match(X, m_FNeg(m_Value(P)))) {
+      IRBuilder<>::FastMathFlagGuard FMFG(Builder);
+      Builder.setFastMathFlags(I.getFastMathFlags());
+      Value *NegY = Builder.CreateFNegFMF(Y, &I, Y->getName() + ".neg");
+      Value *NewSel = Builder.CreateSelect(Cond, P, NegY);
+      return replaceInstUsesWith(I, NewSel);
+    }
+    if (match(Y, m_FNeg(m_Value(P)))) {
+      IRBuilder<>::FastMathFlagGuard FMFG(Builder);
+      Builder.setFastMathFlags(I.getFastMathFlags());
+      Value *NegX = Builder.CreateFNegFMF(X, &I, X->getName() + ".neg");
+      Value *NewSel = Builder.CreateSelect(Cond, NegX, P);
+      return replaceInstUsesWith(I, NewSel);
+    }
+  }
+
   return nullptr;
 }
 
@@ -2196,7 +2267,7 @@ Instruction *InstCombinerImpl::visitFSub(BinaryOperator &I) {
   // X - C --> X + (-C)
   // But don't transform constant expressions because there's an inverse fold
   // for X + (-Y) --> X - Y.
-  if (match(Op1, m_Constant(C)) && !isa<ConstantExpr>(Op1))
+  if (match(Op1, m_ImmConstant(C)))
     return BinaryOperator::CreateFAddFMF(Op0, ConstantExpr::getFNeg(C), &I);
 
   // X - (-Y) --> X + Y

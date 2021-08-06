@@ -42,18 +42,26 @@ std::unique_ptr<Pass> createBufferLoopHoistingPass();
 
 /// Creates a pass that promotes heap-based allocations to stack-based ones.
 /// Only buffers smaller than the provided size are promoted.
+/// Dynamic shaped buffers are promoted up to the given rank.
 std::unique_ptr<Pass>
 createPromoteBuffersToStackPass(unsigned maxAllocSizeInBytes = 1024,
-                                unsigned bitwidthOfIndexType = 64);
+                                unsigned bitwidthOfIndexType = 64,
+                                unsigned maxRankOfAllocatedMemRef = 1);
+
+/// Creates a pass that promotes heap-based allocations to stack-based ones.
+/// Only buffers smaller with `isSmallAlloc(alloc) == true` are promoted.
+std::unique_ptr<Pass>
+createPromoteBuffersToStackPass(std::function<bool(Value)> isSmallAlloc);
+
+/// Creates a pass that finalizes a partial bufferization by removing remaining
+/// tensor_load and buffer_cast operations.
+std::unique_ptr<FunctionPass> createFinalizingBufferizePass();
 
 /// Creates a pass that converts memref function results to out-params.
 std::unique_ptr<Pass> createBufferResultsToOutParamsPass();
 
 /// Creates an instance of the Canonicalizer pass.
 std::unique_ptr<Pass> createCanonicalizerPass();
-
-/// Create a pass that removes unnecessary Copy operations.
-std::unique_ptr<Pass> createCopyRemovalPass();
 
 /// Creates a pass to perform common sub expression elimination.
 std::unique_ptr<Pass> createCSEPass();
@@ -73,11 +81,6 @@ std::unique_ptr<Pass> createLoopInvariantCodeMotionPass();
 /// Creates a pass to pipeline explicit movement of data across levels of the
 /// memory hierarchy.
 std::unique_ptr<OperationPass<FuncOp>> createPipelineDataTransferPass();
-
-/// Lowers affine control flow operations (ForStmt, IfStmt and AffineApplyOp)
-/// to equivalent lower-level constructs (flow of basic blocks and arithmetic
-/// primitives).
-std::unique_ptr<Pass> createLowerAffinePass();
 
 /// Creates a pass that transforms perfectly nested loops with independent
 /// bounds into a single loop.
@@ -101,6 +104,19 @@ std::unique_ptr<Pass> createPrintOpStatsPass();
 /// Creates a pass which inlines calls and callable operations as defined by
 /// the CallGraph.
 std::unique_ptr<Pass> createInlinerPass();
+/// Creates an instance of the inliner pass, and use the provided pass managers
+/// when optimizing callable operations with names matching the key type.
+/// Callable operations with a name not within the provided map will use the
+/// default inliner pipeline during optimization.
+std::unique_ptr<Pass>
+createInlinerPass(llvm::StringMap<OpPassManager> opPipelines);
+/// Creates an instance of the inliner pass, and use the provided pass managers
+/// when optimizing callable operations with names matching the key type.
+/// Callable operations with a name not within the provided map will use the
+/// provided default pipeline builder.
+std::unique_ptr<Pass>
+createInlinerPass(llvm::StringMap<OpPassManager> opPipelines,
+                  std::function<void(OpPassManager &)> defaultPipelineBuilder);
 
 /// Creates a pass which performs sparse conditional constant propagation over
 /// nested operations.

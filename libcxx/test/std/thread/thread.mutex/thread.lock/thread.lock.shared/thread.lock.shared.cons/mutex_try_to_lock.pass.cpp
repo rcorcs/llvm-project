@@ -10,9 +10,9 @@
 // UNSUPPORTED: c++03, c++11
 
 // dylib support for shared_mutex was added in macosx10.12
-// XFAIL: with_system_cxx_lib=macosx10.11
-// XFAIL: with_system_cxx_lib=macosx10.10
-// XFAIL: with_system_cxx_lib=macosx10.9
+// XFAIL: use_system_cxx_lib && x86_64-apple-macosx10.11
+// XFAIL: use_system_cxx_lib && x86_64-apple-macosx10.10
+// XFAIL: use_system_cxx_lib && x86_64-apple-macosx10.9
 
 // ALLOW_RETRIES: 2
 
@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <cassert>
 
+#include "make_test_thread.h"
 #include "test_macros.h"
 
 std::shared_timed_mutex m;
@@ -69,7 +70,7 @@ int main(int, char**)
     m.lock();
     std::vector<std::thread> v;
     for (int i = 0; i < 5; ++i)
-        v.push_back(std::thread(f));
+        v.push_back(support::make_test_thread(f));
     std::this_thread::sleep_for(ms(250));
     m.unlock();
     for (auto& t : v)

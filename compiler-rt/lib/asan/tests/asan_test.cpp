@@ -230,13 +230,13 @@ TEST(AddressSanitizer, UAF_Packed5) {
   delete [] Ident(p);
 }
 
-#if ASAN_HAS_BLACKLIST
+#if ASAN_HAS_IGNORELIST
 TEST(AddressSanitizer, IgnoreTest) {
   int *x = Ident(new int);
   delete Ident(x);
   *x = 0;
 }
-#endif  // ASAN_HAS_BLACKLIST
+#endif  // ASAN_HAS_IGNORELIST
 
 struct StructWithBitField {
   int bf1:1;
@@ -804,7 +804,7 @@ char* MallocAndMemsetString(size_t size) {
   return MallocAndMemsetString(size, 'z');
 }
 
-#if defined(__linux__) && !defined(__ANDROID__)
+#if SANITIZER_GLIBC
 #define READ_TEST(READ_N_BYTES)                                          \
   char *x = new char[10];                                                \
   int fd = open("/proc/self/stat", O_RDONLY);                            \
@@ -827,7 +827,7 @@ TEST(AddressSanitizer, pread64) {
 TEST(AddressSanitizer, read) {
   READ_TEST(read(fd, x, 15));
 }
-#endif  // defined(__linux__) && !defined(__ANDROID__)
+#endif  // SANITIZER_GLIBC
 
 // This test case fails
 // Clang optimizes memcpy/memset calls which lead to unaligned access

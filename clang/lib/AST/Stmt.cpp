@@ -791,7 +791,27 @@ std::string GCCAsmStmt::generateAsmString(const ASTContext &C) const {
 /// Assemble final IR asm string (MS-style).
 std::string MSAsmStmt::generateAsmString(const ASTContext &C) const {
   // FIXME: This needs to be translated into the IR string representation.
-  return std::string(AsmStr);
+  SmallVector<StringRef, 8> Pieces;
+  AsmStr.split(Pieces, "\n\t");
+  std::string MSAsmString;
+  for (size_t I = 0, E = Pieces.size(); I < E; ++I) {
+    StringRef Instruction = Pieces[I];
+    // For vex/vex2/vex3/evex masm style prefix, convert it to att style
+    // since we don't support masm style prefix in backend.
+    if (Instruction.startswith("vex "))
+      MSAsmString += '{' + Instruction.substr(0, 3).str() + '}' +
+                     Instruction.substr(3).str();
+    else if (Instruction.startswith("vex2 ") ||
+             Instruction.startswith("vex3 ") || Instruction.startswith("evex "))
+      MSAsmString += '{' + Instruction.substr(0, 4).str() + '}' +
+                     Instruction.substr(4).str();
+    else
+      MSAsmString += Instruction.str();
+    // If this is not the last instruction, adding back the '\n\t'.
+    if (I < E - 1)
+      MSAsmString += "\n\t";
+  }
+  return MSAsmString;
 }
 
 Expr *MSAsmStmt::getOutputExpr(unsigned i) {
@@ -969,10 +989,18 @@ bool IfStmt::isObjCAvailabilityCheck() const {
   return isa<ObjCAvailabilityCheckExpr>(getCond());
 }
 
-Optional<const Stmt*> IfStmt::getNondiscardedCase(const ASTContext &Ctx) const {
+Optional<Stmt *> IfStmt::getNondiscardedCase(const ASTContext &Ctx) {
   if (!isConstexpr() || getCond()->isValueDependent())
     return None;
   return !getCond()->EvaluateKnownConstInt(Ctx) ? getElse() : getThen();
+}
+
+Optional<const Stmt *>
+IfStmt::getNondiscardedCase(const ASTContext &Ctx) const {
+  if (Optional<Stmt *> Result =
+          const_cast<IfStmt *>(this)->getNondiscardedCase(Ctx))
+    return *Result;
+  return None;
 }
 
 ForStmt::ForStmt(const ASTContext &C, Stmt *Init, Expr *Cond, VarDecl *condVar,
@@ -1246,13 +1274,6 @@ CapturedStmt::Capture::Capture(SourceLocation Loc, VariableCaptureKind Kind,
     break;
   case VCK_ByCopy:
     assert(Var && "capturing by copy must have a variable!");
-    assert(
-        (Var->getType()->isScalarType() || (Var->getType()->isReferenceType() &&
-                                            Var->getType()
-                                                ->castAs<ReferenceType>()
-                                                ->getPointeeType()
-                                                ->isScalarType())) &&
-        "captures by copy are expected to have a scalar type!");
     break;
   case VCK_VLAType:
     assert(!Var &&

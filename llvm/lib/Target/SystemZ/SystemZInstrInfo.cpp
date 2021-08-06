@@ -56,9 +56,9 @@ static uint64_t allOnes(unsigned int Count) {
 void SystemZInstrInfo::anchor() {}
 
 SystemZInstrInfo::SystemZInstrInfo(SystemZSubtarget &sti)
-  : SystemZGenInstrInfo(SystemZ::ADJCALLSTACKDOWN, SystemZ::ADJCALLSTACKUP),
-    RI(), STI(sti) {
-}
+    : SystemZGenInstrInfo(SystemZ::ADJCALLSTACKDOWN, SystemZ::ADJCALLSTACKUP),
+      RI(sti.getSpecialRegisters()->getReturnFunctionAddressRegister()),
+      STI(sti) {}
 
 // MI is a 128-bit load or store.  Split it into two 64-bit loads or stores,
 // each having the opcode given by NewOpcode.
@@ -120,7 +120,7 @@ void SystemZInstrInfo::splitAdjDynAlloc(MachineBasicBlock::iterator MI) const {
   MachineOperand &OffsetMO = MI->getOperand(2);
 
   uint64_t Offset = (MFFrame.getMaxCallFrameSize() +
-                     SystemZMC::CallFrameSize +
+                     SystemZMC::ELFCallFrameSize +
                      OffsetMO.getImm());
   unsigned NewOpcode = getOpcodeForOffset(SystemZ::LA, Offset);
   assert(NewOpcode && "No support for huge argument lists yet");
@@ -752,11 +752,14 @@ bool SystemZInstrInfo::PredicateInstruction(
     return true;
   }
   if (Opcode == SystemZ::CallBR) {
-    const uint32_t *RegMask = MI.getOperand(0).getRegMask();
+    MachineOperand Target = MI.getOperand(0);
+    const uint32_t *RegMask = MI.getOperand(1).getRegMask();
+    MI.RemoveOperand(1);
     MI.RemoveOperand(0);
     MI.setDesc(get(SystemZ::CallBCR));
     MachineInstrBuilder(*MI.getParent()->getParent(), MI)
       .addImm(CCValid).addImm(CCMask)
+      .add(Target)
       .addRegMask(RegMask)
       .addReg(SystemZ::CC, RegState::Implicit);
     return true;

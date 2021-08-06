@@ -14,9 +14,38 @@ using namespace llvm;
 using namespace lld;
 using namespace lld::macho;
 
+// Returns a symbol for an error message.
+static std::string demangle(StringRef symName) {
+  if (config->demangle)
+    return demangleItanium(symName);
+  return std::string(symName);
+}
+
+std::string lld::toString(const Symbol &sym) { return demangle(sym.getName()); }
+
+std::string lld::toMachOString(const object::Archive::Symbol &b) {
+  return demangle(b.getName());
+}
+
+uint64_t Symbol::getStubVA() const { return in.stubs->getVA(stubsIndex); }
+uint64_t Symbol::getGotVA() const { return in.got->getVA(gotIndex); }
+uint64_t Symbol::getTlvVA() const { return in.tlvPointers->getVA(gotIndex); }
+
 uint64_t Defined::getVA() const {
   if (isAbsolute())
     return value;
+
+  if (!isec->isFinal) {
+    // A target arch that does not use thunks ought never ask for
+    // the address of a function that has not yet been finalized.
+    assert(target->usesThunks());
+
+    // MergedOutputSection::finalize() can seek the address of a
+    // function before its address is assigned. The thunking algorithm
+    // knows that unfinalized functions will be out of range, so it is
+    // expedient to return a contrived out-of-range address.
+    return TargetInfo::outOfRangeVA;
+  }
   return isec->getVA() + value;
 }
 
@@ -29,17 +58,8 @@ uint64_t Defined::getFileOffset() const {
   return isec->getFileOffset() + value;
 }
 
-void LazySymbol::fetchArchiveMember() { file->fetch(sym); }
-
-// Returns a symbol for an error message.
-std::string lld::toString(const Symbol &sym) {
-  if (Optional<std::string> s = demangleItanium(sym.getName()))
-    return *s;
-  return std::string(sym.getName());
+uint64_t DylibSymbol::getVA() const {
+  return isInStubs() ? getStubVA() : Symbol::getVA();
 }
 
-uint64_t DSOHandle::getVA() const { return header->addr; }
-
-uint64_t DSOHandle::getFileOffset() const { return header->fileOff; }
-
-constexpr StringRef DSOHandle::name;
+void LazySymbol::fetchArchiveMember() { getFile()->fetch(sym); }

@@ -26,10 +26,7 @@ public:
   void GetEnvAll();
 
   int getMaxQueueSize() const { return max_queue_size_; }
-
-  // TODO(ashwinma): int may change to enum if we have more debug modes
   int getDebugMode() const { return debug_mode_; }
-  // TODO(ashwinma): int may change to enum if we have more profile modes
 
 private:
   std::string GetEnv(const char *name) {
@@ -62,17 +59,14 @@ public:
       void *, size_t, atmi_place_t,
       atmi_status_t (*on_deserialized_data)(void *data, size_t size,
                                             void *cb_state),
-      void *cb_state);
+      void *cb_state, std::vector<hsa_executable_t> &HSAExecutables);
 
   // data
   static atmi_status_t Memcpy(hsa_signal_t, void *, const void *, size_t);
   static atmi_status_t Memfree(void *);
   static atmi_status_t Malloc(void **, size_t, atmi_mem_place_t);
 
-  // environment variables
   int getMaxQueueSize() const { return env_.getMaxQueueSize(); }
-
-  // TODO(ashwinma): int may change to enum if we have more debug modes
   int getDebugMode() const { return env_.getDebugMode(); }
 
 protected:

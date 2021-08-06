@@ -85,29 +85,42 @@ namespace ISD {
 
   /// Node predicates
 
-  /// If N is a BUILD_VECTOR node whose elements are all the same constant or
-  /// undefined, return true and return the constant value in \p SplatValue.
-  bool isConstantSplatVector(const SDNode *N, APInt &SplatValue);
+/// If N is a BUILD_VECTOR or SPLAT_VECTOR node whose elements are all the
+/// same constant or undefined, return true and return the constant value in
+/// \p SplatValue.
+bool isConstantSplatVector(const SDNode *N, APInt &SplatValue);
 
-  /// Return true if the specified node is a BUILD_VECTOR where all of the
-  /// elements are ~0 or undef.
-  bool isBuildVectorAllOnes(const SDNode *N);
+/// Return true if the specified node is a BUILD_VECTOR or SPLAT_VECTOR where
+/// all of the elements are ~0 or undef. If \p BuildVectorOnly is set to
+/// true, it only checks BUILD_VECTOR.
+bool isConstantSplatVectorAllOnes(const SDNode *N,
+                                  bool BuildVectorOnly = false);
 
-  /// Return true if the specified node is a BUILD_VECTOR where all of the
-  /// elements are 0 or undef.
-  bool isBuildVectorAllZeros(const SDNode *N);
+/// Return true if the specified node is a BUILD_VECTOR or SPLAT_VECTOR where
+/// all of the elements are 0 or undef. If \p BuildVectorOnly is set to true, it
+/// only checks BUILD_VECTOR.
+bool isConstantSplatVectorAllZeros(const SDNode *N,
+                                   bool BuildVectorOnly = false);
 
-  /// Return true if the specified node is a BUILD_VECTOR node of all
-  /// ConstantSDNode or undef.
-  bool isBuildVectorOfConstantSDNodes(const SDNode *N);
+/// Return true if the specified node is a BUILD_VECTOR where all of the
+/// elements are ~0 or undef.
+bool isBuildVectorAllOnes(const SDNode *N);
 
-  /// Return true if the specified node is a BUILD_VECTOR node of all
-  /// ConstantFPSDNode or undef.
-  bool isBuildVectorOfConstantFPSDNodes(const SDNode *N);
+/// Return true if the specified node is a BUILD_VECTOR where all of the
+/// elements are 0 or undef.
+bool isBuildVectorAllZeros(const SDNode *N);
 
-  /// Return true if the node has at least one operand and all operands of the
-  /// specified node are ISD::UNDEF.
-  bool allOperandsUndef(const SDNode *N);
+/// Return true if the specified node is a BUILD_VECTOR node of all
+/// ConstantSDNode or undef.
+bool isBuildVectorOfConstantSDNodes(const SDNode *N);
+
+/// Return true if the specified node is a BUILD_VECTOR node of all
+/// ConstantFPSDNode or undef.
+bool isBuildVectorOfConstantFPSDNodes(const SDNode *N);
+
+/// Return true if the node has at least one operand and all operands of the
+/// specified node are ISD::UNDEF.
+bool allOperandsUndef(const SDNode *N);
 
 } // end namespace ISD
 
@@ -513,6 +526,7 @@ BEGIN_TWO_BYTE_PACK()
   class LoadSDNodeBitfields {
     friend class LoadSDNode;
     friend class MaskedLoadSDNode;
+    friend class MaskedGatherSDNode;
 
     uint16_t : NumLSBaseSDNodeBits;
 
@@ -675,9 +689,7 @@ public:
   bool use_empty() const { return UseList == nullptr; }
 
   /// Return true if there is exactly one use of this node.
-  bool hasOneUse() const {
-    return !use_empty() && std::next(use_begin()) == use_end();
-  }
+  bool hasOneUse() const { return hasSingleElement(uses()); }
 
   /// Return the number of uses of this node. This method takes
   /// time proportional to the number of uses.
@@ -704,8 +716,7 @@ public:
 
   /// This class provides iterator support for SDUse
   /// operands that use a specific SDNode.
-  class use_iterator
-    : public std::iterator<std::forward_iterator_tag, SDUse, ptrdiff_t> {
+  class use_iterator {
     friend class SDNode;
 
     SDUse *Op = nullptr;
@@ -713,10 +724,11 @@ public:
     explicit use_iterator(SDUse *op) : Op(op) {}
 
   public:
-    using reference = std::iterator<std::forward_iterator_tag,
-                                    SDUse, ptrdiff_t>::reference;
-    using pointer = std::iterator<std::forward_iterator_tag,
-                                  SDUse, ptrdiff_t>::pointer;
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = SDUse;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type *;
+    using reference = value_type &;
 
     use_iterator() = default;
     use_iterator(const use_iterator &I) : Op(I.Op) {}
@@ -932,7 +944,7 @@ public:
     return nullptr;
   }
 
-  const SDNodeFlags getFlags() const { return Flags; }
+  SDNodeFlags getFlags() const { return Flags; }
   void setFlags(SDNodeFlags NewFlags) { Flags = NewFlags; }
 
   /// Clear any flags in this node that aren't also set in Flags.
@@ -1250,10 +1262,6 @@ public:
   /// Returns alignment and volatility of the memory access
   Align getOriginalAlign() const { return MMO->getBaseAlign(); }
   Align getAlign() const { return MMO->getAlign(); }
-  LLVM_ATTRIBUTE_DEPRECATED(unsigned getOriginalAlignment() const,
-                            "Use getOriginalAlign() instead") {
-    return MMO->getBaseAlign().value();
-  }
   // FIXME: Remove once transition to getAlign is over.
   unsigned getAlignment() const { return MMO->getAlign().value(); }
 
@@ -1665,12 +1673,17 @@ bool isNullOrNullSplat(SDValue V, bool AllowUndefs = false);
 /// Return true if the value is a constant 1 integer or a splatted vector of a
 /// constant 1 integer (with no undefs).
 /// Does not permit build vector implicit truncation.
-bool isOneOrOneSplat(SDValue V);
+bool isOneOrOneSplat(SDValue V, bool AllowUndefs = false);
 
 /// Return true if the value is a constant -1 integer or a splatted vector of a
 /// constant -1 integer (with no undefs).
 /// Does not permit build vector implicit truncation.
-bool isAllOnesOrAllOnesSplat(SDValue V);
+bool isAllOnesOrAllOnesSplat(SDValue V, bool AllowUndefs = false);
+
+/// Return true if \p V is either a integer or FP constant.
+inline bool isIntOrFPConstant(SDValue V) {
+  return isa<ConstantSDNode>(V) || isa<ConstantFPSDNode>(V);
+}
 
 class GlobalAddressSDNode : public SDNode {
   friend class SelectionDAG;
@@ -1746,6 +1759,32 @@ public:
   static bool classof(const SDNode *N) {
     return N->getOpcode() == ISD::LIFETIME_START ||
            N->getOpcode() == ISD::LIFETIME_END;
+  }
+};
+
+/// This SDNode is used for PSEUDO_PROBE values, which are the function guid and
+/// the index of the basic block being probed. A pseudo probe serves as a place
+/// holder and will be removed at the end of compilation. It does not have any
+/// operand because we do not want the instruction selection to deal with any.
+class PseudoProbeSDNode : public SDNode {
+  friend class SelectionDAG;
+  uint64_t Guid;
+  uint64_t Index;
+  uint32_t Attributes;
+
+  PseudoProbeSDNode(unsigned Opcode, unsigned Order, const DebugLoc &Dl,
+                    SDVTList VTs, uint64_t Guid, uint64_t Index, uint32_t Attr)
+      : SDNode(Opcode, Order, Dl, VTs), Guid(Guid), Index(Index),
+        Attributes(Attr) {}
+
+public:
+  uint64_t getGuid() const { return Guid; }
+  uint64_t getIndex() const { return Index; }
+  uint32_t getAttributes() const { return Attributes; }
+
+  // Methods to support isa and dyn_cast
+  static bool classof(const SDNode *N) {
+    return N->getOpcode() == ISD::PSEUDO_PROBE;
   }
 };
 
@@ -2426,11 +2465,17 @@ public:
 
   MaskedGatherSDNode(unsigned Order, const DebugLoc &dl, SDVTList VTs,
                      EVT MemVT, MachineMemOperand *MMO,
-                     ISD::MemIndexType IndexType)
+                     ISD::MemIndexType IndexType, ISD::LoadExtType ETy)
       : MaskedGatherScatterSDNode(ISD::MGATHER, Order, dl, VTs, MemVT, MMO,
-                                  IndexType) {}
+                                  IndexType) {
+    LoadSDNodeBits.ExtTy = ETy;
+  }
 
   const SDValue &getPassThru() const { return getOperand(1); }
+
+  ISD::LoadExtType getExtensionType() const {
+    return ISD::LoadExtType(LoadSDNodeBits.ExtTy);
+  }
 
   static bool classof(const SDNode *N) {
     return N->getOpcode() == ISD::MGATHER;
@@ -2543,14 +2588,19 @@ public:
   }
 };
 
-class SDNodeIterator : public std::iterator<std::forward_iterator_tag,
-                                            SDNode, ptrdiff_t> {
+class SDNodeIterator {
   const SDNode *Node;
   unsigned Operand;
 
   SDNodeIterator(const SDNode *N, unsigned Op) : Node(N), Operand(Op) {}
 
 public:
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = SDNode;
+  using difference_type = std::ptrdiff_t;
+  using pointer = value_type *;
+  using reference = value_type &;
+
   bool operator==(const SDNodeIterator& x) const {
     return Operand == x.Operand;
   }
@@ -2604,7 +2654,8 @@ template <> struct GraphTraits<SDNode*> {
 /// with 4 and 8 byte pointer alignment, respectively.
 using LargestSDNode = AlignedCharArrayUnion<AtomicSDNode, TargetIndexSDNode,
                                             BlockAddressSDNode,
-                                            GlobalAddressSDNode>;
+                                            GlobalAddressSDNode,
+                                            PseudoProbeSDNode>;
 
 /// The SDNode class with the greatest alignment requirement.
 using MostAlignedSDNode = GlobalAddressSDNode;

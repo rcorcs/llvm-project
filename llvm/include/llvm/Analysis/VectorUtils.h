@@ -127,12 +127,6 @@ struct VFInfo {
   std::string ScalarName; /// Scalar Function Name.
   std::string VectorName; /// Vector Function Name associated to this VFInfo.
   VFISAKind ISA;          /// Instruction Set Architecture.
-
-  // Comparison operator.
-  bool operator==(const VFInfo &Other) const {
-    return std::tie(Shape, ScalarName, VectorName, ISA) ==
-           std::tie(Shape, Other.ScalarName, Other.VectorName, Other.ISA);
-  }
 };
 
 namespace VFABI {
@@ -186,12 +180,13 @@ Optional<VFInfo> tryDemangleForVFABI(StringRef MangledName, const Module &M);
 /// <isa> = "_LLVM_"
 /// <mask> = "N". Note: TLI does not support masked interfaces.
 /// <vlen> = Number of concurrent lanes, stored in the `VectorizationFactor`
-///          field of the `VecDesc` struct.
+///          field of the `VecDesc` struct. If the number of lanes is scalable
+///          then 'x' is printed instead.
 /// <vparams> = "v", as many as are the numArgs.
 /// <scalarname> = the name of the scalar function.
 /// <vectorname> = the name of the vector function.
 std::string mangleTLIVectorName(StringRef VectorName, StringRef ScalarName,
-                                unsigned numArgs, unsigned VF);
+                                unsigned numArgs, ElementCount VF);
 
 /// Retrieve the `VFParamKind` from a string token.
 VFParamKind getVFParamKindFromString(const StringRef Token);
@@ -304,7 +299,7 @@ typedef unsigned ID;
 /// the incoming type is void, we return void. If the EC represents a
 /// scalar, we return the scalar type.
 inline Type *ToVectorTy(Type *Scalar, ElementCount EC) {
-  if (Scalar->isVoidTy() || EC.isScalar())
+  if (Scalar->isVoidTy() || Scalar->isMetadataTy() || EC.isScalar())
     return Scalar;
   return VectorType::get(Scalar, EC);
 }
@@ -601,10 +596,6 @@ public:
 
   bool isReverse() const { return Reverse; }
   uint32_t getFactor() const { return Factor; }
-  LLVM_ATTRIBUTE_DEPRECATED(uint32_t getAlignment() const,
-                            "Use getAlign instead.") {
-    return Alignment.value();
-  }
   Align getAlign() const { return Alignment; }
   uint32_t getNumMembers() const { return Members.size(); }
 
@@ -619,6 +610,11 @@ public:
     if (!MaybeKey)
       return false;
     int32_t Key = *MaybeKey;
+
+    // Skip if the key is used for either the tombstone or empty special values.
+    if (DenseMapInfo<int32_t>::getTombstoneKey() == Key ||
+        DenseMapInfo<int32_t>::getEmptyKey() == Key)
+      return false;
 
     // Skip if there is already a member with the same index.
     if (Members.find(Key) != Members.end())
@@ -655,11 +651,7 @@ public:
   /// \returns nullptr if contains no such member.
   InstTy *getMember(uint32_t Index) const {
     int32_t Key = SmallestKey + Index;
-    auto Member = Members.find(Key);
-    if (Member == Members.end())
-      return nullptr;
-
-    return Member->second;
+    return Members.lookup(Key);
   }
 
   /// Get the index for the given member. Unlike the key in the member
@@ -777,9 +769,7 @@ public:
   /// \returns nullptr if doesn't have such group.
   InterleaveGroup<Instruction> *
   getInterleaveGroup(const Instruction *Instr) const {
-    if (InterleaveGroupMap.count(Instr))
-      return InterleaveGroupMap.find(Instr)->second;
-    return nullptr;
+    return InterleaveGroupMap.lookup(Instr);
   }
 
   iterator_range<SmallPtrSetIterator<llvm::InterleaveGroup<Instruction> *>>

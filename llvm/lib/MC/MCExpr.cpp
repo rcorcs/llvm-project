@@ -253,6 +253,7 @@ StringRef MCSymbolRefExpr::getVariantKindName(VariantKind Kind) {
   case VK_SIZE: return "SIZE";
   case VK_WEAKREF: return "WEAKREF";
   case VK_X86_ABS8: return "ABS8";
+  case VK_X86_PLTOFF: return "PLTOFF";
   case VK_ARM_NONE: return "none";
   case VK_ARM_GOT_PREL: return "GOT_PREL";
   case VK_ARM_TARGET1: return "target1";
@@ -268,6 +269,7 @@ StringRef MCSymbolRefExpr::getVariantKindName(VariantKind Kind) {
   case VK_AVR_DIFF8: return "diff8";
   case VK_AVR_DIFF16: return "diff16";
   case VK_AVR_DIFF32: return "diff32";
+  case VK_AVR_PM: return "pm";
   case VK_PPC_LO: return "l";
   case VK_PPC_HI: return "h";
   case VK_PPC_HA: return "ha";
@@ -320,6 +322,10 @@ StringRef MCSymbolRefExpr::getVariantKindName(VariantKind Kind) {
   case VK_PPC_GOT_TLSGD_HI: return "got@tlsgd@h";
   case VK_PPC_GOT_TLSGD_HA: return "got@tlsgd@ha";
   case VK_PPC_TLSGD: return "tlsgd";
+  case VK_PPC_AIX_TLSGD:
+    return "gd";
+  case VK_PPC_AIX_TLSGDM:
+    return "m";
   case VK_PPC_GOT_TLSLD: return "got@tlsld";
   case VK_PPC_GOT_TLSLD_LO: return "got@tlsld@l";
   case VK_PPC_GOT_TLSLD_HI: return "got@tlsld@h";
@@ -410,6 +416,7 @@ MCSymbolRefExpr::getVariantKindForName(StringRef Name) {
     .Case("secrel32", VK_SECREL)
     .Case("size", VK_SIZE)
     .Case("abs8", VK_X86_ABS8)
+    .Case("pltoff", VK_X86_PLTOFF)
     .Case("l", VK_PPC_LO)
     .Case("h", VK_PPC_HI)
     .Case("ha", VK_PPC_HA)

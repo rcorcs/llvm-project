@@ -15,10 +15,11 @@
 #include "clang/Sema/CodeCompleteOptions.h"
 #include "clang/Serialization/ModuleFileExtension.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/MemoryBuffer.h"
 #include <cassert>
+#include <map>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace llvm {
@@ -239,9 +240,6 @@ public:
   /// Show frontend performance metrics and statistics.
   unsigned ShowStats : 1;
 
-  /// Show timers for individual actions.
-  unsigned ShowTimers : 1;
-
   /// print the supported cpus for the current target
   unsigned PrintSupportedCPUs : 1;
 
@@ -377,6 +375,10 @@ public:
   std::string MTMigrateDir;
   std::string ARCMTMigrateReportOut;
 
+  /// The input kind, either specified via -x argument or deduced from the input
+  /// file name.
+  InputKind DashX;
+
   /// The input files and their types.
   SmallVector<FrontendInputFile, 0> Inputs;
 
@@ -403,7 +405,7 @@ public:
   std::string ActionName;
 
   /// Args to pass to the plugins
-  std::unordered_map<std::string,std::vector<std::string>> PluginArgs;
+  std::map<std::string, std::vector<std::string>> PluginArgs;
 
   /// The list of plugin actions to run in addition to the normal action.
   std::vector<std::string> AddPluginActions;
@@ -453,15 +455,15 @@ public:
 public:
   FrontendOptions()
       : DisableFree(false), RelocatablePCH(false), ShowHelp(false),
-        ShowStats(false), ShowTimers(false), TimeTrace(false),
-        ShowVersion(false), FixWhatYouCan(false), FixOnlyWarnings(false),
-        FixAndRecompile(false), FixToTemporaries(false),
-        ARCMTMigrateEmitARCErrors(false), SkipFunctionBodies(false),
-        UseGlobalModuleIndex(true), GenerateGlobalModuleIndex(true),
-        ASTDumpDecls(false), ASTDumpLookups(false),
-        BuildingImplicitModule(false), ModulesEmbedAllFiles(false),
-        IncludeTimestamps(true), UseTemporary(true),
-        AllowPCMWithCompilerErrors(false), TimeTraceGranularity(500) {}
+        ShowStats(false), TimeTrace(false), ShowVersion(false),
+        FixWhatYouCan(false), FixOnlyWarnings(false), FixAndRecompile(false),
+        FixToTemporaries(false), ARCMTMigrateEmitARCErrors(false),
+        SkipFunctionBodies(false), UseGlobalModuleIndex(true),
+        GenerateGlobalModuleIndex(true), ASTDumpDecls(false),
+        ASTDumpLookups(false), BuildingImplicitModule(false),
+        ModulesEmbedAllFiles(false), IncludeTimestamps(true),
+        UseTemporary(true), AllowPCMWithCompilerErrors(false),
+        TimeTraceGranularity(500) {}
 
   /// getInputKindForExtension - Return the appropriate input kind for a file
   /// extension. For example, "c" would return Language::C.

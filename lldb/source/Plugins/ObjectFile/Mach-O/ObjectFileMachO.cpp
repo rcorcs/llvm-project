@@ -17,6 +17,7 @@
 #include "lldb/Core/Module.h"
 #include "lldb/Core/ModuleSpec.h"
 #include "lldb/Core/PluginManager.h"
+#include "lldb/Core/Progress.h"
 #include "lldb/Core/Section.h"
 #include "lldb/Core/StreamFile.h"
 #include "lldb/Host/Host.h"
@@ -43,6 +44,7 @@
 
 #include "lldb/Host/SafeMachO.h"
 
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/MemoryBuffer.h"
 
 #include "ObjectFileMachO.h"
@@ -2161,12 +2163,14 @@ ParseNList(DataExtractor &nlist_data, lldb::offset_t &nlist_data_offset,
 enum { DebugSymbols = true, NonDebugSymbols = false };
 
 size_t ObjectFileMachO::ParseSymtab() {
-  static Timer::Category func_cat(LLVM_PRETTY_FUNCTION);
-  Timer scoped_timer(func_cat, "ObjectFileMachO::ParseSymtab () module = %s",
+  LLDB_SCOPED_TIMERF("ObjectFileMachO::ParseSymtab () module = %s",
                      m_file.GetFilename().AsCString(""));
   ModuleSP module_sp(GetModule());
   if (!module_sp)
     return 0;
+
+  Progress progress(llvm::formatv("Parsing symbol table for {0}",
+                                  m_file.GetFilename().AsCString("<Unknown>")));
 
   struct symtab_command symtab_load_command = {0, 0, 0, 0, 0, 0};
   struct linkedit_data_command function_starts_load_command = {0, 0, 0, 0};
@@ -2579,7 +2583,7 @@ size_t ObjectFileMachO::ParseSymtab() {
   typedef std::set<ConstString> IndirectSymbols;
   IndirectSymbols indirect_symbol_names;
 
-#if defined(__APPLE__) && TARGET_OS_EMBEDDED
+#if TARGET_OS_IPHONE
 
   // Some recent builds of the dyld_shared_cache (hereafter: DSC) have been
   // optimized by moving LOCAL symbols out of the memory mapped portion of
@@ -3467,10 +3471,11 @@ size_t ObjectFileMachO::ParseSymtab() {
                           sym[sym_idx].GetMangled().SetValue(
                               const_symbol_name, symbol_name_is_mangled);
                           if (is_gsym && is_debug) {
-                            const char *gsym_name = sym[sym_idx]
-                                                        .GetMangled()
-                                                        .GetName()
-                                                        .GetCString();
+                            const char *gsym_name =
+                                sym[sym_idx]
+                                    .GetMangled()
+                                    .GetName(Mangled::ePreferMangled)
+                                    .GetCString();
                             if (gsym_name)
                               N_GSYM_name_to_sym_idx[gsym_name] = sym_idx;
                           }
@@ -3550,8 +3555,10 @@ size_t ObjectFileMachO::ParseSymtab() {
                             bool found_it = false;
                             for (auto pos = range.first; pos != range.second;
                                  ++pos) {
-                              if (sym[sym_idx].GetMangled().GetName() ==
-                                  sym[pos->second].GetMangled().GetName()) {
+                              if (sym[sym_idx].GetMangled().GetName(
+                                      Mangled::ePreferMangled) ==
+                                  sym[pos->second].GetMangled().GetName(
+                                      Mangled::ePreferMangled)) {
                                 m_nlist_idx_to_sym_idx[nlist_idx] = pos->second;
                                 // We just need the flags from the linker
                                 // symbol, so put these flags
@@ -3591,8 +3598,10 @@ size_t ObjectFileMachO::ParseSymtab() {
                             bool found_it = false;
                             for (auto pos = range.first; pos != range.second;
                                  ++pos) {
-                              if (sym[sym_idx].GetMangled().GetName() ==
-                                  sym[pos->second].GetMangled().GetName()) {
+                              if (sym[sym_idx].GetMangled().GetName(
+                                      Mangled::ePreferMangled) ==
+                                  sym[pos->second].GetMangled().GetName(
+                                      Mangled::ePreferMangled)) {
                                 m_nlist_idx_to_sym_idx[nlist_idx] = pos->second;
                                 // We just need the flags from the linker
                                 // symbol, so put these flags
@@ -3610,10 +3619,11 @@ size_t ObjectFileMachO::ParseSymtab() {
                             if (found_it)
                               continue;
                           } else {
-                            const char *gsym_name = sym[sym_idx]
-                                                        .GetMangled()
-                                                        .GetName()
-                                                        .GetCString();
+                            const char *gsym_name =
+                                sym[sym_idx]
+                                    .GetMangled()
+                                    .GetName(Mangled::ePreferMangled)
+                                    .GetCString();
                             if (gsym_name) {
                               // Combine N_GSYM stab entries with the non
                               // stab symbol
@@ -4334,8 +4344,10 @@ size_t ObjectFileMachO::ParseSymtab() {
       }
 
       if (is_gsym) {
-        const char *gsym_name =
-            sym[sym_idx].GetMangled().GetName().GetCString();
+        const char *gsym_name = sym[sym_idx]
+                                    .GetMangled()
+                                    .GetName(Mangled::ePreferMangled)
+                                    .GetCString();
         if (gsym_name)
           N_GSYM_name_to_sym_idx[gsym_name] = sym_idx;
       }
@@ -4399,8 +4411,9 @@ size_t ObjectFileMachO::ParseSymtab() {
           if (range.first != range.second) {
             for (ValueToSymbolIndexMap::const_iterator pos = range.first;
                  pos != range.second; ++pos) {
-              if (sym[sym_idx].GetMangled().GetName() ==
-                  sym[pos->second].GetMangled().GetName()) {
+              if (sym[sym_idx].GetMangled().GetName(Mangled::ePreferMangled) ==
+                  sym[pos->second].GetMangled().GetName(
+                      Mangled::ePreferMangled)) {
                 m_nlist_idx_to_sym_idx[nlist_idx] = pos->second;
                 // We just need the flags from the linker symbol, so put these
                 // flags into the N_FUN flags to avoid duplicate symbols in the
@@ -4433,8 +4446,9 @@ size_t ObjectFileMachO::ParseSymtab() {
           if (range.first != range.second) {
             for (ValueToSymbolIndexMap::const_iterator pos = range.first;
                  pos != range.second; ++pos) {
-              if (sym[sym_idx].GetMangled().GetName() ==
-                  sym[pos->second].GetMangled().GetName()) {
+              if (sym[sym_idx].GetMangled().GetName(Mangled::ePreferMangled) ==
+                  sym[pos->second].GetMangled().GetName(
+                      Mangled::ePreferMangled)) {
                 m_nlist_idx_to_sym_idx[nlist_idx] = pos->second;
                 // We just need the flags from the linker symbol, so put these
                 // flags into the N_STSYM flags to avoid duplicate symbols in
@@ -4447,8 +4461,10 @@ size_t ObjectFileMachO::ParseSymtab() {
             }
           } else {
             // Combine N_GSYM stab entries with the non stab symbol.
-            const char *gsym_name =
-                sym[sym_idx].GetMangled().GetName().GetCString();
+            const char *gsym_name = sym[sym_idx]
+                                        .GetMangled()
+                                        .GetName(Mangled::ePreferMangled)
+                                        .GetCString();
             if (gsym_name) {
               ConstNameToSymbolIndexMap::const_iterator pos =
                   N_GSYM_name_to_sym_idx.find(gsym_name);

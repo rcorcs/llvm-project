@@ -16,6 +16,8 @@
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/CommandLine.h"
 
+#include <unordered_set>
+
 namespace llvm {
 namespace object {
 class COFFImportFile;
@@ -32,7 +34,7 @@ class ScopedPrinter;
 
 class ObjDumper {
 public:
-  ObjDumper(ScopedPrinter &Writer);
+  ObjDumper(ScopedPrinter &Writer, StringRef ObjName);
   virtual ~ObjDumper();
 
   virtual bool canDumpContent() { return true; }
@@ -70,6 +72,7 @@ public:
   virtual void printGroupSections() {}
   virtual void printHashHistograms() {}
   virtual void printCGProfile() {}
+  virtual void printBBAddrMaps() {}
   virtual void printAddrsig() {}
   virtual void printNotes() {}
   virtual void printELFLinkerOptions() {}
@@ -109,6 +112,10 @@ public:
   void printSectionsAsHex(const object::ObjectFile &Obj,
                           ArrayRef<std::string> Sections);
 
+  std::function<Error(const Twine &Msg)> WarningHandler;
+  void reportUniqueWarning(Error Err) const;
+  void reportUniqueWarning(const Twine &Msg) const;
+
 protected:
   ScopedPrinter &W;
 
@@ -117,6 +124,8 @@ private:
   virtual void printDynamicSymbols() {}
   virtual void printProgramHeaders() {}
   virtual void printSectionMapping() {}
+
+  std::unordered_set<std::string> Warnings;
 };
 
 std::unique_ptr<ObjDumper> createCOFFDumper(const object::COFFObjectFile &Obj,

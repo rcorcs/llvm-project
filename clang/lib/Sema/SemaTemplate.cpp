@@ -1105,8 +1105,17 @@ bool Sema::ActOnTypeConstraint(const CXXScopeSpec &SS,
                                TemplateIdAnnotation *TypeConstr,
                                TemplateTypeParmDecl *ConstrainedParameter,
                                SourceLocation EllipsisLoc) {
-  ConceptDecl *CD =
-      cast<ConceptDecl>(TypeConstr->Template.get().getAsTemplateDecl());
+  return BuildTypeConstraint(SS, TypeConstr, ConstrainedParameter, EllipsisLoc,
+                             false);
+}
+
+bool Sema::BuildTypeConstraint(const CXXScopeSpec &SS,
+                               TemplateIdAnnotation *TypeConstr,
+                               TemplateTypeParmDecl *ConstrainedParameter,
+                               SourceLocation EllipsisLoc,
+                               bool AllowUnexpandedPack) {
+  TemplateName TN = TypeConstr->Template.get();
+  ConceptDecl *CD = cast<ConceptDecl>(TN.getAsTemplateDecl());
 
   // C++2a [temp.param]p4:
   //     [...] The concept designated by a type-constraint shall be a type
@@ -1126,15 +1135,24 @@ bool Sema::ActOnTypeConstraint(const CXXScopeSpec &SS,
     return true;
   }
 
+  DeclarationNameInfo ConceptName(DeclarationName(TypeConstr->Name),
+                                  TypeConstr->TemplateNameLoc);
+
   TemplateArgumentListInfo TemplateArgs;
   if (TypeConstr->LAngleLoc.isValid()) {
     TemplateArgs =
         makeTemplateArgumentListInfo(*this, *TypeConstr);
+
+    if (EllipsisLoc.isInvalid() && !AllowUnexpandedPack) {
+      for (TemplateArgumentLoc Arg : TemplateArgs.arguments()) {
+        if (DiagnoseUnexpandedParameterPack(Arg, UPPC_TypeConstraint))
+          return true;
+      }
+    }
   }
   return AttachTypeConstraint(
       SS.isSet() ? SS.getWithLocInContext(Context) : NestedNameSpecifierLoc(),
-      DeclarationNameInfo(DeclarationName(TypeConstr->Name),
-                          TypeConstr->TemplateNameLoc), CD,
+      ConceptName, CD,
       TypeConstr->LAngleLoc.isValid() ? &TemplateArgs : nullptr,
       ConstrainedParameter, EllipsisLoc);
 }
@@ -1677,6 +1695,9 @@ Sema::ActOnTemplateParameterList(unsigned Depth,
   if (ExportLoc.isValid())
     Diag(ExportLoc, diag::warn_template_export_unsupported);
 
+  for (NamedDecl *P : Params)
+    warnOnReservedIdentifier(P);
+
   return TemplateParameterList::Create(
       Context, TemplateLoc, LAngleLoc,
       llvm::makeArrayRef(Params.data(), Params.size()),
@@ -2077,26 +2098,26 @@ public:
   QualType TransformTypedefType(TypeLocBuilder &TLB, TypedefTypeLoc TL) {
     ASTContext &Context = SemaRef.getASTContext();
     TypedefNameDecl *OrigDecl = TL.getTypedefNameDecl();
-    TypeLocBuilder InnerTLB;
-    QualType Transformed =
-        TransformType(InnerTLB, OrigDecl->getTypeSourceInfo()->getTypeLoc());
-    TypeSourceInfo *TSI =
-        TransformType(InnerTLB.getTypeSourceInfo(Context, Transformed));
-
-    TypedefNameDecl *Decl = nullptr;
-
-    if (isa<TypeAliasDecl>(OrigDecl))
-      Decl = TypeAliasDecl::Create(
-          Context, Context.getTranslationUnitDecl(), OrigDecl->getBeginLoc(),
-          OrigDecl->getLocation(), OrigDecl->getIdentifier(), TSI);
-    else {
-      assert(isa<TypedefDecl>(OrigDecl) && "Not a Type alias or typedef");
-      Decl = TypedefDecl::Create(
-          Context, Context.getTranslationUnitDecl(), OrigDecl->getBeginLoc(),
-          OrigDecl->getLocation(), OrigDecl->getIdentifier(), TSI);
+    TypedefNameDecl *Decl = OrigDecl;
+    // Transform the underlying type of the typedef and clone the Decl only if
+    // the typedef has a dependent context.
+    if (OrigDecl->getDeclContext()->isDependentContext()) {
+      TypeLocBuilder InnerTLB;
+      QualType Transformed =
+          TransformType(InnerTLB, OrigDecl->getTypeSourceInfo()->getTypeLoc());
+      TypeSourceInfo *TSI = InnerTLB.getTypeSourceInfo(Context, Transformed);
+      if (isa<TypeAliasDecl>(OrigDecl))
+        Decl = TypeAliasDecl::Create(
+            Context, Context.getTranslationUnitDecl(), OrigDecl->getBeginLoc(),
+            OrigDecl->getLocation(), OrigDecl->getIdentifier(), TSI);
+      else {
+        assert(isa<TypedefDecl>(OrigDecl) && "Not a Type alias or typedef");
+        Decl = TypedefDecl::Create(
+            Context, Context.getTranslationUnitDecl(), OrigDecl->getBeginLoc(),
+            OrigDecl->getLocation(), OrigDecl->getIdentifier(), TSI);
+      }
+      MaterializedTypedefs.push_back(Decl);
     }
-
-    MaterializedTypedefs.push_back(Decl);
 
     QualType TDTy = Context.getTypedefType(Decl);
     TypedefTypeLoc TypedefTL = TLB.push<TypedefTypeLoc>(TDTy);
@@ -2196,7 +2217,7 @@ struct ConvertConstructorToDeductionGuideTransform {
       return nullptr;
     TypeSourceInfo *NewTInfo = TLB.getTypeSourceInfo(SemaRef.Context, NewType);
 
-    return buildDeductionGuide(TemplateParams, CD->getExplicitSpecifier(),
+    return buildDeductionGuide(TemplateParams, CD, CD->getExplicitSpecifier(),
                                NewTInfo, CD->getBeginLoc(), CD->getLocation(),
                                CD->getEndLoc(), MaterializedTypedefs);
   }
@@ -2226,7 +2247,7 @@ struct ConvertConstructorToDeductionGuideTransform {
       Params.push_back(NewParam);
     }
 
-    return buildDeductionGuide(Template->getTemplateParameters(),
+    return buildDeductionGuide(Template->getTemplateParameters(), nullptr,
                                ExplicitSpecifier(), TSI, Loc, Loc, Loc);
   }
 
@@ -2404,9 +2425,9 @@ private:
   }
 
   FunctionTemplateDecl *buildDeductionGuide(
-      TemplateParameterList *TemplateParams, ExplicitSpecifier ES,
-      TypeSourceInfo *TInfo, SourceLocation LocStart, SourceLocation Loc,
-      SourceLocation LocEnd,
+      TemplateParameterList *TemplateParams, CXXConstructorDecl *Ctor,
+      ExplicitSpecifier ES, TypeSourceInfo *TInfo, SourceLocation LocStart,
+      SourceLocation Loc, SourceLocation LocEnd,
       llvm::ArrayRef<TypedefNameDecl *> MaterializedTypedefs = {}) {
     DeclarationNameInfo Name(DeductionGuideName, Loc);
     ArrayRef<ParmVarDecl *> Params =
@@ -2415,7 +2436,7 @@ private:
     // Build the implicit deduction guide template.
     auto *Guide =
         CXXDeductionGuideDecl::Create(SemaRef.Context, DC, LocStart, ES, Name,
-                                      TInfo->getType(), TInfo, LocEnd);
+                                      TInfo->getType(), TInfo, LocEnd, Ctor);
     Guide->setImplicit();
     Guide->setParams(Params);
 
@@ -2492,6 +2513,12 @@ void Sema::DeclareImplicitDeductionGuides(TemplateDecl *Template,
     // Class-scope explicit specializations (MS extension) do not result in
     // deduction guides.
     if (!CD || (!FTD && CD->isFunctionTemplateSpecialization()))
+      continue;
+
+    // Cannot make a deduction guide when unparsed arguments are present.
+    if (std::any_of(CD->param_begin(), CD->param_end(), [](ParmVarDecl *P) {
+          return !P || P->hasUnparsedDefaultArg();
+        }))
       continue;
 
     Transform.transformConstructor(FTD, CD);
@@ -3561,7 +3588,9 @@ public:
       OS << VD->getName();
       if (const auto *IV = dyn_cast<VarTemplateSpecializationDecl>(VD)) {
         // This is a template variable, print the expanded template arguments.
-        printTemplateArgumentList(OS, IV->getTemplateArgs().asArray(), Policy);
+        printTemplateArgumentList(
+            OS, IV->getTemplateArgs().asArray(), Policy,
+            IV->getSpecializedTemplate()->getTemplateParameters());
       }
       return true;
     }
@@ -3661,7 +3690,6 @@ QualType Sema::CheckTemplateIdType(TemplateName Name,
 
   QualType CanonType;
 
-  bool InstantiationDependent = false;
   if (TypeAliasTemplateDecl *AliasTemplate =
           dyn_cast<TypeAliasTemplateDecl>(Template)) {
 
@@ -3724,7 +3752,7 @@ QualType Sema::CheckTemplateIdType(TemplateName Name,
     }
   } else if (Name.isDependent() ||
              TemplateSpecializationType::anyDependentTemplateArguments(
-               TemplateArgs, InstantiationDependent)) {
+                 TemplateArgs, Converted)) {
     // This class template specialization is a dependent
     // type. Therefore, its canonical type is another class template
     // specialization type that contains all of the converted
@@ -3792,11 +3820,15 @@ QualType Sema::CheckTemplateIdType(TemplateName Name,
         Decl->setLexicalDeclContext(ClassTemplate->getLexicalDeclContext());
     }
 
-    if (Decl->getSpecializationKind() == TSK_Undeclared) {
-      MultiLevelTemplateArgumentList TemplateArgLists;
-      TemplateArgLists.addOuterTemplateArguments(Converted);
-      InstantiateAttrsForDecl(TemplateArgLists, ClassTemplate->getTemplatedDecl(),
-                              Decl);
+    if (Decl->getSpecializationKind() == TSK_Undeclared &&
+        ClassTemplate->getTemplatedDecl()->hasAttrs()) {
+      InstantiatingTemplate Inst(*this, TemplateLoc, Decl);
+      if (!Inst.isInvalid()) {
+        MultiLevelTemplateArgumentList TemplateArgLists;
+        TemplateArgLists.addOuterTemplateArguments(Converted);
+        InstantiateAttrsForDecl(TemplateArgLists,
+                                ClassTemplate->getTemplatedDecl(), Decl);
+      }
     }
 
     // Diagnose uses of this specialization.
@@ -4311,11 +4343,9 @@ DeclResult Sema::ActOnVarTemplateSpecialization(
 
     // FIXME: Move these checks to CheckTemplatePartialSpecializationArgs so we
     // also do them during instantiation.
-    bool InstantiationDependent;
     if (!Name.isDependent() &&
-        !TemplateSpecializationType::anyDependentTemplateArguments(
-            TemplateArgs.arguments(),
-            InstantiationDependent)) {
+        !TemplateSpecializationType::anyDependentTemplateArguments(TemplateArgs,
+                                                                   Converted)) {
       Diag(TemplateNameLoc, diag::err_partial_spec_fully_specialized)
           << VarTemplate->getDeclName();
       IsPartialSpecialization = false;
@@ -4476,10 +4506,9 @@ Sema::CheckVarTemplateId(VarTemplateDecl *Template, SourceLocation TemplateLoc,
     return true;
 
   // Produce a placeholder value if the specialization is dependent.
-  bool InstantiationDependent = false;
   if (Template->getDeclContext()->isDependentContext() ||
-      TemplateSpecializationType::anyDependentTemplateArguments(
-          TemplateArgs, InstantiationDependent))
+      TemplateSpecializationType::anyDependentTemplateArguments(TemplateArgs,
+                                                                Converted))
     return DeclResult();
 
   // Find the variable template specialization declaration that
@@ -4665,22 +4694,16 @@ Sema::CheckConceptTemplateId(const CXXScopeSpec &SS,
     return ExprError();
 
   ConstraintSatisfaction Satisfaction;
-  bool AreArgsDependent = false;
-  for (TemplateArgument &Arg : Converted) {
-    if (Arg.isDependent()) {
-      AreArgsDependent = true;
-      break;
-    }
-  }
+  bool AreArgsDependent =
+      TemplateSpecializationType::anyDependentTemplateArguments(*TemplateArgs,
+                                                                Converted);
   if (!AreArgsDependent &&
-      CheckConstraintSatisfaction(NamedConcept,
-                                  {NamedConcept->getConstraintExpr()},
-                                  Converted,
-                                  SourceRange(SS.isSet() ? SS.getBeginLoc() :
-                                                       ConceptNameInfo.getLoc(),
-                                                TemplateArgs->getRAngleLoc()),
-                                    Satisfaction))
-      return ExprError();
+      CheckConstraintSatisfaction(
+          NamedConcept, {NamedConcept->getConstraintExpr()}, Converted,
+          SourceRange(SS.isSet() ? SS.getBeginLoc() : ConceptNameInfo.getLoc(),
+                      TemplateArgs->getRAngleLoc()),
+          Satisfaction))
+    return ExprError();
 
   return ConceptSpecializationExpr::Create(Context,
       SS.isSet() ? SS.getWithLocInContext(Context) : NestedNameSpecifierLoc{},
@@ -5582,39 +5605,6 @@ bool Sema::CheckTemplateArgument(NamedDecl *Param,
   }
 
   return false;
-}
-
-/// Check whether the template parameter is a pack expansion, and if so,
-/// determine the number of parameters produced by that expansion. For instance:
-///
-/// \code
-/// template<typename ...Ts> struct A {
-///   template<Ts ...NTs, template<Ts> class ...TTs, typename ...Us> struct B;
-/// };
-/// \endcode
-///
-/// In \c A<int,int>::B, \c NTs and \c TTs have expanded pack size 2, and \c Us
-/// is not a pack expansion, so returns an empty Optional.
-static Optional<unsigned> getExpandedPackSize(NamedDecl *Param) {
-  if (TemplateTypeParmDecl *TTP
-        = dyn_cast<TemplateTypeParmDecl>(Param)) {
-    if (TTP->isExpandedParameterPack())
-      return TTP->getNumExpansionParameters();
-  }
-
-  if (NonTypeTemplateParmDecl *NTTP
-        = dyn_cast<NonTypeTemplateParmDecl>(Param)) {
-    if (NTTP->isExpandedParameterPack())
-      return NTTP->getNumExpansionTypes();
-  }
-
-  if (TemplateTemplateParmDecl *TTP
-        = dyn_cast<TemplateTemplateParmDecl>(Param)) {
-    if (TTP->isExpandedParameterPack())
-      return TTP->getNumExpansionTemplateParameters();
-  }
-
-  return None;
 }
 
 /// Diagnose a missing template argument.
@@ -6660,8 +6650,8 @@ CheckTemplateArgumentAddressOfObjectOrFunction(Sema &S,
     return true;
 
   // Create the template argument.
-  Converted =
-      TemplateArgument(cast<ValueDecl>(Entity->getCanonicalDecl()), ParamType);
+  Converted = TemplateArgument(cast<ValueDecl>(Entity->getCanonicalDecl()),
+                               S.Context.getCanonicalType(ParamType));
   S.MarkAnyDeclReferenced(Arg->getBeginLoc(), Entity, false);
   return false;
 }
@@ -6782,7 +6772,7 @@ static bool CheckTemplateArgumentPointerToMember(Sema &S,
       Converted = TemplateArgument(Arg);
     } else {
       ValueDecl *D = cast<ValueDecl>(DRE->getDecl()->getCanonicalDecl());
-      Converted = TemplateArgument(D, ParamType);
+      Converted = TemplateArgument(D, S.Context.getCanonicalType(ParamType));
     }
     return Invalid;
   }
@@ -8374,10 +8364,9 @@ DeclResult Sema::ActOnClassTemplateSpecialization(
 
     // FIXME: Move this to CheckTemplatePartialSpecializationArgs so we
     // also do it during instantiation.
-    bool InstantiationDependent;
     if (!Name.isDependent() &&
-        !TemplateSpecializationType::anyDependentTemplateArguments(
-            TemplateArgs.arguments(), InstantiationDependent)) {
+        !TemplateSpecializationType::anyDependentTemplateArguments(TemplateArgs,
+                                                                   Converted)) {
       Diag(TemplateNameLoc, diag::err_partial_spec_fully_specialized)
         << ClassTemplate->getDeclName();
       isPartialSpecialization = false;
@@ -9759,11 +9748,11 @@ DeclResult Sema::ActOnExplicitInstantiation(
       Def->setTemplateSpecializationKind(TSK);
 
       if (!getDLLAttr(Def) && getDLLAttr(Specialization) &&
-          (Context.getTargetInfo().getCXXABI().isMicrosoft() ||
-           Context.getTargetInfo().getTriple().isWindowsItaniumEnvironment())) {
-        // In the MS ABI, an explicit instantiation definition can add a dll
-        // attribute to a template with a previous instantiation declaration.
-        // MinGW doesn't allow this.
+          (Context.getTargetInfo().shouldDLLImportComdatSymbols() &&
+           !Context.getTargetInfo().getTriple().isPS4CPU())) {
+        // An explicit instantiation definition can add a dll attribute to a
+        // template with a previous instantiation declaration. MinGW doesn't
+        // allow this.
         auto *A = cast<InheritableAttr>(
             getDLLAttr(Specialization)->clone(getASTContext()));
         A->setInherited(true);
@@ -9777,19 +9766,19 @@ DeclResult Sema::ActOnExplicitInstantiation(
     bool NewlyDLLExported =
         !PreviouslyDLLExported && Specialization->hasAttr<DLLExportAttr>();
     if (Old_TSK == TSK_ImplicitInstantiation && NewlyDLLExported &&
-        (Context.getTargetInfo().getCXXABI().isMicrosoft() ||
-         Context.getTargetInfo().getTriple().isWindowsItaniumEnvironment())) {
-      // In the MS ABI, an explicit instantiation definition can add a dll
-      // attribute to a template with a previous implicit instantiation.
-      // MinGW doesn't allow this. We limit clang to only adding dllexport, to
-      // avoid potentially strange codegen behavior.  For example, if we extend
-      // this conditional to dllimport, and we have a source file calling a
-      // method on an implicitly instantiated template class instance and then
-      // declaring a dllimport explicit instantiation definition for the same
-      // template class, the codegen for the method call will not respect the
-      // dllimport, while it will with cl. The Def will already have the DLL
-      // attribute, since the Def and Specialization will be the same in the
-      // case of Old_TSK == TSK_ImplicitInstantiation, and we already added the
+        (Context.getTargetInfo().shouldDLLImportComdatSymbols() &&
+         !Context.getTargetInfo().getTriple().isPS4CPU())) {
+      // An explicit instantiation definition can add a dll attribute to a
+      // template with a previous implicit instantiation. MinGW doesn't allow
+      // this. We limit clang to only adding dllexport, to avoid potentially
+      // strange codegen behavior. For example, if we extend this conditional
+      // to dllimport, and we have a source file calling a method on an
+      // implicitly instantiated template class instance and then declaring a
+      // dllimport explicit instantiation definition for the same template
+      // class, the codegen for the method call will not respect the dllimport,
+      // while it will with cl. The Def will already have the DLL attribute,
+      // since the Def and Specialization will be the same in the case of
+      // Old_TSK == TSK_ImplicitInstantiation, and we already added the
       // attribute to the Specialization; we just need to make it take effect.
       assert(Def == Specialization &&
              "Def and Specialization should match for implicit instantiation");
@@ -9802,6 +9791,11 @@ DeclResult Sema::ActOnExplicitInstantiation(
         Context.getTargetInfo().getTriple().isWindowsGNUEnvironment() &&
         PrevDecl->hasAttr<DLLExportAttr>()) {
       dllExportImportClassTemplateSpecialization(*this, Def);
+    }
+
+    if (Def->hasAttr<MSInheritanceAttr>()) {
+      Specialization->addAttr(Def->getAttr<MSInheritanceAttr>());
+      Consumer.AssignInheritanceModel(Specialization);
     }
 
     // Set the template specialization kind. Make sure it is set before
@@ -10770,7 +10764,7 @@ namespace {
     /// For the purposes of type reconstruction, a type has already been
     /// transformed if it is NULL or if it is not dependent.
     bool AlreadyTransformed(QualType T) {
-      return T.isNull() || !T->isDependentType();
+      return T.isNull() || !T->isInstantiationDependentType();
     }
 
     /// Returns the location of the entity whose type is being
@@ -10823,7 +10817,7 @@ namespace {
 TypeSourceInfo *Sema::RebuildTypeInCurrentInstantiation(TypeSourceInfo *T,
                                                         SourceLocation Loc,
                                                         DeclarationName Name) {
-  if (!T || !T->getType()->isDependentType())
+  if (!T || !T->getType()->isInstantiationDependentType())
     return T;
 
   CurrentInstantiationRebuilder Rebuilder(*this, Loc, Name);
@@ -10934,7 +10928,9 @@ Sema::getTemplateArgumentBindingsText(const TemplateParameterList *Params,
     }
 
     Out << " = ";
-    Args[I].print(getPrintingPolicy(), Out);
+    Args[I].print(
+        getPrintingPolicy(), Out,
+        TemplateParameterList::shouldIncludeTypeForArgument(Params, I));
   }
 
   Out << ']';
@@ -11112,15 +11108,4 @@ void Sema::checkSpecializationVisibility(SourceLocation Loc, NamedDecl *Spec) {
     return;
 
   ExplicitSpecializationVisibilityChecker(*this, Loc).check(Spec);
-}
-
-/// Check whether a template partial specialization that we've discovered
-/// is hidden, and produce suitable diagnostics if so.
-void Sema::checkPartialSpecializationVisibility(SourceLocation Loc,
-                                                NamedDecl *Spec) {
-  llvm::SmallVector<Module *, 8> Modules;
-  if (!hasVisibleDeclaration(Spec, &Modules))
-    diagnoseMissingImport(Loc, Spec, Spec->getLocation(), Modules,
-                          MissingImportKind::PartialSpecialization,
-                          /*Recover*/true);
 }

@@ -16,7 +16,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-
 namespace mlir {
 namespace python {
 
@@ -51,7 +50,7 @@ public:
   Defaulting() = default;
   Defaulting(ReferrentTy &referrent) : referrent(&referrent) {}
 
-  ReferrentTy *get() { return referrent; }
+  ReferrentTy *get() const { return referrent; }
   ReferrentTy *operator->() { return referrent; }
 
 private:
@@ -115,10 +114,11 @@ struct PyPrintAccumulator {
   void *getUserData() { return this; }
 
   MlirStringCallback getCallback() {
-    return [](const char *part, intptr_t size, void *userData) {
+    return [](MlirStringRef part, void *userData) {
       PyPrintAccumulator *printAccum =
           static_cast<PyPrintAccumulator *>(userData);
-      pybind11::str pyPart(part, size); // Decodes as UTF-8 by default.
+      pybind11::str pyPart(part.data,
+                           part.length); // Decodes as UTF-8 by default.
       printAccum->parts.append(std::move(pyPart));
     };
   }
@@ -139,15 +139,16 @@ public:
   void *getUserData() { return this; }
 
   MlirStringCallback getCallback() {
-    return [](const char *part, intptr_t size, void *userData) {
+    return [](MlirStringRef part, void *userData) {
       pybind11::gil_scoped_acquire();
       PyFileAccumulator *accum = static_cast<PyFileAccumulator *>(userData);
       if (accum->binary) {
         // Note: Still has to copy and not avoidable with this API.
-        pybind11::bytes pyBytes(part, size);
+        pybind11::bytes pyBytes(part.data, part.length);
         accum->pyWriteFunction(pyBytes);
       } else {
-        pybind11::str pyStr(part, size); // Decodes as UTF-8 by default.
+        pybind11::str pyStr(part.data,
+                            part.length); // Decodes as UTF-8 by default.
         accum->pyWriteFunction(pyStr);
       }
     };
@@ -165,13 +166,13 @@ struct PySinglePartStringAccumulator {
   void *getUserData() { return this; }
 
   MlirStringCallback getCallback() {
-    return [](const char *part, intptr_t size, void *userData) {
+    return [](MlirStringRef part, void *userData) {
       PySinglePartStringAccumulator *accum =
           static_cast<PySinglePartStringAccumulator *>(userData);
       assert(!accum->invoked &&
              "PySinglePartStringAccumulator called back multiple times");
       accum->invoked = true;
-      accum->value = pybind11::str(part, size);
+      accum->value = pybind11::str(part.data, part.length);
     };
   }
 
@@ -214,6 +215,16 @@ class Sliceable {
 protected:
   using ClassTy = pybind11::class_<Derived>;
 
+  intptr_t wrapIndex(intptr_t index) {
+    if (index < 0)
+      index = length + index;
+    if (index < 0 || index >= length) {
+      throw python::SetPyError(PyExc_IndexError,
+                               "attempt to access out of bounds");
+    }
+    return index;
+  }
+
 public:
   explicit Sliceable(intptr_t startIndex, intptr_t length, intptr_t step)
       : startIndex(startIndex), length(length), step(step) {
@@ -227,12 +238,7 @@ public:
   /// by taking elements in inverse order. Throws if the index is out of bounds.
   ElementTy dunderGetItem(intptr_t index) {
     // Negative indices mean we count from the end.
-    if (index < 0)
-      index = length + index;
-    if (index < 0 || index >= length) {
-      throw python::SetPyError(PyExc_IndexError,
-                               "attempt to access out of bounds");
-    }
+    index = wrapIndex(index);
 
     // Compute the linear index given the current slice properties.
     int linearIndex = index * step + startIndex;

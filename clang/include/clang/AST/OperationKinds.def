@@ -77,9 +77,10 @@ CAST_OPERATION(LValueToRValueBitCast)
 CAST_OPERATION(LValueToRValue)
 
 /// CK_NoOp - A conversion which does not affect the type other than
-/// (possibly) adding qualifiers.
+/// (possibly) adding qualifiers or removing noexcept.
 ///   int    -> int
 ///   char** -> const char * const *
+///   void () noexcept -> void ()
 CAST_OPERATION(NoOp)
 
 /// CK_BaseToDerived - A conversion from a C++ class pointer/reference
@@ -179,6 +180,9 @@ CAST_OPERATION(PointerToBoolean)
 /// CK_ToVoid - Cast to void, discarding the computed value.
 ///    (void) malloc(2048)
 CAST_OPERATION(ToVoid)
+
+/// CK_MatrixCast - A cast between matrix types of the same dimensions.
+CAST_OPERATION(MatrixCast)
 
 /// CK_VectorSplat - A conversion from an arithmetic type to a
 /// vector of that element type.  Fills all elements ("splats") with

@@ -29,6 +29,7 @@ Basic Commands
    llvm-link
    llvm-lipo
    llvm-mca
+   llvm-otool
    llvm-profdata
    llvm-readobj
    llvm-stress
@@ -72,7 +73,12 @@ Developer Tools
 
    FileCheck
    tblgen
+   clang-tblgen
+   lldb-tblgen
+   llvm-tblgen
+   mlir-tblgen
    lit
    llvm-exegesis
-   llvm-pdbutil
    llvm-locstats
+   llvm-pdbutil
+   llvm-profgen

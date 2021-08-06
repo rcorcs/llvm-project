@@ -758,9 +758,8 @@ std::unique_ptr<ASTUnit> ASTUnit::LoadFromASTFile(
     const std::string &Filename, const PCHContainerReader &PCHContainerRdr,
     WhatToLoad ToLoad, IntrusiveRefCntPtr<DiagnosticsEngine> Diags,
     const FileSystemOptions &FileSystemOpts, bool UseDebugInfo,
-    bool OnlyLocalDecls, ArrayRef<RemappedFile> RemappedFiles,
-    CaptureDiagsKind CaptureDiagnostics, bool AllowASTWithCompilerErrors,
-    bool UserFilesAreVolatile) {
+    bool OnlyLocalDecls, CaptureDiagsKind CaptureDiagnostics,
+    bool AllowASTWithCompilerErrors, bool UserFilesAreVolatile) {
   std::unique_ptr<ASTUnit> AST(new ASTUnit(true));
 
   // Recover resources if we crash before exiting this method.
@@ -793,9 +792,6 @@ std::unique_ptr<ASTUnit> ASTUnit::LoadFromASTFile(
                                          /*Target=*/nullptr));
   AST->PPOpts = std::make_shared<PreprocessorOptions>();
 
-  for (const auto &RemappedFile : RemappedFiles)
-    AST->PPOpts->addRemappedFile(RemappedFile.first, RemappedFile.second);
-
   // Gather Info for preprocessor construction later on.
 
   HeaderSearch &HeaderInfo = *AST->HeaderInfo;
@@ -813,9 +809,10 @@ std::unique_ptr<ASTUnit> ASTUnit::LoadFromASTFile(
                               PP.getIdentifierTable(), PP.getSelectorTable(),
                               PP.getBuiltinInfo());
 
-  bool disableValid = false;
+  DisableValidationForModuleKind disableValid =
+      DisableValidationForModuleKind::None;
   if (::getenv("LIBCLANG_DISABLE_PCH_VALIDATION"))
-    disableValid = true;
+    disableValid = DisableValidationForModuleKind::All;
   AST->Reader = new ASTReader(
       PP, *AST->ModuleCache, AST->Ctx.get(), PCHContainerRdr, {},
       /*isysroot=*/"",
@@ -1153,16 +1150,8 @@ bool ASTUnit::Parse(std::shared_ptr<PCHContainerOperations> PCHContainerOps,
   Clang->setDiagnostics(&getDiagnostics());
 
   // Create the target instance.
-  Clang->setTarget(TargetInfo::CreateTargetInfo(
-      Clang->getDiagnostics(), Clang->getInvocation().TargetOpts));
-  if (!Clang->hasTarget())
+  if (!Clang->createTarget())
     return true;
-
-  // Inform the target of the language options.
-  //
-  // FIXME: We shouldn't need to do this, the target should be immutable once
-  // created. This complexity should be lifted elsewhere.
-  Clang->getTarget().adjust(Clang->getLangOpts());
 
   assert(Clang->getFrontendOpts().Inputs.size() == 1 &&
          "Invocation must have exactly one source file!");
@@ -1185,9 +1174,6 @@ bool ASTUnit::Parse(std::shared_ptr<PCHContainerOperations> PCHContainerOps,
     checkAndRemoveNonDriverDiags(StoredDiagnostics);
     TopLevelDeclsInPreamble.clear();
   }
-
-  // Create a file manager object to provide access to and cache the filesystem.
-  Clang->setFileManager(&getFileManager());
 
   // Create the source manager.
   Clang->setSourceManager(&getSourceManager());
@@ -1323,8 +1309,8 @@ ASTUnit::getMainBufferWithPrecompiledPreamble(
     return nullptr;
 
   if (Preamble) {
-    if (Preamble->CanReuse(PreambleInvocationIn, MainFileBuffer.get(), Bounds,
-                           VFS.get())) {
+    if (Preamble->CanReuse(PreambleInvocationIn, *MainFileBuffer, Bounds,
+                           *VFS)) {
       // Okay! We can re-use the precompiled preamble.
 
       // Set the state of the diagnostic object to mimic its state
@@ -1574,16 +1560,8 @@ ASTUnit *ASTUnit::LoadFromCompilerInvocationAction(
   Clang->setDiagnostics(&AST->getDiagnostics());
 
   // Create the target instance.
-  Clang->setTarget(TargetInfo::CreateTargetInfo(
-      Clang->getDiagnostics(), Clang->getInvocation().TargetOpts));
-  if (!Clang->hasTarget())
+  if (!Clang->createTarget())
     return nullptr;
-
-  // Inform the target of the language options.
-  //
-  // FIXME: We shouldn't need to do this, the target should be immutable once
-  // created. This complexity should be lifted elsewhere.
-  Clang->getTarget().adjust(Clang->getLangOpts());
 
   assert(Clang->getFrontendOpts().Inputs.size() == 1 &&
          "Invocation must have exactly one source file!");
@@ -2200,18 +2178,10 @@ void ASTUnit::CodeComplete(
   ProcessWarningOptions(Diag, Inv.getDiagnosticOpts());
 
   // Create the target instance.
-  Clang->setTarget(TargetInfo::CreateTargetInfo(
-      Clang->getDiagnostics(), Clang->getInvocation().TargetOpts));
-  if (!Clang->hasTarget()) {
+  if (!Clang->createTarget()) {
     Clang->setInvocation(nullptr);
     return;
   }
-
-  // Inform the target of the language options.
-  //
-  // FIXME: We shouldn't need to do this, the target should be immutable once
-  // created. This complexity should be lifted elsewhere.
-  Clang->getTarget().adjust(Clang->getLangOpts());
 
   assert(Clang->getFrontendOpts().Inputs.size() == 1 &&
          "Invocation must have exactly one source file!");
@@ -2240,28 +2210,30 @@ void ASTUnit::CodeComplete(
     = new AugmentedCodeCompleteConsumer(*this, Consumer, CodeCompleteOpts);
   Clang->setCodeCompletionConsumer(AugmentedConsumer);
 
+  auto getUniqueID =
+      [&FileMgr](StringRef Filename) -> Optional<llvm::sys::fs::UniqueID> {
+    if (auto Status = FileMgr.getVirtualFileSystem().status(Filename))
+      return Status->getUniqueID();
+    return None;
+  };
+
+  auto hasSameUniqueID = [getUniqueID](StringRef LHS, StringRef RHS) {
+    if (LHS == RHS)
+      return true;
+    if (auto LHSID = getUniqueID(LHS))
+      if (auto RHSID = getUniqueID(RHS))
+        return *LHSID == *RHSID;
+    return false;
+  };
+
   // If we have a precompiled preamble, try to use it. We only allow
   // the use of the precompiled preamble if we're if the completion
   // point is within the main file, after the end of the precompiled
   // preamble.
   std::unique_ptr<llvm::MemoryBuffer> OverrideMainBuffer;
-  if (Preamble) {
-    std::string CompleteFilePath(File);
-
-    auto &VFS = FileMgr.getVirtualFileSystem();
-    auto CompleteFileStatus = VFS.status(CompleteFilePath);
-    if (CompleteFileStatus) {
-      llvm::sys::fs::UniqueID CompleteFileID = CompleteFileStatus->getUniqueID();
-
-      std::string MainPath(OriginalSourceFile);
-      auto MainStatus = VFS.status(MainPath);
-      if (MainStatus) {
-        llvm::sys::fs::UniqueID MainID = MainStatus->getUniqueID();
-        if (CompleteFileID == MainID && Line > 1)
-          OverrideMainBuffer = getMainBufferWithPrecompiledPreamble(
-              PCHContainerOps, Inv, &VFS, false, Line - 1);
-      }
-    }
+  if (Preamble && Line > 1 && hasSameUniqueID(File, OriginalSourceFile)) {
+    OverrideMainBuffer = getMainBufferWithPrecompiledPreamble(
+        PCHContainerOps, Inv, &FileMgr.getVirtualFileSystem(), false, Line - 1);
   }
 
   // If the main file has been overridden due to the use of a preamble,

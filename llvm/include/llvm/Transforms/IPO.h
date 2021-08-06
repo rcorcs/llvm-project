@@ -160,7 +160,7 @@ Pass *createArgumentPromotionPass(unsigned maxElements = 3);
 
 //===----------------------------------------------------------------------===//
 /// createOpenMPOptLegacyPass - OpenMP specific optimizations.
-Pass *createOpenMPOptLegacyPass();
+Pass *createOpenMPOptCGSCCLegacyPass();
 
 //===----------------------------------------------------------------------===//
 /// createIPSCCPPass - This pass propagates constants from call sites into the
@@ -227,6 +227,11 @@ ModulePass *createMergeSimilarFunctionsPass();
 /// createHotColdSplittingPass - This pass outlines cold blocks into a separate
 /// function(s).
 ModulePass *createHotColdSplittingPass();
+
+//===----------------------------------------------------------------------===//
+/// createIROutlinerPass - This pass finds similar code regions and factors
+/// those regions out into functions.
+ModulePass *createIROutlinerPass();
 
 //===----------------------------------------------------------------------===//
 /// createPartialInliningPass - This pass inlines parts of functions.

@@ -11,6 +11,7 @@
 
 #include "atomic_helpers.h"
 #include "common.h"
+#include "memtag.h"
 
 namespace scudo {
 
@@ -23,6 +24,7 @@ enum class OptionBit {
   TrackAllocationStacks,
   UseOddEvenTags,
   UseMemoryTagging,
+  AddLargeAllocationSlack,
 };
 
 struct Options {
@@ -36,10 +38,14 @@ struct Options {
   }
 };
 
-struct AtomicOptions {
-  atomic_u32 Val;
+template <typename Config> bool useMemoryTagging(Options Options) {
+  return allocatorSupportsMemoryTagging<Config>() &&
+         Options.get(OptionBit::UseMemoryTagging);
+}
 
-public:
+struct AtomicOptions {
+  atomic_u32 Val = {};
+
   Options load() const { return Options{atomic_load_relaxed(&Val)}; }
 
   void clear(OptionBit Opt) {

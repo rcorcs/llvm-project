@@ -59,7 +59,7 @@ module attributes {gpu.container_module} {
       "gpu.barrier"() : () -> ()
 
       "some_op"(%bIdX, %tIdX) : (index, index) -> ()
-      %42 = load %arg1[%bIdX] : memref<?xf32, 1>
+      %42 = memref.load %arg1[%bIdX] : memref<?xf32, 1>
       gpu.return
     }
 
@@ -144,6 +144,23 @@ module attributes {gpu.container_module} {
     } ) {gpu.kernel, sym_name = "kernel_1", type = (f32, memref<?xf32>) -> (), workgroup_attributions = 1: i64} : () -> ()
   }
 
+  func @alloc() {
+    // CHECK-LABEL: func @alloc()
+
+    // CHECK: %[[m0:.*]] = gpu.alloc () : memref<13xf32, 1>
+    %m0 = gpu.alloc () : memref<13xf32, 1>
+    // CHECK: gpu.dealloc %[[m0]] : memref<13xf32, 1>
+    gpu.dealloc %m0 : memref<13xf32, 1>
+
+    %t0 = gpu.wait async
+    // CHECK: %[[m1:.*]], %[[t1:.*]] = gpu.alloc async [{{.*}}] () : memref<13xf32, 1>
+    %m1, %t1 = gpu.alloc async [%t0] () : memref<13xf32, 1>
+    // CHECK: gpu.dealloc async [%[[t1]]] %[[m1]] : memref<13xf32, 1>
+    %t2 = gpu.dealloc async [%t1] %m1 : memref<13xf32, 1>
+
+    return
+  }
+
   func @async_token(%arg0 : !gpu.async.token) -> !gpu.async.token {
     // CHECK-LABEL: func @async_token({{.*}}: !gpu.async.token)
     // CHECK: return {{.*}} : !gpu.async.token
@@ -164,6 +181,28 @@ module attributes {gpu.container_module} {
     // CHECK: gpu.wait
     // CHECK-NOT: async
     gpu.wait // Valid, but a no-op.
+    return
+  }
+
+  func @memcpy(%dst : memref<3x7xf32>, %src : memref<3x7xf32, 1>) {
+    // CHECK-LABEL: func @memcpy
+    // CHECK: gpu.memcpy {{.*}}, {{.*}} : memref<3x7xf32>, memref<3x7xf32, 1>
+    gpu.memcpy %dst, %src : memref<3x7xf32>, memref<3x7xf32, 1>
+    // CHECK: %[[t0:.*]] = gpu.wait async
+    %0 = gpu.wait async
+    // CHECK: {{.*}} = gpu.memcpy async [%[[t0]]] {{.*}}, {{.*}} : memref<3x7xf32>, memref<3x7xf32, 1>
+    %1 = gpu.memcpy async [%0] %dst, %src : memref<3x7xf32>, memref<3x7xf32, 1>
+    return
+  }
+
+  func @mmamatrix_valid_element_type(){
+    // CHECK-LABEL: func @mmamatrix_valid_element_type
+    %wg = memref.alloca() {alignment = 32} : memref<32x32xf16, 3>
+    // CHECK: %[[wg:.*]] = memref.alloca()
+    %i = constant 16 : index
+    // CHECK: %[[i:.*]] = constant 16 : index
+    %0 = gpu.subgroup_mma_load_matrix %wg[%i, %i] {leadDimension = 32 : index} : memref<32x32xf16, 3> -> !gpu.mma_matrix<16x16xf16, "AOp">
+    // CHECK: gpu.subgroup_mma_load_matrix %[[wg]][%[[i]], %[[i]]] {leadDimension = 32 : index} : memref<32x32xf16, 3> -> !gpu.mma_matrix<16x16xf16, "AOp">
     return
   }
 }

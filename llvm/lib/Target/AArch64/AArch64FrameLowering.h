@@ -67,10 +67,13 @@ public:
   bool hasFP(const MachineFunction &MF) const override;
   bool hasReservedCallFrame(const MachineFunction &MF) const override;
 
-  bool
-  assignCalleeSavedSpillSlots(MachineFunction &MF,
-                              const TargetRegisterInfo *TRI,
-                              std::vector<CalleeSavedInfo> &CSI) const override;
+  bool hasSwiftExtendedFrame(const MachineFunction &MF) const;
+
+  bool assignCalleeSavedSpillSlots(MachineFunction &MF,
+                                   const TargetRegisterInfo *TRI,
+                                   std::vector<CalleeSavedInfo> &CSI,
+                                   unsigned &MinCSFrameIndex,
+                                   unsigned &MaxCSFrameIndex) const override;
 
   void determineCalleeSaves(MachineFunction &MF, BitVector &SavedRegs,
                             RegScavenger *RS) const override;
@@ -107,7 +110,7 @@ public:
     default:
       return false;
     case TargetStackID::Default:
-    case TargetStackID::SVEVector:
+    case TargetStackID::ScalableVector:
     case TargetStackID::NoAlloc:
       return true;
     }
@@ -116,7 +119,7 @@ public:
   bool isStackIdSafeForLocalArea(unsigned StackId) const override {
     // We don't support putting SVE objects into the pre-allocated local
     // frame block at the moment.
-    return StackId != TargetStackID::SVEVector;
+    return StackId != TargetStackID::ScalableVector;
   }
 
   void
@@ -124,6 +127,16 @@ public:
                     SmallVectorImpl<int> &ObjectsToAllocate) const override;
 
 private:
+  /// Returns true if a homogeneous prolog or epilog code can be emitted
+  /// for the size optimization. If so, HOM_Prolog/HOM_Epilog pseudo
+  /// instructions are emitted in place. When Exit block is given, this check is
+  /// for epilog.
+  bool homogeneousPrologEpilog(MachineFunction &MF,
+                               MachineBasicBlock *Exit = nullptr) const;
+
+  /// Returns true if CSRs should be paired.
+  bool producePairRegisters(MachineFunction &MF) const;
+
   bool shouldCombineCSRLocalStackBump(MachineFunction &MF,
                                       uint64_t StackBumpBytes) const;
 

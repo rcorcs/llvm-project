@@ -186,6 +186,9 @@ public:
   /// code, e.g., implicit constructors and destructors.
   bool shouldVisitImplicitCode() const { return false; }
 
+  /// Return whether this visitor should recurse into lambda body
+  bool shouldVisitLambdaBody() const { return true; }
+
   /// Return whether this visitor should traverse post-order.
   bool shouldTraversePostOrder() const { return false; }
 
@@ -468,6 +471,8 @@ public:
   DEF_TRAVERSE_TMPL_INST(Function)
 #undef DEF_TRAVERSE_TMPL_INST
 
+  bool dataTraverseNode(Stmt *S, DataRecursionQueue *Queue);
+
 private:
   // These are helper methods used by more than one Traverse* method.
   bool TraverseTemplateParameterListHelper(TemplateParameterList *TPL);
@@ -475,6 +480,8 @@ private:
   // Traverses template parameter lists of either a DeclaratorDecl or TagDecl.
   template <typename T>
   bool TraverseDeclTemplateParameterLists(T *D);
+
+  bool TraverseTemplateTypeParamDeclConstraints(const TemplateTypeParmDecl *D);
 
   bool TraverseTemplateArgumentLocsHelper(const TemplateArgumentLoc *TAL,
                                           unsigned Count);
@@ -488,15 +495,15 @@ private:
   bool TraverseOMPExecutableDirective(OMPExecutableDirective *S);
   bool TraverseOMPLoopDirective(OMPLoopDirective *S);
   bool TraverseOMPClause(OMPClause *C);
-#define OMP_CLAUSE_CLASS(Enum, Str, Class) bool Visit##Class(Class *C);
-#include "llvm/Frontend/OpenMP/OMPKinds.def"
+#define GEN_CLANG_CLAUSE_CLASS
+#define CLAUSE_CLASS(Enum, Str, Class) bool Visit##Class(Class *C);
+#include "llvm/Frontend/OpenMP/OMP.inc"
   /// Process clauses with list of variables.
   template <typename T> bool VisitOMPClauseList(T *Node);
   /// Process clauses with pre-initis.
   bool VisitOMPClauseWithPreInit(OMPClauseWithPreInit *Node);
   bool VisitOMPClauseWithPostUpdate(OMPClauseWithPostUpdate *Node);
 
-  bool dataTraverseNode(Stmt *S, DataRecursionQueue *Queue);
   bool PostVisitStmt(Stmt *S);
 };
 
@@ -653,8 +660,14 @@ bool RecursiveASTVisitor<Derived>::TraverseDecl(Decl *D) {
 
   // As a syntax visitor, by default we want to ignore declarations for
   // implicit declarations (ones not typed explicitly by the user).
-  if (!getDerived().shouldVisitImplicitCode() && D->isImplicit())
+  if (!getDerived().shouldVisitImplicitCode() && D->isImplicit()) {
+    // For an implicit template type parameter, its type constraints are not
+    // implicit and are not represented anywhere else. We still need to visit
+    // them.
+    if (auto *TTPD = dyn_cast<TemplateTypeParmDecl>(D))
+      return TraverseTemplateTypeParamDeclConstraints(TTPD);
     return true;
+  }
 
   switch (D->getKind()) {
 #define ABSTRACT_DECL(DECL)
@@ -1774,10 +1787,9 @@ DEF_TRAVERSE_DECL(BuiltinTemplateDecl, {
   TRY_TO(TraverseTemplateParameterListHelper(D->getTemplateParameters()));
 })
 
-DEF_TRAVERSE_DECL(TemplateTypeParmDecl, {
-  // D is the "T" in something like "template<typename T> class vector;"
-  if (D->getTypeForDecl())
-    TRY_TO(TraverseType(QualType(D->getTypeForDecl(), 0)));
+template <typename Derived>
+bool RecursiveASTVisitor<Derived>::TraverseTemplateTypeParamDeclConstraints(
+    const TemplateTypeParmDecl *D) {
   if (const auto *TC = D->getTypeConstraint()) {
     if (Expr *IDC = TC->getImmediatelyDeclaredConstraint()) {
       TRY_TO(TraverseStmt(IDC));
@@ -1789,6 +1801,14 @@ DEF_TRAVERSE_DECL(TemplateTypeParmDecl, {
       TRY_TO(TraverseConceptReference(*TC));
     }
   }
+  return true;
+}
+
+DEF_TRAVERSE_DECL(TemplateTypeParmDecl, {
+  // D is the "T" in something like "template<typename T> class vector;"
+  if (D->getTypeForDecl())
+    TRY_TO(TraverseType(QualType(D->getTypeForDecl(), 0)));
+  TRY_TO(TraverseTemplateTypeParamDeclConstraints(D));
   if (D->hasDefaultArgument() && !D->defaultArgumentWasInherited())
     TRY_TO(TraverseTypeLoc(D->getDefaultArgumentInfo()->getTypeLoc()));
 })
@@ -2054,6 +2074,15 @@ bool RecursiveASTVisitor<Derived>::TraverseFunctionHelper(FunctionDecl *D) {
       // Don't visit the function body if the function definition is generated
       // by clang.
       (!D->isDefaulted() || getDerived().shouldVisitImplicitCode());
+
+  if (const auto *MD = dyn_cast<CXXMethodDecl>(D)) {
+    if (const CXXRecordDecl *RD = MD->getParent()) {
+      if (RD->isLambda() &&
+          declaresSameEntity(RD->getLambdaCallOperator(), MD)) {
+        VisitBody = VisitBody && getDerived().shouldVisitLambdaBody();
+      }
+    }
+  }
 
   if (VisitBody) {
     TRY_TO(TraverseStmt(D->getBody())); // Function body.
@@ -2503,17 +2532,12 @@ DEF_TRAVERSE_STMT(LambdaExpr, {
     TypeLoc TL = S->getCallOperator()->getTypeSourceInfo()->getTypeLoc();
     FunctionProtoTypeLoc Proto = TL.getAsAdjusted<FunctionProtoTypeLoc>();
 
-    for (Decl *D : S->getExplicitTemplateParameters()) {
-      // Visit explicit template parameters.
-      TRY_TO(TraverseDecl(D));
-    }
+    TRY_TO(TraverseTemplateParameterListHelper(S->getTemplateParameterList()));
     if (S->hasExplicitParameters()) {
       // Visit parameters.
       for (unsigned I = 0, N = Proto.getNumParams(); I != N; ++I)
         TRY_TO(TraverseDecl(Proto.getParam(I)));
     }
-    if (S->hasExplicitResultType())
-      TRY_TO(TraverseTypeLoc(Proto.getReturnLoc()));
 
     auto *T = Proto.getTypePtr();
     for (const auto &E : T->exceptions())
@@ -2521,6 +2545,10 @@ DEF_TRAVERSE_STMT(LambdaExpr, {
 
     if (Expr *NE = T->getNoexceptExpr())
       TRY_TO_TRAVERSE_OR_ENQUEUE_STMT(NE);
+
+    if (S->hasExplicitResultType())
+      TRY_TO(TraverseTypeLoc(Proto.getReturnLoc()));
+    TRY_TO_TRAVERSE_OR_ENQUEUE_STMT(S->getTrailingRequiresClause());
 
     TRY_TO_TRAVERSE_OR_ENQUEUE_STMT(S->getBody());
   }
@@ -2774,6 +2802,14 @@ bool RecursiveASTVisitor<Derived>::TraverseOMPExecutableDirective(
   return true;
 }
 
+DEF_TRAVERSE_STMT(OMPCanonicalLoop, {
+  if (!getDerived().shouldVisitImplicitCode()) {
+    // Visit only the syntactical loop.
+    TRY_TO(TraverseStmt(S->getLoopStmt()));
+    ShouldVisitChildren = false;
+  }
+})
+
 template <typename Derived>
 bool
 RecursiveASTVisitor<Derived>::TraverseOMPLoopDirective(OMPLoopDirective *S) {
@@ -2784,6 +2820,9 @@ DEF_TRAVERSE_STMT(OMPParallelDirective,
                   { TRY_TO(TraverseOMPExecutableDirective(S)); })
 
 DEF_TRAVERSE_STMT(OMPSimdDirective,
+                  { TRY_TO(TraverseOMPExecutableDirective(S)); })
+
+DEF_TRAVERSE_STMT(OMPTileDirective,
                   { TRY_TO(TraverseOMPExecutableDirective(S)); })
 
 DEF_TRAVERSE_STMT(OMPForDirective,
@@ -2944,22 +2983,30 @@ DEF_TRAVERSE_STMT(OMPTargetTeamsDistributeParallelForSimdDirective,
 DEF_TRAVERSE_STMT(OMPTargetTeamsDistributeSimdDirective,
                   { TRY_TO(TraverseOMPExecutableDirective(S)); })
 
+DEF_TRAVERSE_STMT(OMPInteropDirective,
+                  { TRY_TO(TraverseOMPExecutableDirective(S)); })
+
+DEF_TRAVERSE_STMT(OMPDispatchDirective,
+                  { TRY_TO(TraverseOMPExecutableDirective(S)); })
+
+DEF_TRAVERSE_STMT(OMPMaskedDirective,
+                  { TRY_TO(TraverseOMPExecutableDirective(S)); })
+
 // OpenMP clauses.
 template <typename Derived>
 bool RecursiveASTVisitor<Derived>::TraverseOMPClause(OMPClause *C) {
   if (!C)
     return true;
   switch (C->getClauseKind()) {
-#define OMP_CLAUSE_CLASS(Enum, Str, Class)                                     \
+#define GEN_CLANG_CLAUSE_CLASS
+#define CLAUSE_CLASS(Enum, Str, Class)                                         \
   case llvm::omp::Clause::Enum:                                                \
     TRY_TO(Visit##Class(static_cast<Class *>(C)));                             \
     break;
-#define OMP_CLAUSE_NO_CLASS(Enum, Str)                                         \
+#define CLAUSE_NO_CLASS(Enum, Str)                                             \
   case llvm::omp::Clause::Enum:                                                \
     break;
-#include "llvm/Frontend/OpenMP/OMPKinds.def"
-  default:
-    break;
+#include "llvm/Frontend/OpenMP/OMP.inc"
   }
   return true;
 }
@@ -3024,6 +3071,13 @@ bool RecursiveASTVisitor<Derived>::VisitOMPSafelenClause(OMPSafelenClause *C) {
 template <typename Derived>
 bool RecursiveASTVisitor<Derived>::VisitOMPSimdlenClause(OMPSimdlenClause *C) {
   TRY_TO(TraverseStmt(C->getSimdlen()));
+  return true;
+}
+
+template <typename Derived>
+bool RecursiveASTVisitor<Derived>::VisitOMPSizesClause(OMPSizesClause *C) {
+  for (Expr *E : C->getSizesRefs())
+    TRY_TO(TraverseStmt(E));
   return true;
 }
 
@@ -3165,7 +3219,36 @@ bool RecursiveASTVisitor<Derived>::VisitOMPNogroupClause(OMPNogroupClause *) {
 }
 
 template <typename Derived>
-bool RecursiveASTVisitor<Derived>::VisitOMPDestroyClause(OMPDestroyClause *) {
+bool RecursiveASTVisitor<Derived>::VisitOMPInitClause(OMPInitClause *C) {
+  TRY_TO(VisitOMPClauseList(C));
+  return true;
+}
+
+template <typename Derived>
+bool RecursiveASTVisitor<Derived>::VisitOMPUseClause(OMPUseClause *C) {
+  TRY_TO(TraverseStmt(C->getInteropVar()));
+  return true;
+}
+
+template <typename Derived>
+bool RecursiveASTVisitor<Derived>::VisitOMPDestroyClause(OMPDestroyClause *C) {
+  TRY_TO(TraverseStmt(C->getInteropVar()));
+  return true;
+}
+
+template <typename Derived>
+bool RecursiveASTVisitor<Derived>::VisitOMPNovariantsClause(
+    OMPNovariantsClause *C) {
+  TRY_TO(VisitOMPClauseWithPreInit(C));
+  TRY_TO(TraverseStmt(C->getCondition()));
+  return true;
+}
+
+template <typename Derived>
+bool RecursiveASTVisitor<Derived>::VisitOMPNocontextClause(
+    OMPNocontextClause *C) {
+  TRY_TO(VisitOMPClauseWithPreInit(C));
+  TRY_TO(TraverseStmt(C->getCondition()));
   return true;
 }
 
@@ -3541,6 +3624,13 @@ bool RecursiveASTVisitor<Derived>::VisitOMPAffinityClause(
   TRY_TO(TraverseStmt(C->getModifier()));
   for (Expr *E : C->varlists())
     TRY_TO(TraverseStmt(E));
+  return true;
+}
+
+template <typename Derived>
+bool RecursiveASTVisitor<Derived>::VisitOMPFilterClause(OMPFilterClause *C) {
+  TRY_TO(VisitOMPClauseWithPreInit(C));
+  TRY_TO(TraverseStmt(C->getThreadID()));
   return true;
 }
 

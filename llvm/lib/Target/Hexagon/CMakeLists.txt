@@ -60,6 +60,7 @@ add_llvm_target(HexagonCodeGen
   HexagonTargetMachine.cpp
   HexagonTargetObjectFile.cpp
   HexagonTargetTransformInfo.cpp
+  HexagonVectorCombine.cpp
   HexagonVectorLoopCarriedReuse.cpp
   HexagonVectorPrint.cpp
   HexagonVExtract.cpp
@@ -68,7 +69,7 @@ add_llvm_target(HexagonCodeGen
   RDFDeadCode.cpp
 
   LINK_COMPONENTS
-   Analysis
+  Analysis
   AsmPrinter
   CodeGen
   Core

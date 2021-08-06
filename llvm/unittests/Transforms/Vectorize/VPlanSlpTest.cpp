@@ -9,6 +9,7 @@
 #include "../lib/Transforms/Vectorize/VPlan.h"
 #include "../lib/Transforms/Vectorize/VPlanHCFGBuilder.h"
 #include "VPlanTestBase.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/VectorUtils.h"
 #include "gtest/gtest.h"
 
@@ -39,7 +40,7 @@ protected:
                                                    VPlan &Plan) {
     AC.reset(new AssumptionCache(F));
     SE.reset(new ScalarEvolution(F, TLI, *AC, *DT, *LI));
-    BasicAA.reset(new BasicAAResult(DL, F, TLI, *AC, &*DT, &*LI));
+    BasicAA.reset(new BasicAAResult(DL, F, TLI, *AC, &*DT));
     AARes.reset(new AAResults(TLI));
     AARes->addAAResult(*BasicAA);
     PSE.reset(new PredicatedScalarEvolution(*SE, *L));

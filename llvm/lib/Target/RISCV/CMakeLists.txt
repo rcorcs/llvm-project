@@ -13,14 +13,15 @@ tablegen(LLVM RISCVGenMCCodeEmitter.inc -gen-emitter)
 tablegen(LLVM RISCVGenMCPseudoLowering.inc -gen-pseudo-lowering)
 tablegen(LLVM RISCVGenRegisterBank.inc -gen-register-bank)
 tablegen(LLVM RISCVGenRegisterInfo.inc -gen-register-info)
+tablegen(LLVM RISCVGenSearchableTables.inc -gen-searchable-tables)
 tablegen(LLVM RISCVGenSubtargetInfo.inc -gen-subtarget)
-tablegen(LLVM RISCVGenSystemOperands.inc -gen-searchable-tables)
 
 add_public_tablegen_target(RISCVCommonTableGen)
 
 add_llvm_target(RISCVCodeGen
   RISCVAsmPrinter.cpp
   RISCVCallLowering.cpp
+  RISCVCleanupVSETVLI.cpp
   RISCVExpandAtomicPseudoInsts.cpp
   RISCVExpandPseudoInsts.cpp
   RISCVFrameLowering.cpp
@@ -46,7 +47,6 @@ add_llvm_target(RISCVCodeGen
   MC
   RISCVDesc
   RISCVInfo
-  RISCVUtils
   SelectionDAG
   Support
   Target
@@ -60,4 +60,3 @@ add_subdirectory(AsmParser)
 add_subdirectory(Disassembler)
 add_subdirectory(MCTargetDesc)
 add_subdirectory(TargetInfo)
-add_subdirectory(Utils)

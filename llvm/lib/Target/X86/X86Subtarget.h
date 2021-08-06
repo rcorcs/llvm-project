@@ -433,6 +433,9 @@ class X86Subtarget final : public X86GenSubtargetInfo {
   /// Prefer a left/right vector logical shifts pair over a shift+and pair.
   bool HasFastVectorShiftMasks = false;
 
+  /// Prefer a movbe over a single-use load + bswap / single-use bswap + store.
+  bool HasFastMOVBE = false;
+
   /// Use a retpoline thunk rather than indirect calls to block speculative
   /// execution.
   bool UseRetpolineIndirectCalls = false;
@@ -471,6 +474,8 @@ class X86Subtarget final : public X86GenSubtargetInfo {
   /// The minimum alignment known to hold of the stack frame on
   /// entry to the function and which must be maintained by every function.
   Align stackAlignment = Align(4);
+
+  Align TileConfigAlignment = Align(4);
 
   /// Max. memset / memcpy size that is turned into rep/movs, rep/stos ops.
   ///
@@ -554,6 +559,9 @@ public:
   const X86RegisterInfo *getRegisterInfo() const override {
     return &getInstrInfo()->getRegisterInfo();
   }
+
+  unsigned getTileConfigSize() const { return 64; }
+  Align getTileConfigAlignment() const { return TileConfigAlignment; }
 
   /// Returns the minimum alignment known to hold of the
   /// stack frame on entry to the function and which must be maintained by every
@@ -709,6 +717,7 @@ public:
   bool hasFastHorizontalOps() const { return HasFastHorizontalOps; }
   bool hasFastScalarShiftMasks() const { return HasFastScalarShiftMasks; }
   bool hasFastVectorShiftMasks() const { return HasFastVectorShiftMasks; }
+  bool hasFastMOVBE() const { return HasFastMOVBE; }
   bool hasMacroFusion() const { return HasMacroFusion; }
   bool hasBranchFusion() const { return HasBranchFusion; }
   bool hasERMSB() const { return HasERMSB; }
@@ -880,6 +889,7 @@ public:
     case CallingConv::Fast:
     case CallingConv::Tail:
     case CallingConv::Swift:
+    case CallingConv::SwiftTail:
     case CallingConv::X86_FastCall:
     case CallingConv::X86_StdCall:
     case CallingConv::X86_ThisCall:
@@ -936,7 +946,7 @@ public:
     return TargetSubtargetInfo::ANTIDEP_CRITICAL;
   }
 
-  bool enableAdvancedRASplitCost() const override { return true; }
+  bool enableAdvancedRASplitCost() const override { return false; }
 };
 
 } // end namespace llvm

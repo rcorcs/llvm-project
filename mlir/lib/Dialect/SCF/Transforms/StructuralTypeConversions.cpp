@@ -63,7 +63,7 @@ public:
     }
     // Change the clone to use the updated operands. We could have cloned with
     // a BlockAndValueMapping, but this seems a bit more direct.
-    newOp.getOperation()->setOperands(operands);
+    newOp->setOperands(operands);
     // Update the result types to the new converted types.
     for (auto t : llvm::zip(newOp.getResults(), newResultTypes))
       std::get<0>(t).setType(std::get<1>(t));
@@ -108,7 +108,7 @@ public:
                                 newOp.elseRegion().end());
 
     // Update the operands and types.
-    newOp.getOperation()->setOperands(operands);
+    newOp->setOperands(operands);
     for (auto t : llvm::zip(newOp.getResults(), newResultTypes))
       std::get<0>(t).setType(std::get<1>(t));
     rewriter.replaceOp(op, newOp.getResults());
@@ -134,17 +134,17 @@ public:
 } // namespace
 
 void mlir::scf::populateSCFStructuralTypeConversionsAndLegality(
-    MLIRContext *context, TypeConverter &typeConverter,
-    OwningRewritePatternList &patterns, ConversionTarget &target) {
-  patterns.insert<ConvertForOpTypes, ConvertIfOpTypes, ConvertYieldOpTypes>(
-      typeConverter, context);
+    TypeConverter &typeConverter, RewritePatternSet &patterns,
+    ConversionTarget &target) {
+  patterns.add<ConvertForOpTypes, ConvertIfOpTypes, ConvertYieldOpTypes>(
+      typeConverter, patterns.getContext());
   target.addDynamicallyLegalOp<ForOp, IfOp>([&](Operation *op) {
     return typeConverter.isLegal(op->getResultTypes());
   });
   target.addDynamicallyLegalOp<scf::YieldOp>([&](scf::YieldOp op) {
     // We only have conversions for a subset of ops that use scf.yield
     // terminators.
-    if (!isa<ForOp, IfOp>(op.getParentOp()))
+    if (!isa<ForOp, IfOp>(op->getParentOp()))
       return true;
     return typeConverter.isLegal(op.getOperandTypes());
   });

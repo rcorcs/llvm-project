@@ -14,10 +14,14 @@
 #ifndef MLIR_REWRITE_PATTERNAPPLICATOR_H
 #define MLIR_REWRITE_PATTERNAPPLICATOR_H
 
-#include "mlir/Rewrite/FrozenRewritePatternList.h"
+#include "mlir/Rewrite/FrozenRewritePatternSet.h"
 
 namespace mlir {
 class PatternRewriter;
+
+namespace detail {
+class PDLByteCodeMutableState;
+} // end namespace detail
 
 /// This class manages the application of a group of rewrite patterns, with a
 /// user-provided cost model.
@@ -29,8 +33,8 @@ public:
   /// `impossibleToMatch`.
   using CostModel = function_ref<PatternBenefit(const Pattern &)>;
 
-  explicit PatternApplicator(const FrozenRewritePatternList &frozenPatternList)
-      : frozenPatternList(frozenPatternList) {}
+  explicit PatternApplicator(const FrozenRewritePatternSet &frozenPatternList);
+  ~PatternApplicator();
 
   /// Attempt to match and rewrite the given op with any pattern, allowing a
   /// predicate to decide if a pattern can be applied or not, and hooks for if
@@ -60,23 +64,15 @@ public:
   void walkAllPatterns(function_ref<void(const Pattern &)> walk);
 
 private:
-  /// Attempt to match and rewrite the given op with the given pattern, allowing
-  /// a predicate to decide if a pattern can be applied or not, and hooks for if
-  /// the pattern match was a success or failure.
-  LogicalResult
-  matchAndRewrite(Operation *op, const RewritePattern &pattern,
-                  PatternRewriter &rewriter,
-                  function_ref<bool(const Pattern &)> canApply,
-                  function_ref<void(const Pattern &)> onFailure,
-                  function_ref<LogicalResult(const Pattern &)> onSuccess);
-
   /// The list that owns the patterns used within this applicator.
-  const FrozenRewritePatternList &frozenPatternList;
+  const FrozenRewritePatternSet &frozenPatternList;
   /// The set of patterns to match for each operation, stable sorted by benefit.
   DenseMap<OperationName, SmallVector<const RewritePattern *, 2>> patterns;
   /// The set of patterns that may match against any operation type, stable
   /// sorted by benefit.
   SmallVector<const RewritePattern *, 1> anyOpPatterns;
+  /// The mutable state used during execution of the PDL bytecode.
+  std::unique_ptr<detail::PDLByteCodeMutableState> mutableByteCodeState;
 };
 
 } // end namespace mlir

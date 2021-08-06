@@ -72,6 +72,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetIntrinsicInfo.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/Transforms/Utils/MemoryOpRemark.h"
 #include <algorithm>
 #include <cassert>
 #include <cstddef>
@@ -97,6 +98,7 @@ INITIALIZE_PASS_DEPENDENCY(TargetPassConfig)
 INITIALIZE_PASS_DEPENDENCY(GISelCSEAnalysisWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(BlockFrequencyInfoWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(StackProtector)
+INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
 INITIALIZE_PASS_END(IRTranslator, DEBUG_TYPE, "IRTranslator LLVM IR -> MI",
                 false, false)
 
@@ -164,13 +166,17 @@ void IRTranslator::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addRequired<GISelCSEAnalysisWrapperPass>();
   if (OptLevel != CodeGenOpt::None)
     AU.addRequired<BranchProbabilityInfoWrapperPass>();
+  AU.addRequired<TargetLibraryInfoWrapperPass>();
+  AU.addPreserved<TargetLibraryInfoWrapperPass>();
   getSelectionDAGFallbackAnalysisUsage(AU);
   MachineFunctionPass::getAnalysisUsage(AU);
 }
 
 IRTranslator::ValueToVRegInfo::VRegListT &
 IRTranslator::allocateVRegs(const Value &Val) {
-  assert(!VMap.contains(Val) && "Value already allocated in VMap");
+  auto VRegsIt = VMap.findVRegs(Val);
+  if (VRegsIt != VMap.vregs_end())
+    return *VRegsIt->second;
   auto *Regs = VMap.getVRegs(Val);
   auto *Offsets = VMap.getOffsets(Val);
   SmallVector<LLT, 4> SplitTys;
@@ -251,23 +257,13 @@ int IRTranslator::getOrCreateFrameIndex(const AllocaInst &AI) {
 Align IRTranslator::getMemOpAlign(const Instruction &I) {
   if (const StoreInst *SI = dyn_cast<StoreInst>(&I))
     return SI->getAlign();
-  if (const LoadInst *LI = dyn_cast<LoadInst>(&I)) {
+  if (const LoadInst *LI = dyn_cast<LoadInst>(&I))
     return LI->getAlign();
-  }
-  if (const AtomicCmpXchgInst *AI = dyn_cast<AtomicCmpXchgInst>(&I)) {
-    // TODO(PR27168): This instruction has no alignment attribute, but unlike
-    // the default alignment for load/store, the default here is to assume
-    // it has NATURAL alignment, not DataLayout-specified alignment.
-    const DataLayout &DL = AI->getModule()->getDataLayout();
-    return Align(DL.getTypeStoreSize(AI->getCompareOperand()->getType()));
-  }
-  if (const AtomicRMWInst *AI = dyn_cast<AtomicRMWInst>(&I)) {
-    // TODO(PR27168): This instruction has no alignment attribute, but unlike
-    // the default alignment for load/store, the default here is to assume
-    // it has NATURAL alignment, not DataLayout-specified alignment.
-    const DataLayout &DL = AI->getModule()->getDataLayout();
-    return Align(DL.getTypeStoreSize(AI->getValOperand()->getType()));
-  }
+  if (const AtomicCmpXchgInst *AI = dyn_cast<AtomicCmpXchgInst>(&I))
+    return AI->getAlign();
+  if (const AtomicRMWInst *AI = dyn_cast<AtomicRMWInst>(&I))
+    return AI->getAlign();
+
   OptimizationRemarkMissed R("gisel-irtranslator", "", &I);
   R << "unable to translate memop: " << ore::NV("Opcode", &I);
   reportTranslationError(*MF, *TPC, *ORE, R);
@@ -366,7 +362,7 @@ bool IRTranslator::translateRet(const User &U, MachineIRBuilder &MIRBuilder) {
   // The target may mess up with the insertion point, but
   // this is not important as a return is the last instruction
   // of the block anyway.
-  return CLI->lowerReturn(MIRBuilder, Ret, VRegs, SwiftErrorVReg);
+  return CLI->lowerReturn(MIRBuilder, Ret, VRegs, FuncInfo, SwiftErrorVReg);
 }
 
 void IRTranslator::emitBranchForMergedCondition(
@@ -424,14 +420,19 @@ void IRTranslator::findMergedConditions(
   }
 
   const Instruction *BOp = dyn_cast<Instruction>(Cond);
+  const Value *BOpOp0, *BOpOp1;
   // Compute the effective opcode for Cond, taking into account whether it needs
   // to be inverted, e.g.
   //   and (not (or A, B)), C
   // gets lowered as
   //   and (and (not A, not B), C)
-  unsigned BOpc = 0;
+  Instruction::BinaryOps BOpc = (Instruction::BinaryOps)0;
   if (BOp) {
-    BOpc = BOp->getOpcode();
+    BOpc = match(BOp, m_LogicalAnd(m_Value(BOpOp0), m_Value(BOpOp1)))
+               ? Instruction::And
+               : (match(BOp, m_LogicalOr(m_Value(BOpOp0), m_Value(BOpOp1)))
+                      ? Instruction::Or
+                      : (Instruction::BinaryOps)0);
     if (InvertCond) {
       if (BOpc == Instruction::And)
         BOpc = Instruction::Or;
@@ -441,11 +442,11 @@ void IRTranslator::findMergedConditions(
   }
 
   // If this node is not part of the or/and tree, emit it as a branch.
-  if (!BOp || !(isa<BinaryOperator>(BOp) || isa<CmpInst>(BOp)) ||
-      BOpc != static_cast<unsigned>(Opc) || !BOp->hasOneUse() ||
-      BOp->getParent() != CurBB->getBasicBlock() ||
-      !isValInBlock(BOp->getOperand(0), CurBB->getBasicBlock()) ||
-      !isValInBlock(BOp->getOperand(1), CurBB->getBasicBlock())) {
+  // Note that all nodes in the tree should have same opcode.
+  bool BOpIsInOrAndTree = BOpc && BOpc == Opc && BOp->hasOneUse();
+  if (!BOpIsInOrAndTree || BOp->getParent() != CurBB->getBasicBlock() ||
+      !isValInBlock(BOpOp0, CurBB->getBasicBlock()) ||
+      !isValInBlock(BOpOp1, CurBB->getBasicBlock())) {
     emitBranchForMergedCondition(Cond, TBB, FBB, CurBB, SwitchBB, TProb, FProb,
                                  InvertCond);
     return;
@@ -481,15 +482,15 @@ void IRTranslator::findMergedConditions(
     auto NewTrueProb = TProb / 2;
     auto NewFalseProb = TProb / 2 + FProb;
     // Emit the LHS condition.
-    findMergedConditions(BOp->getOperand(0), TBB, TmpBB, CurBB, SwitchBB, Opc,
-                         NewTrueProb, NewFalseProb, InvertCond);
+    findMergedConditions(BOpOp0, TBB, TmpBB, CurBB, SwitchBB, Opc, NewTrueProb,
+                         NewFalseProb, InvertCond);
 
     // Normalize A/2 and B to get A/(1+B) and 2B/(1+B).
     SmallVector<BranchProbability, 2> Probs{TProb / 2, FProb};
     BranchProbability::normalizeProbabilities(Probs.begin(), Probs.end());
     // Emit the RHS condition into TmpBB.
-    findMergedConditions(BOp->getOperand(1), TBB, FBB, TmpBB, SwitchBB, Opc,
-                         Probs[0], Probs[1], InvertCond);
+    findMergedConditions(BOpOp1, TBB, FBB, TmpBB, SwitchBB, Opc, Probs[0],
+                         Probs[1], InvertCond);
   } else {
     assert(Opc == Instruction::And && "Unknown merge op!");
     // Codegen X & Y as:
@@ -514,15 +515,15 @@ void IRTranslator::findMergedConditions(
     auto NewTrueProb = TProb + FProb / 2;
     auto NewFalseProb = FProb / 2;
     // Emit the LHS condition.
-    findMergedConditions(BOp->getOperand(0), TmpBB, FBB, CurBB, SwitchBB, Opc,
-                         NewTrueProb, NewFalseProb, InvertCond);
+    findMergedConditions(BOpOp0, TmpBB, FBB, CurBB, SwitchBB, Opc, NewTrueProb,
+                         NewFalseProb, InvertCond);
 
     // Normalize A and B/2 to get 2A/(1+A) and B/(1+A).
     SmallVector<BranchProbability, 2> Probs{TProb, FProb / 2};
     BranchProbability::normalizeProbabilities(Probs.begin(), Probs.end());
     // Emit the RHS condition into TmpBB.
-    findMergedConditions(BOp->getOperand(1), TBB, FBB, TmpBB, SwitchBB, Opc,
-                         Probs[0], Probs[1], InvertCond);
+    findMergedConditions(BOpOp1, TBB, FBB, TmpBB, SwitchBB, Opc, Probs[0],
+                         Probs[1], InvertCond);
   }
 }
 
@@ -599,15 +600,20 @@ bool IRTranslator::translateBr(const User &U, MachineIRBuilder &MIRBuilder) {
   //     cmp D, E
   //     jle foo
   using namespace PatternMatch;
-  if (const BinaryOperator *BOp = dyn_cast<BinaryOperator>(CondVal)) {
-    Instruction::BinaryOps Opcode = BOp->getOpcode();
-    Value *Vec, *BOp0 = BOp->getOperand(0), *BOp1 = BOp->getOperand(1);
-    if (!TLI.isJumpExpensive() && BOp->hasOneUse() &&
-        !BrInst.hasMetadata(LLVMContext::MD_unpredictable) &&
-        (Opcode == Instruction::And || Opcode == Instruction::Or) &&
-        !(match(BOp0, m_ExtractElt(m_Value(Vec), m_Value())) &&
-          match(BOp1, m_ExtractElt(m_Specific(Vec), m_Value())))) {
-      findMergedConditions(BOp, Succ0MBB, Succ1MBB, &CurMBB, &CurMBB, Opcode,
+  const Instruction *CondI = dyn_cast<Instruction>(CondVal);
+  if (!TLI.isJumpExpensive() && CondI && CondI->hasOneUse() &&
+      !BrInst.hasMetadata(LLVMContext::MD_unpredictable)) {
+    Instruction::BinaryOps Opcode = (Instruction::BinaryOps)0;
+    Value *Vec;
+    const Value *BOp0, *BOp1;
+    if (match(CondI, m_LogicalAnd(m_Value(BOp0), m_Value(BOp1))))
+      Opcode = Instruction::And;
+    else if (match(CondI, m_LogicalOr(m_Value(BOp0), m_Value(BOp1))))
+      Opcode = Instruction::Or;
+
+    if (Opcode && !(match(BOp0, m_ExtractElt(m_Value(Vec), m_Value())) &&
+                    match(BOp1, m_ExtractElt(m_Specific(Vec), m_Value())))) {
+      findMergedConditions(CondI, Succ0MBB, Succ1MBB, &CurMBB, &CurMBB, Opcode,
                            getEdgeProbability(&CurMBB, Succ0MBB),
                            getEdgeProbability(&CurMBB, Succ1MBB),
                            /*InvertCond=*/false);
@@ -828,9 +834,8 @@ void IRTranslator::emitSwitchCase(SwitchCG::CaseBlock &CB,
     // For conditional branch lowering, we might try to do something silly like
     // emit an G_ICMP to compare an existing G_ICMP i1 result with true. If so,
     // just re-use the existing condition vreg.
-    if (CI && CI->getZExtValue() == 1 &&
-        MRI->getType(CondLHS).getSizeInBits() == 1 &&
-        CB.PredInfo.Pred == CmpInst::ICMP_EQ) {
+    if (MRI->getType(CondLHS).getSizeInBits() == 1 && CI &&
+        CI->getZExtValue() == 1 && CB.PredInfo.Pred == CmpInst::ICMP_EQ) {
       Cond = CondLHS;
     } else {
       Register CondRHS = getOrCreateVReg(*CB.CmpRHS);
@@ -1814,6 +1819,14 @@ bool IRTranslator::translateConstrainedFPIntrinsic(
 
 bool IRTranslator::translateKnownIntrinsic(const CallInst &CI, Intrinsic::ID ID,
                                            MachineIRBuilder &MIRBuilder) {
+  if (auto *MI = dyn_cast<AnyMemIntrinsic>(&CI)) {
+    const Function &F = *MI->getParent()->getParent();
+    auto &TLI = getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F);
+    if (MemoryOpRemark::canHandle(MI, TLI)) {
+      MemoryOpRemark R(*ORE, "memsize", *DL, TLI);
+      R.visit(MI);
+    }
+  }
 
   // If this is a simple intrinsic (that is, we just need to add a def of
   // a vreg, and uses for each arg operand, then translate it.
@@ -2114,6 +2127,7 @@ bool IRTranslator::translateKnownIntrinsic(const CallInst &CI, Intrinsic::ID ID,
     return true;
   }
   case Intrinsic::assume:
+  case Intrinsic::experimental_noalias_scope_decl:
   case Intrinsic::var_annotation:
   case Intrinsic::sideeffect:
     // Discard annotate attributes, assumptions, and artificial side-effects.
@@ -2242,6 +2256,15 @@ bool IRTranslator::translateCallBase(const CallBase &CB,
     Args.push_back(getOrCreateVRegs(*Arg));
   }
 
+  if (auto *CI = dyn_cast<CallInst>(&CB)) {
+    const Function &F = *CI->getParent()->getParent();
+    auto &TLI = getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F);
+    if (MemoryOpRemark::canHandle(CI, TLI)) {
+      MemoryOpRemark R(*ORE, "memsize", *DL, TLI);
+      R.visit(CI);
+    }
+  }
+
   // We don't set HasCalls on MFI here yet because call lowering may decide to
   // optimize into tail calls. Instead, we defer that to selection where a final
   // scan is done to check if any instructions are calls.
@@ -2345,6 +2368,62 @@ bool IRTranslator::translateCall(const User &U, MachineIRBuilder &MIRBuilder) {
   return true;
 }
 
+bool IRTranslator::findUnwindDestinations(
+    const BasicBlock *EHPadBB,
+    BranchProbability Prob,
+    SmallVectorImpl<std::pair<MachineBasicBlock *, BranchProbability>>
+        &UnwindDests) {
+  EHPersonality Personality = classifyEHPersonality(
+      EHPadBB->getParent()->getFunction().getPersonalityFn());
+  bool IsMSVCCXX = Personality == EHPersonality::MSVC_CXX;
+  bool IsCoreCLR = Personality == EHPersonality::CoreCLR;
+  bool IsWasmCXX = Personality == EHPersonality::Wasm_CXX;
+  bool IsSEH = isAsynchronousEHPersonality(Personality);
+
+  if (IsWasmCXX) {
+    // Ignore this for now.
+    return false;
+  }
+
+  while (EHPadBB) {
+    const Instruction *Pad = EHPadBB->getFirstNonPHI();
+    BasicBlock *NewEHPadBB = nullptr;
+    if (isa<LandingPadInst>(Pad)) {
+      // Stop on landingpads. They are not funclets.
+      UnwindDests.emplace_back(&getMBB(*EHPadBB), Prob);
+      break;
+    }
+    if (isa<CleanupPadInst>(Pad)) {
+      // Stop on cleanup pads. Cleanups are always funclet entries for all known
+      // personalities.
+      UnwindDests.emplace_back(&getMBB(*EHPadBB), Prob);
+      UnwindDests.back().first->setIsEHScopeEntry();
+      UnwindDests.back().first->setIsEHFuncletEntry();
+      break;
+    }
+    if (auto *CatchSwitch = dyn_cast<CatchSwitchInst>(Pad)) {
+      // Add the catchpad handlers to the possible destinations.
+      for (const BasicBlock *CatchPadBB : CatchSwitch->handlers()) {
+        UnwindDests.emplace_back(&getMBB(*CatchPadBB), Prob);
+        // For MSVC++ and the CLR, catchblocks are funclets and need prologues.
+        if (IsMSVCCXX || IsCoreCLR)
+          UnwindDests.back().first->setIsEHFuncletEntry();
+        if (!IsSEH)
+          UnwindDests.back().first->setIsEHScopeEntry();
+      }
+      NewEHPadBB = CatchSwitch->getUnwindDest();
+    } else {
+      continue;
+    }
+
+    BranchProbabilityInfo *BPI = FuncInfo.BPI;
+    if (BPI && NewEHPadBB)
+      Prob *= BPI->getEdgeProbability(EHPadBB, NewEHPadBB);
+    EHPadBB = NewEHPadBB;
+  }
+  return true;
+}
+
 bool IRTranslator::translateInvoke(const User &U,
                                    MachineIRBuilder &MIRBuilder) {
   const InvokeInst &I = cast<InvokeInst>(U);
@@ -2354,8 +2433,6 @@ bool IRTranslator::translateInvoke(const User &U,
   const BasicBlock *EHPadBB = I.getSuccessor(1);
 
   const Function *Fn = I.getCalledFunction();
-  if (I.isInlineAsm())
-    return false;
 
   // FIXME: support invoking patchpoint and statepoint intrinsics.
   if (Fn && Fn->isIntrinsic())
@@ -2373,25 +2450,64 @@ bool IRTranslator::translateInvoke(const User &U,
   if (!isa<LandingPadInst>(EHPadBB->getFirstNonPHI()))
     return false;
 
+  bool LowerInlineAsm = false;
+  if (I.isInlineAsm()) {
+    const InlineAsm *IA = cast<InlineAsm>(I.getCalledOperand());
+    if (!IA->canThrow()) {
+      // Fast path without emitting EH_LABELs.
+
+      if (!translateInlineAsm(I, MIRBuilder))
+        return false;
+
+      MachineBasicBlock *InvokeMBB = &MIRBuilder.getMBB(),
+                        *ReturnMBB = &getMBB(*ReturnBB);
+
+      // Update successor info.
+      addSuccessorWithProb(InvokeMBB, ReturnMBB, BranchProbability::getOne());
+
+      MIRBuilder.buildBr(*ReturnMBB);
+      return true;
+    } else {
+      LowerInlineAsm = true;
+    }
+  }
+
   // Emit the actual call, bracketed by EH_LABELs so that the MF knows about
   // the region covered by the try.
   MCSymbol *BeginSymbol = Context.createTempSymbol();
   MIRBuilder.buildInstr(TargetOpcode::EH_LABEL).addSym(BeginSymbol);
 
-  if (!translateCallBase(I, MIRBuilder))
+  if (LowerInlineAsm) {
+    if (!translateInlineAsm(I, MIRBuilder))
+      return false;
+  } else if (!translateCallBase(I, MIRBuilder))
     return false;
 
   MCSymbol *EndSymbol = Context.createTempSymbol();
   MIRBuilder.buildInstr(TargetOpcode::EH_LABEL).addSym(EndSymbol);
 
-  // FIXME: track probabilities.
+  SmallVector<std::pair<MachineBasicBlock *, BranchProbability>, 1> UnwindDests;
+  BranchProbabilityInfo *BPI = FuncInfo.BPI;
+  MachineBasicBlock *InvokeMBB = &MIRBuilder.getMBB();
+  BranchProbability EHPadBBProb =
+      BPI ? BPI->getEdgeProbability(InvokeMBB->getBasicBlock(), EHPadBB)
+          : BranchProbability::getZero();
+
+  if (!findUnwindDestinations(EHPadBB, EHPadBBProb, UnwindDests))
+    return false;
+
   MachineBasicBlock &EHPadMBB = getMBB(*EHPadBB),
                     &ReturnMBB = getMBB(*ReturnBB);
-  MF->addInvoke(&EHPadMBB, BeginSymbol, EndSymbol);
-  MIRBuilder.getMBB().addSuccessor(&ReturnMBB);
-  MIRBuilder.getMBB().addSuccessor(&EHPadMBB);
-  MIRBuilder.buildBr(ReturnMBB);
+  // Update successor info.
+  addSuccessorWithProb(InvokeMBB, &ReturnMBB);
+  for (auto &UnwindDest : UnwindDests) {
+    UnwindDest.first->setIsEHPad();
+    addSuccessorWithProb(InvokeMBB, UnwindDest.first, UnwindDest.second);
+  }
+  InvokeMBB->normalizeSuccProbs();
 
+  MF->addInvoke(&EHPadMBB, BeginSymbol, EndSymbol);
+  MIRBuilder.buildBr(ReturnMBB);
   return true;
 }
 
@@ -2770,13 +2886,6 @@ bool IRTranslator::valueIsSplit(const Value &V,
 
 bool IRTranslator::translate(const Instruction &Inst) {
   CurBuilder->setDebugLoc(Inst.getDebugLoc());
-  // We only emit constants into the entry block from here. To prevent jumpy
-  // debug behaviour set the line to 0.
-  if (const DebugLoc &DL = Inst.getDebugLoc())
-    EntryBuilder->setDebugLoc(
-        DebugLoc::get(0, 0, DL.getScope(), DL.getInlinedAt()));
-  else
-    EntryBuilder->setDebugLoc(DebugLoc());
 
   auto &TLI = *MF->getSubtarget().getTargetLowering();
   if (TLI.fallBackToDAGISel(Inst))
@@ -2793,6 +2902,13 @@ bool IRTranslator::translate(const Instruction &Inst) {
 }
 
 bool IRTranslator::translate(const Constant &C, Register Reg) {
+  // We only emit constants into the entry block from here. To prevent jumpy
+  // debug behaviour set the line to 0.
+  if (auto CurrInstDL = CurBuilder->getDL())
+    EntryBuilder->setDebugLoc(DILocation::get(C.getContext(), 0, 0,
+                                              CurrInstDL.getScope(),
+                                              CurrInstDL.getInlinedAt()));
+
   if (auto CI = dyn_cast<ConstantInt>(&C))
     EntryBuilder->buildConstant(Reg, *CI);
   else if (auto CF = dyn_cast<ConstantFP>(&C))
@@ -2804,14 +2920,15 @@ bool IRTranslator::translate(const Constant &C, Register Reg) {
   else if (auto GV = dyn_cast<GlobalValue>(&C))
     EntryBuilder->buildGlobalValue(Reg, GV);
   else if (auto CAZ = dyn_cast<ConstantAggregateZero>(&C)) {
-    if (!CAZ->getType()->isVectorTy())
+    if (!isa<FixedVectorType>(CAZ->getType()))
       return false;
     // Return the scalar if it is a <1 x Ty> vector.
-    if (CAZ->getNumElements() == 1)
+    unsigned NumElts = CAZ->getElementCount().getFixedValue();
+    if (NumElts == 1)
       return translateCopy(C, *CAZ->getElementValue(0u), *EntryBuilder.get());
     SmallVector<Register, 4> Ops;
-    for (unsigned i = 0; i < CAZ->getNumElements(); ++i) {
-      Constant &Elt = *CAZ->getElementValue(i);
+    for (unsigned I = 0; I < NumElts; ++I) {
+      Constant &Elt = *CAZ->getElementValue(I);
       Ops.push_back(getOrCreateVReg(Elt));
     }
     EntryBuilder->buildBuildVector(Reg, Ops);
@@ -2885,8 +3002,13 @@ void IRTranslator::finalizeBasicBlock() {
 
       emitBitTestCase(BTB, NextMBB, UnhandledProb, BTB.Reg, BTB.Cases[j], MBB);
 
-      // FIXME delete this block below?
       if (BTB.ContiguousRange && j + 2 == ej) {
+        // We need to record the replacement phi edge here that normally
+        // happens in emitBitTestCase before we delete the case, otherwise the
+        // phi edge will be lost.
+        addMachineCFGPred({BTB.Parent->getBasicBlock(),
+                           BTB.Cases[ej - 1].TargetBB->getBasicBlock()},
+                          MBB);
         // Since we're not going to use the final bit test, remove it.
         BTB.Cases.pop_back();
         break;
@@ -2985,6 +3107,8 @@ bool IRTranslator::runOnMachineFunction(MachineFunction &CurMF) {
   else
     FuncInfo.BPI = nullptr;
 
+  FuncInfo.CanLowerReturn = CLI->checkReturnTypeForCallConv(*MF);
+
   const auto &TLI = *MF->getSubtarget().getTargetLowering();
 
   SL = std::make_unique<GISelSwitchLowering>(this, FuncInfo);
@@ -3036,7 +3160,7 @@ bool IRTranslator::runOnMachineFunction(MachineFunction &CurMF) {
   // Make our arguments/constants entry block fallthrough to the IR entry block.
   EntryBB->addSuccessor(&getMBB(F.front()));
 
-  if (CLI->fallBackToDAGISel(F)) {
+  if (CLI->fallBackToDAGISel(*MF)) {
     OptimizationRemarkMissed R("gisel-irtranslator", "GISelFailure",
                                F.getSubprogram(), &F.getEntryBlock());
     R << "unable to lower function: " << ore::NV("Prototype", F.getType());
@@ -3058,7 +3182,7 @@ bool IRTranslator::runOnMachineFunction(MachineFunction &CurMF) {
     }
   }
 
-  if (!CLI->lowerFormalArguments(*EntryBuilder.get(), F, VRegArgs)) {
+  if (!CLI->lowerFormalArguments(*EntryBuilder.get(), F, VRegArgs, FuncInfo)) {
     OptimizationRemarkMissed R("gisel-irtranslator", "GISelFailure",
                                F.getSubprogram(), &F.getEntryBlock());
     R << "unable to lower arguments: " << ore::NV("Prototype", F.getType());

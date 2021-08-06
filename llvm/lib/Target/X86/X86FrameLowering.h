@@ -192,6 +192,10 @@ public:
   bool has128ByteRedZone(const MachineFunction& MF) const;
 
 private:
+  bool isWin64Prologue(const MachineFunction &MF) const;
+
+  bool needsDwarfCFI(const MachineFunction &MF) const;
+
   uint64_t calculateMaxStackAlign(const MachineFunction &MF) const;
 
   /// Emit target stack probe as a call to a helper function
@@ -224,12 +228,7 @@ private:
                                        const DebugLoc &DL, uint64_t Offset,
                                        uint64_t Align) const;
 
-  /// Emit a stub to later inline the target stack probe.
-  MachineInstr *emitStackProbeInlineStub(MachineFunction &MF,
-                                         MachineBasicBlock &MBB,
-                                         MachineBasicBlock::iterator MBBI,
-                                         const DebugLoc &DL,
-                                         bool InProlog) const;
+  void adjustFrameForMsvcCxxEh(MachineFunction &MF) const;
 
   /// Aligns the stack pointer by ANDing it with -MaxAlign.
   void BuildStackAlignAND(MachineBasicBlock &MBB,

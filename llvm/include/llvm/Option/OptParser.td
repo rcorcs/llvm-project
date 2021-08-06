@@ -97,9 +97,12 @@ class Option<list<string> prefixes, string name, OptionKind kind> {
   OptionGroup Group = ?;
   Option Alias = ?;
   list<string> AliasArgs = [];
-  string MarshallingInfoKind = ?;
+  code MacroPrefix = "";
   code KeyPath = ?;
   code DefaultValue = ?;
+  code ImpliedValue = ?;
+  code ImpliedCheck = "false";
+  code ShouldParse = "true";
   bit ShouldAlwaysEmit = false;
   code NormalizerRetTy = ?;
   code NormalizedValuesScope = "";
@@ -108,8 +111,6 @@ class Option<list<string> prefixes, string name, OptionKind kind> {
   code ValueMerger = "mergeForwardValue";
   code ValueExtractor = "extractForwardValue";
   list<code> NormalizedValues = ?;
-  // Used for BooleanFlagKind
-  Option NegOption = ?;
 }
 
 // Helpers for defining options.
@@ -143,62 +144,99 @@ class MetaVarName<string name> { string MetaVarName = name; }
 class Values<string value> { string Values = value; }
 class ValuesCode<code valuecode> { code ValuesCode = valuecode; }
 
-// Helpers for defining marshalling information.
+// Helpers for defining marshalling information (typically used in Clang's -cc1
+// frontend).
 
-class DefaultAnyOf<list<Option> options, string default = "false", string separator = " || "> {
-  code DefaultValue = !foldl(default, options, accumulator, option,
-                             !strconcat(accumulator, separator, !cast<string>(option.KeyPath)));
+// The key path to the mapped field and the macro prefix for the resulting
+// definition database.
+class KeyPathAndMacro<string key_path_prefix, string key_path_base,
+                      string macro_prefix = ""> {
+  code KeyPath = !strconcat(key_path_prefix, key_path_base);
+  code MacroPrefix = macro_prefix;
 }
 
-class MarshallingInfo<code keypath, code defaultvalue> {
-  string MarshallingInfoKind = "Default";
-  code KeyPath = keypath;
+// Mixin that implies the specified value for the current option when any of the
+// given key paths evaluates to true.
+class ImpliedByAnyOf<list<string> key_paths, code value = "true"> {
+  code ImpliedCheck = !foldl("false", key_paths, accumulator, key_path,
+                             !strconcat(accumulator, " || ", key_path));
+  code ImpliedValue = value;
+}
+
+// Parent class for marshalled options (typically used in Clang's -cc1 frontend).
+class MarshallingInfo<KeyPathAndMacro kpm, code defaultvalue> {
+  code KeyPath = kpm.KeyPath;
+  code MacroPrefix = kpm.MacroPrefix;
   code DefaultValue = defaultvalue;
 }
 
-class MarshallingInfoString<code keypath, code defaultvalue>
-  : MarshallingInfo<keypath, defaultvalue> {}
+// Marshalled option accepting a string argument.
+class MarshallingInfoString<KeyPathAndMacro kpm, code defaultvalue="std::string()">
+  : MarshallingInfo<kpm, defaultvalue> {
+  code Normalizer = "normalizeString";
+  code Denormalizer = "denormalizeString";
+}
 
-class MarshallingInfoFlag<code keypath, DefaultAnyOf defaults = DefaultAnyOf<[]>>
-  : MarshallingInfo<keypath, defaults.DefaultValue> {
+// Marshalled option accepting an integer argument.
+class MarshallingInfoInt<KeyPathAndMacro kpm, code defaultvalue="0", code type="unsigned">
+  : MarshallingInfo<kpm, defaultvalue> {
+  code Normalizer = "normalizeStringIntegral<"#type#">";
+  code Denormalizer = "denormalizeString<"#type#">";
+}
+
+// Marshalled option accepting vector of strings.
+class MarshallingInfoStringVector<KeyPathAndMacro kpm>
+  : MarshallingInfo<kpm, "std::vector<std::string>({})"> {
+  code Normalizer = "normalizeStringVector";
+  code Denormalizer = "denormalizeStringVector";
+}
+
+// Marshalled option - single positive flag.
+class MarshallingInfoFlag<KeyPathAndMacro kpm, code defaultvalue = "false">
+  : MarshallingInfo<kpm, defaultvalue> {
   code Normalizer = "normalizeSimpleFlag";
   code Denormalizer = "denormalizeSimpleFlag";
 }
 
-class MarshallingInfoBitfieldFlag<code keypath, code value>
-  : MarshallingInfoFlag<keypath, DefaultAnyOf<[], "0u", " | ">> {
-  code Normalizer = "(normalizeFlagToValue<unsigned, "#value#">)";
+// Marshalled option - single negative flag.
+class MarshallingInfoNegativeFlag<KeyPathAndMacro kpm, code defaultvalue = "true">
+  : MarshallingInfo<kpm, defaultvalue> {
+  code Normalizer = "normalizeSimpleNegativeFlag";
+  code Denormalizer = "denormalizeSimpleFlag";
+}
+
+// Marshalled option - single flag contributing to a bitfield.
+class MarshallingInfoBitfieldFlag<KeyPathAndMacro kpm, code value>
+  : MarshallingInfoFlag<kpm, "0u"> {
+  code Normalizer = "makeFlagToValueNormalizer("#value#")";
   code ValueMerger = "mergeMaskValue";
   code ValueExtractor = "(extractMaskValue<unsigned, decltype("#value#"), "#value#">)";
 }
 
-class MarshallingInfoBooleanFlag<code keypath, code defaultvalue, Option negopt>
-  : MarshallingInfoFlag<keypath, DefaultAnyOf<[], defaultvalue>> {
-  bit ShouldAlwaysEmit = 1;
-  string MarshallingInfoKind = "BooleanFlag";
-  code Normalizer = "normalizeBooleanFlag";
-  code Denormalizer = "denormalizeBooleanFlag";
-  Option NegOption = negopt;
+// Implementation detail of BoolOption.
+class MarshallingInfoBooleanFlag<KeyPathAndMacro kpm, code defaultvalue, code value, code name,
+                                 code other_value, code other_name>
+  : MarshallingInfoFlag<kpm, defaultvalue> {
+  code Normalizer = "makeBooleanOptionNormalizer("#value#", "#other_value#", OPT_"#other_name#")";
+  code Denormalizer = "makeBooleanOptionDenormalizer("#value#")";
+}
+
+// Marshalled option accepting any of the specified enum values.
+// Typically used with `Values`, `NormalizedValues` and `NormalizedValuesScope`.
+class MarshallingInfoEnum<KeyPathAndMacro kpm, code defaultvalue>
+  : MarshallingInfo<kpm, defaultvalue> {
+  code Normalizer = "normalizeSimpleEnum";
+  code Denormalizer = "denormalizeSimpleEnum";
 }
 
 // Mixins for additional marshalling attributes.
 
-class IsNegative {
-  // todo: create & apply a normalizer for negative flags
-}
+class ShouldParseIf<code condition> { code ShouldParse = condition; }
 class AlwaysEmit { bit ShouldAlwaysEmit = true; }
 class Normalizer<code normalizer> { code Normalizer = normalizer; }
 class Denormalizer<code denormalizer> { code Denormalizer = denormalizer; }
 class NormalizedValuesScope<code scope> { code NormalizedValuesScope = scope; }
 class NormalizedValues<list<code> definitions> { list<code> NormalizedValues = definitions; } 
-class DenormalizeString { code Denormalizer = "denormalizeString"; }
-class AutoNormalizeEnum {
-  code Normalizer = "normalizeSimpleEnum";
-  code Denormalizer = "denormalizeSimpleEnum";
-}
-class AutoNormalizeEnumJoined : AutoNormalizeEnum {
-  code Denormalizer = "denormalizeSimpleEnumJoined";
-}
 class ValueMerger<code merger> { code ValueMerger = merger; }
 class ValueExtractor<code extractor> { code ValueExtractor = extractor; }
 

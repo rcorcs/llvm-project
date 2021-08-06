@@ -875,7 +875,8 @@ static bool isLoopCounter(PHINode* Phi, Loop *L,
 
   int LatchIdx = Phi->getBasicBlockIndex(L->getLoopLatch());
   Value *IncV = Phi->getIncomingValue(LatchIdx);
-  return (getLoopPhiForCounter(IncV, L) == Phi);
+  return (getLoopPhiForCounter(IncV, L) == Phi &&
+          isa<SCEVAddRecExpr>(SE->getSCEV(IncV)));
 }
 
 /// Search the loop header for a loop counter (anadd rec w/step of one)
@@ -1399,7 +1400,7 @@ bool IndVarSimplify::optimizeLoopExits(Loop *L, SCEVExpander &Rewriter) {
 
   // Remove all exits which aren't both rewriteable and execute on every
   // iteration.
-  auto NewEnd = llvm::remove_if(ExitingBlocks, [&](BasicBlock *ExitingBB) {
+  llvm::erase_if(ExitingBlocks, [&](BasicBlock *ExitingBB) {
     // If our exitting block exits multiple loops, we can only rewrite the
     // innermost one.  Otherwise, we're changing how many times the innermost
     // loop runs before it exits.
@@ -1421,7 +1422,6 @@ bool IndVarSimplify::optimizeLoopExits(Loop *L, SCEVExpander &Rewriter) {
 
     return false;
   });
-  ExitingBlocks.erase(NewEnd, ExitingBlocks.end());
 
   if (ExitingBlocks.empty())
     return false;
@@ -1565,9 +1565,6 @@ bool IndVarSimplify::predicateLoopExits(Loop *L, SCEVExpander &Rewriter) {
   if (!LoopPredication)
     return false;
 
-  if (!SE->hasLoopInvariantBackedgeTakenCount(L))
-    return false;
-
   // Note: ExactBTC is the exact backedge taken count *iff* the loop exits
   // through *explicit* control flow.  We have to eliminate the possibility of
   // implicit exits (see below) before we know it's truly exact.
@@ -1606,8 +1603,8 @@ bool IndVarSimplify::predicateLoopExits(Loop *L, SCEVExpander &Rewriter) {
       return true;
 
     const SCEV *ExitCount = SE->getExitCount(L, ExitingBB);
-    assert(!isa<SCEVCouldNotCompute>(ExactBTC) && "implied by having exact trip count");
-    if (!SE->isLoopInvariant(ExitCount, L) ||
+    if (isa<SCEVCouldNotCompute>(ExitCount) ||
+        !SE->isLoopInvariant(ExitCount, L) ||
         !isSafeToExpand(ExitCount, *SE))
       return true;
 
@@ -1671,7 +1668,7 @@ bool IndVarSimplify::predicateLoopExits(Loop *L, SCEVExpander &Rewriter) {
   for (BasicBlock *BB : L->blocks())
     for (auto &I : *BB)
       // TODO:isGuaranteedToTransfer
-      if (I.mayHaveSideEffects() || I.mayThrow())
+      if (I.mayHaveSideEffects())
         return false;
 
   bool Changed = false;
@@ -1869,11 +1866,15 @@ bool IndVarSimplify::run(Loop *L) {
 
   // Now that we're done iterating through lists, clean up any instructions
   // which are now dead.
-  while (!DeadInsts.empty())
-    if (Instruction *Inst =
-            dyn_cast_or_null<Instruction>(DeadInsts.pop_back_val()))
+  while (!DeadInsts.empty()) {
+    Value *V = DeadInsts.pop_back_val();
+
+    if (PHINode *PHI = dyn_cast_or_null<PHINode>(V))
+      Changed |= RecursivelyDeleteDeadPHINode(PHI, TLI, MSSAU.get());
+    else if (Instruction *Inst = dyn_cast_or_null<Instruction>(V))
       Changed |=
           RecursivelyDeleteTriviallyDeadInstructions(Inst, TLI, MSSAU.get());
+  }
 
   // The Rewriter may not be used from this point on.
 

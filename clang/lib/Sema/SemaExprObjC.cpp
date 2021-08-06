@@ -1563,12 +1563,20 @@ QualType Sema::getMessageSendResultType(const Expr *Receiver,
 
   // Map the nullability of the result into a table index.
   unsigned receiverNullabilityIdx = 0;
-  if (auto nullability = ReceiverType->getNullability(Context))
+  if (Optional<NullabilityKind> nullability =
+          ReceiverType->getNullability(Context)) {
+    if (*nullability == NullabilityKind::NullableResult)
+      nullability = NullabilityKind::Nullable;
     receiverNullabilityIdx = 1 + static_cast<unsigned>(*nullability);
+  }
 
   unsigned resultNullabilityIdx = 0;
-  if (auto nullability = resultType->getNullability(Context))
+  if (Optional<NullabilityKind> nullability =
+          resultType->getNullability(Context)) {
+    if (*nullability == NullabilityKind::NullableResult)
+      nullability = NullabilityKind::Nullable;
     resultNullabilityIdx = 1 + static_cast<unsigned>(*nullability);
+  }
 
   // The table of nullability mappings, indexed by the receiver's nullability
   // and then the result type's nullability.
@@ -1813,7 +1821,8 @@ bool Sema::CheckMessageArgumentTypes(
     ParmVarDecl *param = Method->parameters()[i];
     assert(argExpr && "CheckMessageArgumentTypes(): missing expression");
 
-    if (param->hasAttr<NoEscapeAttr>())
+    if (param->hasAttr<NoEscapeAttr>() &&
+        param->getType()->isBlockPointerType())
       if (auto *BE = dyn_cast<BlockExpr>(
               argExpr->IgnoreParenNoopCasts(Context)))
         BE->getBlockDecl()->setDoesNotEscape();
@@ -3839,9 +3848,12 @@ static inline T *getObjCBridgeAttr(const TypedefType *TD) {
   QualType QT = TDNDecl->getUnderlyingType();
   if (QT->isPointerType()) {
     QT = QT->getPointeeType();
-    if (const RecordType *RT = QT->getAs<RecordType>())
-      if (RecordDecl *RD = RT->getDecl()->getMostRecentDecl())
-        return RD->getAttr<T>();
+    if (const RecordType *RT = QT->getAs<RecordType>()) {
+      for (auto *Redecl : RT->getDecl()->getMostRecentDecl()->redecls()) {
+        if (auto *attr = Redecl->getAttr<T>())
+          return attr;
+      }
+    }
   }
   return nullptr;
 }

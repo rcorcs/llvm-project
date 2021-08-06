@@ -261,7 +261,7 @@ Sema::InstantiatingTemplate::InstantiatingTemplate(
 
     AlreadyInstantiating = !Inst.Entity ? false :
         !SemaRef.InstantiatingSpecializations
-             .insert(std::make_pair(Inst.Entity->getCanonicalDecl(), Inst.Kind))
+             .insert({Inst.Entity->getCanonicalDecl(), Inst.Kind})
              .second;
     atTemplateBegin(SemaRef.TemplateInstCallbacks, SemaRef, Inst);
   }
@@ -480,7 +480,7 @@ void Sema::InstantiatingTemplate::Clear() {
       auto &Active = SemaRef.CodeSynthesisContexts.back();
       if (Active.Entity)
         SemaRef.InstantiatingSpecializations.erase(
-            std::make_pair(Active.Entity, Active.Kind));
+            {Active.Entity->getCanonicalDecl(), Active.Kind});
     }
 
     atTemplateEnd(SemaRef.TemplateInstCallbacks, SemaRef,
@@ -805,9 +805,10 @@ void Sema::PrintInstantiationStack() {
       SmallString<128> TemplateArgsStr;
       llvm::raw_svector_ostream OS(TemplateArgsStr);
       cast<NamedDecl>(Active->Entity)->printName(OS);
-      if (!isa<FunctionDecl>(Active->Entity))
+      if (!isa<FunctionDecl>(Active->Entity)) {
         printTemplateArgumentList(OS, Active->template_arguments(),
                                   getPrintingPolicy());
+      }
       Diags.Report(Active->PointOfInstantiation, DiagID) << OS.str()
         << Active->InstantiationRange;
       break;
@@ -1595,7 +1596,9 @@ TemplateInstantiator::TransformSubstNonTypeTemplateParmPackExpr(
 ExprResult
 TemplateInstantiator::TransformSubstNonTypeTemplateParmExpr(
                                           SubstNonTypeTemplateParmExpr *E) {
-  ExprResult SubstReplacement = TransformExpr(E->getReplacement());
+  ExprResult SubstReplacement = E->getReplacement();
+  if (!isa<ConstantExpr>(SubstReplacement.get()))
+    SubstReplacement = TransformExpr(E->getReplacement());
   if (SubstReplacement.isInvalid())
     return true;
   QualType SubstType = TransformType(E->getParameterType(getSema().Context));
@@ -2383,10 +2386,10 @@ ParmVarDecl *Sema::SubstParmVarDecl(ParmVarDecl *OldParm,
         }
         if (AttachTypeConstraint(
                 TC->getNestedNameSpecifierLoc(), TC->getConceptNameInfo(),
-                TC->getNamedConcept(), &InstArgs, Inst,
+                TC->getNamedConcept(), TemplArgInfo ? &InstArgs : nullptr, Inst,
                 TTP->isParameterPack()
                     ? cast<CXXFoldExpr>(TC->getImmediatelyDeclaredConstraint())
-                        ->getEllipsisLoc()
+                          ->getEllipsisLoc()
                     : SourceLocation()))
           return nullptr;
       }
@@ -2794,7 +2797,8 @@ Sema::InstantiateClass(SourceLocation PointOfInstantiation,
 
     Attr *NewAttr =
       instantiateTemplateAttribute(I->TmplAttr, Context, *this, TemplateArgs);
-    I->NewDecl->addAttr(NewAttr);
+    if (NewAttr)
+      I->NewDecl->addAttr(NewAttr);
     LocalInstantiationScope::deleteScopes(I->Scope,
                                           Instantiator.getStartingScope());
   }
@@ -2846,8 +2850,6 @@ Sema::InstantiateClass(SourceLocation PointOfInstantiation,
   SavedContext.pop();
 
   if (!Instantiation->isInvalidDecl()) {
-    Consumer.HandleTagDeclDefinition(Instantiation);
-
     // Always emit the vtable for an explicit instantiation definition
     // of a polymorphic class template specialization. Otherwise, eagerly
     // instantiate only constexpr virtual functions in preparation for their use
@@ -2858,6 +2860,8 @@ Sema::InstantiateClass(SourceLocation PointOfInstantiation,
       MarkVirtualMembersReferenced(PointOfInstantiation, Instantiation,
                                    /*ConstexprOnly*/ true);
   }
+
+  Consumer.HandleTagDeclDefinition(Instantiation);
 
   return Instantiation->isInvalidDecl();
 }
@@ -3037,14 +3041,16 @@ bool Sema::usesPartialOrExplicitSpecialization(
 /// Get the instantiation pattern to use to instantiate the definition of a
 /// given ClassTemplateSpecializationDecl (either the pattern of the primary
 /// template or of a partial specialization).
-static CXXRecordDecl *
+static ActionResult<CXXRecordDecl *>
 getPatternForClassTemplateSpecialization(
     Sema &S, SourceLocation PointOfInstantiation,
     ClassTemplateSpecializationDecl *ClassTemplateSpec,
-    TemplateSpecializationKind TSK, bool Complain) {
+    TemplateSpecializationKind TSK) {
   Sema::InstantiatingTemplate Inst(S, PointOfInstantiation, ClassTemplateSpec);
-  if (Inst.isInvalid() || Inst.isAlreadyInstantiating())
-    return nullptr;
+  if (Inst.isInvalid())
+    return {/*Invalid=*/true};
+  if (Inst.isAlreadyInstantiating())
+    return {/*Invalid=*/false};
 
   llvm::PointerUnion<ClassTemplateDecl *,
                      ClassTemplatePartialSpecializationDecl *>
@@ -3141,7 +3147,7 @@ getPatternForClassTemplateSpecialization(
                 << S.getTemplateArgumentBindingsText(
                        P->Partial->getTemplateParameters(), *P->Args);
 
-          return nullptr;
+          return {/*Invalid=*/true};
         }
       }
 
@@ -3192,14 +3198,15 @@ bool Sema::InstantiateClassTemplateSpecialization(
   if (ClassTemplateSpec->isInvalidDecl())
     return true;
 
-  CXXRecordDecl *Pattern = getPatternForClassTemplateSpecialization(
-      *this, PointOfInstantiation, ClassTemplateSpec, TSK, Complain);
-  if (!Pattern)
-    return true;
+  ActionResult<CXXRecordDecl *> Pattern =
+      getPatternForClassTemplateSpecialization(*this, PointOfInstantiation,
+                                               ClassTemplateSpec, TSK);
+  if (!Pattern.isUsable())
+    return Pattern.isInvalid();
 
-  return InstantiateClass(PointOfInstantiation, ClassTemplateSpec, Pattern,
-                          getTemplateInstantiationArgs(ClassTemplateSpec), TSK,
-                          Complain);
+  return InstantiateClass(
+      PointOfInstantiation, ClassTemplateSpec, Pattern.get(),
+      getTemplateInstantiationArgs(ClassTemplateSpec), TSK, Complain);
 }
 
 /// Instantiates the definitions of all of the member
@@ -3414,7 +3421,8 @@ Sema::InstantiateClassMembers(SourceLocation PointOfInstantiation,
             Instantiation->getTemplateInstantiationPattern();
         DeclContext::lookup_result Lookup =
             ClassPattern->lookup(Field->getDeclName());
-        FieldDecl *Pattern = cast<FieldDecl>(Lookup.front());
+        FieldDecl *Pattern = Lookup.find_first<FieldDecl>();
+        assert(Pattern);
         InstantiateInClassInitializer(PointOfInstantiation, Field, Pattern,
                                       TemplateArgs);
       }

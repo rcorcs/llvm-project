@@ -11,7 +11,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Config/llvm-config.h"
 #include "llvm/ExecutionEngine/Orc/DebugUtils.h"
-#include "llvm/ExecutionEngine/Orc/OrcError.h"
+#include "llvm/ExecutionEngine/Orc/Shared/OrcError.h"
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/MSVCErrorWorkarounds.h"
 
@@ -29,6 +29,8 @@ char SymbolsNotFound::ID = 0;
 char SymbolsCouldNotBeRemoved::ID = 0;
 char MissingSymbolDefinitions::ID = 0;
 char UnexpectedSymbolDefinitions::ID = 0;
+char Task::ID = 0;
+char MaterializationTask::ID = 0;
 
 RegisterDependenciesFunction NoDependenciesToRegister =
     RegisterDependenciesFunction();
@@ -168,13 +170,30 @@ void AsynchronousSymbolQuery::notifySymbolMetRequiredState(
   --OutstandingSymbolsCount;
 }
 
-void AsynchronousSymbolQuery::handleComplete() {
+void AsynchronousSymbolQuery::handleComplete(ExecutionSession &ES) {
   assert(OutstandingSymbolsCount == 0 &&
          "Symbols remain, handleComplete called prematurely");
 
-  auto TmpNotifyComplete = std::move(NotifyComplete);
+  class RunQueryCompleteTask : public Task {
+  public:
+    RunQueryCompleteTask(SymbolMap ResolvedSymbols,
+                         SymbolsResolvedCallback NotifyComplete)
+        : ResolvedSymbols(std::move(ResolvedSymbols)),
+          NotifyComplete(std::move(NotifyComplete)) {}
+    void printDescription(raw_ostream &OS) override {
+      OS << "Execute query complete callback for " << ResolvedSymbols;
+    }
+    void run() override { NotifyComplete(std::move(ResolvedSymbols)); }
+
+  private:
+    SymbolMap ResolvedSymbols;
+    SymbolsResolvedCallback NotifyComplete;
+  };
+
+  auto T = std::make_unique<RunQueryCompleteTask>(std::move(ResolvedSymbols),
+                                                  std::move(NotifyComplete));
   NotifyComplete = SymbolsResolvedCallback();
-  TmpNotifyComplete(std::move(ResolvedSymbols));
+  ES.dispatchTask(std::move(T));
 }
 
 void AsynchronousSymbolQuery::handleFailed(Error Err) {
@@ -577,7 +596,10 @@ LookupState::LookupState(std::unique_ptr<InProgressLookupState> IPLS)
 
 void LookupState::reset(InProgressLookupState *IPLS) { this->IPLS.reset(IPLS); }
 
-LookupState::~LookupState() {}
+LookupState::LookupState() = default;
+LookupState::LookupState(LookupState &&) = default;
+LookupState &LookupState::operator=(LookupState &&) = default;
+LookupState::~LookupState() = default;
 
 void LookupState::continueLookup(Error Err) {
   assert(IPLS && "Cannot call continueLookup on empty LookupState");
@@ -618,10 +640,10 @@ ResourceTrackerSP JITDylib::createResourceTracker() {
 
 void JITDylib::removeGenerator(DefinitionGenerator &G) {
   std::lock_guard<std::mutex> Lock(GeneratorsMutex);
-  auto I = std::find_if(DefGenerators.begin(), DefGenerators.end(),
-                        [&](const std::shared_ptr<DefinitionGenerator> &H) {
-                          return H.get() == &G;
-                        });
+  auto I = llvm::find_if(DefGenerators,
+                         [&](const std::shared_ptr<DefinitionGenerator> &H) {
+                           return H.get() == &G;
+                         });
   assert(I != DefGenerators.end() && "Generator not found");
   DefGenerators.erase(I);
 }
@@ -747,7 +769,8 @@ Error JITDylib::replace(MaterializationResponsibility &FromMR,
 
   if (MustRunMU) {
     assert(MustRunMR && "MustRunMU set implies MustRunMR set");
-    ES.dispatchMaterialization(std::move(MustRunMU), std::move(MustRunMR));
+    ES.dispatchTask(std::make_unique<MaterializationTask>(
+        std::move(MustRunMU), std::move(MustRunMR)));
   } else {
     assert(!MustRunMR && "MustRunMU unset implies MustRunMR unset");
   }
@@ -797,76 +820,79 @@ JITDylib::getRequestedSymbols(const SymbolFlagsMap &SymbolFlags) const {
 
 void JITDylib::addDependencies(const SymbolStringPtr &Name,
                                const SymbolDependenceMap &Dependencies) {
-  assert(Symbols.count(Name) && "Name not in symbol table");
-  assert(Symbols[Name].getState() < SymbolState::Emitted &&
-         "Can not add dependencies for a symbol that is not materializing");
+  ES.runSessionLocked([&]() {
+    assert(Symbols.count(Name) && "Name not in symbol table");
+    assert(Symbols[Name].getState() < SymbolState::Emitted &&
+           "Can not add dependencies for a symbol that is not materializing");
 
-  LLVM_DEBUG({
-      dbgs() << "In " << getName() << " adding dependencies for "
-             << *Name << ": " << Dependencies << "\n";
+    LLVM_DEBUG({
+      dbgs() << "In " << getName() << " adding dependencies for " << *Name
+             << ": " << Dependencies << "\n";
     });
 
-  // If Name is already in an error state then just bail out.
-  if (Symbols[Name].getFlags().hasError())
-    return;
+    // If Name is already in an error state then just bail out.
+    if (Symbols[Name].getFlags().hasError())
+      return;
 
-  auto &MI = MaterializingInfos[Name];
-  assert(Symbols[Name].getState() != SymbolState::Emitted &&
-         "Can not add dependencies to an emitted symbol");
+    auto &MI = MaterializingInfos[Name];
+    assert(Symbols[Name].getState() != SymbolState::Emitted &&
+           "Can not add dependencies to an emitted symbol");
 
-  bool DependsOnSymbolInErrorState = false;
+    bool DependsOnSymbolInErrorState = false;
 
-  // Register dependencies, record whether any depenendency is in the error
-  // state.
-  for (auto &KV : Dependencies) {
-    assert(KV.first && "Null JITDylib in dependency?");
-    auto &OtherJITDylib = *KV.first;
-    auto &DepsOnOtherJITDylib = MI.UnemittedDependencies[&OtherJITDylib];
+    // Register dependencies, record whether any depenendency is in the error
+    // state.
+    for (auto &KV : Dependencies) {
+      assert(KV.first && "Null JITDylib in dependency?");
+      auto &OtherJITDylib = *KV.first;
+      auto &DepsOnOtherJITDylib = MI.UnemittedDependencies[&OtherJITDylib];
 
-    for (auto &OtherSymbol : KV.second) {
+      for (auto &OtherSymbol : KV.second) {
 
-      // Check the sym entry for the dependency.
-      auto OtherSymI = OtherJITDylib.Symbols.find(OtherSymbol);
+        // Check the sym entry for the dependency.
+        auto OtherSymI = OtherJITDylib.Symbols.find(OtherSymbol);
 
-      // Assert that this symbol exists and has not reached the ready state
-      // already.
-      assert(OtherSymI != OtherJITDylib.Symbols.end() &&
-             "Dependency on unknown symbol");
+        // Assert that this symbol exists and has not reached the ready state
+        // already.
+        assert(OtherSymI != OtherJITDylib.Symbols.end() &&
+               "Dependency on unknown symbol");
 
-      auto &OtherSymEntry = OtherSymI->second;
+        auto &OtherSymEntry = OtherSymI->second;
 
-      // If the other symbol is already in the Ready state then there's no
-      // dependency to add.
-      if (OtherSymEntry.getState() == SymbolState::Ready)
-        continue;
+        // If the other symbol is already in the Ready state then there's no
+        // dependency to add.
+        if (OtherSymEntry.getState() == SymbolState::Ready)
+          continue;
 
-      // If the dependency is in an error state then note this and continue,
-      // we will move this symbol to the error state below.
-      if (OtherSymEntry.getFlags().hasError()) {
-        DependsOnSymbolInErrorState = true;
-        continue;
+        // If the dependency is in an error state then note this and continue,
+        // we will move this symbol to the error state below.
+        if (OtherSymEntry.getFlags().hasError()) {
+          DependsOnSymbolInErrorState = true;
+          continue;
+        }
+
+        // If the dependency was not in the error state then add it to
+        // our list of dependencies.
+        auto &OtherMI = OtherJITDylib.MaterializingInfos[OtherSymbol];
+
+        if (OtherSymEntry.getState() == SymbolState::Emitted)
+          transferEmittedNodeDependencies(MI, Name, OtherMI);
+        else if (&OtherJITDylib != this || OtherSymbol != Name) {
+          OtherMI.Dependants[this].insert(Name);
+          DepsOnOtherJITDylib.insert(OtherSymbol);
+        }
       }
 
-      // If the dependency was not in the error state then add it to
-      // our list of dependencies.
-      auto &OtherMI = OtherJITDylib.MaterializingInfos[OtherSymbol];
-
-      if (OtherSymEntry.getState() == SymbolState::Emitted)
-        transferEmittedNodeDependencies(MI, Name, OtherMI);
-      else if (&OtherJITDylib != this || OtherSymbol != Name) {
-        OtherMI.Dependants[this].insert(Name);
-        DepsOnOtherJITDylib.insert(OtherSymbol);
-      }
+      if (DepsOnOtherJITDylib.empty())
+        MI.UnemittedDependencies.erase(&OtherJITDylib);
     }
 
-    if (DepsOnOtherJITDylib.empty())
-      MI.UnemittedDependencies.erase(&OtherJITDylib);
-  }
-
-  // If this symbol dependended on any symbols in the error state then move
-  // this symbol to the error state too.
-  if (DependsOnSymbolInErrorState)
-    Symbols[Name].setFlags(Symbols[Name].getFlags() | JITSymbolFlags::HasError);
+    // If this symbol dependended on any symbols in the error state then move
+    // this symbol to the error state too.
+    if (DependsOnSymbolInErrorState)
+      Symbols[Name].setFlags(Symbols[Name].getFlags() |
+                             JITSymbolFlags::HasError);
+  });
 }
 
 Error JITDylib::resolve(MaterializationResponsibility &MR,
@@ -960,7 +986,7 @@ Error JITDylib::resolve(MaterializationResponsibility &MR,
   // Otherwise notify all the completed queries.
   for (auto &Q : CompletedQueries) {
     assert(Q->isComplete() && "Q not completed");
-    Q->handleComplete();
+    Q->handleComplete(ES);
   }
 
   return Error::success();
@@ -1084,6 +1110,7 @@ Error JITDylib::emit(MaterializationResponsibility &MR,
                     CompletedQueries.insert(Q);
                   Q->removeQueryDependence(DependantJD, DependantName);
                 }
+                DependantJD.MaterializingInfos.erase(DependantMII);
               }
             }
           }
@@ -1099,6 +1126,7 @@ Error JITDylib::emit(MaterializationResponsibility &MR,
                 CompletedQueries.insert(Q);
               Q->removeQueryDependence(*this, Name);
             }
+            MaterializingInfos.erase(MII);
           }
         }
 
@@ -1109,7 +1137,7 @@ Error JITDylib::emit(MaterializationResponsibility &MR,
   // Otherwise notify all the completed queries.
   for (auto &Q : CompletedQueries) {
     assert(Q->isComplete() && "Q is not complete");
-    Q->handleComplete();
+    Q->handleComplete(ES);
   }
 
   return Error::success();
@@ -1241,8 +1269,7 @@ void JITDylib::setLinkOrder(JITDylibSearchOrder NewLinkOrder,
       if (NewLinkOrder.empty() || NewLinkOrder.front().first != this)
         LinkOrder.push_back(
             std::make_pair(this, JITDylibLookupFlags::MatchAllSymbols));
-      LinkOrder.insert(LinkOrder.end(), NewLinkOrder.begin(),
-                       NewLinkOrder.end());
+      llvm::append_range(LinkOrder, NewLinkOrder);
     } else
       LinkOrder = std::move(NewLinkOrder);
   });
@@ -1265,10 +1292,10 @@ void JITDylib::replaceInLinkOrder(JITDylib &OldJD, JITDylib &NewJD,
 
 void JITDylib::removeFromLinkOrder(JITDylib &JD) {
   ES.runSessionLocked([&]() {
-    auto I = std::find_if(LinkOrder.begin(), LinkOrder.end(),
-                          [&](const JITDylibSearchOrder::value_type &KV) {
-                            return KV.first == &JD;
-                          });
+    auto I = llvm::find_if(LinkOrder,
+                           [&](const JITDylibSearchOrder::value_type &KV) {
+                             return KV.first == &JD;
+                           });
     if (I != LinkOrder.end())
       LinkOrder.erase(I);
   });
@@ -1371,6 +1398,11 @@ void JITDylib::dump(raw_ostream &OS) {
       OS << "      Unemitted Dependencies:\n";
       for (auto &KV2 : KV.second.UnemittedDependencies)
         OS << "        " << KV2.first->getName() << ": " << KV2.second << "\n";
+      assert((Symbols[KV.first].getState() != SymbolState::Ready ||
+              !KV.second.pendingQueries().empty() ||
+              !KV.second.Dependants.empty() ||
+              !KV.second.UnemittedDependencies.empty()) &&
+             "Stale materializing info entry");
     }
   });
 }
@@ -1389,11 +1421,10 @@ void JITDylib::MaterializingInfo::addQuery(
 void JITDylib::MaterializingInfo::removeQuery(
     const AsynchronousSymbolQuery &Q) {
   // FIXME: Implement 'find_as' for shared_ptr<T>/T*.
-  auto I =
-      std::find_if(PendingQueries.begin(), PendingQueries.end(),
-                   [&Q](const std::shared_ptr<AsynchronousSymbolQuery> &V) {
-                     return V.get() == &Q;
-                   });
+  auto I = llvm::find_if(
+      PendingQueries, [&Q](const std::shared_ptr<AsynchronousSymbolQuery> &V) {
+        return V.get() == &Q;
+      });
   assert(I != PendingQueries.end() &&
          "Query is not attached to this MaterializingInfo");
   PendingQueries.erase(I);
@@ -1719,6 +1750,15 @@ Expected<DenseMap<JITDylib *, SymbolMap>> Platform::lookupInitSymbols(
   return std::move(CompoundResult);
 }
 
+void Task::anchor() {}
+
+void MaterializationTask::printDescription(raw_ostream &OS) {
+  OS << "Materialization task: " << MU->getName() << " in "
+     << MR->getTargetJITDylib().getName() << "\n";
+}
+
+void MaterializationTask::run() { MU->materialize(std::move(MR)); }
+
 ExecutionSession::ExecutionSession(std::shared_ptr<SymbolStringPool> SSP)
     : SSP(SSP ? std::move(SSP) : std::make_shared<SymbolStringPool>()) {}
 
@@ -1992,7 +2032,8 @@ void ExecutionSession::dispatchOutstandingMUs() {
 
     assert(JMU->first && "No MU?");
     LLVM_DEBUG(dbgs() << "  Dispatching \"" << JMU->first->getName() << "\"\n");
-    dispatchMaterialization(std::move(JMU->first), std::move(JMU->second));
+    dispatchTask(std::make_unique<MaterializationTask>(std::move(JMU->first),
+                                                       std::move(JMU->second)));
   }
   LLVM_DEBUG(dbgs() << "Done dispatching MaterializationUnits.\n");
 }
@@ -2517,7 +2558,7 @@ void ExecutionSession::OL_completeLookup(
 
   if (QueryComplete) {
     LLVM_DEBUG(dbgs() << "Completing query\n");
-    Q->handleComplete();
+    Q->handleComplete(*this);
   }
 
   dispatchOutstandingMUs();
@@ -2765,9 +2806,10 @@ void ExecutionSession::OL_addDependenciesForAll(
 }
 
 #ifndef NDEBUG
-void ExecutionSession::dumpDispatchInfo(JITDylib &JD, MaterializationUnit &MU) {
+void ExecutionSession::dumpDispatchInfo(Task &T) {
   runSessionLocked([&]() {
-    dbgs() << "Dispatching " << MU << " for " << JD.getName() << "\n";
+    dbgs() << "Dispatching: ";
+    T.printDescription(dbgs());
   });
 }
 #endif // NDEBUG

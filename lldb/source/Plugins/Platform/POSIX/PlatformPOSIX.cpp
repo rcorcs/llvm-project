@@ -377,7 +377,6 @@ lldb::ProcessSP PlatformPOSIX::Attach(ProcessAttachInfo &attach_info,
     }
 
     if (target && error.Success()) {
-      debugger.GetTargetList().SetSelectedTarget(target);
       if (log) {
         ModuleSP exe_module_sp = target->GetExecutableModule();
         LLDB_LOGF(log, "PlatformPOSIX::%s set selected target to %p %s",
@@ -388,7 +387,7 @@ lldb::ProcessSP PlatformPOSIX::Attach(ProcessAttachInfo &attach_info,
 
       process_sp =
           target->CreateProcess(attach_info.GetListenerForProcess(debugger),
-                                attach_info.GetProcessPluginName(), nullptr);
+                                "gdb-remote", nullptr, true);
 
       if (process_sp) {
         ListenerSP listener_sp = attach_info.GetHijackListener();
@@ -462,13 +461,11 @@ PlatformPOSIX::DebugProcess(ProcessLaunchInfo &launch_info, Debugger &debugger,
     }
   }
 
-  // Mark target as currently selected target.
-  debugger.GetTargetList().SetSelectedTarget(target);
-
   // Now create the gdb-remote process.
   LLDB_LOG(log, "having target create process with gdb-remote plugin");
   process_sp =
-      target->CreateProcess(launch_info.GetListener(), "gdb-remote", nullptr);
+      target->CreateProcess(launch_info.GetListener(), "gdb-remote", nullptr,
+                            true);
 
   if (!process_sp) {
     error.SetErrorString("CreateProcess() failed for gdb-remote process");
@@ -581,7 +578,19 @@ PlatformPOSIX::MakeLoadImageUtilityFunction(ExecutionContext &exe_ctx,
   // __lldb_dlopen_result for consistency. The wrapper returns a void * but
   // doesn't use it because UtilityFunctions don't work with void returns at
   // present.
+  //
+  // Use lazy binding so as to not make dlopen()'s success conditional on
+  // forcing every symbol in the library.
+  //
+  // In general, the debugger should allow programs to load & run with
+  // libraries as far as they can, instead of defaulting to being super-picky
+  // about unavailable symbols.
+  //
+  // The value "1" appears to imply lazy binding (RTLD_LAZY) on both Darwin
+  // and other POSIX OSes.
   static const char *dlopen_wrapper_code = R"(
+  const int RTLD_LAZY = 1;
+
   struct __lldb_dlopen_result {
     void *image_ptr;
     const char *error_str;
@@ -598,7 +607,7 @@ PlatformPOSIX::MakeLoadImageUtilityFunction(ExecutionContext &exe_ctx,
   {
     // This is the case where the name is the full path:
     if (!path_strings) {
-      result_ptr->image_ptr = dlopen(name, 2);
+      result_ptr->image_ptr = dlopen(name, RTLD_LAZY);
       if (result_ptr->image_ptr)
         result_ptr->error_str = nullptr;
       return nullptr;
@@ -612,7 +621,7 @@ PlatformPOSIX::MakeLoadImageUtilityFunction(ExecutionContext &exe_ctx,
       buffer[path_len] = '/';
       char *target_ptr = buffer+path_len+1; 
       memcpy((void *) target_ptr, (void *) name, name_len + 1);
-      result_ptr->image_ptr = dlopen(buffer, 2);
+      result_ptr->image_ptr = dlopen(buffer, RTLD_LAZY);
       if (result_ptr->image_ptr) {
         result_ptr->error_str = nullptr;
         break;
@@ -649,7 +658,8 @@ PlatformPOSIX::MakeLoadImageUtilityFunction(ExecutionContext &exe_ctx,
   FunctionCaller *do_dlopen_function = nullptr;
 
   // Fetch the clang types we will need:
-  TypeSystemClang *ast = TypeSystemClang::GetScratch(process->GetTarget());
+  TypeSystemClang *ast =
+      ScratchTypeSystemClang::GetForTarget(process->GetTarget());
   if (!ast)
     return nullptr;
 
@@ -661,7 +671,7 @@ PlatformPOSIX::MakeLoadImageUtilityFunction(ExecutionContext &exe_ctx,
   // We are passing four arguments, the basename, the list of places to look,
   // a buffer big enough for all the path + name combos, and
   // a pointer to the storage we've made for the result:
-  value.SetValueType(Value::eValueTypeScalar);
+  value.SetValueType(Value::ValueType::Scalar);
   value.SetCompilerType(clang_void_pointer_type);
   arguments.PushValue(value);
   value.SetCompilerType(clang_char_pointer_type);
@@ -893,7 +903,8 @@ uint32_t PlatformPOSIX::DoLoadImage(lldb_private::Process *process,
 
   Value return_value;
   // Fetch the clang types we will need:
-  TypeSystemClang *ast = TypeSystemClang::GetScratch(process->GetTarget());
+  TypeSystemClang *ast =
+      ScratchTypeSystemClang::GetForTarget(process->GetTarget());
   if (!ast) {
     error.SetErrorString("dlopen error: Unable to get TypeSystemClang");
     return LLDB_INVALID_IMAGE_TOKEN;
@@ -993,13 +1004,6 @@ PlatformPOSIX::GetLibdlFunctionDeclarations(lldb_private::Process *process) {
               extern "C" int   dlclose(void*);
               extern "C" char* dlerror(void);
              )";
-}
-
-size_t PlatformPOSIX::ConnectToWaitingProcesses(Debugger &debugger,
-                                                Status &error) {
-  if (m_remote_platform_sp)
-    return m_remote_platform_sp->ConnectToWaitingProcesses(debugger, error);
-  return Platform::ConnectToWaitingProcesses(debugger, error);
 }
 
 ConstString PlatformPOSIX::GetFullNameForDylib(ConstString basename) {

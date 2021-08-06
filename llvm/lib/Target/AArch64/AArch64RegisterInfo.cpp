@@ -24,6 +24,7 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/RegisterScavenging.h"
 #include "llvm/CodeGen/TargetFrameLowering.h"
+#include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/Support/raw_ostream.h"
@@ -99,6 +100,8 @@ AArch64RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
       MF->getFunction().getAttributes().hasAttrSomewhere(
           Attribute::SwiftError))
     return CSR_AArch64_AAPCS_SwiftError_SaveList;
+  if (MF->getFunction().getCallingConv() == CallingConv::SwiftTail)
+    return CSR_AArch64_AAPCS_SwiftTail_SaveList;
   if (MF->getFunction().getCallingConv() == CallingConv::PreserveMost)
     return CSR_AArch64_RT_MostRegs_SaveList;
   if (MF->getFunction().getCallingConv() == CallingConv::Win64)
@@ -133,6 +136,8 @@ AArch64RegisterInfo::getDarwinCalleeSavedRegs(const MachineFunction *MF) const {
       MF->getFunction().getAttributes().hasAttrSomewhere(
           Attribute::SwiftError))
     return CSR_Darwin_AArch64_AAPCS_SwiftError_SaveList;
+  if (MF->getFunction().getCallingConv() == CallingConv::SwiftTail)
+    return CSR_Darwin_AArch64_AAPCS_SwiftTail_SaveList;
   if (MF->getFunction().getCallingConv() == CallingConv::PreserveMost)
     return CSR_Darwin_AArch64_RT_MostRegs_SaveList;
   return CSR_Darwin_AArch64_AAPCS_SaveList;
@@ -198,6 +203,8 @@ AArch64RegisterInfo::getDarwinCallPreservedMask(const MachineFunction &MF,
           ->supportSwiftError() &&
       MF.getFunction().getAttributes().hasAttrSomewhere(Attribute::SwiftError))
     return CSR_Darwin_AArch64_AAPCS_SwiftError_RegMask;
+  if (CC == CallingConv::SwiftTail)
+    return CSR_Darwin_AArch64_AAPCS_SwiftTail_RegMask;
   if (CC == CallingConv::PreserveMost)
     return CSR_Darwin_AArch64_RT_MostRegs_RegMask;
   return CSR_Darwin_AArch64_AAPCS_RegMask;
@@ -232,6 +239,11 @@ AArch64RegisterInfo::getCallPreservedMask(const MachineFunction &MF,
       MF.getFunction().getAttributes().hasAttrSomewhere(Attribute::SwiftError))
     return SCS ? CSR_AArch64_AAPCS_SwiftError_SCS_RegMask
                : CSR_AArch64_AAPCS_SwiftError_RegMask;
+  if (CC == CallingConv::SwiftTail) {
+    if (SCS)
+      report_fatal_error("ShadowCallStack attribute not supported with swifttail");
+    return CSR_AArch64_AAPCS_SwiftTail_RegMask;
+  }
   if (CC == CallingConv::PreserveMost)
     return SCS ? CSR_AArch64_RT_MostRegs_SCS_RegMask
                : CSR_AArch64_RT_MostRegs_RegMask;
@@ -333,9 +345,9 @@ bool AArch64RegisterInfo::isReservedReg(const MachineFunction &MF,
 }
 
 bool AArch64RegisterInfo::isAnyArgRegReserved(const MachineFunction &MF) const {
-  return std::any_of(std::begin(*AArch64::GPR64argRegClass.MC),
-                     std::end(*AArch64::GPR64argRegClass.MC),
-                     [this, &MF](MCPhysReg r){return isReservedReg(MF, r);});
+  return llvm::any_of(*AArch64::GPR64argRegClass.MC, [this, &MF](MCPhysReg r) {
+    return isReservedReg(MF, r);
+  });
 }
 
 void AArch64RegisterInfo::emitReservedArgRegCallError(
@@ -381,7 +393,7 @@ bool AArch64RegisterInfo::hasBasePointer(const MachineFunction &MF) const {
   // stack needs to be dynamically re-aligned, the base pointer is the only
   // reliable way to reference the locals.
   if (MFI.hasVarSizedObjects() || MF.hasEHFunclets()) {
-    if (needsStackRealignment(MF))
+    if (hasStackRealignment(MF))
       return true;
 
     if (MF.getSubtarget<AArch64Subtarget>().hasSVE()) {
@@ -436,7 +448,7 @@ AArch64RegisterInfo::useFPForScavengingIndex(const MachineFunction &MF) const {
   assert((!MF.getSubtarget<AArch64Subtarget>().hasSVE() ||
           AFI->hasCalculatedStackSizeSVE()) &&
          "Expected SVE area to be calculated by this point");
-  return TFI.hasFP(MF) && !needsStackRealignment(MF) && !AFI->getStackSizeSVE();
+  return TFI.hasFP(MF) && !hasStackRealignment(MF) && !AFI->getStackSizeSVE();
 }
 
 bool AArch64RegisterInfo::requiresFrameIndexScavenging(
@@ -530,10 +542,10 @@ bool AArch64RegisterInfo::isFrameOffsetLegal(const MachineInstr *MI,
 
 /// Insert defining instruction(s) for BaseReg to be a pointer to FrameIdx
 /// at the beginning of the basic block.
-void AArch64RegisterInfo::materializeFrameBaseRegister(MachineBasicBlock *MBB,
-                                                       Register BaseReg,
-                                                       int FrameIdx,
-                                                       int64_t Offset) const {
+Register
+AArch64RegisterInfo::materializeFrameBaseRegister(MachineBasicBlock *MBB,
+                                                  int FrameIdx,
+                                                  int64_t Offset) const {
   MachineBasicBlock::iterator Ins = MBB->begin();
   DebugLoc DL; // Defaults to "unknown"
   if (Ins != MBB->end())
@@ -543,6 +555,7 @@ void AArch64RegisterInfo::materializeFrameBaseRegister(MachineBasicBlock *MBB,
       MF.getSubtarget<AArch64Subtarget>().getInstrInfo();
   const MCInstrDesc &MCID = TII->get(AArch64::ADDXri);
   MachineRegisterInfo &MRI = MBB->getParent()->getRegInfo();
+  Register BaseReg = MRI.createVirtualRegister(&AArch64::GPR64spRegClass);
   MRI.constrainRegClass(BaseReg, TII->getRegClass(MCID, 0, this, MF));
   unsigned Shifter = AArch64_AM::getShifterImm(AArch64_AM::LSL, 0);
 
@@ -550,6 +563,8 @@ void AArch64RegisterInfo::materializeFrameBaseRegister(MachineBasicBlock *MBB,
       .addFrameIndex(FrameIdx)
       .addImm(Offset)
       .addImm(Shifter);
+
+  return BaseReg;
 }
 
 void AArch64RegisterInfo::resolveFrameIndex(MachineInstr &MI, Register BaseReg,
@@ -558,11 +573,11 @@ void AArch64RegisterInfo::resolveFrameIndex(MachineInstr &MI, Register BaseReg,
   StackOffset Off = StackOffset::getFixed(Offset);
 
   unsigned i = 0;
-
   while (!MI.getOperand(i).isFI()) {
     ++i;
     assert(i < MI.getNumOperands() && "Instr doesn't have FrameIndex operand!");
   }
+
   const MachineFunction *MF = MI.getParent()->getParent();
   const AArch64InstrInfo *TII =
       MF->getSubtarget<AArch64Subtarget>().getInstrInfo();
@@ -592,6 +607,33 @@ createScratchRegisterForInstruction(MachineInstr &MI,
   }
 }
 
+void AArch64RegisterInfo::getOffsetOpcodes(
+    const StackOffset &Offset, SmallVectorImpl<uint64_t> &Ops) const {
+  // The smallest scalable element supported by scaled SVE addressing
+  // modes are predicates, which are 2 scalable bytes in size. So the scalable
+  // byte offset must always be a multiple of 2.
+  assert(Offset.getScalable() % 2 == 0 && "Invalid frame offset");
+
+  // Add fixed-sized offset using existing DIExpression interface.
+  DIExpression::appendOffset(Ops, Offset.getFixed());
+
+  unsigned VG = getDwarfRegNum(AArch64::VG, true);
+  int64_t VGSized = Offset.getScalable() / 2;
+  if (VGSized > 0) {
+    Ops.push_back(dwarf::DW_OP_constu);
+    Ops.push_back(VGSized);
+    Ops.append({dwarf::DW_OP_bregx, VG, 0ULL});
+    Ops.push_back(dwarf::DW_OP_mul);
+    Ops.push_back(dwarf::DW_OP_plus);
+  } else if (VGSized < 0) {
+    Ops.push_back(dwarf::DW_OP_constu);
+    Ops.push_back(-VGSized);
+    Ops.append({dwarf::DW_OP_bregx, VG, 0ULL});
+    Ops.push_back(dwarf::DW_OP_mul);
+    Ops.push_back(dwarf::DW_OP_minus);
+  }
+}
+
 void AArch64RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
                                               int SPAdj, unsigned FIOperandNum,
                                               RegScavenger *RS) const {
@@ -604,14 +646,13 @@ void AArch64RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   const AArch64InstrInfo *TII =
       MF.getSubtarget<AArch64Subtarget>().getInstrInfo();
   const AArch64FrameLowering *TFI = getFrameLowering(MF);
-
   int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
   bool Tagged =
       MI.getOperand(FIOperandNum).getTargetFlags() & AArch64II::MO_TAGGED;
   Register FrameReg;
 
   // Special handling of dbg_value, stackmap patchpoint statepoint instructions.
-  if (MI.isDebugValue() || MI.getOpcode() == TargetOpcode::STACKMAP ||
+  if (MI.getOpcode() == TargetOpcode::STACKMAP ||
       MI.getOpcode() == TargetOpcode::PATCHPOINT ||
       MI.getOpcode() == TargetOpcode::STATEPOINT) {
     StackOffset Offset =
@@ -731,7 +772,7 @@ unsigned AArch64RegisterInfo::getLocalAddressRegister(
   const auto &MFI = MF.getFrameInfo();
   if (!MF.hasEHFunclets() && !MFI.hasVarSizedObjects())
     return AArch64::SP;
-  else if (needsStackRealignment(MF))
+  else if (hasStackRealignment(MF))
     return getBaseRegister();
   return getFrameRegister(MF);
 }

@@ -23,7 +23,6 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/Analysis/BlockFrequencyInfo.h"
@@ -37,6 +36,7 @@
 #include "llvm/Analysis/ProfileSummaryInfo.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
+#include "llvm/Analysis/Utils/ImportedFunctionsInliningStatistics.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/DataLayout.h"
@@ -58,10 +58,8 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
-#include "llvm/Transforms/IPO/AlwaysInliner.h"
 #include "llvm/Transforms/Utils/CallPromotionUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
-#include "llvm/Transforms/Utils/ImportedFunctionsInliningStatistics.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/ModuleUtils.h"
 #include <algorithm>
@@ -92,29 +90,14 @@ static cl::opt<bool>
     DisableInlinedAllocaMerging("disable-inlined-alloca-merging",
                                 cl::init(false), cl::Hidden);
 
-/// Flag to disable adding AlwaysInlinerPass to ModuleInlinerWrapperPass.
-/// TODO: remove this once this has is baked in for long enough.
-static cl::opt<bool> DisableAlwaysInlinerInModuleWrapper(
-    "disable-always-inliner-in-module-wrapper", cl::init(false), cl::Hidden);
+extern cl::opt<InlinerFunctionImportStatsOpts> InlinerFunctionImportStats;
 
-namespace {
-
-enum class InlinerFunctionImportStatsOpts {
-  No = 0,
-  Basic = 1,
-  Verbose = 2,
-};
-
-} // end anonymous namespace
-
-static cl::opt<InlinerFunctionImportStatsOpts> InlinerFunctionImportStats(
-    "inliner-function-import-stats",
-    cl::init(InlinerFunctionImportStatsOpts::No),
-    cl::values(clEnumValN(InlinerFunctionImportStatsOpts::Basic, "basic",
-                          "basic statistics"),
-               clEnumValN(InlinerFunctionImportStatsOpts::Verbose, "verbose",
-                          "printing of statistics for each inlined function")),
-    cl::Hidden, cl::desc("Enable inliner stats for imported functions"));
+static cl::opt<std::string> CGSCCInlineReplayFile(
+    "cgscc-inline-replay", cl::init(""), cl::value_desc("filename"),
+    cl::desc(
+        "Optimization remarks file containing inline remarks to be replayed "
+        "by inlining from cgscc inline remarks."),
+    cl::Hidden);
 
 LegacyInlinerBase::LegacyInlinerBase(char &ID) : CallGraphSCCPass(ID) {}
 
@@ -654,17 +637,12 @@ bool LegacyInlinerBase::removeDeadFunctions(CallGraph &CG,
   return true;
 }
 
-InlinerPass::~InlinerPass() {
-  if (ImportedFunctionsStats) {
-    assert(InlinerFunctionImportStats != InlinerFunctionImportStatsOpts::No);
-    ImportedFunctionsStats->dump(InlinerFunctionImportStats ==
-                                 InlinerFunctionImportStatsOpts::Verbose);
-  }
-}
-
 InlineAdvisor &
 InlinerPass::getAdvisor(const ModuleAnalysisManagerCGSCCProxy::Result &MAM,
                         FunctionAnalysisManager &FAM, Module &M) {
+  if (OwnedAdvisor)
+    return *OwnedAdvisor;
+
   auto *IAA = MAM.getCachedResult<InlineAdvisorAnalysis>(M);
   if (!IAA) {
     // It should still be possible to run the inliner as a stand-alone SCC pass,
@@ -675,8 +653,16 @@ InlinerPass::getAdvisor(const ModuleAnalysisManagerCGSCCProxy::Result &MAM,
     // duration of the inliner pass, and thus the lifetime of the owned advisor.
     // The one we would get from the MAM can be invalidated as a result of the
     // inliner's activity.
-    OwnedDefaultAdvisor.emplace(FAM, getInlineParams());
-    return *OwnedDefaultAdvisor;
+    OwnedAdvisor =
+        std::make_unique<DefaultInlineAdvisor>(M, FAM, getInlineParams());
+
+    if (!CGSCCInlineReplayFile.empty())
+      OwnedAdvisor = std::make_unique<ReplayInlineAdvisor>(
+          M, FAM, M.getContext(), std::move(OwnedAdvisor),
+          CGSCCInlineReplayFile,
+          /*EmitRemarks=*/true);
+
+    return *OwnedAdvisor;
   }
   assert(IAA->getAdvisor() &&
          "Expected a present InlineAdvisorAnalysis also have an "
@@ -704,20 +690,13 @@ PreservedAnalyses InlinerPass::run(LazyCallGraph::SCC &InitialC,
 
   auto AdvisorOnExit = make_scope_exit([&] { Advisor.onPassExit(); });
 
-  if (!ImportedFunctionsStats &&
-      InlinerFunctionImportStats != InlinerFunctionImportStatsOpts::No) {
-    ImportedFunctionsStats =
-        std::make_unique<ImportedFunctionsInliningStatistics>();
-    ImportedFunctionsStats->setModuleInfo(M);
-  }
-
   // We use a single common worklist for calls across the entire SCC. We
   // process these in-order and append new calls introduced during inlining to
   // the end.
   //
   // Note that this particular order of processing is actually critical to
   // avoid very bad behaviors. Consider *highly connected* call graphs where
-  // each function contains a small amonut of code and a couple of calls to
+  // each function contains a small amount of code and a couple of calls to
   // other functions. Because the LLVM inliner is fundamentally a bottom-up
   // inliner, it can handle gracefully the fact that these all appear to be
   // reasonable inlining candidates as it will flatten things until they become
@@ -796,14 +775,10 @@ PreservedAnalyses InlinerPass::run(LazyCallGraph::SCC &InitialC,
     LazyCallGraph::Node &N = *CG.lookup(F);
     if (CG.lookupSCC(N) != C)
       continue;
-    if (!Calls[I].first->getCalledFunction()->hasFnAttribute(
-            Attribute::AlwaysInline) &&
-        F.hasOptNone()) {
-      setInlineRemark(*Calls[I].first, "optnone attribute");
-      continue;
-    }
 
-    LLVM_DEBUG(dbgs() << "Inlining calls in: " << F.getName() << "\n");
+    LLVM_DEBUG(dbgs() << "Inlining calls in: " << F.getName() << "\n"
+                      << "    Function size: " << F.getInstructionCount()
+                      << "\n");
 
     auto GetAssumptionCache = [&](Function &F) -> AssumptionCache & {
       return FAM.getResult<AssumptionAnalysis>(F);
@@ -839,7 +814,7 @@ PreservedAnalyses InlinerPass::run(LazyCallGraph::SCC &InitialC,
         continue;
       }
 
-      auto Advice = Advisor.getAdvice(*CB);
+      auto Advice = Advisor.getAdvice(*CB, OnlyMandatory);
       // Check whether we want to inline this callsite.
       if (!Advice->isInliningRecommended()) {
         Advice->recordUnattemptedInlining();
@@ -864,6 +839,9 @@ PreservedAnalyses InlinerPass::run(LazyCallGraph::SCC &InitialC,
       InlinedCallees.insert(&Callee);
       ++NumInlined;
 
+      LLVM_DEBUG(dbgs() << "    Size after inlining: "
+                        << F.getInstructionCount() << "\n");
+
       // Add any new callsites to defined functions to the worklist.
       if (!IFI.InlinedCallSites.empty()) {
         int NewHistoryID = InlineHistory.size();
@@ -884,9 +862,6 @@ PreservedAnalyses InlinerPass::run(LazyCallGraph::SCC &InitialC,
               Calls.push_back({ICB, NewHistoryID});
         }
       }
-
-      if (InlinerFunctionImportStats != InlinerFunctionImportStatsOpts::No)
-        ImportedFunctionsStats->recordInline(F, Callee);
 
       // Merge the attributes based on the inlining.
       AttributeFuncs::mergeAttributesForInlining(F, Callee);
@@ -912,7 +887,7 @@ PreservedAnalyses InlinerPass::run(LazyCallGraph::SCC &InitialC,
           // Note that after this point, it is an error to do anything other
           // than use the callee's address or delete it.
           Callee.dropAllReferences();
-          assert(find(DeadFunctions, &Callee) == DeadFunctions.end() &&
+          assert(!is_contained(DeadFunctions, &Callee) &&
                  "Cannot put cause a function to become dead twice!");
           DeadFunctions.push_back(&Callee);
           CalleeWasDeleted = true;
@@ -976,6 +951,10 @@ PreservedAnalyses InlinerPass::run(LazyCallGraph::SCC &InitialC,
       UR.InlinedInternalEdges.insert({&N, OldC});
     }
     InlinedCallees.clear();
+
+    // Invalidate analyses for this function now so that we don't have to
+    // invalidate analyses for all functions in this SCC later.
+    FAM.invalidate(F, PreservedAnalyses::none());
   }
 
   // Now that we've finished inlining all of the calls across this SCC, delete
@@ -1015,39 +994,41 @@ PreservedAnalyses InlinerPass::run(LazyCallGraph::SCC &InitialC,
   if (!Changed)
     return PreservedAnalyses::all();
 
+  PreservedAnalyses PA;
   // Even if we change the IR, we update the core CGSCC data structures and so
   // can preserve the proxy to the function analysis manager.
-  PreservedAnalyses PA;
   PA.preserve<FunctionAnalysisManagerCGSCCProxy>();
+  // We have already invalidated all analyses on modified functions.
+  PA.preserveSet<AllAnalysesOn<Function>>();
   return PA;
 }
 
 ModuleInlinerWrapperPass::ModuleInlinerWrapperPass(InlineParams Params,
-                                                   bool Debugging,
+                                                   bool MandatoryFirst,
                                                    InliningAdvisorMode Mode,
                                                    unsigned MaxDevirtIterations)
     : Params(Params), Mode(Mode), MaxDevirtIterations(MaxDevirtIterations),
-      PM(Debugging), MPM(Debugging) {
+      PM(), MPM() {
   // Run the inliner first. The theory is that we are walking bottom-up and so
   // the callees have already been fully optimized, and we want to inline them
   // into the callers so that our optimizations can reflect that.
   // For PreLinkThinLTO pass, we disable hot-caller heuristic for sample PGO
   // because it makes profile annotation in the backend inaccurate.
+  if (MandatoryFirst)
+    PM.addPass(InlinerPass(/*OnlyMandatory*/ true));
   PM.addPass(InlinerPass());
 }
 
 PreservedAnalyses ModuleInlinerWrapperPass::run(Module &M,
                                                 ModuleAnalysisManager &MAM) {
   auto &IAA = MAM.getResult<InlineAdvisorAnalysis>(M);
-  if (!IAA.tryCreate(Params, Mode)) {
+  if (!IAA.tryCreate(Params, Mode, CGSCCInlineReplayFile)) {
     M.getContext().emitError(
         "Could not setup Inlining Advisor for the requested "
         "mode and/or options");
     return PreservedAnalyses::all();
   }
 
-  if (!DisableAlwaysInlinerInModuleWrapper)
-    MPM.addPass(AlwaysInlinerPass());
   // We wrap the CGSCC pipeline in a devirtualization repeater. This will try
   // to detect when we devirtualize indirect calls and iterate the SCC passes
   // in that case to try and catch knock-on inlining or function attrs
@@ -1060,8 +1041,10 @@ PreservedAnalyses ModuleInlinerWrapperPass::run(Module &M,
   else
     MPM.addPass(createModuleToPostOrderCGSCCPassAdaptor(
         createDevirtSCCRepeatedPass(std::move(PM), MaxDevirtIterations)));
-  auto Ret = MPM.run(M, MAM);
+  MPM.run(M, MAM);
 
   IAA.clear();
-  return Ret;
+
+  // The ModulePassManager has already taken care of invalidating analyses.
+  return PreservedAnalyses::all();
 }

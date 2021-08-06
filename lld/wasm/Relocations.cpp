@@ -62,7 +62,9 @@ static void reportUndefined(Symbol *sym) {
                      << "ignoring undefined symbol: " + toString(*sym) + "\n");
           f->stubFunction = symtab->createUndefinedStub(*f->getSignature());
           f->stubFunction->markLive();
-          f->setTableIndex(0);
+          // Mark the function itself as a stub which prevents it from being
+          // assigned a table entry.
+          f->isStub = true;
         }
       }
       break;
@@ -113,7 +115,7 @@ void scanRelocations(InputChunk *chunk) {
       break;
     case R_WASM_MEMORY_ADDR_TLS_SLEB:
       if (auto *D = dyn_cast<DefinedData>(sym)) {
-        if (D->segment->outputSeg->name != ".tdata") {
+        if (!D->segment->outputSeg->isTLS()) {
           error(toString(file) + ": relocation " +
                 relocTypeToString(reloc.Type) + " cannot be used against `" +
                 toString(*sym) +
@@ -148,10 +150,9 @@ void scanRelocations(InputChunk *chunk) {
           addGOTEntry(sym);
         break;
       }
-    } else {
+    } else if (sym->isUndefined() && !config->relocatable && !sym->isWeak()) {
       // Report undefined symbols
-      if (sym->isUndefined() && !config->relocatable && !sym->isWeak())
-        reportUndefined(sym);
+      reportUndefined(sym);
     }
   }
 }

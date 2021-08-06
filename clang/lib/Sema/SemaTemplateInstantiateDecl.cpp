@@ -548,12 +548,40 @@ static void instantiateDependentAMDGPUWavesPerEUAttr(
   S.addAMDGPUWavesPerEUAttr(New, Attr, MinExpr, MaxExpr);
 }
 
+/// Determine whether the attribute A might be relevent to the declaration D.
+/// If not, we can skip instantiating it. The attribute may or may not have
+/// been instantiated yet.
+static bool isRelevantAttr(Sema &S, const Decl *D, const Attr *A) {
+  // 'preferred_name' is only relevant to the matching specialization of the
+  // template.
+  if (const auto *PNA = dyn_cast<PreferredNameAttr>(A)) {
+    QualType T = PNA->getTypedefType();
+    const auto *RD = cast<CXXRecordDecl>(D);
+    if (!T->isDependentType() && !RD->isDependentContext() &&
+        !declaresSameEntity(T->getAsCXXRecordDecl(), RD))
+      return false;
+    for (const auto *ExistingPNA : D->specific_attrs<PreferredNameAttr>())
+      if (S.Context.hasSameType(ExistingPNA->getTypedefType(),
+                                PNA->getTypedefType()))
+        return false;
+    return true;
+  }
+
+  return true;
+}
+
 void Sema::InstantiateAttrsForDecl(
     const MultiLevelTemplateArgumentList &TemplateArgs, const Decl *Tmpl,
     Decl *New, LateInstantiatedAttrVec *LateAttrs,
     LocalInstantiationScope *OuterMostScope) {
   if (NamedDecl *ND = dyn_cast<NamedDecl>(New)) {
+    // FIXME: This function is called multiple times for the same template
+    // specialization. We should only instantiate attributes that were added
+    // since the previous instantiation.
     for (const auto *TmplAttr : Tmpl->attrs()) {
+      if (!isRelevantAttr(*this, New, TmplAttr))
+        continue;
+
       // FIXME: If any of the special case versions from InstantiateAttrs become
       // applicable to template declaration, we'll need to add them here.
       CXXThisScopeRAII ThisScope(
@@ -562,7 +590,7 @@ void Sema::InstantiateAttrsForDecl(
 
       Attr *NewAttr = sema::instantiateTemplateAttributeForDecl(
           TmplAttr, Context, *this, TemplateArgs);
-      if (NewAttr)
+      if (NewAttr && isRelevantAttr(*this, New, NewAttr))
         New->addAttr(NewAttr);
     }
   }
@@ -587,6 +615,9 @@ void Sema::InstantiateAttrs(const MultiLevelTemplateArgumentList &TemplateArgs,
                             LateInstantiatedAttrVec *LateAttrs,
                             LocalInstantiationScope *OuterMostScope) {
   for (const auto *TmplAttr : Tmpl->attrs()) {
+    if (!isRelevantAttr(*this, New, TmplAttr))
+      continue;
+
     // FIXME: This should be generalized to more than just the AlignedAttr.
     const AlignedAttr *Aligned = dyn_cast<AlignedAttr>(TmplAttr);
     if (Aligned && Aligned->isAlignmentDependent()) {
@@ -709,7 +740,7 @@ void Sema::InstantiateAttrs(const MultiLevelTemplateArgumentList &TemplateArgs,
 
       Attr *NewAttr = sema::instantiateTemplateAttribute(TmplAttr, Context,
                                                          *this, TemplateArgs);
-      if (NewAttr)
+      if (NewAttr && isRelevantAttr(*this, New, TmplAttr))
         New->addAttr(NewAttr);
     }
   }
@@ -825,10 +856,11 @@ Decl *TemplateDeclInstantiator::InstantiateTypedefNameDecl(TypedefNameDecl *D,
     SemaRef.MarkDeclarationsReferencedInType(D->getLocation(), DI->getType());
   }
 
-  // HACK: g++ has a bug where it gets the value kind of ?: wrong.
-  // libstdc++ relies upon this bug in its implementation of common_type.
-  // If we happen to be processing that implementation, fake up the g++ ?:
-  // semantics. See LWG issue 2141 for more information on the bug.
+  // HACK: 2012-10-23 g++ has a bug where it gets the value kind of ?: wrong.
+  // libstdc++ relies upon this bug in its implementation of common_type.  If we
+  // happen to be processing that implementation, fake up the g++ ?:
+  // semantics. See LWG issue 2141 for more information on the bug.  The bugs
+  // are fixed in g++ and libstdc++ 4.9.0 (2014-04-22).
   const DecltypeType *DT = DI->getType()->getAs<DecltypeType>();
   CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(D->getDeclContext());
   if (DT && RD && isa<ConditionalOperator>(DT->getUnderlyingExpr()) &&
@@ -1486,48 +1518,18 @@ Decl *TemplateDeclInstantiator::VisitClassTemplateDecl(ClassTemplateDecl *D) {
       return nullptr;
     }
 
-    bool AdoptedPreviousTemplateParams = false;
     if (PrevClassTemplate) {
-      bool Complain = true;
-
-      // HACK: libstdc++ 4.2.1 contains an ill-formed friend class
-      // template for struct std::tr1::__detail::_Map_base, where the
-      // template parameters of the friend declaration don't match the
-      // template parameters of the original declaration. In this one
-      // case, we don't complain about the ill-formed friend
-      // declaration.
-      if (isFriend && Pattern->getIdentifier() &&
-          Pattern->getIdentifier()->isStr("_Map_base") &&
-          DC->isNamespace() &&
-          cast<NamespaceDecl>(DC)->getIdentifier() &&
-          cast<NamespaceDecl>(DC)->getIdentifier()->isStr("__detail")) {
-        DeclContext *DCParent = DC->getParent();
-        if (DCParent->isNamespace() &&
-            cast<NamespaceDecl>(DCParent)->getIdentifier() &&
-            cast<NamespaceDecl>(DCParent)->getIdentifier()->isStr("tr1")) {
-          if (cast<Decl>(DCParent)->isInStdNamespace())
-            Complain = false;
-        }
-      }
-
       TemplateParameterList *PrevParams
         = PrevClassTemplate->getMostRecentDecl()->getTemplateParameters();
 
       // Make sure the parameter lists match.
-      if (!SemaRef.TemplateParameterListsAreEqual(InstParams, PrevParams,
-                                                  Complain,
-                                                  Sema::TPL_TemplateMatch)) {
-        if (Complain)
-          return nullptr;
-
-        AdoptedPreviousTemplateParams = true;
-        InstParams = PrevParams;
-      }
+      if (!SemaRef.TemplateParameterListsAreEqual(InstParams, PrevParams, true,
+                                                  Sema::TPL_TemplateMatch))
+        return nullptr;
 
       // Do some additional validation, then merge default arguments
       // from the existing declarations.
-      if (!AdoptedPreviousTemplateParams &&
-          SemaRef.CheckTemplateParameterList(InstParams, PrevParams,
+      if (SemaRef.CheckTemplateParameterList(InstParams, PrevParams,
                                              Sema::TPC_ClassTemplate))
         return nullptr;
     }
@@ -2579,7 +2581,6 @@ Decl *TemplateDeclInstantiator::VisitParmVarDecl(ParmVarDecl *D) {
 
 Decl *TemplateDeclInstantiator::VisitTemplateTypeParmDecl(
                                                     TemplateTypeParmDecl *D) {
-  // TODO: don't always clone when decls are refcounted.
   assert(D->getTypeForDecl()->isTemplateTypeParmType());
 
   Optional<unsigned> NumExpanded;
@@ -4158,6 +4159,9 @@ TemplateDeclInstantiator::SubstFunctionType(FunctionDecl *D,
       for (unsigned OldIdx = 0, NumOldParams = OldProtoLoc.getNumParams();
            OldIdx != NumOldParams; ++OldIdx) {
         ParmVarDecl *OldParam = OldProtoLoc.getParam(OldIdx);
+        if (!OldParam)
+          return nullptr;
+
         LocalInstantiationScope *Scope = SemaRef.CurrentInstantiationScope;
 
         Optional<unsigned> NumArgumentsInExpansion;
@@ -4490,6 +4494,8 @@ TemplateDeclInstantiator::InitFunctionInstantiation(FunctionDecl *New,
   // into a template instantiation for this specific function template
   // specialization, which is not a SFINAE context, so that we diagnose any
   // further errors in the declaration itself.
+  //
+  // FIXME: This is a hack.
   typedef Sema::CodeSynthesisContext ActiveInstType;
   ActiveInstType &ActiveInst = SemaRef.CodeSynthesisContexts.back();
   if (ActiveInst.Kind == ActiveInstType::ExplicitTemplateArgumentSubstitution ||
@@ -4499,6 +4505,8 @@ TemplateDeclInstantiator::InitFunctionInstantiation(FunctionDecl *New,
       assert(FunTmpl->getTemplatedDecl() == Tmpl &&
              "Deduction from the wrong function template?");
       (void) FunTmpl;
+      SemaRef.InstantiatingSpecializations.erase(
+          {ActiveInst.Entity->getCanonicalDecl(), ActiveInst.Kind});
       atTemplateEnd(SemaRef.TemplateInstCallbacks, SemaRef, ActiveInst);
       ActiveInst.Kind = ActiveInstType::TemplateInstantiation;
       ActiveInst.Entity = New;

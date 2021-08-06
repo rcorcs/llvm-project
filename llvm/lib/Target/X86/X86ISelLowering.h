@@ -505,8 +505,6 @@ namespace llvm {
     VBROADCAST,
     // Broadcast mask to vector.
     VBROADCASTM,
-    // Broadcast subvector to vector.
-    SUBV_BROADCAST,
 
     /// SSE4A Extraction and Insertion.
     EXTRQI,
@@ -776,11 +774,17 @@ namespace llvm {
     // extract_vector_elt, store.
     VEXTRACT_STORE,
 
-    // scalar broadcast from memory
+    // scalar broadcast from memory.
     VBROADCAST_LOAD,
 
-    // Store FP control world into i16 memory.
+    // subvector broadcast from memory.
+    SUBV_BROADCAST_LOAD,
+
+    // Store FP control word into i16 memory.
     FNSTCW16m,
+
+    // Load FP control word from i16 memory.
+    FLDCW16m,
 
     /// This instruction implements FP_TO_SINT with the
     /// integer destination in memory and a FP reg source.  This corresponds
@@ -814,9 +818,10 @@ namespace llvm {
     /// specifies the type to store as.
     FST,
 
-    /// This instruction grabs the address of the next argument
+    /// These instructions grab the address of the next argument
     /// from a va_list. (reads and modifies the va_list in memory)
     VAARG_64,
+    VAARG_X32,
 
     // Vector truncating store with unsigned/signed saturation
     VTRUNCSTOREUS,
@@ -845,6 +850,19 @@ namespace llvm {
   };
   } // end namespace X86ISD
 
+  namespace X86 {
+    /// Current rounding mode is represented in bits 11:10 of FPSR. These
+    /// values are same as corresponding constants for rounding mode used
+    /// in glibc.
+    enum RoundingMode {
+      rmToNearest   = 0,        // FE_TONEAREST
+      rmDownward    = 1 << 10,  // FE_DOWNWARD
+      rmUpward      = 2 << 10,  // FE_UPWARD
+      rmTowardZero  = 3 << 10,  // FE_TOWARDZERO
+      rmMask        = 3 << 10   // Bit mask selecting rounding mode
+    };
+  }
+
   /// Define some predicates that are used for node matching.
   namespace X86 {
     /// Returns true if Elt is a constant zero or floating point constant +0.0.
@@ -853,7 +871,7 @@ namespace llvm {
     /// Returns true of the given offset can be
     /// fit into displacement field of the instruction.
     bool isOffsetSuitableForCodeModel(int64_t Offset, CodeModel::Model M,
-                                      bool hasSymbolicDisplacement = true);
+                                      bool hasSymbolicDisplacement);
 
     /// Determines whether the callee is required to pop its
     /// own arguments. Callee pop is necessary to support tail calls.
@@ -917,21 +935,13 @@ namespace llvm {
 
     /// Returns true if the target allows unaligned memory accesses of the
     /// specified type. Returns whether it is "fast" in the last argument.
-    bool allowsMisalignedMemoryAccesses(EVT VT, unsigned AS, unsigned Align,
+    bool allowsMisalignedMemoryAccesses(EVT VT, unsigned AS, Align Alignment,
                                         MachineMemOperand::Flags Flags,
                                         bool *Fast) const override;
 
     /// Provide custom lowering hooks for some operations.
     ///
     SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const override;
-
-    /// Places new result values for the node in Results (their number
-    /// and types must exactly match those of the original return values of
-    /// the node), or leaves Results empty, which indicates that the node is not
-    /// to be custom lowered after all.
-    void LowerOperationWrapper(SDNode *N,
-                               SmallVectorImpl<SDValue> &Results,
-                               SelectionDAG &DAG) const override;
 
     /// Replace the results of node with an illegal result
     /// type with new values built out of custom code.
@@ -1124,12 +1134,8 @@ namespace llvm {
 
     unsigned
     getInlineAsmMemConstraint(StringRef ConstraintCode) const override {
-      if (ConstraintCode == "o")
-        return InlineAsm::Constraint_o;
-      else if (ConstraintCode == "v")
+      if (ConstraintCode == "v")
         return InlineAsm::Constraint_v;
-      else if (ConstraintCode == "X")
-        return InlineAsm::Constraint_X;
       return TargetLowering::getInlineAsmMemConstraint(ConstraintCode);
     }
 
@@ -1172,8 +1178,9 @@ namespace llvm {
     /// of the specified type.
     /// If the AM is supported, the return value must be >= 0.
     /// If the AM is not supported, it returns a negative value.
-    int getScalingFactorCost(const DataLayout &DL, const AddrMode &AM, Type *Ty,
-                             unsigned AS) const override;
+    InstructionCost getScalingFactorCost(const DataLayout &DL,
+                                         const AddrMode &AM, Type *Ty,
+                                         unsigned AS) const override;
 
     /// This is used to enable splatted operand transforms for vector shifts
     /// and vector funnel shifts.
@@ -1414,6 +1421,8 @@ namespace llvm {
                                    SDValue Addr, SelectionDAG &DAG)
                                    const override;
 
+    Align getPrefLoopAlignment(MachineLoop *ML) const override;
+
   protected:
     std::pair<const TargetRegisterClass *, uint8_t>
     findRepresentativeClass(const TargetRegisterInfo *TRI,
@@ -1505,6 +1514,7 @@ namespace llvm {
     SDValue LowerUINT_TO_FP(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerTRUNCATE(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerFP_TO_INT(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerFP_TO_INT_SAT(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerLRINT_LLRINT(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerSETCC(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerSETCCCARRY(SDValue Op, SelectionDAG &DAG) const;
@@ -1524,15 +1534,13 @@ namespace llvm {
     SDValue lowerEH_SJLJ_SETUP_DISPATCH(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerINIT_TRAMPOLINE(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerFLT_ROUNDS_(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerSET_ROUNDING(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerWin64_i128OP(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerGC_TRANSITION(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerINTRINSIC_WO_CHAIN(SDValue Op, SelectionDAG &DAG) const;
     SDValue lowerFaddFsub(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerFP_EXTEND(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerFP_ROUND(SDValue Op, SelectionDAG &DAG) const;
-
-    SDValue LowerF128Call(SDValue Op, SelectionDAG &DAG,
-                          RTLIB::Libcall Call) const;
 
     SDValue
     LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
@@ -1589,14 +1597,9 @@ namespace llvm {
 
     // Utility function to emit the low-level va_arg code for X86-64.
     MachineBasicBlock *
-    EmitVAARG64WithCustomInserter(MachineInstr &MI,
-                                  MachineBasicBlock *MBB) const;
+    EmitVAARGWithCustomInserter(MachineInstr &MI, MachineBasicBlock *MBB) const;
 
     /// Utility function to emit the xmm reg save portion of va_start.
-    MachineBasicBlock *
-    EmitVAStartSaveXMMRegsWithCustomInserter(MachineInstr &BInstr,
-                                             MachineBasicBlock *BB) const;
-
     MachineBasicBlock *EmitLoweredCascadedSelect(MachineInstr &MI1,
                                                  MachineInstr &MI2,
                                                  MachineBasicBlock *BB) const;
@@ -1706,7 +1709,7 @@ namespace llvm {
   };
 
   /// Generate unpacklo/unpackhi shuffle mask.
-  void createUnpackShuffleMask(MVT VT, SmallVectorImpl<int> &Mask, bool Lo,
+  void createUnpackShuffleMask(EVT VT, SmallVectorImpl<int> &Mask, bool Lo,
                                bool Unary);
 
   /// Similar to unpacklo/unpackhi, but without the 128-bit lane limitation

@@ -8,18 +8,33 @@
 
 #include "llvm/MC/MCAsmInfoXCOFF.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/Support/CommandLine.h"
 
 using namespace llvm;
+
+namespace llvm {
+extern cl::opt<cl::boolOrDefault> UseLEB128Directives;
+}
 
 void MCAsmInfoXCOFF::anchor() {}
 
 MCAsmInfoXCOFF::MCAsmInfoXCOFF() {
   IsLittleEndian = false;
   HasVisibilityOnlyWithLinkage = true;
+  HasBasenameOnlyForFileDirective = false;
+
+  // For XCOFF, string constant consists of any number of characters enclosed in
+  // "" (double quotation marks).
+  HasPairedDoubleQuoteStringConstants = true;
+
   PrivateGlobalPrefix = "L..";
   PrivateLabelPrefix = "L..";
   SupportsQuotedNames = false;
   UseDotAlignForAlignment = true;
+  UsesDwarfFileAndLocDirectives = false;
+  DwarfSectionSizeRequired = false;
+  if (UseLEB128Directives == cl::BOU_UNSET)
+    HasLEB128Directives = false;
   ZeroDirective = "\t.space\t";
   ZeroDirectiveSupportsNonZeroValue = false;
   AsciiDirective = nullptr; // not supported
@@ -37,6 +52,8 @@ MCAsmInfoXCOFF::MCAsmInfoXCOFF() {
   HasDotTypeDotSizeDirective = false;
   UseIntegratedAssembler = false;
   NeedsFunctionDescriptors = true;
+
+  ExceptionsType = ExceptionHandling::AIX;
 }
 
 bool MCAsmInfoXCOFF::isAcceptableChar(char C) const {

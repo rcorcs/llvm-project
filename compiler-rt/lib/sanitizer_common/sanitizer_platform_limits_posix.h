@@ -443,6 +443,8 @@ struct __sanitizer_cmsghdr {
   int cmsg_type;
 };
 #else
+// In POSIX, int msg_iovlen; socklen_t msg_controllen; socklen_t cmsg_len; but
+// many implementations don't conform to the standard.
 struct __sanitizer_msghdr {
   void *msg_name;
   unsigned msg_namelen;
@@ -981,7 +983,6 @@ extern unsigned struct_vt_mode_sz;
 
 #if SANITIZER_LINUX && !SANITIZER_ANDROID
 extern unsigned struct_ax25_parms_struct_sz;
-extern unsigned struct_cyclades_monitor_sz;
 extern unsigned struct_input_keymap_entry_sz;
 extern unsigned struct_ipx_config_data_sz;
 extern unsigned struct_kbdiacrs_sz;
@@ -1326,15 +1327,6 @@ extern unsigned IOCTL_VT_WAITACTIVE;
 #endif  // SANITIZER_LINUX
 
 #if SANITIZER_LINUX && !SANITIZER_ANDROID
-extern unsigned IOCTL_CYGETDEFTHRESH;
-extern unsigned IOCTL_CYGETDEFTIMEOUT;
-extern unsigned IOCTL_CYGETMON;
-extern unsigned IOCTL_CYGETTHRESH;
-extern unsigned IOCTL_CYGETTIMEOUT;
-extern unsigned IOCTL_CYSETDEFTHRESH;
-extern unsigned IOCTL_CYSETDEFTIMEOUT;
-extern unsigned IOCTL_CYSETTHRESH;
-extern unsigned IOCTL_CYSETTIMEOUT;
 extern unsigned IOCTL_EQL_EMANCIPATE;
 extern unsigned IOCTL_EQL_ENSLAVE;
 extern unsigned IOCTL_EQL_GETMASTRCFG;

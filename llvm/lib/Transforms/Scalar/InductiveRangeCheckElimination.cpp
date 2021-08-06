@@ -146,7 +146,6 @@ class InductiveRangeCheck {
   const SCEV *Step = nullptr;
   const SCEV *End = nullptr;
   Use *CheckUse = nullptr;
-  bool IsSigned = true;
 
   static bool parseRangeCheckICmp(Loop *L, ICmpInst *ICI, ScalarEvolution &SE,
                                   Value *&Index, Value *&Length,
@@ -161,7 +160,6 @@ public:
   const SCEV *getBegin() const { return Begin; }
   const SCEV *getStep() const { return Step; }
   const SCEV *getEnd() const { return End; }
-  bool isSigned() const { return IsSigned; }
 
   void print(raw_ostream &OS) const {
     OS << "InductiveRangeCheck:\n";
@@ -362,7 +360,7 @@ void InductiveRangeCheck::extractRangeChecksFromCond(
     return;
 
   // TODO: Do the same for OR, XOR, NOT etc?
-  if (match(Condition, m_And(m_Value(), m_Value()))) {
+  if (match(Condition, m_LogicalAnd(m_Value(), m_Value()))) {
     extractRangeChecksFromCond(L, SE, cast<User>(Condition)->getOperandUse(0),
                                Checks, Visited);
     extractRangeChecksFromCond(L, SE, cast<User>(Condition)->getOperandUse(1),
@@ -405,7 +403,6 @@ void InductiveRangeCheck::extractRangeChecksFromCond(
   IRC.Begin = IndexAddRec->getStart();
   IRC.Step = IndexAddRec->getStepRecurrence(SE);
   IRC.CheckUse = &ConditionUse;
-  IRC.IsSigned = IsSigned;
   Checks.push_back(IRC);
 }
 
@@ -1788,8 +1785,11 @@ PreservedAnalyses IRCEPass::run(Function &F, FunctionAnalysisManager &AM) {
     }
     Changed |= CFGChanged;
 
-    if (CFGChanged && !SkipProfitabilityChecks)
-      AM.invalidate<BlockFrequencyAnalysis>(F);
+    if (CFGChanged && !SkipProfitabilityChecks) {
+      PreservedAnalyses PA = PreservedAnalyses::all();
+      PA.abandon<BlockFrequencyAnalysis>();
+      AM.invalidate(F, PA);
+    }
   }
 
   SmallPriorityWorklist<Loop *, 4> Worklist;
@@ -1803,8 +1803,11 @@ PreservedAnalyses IRCEPass::run(Function &F, FunctionAnalysisManager &AM) {
     Loop *L = Worklist.pop_back_val();
     if (IRCE.run(L, LPMAddNewLoop)) {
       Changed = true;
-      if (!SkipProfitabilityChecks)
-        AM.invalidate<BlockFrequencyAnalysis>(F);
+      if (!SkipProfitabilityChecks) {
+        PreservedAnalyses PA = PreservedAnalyses::all();
+        PA.abandon<BlockFrequencyAnalysis>();
+        AM.invalidate(F, PA);
+      }
     }
   }
 

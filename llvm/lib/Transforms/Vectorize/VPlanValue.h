@@ -35,6 +35,7 @@ class VPDef;
 class VPSlotTracker;
 class VPUser;
 class VPRecipeBase;
+class VPWidenMemoryInstructionRecipe;
 
 // This is the base class of the VPlan Def/Use graph, used for modeling the data
 // flow into, within and out of the VPlan. VPValues can stand for live-ins
@@ -43,11 +44,13 @@ class VPRecipeBase;
 class VPValue {
   friend class VPBuilder;
   friend class VPDef;
+  friend class VPInstruction;
   friend struct VPlanTransforms;
   friend class VPBasicBlock;
   friend class VPInterleavedAccessInfo;
   friend class VPSlotTracker;
   friend class VPRecipeBase;
+  friend class VPWidenMemoryInstructionRecipe;
 
   const unsigned char SubclassID; ///< Subclass identifier (for isa/dyn_cast).
 
@@ -70,10 +73,6 @@ protected:
   // for multiple underlying IRs (Polly?) by providing a new VPlan front-end,
   // back-end and analysis information for the new IR.
 
-  /// Return the underlying Value attached to this VPValue.
-  Value *getUnderlyingValue() { return UnderlyingVal; }
-  const Value *getUnderlyingValue() const { return UnderlyingVal; }
-
   // Set \p Val as the underlying Value of this VPValue.
   void setUnderlyingValue(Value *Val) {
     assert(!UnderlyingVal && "Underlying Value is already set.");
@@ -81,17 +80,28 @@ protected:
   }
 
 public:
+  /// Return the underlying Value attached to this VPValue.
+  Value *getUnderlyingValue() { return UnderlyingVal; }
+  const Value *getUnderlyingValue() const { return UnderlyingVal; }
+
   /// An enumeration for keeping track of the concrete subclass of VPValue that
   /// are actually instantiated. Values of this enumeration are kept in the
   /// SubclassID field of the VPValue objects. They are used for concrete
   /// type identification.
   enum {
     VPValueSC,
-    VPInstructionSC,
-    VPMemoryInstructionSC,
+    VPVBlendSC,
+    VPVInstructionSC,
+    VPVMemoryInstructionSC,
+    VPVPredInstPHI,
+    VPVReductionSC,
+    VPVReplicateSC,
+    VPVWidenSC,
     VPVWidenCallSC,
+    VPVWidenGEPSC,
+    VPVWidenIntOrFpIndcutionSC,
+    VPVWidenPHISC,
     VPVWidenSelectSC,
-    VPVWidenGEPSC
   };
 
   VPValue(Value *UV = nullptr, VPDef *Def = nullptr)
@@ -106,11 +116,13 @@ public:
   /// for any other purpose, as the values may change as LLVM evolves.
   unsigned getVPValueID() const { return SubclassID; }
 
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
   void printAsOperand(raw_ostream &OS, VPSlotTracker &Tracker) const;
   void print(raw_ostream &OS, VPSlotTracker &Tracker) const;
 
   /// Dump the value to stderr (for debugging).
   void dump() const;
+#endif
 
   unsigned getNumUsers() const { return Users.size(); }
   void addUser(VPUser &User) { Users.push_back(&User); }
@@ -160,6 +172,15 @@ public:
   void replaceAllUsesWith(VPValue *New);
 
   VPDef *getDef() { return Def; }
+
+  /// Returns the underlying IR value, if this VPValue is defined outside the
+  /// scope of VPlan. Returns nullptr if the VPValue is defined by a VPDef
+  /// inside a VPlan.
+  Value *getLiveInIRValue() {
+    assert(!getDef() &&
+           "VPValue is not a live-in; it is defined by a VPDef inside a VPlan");
+    return getUnderlyingValue();
+  }
 };
 
 typedef DenseMap<Value *, VPValue *> Value2VPValueTy;
@@ -170,32 +191,50 @@ raw_ostream &operator<<(raw_ostream &OS, const VPValue &V);
 /// This class augments VPValue with operands which provide the inverse def-use
 /// edges from VPValue's users to their defs.
 class VPUser {
+public:
+  /// Subclass identifier (for isa/dyn_cast).
+  enum class VPUserID {
+    Recipe,
+    // TODO: Currently VPUsers are used in VPBlockBase, but in the future the
+    // only VPUsers should either be recipes or live-outs.
+    Block
+  };
+
+private:
   SmallVector<VPValue *, 2> Operands;
 
+  VPUserID ID;
+
 protected:
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
   /// Print the operands to \p O.
   void printOperands(raw_ostream &O, VPSlotTracker &SlotTracker) const;
+#endif
+
+  VPUser(ArrayRef<VPValue *> Operands, VPUserID ID) : ID(ID) {
+    for (VPValue *Operand : Operands)
+      addOperand(Operand);
+  }
+
+  VPUser(std::initializer_list<VPValue *> Operands, VPUserID ID)
+      : VPUser(ArrayRef<VPValue *>(Operands), ID) {}
+
+  template <typename IterT>
+  VPUser(iterator_range<IterT> Operands, VPUserID ID) : ID(ID) {
+    for (VPValue *Operand : Operands)
+      addOperand(Operand);
+  }
 
 public:
-  VPUser() {}
-  VPUser(ArrayRef<VPValue *> Operands) {
-    for (VPValue *Operand : Operands)
-      addOperand(Operand);
-  }
-
-  VPUser(std::initializer_list<VPValue *> Operands)
-      : VPUser(ArrayRef<VPValue *>(Operands)) {}
-  template <typename IterT> VPUser(iterator_range<IterT> Operands) {
-    for (VPValue *Operand : Operands)
-      addOperand(Operand);
-  }
-
+  VPUser() = delete;
   VPUser(const VPUser &) = delete;
   VPUser &operator=(const VPUser &) = delete;
   virtual ~VPUser() {
     for (VPValue *Op : operands())
       Op->removeUser(*this);
   }
+
+  VPUserID getVPUserID() const { return ID; }
 
   void addOperand(VPValue *Operand) {
     Operands.push_back(Operand);
@@ -214,6 +253,11 @@ public:
     New->addUser(*this);
   }
 
+  void removeLastOperand() {
+    VPValue *Op = Operands.pop_back_val();
+    Op->removeUser(*this);
+  }
+
   typedef SmallVectorImpl<VPValue *>::iterator operand_iterator;
   typedef SmallVectorImpl<VPValue *>::const_iterator const_operand_iterator;
   typedef iterator_range<operand_iterator> operand_range;
@@ -229,7 +273,7 @@ public:
   }
 
   /// Method to support type inquiry through isa, cast, and dyn_cast.
-  static inline bool classof(const VPRecipeBase *Recipe);
+  static inline bool classof(const VPDef *Recipe);
 };
 
 /// This class augments a recipe with a set of VPValues defined by the recipe.
@@ -239,6 +283,9 @@ public:
 /// from VPDef before VPValue.
 class VPDef {
   friend class VPValue;
+
+  /// Subclass identifier (for isa/dyn_cast).
+  const unsigned char SubclassID;
 
   /// The VPValues defined by this VPDef.
   TinyPtrVector<VPValue *> DefinedValues;
@@ -255,13 +302,37 @@ class VPDef {
   void removeDefinedValue(VPValue *V) {
     assert(V->getDef() == this &&
            "can only remove VPValue linked with this VPDef");
-    assert(find(DefinedValues, V) != DefinedValues.end() &&
+    assert(is_contained(DefinedValues, V) &&
            "VPValue to remove must be in DefinedValues");
     erase_value(DefinedValues, V);
     V->Def = nullptr;
   }
 
 public:
+  /// An enumeration for keeping track of the concrete subclass of VPRecipeBase
+  /// that is actually instantiated. Values of this enumeration are kept in the
+  /// SubclassID field of the VPRecipeBase objects. They are used for concrete
+  /// type identification.
+  using VPRecipeTy = enum {
+    VPBlendSC,
+    VPBranchOnMaskSC,
+    VPInstructionSC,
+    VPInterleaveSC,
+    VPPredInstPHISC,
+    VPReductionSC,
+    VPReplicateSC,
+    VPWidenCallSC,
+    VPWidenCanonicalIVSC,
+    VPWidenGEPSC,
+    VPWidenIntOrFpInductionSC,
+    VPWidenMemoryInstructionSC,
+    VPWidenPHISC,
+    VPWidenSC,
+    VPWidenSelectSC
+  };
+
+  VPDef(const unsigned char SC) : SubclassID(SC) {}
+
   virtual ~VPDef() {
     for (VPValue *D : make_early_inc_range(DefinedValues)) {
       assert(D->Def == this &&
@@ -273,8 +344,21 @@ public:
     }
   }
 
+  /// Returns the only VPValue defined by the VPDef. Can only be called for
+  /// VPDefs with a single defined value.
+  VPValue *getVPSingleValue() {
+    assert(DefinedValues.size() == 1 && "must have exactly one defined value");
+    assert(DefinedValues[0] && "defined value must be non-null");
+    return DefinedValues[0];
+  }
+  const VPValue *getVPSingleValue() const {
+    assert(DefinedValues.size() == 1 && "must have exactly one defined value");
+    assert(DefinedValues[0] && "defined value must be non-null");
+    return DefinedValues[0];
+  }
+
   /// Returns the VPValue with index \p I defined by the VPDef.
-  VPValue *getVPValue(unsigned I = 0) {
+  VPValue *getVPValue(unsigned I) {
     assert(DefinedValues[I] && "defined value must be non-null");
     return DefinedValues[I];
   }
@@ -285,9 +369,25 @@ public:
 
   /// Returns an ArrayRef of the values defined by the VPDef.
   ArrayRef<VPValue *> definedValues() { return DefinedValues; }
+  /// Returns an ArrayRef of the values defined by the VPDef.
+  ArrayRef<VPValue *> definedValues() const { return DefinedValues; }
 
   /// Returns the number of values defined by the VPDef.
   unsigned getNumDefinedValues() const { return DefinedValues.size(); }
+
+  /// \return an ID for the concrete type of this object.
+  /// This is used to implement the classof checks. This should not be used
+  /// for any other purpose, as the values may change as LLVM evolves.
+  unsigned getVPDefID() const { return SubclassID; }
+
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+  /// Dump the VPDef to stderr (for debugging).
+  void dump() const;
+
+  /// Each concrete VPDef prints itself.
+  virtual void print(raw_ostream &O, const Twine &Indent,
+                     VPSlotTracker &SlotTracker) const = 0;
+#endif
 };
 
 class VPlan;
@@ -301,15 +401,11 @@ class VPSlotTracker {
   DenseMap<const VPValue *, unsigned> Slots;
   unsigned NextSlot = 0;
 
-  void assignSlots(const VPBlockBase *VPBB);
-  void assignSlots(const VPRegionBlock *Region);
-  void assignSlots(const VPBasicBlock *VPBB);
   void assignSlot(const VPValue *V);
-
   void assignSlots(const VPlan &Plan);
 
 public:
-  VPSlotTracker(const VPlan *Plan) {
+  VPSlotTracker(const VPlan *Plan = nullptr) {
     if (Plan)
       assignSlots(*Plan);
   }

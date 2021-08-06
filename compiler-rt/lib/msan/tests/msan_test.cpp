@@ -33,6 +33,10 @@ int shmdt(const void *);
 }
 #endif
 
+#if defined(__linux__) && !defined(__GLIBC__) && !defined(__ANDROID__)
+#define MUSL 1
+#endif
+
 #include <inttypes.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -972,8 +976,8 @@ std::vector<int> GetAvailableIpSocketFamilies() {
   return result;
 }
 
-INSTANTIATE_TEST_CASE_P(IpTests, MemorySanitizerIpTest,
-                        ::testing::ValuesIn(GetAvailableIpSocketFamilies()));
+INSTANTIATE_TEST_SUITE_P(IpTests, MemorySanitizerIpTest,
+                         ::testing::ValuesIn(GetAvailableIpSocketFamilies()));
 
 TEST_P(MemorySanitizerIpTest, accept) {
   int listen_socket = CreateSocket(SOCK_STREAM);
@@ -1162,7 +1166,7 @@ TEST(MemorySanitizer, gethostbyaddr) {
   EXPECT_HOSTENT_NOT_POISONED(he);
 }
 
-#if !defined(__NetBSD__)
+#if defined(__GLIBC__) || defined(__FreeBSD__)
 TEST(MemorySanitizer, gethostent_r) {
   sethostent(0);
   char buf[2000];
@@ -1342,7 +1346,7 @@ TEST(MemorySanitizer, shmat) {
   ASSERT_GT(res, -1);
 }
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+#ifdef __GLIBC__
 TEST(MemorySanitizer, random_r) {
   int32_t x;
   char z[64];
@@ -1422,7 +1426,7 @@ TEST(MemorySanitizer, realpath_null) {
   free(res);
 }
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+#ifdef __GLIBC__
 TEST(MemorySanitizer, canonicalize_file_name) {
   const char* relpath = ".";
   char* res = canonicalize_file_name(relpath);
@@ -1798,12 +1802,15 @@ TEST_STRTO_INT(strtol, char, )
 TEST_STRTO_INT(strtoll, char, )
 TEST_STRTO_INT(strtoul, char, )
 TEST_STRTO_INT(strtoull, char, )
+#ifndef MUSL
 TEST_STRTO_INT(strtouq, char, )
+#endif
 
 TEST_STRTO_FLOAT(strtof, char, )
 TEST_STRTO_FLOAT(strtod, char, )
 TEST_STRTO_FLOAT(strtold, char, )
 
+#ifndef MUSL
 TEST_STRTO_FLOAT_LOC(strtof_l, char, )
 TEST_STRTO_FLOAT_LOC(strtod_l, char, )
 TEST_STRTO_FLOAT_LOC(strtold_l, char, )
@@ -1812,6 +1819,7 @@ TEST_STRTO_INT_LOC(strtol_l, char, )
 TEST_STRTO_INT_LOC(strtoll_l, char, )
 TEST_STRTO_INT_LOC(strtoul_l, char, )
 TEST_STRTO_INT_LOC(strtoull_l, char, )
+#endif
 
 TEST_STRTO_INT(wcstol, wchar_t, L)
 TEST_STRTO_INT(wcstoll, wchar_t, L)
@@ -1822,6 +1830,7 @@ TEST_STRTO_FLOAT(wcstof, wchar_t, L)
 TEST_STRTO_FLOAT(wcstod, wchar_t, L)
 TEST_STRTO_FLOAT(wcstold, wchar_t, L)
 
+#ifndef MUSL
 TEST_STRTO_FLOAT_LOC(wcstof_l, wchar_t, L)
 TEST_STRTO_FLOAT_LOC(wcstod_l, wchar_t, L)
 TEST_STRTO_FLOAT_LOC(wcstold_l, wchar_t, L)
@@ -1830,6 +1839,7 @@ TEST_STRTO_INT_LOC(wcstol_l, wchar_t, L)
 TEST_STRTO_INT_LOC(wcstoll_l, wchar_t, L)
 TEST_STRTO_INT_LOC(wcstoul_l, wchar_t, L)
 TEST_STRTO_INT_LOC(wcstoull_l, wchar_t, L)
+#endif
 
 
 TEST(MemorySanitizer, strtoimax) {
@@ -1973,7 +1983,7 @@ TEST(MemorySanitizer, lgammal_r) {
 }
 #endif
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+#ifdef __GLIBC__
 TEST(MemorySanitizer, drand48_r) {
   struct drand48_data buf;
   srand48_r(0, &buf);
@@ -1981,9 +1991,7 @@ TEST(MemorySanitizer, drand48_r) {
   drand48_r(&buf, &d);
   EXPECT_NOT_POISONED(d);
 }
-#endif
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
 TEST(MemorySanitizer, lrand48_r) {
   struct drand48_data buf;
   srand48_r(0, &buf);
@@ -2334,7 +2342,7 @@ TEST(MemorySanitizer, getmntent) {
 }
 #endif
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+#ifdef __GLIBC__
 TEST(MemorySanitizer, getmntent_r) {
   TempFstabFile fstabtmp;
   ASSERT_TRUE(fstabtmp.Create());
@@ -3096,7 +3104,7 @@ static void GetProgramPath(char *buf, size_t sz) {
   int res = sysctl(mib, 4, buf, &sz, NULL, 0);
   ASSERT_EQ(0, res);
 }
-#elif defined(__GLIBC__)
+#elif defined(__GLIBC__) || defined(MUSL)
 static void GetProgramPath(char *buf, size_t sz) {
   extern char *program_invocation_name;
   int res = snprintf(buf, sz, "%s", program_invocation_name);
@@ -3370,7 +3378,7 @@ TEST(MemorySanitizer, pthread_attr_get) {
     EXPECT_NOT_POISONED(v);
     EXPECT_NOT_POISONED(w);
   }
-#if !defined(__NetBSD__)
+#ifdef __GLIBC__
   {
     cpu_set_t v;
     res = pthread_attr_getaffinity_np(&attr, sizeof(v), &v);
@@ -3484,7 +3492,7 @@ TEST(MemorySanitizer, valloc) {
   free(a);
 }
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+#ifdef __GLIBC__
 TEST(MemorySanitizer, pvalloc) {
   uintptr_t PageSize = GetPageSize();
   void *p = pvalloc(PageSize + 100);
@@ -3600,8 +3608,7 @@ TEST(MemorySanitizer, getpwnam_r_positive) {
   strncpy(s, "abcd", 5);
   __msan_poison(s, 5);
   char buf[10000];
-  int res;
-  EXPECT_UMR(res = getpwnam_r(s, &pwd, buf, sizeof(buf), &pwdres));
+  EXPECT_UMR(getpwnam_r(s, &pwd, buf, sizeof(buf), &pwdres));
 }
 
 TEST(MemorySanitizer, getgrnam_r) {
@@ -3629,6 +3636,7 @@ TEST(MemorySanitizer, getpwent) {
   EXPECT_NOT_POISONED(p->pw_uid);
 }
 
+#ifndef MUSL
 TEST(MemorySanitizer, getpwent_r) {
   struct passwd pwd;
   struct passwd *pwdres;
@@ -3642,8 +3650,9 @@ TEST(MemorySanitizer, getpwent_r) {
   EXPECT_NOT_POISONED(pwd.pw_uid);
   EXPECT_NOT_POISONED(pwdres);
 }
+#endif
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+#ifdef __GLIBC__
 TEST(MemorySanitizer, fgetpwent) {
   FILE *fp = fopen("/etc/passwd", "r");
   struct passwd *p = fgetpwent(fp);
@@ -3666,7 +3675,7 @@ TEST(MemorySanitizer, getgrent) {
   EXPECT_NOT_POISONED(p->gr_gid);
 }
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+#ifdef __GLIBC__
 TEST(MemorySanitizer, fgetgrent) {
   FILE *fp = fopen("/etc/group", "r");
   struct group *grp = fgetgrent(fp);
@@ -3683,6 +3692,7 @@ TEST(MemorySanitizer, fgetgrent) {
 }
 #endif
 
+#if defined(__GLIBC__) || defined(__FreeBSD__)
 TEST(MemorySanitizer, getgrent_r) {
   struct group grp;
   struct group *grpres;
@@ -3696,8 +3706,9 @@ TEST(MemorySanitizer, getgrent_r) {
   EXPECT_NOT_POISONED(grp.gr_gid);
   EXPECT_NOT_POISONED(grpres);
 }
+#endif
 
-#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+#ifdef __GLIBC__
 TEST(MemorySanitizer, fgetgrent_r) {
   FILE *fp = fopen("/etc/group", "r");
   struct group grp;
@@ -4821,7 +4832,7 @@ TEST(MemorySanitizer, throw_catch) {
     // __gxx_personality_v0 is instrumented, libgcc_s is not; as a result,
     // __msan_param_tls is not updated and __gxx_personality_v0 can find
     // leftover poison from the previous call.
-    // A suppression in msan_blacklist.txt makes it work.
+    // A suppression in msan_ignorelist.txt makes it work.
     throw_stuff();
   } catch (const int &e) {
     // pass

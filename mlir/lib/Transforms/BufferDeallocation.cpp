@@ -7,16 +7,15 @@
 //===----------------------------------------------------------------------===//
 //
 // This file implements logic for computing correct alloc and dealloc positions.
-// Furthermore, buffer placement also adds required new alloc and copy
-// operations to ensure that all buffers are deallocated. The main class is the
+// Furthermore, buffer deallocation also adds required new clone operations to
+// ensure that all buffers are deallocated. The main class is the
 // BufferDeallocationPass class that implements the underlying algorithm. In
 // order to put allocations and deallocations at safe positions, it is
 // significantly important to put them into the correct blocks. However, the
 // liveness analysis does not pay attention to aliases, which can occur due to
 // branches (and their associated block arguments) in general. For this purpose,
 // BufferDeallocation firstly finds all possible aliases for a single value
-// (using the BufferAliasAnalysis class). Consider the following
-// example:
+// (using the BufferViewFlowAnalysis class). Consider the following example:
 //
 // ^bb0(%arg0):
 //   cond_br %cond, ^bb1, ^bb2
@@ -30,16 +29,16 @@
 //
 // We should place the dealloc for %new_value in exit. However, we have to free
 // the buffer in the same block, because it cannot be freed in the post
-// dominator. However, this requires a new copy buffer for %arg1 that will
-// contain the actual contents. Using the class BufferAliasAnalysis, we
+// dominator. However, this requires a new clone buffer for %arg1 that will
+// contain the actual contents. Using the class BufferViewFlowAnalysis, we
 // will find out that %new_value has a potential alias %arg1. In order to find
 // the dealloc position we have to find all potential aliases, iterate over
 // their uses and find the common post-dominator block (note that additional
-// copies and buffers remove potential aliases and will influence the placement
+// clones and buffers remove potential aliases and will influence the placement
 // of the deallocs). In all cases, the computed block can be safely used to free
 // the %new_value buffer (may be exit or bb2) as it will die and we can use
 // liveness information to determine the exact operation after which we have to
-// insert the dealloc. However, the algorithm supports introducing copy buffers
+// insert the dealloc. However, the algorithm supports introducing clone buffers
 // and placing deallocs in safe locations to ensure that all buffers will be
 // freed in the end.
 //
@@ -52,13 +51,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "PassDetail.h"
-#include "mlir/Dialect/Linalg/IR/LinalgOps.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/Interfaces/ControlFlowInterfaces.h"
 #include "mlir/Interfaces/LoopLikeInterface.h"
 #include "mlir/Pass/Pass.h"
-#include "mlir/Transforms/Bufferize.h"
+#include "mlir/Transforms/BufferUtils.h"
 #include "mlir/Transforms/Passes.h"
 #include "llvm/ADT/SetOperations.h"
 
@@ -75,153 +74,29 @@ static void walkReturnOperations(Region *region, const FuncT &func) {
     }
 }
 
-/// Wrapper for the actual `RegionBranchOpInterface.getSuccessorRegions`
-/// function that initializes the required `operandAttributes` array.
-static void getSuccessorRegions(RegionBranchOpInterface regionInterface,
-                                llvm::Optional<unsigned> index,
-                                SmallVectorImpl<RegionSuccessor> &successors) {
-  // Create a list of null attributes for each operand to comply with the
-  // `getSuccessorRegions` interface definition that requires a single
-  // attribute per operand.
-  SmallVector<Attribute, 2> operandAttributes(
-      regionInterface.getOperation()->getNumOperands());
-
-  // Get all successor regions using the temporarily allocated
-  // `operandAttributes`.
-  regionInterface.getSuccessorRegions(index, operandAttributes, successors);
-}
-
-//===----------------------------------------------------------------------===//
-// BufferPlacementAllocs
-//===----------------------------------------------------------------------===//
-
-/// Get the start operation to place the given alloc value withing the
-// specified placement block.
-Operation *BufferPlacementAllocs::getStartOperation(Value allocValue,
-                                                    Block *placementBlock,
-                                                    const Liveness &liveness) {
-  // We have to ensure that we place the alloc before its first use in this
-  // block.
-  const LivenessBlockInfo &livenessInfo = *liveness.getLiveness(placementBlock);
-  Operation *startOperation = livenessInfo.getStartOperation(allocValue);
-  // Check whether the start operation lies in the desired placement block.
-  // If not, we will use the terminator as this is the last operation in
-  // this block.
-  if (startOperation->getBlock() != placementBlock) {
-    Operation *opInPlacementBlock =
-        placementBlock->findAncestorOpInBlock(*startOperation);
-    startOperation = opInPlacementBlock ? opInPlacementBlock
-                                        : placementBlock->getTerminator();
-  }
-
-  return startOperation;
-}
-
-/// Finds associated deallocs that can be linked to our allocation nodes (if
-/// any).
-Operation *BufferPlacementAllocs::findDealloc(Value allocValue) {
-  auto userIt = llvm::find_if(allocValue.getUsers(), [&](Operation *user) {
-    auto effectInterface = dyn_cast<MemoryEffectOpInterface>(user);
-    if (!effectInterface)
-      return false;
-    // Try to find a free effect that is applied to one of our values
-    // that will be automatically freed by our pass.
-    SmallVector<MemoryEffects::EffectInstance, 2> effects;
-    effectInterface.getEffectsOnValue(allocValue, effects);
-    return llvm::any_of(effects, [&](MemoryEffects::EffectInstance &it) {
-      return isa<MemoryEffects::Free>(it.getEffect());
-    });
+/// Checks if all operations in a given region have at least one attached region
+/// that implements the RegionBranchOpInterface. This is not required in edge
+/// cases, where we have a single attached region and the parent operation has
+/// no results.
+static bool validateSupportedControlFlow(Region &region) {
+  bool success = true;
+  region.walk([&success](Operation *operation) {
+    auto regions = operation->getRegions();
+    // Walk over all operations in a region and check if the operation has at
+    // least one region and implements the RegionBranchOpInterface. If there
+    // is an operation that does not fulfill this condition, we cannot apply
+    // the deallocation steps. Furthermore, we accept cases, where we have a
+    // region that returns no results, since, in that case, the intra-region
+    // control flow does not affect the transformation.
+    size_t size = regions.size();
+    if (((size == 1 && !operation->getResults().empty()) || size > 1) &&
+        !dyn_cast<RegionBranchOpInterface>(operation)) {
+      operation->emitError("All operations with attached regions need to "
+                           "implement the RegionBranchOpInterface.");
+      success = false;
+    }
   });
-  // Assign the associated dealloc operation (if any).
-  return userIt != allocValue.user_end() ? *userIt : nullptr;
-}
-
-/// Initializes the internal list by discovering all supported allocation
-/// nodes.
-BufferPlacementAllocs::BufferPlacementAllocs(Operation *op) { build(op); }
-
-/// Searches for and registers all supported allocation entries.
-void BufferPlacementAllocs::build(Operation *op) {
-  op->walk([&](MemoryEffectOpInterface opInterface) {
-    // Try to find a single allocation result.
-    SmallVector<MemoryEffects::EffectInstance, 2> effects;
-    opInterface.getEffects(effects);
-
-    SmallVector<MemoryEffects::EffectInstance, 2> allocateResultEffects;
-    llvm::copy_if(
-        effects, std::back_inserter(allocateResultEffects),
-        [=](MemoryEffects::EffectInstance &it) {
-          Value value = it.getValue();
-          return isa<MemoryEffects::Allocate>(it.getEffect()) && value &&
-                 value.isa<OpResult>() &&
-                 it.getResource() !=
-                     SideEffects::AutomaticAllocationScopeResource::get();
-        });
-    // If there is one result only, we will be able to move the allocation and
-    // (possibly existing) deallocation ops.
-    if (allocateResultEffects.size() != 1)
-      return;
-    // Get allocation result.
-    Value allocValue = allocateResultEffects[0].getValue();
-    // Find the associated dealloc value and register the allocation entry.
-    allocs.push_back(std::make_tuple(allocValue, findDealloc(allocValue)));
-  });
-}
-
-//===----------------------------------------------------------------------===//
-// BufferPlacementTransformationBase
-//===----------------------------------------------------------------------===//
-
-/// Constructs a new transformation base using the given root operation.
-BufferPlacementTransformationBase::BufferPlacementTransformationBase(
-    Operation *op)
-    : aliases(op), allocs(op), liveness(op) {}
-
-/// Returns true if the given operation represents a loop by testing whether it
-/// implements the `LoopLikeOpInterface` or the `RegionBranchOpInterface`. In
-/// the case of a `RegionBranchOpInterface`, it checks all region-based control-
-/// flow edges for cycles.
-bool BufferPlacementTransformationBase::isLoop(Operation *op) {
-  // If the operation implements the `LoopLikeOpInterface` it can be considered
-  // a loop.
-  if (isa<LoopLikeOpInterface>(op))
-    return true;
-
-  // If the operation does not implement the `RegionBranchOpInterface`, it is
-  // (currently) not possible to detect a loop.
-  RegionBranchOpInterface regionInterface;
-  if (!(regionInterface = dyn_cast<RegionBranchOpInterface>(op)))
-    return false;
-
-  // Recurses into a region using the current region interface to find potential
-  // cycles.
-  SmallPtrSet<Region *, 4> visitedRegions;
-  std::function<bool(Region *)> recurse = [&](Region *current) {
-    if (!current)
-      return false;
-    // If we have found a back edge, the parent operation induces a loop.
-    if (!visitedRegions.insert(current).second)
-      return true;
-    // Recurses into all region successors.
-    SmallVector<RegionSuccessor, 2> successors;
-    getSuccessorRegions(regionInterface, current->getRegionNumber(),
-                        successors);
-    for (RegionSuccessor &regionEntry : successors)
-      if (recurse(regionEntry.getSuccessor()))
-        return true;
-    return false;
-  };
-
-  // Start with all entry regions and test whether they induce a loop.
-  SmallVector<RegionSuccessor, 2> successorRegions;
-  getSuccessorRegions(regionInterface, /*index=*/llvm::None, successorRegions);
-  for (RegionSuccessor &regionEntry : successorRegions) {
-    if (recurse(regionEntry.getSuccessor()))
-      return true;
-    visitedRegions.clear();
-  }
-
-  return false;
+  return success;
 }
 
 namespace {
@@ -309,25 +184,25 @@ private:
 
 /// The buffer deallocation transformation which ensures that all allocs in the
 /// program have a corresponding de-allocation. As a side-effect, it might also
-/// introduce copies that in turn leads to additional allocs and de-allocations.
+/// introduce clones that in turn leads to additional deallocations.
 class BufferDeallocation : BufferPlacementTransformationBase {
 public:
   BufferDeallocation(Operation *op)
       : BufferPlacementTransformationBase(op), dominators(op),
         postDominators(op) {}
 
-  /// Performs the actual placement/creation of all temporary alloc, copy and
-  /// dealloc nodes.
+  /// Performs the actual placement/creation of all temporary clone and dealloc
+  /// nodes.
   void deallocate() {
-    // Add additional allocations and copies that are required.
-    introduceCopies();
+    // Add additional clones that are required.
+    introduceClones();
     // Place deallocations for all allocation entries.
     placeDeallocs();
   }
 
 private:
-  /// Introduces required allocs and copy operations to avoid memory leaks.
-  void introduceCopies() {
+  /// Introduces required clone operations to avoid memory leaks.
+  void introduceClones() {
     // Initialize the set of values that require a dedicated memory free
     // operation since their operands cannot be safely deallocated in a post
     // dominator.
@@ -336,7 +211,7 @@ private:
     SmallVector<std::tuple<Value, Block *>, 8> toProcess;
 
     // Check dominance relation for proper dominance properties. If the given
-    // value node does not dominate an alias, we will have to create a copy in
+    // value node does not dominate an alias, we will have to create a clone in
     // order to free all buffers that can potentially leak into a post
     // dominator.
     auto findUnsafeValues = [&](Value source, Block *definingBlock) {
@@ -377,7 +252,7 @@ private:
     // arguments at the correct locations.
     aliases.remove(valuesToFree);
 
-    // Add new allocs and additional copy operations.
+    // Add new allocs and additional clone operations.
     for (Value value : valuesToFree) {
       if (auto blockArg = value.dyn_cast<BlockArgument>())
         introduceBlockArgCopy(blockArg);
@@ -391,7 +266,7 @@ private:
     }
   }
 
-  /// Introduces temporary allocs in all predecessors and copies the source
+  /// Introduces temporary clones in all predecessors and copies the source
   /// values into the newly allocated buffers.
   void introduceBlockArgCopy(BlockArgument blockArg) {
     // Allocate a buffer for the current block argument in the block of
@@ -407,9 +282,9 @@ private:
       Value sourceValue =
           branchInterface.getSuccessorOperands(it.getSuccessorIndex())
               .getValue()[blockArg.getArgNumber()];
-      // Create a new alloc and copy at the current location of the terminator.
-      Value alloc = introduceBufferCopy(sourceValue, terminator);
-      // Wire new alloc and successor operand.
+      // Create a new clone at the current location of the terminator.
+      Value clone = introduceCloneBuffers(sourceValue, terminator);
+      // Wire new clone and successor operand.
       auto mutableOperands =
           branchInterface.getMutableSuccessorOperands(it.getSuccessorIndex());
       if (!mutableOperands.hasValue())
@@ -418,7 +293,7 @@ private:
       else
         mutableOperands.getValue()
             .slice(blockArg.getArgNumber(), 1)
-            .assign(alloc);
+            .assign(clone);
     }
 
     // Check whether the block argument has implicitly defined predecessors via
@@ -432,7 +307,7 @@ private:
         !(regionInterface = dyn_cast<RegionBranchOpInterface>(parentOp)))
       return;
 
-    introduceCopiesForRegionSuccessors(
+    introduceClonesForRegionSuccessors(
         regionInterface, argRegion->getParentOp()->getRegions(), blockArg,
         [&](RegionSuccessor &successorRegion) {
           // Find a predecessor of our argRegion.
@@ -440,11 +315,10 @@ private:
         });
 
     // Check whether the block argument belongs to an entry region of the
-    // parent operation. In this case, we have to introduce an additional copy
+    // parent operation. In this case, we have to introduce an additional clone
     // for buffer that is passed to the argument.
     SmallVector<RegionSuccessor, 2> successorRegions;
-    getSuccessorRegions(regionInterface, /*index=*/llvm::None,
-                        successorRegions);
+    regionInterface.getSuccessorRegions(/*index=*/llvm::None, successorRegions);
     auto *it =
         llvm::find_if(successorRegions, [&](RegionSuccessor &successorRegion) {
           return successorRegion.getSuccessor() == argRegion;
@@ -452,20 +326,20 @@ private:
     if (it == successorRegions.end())
       return;
 
-    // Determine the actual operand to introduce a copy for and rewire the
-    // operand to point to the copy instead.
+    // Determine the actual operand to introduce a clone for and rewire the
+    // operand to point to the clone instead.
     Value operand =
         regionInterface.getSuccessorEntryOperands(argRegion->getRegionNumber())
             [llvm::find(it->getSuccessorInputs(), blockArg).getIndex()];
-    Value copy = introduceBufferCopy(operand, parentOp);
+    Value clone = introduceCloneBuffers(operand, parentOp);
 
     auto op = llvm::find(parentOp->getOperands(), operand);
     assert(op != parentOp->getOperands().end() &&
            "parentOp does not contain operand");
-    parentOp->setOperand(op.getIndex(), copy);
+    parentOp->setOperand(op.getIndex(), clone);
   }
 
-  /// Introduces temporary allocs in front of all associated nested-region
+  /// Introduces temporary clones in front of all associated nested-region
   /// terminators and copies the source values into the newly allocated buffers.
   void introduceValueCopyForRegionResult(Value value) {
     // Get the actual result index in the scope of the parent terminator.
@@ -477,28 +351,28 @@ private:
       // its parent operation.
       return !successorRegion.getSuccessor();
     };
-    // Introduce a copy for all region "results" that are returned to the parent
-    // operation. This is required since the parent's result value has been
-    // considered critical. Therefore, the algorithm assumes that a copy of a
-    // previously allocated buffer is returned by the operation (like in the
-    // case of a block argument).
-    introduceCopiesForRegionSuccessors(regionInterface, operation->getRegions(),
+    // Introduce a clone for all region "results" that are returned to the
+    // parent operation. This is required since the parent's result value has
+    // been considered critical. Therefore, the algorithm assumes that a clone
+    // of a previously allocated buffer is returned by the operation (like in
+    // the case of a block argument).
+    introduceClonesForRegionSuccessors(regionInterface, operation->getRegions(),
                                        value, regionPredicate);
   }
 
-  /// Introduces buffer copies for all terminators in the given regions. The
+  /// Introduces buffer clones for all terminators in the given regions. The
   /// regionPredicate is applied to every successor region in order to restrict
-  /// the copies to specific regions.
+  /// the clones to specific regions.
   template <typename TPredicate>
-  void introduceCopiesForRegionSuccessors(
+  void introduceClonesForRegionSuccessors(
       RegionBranchOpInterface regionInterface, MutableArrayRef<Region> regions,
       Value argValue, const TPredicate &regionPredicate) {
     for (Region &region : regions) {
       // Query the regionInterface to get all successor regions of the current
       // one.
       SmallVector<RegionSuccessor, 2> successorRegions;
-      getSuccessorRegions(regionInterface, region.getRegionNumber(),
-                          successorRegions);
+      regionInterface.getSuccessorRegions(region.getRegionNumber(),
+                                          successorRegions);
       // Try to find a matching region successor.
       RegionSuccessor *regionSuccessor =
           llvm::find_if(successorRegions, regionPredicate);
@@ -516,54 +390,37 @@ private:
       walkReturnOperations(&region, [&](Operation *terminator) {
         // Extract the source value from the current terminator.
         Value sourceValue = terminator->getOperand(operandIndex);
-        // Create a new alloc at the current location of the terminator.
-        Value alloc = introduceBufferCopy(sourceValue, terminator);
-        // Wire alloc and terminator operand.
-        terminator->setOperand(operandIndex, alloc);
+        // Create a new clone at the current location of the terminator.
+        Value clone = introduceCloneBuffers(sourceValue, terminator);
+        // Wire clone and terminator operand.
+        terminator->setOperand(operandIndex, clone);
       });
     }
   }
 
-  /// Creates a new memory allocation for the given source value and copies
+  /// Creates a new memory allocation for the given source value and clones
   /// its content into the newly allocated buffer. The terminator operation is
-  /// used to insert the alloc and copy operations at the right places.
-  Value introduceBufferCopy(Value sourceValue, Operation *terminator) {
-    // Avoid multiple copies of the same source value. This can happen in the
+  /// used to insert the clone operation at the right place.
+  Value introduceCloneBuffers(Value sourceValue, Operation *terminator) {
+    // Avoid multiple clones of the same source value. This can happen in the
     // presence of loops when a branch acts as a backedge while also having
     // another successor that returns to its parent operation. Note: that
     // copying copied buffers can introduce memory leaks since the invariant of
-    // BufferPlacement assumes that a buffer will be only copied once into a
-    // temporary buffer. Hence, the construction of copy chains introduces
+    // BufferDeallocation assumes that a buffer will be only cloned once into a
+    // temporary buffer. Hence, the construction of clone chains introduces
     // additional allocations that are not tracked automatically by the
     // algorithm.
-    if (copiedValues.contains(sourceValue))
+    if (clonedValues.contains(sourceValue))
       return sourceValue;
-    // Create a new alloc at the current location of the terminator.
-    auto memRefType = sourceValue.getType().cast<MemRefType>();
+    // Create a new clone operation that copies the contents of the old
+    // buffer to the new one.
     OpBuilder builder(terminator);
+    auto cloneOp =
+        builder.create<memref::CloneOp>(terminator->getLoc(), sourceValue);
 
-    // Extract information about dynamically shaped types by
-    // extracting their dynamic dimensions.
-    SmallVector<Value, 4> dynamicOperands;
-    for (auto shapeElement : llvm::enumerate(memRefType.getShape())) {
-      if (!ShapedType::isDynamic(shapeElement.value()))
-        continue;
-      dynamicOperands.push_back(builder.create<DimOp>(
-          terminator->getLoc(), sourceValue, shapeElement.index()));
-    }
-
-    // TODO: provide a generic interface to create dialect-specific
-    // Alloc and CopyOp nodes.
-    auto alloc = builder.create<AllocOp>(terminator->getLoc(), memRefType,
-                                         dynamicOperands);
-
-    // Create a new copy operation that copies to contents of the old
-    // allocation to the new one.
-    builder.create<linalg::CopyOp>(terminator->getLoc(), sourceValue, alloc);
-
-    // Remember the copy of original source value.
-    copiedValues.insert(alloc);
-    return alloc;
+    // Remember the clone of original source value.
+    clonedValues.insert(cloneOp);
+    return cloneOp;
   }
 
   /// Finds correct dealloc positions according to the algorithm described at
@@ -628,7 +485,7 @@ private:
           continue;
         // If there is no dealloc node, insert one in the right place.
         OpBuilder builder(nextOp);
-        builder.create<DeallocOp>(alloc.getLoc(), alloc);
+        builder.create<memref::DeallocOp>(alloc.getLoc(), alloc);
       }
     }
   }
@@ -641,8 +498,8 @@ private:
   /// position.
   PostDominanceInfo postDominators;
 
-  /// Stores already copied allocations to avoid additional copies of copies.
-  ValueSetT copiedValues;
+  /// Stores already cloned buffers to avoid additional clones of clones.
+  ValueSetT clonedValues;
 };
 
 //===----------------------------------------------------------------------===//
@@ -650,8 +507,8 @@ private:
 //===----------------------------------------------------------------------===//
 
 /// The actual buffer deallocation pass that inserts and moves dealloc nodes
-/// into the right positions. Furthermore, it inserts additional allocs and
-/// copies if necessary. It uses the algorithm described at the top of the file.
+/// into the right positions. Furthermore, it inserts additional clones if
+/// necessary. It uses the algorithm described at the top of the file.
 struct BufferDeallocationPass : BufferDeallocationBase<BufferDeallocationPass> {
 
   void runOnFunction() override {
@@ -660,10 +517,15 @@ struct BufferDeallocationPass : BufferDeallocationBase<BufferDeallocationPass> {
     if (backedges.size()) {
       getFunction().emitError(
           "Structured control-flow loops are supported only.");
-      return;
+      return signalPassFailure();
     }
 
-    // Place all required temporary alloc, copy and dealloc nodes.
+    // Check that the control flow structures are supported.
+    if (!validateSupportedControlFlow(getFunction().getRegion())) {
+      return signalPassFailure();
+    }
+
+    // Place all required temporary clone and dealloc nodes.
     BufferDeallocation deallocation(getFunction());
     deallocation.deallocate();
   }

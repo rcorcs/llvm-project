@@ -11,8 +11,8 @@
 // used to compute the "hotness" of the diagnostic message.
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_IR_OPTIMIZATIONDIAGNOSTICINFO_H
-#define LLVM_IR_OPTIMIZATIONDIAGNOSTICINFO_H
+#ifndef LLVM_ANALYSIS_OPTIMIZATIONREMARKEMITTER_H
+#define LLVM_ANALYSIS_OPTIMIZATIONREMARKEMITTER_H
 
 #include "llvm/ADT/Optional.h"
 #include "llvm/Analysis/BlockFrequencyInfo.h"
@@ -76,6 +76,9 @@ public:
     if (F->getContext().getLLVMRemarkStreamer() ||
         F->getContext().getDiagHandlerPtr()->isAnyRemarkEnabled()) {
       auto R = RemarkBuilder();
+      static_assert(
+          std::is_base_of<DiagnosticInfoOptimizationBase, decltype(R)>::value,
+          "the lambda passed to emit() must return a remark");
       emit((DiagnosticInfoOptimizationBase &)R);
     }
   }
@@ -166,4 +169,4 @@ public:
   Result run(Function &F, FunctionAnalysisManager &AM);
 };
 }
-#endif // LLVM_IR_OPTIMIZATIONDIAGNOSTICINFO_H
+#endif // LLVM_ANALYSIS_OPTIMIZATIONREMARKEMITTER_H

@@ -32,6 +32,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/InstructionCost.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/ScopedPrinter.h"
@@ -151,7 +152,7 @@ void DiagnosticInfoWithLocationBase::getLocation(StringRef &RelativePath,
   Column = Loc.getColumn();
 }
 
-const std::string DiagnosticInfoWithLocationBase::getLocationStr() const {
+std::string DiagnosticInfoWithLocationBase::getLocationStr() const {
   StringRef Filename("<unknown>");
   unsigned Line = 0;
   unsigned Column = 0;
@@ -220,6 +221,13 @@ DiagnosticInfoOptimizationBase::Argument::Argument(StringRef Key,
   EC.print(OS);
 }
 
+DiagnosticInfoOptimizationBase::Argument::Argument(StringRef Key,
+                                                   InstructionCost C)
+    : Key(std::string(Key)) {
+  raw_string_ostream OS(Val);
+  C.print(OS);
+}
+
 DiagnosticInfoOptimizationBase::Argument::Argument(StringRef Key, DebugLoc Loc)
     : Key(std::string(Key)), Loc(Loc) {
   if (Loc) {
@@ -283,6 +291,13 @@ OptimizationRemarkMissed::OptimizationRemarkMissed(const char *PassName,
                                    *Inst->getParent()->getParent(),
                                    Inst->getDebugLoc(), Inst->getParent()) {}
 
+OptimizationRemarkMissed::OptimizationRemarkMissed(const char *PassName,
+                                                   StringRef RemarkName,
+                                                   const Function *Func)
+    : DiagnosticInfoIROptimization(
+          DK_OptimizationRemarkMissed, DS_Remark, PassName, RemarkName, *Func,
+          Func->getSubprogram(), getFirstFunctionBlock(Func)) {}
+
 bool OptimizationRemarkMissed::isEnabled() const {
   const Function &Fn = getFunction();
   LLVMContext &Ctx = Fn.getContext();
@@ -311,6 +326,13 @@ OptimizationRemarkAnalysis::OptimizationRemarkAnalysis(
                                    *cast<BasicBlock>(CodeRegion)->getParent(),
                                    Loc, CodeRegion) {}
 
+OptimizationRemarkAnalysis::OptimizationRemarkAnalysis(const char *PassName,
+                                                       StringRef RemarkName,
+                                                       const Function *Func)
+    : DiagnosticInfoIROptimization(
+          DK_OptimizationRemarkAnalysis, DS_Remark, PassName, RemarkName, *Func,
+          Func->getSubprogram(), getFirstFunctionBlock(Func)) {}
+
 bool OptimizationRemarkAnalysis::isEnabled() const {
   const Function &Fn = getFunction();
   LLVMContext &Ctx = Fn.getContext();
@@ -319,6 +341,10 @@ bool OptimizationRemarkAnalysis::isEnabled() const {
 }
 
 void DiagnosticInfoMIRParser::print(DiagnosticPrinter &DP) const {
+  DP << Diagnostic;
+}
+
+void DiagnosticInfoSrcMgr::print(DiagnosticPrinter &DP) const {
   DP << Diagnostic;
 }
 

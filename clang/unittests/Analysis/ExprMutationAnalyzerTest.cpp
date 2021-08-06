@@ -53,7 +53,7 @@ StmtMatcher withEnclosingCompound(ExprMatcher Matcher) {
 bool isMutated(const SmallVectorImpl<BoundNodes> &Results, ASTUnit *AST) {
   const auto *const S = selectFirst<Stmt>("stmt", Results);
   const auto *const E = selectFirst<Expr>("expr", Results);
-  TraversalKindScope RAII(AST->getASTContext(), ast_type_traits::TK_AsIs);
+  TraversalKindScope RAII(AST->getASTContext(), TK_AsIs);
   return ExprMutationAnalyzer(*S, AST->getASTContext()).isMutated(E);
 }
 
@@ -203,9 +203,9 @@ TEST_P(AssignmentTest, AssignmentModifies) {
   }
 }
 
-INSTANTIATE_TEST_CASE_P(AllAssignmentOperators, AssignmentTest,
+INSTANTIATE_TEST_SUITE_P(AllAssignmentOperators, AssignmentTest,
                         Values("=", "+=", "-=", "*=", "/=", "%=", "&=", "|=",
-                               "^=", "<<=", ">>="), );
+                               "^=", "<<=", ">>=") );
 
 TEST(ExprMutationAnalyzerTest, AssignmentConditionalWithInheritance) {
   const auto AST = buildASTFromCode("struct Base {void nonconst(); };"
@@ -230,9 +230,9 @@ TEST_P(IncDecTest, IncDecModifies) {
   EXPECT_THAT(mutatedBy(Results, AST.get()), ElementsAre(ModExpr));
 }
 
-INSTANTIATE_TEST_CASE_P(AllIncDecOperators, IncDecTest,
+INSTANTIATE_TEST_SUITE_P(AllIncDecOperators, IncDecTest,
                         Values("++x", "--x", "x++", "x--", "++(x)", "--(x)",
-                               "(x)++", "(x)--"), );
+                               "(x)++", "(x)--") );
 
 // Section: member functions
 

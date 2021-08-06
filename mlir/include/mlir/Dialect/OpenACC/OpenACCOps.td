@@ -14,6 +14,7 @@
 #define OPENACC_OPS
 
 include "mlir/IR/OpBase.td"
+include "mlir/Dialect/OpenACC/AccCommon.td"
 
 def OpenACC_Dialect : Dialect {
   let name = "acc";
@@ -21,7 +22,7 @@ def OpenACC_Dialect : Dialect {
   let summary = "An OpenACC dialect for MLIR.";
 
   let description = [{
-    This dialect models the construct from the OpenACC 3.0 directive language.
+    This dialect models the construct from the OpenACC 3.1 directive language.
   }];
 
   let cppNamespace = "::mlir::acc";
@@ -62,15 +63,6 @@ def OpenACC_ReductionOpAttr : StrEnumAttr<"ReductionOpAttr",
 
 // Type used in operation below.
 def IntOrIndex : AnyTypeOf<[AnyInteger, Index]>;
-
-// Parallel and data op default enumeration
-def OpenACC_DefaultNone : StrEnumAttrCase<"none">;
-def OpenACC_DefaultPresent : StrEnumAttrCase<"present">;
-def OpenACC_DefaultAttr : StrEnumAttr<"DefaultAttr",
-    "default attribute values",
-    [OpenACC_DefaultNone, OpenACC_DefaultPresent]> {
-  let cppNamespace = "::mlir::acc";
-}
 
 //===----------------------------------------------------------------------===//
 // 2.5.1 parallel Construct
@@ -118,7 +110,7 @@ def OpenACC_ParallelOp : OpenACC_Op<"parallel",
                        Variadic<AnyType>:$attachOperands,
                        Variadic<AnyType>:$gangPrivateOperands,
                        Variadic<AnyType>:$gangFirstPrivateOperands,
-                       OptionalAttr<OpenACC_DefaultAttr>:$defaultAttr);
+                       OptionalAttr<DefaultValue>:$defaultAttr);
 
   let regions = (region AnyRegion:$region);
 
@@ -190,7 +182,7 @@ def OpenACC_DataOp : OpenACC_Op<"data",
                        Variadic<AnyType>:$presentOperands,
                        Variadic<AnyType>:$deviceptrOperands,
                        Variadic<AnyType>:$attachOperands,
-                       OptionalAttr<OpenACC_DefaultAttr>:$defaultAttr);
+                       OptionalAttr<DefaultValue>:$defaultAttr);
 
   let regions = (region AnyRegion:$region);
 
@@ -257,6 +249,14 @@ def OpenACC_EnterDataOp : OpenACC_Op<"enter_data", [AttrSizedOperandSegments]> {
                        Variadic<AnyType>:$createZeroOperands,
                        Variadic<AnyType>:$attachOperands);
 
+  let extraClassDeclaration = [{
+    /// The number of data operands.
+    unsigned getNumDataOperands();
+
+    /// The i-th data operand passed.
+    Value getDataOperand(unsigned i);
+  }];
+
   let assemblyFormat = [{
     ( `if` `(` $ifCond^ `)` )?
     ( `async` `(` $asyncOperand^ `:` type($asyncOperand) `)` )?
@@ -298,6 +298,14 @@ def OpenACC_ExitDataOp : OpenACC_Op<"exit_data", [AttrSizedOperandSegments]> {
                        Variadic<AnyType>:$deleteOperands,
                        Variadic<AnyType>:$detachOperands,
                        UnitAttr:$finalize);
+
+  let extraClassDeclaration = [{
+    /// The number of data operands.
+    unsigned getNumDataOperands();
+
+    /// The i-th data operand passed.
+    Value getDataOperand(unsigned i);
+  }];
 
   let assemblyFormat = [{
     ( `if` `(` $ifCond^ `)` )?
@@ -390,7 +398,7 @@ def OpenACC_YieldOp : OpenACC_Op<"yield", [Terminator,
 
   let arguments = (ins Variadic<AnyType>:$operands);
 
-  let builders = [OpBuilderDAG<(ins), [{ /* nothing to do */ }]>];
+  let builders = [OpBuilder<(ins), [{ /* nothing to do */ }]>];
 
   let verifier = ?;
 
@@ -487,6 +495,14 @@ def OpenACC_UpdateOp : OpenACC_Op<"update", [AttrSizedOperandSegments]> {
                        Variadic<AnyType>:$hostOperands,
                        Variadic<AnyType>:$deviceOperands,
                        UnitAttr:$ifPresent);
+
+  let extraClassDeclaration = [{
+    /// The number of data operands.
+    unsigned getNumDataOperands();
+
+    /// The i-th data operand passed.
+    Value getDataOperand(unsigned i);
+  }];
 
   let assemblyFormat = [{
     ( `if` `(` $ifCond^ `)` )?

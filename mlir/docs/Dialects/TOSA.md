@@ -17,14 +17,14 @@ that attempt to manage both sets of requirements.
 ## TOSA and Tensor Level Expressiveness
 
 TOSA endeavors to provide an operator set that tries to fulfil the following
-expressivenes goals at the *tensor level of abstraction* :
+expressiveness goals at the *tensor level of abstraction* :
 
 ### Complete
 
 This is driven by the top-down perspective, needing to express as much of
 multiple high level frameworks fully in TOSA, as possible. This was originally
 done from an operator frequency analysis done upon dozens of high level
-networks in different frameworks, to select the most frequently occuring ones
+networks in different frameworks, to select the most frequently occurring ones
 and establish a common set of tensor-level operators that could express them.
 
 TOSA categorizes its operator set into classes and attempts to address major
@@ -60,41 +60,6 @@ specification of the operation.
 The general basis of selection of the operator set that constitutes TOSA is
 described in the TOSA specification document  under Section 1.3 Operator
 Selection. Explanation of the thinking behind some operators is listed here:
-
-### IDENTITYN
-
-tosa.IDENTITYN is used to form a list of Operator results during
-lowering of operations such as tf.Split from a sequence of tosa.SLICE
-ops.  If there are alternate ways to express this lowering without the
-tosa.IDENTITYN op, the tosa.IDENTITYN op could be removed from TOSA.
-
-```
-Value lower_split_op(Value %value, size_t axis, size_t
-num_split) { Value %output[]
-
-    size_t slice_size = %value.shape[axis] / num_split
-
-    for (int i = 0; i < num_split; i++) {
-        vector <size_t> begin_vals, size_vals
-
-        for (int j = 0; j < %value.rank; j++) {
-            if (j == axis) {
-               begin_vals.push_back(slice_size * i)
-               size_vals.push_back(slice_size)
-            } else {
-               begin_vals.push_back(0)
-               size_vals.push_bac(%value.shape[j])
-            }
-
-            %output[i] = tosa.SLICE(%value) {start=begin_vals, size=size_vals} (tensor<%value.type>) -> tensor<size_vals, %value.dtype>
-        }
-
-    }
-
-    %output_list = tosa.IDENTITYN(%output) (tensor<%output:*.type>) -> tensor<%output_list:*.type>
-    return %output_list
-}
-```
 
 ### COND\_IF and WHILE\_LOOP
 

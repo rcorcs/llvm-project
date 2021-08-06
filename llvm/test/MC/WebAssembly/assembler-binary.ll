@@ -50,15 +50,7 @@ entry:
 ; CHECK-NEXT:         Field:           __linear_memory
 ; CHECK-NEXT:         Kind:            MEMORY
 ; CHECK-NEXT:         Memory:
-; CHECK-NEXT:           Initial:         0x0
-; CHECK-NEXT:       - Module:          env
-; CHECK-NEXT:         Field:           __indirect_function_table
-; CHECK-NEXT:         Kind:            TABLE
-; CHECK-NEXT:         Table:
-; CHECK-NEXT:           Index:           0
-; CHECK-NEXT:           ElemType:        FUNCREF
-; CHECK-NEXT:           Limits:
-; CHECK-NEXT:             Initial:         0x0
+; CHECK-NEXT:           Minimum:         0x0
 ; CHECK-NEXT:       - Module:          env
 ; CHECK-NEXT:         Field:           bar
 ; CHECK-NEXT:         Kind:            FUNCTION

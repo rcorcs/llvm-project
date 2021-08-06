@@ -68,6 +68,7 @@
 // FNOSANICOVERALL-NEXT: trace-pc-guard
 // RUN: %clang --autocomplete=-ffp-contract= | FileCheck %s -check-prefix=FFPALL
 // FFPALL: fast
+// FFPALL-NEXT: fast-honor-pragmas 
 // FFPALL-NEXT: off
 // FFPALL-NEXT: on
 // RUN: %clang --autocomplete=-flto= | FileCheck %s -check-prefix=FLTOALL
@@ -75,6 +76,7 @@
 // FLTOALL-NEXT: thin
 // RUN: %clang --autocomplete=-fveclib= | FileCheck %s -check-prefix=FVECLIBALL
 // FVECLIBALL: Accelerate
+// FVECLIBALL-NEXT: Darwin_libsystem_m
 // FVECLIBALL-NEXT: libmvec
 // FVECLIBALL-NEXT: MASSV
 // FVECLIBALL-NEXT: none

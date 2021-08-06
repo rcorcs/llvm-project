@@ -744,9 +744,14 @@ public:
   ///
   /// This value is used for lazy creation of default constructors.
   bool needsImplicitDefaultConstructor() const {
-    return !data().UserDeclaredConstructor &&
-           !(data().DeclaredSpecialMembers & SMF_DefaultConstructor) &&
-           (!isLambda() || lambdaIsDefaultConstructibleAndAssignable());
+    return (!data().UserDeclaredConstructor &&
+            !(data().DeclaredSpecialMembers & SMF_DefaultConstructor) &&
+            (!isLambda() || lambdaIsDefaultConstructibleAndAssignable())) ||
+           // FIXME: Proposed fix to core wording issue: if a class inherits
+           // a default constructor and doesn't explicitly declare one, one
+           // is declared implicitly.
+           (data().HasInheritedDefaultConstructor &&
+            !(data().DeclaredSpecialMembers & SMF_DefaultConstructor));
   }
 
   /// Determine whether this class has any user-declared constructors.
@@ -1622,58 +1627,6 @@ public:
                                    CXXBasePath &Path,
                                    const CXXRecordDecl *BaseRecord);
 
-  /// Base-class lookup callback that determines whether there exists
-  /// a tag with the given name.
-  ///
-  /// This callback can be used with \c lookupInBases() to find tag members
-  /// of the given name within a C++ class hierarchy.
-  static bool FindTagMember(const CXXBaseSpecifier *Specifier,
-                            CXXBasePath &Path, DeclarationName Name);
-
-  /// Base-class lookup callback that determines whether there exists
-  /// a member with the given name.
-  ///
-  /// This callback can be used with \c lookupInBases() to find members
-  /// of the given name within a C++ class hierarchy.
-  static bool FindOrdinaryMember(const CXXBaseSpecifier *Specifier,
-                                 CXXBasePath &Path, DeclarationName Name);
-
-  /// Base-class lookup callback that determines whether there exists
-  /// a member with the given name.
-  ///
-  /// This callback can be used with \c lookupInBases() to find members
-  /// of the given name within a C++ class hierarchy, including dependent
-  /// classes.
-  static bool
-  FindOrdinaryMemberInDependentClasses(const CXXBaseSpecifier *Specifier,
-                                       CXXBasePath &Path, DeclarationName Name);
-
-  /// Base-class lookup callback that determines whether there exists
-  /// an OpenMP declare reduction member with the given name.
-  ///
-  /// This callback can be used with \c lookupInBases() to find members
-  /// of the given name within a C++ class hierarchy.
-  static bool FindOMPReductionMember(const CXXBaseSpecifier *Specifier,
-                                     CXXBasePath &Path, DeclarationName Name);
-
-  /// Base-class lookup callback that determines whether there exists
-  /// an OpenMP declare mapper member with the given name.
-  ///
-  /// This callback can be used with \c lookupInBases() to find members
-  /// of the given name within a C++ class hierarchy.
-  static bool FindOMPMapperMember(const CXXBaseSpecifier *Specifier,
-                                  CXXBasePath &Path, DeclarationName Name);
-
-  /// Base-class lookup callback that determines whether there exists
-  /// a member with the given name that can be used in a nested-name-specifier.
-  ///
-  /// This callback can be used with \c lookupInBases() to find members of
-  /// the given name within a C++ class hierarchy that can occur within
-  /// nested-name-specifiers.
-  static bool FindNestedNameSpecifierMember(const CXXBaseSpecifier *Specifier,
-                                            CXXBasePath &Path,
-                                            DeclarationName Name);
-
   /// Retrieve the final overriders for each virtual member
   /// function in the class hierarchy where this class is the
   /// most-derived class in the class hierarchy.
@@ -1682,12 +1635,20 @@ public:
   /// Get the indirect primary bases for this class.
   void getIndirectPrimaryBases(CXXIndirectPrimaryBaseSet& Bases) const;
 
+  /// Determine whether this class has a member with the given name, possibly
+  /// in a non-dependent base class.
+  ///
+  /// No check for ambiguity is performed, so this should never be used when
+  /// implementing language semantics, but it may be appropriate for warnings,
+  /// static analysis, or similar.
+  bool hasMemberName(DeclarationName N) const;
+
   /// Performs an imprecise lookup of a dependent name in this class.
   ///
   /// This function does not follow strict semantic rules and should be used
   /// only when lookup rules can be relaxed, e.g. indexing.
   std::vector<const NamedDecl *>
-  lookupDependentName(const DeclarationName &Name,
+  lookupDependentName(DeclarationName Name,
                       llvm::function_ref<bool(const NamedDecl *ND)> Filter);
 
   /// Renders and displays an inheritance diagram
@@ -1773,6 +1734,12 @@ public:
     getLambdaData().ContextDecl = ContextDecl;
     getLambdaData().HasKnownInternalLinkage = HasKnownInternalLinkage;
   }
+
+  /// Set the device side mangling number.
+  void setDeviceLambdaManglingNumber(unsigned Num) const;
+
+  /// Retrieve the device side mangling number.
+  unsigned getDeviceLambdaManglingNumber() const;
 
   /// Returns the inheritance model used for this record.
   MSInheritanceModel getMSInheritanceModel() const;
@@ -1885,15 +1852,17 @@ private:
   CXXDeductionGuideDecl(ASTContext &C, DeclContext *DC, SourceLocation StartLoc,
                         ExplicitSpecifier ES,
                         const DeclarationNameInfo &NameInfo, QualType T,
-                        TypeSourceInfo *TInfo, SourceLocation EndLocation)
+                        TypeSourceInfo *TInfo, SourceLocation EndLocation,
+                        CXXConstructorDecl *Ctor)
       : FunctionDecl(CXXDeductionGuide, C, DC, StartLoc, NameInfo, T, TInfo,
                      SC_None, false, ConstexprSpecKind::Unspecified),
-        ExplicitSpec(ES) {
+        Ctor(Ctor), ExplicitSpec(ES) {
     if (EndLocation.isValid())
       setRangeEnd(EndLocation);
     setIsCopyDeductionCandidate(false);
   }
 
+  CXXConstructorDecl *Ctor;
   ExplicitSpecifier ExplicitSpec;
   void setExplicitSpecifier(ExplicitSpecifier ES) { ExplicitSpec = ES; }
 
@@ -1904,7 +1873,8 @@ public:
   static CXXDeductionGuideDecl *
   Create(ASTContext &C, DeclContext *DC, SourceLocation StartLoc,
          ExplicitSpecifier ES, const DeclarationNameInfo &NameInfo, QualType T,
-         TypeSourceInfo *TInfo, SourceLocation EndLocation);
+         TypeSourceInfo *TInfo, SourceLocation EndLocation,
+         CXXConstructorDecl *Ctor = nullptr);
 
   static CXXDeductionGuideDecl *CreateDeserialized(ASTContext &C, unsigned ID);
 
@@ -1917,6 +1887,12 @@ public:
   /// Get the template for which this guide performs deduction.
   TemplateDecl *getDeducedTemplate() const {
     return getDeclName().getCXXDeductionGuideTemplate();
+  }
+
+  /// Get the constructor from which this deduction guide was generated, if
+  /// this is an implicit deduction guide.
+  CXXConstructorDecl *getCorrespondingConstructor() const {
+    return Ctor;
   }
 
   void setIsCopyDeductionCandidate(bool isCDC = true) {
@@ -2199,6 +2175,10 @@ class CXXCtorInitializer final {
   llvm::PointerUnion<TypeSourceInfo *, FieldDecl *, IndirectFieldDecl *>
       Initializee;
 
+  /// The argument used to initialize the base or member, which may
+  /// end up constructing an object (when multiple arguments are involved).
+  Stmt *Init;
+
   /// The source location for the field name or, for a base initializer
   /// pack expansion, the location of the ellipsis.
   ///
@@ -2206,10 +2186,6 @@ class CXXCtorInitializer final {
   /// constructor, it will still include the type's source location as the
   /// Initializee points to the CXXConstructorDecl (to allow loop detection).
   SourceLocation MemberOrEllipsisLocation;
-
-  /// The argument used to initialize the base or member, which may
-  /// end up constructing an object (when multiple arguments are involved).
-  Stmt *Init;
 
   /// Location of the left paren of the ctor-initializer.
   SourceLocation LParenLoc;
@@ -2300,7 +2276,8 @@ public:
 
   // For a pack expansion, returns the location of the ellipsis.
   SourceLocation getEllipsisLoc() const {
-    assert(isPackExpansion() && "Initializer is not a pack expansion");
+    if (!isPackExpansion())
+      return {};
     return MemberOrEllipsisLocation;
   }
 
@@ -2457,12 +2434,12 @@ class CXXConstructorDecl final
                      : ExplicitSpecKind::ResolvedFalse);
   }
 
-  enum TraillingAllocKind {
+  enum TrailingAllocKind {
     TAKInheritsConstructor = 1,
     TAKHasTailExplicit = 1 << 1,
   };
 
-  uint64_t getTraillingAllocKind() const {
+  uint64_t getTrailingAllocKind() const {
     return numTrailingObjects(OverloadToken<InheritedConstructor>()) |
            (numTrailingObjects(OverloadToken<ExplicitSpecifier>()) << 1);
   }

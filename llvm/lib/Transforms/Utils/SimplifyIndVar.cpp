@@ -99,6 +99,24 @@ namespace {
   };
 }
 
+/// Find a point in code which dominates all given instructions. We can safely
+/// assume that, whatever fact we can prove at the found point, this fact is
+/// also true for each of the given instructions.
+static Instruction *findCommonDominator(ArrayRef<Instruction *> Instructions,
+                                        DominatorTree &DT) {
+  Instruction *CommonDom = nullptr;
+  for (auto *Insn : Instructions)
+    if (!CommonDom || DT.dominates(Insn, CommonDom))
+      CommonDom = Insn;
+    else if (!DT.dominates(CommonDom, Insn))
+      // If there is no dominance relation, use common dominator.
+      CommonDom =
+          DT.findNearestCommonDominator(CommonDom->getParent(),
+                                        Insn->getParent())->getTerminator();
+  assert(CommonDom && "Common dominator not found?");
+  return CommonDom;
+}
+
 /// Fold an IV operand into its use.  This removes increments of an
 /// aligned IV when used by a instruction that ignores the low bits.
 ///
@@ -261,14 +279,14 @@ void SimplifyIndvar::eliminateIVComparison(ICmpInst *ICmp, Value *IVOperand) {
   const SCEV *S = SE->getSCEVAtScope(ICmp->getOperand(IVOperIdx), ICmpLoop);
   const SCEV *X = SE->getSCEVAtScope(ICmp->getOperand(1 - IVOperIdx), ICmpLoop);
 
-  // If the condition is always true or always false, replace it with
-  // a constant value.
-  if (SE->isKnownPredicate(Pred, S, X)) {
-    ICmp->replaceAllUsesWith(ConstantInt::getTrue(ICmp->getContext()));
-    DeadInsts.emplace_back(ICmp);
-    LLVM_DEBUG(dbgs() << "INDVARS: Eliminated comparison: " << *ICmp << '\n');
-  } else if (SE->isKnownPredicate(ICmpInst::getInversePredicate(Pred), S, X)) {
-    ICmp->replaceAllUsesWith(ConstantInt::getFalse(ICmp->getContext()));
+  // If the condition is always true or always false in the given context,
+  // replace it with a constant value.
+  SmallVector<Instruction *, 4> Users;
+  for (auto *U : ICmp->users())
+    Users.push_back(cast<Instruction>(U));
+  const Instruction *CtxI = findCommonDominator(Users, *DT);
+  if (auto Ev = SE->evaluatePredicateAt(Pred, S, X, CtxI)) {
+    ICmp->replaceAllUsesWith(ConstantInt::getBool(ICmp->getContext(), *Ev));
     DeadInsts.emplace_back(ICmp);
     LLVM_DEBUG(dbgs() << "INDVARS: Eliminated comparison: " << *ICmp << '\n');
   } else if (makeIVComparisonInvariant(ICmp, IVOperand)) {
@@ -1272,28 +1290,8 @@ Instruction *WidenIV::cloneArithmeticIVUser(WidenIV::NarrowIVDefUse DU,
     }
 
     // WideUse is "WideDef `op.wide` X" as described in the comment.
-    const SCEV *WideUse = nullptr;
-
-    switch (NarrowUse->getOpcode()) {
-    default:
-      llvm_unreachable("No other possibility!");
-
-    case Instruction::Add:
-      WideUse = SE->getAddExpr(WideLHS, WideRHS);
-      break;
-
-    case Instruction::Mul:
-      WideUse = SE->getMulExpr(WideLHS, WideRHS);
-      break;
-
-    case Instruction::UDiv:
-      WideUse = SE->getUDivExpr(WideLHS, WideRHS);
-      break;
-
-    case Instruction::Sub:
-      WideUse = SE->getMinusSCEV(WideLHS, WideRHS);
-      break;
-    }
+    const SCEV *WideUse =
+      getSCEVByOpCode(WideLHS, WideRHS, NarrowUse->getOpcode());
 
     return WideUse == WideAR;
   };
@@ -1332,14 +1330,18 @@ WidenIV::ExtendKind WidenIV::getExtendKind(Instruction *I) {
 
 const SCEV *WidenIV::getSCEVByOpCode(const SCEV *LHS, const SCEV *RHS,
                                      unsigned OpCode) const {
-  if (OpCode == Instruction::Add)
+  switch (OpCode) {
+  case Instruction::Add:
     return SE->getAddExpr(LHS, RHS);
-  if (OpCode == Instruction::Sub)
+  case Instruction::Sub:
     return SE->getMinusSCEV(LHS, RHS);
-  if (OpCode == Instruction::Mul)
+  case Instruction::Mul:
     return SE->getMulExpr(LHS, RHS);
-
-  llvm_unreachable("Unsupported opcode.");
+  case Instruction::UDiv:
+    return SE->getUDivExpr(LHS, RHS);
+  default:
+    llvm_unreachable("Unsupported opcode.");
+  };
 }
 
 /// No-wrap operations can transfer sign extension of their result to their
@@ -1541,17 +1543,44 @@ bool WidenIV::widenWithVariantUse(WidenIV::NarrowIVDefUse DU) {
   bool CanZeroExtend = ExtKind == ZeroExtended && OBO->hasNoUnsignedWrap();
   auto AnotherOpExtKind = ExtKind;
 
-  // Check that all uses are either s/zext, or narrow def (in case of we are
-  // widening the IV increment).
+  // Check that all uses are either:
+  // - narrow def (in case of we are widening the IV increment);
+  // - single-input LCSSA Phis;
+  // - comparison of the chosen type;
+  // - extend of the chosen type (raison d'etre).
   SmallVector<Instruction *, 4> ExtUsers;
+  SmallVector<PHINode *, 4> LCSSAPhiUsers;
+  SmallVector<ICmpInst *, 4> ICmpUsers;
   for (Use &U : NarrowUse->uses()) {
-    if (U.getUser() == NarrowDef)
+    Instruction *User = cast<Instruction>(U.getUser());
+    if (User == NarrowDef)
       continue;
-    Instruction *User = nullptr;
+    if (!L->contains(User)) {
+      auto *LCSSAPhi = cast<PHINode>(User);
+      // Make sure there is only 1 input, so that we don't have to split
+      // critical edges.
+      if (LCSSAPhi->getNumOperands() != 1)
+        return false;
+      LCSSAPhiUsers.push_back(LCSSAPhi);
+      continue;
+    }
+    if (auto *ICmp = dyn_cast<ICmpInst>(User)) {
+      auto Pred = ICmp->getPredicate();
+      // We have 3 types of predicates: signed, unsigned and equality
+      // predicates. For equality, it's legal to widen icmp for either sign and
+      // zero extend. For sign extend, we can also do so for signed predicates,
+      // likeweise for zero extend we can widen icmp for unsigned predicates.
+      if (ExtKind == ZeroExtended && ICmpInst::isSigned(Pred))
+        return false;
+      if (ExtKind == SignExtended && ICmpInst::isUnsigned(Pred))
+        return false;
+      ICmpUsers.push_back(ICmp);
+      continue;
+    }
     if (ExtKind == SignExtended)
-      User = dyn_cast<SExtInst>(U.getUser());
+      User = dyn_cast<SExtInst>(User);
     else
-      User = dyn_cast<ZExtInst>(U.getUser());
+      User = dyn_cast<ZExtInst>(User);
     if (!User || User->getType() != WideType)
       return false;
     ExtUsers.push_back(User);
@@ -1560,6 +1589,11 @@ bool WidenIV::widenWithVariantUse(WidenIV::NarrowIVDefUse DU) {
     DeadInsts.emplace_back(NarrowUse);
     return true;
   }
+
+  // We'll prove some facts that should be true in the context of ext users. If
+  // there is no users, we are done now. If there are some, pick their common
+  // dominator as context.
+  const Instruction *CtxI = findCommonDominator(ExtUsers, *DT);
 
   if (!CanSignExtend && !CanZeroExtend) {
     // Because InstCombine turns 'sub nuw' to 'add' losing the no-wrap flag, we
@@ -1570,10 +1604,13 @@ bool WidenIV::widenWithVariantUse(WidenIV::NarrowIVDefUse DU) {
       return false;
     const SCEV *LHS = SE->getSCEV(OBO->getOperand(0));
     const SCEV *RHS = SE->getSCEV(OBO->getOperand(1));
+    // TODO: Support case for NarrowDef = NarrowUse->getOperand(1).
+    if (NarrowUse->getOperand(0) != NarrowDef)
+      return false;
     if (!SE->isKnownNegative(RHS))
       return false;
-    bool ProvedSubNUW = SE->isKnownPredicateAt(
-        ICmpInst::ICMP_UGE, LHS, SE->getNegativeSCEV(RHS), NarrowUse);
+    bool ProvedSubNUW = SE->isKnownPredicateAt(ICmpInst::ICMP_UGE, LHS,
+                                               SE->getNegativeSCEV(RHS), CtxI);
     if (!ProvedSubNUW)
       return false;
     // In fact, our 'add' is 'sub nuw'. We will need to widen the 2nd operand as
@@ -1615,6 +1652,41 @@ bool WidenIV::widenWithVariantUse(WidenIV::NarrowIVDefUse DU) {
     User->replaceAllUsesWith(WideBO);
     DeadInsts.emplace_back(User);
   }
+
+  for (PHINode *User : LCSSAPhiUsers) {
+    assert(User->getNumOperands() == 1 && "Checked before!");
+    Builder.SetInsertPoint(User);
+    auto *WidePN =
+        Builder.CreatePHI(WideBO->getType(), 1, User->getName() + ".wide");
+    BasicBlock *LoopExitingBlock = User->getParent()->getSinglePredecessor();
+    assert(LoopExitingBlock && L->contains(LoopExitingBlock) &&
+           "Not a LCSSA Phi?");
+    WidePN->addIncoming(WideBO, LoopExitingBlock);
+    Builder.SetInsertPoint(&*User->getParent()->getFirstInsertionPt());
+    auto *TruncPN = Builder.CreateTrunc(WidePN, User->getType());
+    User->replaceAllUsesWith(TruncPN);
+    DeadInsts.emplace_back(User);
+  }
+
+  for (ICmpInst *User : ICmpUsers) {
+    Builder.SetInsertPoint(User);
+    auto ExtendedOp = [&](Value * V)->Value * {
+      if (V == NarrowUse)
+        return WideBO;
+      if (ExtKind == ZeroExtended)
+        return Builder.CreateZExt(V, WideBO->getType());
+      else
+        return Builder.CreateSExt(V, WideBO->getType());
+    };
+    auto Pred = User->getPredicate();
+    auto *LHS = ExtendedOp(User->getOperand(0));
+    auto *RHS = ExtendedOp(User->getOperand(1));
+    auto *WideCmp =
+        Builder.CreateICmp(Pred, LHS, RHS, User->getName() + ".wide");
+    User->replaceAllUsesWith(WideCmp);
+    DeadInsts.emplace_back(User);
+  }
+
   return true;
 }
 
@@ -2012,7 +2084,7 @@ void WidenIV::calculatePostIncRanges(PHINode *OrigPhi) {
   }
 }
 
-PHINode *llvm::createWideIV(WideIVInfo &WI,
+PHINode *llvm::createWideIV(const WideIVInfo &WI,
     LoopInfo *LI, ScalarEvolution *SE, SCEVExpander &Rewriter,
     DominatorTree *DT, SmallVectorImpl<WeakTrackingVH> &DeadInsts,
     unsigned &NumElimExt, unsigned &NumWidened,

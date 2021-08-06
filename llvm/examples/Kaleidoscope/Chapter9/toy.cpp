@@ -848,8 +848,8 @@ void DebugInfo::emitLocation(ExprAST *AST) {
     Scope = TheCU;
   else
     Scope = LexicalBlocks.back();
-  Builder->SetCurrentDebugLocation(
-      DebugLoc::get(AST->getLine(), AST->getCol(), Scope));
+  Builder->SetCurrentDebugLocation(DILocation::get(
+      Scope->getContext(), AST->getLine(), AST->getCol(), Scope));
 }
 
 static DISubroutineType *CreateFunctionType(unsigned NumArgs, DIFile *Unit) {
@@ -911,7 +911,7 @@ Value *VariableExprAST::codegen() {
 
   KSDbgInfo.emitLocation(this);
   // Load the value.
-  return Builder->CreateLoad(V, Name.c_str());
+  return Builder->CreateLoad(Type::getDoubleTy(*TheContext), V, Name.c_str());
 }
 
 Value *UnaryExprAST::codegen() {
@@ -1132,7 +1132,8 @@ Value *ForExprAST::codegen() {
 
   // Reload, increment, and restore the alloca.  This handles the case where
   // the body of the loop mutates the variable.
-  Value *CurVar = Builder->CreateLoad(Alloca, VarName.c_str());
+  Value *CurVar = Builder->CreateLoad(Type::getDoubleTy(*TheContext), Alloca,
+                                      VarName.c_str());
   Value *NextVar = Builder->CreateFAdd(CurVar, StepVal, "nextvar");
   Builder->CreateStore(NextVar, Alloca);
 
@@ -1277,7 +1278,7 @@ Function *FunctionAST::codegen() {
         true);
 
     DBuilder->insertDeclare(Alloca, D, DBuilder->createExpression(),
-                            DebugLoc::get(LineNo, 0, SP),
+                            DILocation::get(SP->getContext(), LineNo, 0, SP),
                             Builder->GetInsertBlock());
 
     // Store the initial value into the alloca.

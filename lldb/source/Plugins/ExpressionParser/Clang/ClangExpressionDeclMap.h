@@ -380,6 +380,11 @@ private:
   /// Deallocate struct variables
   void DisableStructVars() { m_struct_vars.reset(); }
 
+  TypeSystemClang *GetScratchContext(Target &target) {
+    return ScratchTypeSystemClang::GetForTarget(target,
+                                                m_ast_context->getLangOpts());
+  }
+
   /// Get this parser's ID for use in extracting parser- and JIT-specific data
   /// from persistent variables.
   uint64_t GetParserID() { return (uint64_t) this; }
@@ -603,8 +608,13 @@ private:
   ///
   /// \param[in] type
   ///     The type of the class that serves as the evaluation context.
-  void AddContextClassType(NameSearchContext &context,
-                           const TypeFromUser &type);
+  ///
+  /// \param[in] context_method
+  ///     The member function declaration in which the expression is being
+  ///     evaluated or null if the expression is not evaluated in the context
+  ///     of a member function.
+  void AddContextClassType(NameSearchContext &context, const TypeFromUser &type,
+                           clang::CXXMethodDecl *context_method = nullptr);
 
   /// Move a type out of the current ASTContext into another, but make sure to
   /// export all components of the type also.

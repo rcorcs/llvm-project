@@ -455,11 +455,13 @@ static Sema::TemplateDeductionResult DeduceNullPtrTemplateArgument(
     const NonTypeTemplateParmDecl *NTTP, QualType NullPtrType,
     TemplateDeductionInfo &Info,
     SmallVectorImpl<DeducedTemplateArgument> &Deduced) {
-  Expr *Value =
-      S.ImpCastExprToType(new (S.Context) CXXNullPtrLiteralExpr(
-                              S.Context.NullPtrTy, NTTP->getLocation()),
-                          NullPtrType, CK_NullToPointer)
-          .get();
+  Expr *Value = S.ImpCastExprToType(
+                     new (S.Context) CXXNullPtrLiteralExpr(S.Context.NullPtrTy,
+                                                           NTTP->getLocation()),
+                     NullPtrType,
+                     NullPtrType->isMemberPointerType() ? CK_NullToMemberPointer
+                                                        : CK_NullToPointer)
+                    .get();
   return DeduceNonTypeTemplateArgument(S, TemplateParams, NTTP,
                                        DeducedTemplateArgument(Value),
                                        Value->getType(), Info, Deduced);
@@ -656,23 +658,6 @@ static TemplateParameter makeTemplateParameter(Decl *D) {
     return TemplateParameter(NTTP);
 
   return TemplateParameter(cast<TemplateTemplateParmDecl>(D));
-}
-
-/// If \p Param is an expanded parameter pack, get the number of expansions.
-static Optional<unsigned> getExpandedPackSize(NamedDecl *Param) {
-  if (auto *TTP = dyn_cast<TemplateTypeParmDecl>(Param))
-    if (TTP->isExpandedParameterPack())
-      return TTP->getNumExpansionParameters();
-
-  if (auto *NTTP = dyn_cast<NonTypeTemplateParmDecl>(Param))
-    if (NTTP->isExpandedParameterPack())
-      return NTTP->getNumExpansionTypes();
-
-  if (auto *TTP = dyn_cast<TemplateTemplateParmDecl>(Param))
-    if (TTP->isExpandedParameterPack())
-      return TTP->getNumExpansionTemplateParameters();
-
-  return None;
 }
 
 /// A pack that we're currently deducing.
@@ -3094,6 +3079,10 @@ Sema::DeduceTemplateArguments(ClassTemplatePartialSpecializationDecl *Partial,
       *this, Sema::ExpressionEvaluationContext::Unevaluated);
   SFINAETrap Trap(*this);
 
+  // This deduction has no relation to any outer instantiation we might be
+  // performing.
+  LocalInstantiationScope InstantiationScope(*this);
+
   SmallVector<DeducedTemplateArgument, 4> Deduced;
   Deduced.resize(Partial->getTemplateParameters()->size());
   if (TemplateDeductionResult Result
@@ -3141,6 +3130,10 @@ Sema::DeduceTemplateArguments(VarTemplatePartialSpecializationDecl *Partial,
   EnterExpressionEvaluationContext Unevaluated(
       *this, Sema::ExpressionEvaluationContext::Unevaluated);
   SFINAETrap Trap(*this);
+
+  // This deduction has no relation to any outer instantiation we might be
+  // performing.
+  LocalInstantiationScope InstantiationScope(*this);
 
   SmallVector<DeducedTemplateArgument, 4> Deduced;
   Deduced.resize(Partial->getTemplateParameters()->size());
@@ -3878,17 +3871,15 @@ static bool AdjustFunctionParmAndArgTypesForDeduction(
 
   if (ParamRefType) {
     // If the argument has incomplete array type, try to complete its type.
-    if (ArgType->isIncompleteArrayType()) {
-      S.completeExprArrayBound(Arg);
-      ArgType = Arg->getType();
-    }
+    if (ArgType->isIncompleteArrayType())
+      ArgType = S.getCompletedType(Arg);
 
     // C++1z [temp.deduct.call]p3:
     //   If P is a forwarding reference and the argument is an lvalue, the type
     //   "lvalue reference to A" is used in place of A for type deduction.
     if (isForwardingReference(QualType(ParamRefType, 0), FirstInnerIndex) &&
         Arg->isLValue()) {
-      if (S.getLangOpts().OpenCL)
+      if (S.getLangOpts().OpenCL  && !ArgType.hasAddressSpace())
         ArgType = S.Context.getAddrSpaceQualType(ArgType, LangAS::opencl_generic);
       ArgType = S.Context.getLValueReferenceType(ArgType);
     }
@@ -3937,7 +3928,7 @@ static bool AdjustFunctionParmAndArgTypesForDeduction(
   if (isSimpleTemplateIdType(ParamType) ||
       (isa<PointerType>(ParamType) &&
        isSimpleTemplateIdType(
-                              ParamType->getAs<PointerType>()->getPointeeType())))
+           ParamType->castAs<PointerType>()->getPointeeType())))
     TDF |= TDF_DerivedClass;
 
   return false;
@@ -4714,10 +4705,9 @@ CheckDeducedPlaceholderConstraints(Sema &S, const AutoType &Type,
     llvm::raw_string_ostream OS(Buf);
     OS << "'" << Concept->getName();
     if (TypeLoc.hasExplicitTemplateArgs()) {
-      OS << "<";
-      for (const auto &Arg : Type.getTypeConstraintArguments())
-        Arg.print(S.getPrintingPolicy(), OS);
-      OS << ">";
+      printTemplateArgumentList(
+          OS, Type.getTypeConstraintArguments(), S.getPrintingPolicy(),
+          Type.getTypeConstraintConcept()->getTemplateParameters());
     }
     OS << "'";
     OS.flush();
@@ -5483,6 +5473,9 @@ static bool isAtLeastAsSpecializedAs(Sema &S, QualType T1, QualType T2,
                                                Deduced.end());
   Sema::InstantiatingTemplate Inst(S, Info.getLocation(), P2, DeducedArgs,
                                    Info);
+  if (Inst.isInvalid())
+    return false;
+
   auto *TST1 = T1->castAs<TemplateSpecializationType>();
   bool AtLeastAsSpecialized;
   S.runWithSufficientStackSpace(Info.getLocation(), [&] {

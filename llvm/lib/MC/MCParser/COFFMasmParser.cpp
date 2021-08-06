@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/StringSwitch.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/BinaryFormat/COFF.h"
@@ -118,9 +117,7 @@ class COFFMasmParser : public MCAsmParserExtension {
     addDirectiveHandler<&COFFMasmParser::IgnoreDirective>("title");
 
     // Macro directives
-    // exitm
     // goto
-    // purge
 
     // Miscellaneous directives
     addDirectiveHandler<&COFFMasmParser::ParseDirectiveAlias>("alias");
@@ -152,9 +149,6 @@ class COFFMasmParser : public MCAsmParserExtension {
     addDirectiveHandler<&COFFMasmParser::IgnoreDirective>(".k3d");
     addDirectiveHandler<&COFFMasmParser::IgnoreDirective>(".mmx");
     addDirectiveHandler<&COFFMasmParser::IgnoreDirective>(".xmm");
-
-    // Repeat blocks directives
-    // goto
 
     // Scope directives
     // comm

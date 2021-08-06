@@ -40,11 +40,13 @@ namespace format {
   TYPE(ConflictAlternative)                                                    \
   TYPE(ConflictEnd)                                                            \
   TYPE(ConflictStart)                                                          \
+  TYPE(ConstraintJunctions)                                                    \
   TYPE(CtorInitializerColon)                                                   \
   TYPE(CtorInitializerComma)                                                   \
   TYPE(DesignatedInitializerLSquare)                                           \
   TYPE(DesignatedInitializerPeriod)                                            \
   TYPE(DictLiteral)                                                            \
+  TYPE(FatArrow)                                                               \
   TYPE(ForEachMacro)                                                           \
   TYPE(FunctionAnnotationRParen)                                               \
   TYPE(FunctionDeclarationName)                                                \
@@ -60,17 +62,12 @@ namespace format {
   TYPE(JsComputedPropertyName)                                                 \
   TYPE(JsExponentiation)                                                       \
   TYPE(JsExponentiationEqual)                                                  \
-  TYPE(JsFatArrow)                                                             \
-  TYPE(JsNonNullAssertion)                                                     \
-  TYPE(JsNullishCoalescingOperator)                                            \
-  TYPE(JsNullPropagatingOperator)                                              \
+  TYPE(JsPipePipeEqual)                                                        \
   TYPE(JsPrivateIdentifier)                                                    \
   TYPE(JsTypeColon)                                                            \
   TYPE(JsTypeOperator)                                                         \
   TYPE(JsTypeOptionalQuestion)                                                 \
   TYPE(JsAndAndEqual)                                                          \
-  TYPE(JsPipePipeEqual)                                                        \
-  TYPE(JsNullishCoalescingEqual)                                               \
   TYPE(LambdaArrow)                                                            \
   TYPE(LambdaLBrace)                                                           \
   TYPE(LambdaLSquare)                                                          \
@@ -79,6 +76,10 @@ namespace format {
   TYPE(MacroBlockBegin)                                                        \
   TYPE(MacroBlockEnd)                                                          \
   TYPE(NamespaceMacro)                                                         \
+  TYPE(NonNullAssertion)                                                       \
+  TYPE(NullCoalescingEqual)                                                    \
+  TYPE(NullCoalescingOperator)                                                 \
+  TYPE(NullPropagatingOperator)                                                \
   TYPE(ObjCBlockLBrace)                                                        \
   TYPE(ObjCBlockLParen)                                                        \
   TYPE(ObjCDecl)                                                               \
@@ -95,6 +96,7 @@ namespace format {
   TYPE(RegexLiteral)                                                           \
   TYPE(SelectorName)                                                           \
   TYPE(StartOfName)                                                            \
+  TYPE(StatementAttributeLikeMacro)                                            \
   TYPE(StatementMacro)                                                         \
   TYPE(StructuredBindingLSquare)                                               \
   TYPE(TemplateCloser)                                                         \
@@ -111,8 +113,6 @@ namespace format {
   TYPE(CSharpStringLiteral)                                                    \
   TYPE(CSharpNamedArgumentColon)                                               \
   TYPE(CSharpNullable)                                                         \
-  TYPE(CSharpNullCoalescing)                                                   \
-  TYPE(CSharpNullConditional)                                                  \
   TYPE(CSharpNullConditionalLSquare)                                           \
   TYPE(CSharpGenericTypeConstraint)                                            \
   TYPE(CSharpGenericTypeConstraintColon)                                       \
@@ -590,6 +590,7 @@ public:
     case tok::kw__Atomic:
     case tok::kw___attribute:
     case tok::kw___underlying_type:
+    case tok::kw_requires:
       return true;
     default:
       return false;

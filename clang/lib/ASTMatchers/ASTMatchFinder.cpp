@@ -95,12 +95,11 @@ public:
   // matching the descendants.
   MatchChildASTVisitor(const DynTypedMatcher *Matcher, ASTMatchFinder *Finder,
                        BoundNodesTreeBuilder *Builder, int MaxDepth,
-                       TraversalKind Traversal, bool IgnoreImplicitChildren,
+                       bool IgnoreImplicitChildren,
                        ASTMatchFinder::BindKind Bind)
       : Matcher(Matcher), Finder(Finder), Builder(Builder), CurrentDepth(0),
-        MaxDepth(MaxDepth), Traversal(Traversal),
-        IgnoreImplicitChildren(IgnoreImplicitChildren), Bind(Bind),
-        Matches(false) {}
+        MaxDepth(MaxDepth), IgnoreImplicitChildren(IgnoreImplicitChildren),
+        Bind(Bind), Matches(false) {}
 
   // Returns true if a match is found in the subtree rooted at the
   // given AST node. This is done via a set of mutually recursive
@@ -167,10 +166,6 @@ public:
         StmtToTraverse =
             Finder->getASTContext().getParentMapContext().traverseIgnored(
                 ExprNode);
-    }
-    if (Traversal == TraversalKind::TK_IgnoreImplicitCastsAndParentheses) {
-      if (Expr *ExprNode = dyn_cast_or_null<Expr>(StmtNode))
-        StmtToTraverse = ExprNode->IgnoreParenImpCasts();
     }
     return StmtToTraverse;
   }
@@ -241,6 +236,33 @@ public:
     ScopedIncrement ScopedDepth(&CurrentDepth);
     return traverse(TAL);
   }
+  bool TraverseCXXForRangeStmt(CXXForRangeStmt *Node) {
+    if (!Finder->isTraversalIgnoringImplicitNodes())
+      return VisitorBase::TraverseCXXForRangeStmt(Node);
+    if (!Node)
+      return true;
+    ScopedIncrement ScopedDepth(&CurrentDepth);
+    if (auto *Init = Node->getInit())
+      if (!traverse(*Init))
+        return false;
+    if (!match(*Node->getLoopVariable()))
+      return false;
+    if (match(*Node->getRangeInit()))
+      if (!VisitorBase::TraverseStmt(Node->getRangeInit()))
+        return false;
+    if (!match(*Node->getBody()))
+      return false;
+    return VisitorBase::TraverseStmt(Node->getBody());
+  }
+  bool TraverseCXXRewrittenBinaryOperator(CXXRewrittenBinaryOperator *Node) {
+    if (!Finder->isTraversalIgnoringImplicitNodes())
+      return VisitorBase::TraverseCXXRewrittenBinaryOperator(Node);
+    if (!Node)
+      return true;
+    ScopedIncrement ScopedDepth(&CurrentDepth);
+
+    return match(*Node->getLHS()) && match(*Node->getRHS());
+  }
   bool TraverseLambdaExpr(LambdaExpr *Node) {
     if (!Finder->isTraversalIgnoringImplicitNodes())
       return VisitorBase::TraverseLambdaExpr(Node);
@@ -273,7 +295,7 @@ public:
     if (!match(*Node->getBody()))
       return false;
 
-    return true;
+    return VisitorBase::TraverseStmt(Node->getBody());
   }
 
   bool shouldVisitTemplateInstantiations() const { return true; }
@@ -371,7 +393,6 @@ private:
   BoundNodesTreeBuilder ResultBindings;
   int CurrentDepth;
   const int MaxDepth;
-  const TraversalKind Traversal;
   const bool IgnoreImplicitChildren;
   const ASTMatchFinder::BindKind Bind;
   bool Matches;
@@ -469,15 +490,98 @@ public:
   bool TraverseConstructorInitializer(CXXCtorInitializer *CtorInit);
   bool TraverseTemplateArgumentLoc(TemplateArgumentLoc TAL);
 
+  bool dataTraverseNode(Stmt *S, DataRecursionQueue *Queue) {
+    if (auto *RF = dyn_cast<CXXForRangeStmt>(S)) {
+      {
+        ASTNodeNotAsIsSourceScope RAII(this, true);
+        TraverseStmt(RF->getInit());
+        // Don't traverse under the loop variable
+        match(*RF->getLoopVariable());
+        TraverseStmt(RF->getRangeInit());
+      }
+      {
+        ASTNodeNotSpelledInSourceScope RAII(this, true);
+        for (auto *SubStmt : RF->children()) {
+          if (SubStmt != RF->getBody())
+            TraverseStmt(SubStmt);
+        }
+      }
+      TraverseStmt(RF->getBody());
+      return true;
+    } else if (auto *RBO = dyn_cast<CXXRewrittenBinaryOperator>(S)) {
+      {
+        ASTNodeNotAsIsSourceScope RAII(this, true);
+        TraverseStmt(const_cast<Expr *>(RBO->getLHS()));
+        TraverseStmt(const_cast<Expr *>(RBO->getRHS()));
+      }
+      {
+        ASTNodeNotSpelledInSourceScope RAII(this, true);
+        for (auto *SubStmt : RBO->children()) {
+          TraverseStmt(SubStmt);
+        }
+      }
+      return true;
+    } else if (auto *LE = dyn_cast<LambdaExpr>(S)) {
+      for (auto I : llvm::zip(LE->captures(), LE->capture_inits())) {
+        auto C = std::get<0>(I);
+        ASTNodeNotSpelledInSourceScope RAII(
+            this, TraversingASTNodeNotSpelledInSource || !C.isExplicit());
+        TraverseLambdaCapture(LE, &C, std::get<1>(I));
+      }
+
+      {
+        ASTNodeNotSpelledInSourceScope RAII(this, true);
+        TraverseDecl(LE->getLambdaClass());
+      }
+      {
+        ASTNodeNotAsIsSourceScope RAII(this, true);
+
+        // We need to poke around to find the bits that might be explicitly
+        // written.
+        TypeLoc TL = LE->getCallOperator()->getTypeSourceInfo()->getTypeLoc();
+        FunctionProtoTypeLoc Proto = TL.getAsAdjusted<FunctionProtoTypeLoc>();
+
+        if (auto *TPL = LE->getTemplateParameterList()) {
+          for (NamedDecl *D : *TPL) {
+            TraverseDecl(D);
+          }
+          if (Expr *RequiresClause = TPL->getRequiresClause()) {
+            TraverseStmt(RequiresClause);
+          }
+        }
+
+        if (LE->hasExplicitParameters()) {
+          // Visit parameters.
+          for (ParmVarDecl *Param : Proto.getParams())
+            TraverseDecl(Param);
+        }
+
+        const auto *T = Proto.getTypePtr();
+        for (const auto &E : T->exceptions())
+          TraverseType(E);
+
+        if (Expr *NE = T->getNoexceptExpr())
+          TraverseStmt(NE, Queue);
+
+        if (LE->hasExplicitResultType())
+          TraverseTypeLoc(Proto.getReturnLoc());
+        TraverseStmt(LE->getTrailingRequiresClause());
+      }
+
+      TraverseStmt(LE->getBody());
+      return true;
+    }
+    return RecursiveASTVisitor<MatchASTVisitor>::dataTraverseNode(S, Queue);
+  }
+
   // Matches children or descendants of 'Node' with 'BaseMatcher'.
   bool memoizedMatchesRecursively(const DynTypedNode &Node, ASTContext &Ctx,
                                   const DynTypedMatcher &Matcher,
                                   BoundNodesTreeBuilder *Builder, int MaxDepth,
-                                  TraversalKind Traversal, BindKind Bind) {
+                                  BindKind Bind) {
     // For AST-nodes that don't have an identity, we can't memoize.
     if (!Node.getMemoizationData() || !Builder->isComparable())
-      return matchesRecursively(Node, Matcher, Builder, MaxDepth, Traversal,
-                                Bind);
+      return matchesRecursively(Node, Matcher, Builder, MaxDepth, Bind);
 
     MatchKey Key;
     Key.MatcherID = Matcher.getID();
@@ -495,8 +599,8 @@ public:
 
     MemoizedMatchResult Result;
     Result.Nodes = *Builder;
-    Result.ResultOfMatch = matchesRecursively(Node, Matcher, &Result.Nodes,
-                                              MaxDepth, Traversal, Bind);
+    Result.ResultOfMatch =
+        matchesRecursively(Node, Matcher, &Result.Nodes, MaxDepth, Bind);
 
     MemoizedMatchResult &CachedResult = ResultCache[Key];
     CachedResult = std::move(Result);
@@ -509,7 +613,7 @@ public:
   bool matchesRecursively(const DynTypedNode &Node,
                           const DynTypedMatcher &Matcher,
                           BoundNodesTreeBuilder *Builder, int MaxDepth,
-                          TraversalKind Traversal, BindKind Bind) {
+                          BindKind Bind) {
     bool ScopedTraversal = TraversingASTNodeNotSpelledInSource ||
                            TraversingASTChildrenNotSpelledInSource;
 
@@ -517,13 +621,11 @@ public:
 
     if (isTraversalIgnoringImplicitNodes()) {
       IgnoreImplicitChildren = true;
-      if (Node.get<CXXForRangeStmt>())
-        ScopedTraversal = true;
     }
 
     ASTNodeNotSpelledInSourceScope RAII(this, ScopedTraversal);
 
-    MatchChildASTVisitor Visitor(&Matcher, this, Builder, MaxDepth, Traversal,
+    MatchChildASTVisitor Visitor(&Matcher, this, Builder, MaxDepth,
                                  IgnoreImplicitChildren, Bind);
     return Visitor.findMatch(Node);
   }
@@ -541,12 +643,10 @@ public:
   // Implements ASTMatchFinder::matchesChildOf.
   bool matchesChildOf(const DynTypedNode &Node, ASTContext &Ctx,
                       const DynTypedMatcher &Matcher,
-                      BoundNodesTreeBuilder *Builder, TraversalKind Traversal,
-                      BindKind Bind) override {
+                      BoundNodesTreeBuilder *Builder, BindKind Bind) override {
     if (ResultCache.size() > MaxMemoizationEntries)
       ResultCache.clear();
-    return memoizedMatchesRecursively(Node, Ctx, Matcher, Builder, 1, Traversal,
-                                      Bind);
+    return memoizedMatchesRecursively(Node, Ctx, Matcher, Builder, 1, Bind);
   }
   // Implements ASTMatchFinder::matchesDescendantOf.
   bool matchesDescendantOf(const DynTypedNode &Node, ASTContext &Ctx,
@@ -556,7 +656,7 @@ public:
     if (ResultCache.size() > MaxMemoizationEntries)
       ResultCache.clear();
     return memoizedMatchesRecursively(Node, Ctx, Matcher, Builder, INT_MAX,
-                                      TraversalKind::TK_AsIs, Bind);
+                                      Bind);
   }
   // Implements ASTMatchFinder::matchesAncestorOf.
   bool matchesAncestorOf(const DynTypedNode &Node, ASTContext &Ctx,
@@ -607,8 +707,22 @@ public:
   bool shouldVisitTemplateInstantiations() const { return true; }
   bool shouldVisitImplicitCode() const { return true; }
 
+  // We visit the lambda body explicitly, so instruct the RAV
+  // to not visit it on our behalf too.
+  bool shouldVisitLambdaBody() const { return false; }
+
   bool IsMatchingInASTNodeNotSpelledInSource() const override {
     return TraversingASTNodeNotSpelledInSource;
+  }
+  bool isMatchingChildrenNotSpelledInSource() const override {
+    return TraversingASTChildrenNotSpelledInSource;
+  }
+  void setMatchingChildrenNotSpelledInSource(bool Set) override {
+    TraversingASTChildrenNotSpelledInSource = Set;
+  }
+
+  bool IsMatchingInASTNodeNotAsIs() const override {
+    return TraversingASTNodeNotAsIs;
   }
 
   bool TraverseTemplateInstantiations(ClassTemplateDecl *D) {
@@ -631,6 +745,7 @@ public:
 
 private:
   bool TraversingASTNodeNotSpelledInSource = false;
+  bool TraversingASTNodeNotAsIs = false;
   bool TraversingASTChildrenNotSpelledInSource = false;
 
   struct ASTNodeNotSpelledInSourceScope {
@@ -647,14 +762,12 @@ private:
     bool MB;
   };
 
-  struct ASTChildrenNotSpelledInSource {
-    ASTChildrenNotSpelledInSource(MatchASTVisitor *V, bool B)
-        : MV(V), MB(V->TraversingASTChildrenNotSpelledInSource) {
-      V->TraversingASTChildrenNotSpelledInSource = B;
+  struct ASTNodeNotAsIsSourceScope {
+    ASTNodeNotAsIsSourceScope(MatchASTVisitor *V, bool B)
+        : MV(V), MB(V->TraversingASTNodeNotAsIs) {
+      V->TraversingASTNodeNotAsIs = B;
     }
-    ~ASTChildrenNotSpelledInSource() {
-      MV->TraversingASTChildrenNotSpelledInSource = MB;
-    }
+    ~ASTNodeNotAsIsSourceScope() { MV->TraversingASTNodeNotAsIs = MB; }
 
   private:
     MatchASTVisitor *MV;
@@ -724,6 +837,14 @@ private:
       if (EnableCheckProfiling)
         Timer.setBucket(&TimeByBucket[MP.second->getID()]);
       BoundNodesTreeBuilder Builder;
+
+      {
+        TraversalKindScope RAII(getASTContext(), MP.first.getTraversalKind());
+        if (getASTContext().getParentMapContext().traverseIgnored(DynNode) !=
+            DynNode)
+          continue;
+      }
+
       if (MP.first.matches(DynNode, this, &Builder)) {
         MatchVisitor Visitor(ActiveASTContext, MP.second);
         Builder.visitMatches(&Visitor);
@@ -915,6 +1036,7 @@ private:
         Callback(Callback) {}
 
     void visitMatch(const BoundNodes& BoundNodesView) override {
+      TraversalKindScope RAII(*Context, Callback->getCheckTraversalKind());
       Callback->run(MatchFinder::MatchResult(BoundNodesView, Context));
     }
 
@@ -1093,10 +1215,14 @@ bool MatchASTVisitor::TraverseDecl(Decl *DeclNode) {
   } else if (const auto *FD = dyn_cast<FunctionDecl>(DeclNode)) {
     if (FD->isDefaulted())
       ScopedChildren = true;
+    if (FD->isTemplateInstantiation())
+      ScopedTraversal = true;
+  } else if (isa<BindingDecl>(DeclNode)) {
+    ScopedChildren = true;
   }
 
   ASTNodeNotSpelledInSourceScope RAII1(this, ScopedTraversal);
-  ASTChildrenNotSpelledInSource RAII2(this, ScopedChildren);
+  ASTChildrenNotSpelledInSourceScope RAII2(this, ScopedChildren);
 
   match(*DeclNode);
   return RecursiveASTVisitor<MatchASTVisitor>::TraverseDecl(DeclNode);
@@ -1210,7 +1336,13 @@ MatchFinder::~MatchFinder() {}
 
 void MatchFinder::addMatcher(const DeclarationMatcher &NodeMatch,
                              MatchCallback *Action) {
-  Matchers.DeclOrStmt.emplace_back(NodeMatch, Action);
+  llvm::Optional<TraversalKind> TK;
+  if (Action)
+    TK = Action->getCheckTraversalKind();
+  if (TK)
+    Matchers.DeclOrStmt.emplace_back(traverse(*TK, NodeMatch), Action);
+  else
+    Matchers.DeclOrStmt.emplace_back(NodeMatch, Action);
   Matchers.AllCallbacks.insert(Action);
 }
 
@@ -1222,7 +1354,13 @@ void MatchFinder::addMatcher(const TypeMatcher &NodeMatch,
 
 void MatchFinder::addMatcher(const StatementMatcher &NodeMatch,
                              MatchCallback *Action) {
-  Matchers.DeclOrStmt.emplace_back(NodeMatch, Action);
+  llvm::Optional<TraversalKind> TK;
+  if (Action)
+    TK = Action->getCheckTraversalKind();
+  if (TK)
+    Matchers.DeclOrStmt.emplace_back(traverse(*TK, NodeMatch), Action);
+  else
+    Matchers.DeclOrStmt.emplace_back(NodeMatch, Action);
   Matchers.AllCallbacks.insert(Action);
 }
 
@@ -1310,6 +1448,11 @@ void MatchFinder::registerTestCallbackAfterParsing(
 }
 
 StringRef MatchFinder::MatchCallback::getID() const { return "<unknown>"; }
+
+llvm::Optional<TraversalKind>
+MatchFinder::MatchCallback::getCheckTraversalKind() const {
+  return llvm::None;
+}
 
 } // end namespace ast_matchers
 } // end namespace clang

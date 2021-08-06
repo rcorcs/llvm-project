@@ -35,6 +35,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(LLVM_MAIN_SRC_DIR ${MAIN_SRC_DIR} CACHE PATH "Path to LLVM source tree")
 
   file(TO_CMAKE_PATH ${LLVM_OBJ_ROOT} LLVM_BINARY_DIR)
+  file(TO_CMAKE_PATH ${LLVM_CMAKE_PATH} LLVM_CMAKE_PATH)
 
   if(NOT EXISTS "${LLVM_CMAKE_PATH}/LLVMConfig.cmake")
     message(FATAL_ERROR "LLVMConfig.cmake not found")
@@ -54,23 +55,12 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   include(AddLLVM)
   include(TableGen)
   include(HandleLLVMOptions)
+  include(GetErrcMessages)
   include(CheckAtomic)
 
   if(LLVM_INCLUDE_TESTS)
-    find_package(Python3 COMPONENTS Interpreter)
-    if(NOT Python3_Interpreter_FOUND)
-      message(WARNING "Python3 not found, using python2 as a fallback")
-      find_package(Python2 COMPONENTS Interpreter REQUIRED)
-      if(Python2_VERSION VERSION_LESS 2.7)
-        message(SEND_ERROR "Python 2.7 or newer is required")
-      endif()
-
-      # Treat python2 as python3
-      add_executable(Python3::Interpreter IMPORTED)
-      set_target_properties(Python3::Interpreter PROPERTIES
-        IMPORTED_LOCATION ${Python2_EXECUTABLE})
-      set(Python3_EXECUTABLE ${Python2_EXECUTABLE})
-    endif()
+    find_package(Python3 ${LLVM_MINIMUM_PYTHON_VERSION} REQUIRED
+      COMPONENTS Interpreter)
 
     # Check prebuilt llvm/utils.
     if(EXISTS ${LLVM_TOOLS_BINARY_DIR}/FileCheck${CMAKE_EXECUTABLE_SUFFIX}
@@ -110,6 +100,8 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
       endif()
       set(LLVM_LIT_ARGS "${LIT_ARGS_DEFAULT}" CACHE STRING "Default options for lit")
 
+      get_errc_messages(LLVM_LIT_ERRC_MESSAGES)
+
       # On Win32 hosts, provide an option to specify the path to the GnuWin32 tools.
       if(WIN32 AND NOT CYGWIN)
         set(LLVM_LIT_TOOLS_DIR "" CACHE PATH "Path to GnuWin32 tools")
@@ -117,6 +109,10 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     else()
       set(LLVM_INCLUDE_TESTS OFF)
     endif()
+  endif()
+
+  if(LLVM_HAVE_LIBXAR)
+    set(XAR_LIB xar)
   endif()
 endif()
 

@@ -30,8 +30,8 @@ if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "(x86_64)|(ppc64le)|(aarch64)$" AND CMAKE_
   return()
 endif()
 
-if (NOT LIBOMPTARGET_LLVM_MAIN_INCLUDE_DIR)
-  libomptarget_say("Not building AMDGPU plugin: Missing definition for LIBOMPTARGET_LLVM_MAIN_INCLUDE_DIR")
+if (NOT LIBOMPTARGET_LLVM_INCLUDE_DIRS)
+  libomptarget_say("Not building AMDGPU plugin: Missing definition for LIBOMPTARGET_LLVM_INCLUDE_DIRS")
   return()
 endif()
 
@@ -50,13 +50,14 @@ endif()
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/impl
-  ${LIBOMPTARGET_LLVM_MAIN_INCLUDE_DIR}
+  ${LIBOMPTARGET_LLVM_INCLUDE_DIRS}
 )
 
 add_library(omptarget.rtl.amdgpu SHARED
       impl/atmi.cpp
       impl/atmi_interop_hsa.cpp
       impl/data.cpp
+      impl/get_elf_mach_gfx_name.cpp
       impl/machine.cpp
       impl/system.cpp
       impl/utils.cpp
@@ -72,11 +73,34 @@ set_property(TARGET omptarget.rtl.amdgpu PROPERTY INSTALL_RPATH "$ORIGIN")
 target_link_libraries(
   omptarget.rtl.amdgpu
   PRIVATE
+  elf_common
   hsa-runtime64::hsa-runtime64
   pthread dl elf
   "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/../exports"
   "-Wl,-z,defs"
   )
+
+if (LLVM_BINARY_DIR)
+  # for in-tree build using LLVM_ENABLE_RUNTIMES
+  set(AMDGPU_ARCH_TOOL "${LLVM_BINARY_DIR}/bin/amdgpu-arch")
+elseif (OPENMP_LLVM_TOOLS_DIR)
+  set(AMDGPU_ARCH_TOOL "${OPENMP_LLVM_TOOLS_DIR}/amdgpu-arch")
+else()
+  set(AMDGPU_ARCH_TOOL "amdgpu-arch")
+endif()
+
+# in case of amdgcn, skip running tests if amdgpu-arch was not built or fails
+if (NOT EXISTS "${AMDGPU_ARCH_TOOL}")
+  libomptarget_say("Not generating amdgcn test targets as amdgpu-arch is not found")
+  return()
+endif()
+
+execute_process(COMMAND "${AMDGPU_ARCH_TOOL}" RESULT_VARIABLE amdgpu_arch_result
+  OUTPUT_VARIABLE amdgpu_arch_output)
+if (${amdgpu_arch_result})
+  libomptarget_say("Not generating amdgcn test targets as amdgpu-arch exited with ${amdgpu_arch_result}")
+  return()
+endif()
 
 # Report to the parent scope that we are building a plugin for amdgpu
 set(LIBOMPTARGET_SYSTEM_TARGETS "${LIBOMPTARGET_SYSTEM_TARGETS} amdgcn-amd-amdhsa" PARENT_SCOPE)

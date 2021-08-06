@@ -303,13 +303,6 @@ struct Allocator {
                  bool ForceZeroContents = false) {
     initThreadMaybe();
 
-#ifdef GWP_ASAN_HOOKS
-    if (UNLIKELY(GuardedAlloc.shouldSample())) {
-      if (void *Ptr = GuardedAlloc.allocate(Size))
-        return Ptr;
-    }
-#endif // GWP_ASAN_HOOKS
-
     if (UNLIKELY(Alignment > MaxAlignment)) {
       if (AllocatorMayReturnNull())
         return nullptr;
@@ -317,6 +310,16 @@ struct Allocator {
     }
     if (UNLIKELY(Alignment < MinAlignment))
       Alignment = MinAlignment;
+
+#ifdef GWP_ASAN_HOOKS
+    if (UNLIKELY(GuardedAlloc.shouldSample())) {
+      if (void *Ptr = GuardedAlloc.allocate(Size, Alignment)) {
+        if (SCUDO_CAN_USE_HOOKS && &__sanitizer_malloc_hook)
+          __sanitizer_malloc_hook(Ptr, Size);
+        return Ptr;
+      }
+    }
+#endif // GWP_ASAN_HOOKS
 
     const uptr NeededSize = RoundUpTo(Size ? Size : 1, MinAlignment) +
         Chunk::getHeaderSize();
@@ -672,16 +675,17 @@ static BackendT &getBackend() {
 void initScudo() {
   Instance.init();
 #ifdef GWP_ASAN_HOOKS
-  gwp_asan::options::initOptions();
+  gwp_asan::options::initOptions(__sanitizer::GetEnv("GWP_ASAN_OPTIONS"),
+                                 Printf);
   gwp_asan::options::Options &Opts = gwp_asan::options::getOptions();
-  Opts.Backtrace = gwp_asan::options::getBacktraceFunction();
+  Opts.Backtrace = gwp_asan::backtrace::getBacktraceFunction();
   GuardedAlloc.init(Opts);
 
   if (Opts.InstallSignalHandlers)
-    gwp_asan::crash_handler::installSignalHandlers(
+    gwp_asan::segv_handler::installSignalHandlers(
         &GuardedAlloc, __sanitizer::Printf,
-        gwp_asan::options::getPrintBacktraceFunction(),
-        gwp_asan::crash_handler::getSegvBacktraceFunction());
+        gwp_asan::backtrace::getPrintBacktraceFunction(),
+        gwp_asan::backtrace::getSegvBacktraceFunction());
 #endif // GWP_ASAN_HOOKS
 }
 
