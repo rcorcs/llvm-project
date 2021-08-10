@@ -1206,6 +1206,14 @@ Timer TimeRank("Merge::Rank", "Merge::Rank");
 Timer TimeVerify("Merge::Verify", "Merge::Verify");
 Timer TimeUpdate("Merge::Update", "Merge::Update");
 Timer TimeTotal("Merge::Total", "Merge::Total");
+
+std::chrono::time_point<std::chrono::steady_clock> time_ranking_start;
+std::chrono::time_point<std::chrono::steady_clock> time_ranking_end;
+std::chrono::time_point<std::chrono::steady_clock> time_align_start;
+std::chrono::time_point<std::chrono::steady_clock> time_align_end;
+std::chrono::time_point<std::chrono::steady_clock> time_codegen_start;
+std::chrono::time_point<std::chrono::steady_clock> time_codegen_end;
+std::chrono::time_point<std::chrono::steady_clock> time_update_end;
 #endif
 
 
@@ -2435,6 +2443,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
 
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.startTimer();
+  time_align_start = std::chrono::steady_clock::now();
 #endif
 
   AlignedSequence<Value *> AlignedSeq;
@@ -2626,6 +2635,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
       errs() << "Insufficient Memory\n";
 #ifdef TIME_STEPS_DEBUG
       TimeAlign.stopTimer();
+      time_align_end = std::chrono::steady_clock::now();
 #endif
       return ErrorResponse;
     }
@@ -2636,6 +2646,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
 
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.stopTimer();
+  time_align_end = std::chrono::steady_clock::now();
 #endif
   if (!ProfitableFn && !ReportStats) {
     if (Verbose)
@@ -3579,6 +3590,7 @@ bool FunctionMerging::runOnModule(Module &M) {
   while (matcher->size() > 0) {
 #ifdef TIME_STEPS_DEBUG
     TimeRank.startTimer();
+	time_ranking_start = std::chrono::steady_clock::now();
 #endif
 
     Function *F1 = matcher->next_candidate();
@@ -3587,6 +3599,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 
 #ifdef TIME_STEPS_DEBUG
     TimeRank.stopTimer();
+	time_ranking_end = std::chrono::steady_clock::now();
 #endif
     unsigned MergingTrialsCount = 0;
     float OtherDistance = 0.0;
@@ -3594,6 +3607,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     while (!Rank.empty()) {
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGenTotal.startTimer();
+	  time_codegen_start = std::chrono::steady_clock::now();
 #endif
       MatchInfo<Function *> match = Rank.back();
       Rank.pop_back();
@@ -3624,6 +3638,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       FunctionMergeResult Result = FM.merge(F1, F2, Name, Options);
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGenTotal.stopTimer();
+	  time_codegen_end = std::chrono::steady_clock::now();
 #endif
 
       if (Result.getMergedFunction() != nullptr) {
@@ -3680,6 +3695,7 @@ bool FunctionMerging::runOnModule(Module &M) {
         }
 #ifdef TIME_STEPS_DEBUG
         TimeUpdate.stopTimer();
+	    time_update_end = std::chrono::steady_clock::now();
 #endif
       }
 
@@ -3692,9 +3708,16 @@ bool FunctionMerging::runOnModule(Module &M) {
              << " Profitable: " << match.Profitable
              << " Distance: " << match.Distance;
       if (Verbose)
-        errs() << " OtherDistance: " << OtherDistance << "\n";
-      else
-        errs() << "\n";
+        errs() << " OtherDistance: " << OtherDistance;
+#ifdef TIME_STEPS_DEBUG
+	  using namespace std::chrono_literals;
+	  errs() << "TotalTime: " << (time_update_end - time_ranking_start) / 1us
+		     << "RankingTime: " << (time_ranking_end - time_ranking_start) / 1us
+			 << "AlignTime: " << (time_align_end - time_align_start) / 1us
+			 << "CodegenTime: " << ((time_codegen_end - time_codegen_start) - (time_align_end - time_align_start)) / 1us;
+#endif
+
+      errs() << "\n";
 
       //if (match.Profitable || (MergingTrialsCount >= ExplorationThreshold))
       if (MergingTrialsCount >= ExplorationThreshold)
