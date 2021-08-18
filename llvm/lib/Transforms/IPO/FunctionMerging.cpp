@@ -1213,6 +1213,7 @@ std::chrono::time_point<std::chrono::steady_clock> time_align_start;
 std::chrono::time_point<std::chrono::steady_clock> time_align_end;
 std::chrono::time_point<std::chrono::steady_clock> time_codegen_start;
 std::chrono::time_point<std::chrono::steady_clock> time_codegen_end;
+std::chrono::time_point<std::chrono::steady_clock> time_update_start;
 std::chrono::time_point<std::chrono::steady_clock> time_update_end;
 #endif
 
@@ -3147,7 +3148,7 @@ static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
     //  break;
     default:
       auto cost = TTI->getInstructionCost(&I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
-	  size += cost.getValue().getValue();
+    size += cost.getValue().getValue();
     }
   }
   return size_t(std::ceil(size));
@@ -3473,6 +3474,23 @@ unsigned instToInt(Instruction *I) {
   return value;
 }
 
+bool ignoreFunction(Function &F) {
+  for (Instruction &I : instructions(F)) {
+    if (auto *CB = dyn_cast<CallBase>(&I)) {
+      if (Function *F2 = CB->getCalledFunction()) {
+        if (auto ID = (Intrinsic::ID)F2->getIntrinsicID()) {
+          if (Intrinsic::isOverloaded(ID))
+            continue;
+          if (Intrinsic::getName(ID).contains("permvar"))
+            return true;
+          if (Intrinsic::getName(ID).contains("vcvtps"))
+            return true;
+        }
+      }
+    }
+  }
+  return false;
+}
 
 bool FunctionMerging::runOnModule(Module &M) {
 
@@ -3558,8 +3576,6 @@ bool FunctionMerging::runOnModule(Module &M) {
   errs() << "LSHRows: " << LSHRows << "\n";
   errs() << "LSHBands: " << LSHBands << "\n";
 
-
-
   if (EnableLSH && !linearScan){
     matcher = std::make_unique<MatcherLSH<Function *>>(FM, Options, LSHRows, LSHBands); errs() << "LSH MH\n";}
   else if (EnableLSH && linearScan){
@@ -3572,6 +3588,8 @@ bool FunctionMerging::runOnModule(Module &M) {
   size_t count=0;
   for (auto &F : M) {
     if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
+      continue;
+    if (ignoreFunction(F))
       continue;
     matcher->add_candidate(&F, EstimateFunctionSize(&F, &TTI));
     count++;
@@ -3590,7 +3608,7 @@ bool FunctionMerging::runOnModule(Module &M) {
   while (matcher->size() > 0) {
 #ifdef TIME_STEPS_DEBUG
     TimeRank.startTimer();
-	time_ranking_start = std::chrono::steady_clock::now();
+    time_ranking_start = std::chrono::steady_clock::now();
 #endif
 
     Function *F1 = matcher->next_candidate();
@@ -3599,7 +3617,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 
 #ifdef TIME_STEPS_DEBUG
     TimeRank.stopTimer();
-	time_ranking_end = std::chrono::steady_clock::now();
+    time_ranking_end = std::chrono::steady_clock::now();
 #endif
     unsigned MergingTrialsCount = 0;
     float OtherDistance = 0.0;
@@ -3607,7 +3625,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     while (!Rank.empty()) {
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGenTotal.startTimer();
-	  time_codegen_start = std::chrono::steady_clock::now();
+      time_codegen_start = std::chrono::steady_clock::now();
 #endif
       MatchInfo<Function *> match = Rank.back();
       Rank.pop_back();
@@ -3638,7 +3656,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       FunctionMergeResult Result = FM.merge(F1, F2, Name, Options);
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGenTotal.stopTimer();
-	  time_codegen_end = std::chrono::steady_clock::now();
+      time_codegen_end = std::chrono::steady_clock::now();
 #endif
 
       if (Result.getMergedFunction() != nullptr) {
@@ -3664,6 +3682,7 @@ bool FunctionMerging::runOnModule(Module &M) {
 
 #ifdef TIME_STEPS_DEBUG
         TimeUpdate.startTimer();
+        time_update_start = std::chrono::steady_clock::now();
 #endif
         if (!match.Valid) {
           Result.getMergedFunction()->eraseFromParent();
@@ -3695,7 +3714,7 @@ bool FunctionMerging::runOnModule(Module &M) {
         }
 #ifdef TIME_STEPS_DEBUG
         TimeUpdate.stopTimer();
-	    time_update_end = std::chrono::steady_clock::now();
+        time_update_end = std::chrono::steady_clock::now();
 #endif
       }
 
@@ -3710,11 +3729,12 @@ bool FunctionMerging::runOnModule(Module &M) {
       if (Verbose)
         errs() << " OtherDistance: " << OtherDistance;
 #ifdef TIME_STEPS_DEBUG
-	  using namespace std::chrono_literals;
-	  errs() << "TotalTime: " << (time_update_end - time_ranking_start) / 1us
-		     << "RankingTime: " << (time_ranking_end - time_ranking_start) / 1us
-			 << "AlignTime: " << (time_align_end - time_align_start) / 1us
-			 << "CodegenTime: " << ((time_codegen_end - time_codegen_start) - (time_align_end - time_align_start)) / 1us;
+      using namespace std::chrono_literals;
+      errs() << " TotalTime: " << (time_update_end - time_ranking_start) / 1us
+             << " RankingTime: " << (time_ranking_end - time_ranking_start) / 1us
+             << " AlignTime: " << (time_align_end - time_align_start) / 1us
+             << " CodegenTime: " << ((time_codegen_end - time_codegen_start) - (time_align_end - time_align_start)) / 1us
+             << " UpdateTime: " << (time_update_end - time_update_start) / 1us;
 #endif
 
       errs() << "\n";
@@ -4541,16 +4561,6 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
         assert(I1->getNumOperands() == I2->getNumOperands() &&
                "Num of Operands SHOULD be EQUAL\n");
       }
-      /*
-      if (I1->getOpcode() == Instruction::CallBr) {
-        // CallBr is used almost exclusively for inline asm
-        // Merging linux functions with asm code usually breaks code generation
-#ifdef TIME_STEPS_DEBUG
-              TimeCodeGen.stopTimer();
-#endif
-              return false;
-      }
-      */
 
       auto *NewI = dyn_cast<Instruction>(VMap[I]);
 
