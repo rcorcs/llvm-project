@@ -1205,6 +1205,7 @@ Timer TimePreProcess("Merge::Preprocess", "Merge::Preprocess");
 Timer TimeRank("Merge::Rank", "Merge::Rank");
 Timer TimeVerify("Merge::Verify", "Merge::Verify");
 Timer TimeUpdate("Merge::Update", "Merge::Update");
+Timer TimePrinting("Merge::Printing", "Merge::Printing");
 Timer TimeTotal("Merge::Total", "Merge::Total");
 
 std::chrono::time_point<std::chrono::steady_clock> time_ranking_start;
@@ -1213,6 +1214,8 @@ std::chrono::time_point<std::chrono::steady_clock> time_align_start;
 std::chrono::time_point<std::chrono::steady_clock> time_align_end;
 std::chrono::time_point<std::chrono::steady_clock> time_codegen_start;
 std::chrono::time_point<std::chrono::steady_clock> time_codegen_end;
+std::chrono::time_point<std::chrono::steady_clock> time_verify_start;
+std::chrono::time_point<std::chrono::steady_clock> time_verify_end;
 std::chrono::time_point<std::chrono::steady_clock> time_update_start;
 std::chrono::time_point<std::chrono::steady_clock> time_update_end;
 #endif
@@ -3485,6 +3488,12 @@ bool ignoreFunction(Function &F) {
             return true;
           if (Intrinsic::getName(ID).contains("vcvtps"))
             return true;
+          if (Intrinsic::getName(ID).contains("avx"))
+            return true;
+          if (Intrinsic::getName(ID).contains("x86"))
+            return true;
+          if (Intrinsic::getName(ID).contains("arm"))
+            return true;
         }
       }
     }
@@ -3662,10 +3671,12 @@ bool FunctionMerging::runOnModule(Module &M) {
       if (Result.getMergedFunction() != nullptr) {
 #ifdef TIME_STEPS_DEBUG
         TimeVerify.startTimer();
+        time_verify_start = std::chrono::steady_clock::now();
 #endif
         match.Valid = !verifyFunction(*Result.getMergedFunction());
 #ifdef TIME_STEPS_DEBUG
         TimeVerify.stopTimer();
+        time_verify_end = std::chrono::steady_clock::now();
 #endif
 
 #ifdef ENABLE_DEBUG_CODE
@@ -3718,6 +3729,10 @@ bool FunctionMerging::runOnModule(Module &M) {
 #endif
       }
 
+#ifdef TIME_STEPS_DEBUG
+      TimePrinting.startTimer();
+#endif
+
       errs() << F1Name << " + " << F2Name << " <= " << Name
              << " Tries: " << MergingTrialsCount
              << " Valid: " << match.Valid
@@ -3734,10 +3749,15 @@ bool FunctionMerging::runOnModule(Module &M) {
              << " RankingTime: " << (time_ranking_end - time_ranking_start) / 1us
              << " AlignTime: " << (time_align_end - time_align_start) / 1us
              << " CodegenTime: " << ((time_codegen_end - time_codegen_start) - (time_align_end - time_align_start)) / 1us
+             << " VerifyTime: " << (time_verify_end - time_verify_start) / 1us
              << " UpdateTime: " << (time_update_end - time_update_start) / 1us;
 #endif
-
       errs() << "\n";
+
+
+#ifdef TIME_STEPS_DEBUG
+      TimePrinting.stopTimer();
+#endif
 
       //if (match.Profitable || (MergingTrialsCount >= ExplorationThreshold))
       if (MergingTrialsCount >= ExplorationThreshold)
@@ -3806,6 +3826,9 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   errs() << "Timer:Update: " << TimeUpdate.getTotalTime().getWallTime() << "\n";
   TimeUpdate.clear();
+
+  errs() << "Timer:Printing: " << TimePrinting.getTotalTime().getWallTime() << "\n";
+  TimePrinting.clear();
 
   errs() << "Timer:Total: " << TimeTotal.getTotalTime().getWallTime() << "\n";
   TimeTotal.clear();
