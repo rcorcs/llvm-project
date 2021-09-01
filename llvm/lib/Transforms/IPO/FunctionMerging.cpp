@@ -218,6 +218,10 @@ static cl::opt<bool> AdaptiveThreshold(
     "adaptive-threshold", cl::init(false), cl::Hidden,
     cl::desc("Adaptively define a new threshold based on the application"));
 
+static cl::opt<bool> AdaptiveBands(
+    "adaptive-bands", cl::init(false), cl::Hidden,
+    cl::desc("Adaptively define the LSH geometry based on the application"));
+
 static cl::opt<double> RankingDistance(
     "ranking-distance", cl::init(1.0), cl::Hidden,
     cl::desc("Define a threshold to be used"));
@@ -1218,6 +1222,7 @@ std::chrono::time_point<std::chrono::steady_clock> time_verify_start;
 std::chrono::time_point<std::chrono::steady_clock> time_verify_end;
 std::chrono::time_point<std::chrono::steady_clock> time_update_start;
 std::chrono::time_point<std::chrono::steady_clock> time_update_end;
+std::chrono::time_point<std::chrono::steady_clock> time_iteration_end;
 #endif
 
 
@@ -3550,35 +3555,44 @@ bool FunctionMerging::runOnModule(Module &M) {
       continue;
     size++;
   }
-  bool linearScan = size < 100 ? true : false;
+
+  //bool linearScan = size < 100 ? true : false;
+  bool linearScan = false;
 
   // Create a threshold based on the application's size
-  if (AdaptiveThreshold)
+  if (AdaptiveThreshold || AdaptiveBands)
   {
     double x = std::log10(size) / 10;
-    RankingDistance = (double) (1.0 / (2.0 + std::pow(x/(1.0-x),-3.0))) + 0.125;
-    if (RankingDistance < 0.15)
-    {
-        LSHRows = 1;
-        LSHBands = 200;
-    }
-    else if (RankingDistance >= 0.15 && RankingDistance < 0.4)
-    {
-        LSHRows = 2;
-        LSHBands = 100;
-    }
-    else if (RankingDistance >= 0.4 && RankingDistance < 0.5)
-    {
-        LSHRows = 4;
-        LSHBands = 50;
-    }
-    else
-    {
-        LSHRows = 5;
-        LSHBands = 40;
-    }
+    //RankingDistance = (double) (1.0 / (2.0 + std::pow(x/(1.0-x),-3.0))) + 0.125;
+    RankingDistance = (double) (x - 0.3);
+	  if (RankingDistance < 0.05)
+      RankingDistance = 0.05;
+    if (RankingDistance > 0.4)
+      RankingDistance = 0.4;
+  
+    if (AdaptiveBands) {
+      float target_probability = 0.9;
+      float offset = 0.1;
+      unsigned tempBands = std::ceil(std::log(1.0 - target_probability) / std::log(1.0 - std::pow(RankingDistance + offset, LSHRows)));
+      //size_t fingerprint_size = LSHRows * LSHBands;
+      //if (RankingDistance < 0.15)
+      //    LSHRows = 1;
+      //else if (RankingDistance >= 0.15 && RankingDistance < 0.4)
+      //    LSHRows = 2;
+      //else if (RankingDistance >= 0.4 && RankingDistance < 0.5)
+      //    LSHRows = 4;
+      //else
+      //    LSHRows = 5;
+      //LSHBands = fingerprint_size / LSHRows;
+      if (tempBands < LSHBands)
+        LSHBands = tempBands;
 
-    RankingDistance = 1 - RankingDistance;
+    }
+    if (AdaptiveThreshold)
+      RankingDistance = 1 - RankingDistance;
+    else
+      RankingDistance = 1.0;
+
   }
 
   errs() << "Threshold: " << RankingDistance << "\n";
@@ -3618,6 +3632,17 @@ bool FunctionMerging::runOnModule(Module &M) {
 #ifdef TIME_STEPS_DEBUG
     TimeRank.startTimer();
     time_ranking_start = std::chrono::steady_clock::now();
+
+    time_ranking_end = time_ranking_start;
+    time_align_start = time_ranking_start;
+    time_align_end = time_ranking_start;
+    time_codegen_start = time_ranking_start;
+    time_codegen_end = time_ranking_start;
+    time_verify_start = time_ranking_start;
+    time_verify_end = time_ranking_start;
+    time_update_start = time_ranking_start;
+    time_update_end = time_ranking_start;
+    time_iteration_end = time_ranking_start;
 #endif
 
     Function *F1 = matcher->next_candidate();
@@ -3728,6 +3753,7 @@ bool FunctionMerging::runOnModule(Module &M) {
         time_update_end = std::chrono::steady_clock::now();
 #endif
       }
+      time_iteration_end = std::chrono::steady_clock::now();
 
 #ifdef TIME_STEPS_DEBUG
       TimePrinting.startTimer();
@@ -3745,7 +3771,7 @@ bool FunctionMerging::runOnModule(Module &M) {
         errs() << " OtherDistance: " << OtherDistance;
 #ifdef TIME_STEPS_DEBUG
       using namespace std::chrono_literals;
-      errs() << " TotalTime: " << (time_update_end - time_ranking_start) / 1us
+      errs() << " TotalTime: " << (time_iteration_end - time_ranking_start) / 1us
              << " RankingTime: " << (time_ranking_end - time_ranking_start) / 1us
              << " AlignTime: " << (time_align_end - time_align_start) / 1us
              << " CodegenTime: " << ((time_codegen_end - time_codegen_start) - (time_align_end - time_align_start)) / 1us
