@@ -234,10 +234,17 @@ static cl::opt<bool> ReportStats(
     "func-merging-report", cl::init(false), cl::Hidden,
     cl::desc("Only report the distances and alignment between all allowed function pairs"));
 
+static cl::opt<bool> MatcherStats(
+    "func-merging-matcher-report", cl::init(false), cl::Hidden,
+    cl::desc("Only report statistics about the distribution of distances and bucket sizes in the Matcher"));
+
 static cl::opt<bool> Deterministic(
     "func-merging-deterministic", cl::init(true), cl::Hidden,
     cl::desc("Replace all random number generators with deterministic values"));
 
+static cl::opt<unsigned> BucketSizeCap(
+    "bucket-size-cap", cl::init(1000000000), cl::Hidden,
+    cl::desc("Define a threshold to be used"));
 
 static std::string GetValueName(const Value *V);
 
@@ -2089,10 +2096,19 @@ public:
 
   void print_stats() override {
     std::unordered_set<T> seen;
-    std::vector<uint32_t> hist_bucket_size(15);
+    std::vector<uint32_t> hist_bucket_size(20);
     std::vector<uint32_t> hist_distances(21);
     std::vector<uint32_t> hist_distances_diff(21);
     uint32_t duplicate_hashes = 0;
+
+    for (auto it = lsh.cbegin(); it != lsh.cend(); ++it) {
+      size_t idx = 31 - __builtin_clz(it->second.size());
+      idx = idx < 20 ? idx : 19;
+      hist_bucket_size[idx]++;
+    }
+    for (size_t i = 0; i < 20; i++)
+      errs() << "STATS: Histogram Bucket Size " << (1 << i) << " : " << hist_bucket_size[i] << "\n";
+    return;
 
     for (auto it = candidates.begin(); it != candidates.end(); ++it) {
       seen.clear();
@@ -2105,7 +2121,7 @@ public:
       for (size_t i = 0; i < bands; ++i) {
         auto &foundFs = lsh.at(it->FP.bandHash[i]);
         size_t idx = 31 - __builtin_clz(foundFs.size());
-        idx = idx < 15 ? idx : 14;
+        idx = idx < 20 ? idx : 19;
         hist_bucket_size[idx]++;
         for (size_t j = 0; j < foundFs.size(); ++j) {
           auto match_it = foundFs[j];
@@ -2133,7 +2149,7 @@ public:
       }
     }
     errs() << "STATS: Avg Duplicate Hashes: " << (1.0*duplicate_hashes) / candidates.size() << "\n";
-    for (size_t i = 0; i < 15; i++)
+    for (size_t i = 0; i < 20; i++)
       errs() << "STATS: Histogram Bucket Size " << (1 << i) << " : " << hist_bucket_size[i] << "\n";
     for (size_t i = 0; i < 21; i++)
       errs() << "STATS: Histogram Distances " << i * 0.05 << " : " << hist_distances[i] << "\n";
@@ -2157,7 +2173,7 @@ private:
       assert(lsh.count(FP.bandHash[i]) > 0);
 
       auto &foundFs = lsh.at(FP.bandHash[i]);
-      for (size_t j = 0; j < foundFs.size() && j < 100; ++j) {
+      for (size_t j = 0; j < foundFs.size() && j < BucketSizeCap; ++j) {
         auto match_it = foundFs[j];
         if ((match_it->candidate == NULL) ||
             (match_it->candidate == it->candidate))
@@ -3565,7 +3581,7 @@ bool FunctionMerging::runOnModule(Module &M) {
     double x = std::log10(size) / 10;
     //RankingDistance = (double) (1.0 / (2.0 + std::pow(x/(1.0-x),-3.0))) + 0.125;
     RankingDistance = (double) (x - 0.3);
-	  if (RankingDistance < 0.05)
+    if (RankingDistance < 0.05)
       RankingDistance = 0.05;
     if (RankingDistance > 0.4)
       RankingDistance = 0.4;
@@ -3617,12 +3633,30 @@ bool FunctionMerging::runOnModule(Module &M) {
     matcher->add_candidate(&F, EstimateFunctionSize(&F, &TTI));
     count++;
   }
-  errs() << "Number of Functions: " << matcher->size() << "\n";
-  //matcher->print_stats();
 
 #ifdef TIME_STEPS_DEBUG
   TimePreProcess.stopTimer();
 #endif
+
+  errs() << "Number of Functions: " << matcher->size() << "\n";
+  if (MatcherStats) {
+    matcher->print_stats();
+    TimeRank.clear();
+    TimeCodeGenTotal.clear();
+    TimeAlign.clear();
+    TimeAlignRank.clear();
+    TimeParam.clear();
+    TimeCodeGen.clear();
+    TimeCodeGenFix.clear();
+    TimePostOpt.clear();
+    TimeVerify.clear();
+    TimePreProcess.clear();
+    TimeLin.clear();
+    TimeUpdate.clear();
+    TimePrinting.clear();
+    TimeTotal.clear();
+    return false;
+  }
 
   unsigned TotalMerges = 0;
   unsigned TotalOpReorder = 0;
