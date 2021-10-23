@@ -161,6 +161,7 @@ void initializeFixupStatepointCallerSavedPass(PassRegistry&);
 void initializeFlattenCFGPassPass(PassRegistry&);
 void initializeFloat2IntLegacyPassPass(PassRegistry&);
 void initializeForceFunctionAttrsLegacyPassPass(PassRegistry&);
+void initializeFunctionMergingLegacyPassPass(PassRegistry&);
 void initializeForwardControlFlowIntegrityPass(PassRegistry&);
 void initializeFuncletLayoutPass(PassRegistry&);
 void initializeFunctionImportLegacyPassPass(PassRegistry&);
