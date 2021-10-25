@@ -3625,9 +3625,11 @@ bool FunctionMerging::runImpl(
 
   }
 
-  errs() << "Threshold: " << RankingDistance << "\n";
-  errs() << "LSHRows: " << LSHRows << "\n";
-  errs() << "LSHBands: " << LSHBands << "\n";
+  if (EnableLSH) {
+    errs() << "Threshold: " << RankingDistance << "\n";
+    errs() << "LSHRows: " << LSHRows << "\n";
+    errs() << "LSHBands: " << LSHBands << "\n";
+  }
 
   if (EnableLSH && !linearScan){
     matcher = std::make_unique<MatcherLSH<Function *>>(FM, Options, LSHRows, LSHBands); errs() << "LSH MH\n";}
