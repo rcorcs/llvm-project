@@ -1257,8 +1257,10 @@ static bool validMergePair(Function *F1, Function *F2) {
   //  if (F1->hasSection() && !F1->getSection().equals(F2->getSection())) return
   //  false;
 
-  // if (F1->hasComdat()!=F2->hasComdat()) return false;
-  // if (F1->hasComdat() && F1->getComdat() != F2->getComdat()) return false;
+  if (F1->hasComdat() != F2->hasComdat())
+    return false;
+  if (F1->hasComdat() && F1->getComdat() != F2->getComdat())
+    return false;
 
   if (F1->hasPersonalityFn() != F2->hasPersonalityFn())
     return false;
@@ -2945,6 +2947,9 @@ void FunctionMerger::replaceByCall(Function *F, FunctionMergeResult &MFR,
   Value *FuncId = MFR.getFunctionIdValue(F);
   Function *MergedF = MFR.getMergedFunction();
 
+  // Make sure we preserve its linkage
+  auto Linkage = F->getLinkage();
+
   F->deleteBody();
   BasicBlock *NewBB = BasicBlock::Create(Context, "", F);
   IRBuilder<> Builder(NewBB);
@@ -2972,6 +2977,8 @@ void FunctionMerger::replaceByCall(Function *F, FunctionMergeResult &MFR,
       args[i] = UndefValue::get(MergedF->getFunctionType()->getParamType(i));
     }
   }
+
+  F->setLinkage(Linkage);
 
   CallInst *CI =
       (CallInst *)Builder.CreateCall(MergedF, ArrayRef<Value *>(args));
