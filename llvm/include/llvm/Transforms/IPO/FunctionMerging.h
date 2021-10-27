@@ -394,14 +394,9 @@ public:
 FunctionMergeResult MergeFunctions(Function *F1, Function *F2,
                                    const FunctionMergingOptions &Options = {});
 
-class FunctionMerging : public ModulePass {
+class FunctionMergingPass : public PassInfoMixin<FunctionMergingPass> {
 public:
-  static char ID;
-  FunctionMerging() : ModulePass(ID) {
-    initializeFunctionMergingPass(*PassRegistry::getPassRegistry());
-  }
-  bool runOnModule(Module &M) override;
-  void getAnalysisUsage(AnalysisUsage &AU) const override;
+  PreservedAnalyses run(Module &M, ModuleAnalysisManager &AM);
 };
 
 } // namespace llvm

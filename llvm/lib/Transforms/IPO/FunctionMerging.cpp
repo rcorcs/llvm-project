@@ -127,7 +127,7 @@
 #include <windows.h>
 #endif
 
-#define DEBUG_TYPE "MyFuncMerge"
+#define DEBUG_TYPE "func-merging"
 
 //#define ENABLE_DEBUG_CODE
 
@@ -268,6 +268,16 @@ unsigned long long getTotalSystemMemory() {
   return status.ullTotalPhys;
 }
 #endif
+
+class FunctionMerging {
+public:
+  bool runImpl(Module &M) {
+    TargetTransformInfo TTI(M.getDataLayout());
+    auto GTTI = [&](Function &F) -> TargetTransformInfo * { return &TTI; };
+    return runImpl(M, GTTI);
+  }
+  bool runImpl(Module &M, function_ref<TargetTransformInfo *(Function &)> GTTI);
+};
 
 FunctionMergeResult MergeFunctions(Function *F1, Function *F2,
                                    const FunctionMergingOptions &Options) {
@@ -3522,7 +3532,8 @@ bool ignoreFunction(Function &F) {
   return false;
 }
 
-bool FunctionMerging::runOnModule(Module &M) {
+bool FunctionMerging::runImpl(
+    Module &M, function_ref<TargetTransformInfo *(Function &)> GTTI) {
 
 #ifdef TIME_STEPS_DEBUG
   TimeTotal.startTimer();
@@ -3547,7 +3558,6 @@ bool FunctionMerging::runOnModule(Module &M) {
 
   // TODO: We could use a TTI ModulePass instead but current TTI analysis pass
   // is a FunctionPass.
-  TargetTransformInfo TTI(M.getDataLayout());
 
   FunctionMerger FM(&M);
 
@@ -3630,7 +3640,7 @@ bool FunctionMerging::runOnModule(Module &M) {
       continue;
     if (ignoreFunction(F))
       continue;
-    matcher->add_candidate(&F, EstimateFunctionSize(&F, &TTI));
+    matcher->add_candidate(&F, EstimateFunctionSize(&F, GTTI(F)));
     count++;
   }
 
@@ -3757,7 +3767,7 @@ bool FunctionMerging::runOnModule(Module &M) {
         if (!match.Valid) {
           Result.getMergedFunction()->eraseFromParent();
         } else {
-          size_t MergedSize = EstimateFunctionSize(Result.getMergedFunction(), &TTI);
+          size_t MergedSize = EstimateFunctionSize(Result.getMergedFunction(), GTTI(*Result.getMergedFunction()));
           size_t Overhead = EstimateThunkOverhead(Result, AlwaysPreserved);
 
           size_t SizeF12 = MergedSize + Overhead;
@@ -3776,7 +3786,7 @@ bool FunctionMerging::runOnModule(Module &M) {
               // feed new function back into the working lists
               matcher->add_candidate(
                   Result.getMergedFunction(),
-                  EstimateFunctionSize(Result.getMergedFunction(), &TTI));
+                  EstimateFunctionSize(Result.getMergedFunction(), GTTI(*Result.getMergedFunction())));
             }
           } else {
             Result.getMergedFunction()->eraseFromParent();
@@ -3897,17 +3907,47 @@ bool FunctionMerging::runOnModule(Module &M) {
   return true;
 }
 
-void FunctionMerging::getAnalysisUsage(AnalysisUsage &AU) const {
-  ModulePass::getAnalysisUsage(AU);
-  // AU.addRequired<ProfileSummaryInfoWrapperPass>();
-  // AU.addRequired<BlockFrequencyInfoWrapperPass>();
+class FunctionMergingLegacyPass : public ModulePass {
+public:
+  static char ID;
+  FunctionMergingLegacyPass() : ModulePass(ID) {
+    initializeFunctionMergingLegacyPassPass(*PassRegistry::getPassRegistry());
+  }
+  bool runOnModule(Module &M) override {
+    auto GTTI = [this](Function &F) -> TargetTransformInfo * {
+      return &this->getAnalysis<TargetTransformInfoWrapperPass>().getTTI(F);
+    };
+
+    FunctionMerging FM;
+    return FM.runImpl(M, GTTI);
+  }
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.addRequired<TargetTransformInfoWrapperPass>();
+    // ModulePass::getAnalysisUsage(AU);
+  }
+};
+
+char FunctionMergingLegacyPass::ID = 0;
+INITIALIZE_PASS(FunctionMergingLegacyPass, "func-merging",
+                "New Function Merging", false, false)
+
+ModulePass *llvm::createFunctionMergingPass() {
+  return new FunctionMergingLegacyPass();
 }
 
-char FunctionMerging::ID = 0;
-INITIALIZE_PASS(FunctionMerging, "func-merging", "New Function Merging", false,
-                false)
+PreservedAnalyses FunctionMergingPass::run(Module &M,
+                                           ModuleAnalysisManager &AM) {
+  //auto &FAM = AM.getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
+  //std::function<TargetTransformInfo *(Function &)> GTTI =
+  //    [&FAM](Function &F) -> TargetTransformInfo * {
+  //  return &FAM.getResult<TargetIRAnalysis>(F);
+  //};
 
-ModulePass *llvm::createFunctionMergingPass() { return new FunctionMerging(); }
+  FunctionMerging FM;
+  if (!FM.runImpl(M)) //, GTTI))
+    return PreservedAnalyses::all();
+  return PreservedAnalyses::none();
+}
 
 static std::string GetValueName(const Value *V) {
   if (V) {
