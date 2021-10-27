@@ -246,6 +246,20 @@ static cl::opt<unsigned> BucketSizeCap(
     "bucket-size-cap", cl::init(1000000000), cl::Hidden,
     cl::desc("Define a threshold to be used"));
 
+// DEBUG OPTIONS
+static cl::opt<unsigned> MaxMerges(
+    "max-merges", cl::init(1000000000), cl::Hidden,
+    cl::desc("Maximum number of merged functions per module"));
+
+static cl::list<std::string> AllowedFunctionsList(
+    "allow-functions", cl::Hidden,
+    cl::desc("List of functions that are allowed to be merged"));
+
+static cl::list<std::string> ExcludedFunctionsList(
+    "exclude-functions", cl::Hidden,
+    cl::desc("List of functions that are not allowed to be merged"));
+
+
 static std::string GetValueName(const Value *V);
 
 #ifdef __unix__ /* __unix__ is usually defined by compilers targeting Unix     \
@@ -3639,7 +3653,9 @@ bool FunctionMerging::runImpl(
     matcher = std::make_unique<MatcherFQ<Function *, FingerprintMH>>(FM, Options); errs() << "LIN SCAN MH\n";}
   else{
     matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options); errs() << "LIN SCAN FP\n";}
-    
+  
+  std::unordered_set<std::string> AllowedSet(AllowedFunctionsList.begin(), AllowedFunctionsList.end()); 
+  std::unordered_set<std::string> ExcludedSet(ExcludedFunctionsList.begin(), ExcludedFunctionsList.end());
 
   SearchStrategy strategy(LSHRows, LSHBands);
   size_t count=0;
@@ -3647,6 +3663,11 @@ bool FunctionMerging::runImpl(
     if (F.isDeclaration() || F.isVarArg() || (!HasWholeProgram && F.hasAvailableExternallyLinkage()))
       continue;
     if (ignoreFunction(F))
+      continue;
+    std::string FName(GetValueName(&F));
+    if (!AllowedSet.empty() && (AllowedSet.find(FName) == AllowedSet.cend()))
+      continue;
+    if (ExcludedSet.find(FName) != ExcludedSet.cend())
       continue;
     matcher->add_candidate(&F, EstimateFunctionSize(&F, GTTI(F)));
     count++;
@@ -3681,6 +3702,8 @@ bool FunctionMerging::runImpl(
   unsigned TotalBinOps = 0;
 
   while (matcher->size() > 0) {
+    if (TotalMerges > MaxMerges)
+      break;
 #ifdef TIME_STEPS_DEBUG
     TimeRank.startTimer();
     time_ranking_start = std::chrono::steady_clock::now();
