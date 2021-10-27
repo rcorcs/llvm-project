@@ -2847,20 +2847,21 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     ArgsList.push_back(&arg);
   }
   Value *FuncId = ArgsList[0];
-
   
-  auto AttrList1 = F1->getAttributes();
-  auto AttrList2 = F2->getAttributes();
-  auto AttrListM = MergedFunc->getAttributes();
+  ////TODO: merging attributes might create compilation issues if we are not careful.
+  ////Therefore, attributes are not being merged right now.
+  //auto AttrList1 = F1->getAttributes();
+  //auto AttrList2 = F2->getAttributes();
+  //auto AttrListM = MergedFunc->getAttributes();
 
   int ArgId = 0;
   for (auto I = F1->arg_begin(), E = F1->arg_end(); I != E; I++) {
     VMap[&(*I)] = ArgsList[ParamMap1[ArgId]];
 
-    auto AttrSet1 = AttrList1.getParamAttributes((*I).getArgNo());
-    AttrBuilder Attrs(AttrSet1);
-    AttrListM = AttrListM.addParamAttributes(
-        Context, ArgsList[ParamMap1[ArgId]]->getArgNo(), Attrs);
+    //auto AttrSet1 = AttrList1.getParamAttributes((*I).getArgNo());
+    //AttrBuilder Attrs(AttrSet1);
+    //AttrListM = AttrListM.addParamAttributes(
+    //    Context, ArgsList[ParamMap1[ArgId]]->getArgNo(), Attrs);
 
     ArgId++;
   }
@@ -2869,10 +2870,10 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
   for (auto I = F2->arg_begin(), E = F2->arg_end(); I != E; I++) {
     VMap[&(*I)] = ArgsList[ParamMap2[ArgId]];
 
-    auto AttrSet2 = AttrList2.getParamAttributes((*I).getArgNo());
-    AttrBuilder Attrs(AttrSet2);
-    AttrListM = AttrListM.addParamAttributes(
-        Context, ArgsList[ParamMap2[ArgId]]->getArgNo(), Attrs);
+    //auto AttrSet2 = AttrList2.getParamAttributes((*I).getArgNo());
+    //AttrBuilder Attrs(AttrSet2);
+    //AttrListM = AttrListM.addParamAttributes(
+    //    Context, ArgsList[ParamMap2[ArgId]]->getArgNo(), Attrs);
 
     ArgId++;
   }
