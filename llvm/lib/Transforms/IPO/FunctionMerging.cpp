@@ -3632,10 +3632,13 @@ bool FunctionMerging::runImpl(
   errs() << "LSHRows: " << LSHRows << "\n";
   errs() << "LSHBands: " << LSHBands << "\n";
 
-  if (EnableF3M)
-    matcher = std::make_unique<MatcherLSH<Function *>>(FM, Options, LSHRows, LSHBands); errs() << "LSH MH\n";
-  else
-    matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options); errs() << "LIN SCAN FP\n";
+  if (EnableF3M) {
+    matcher = std::make_unique<MatcherLSH<Function *>>(FM, Options, LSHRows, LSHBands);
+	errs() << "LSH MH\n";
+  } else {
+    matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options);
+	errs() << "LIN SCAN FP\n";
+  }
   
   std::unordered_set<std::string> AllowedSet(AllowedFunctionsList.begin(), AllowedFunctionsList.end()); 
   std::unordered_set<std::string> ExcludedSet(ExcludedFunctionsList.begin(), ExcludedFunctionsList.end());
