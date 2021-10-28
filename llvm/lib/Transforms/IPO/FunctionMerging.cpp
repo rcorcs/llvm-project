@@ -114,8 +114,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include <cstdlib>
 #include <climits>
+#include <cstdlib>
 #include <ctime>
 
 #ifdef __unix__
@@ -198,16 +198,16 @@ static cl::opt<bool> HyFMProfitability(
     "hyfm-profitability", cl::init(true), cl::Hidden,
     cl::desc("Try to reuse merged functions for another merge operation"));
 
-static cl::opt<bool> EnableLSH(
-    "func-merging-lsh", cl::init(false), cl::Hidden,
-    cl::desc("Enable function pairing based on LSH"));
+static cl::opt<bool> EnableF3M(
+    "func-merging-f3m", cl::init(false), cl::Hidden,
+    cl::desc("Enable function pairing based on MinHashes and LSH"));
 
 static cl::opt<unsigned> LSHRows(
-    "hyfm-lsh-rows", cl::init(2), cl::Hidden,
+    "hyfm-f3m-rows", cl::init(2), cl::Hidden,
     cl::desc("Number of rows in the LSH structure"));
 
 static cl::opt<unsigned> LSHBands(
-    "hyfm-lsh-bands", cl::init(100), cl::Hidden,
+    "hyfm-f3m-bands", cl::init(100), cl::Hidden,
     cl::desc("Number of bands in the LSH structure"));
 
 static cl::opt<bool> ShingleCrossBBs(
@@ -1988,7 +1988,7 @@ private:
         CountCandidates++;
       }
       if (best_match.candidate != nullptr)
-        if (!EnableLSH || best_match.Distance < RankingDistance)
+        if (!EnableF3M || best_match.Distance < RankingDistance)
           /*if (EnableThunkPrediction)
           {
               if (std::max(best_match.size, best_match.OtherSize) + EstimateThunkOverhead(it->candidate, best_match->candidate)) // Needs AlwaysPreserved
@@ -2010,7 +2010,7 @@ private:
       new_match.OtherSize = it->size;
       new_match.OtherMagnitude = it->FP.magnitude;
       new_match.Magnitude = entry.FP.magnitude;
-      if (!EnableLSH || new_match.Distance < RankingDistance)
+      if (!EnableF3M || new_match.Distance < RankingDistance)
         matches.push_back(std::move(new_match));
       if (RankingThreshold && (CountCandidates > RankingThreshold))
         break;
@@ -2055,7 +2055,6 @@ private:
   SearchStrategy strategy;
 
   std::list<MatcherEntry> candidates;
-  //tsl::robin_map<uint32_t, std::vector<MatcherIt>> lsh;
   std::unordered_map<uint32_t, std::vector<MatcherIt>> lsh;
   std::vector<std::pair<T, MatcherIt>> cache;
   std::vector<MatchInfo<T>> matches;
@@ -3604,14 +3603,10 @@ bool FunctionMerging::runImpl(
     size++;
   }
 
-  //bool linearScan = size < 100 ? true : false;
-  bool linearScan = false;
-
   // Create a threshold based on the application's size
   if (AdaptiveThreshold || AdaptiveBands)
   {
     double x = std::log10(size) / 10;
-    //RankingDistance = (double) (1.0 / (2.0 + std::pow(x/(1.0-x),-3.0))) + 0.125;
     RankingDistance = (double) (x - 0.3);
     if (RankingDistance < 0.05)
       RankingDistance = 0.05;
@@ -3622,16 +3617,6 @@ bool FunctionMerging::runImpl(
       float target_probability = 0.9;
       float offset = 0.1;
       unsigned tempBands = std::ceil(std::log(1.0 - target_probability) / std::log(1.0 - std::pow(RankingDistance + offset, LSHRows)));
-      //size_t fingerprint_size = LSHRows * LSHBands;
-      //if (RankingDistance < 0.15)
-      //    LSHRows = 1;
-      //else if (RankingDistance >= 0.15 && RankingDistance < 0.4)
-      //    LSHRows = 2;
-      //else if (RankingDistance >= 0.4 && RankingDistance < 0.5)
-      //    LSHRows = 4;
-      //else
-      //    LSHRows = 5;
-      //LSHBands = fingerprint_size / LSHRows;
       if (tempBands < LSHBands)
         LSHBands = tempBands;
 
@@ -3647,12 +3632,10 @@ bool FunctionMerging::runImpl(
   errs() << "LSHRows: " << LSHRows << "\n";
   errs() << "LSHBands: " << LSHBands << "\n";
 
-  if (EnableLSH && !linearScan){
-    matcher = std::make_unique<MatcherLSH<Function *>>(FM, Options, LSHRows, LSHBands); errs() << "LSH MH\n";}
-  else if (EnableLSH && linearScan){
-    matcher = std::make_unique<MatcherFQ<Function *, FingerprintMH>>(FM, Options); errs() << "LIN SCAN MH\n";}
-  else{
-    matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options); errs() << "LIN SCAN FP\n";}
+  if (EnableF3M)
+    matcher = std::make_unique<MatcherLSH<Function *>>(FM, Options, LSHRows, LSHBands); errs() << "LSH MH\n";
+  else
+    matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options); errs() << "LIN SCAN FP\n";
   
   std::unordered_set<std::string> AllowedSet(AllowedFunctionsList.begin(), AllowedFunctionsList.end()); 
   std::unordered_set<std::string> ExcludedSet(ExcludedFunctionsList.begin(), ExcludedFunctionsList.end());
@@ -3744,7 +3727,7 @@ bool FunctionMerging::runImpl(
       std::string F2Name(GetValueName(F2));
 
       if (Verbose) {
-        if (EnableLSH) {
+        if (EnableF3M) {
           Fingerprint<Function *> FP1(F1);
           Fingerprint<Function *> FP2(F2);
           OtherDistance = FP1.distance(FP2);
