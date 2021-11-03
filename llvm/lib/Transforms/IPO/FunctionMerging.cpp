@@ -251,6 +251,10 @@ static cl::opt<unsigned> MaxMerges(
     "max-merges", cl::init(1000000000), cl::Hidden,
     cl::desc("Maximum number of merged functions per module"));
 
+static cl::opt<unsigned> MaxBB2(
+    "max-bb-merges", cl::init(1000000000), cl::Hidden,
+    cl::desc("Maximum number of merged functions per module"));
+
 static cl::list<std::string> AllowedFunctionsList(
     "allow-functions", cl::Hidden,
     cl::desc("List of functions that are allowed to be merged"));
@@ -2626,7 +2630,6 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
 
       auto &SetRef = BlocksF1[BD2.Size];
 
-
       auto BestIt = SetRef.end();
       float BestDist = std::numeric_limits<float>::max();
       for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt != E; BDIt++) {
@@ -3634,10 +3637,10 @@ bool FunctionMerging::runImpl(
 
   if (EnableF3M) {
     matcher = std::make_unique<MatcherLSH<Function *>>(FM, Options, LSHRows, LSHBands);
-	errs() << "LSH MH\n";
+  errs() << "LSH MH\n";
   } else {
     matcher = std::make_unique<MatcherFQ<Function *>>(FM, Options);
-	errs() << "LIN SCAN FP\n";
+  errs() << "LIN SCAN FP\n";
   }
   
   std::unordered_set<std::string> AllowedSet(AllowedFunctionsList.begin(), AllowedFunctionsList.end()); 
@@ -5037,8 +5040,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
         LastI = &I;
       }
       if (isa<PHINode>(InsertPt) || isa<LandingPadInst>(InsertPt)) {
-        // Builder.SetInsertPoint(&*IV->getParent()->getFirstInsertionPt());
-        Builder.SetInsertPoint(IV->getParent()->getTerminator());
+        Builder.SetInsertPoint(&*IV->getParent()->getFirstInsertionPt());
+        //Builder.SetInsertPoint(IV->getParent()->getTerminator());
       } else
         Builder.SetInsertPoint(InsertPt);
 
@@ -5061,8 +5064,13 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
 
         if (auto *PHI = dyn_cast<PHINode>(User)) {
           /// TODO: make sure getOperandNo is getting the correct incoming edge
-          IRBuilder<> Builder(
-              PHI->getIncomingBlock(UI.getOperandNo())->getTerminator());
+          auto InsertionPt = PHI->getIncomingBlock(UI.getOperandNo())->getTerminator();
+          /// TODO: If the terminator of the incoming block is the producer of
+          //        the value we want to store, the load cannot be inserted between
+          //        the producer and the user. Something more complex is needed.
+          if (InsertionPt == I)
+            continue;
+          IRBuilder<> Builder(InsertionPt);
           UI.set(Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr));
         } else {
           IRBuilder<> Builder(User);
@@ -5155,6 +5163,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
 #endif
       return false;
     } 
+    //errs() << "Fixing Domination:\n";
+    //MergedFunc->dump();
     std::set<Instruction *> Visited;
     for (Instruction *I : LinearOffendingInsts) {
       if (Visited.find(I) != Visited.end())
@@ -5175,14 +5185,14 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
         Allocas.push_back(Addr);
     }
 
-    // errs() << "Fixed Domination:\n";
-    // MergedFunc->dump();
+    //errs() << "Fixed Domination:\n";
+    //MergedFunc->dump();
 
     DominatorTree DT(*MergedFunc);
     PromoteMemToReg(Allocas, DT, nullptr);
 
-    // errs() << "Mem2Reg:\n";
-    // MergedFunc->dump();
+    //errs() << "Mem2Reg:\n";
+    //MergedFunc->dump();
 
     if (verifyFunction(*MergedFunc)) {
       if (Verbose)
