@@ -41,7 +41,11 @@
 // Effective Function Merging in the SSA Form (PLDI'20)
 // Rodrigo C. O. Rocha, Pavlos Petoumenos, Zheng Wang, Murray Cole, Hugh Leather
 //
-// Extra unpublished work by Sean Stirling
+// HyFM: Function Merging for Free (LCTES'21)
+// Rodrigo C. O. Rocha, Pavlos Petoumenos, Zheng Wang, Murray Cole, Kim Hazelwood, Hugh Leather
+//
+// F3M: Fast Focused Function Merging (CGO'22)
+// Sean Sterling, Rodrigo C. O. Rocha, Hugh Leather, Kim Hazelwood, Michael O'Boyle, Pavlos Petoumenos
 //
 //===----------------------------------------------------------------------===//
 
