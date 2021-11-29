@@ -202,7 +202,7 @@ private:
 
   enum LinearizationKind { LK_Random, LK_Canonical };
 
-  void linearize(Function *F, SmallVectorImpl<Value *> &FVec,
+  void linearize(Function &F, SmallVectorImpl<Value *> &FVec,
                  LinearizationKind LK = LinearizationKind::LK_Canonical);
 
   static bool matchInstructions(Instruction *I1, Instruction *I2,
@@ -244,6 +244,9 @@ public:
 
   static bool match(Value *V1, Value *V2);
 
+  template<typename RegionT>
+  AlignedSequence<Value *> alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, const FunctionMergingOptions &Options = {});
+
   void updateCallGraph(FunctionMergeResult &Result,
                        StringSet<> &AlwaysPreserved,
                        const FunctionMergingOptions &Options = {});
@@ -283,16 +286,8 @@ public:
                                      DominatorTree &DT);
 
   public:
-    // CodeGenerator(BlockListType &Blocks1, BlockListType &Blocks2) :
-    // Blocks1(Blocks1), Blocks2(Blocks2) {}
-    CodeGenerator(SmallVectorImpl<BasicBlock*> &Blocks1, SmallVectorImpl<BasicBlock*> &Blocks2) {
-      for (BasicBlock *BB : Blocks1)
-        this->Blocks1.push_back(BB);
-      for (BasicBlock *BB : Blocks2)
-        this->Blocks2.push_back(BB);
-    }
-
-    CodeGenerator(Function::BasicBlockListType &Blocks1, Function::BasicBlockListType &Blocks2) {
+    template <typename BlockListType>
+    CodeGenerator(BlockListType &Blocks1, BlockListType &Blocks2) {
       for (BasicBlock &BB : Blocks1)
         this->Blocks1.push_back(&BB);
       for (BasicBlock &BB : Blocks2)

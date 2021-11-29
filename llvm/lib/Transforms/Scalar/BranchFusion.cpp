@@ -15,6 +15,7 @@
 #include "llvm/Transforms/IPO/FunctionMerging.h"
 
 #include "llvm/ADT/SequenceAlignment.h"
+#include "llvm/ADT/iterator_range.h"
 
 #include "llvm/InitializePasses.h"
 
@@ -130,44 +131,75 @@ public:
   }
 };
 
-static void linearizeDominatedBlocks(BasicBlock *BB, BasicBlock *DomBB,
-                                     SmallVectorImpl<BasicBlock *> &CFG,
-                                     SmallVectorImpl<Value *> &AllVals,
-                                     SmallVectorImpl<BasicBlock *> &Exit,
-                                     DominatorTree &DT,
-                                     std::set<Value *> &Visited) {
-  // if (DomBB==BB || DT.dominates(DomBB,BB)) {
-  if (DT.dominates(DomBB, BB)) {
-    errs() << DomBB->getName() << " dominate " << BB->getName() << "\n";
+
+template<typename T, typename PtrIteratorT>
+class PtrToRefIterator {
+  PtrIteratorT It;
+
+public:
+  PtrToRefIterator(PtrIteratorT It) : It(It) {}
+
+  PtrToRefIterator &operator++() { It++; return *this; }
+
+  bool operator==(PtrToRefIterator &other) const {return It == other.It;}
+  bool operator!=(PtrToRefIterator &other) const {return !(*this == other);}
+
+  T &operator *() { return *(*It); }
+};
+
+class SEMERegion {
+private:
+  BasicBlock *Entry;
+  std::vector<BasicBlock *> Blocks;
+  std::vector<BasicBlock *> Exits;
+
+  void collectDominatedRegion(BasicBlock *BB, DominatorTree &DT, std::set<Value *> &Visited);
+public:
+  using iterator = PtrToRefIterator<BasicBlock, std::vector<BasicBlock *>::iterator>;
+
+  SEMERegion(BasicBlock *Entry, DominatorTree &DT) : Entry(Entry) {
+    std::set<Value *> Visited;
+    collectDominatedRegion(Entry, DT, Visited);
+  }
+
+  const BasicBlock &getEntryBlock() const { return *Entry; }
+  BasicBlock &getEntryBlock() { return *Entry; }
+
+  bool contains(BasicBlock *BB) { return std::find(Blocks.begin(), Blocks.end(), BB)!=Blocks.end(); }
+  bool isExitBlock(BasicBlock *BB) { return std::find(Exits.begin(), Exits.end(), BB)!=Exits.end(); }
+
+  iterator begin() { return iterator(Blocks.begin()); }
+  iterator end() { return iterator(Blocks.end()); }
+
+  iterator exit_begin() { return iterator(Exits.begin()); }
+  iterator exit_end() { return iterator(Exits.end()); }
+
+  iterator_range<iterator> exits() { return make_range<iterator>(exit_begin(), exit_end()); }
+
+  size_t size() { return Blocks.size(); }
+
+  size_t getNumExitBlocks() { return Exits.size(); }
+
+  BasicBlock *getUniqueExitBlock() { if (Exits.size()==1) return *Exits.begin(); else return nullptr; }
+};
+
+void SEMERegion::collectDominatedRegion(BasicBlock *BB, DominatorTree &DT, std::set<Value *> &Visited) {
+  if (DT.dominates(Entry, BB)) {
+    //errs() << Entry->getName() << " dominate " << BB->getName() << "\n";
     if (Visited.find(BB) != Visited.end())
       return;
     Visited.insert(BB);
 
-    CFG.push_back(BB);
-    AllVals.push_back(BB);
-    for (Instruction &I : *BB) {
-      if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
-        AllVals.push_back(&I);
-      }
-    }
+    Blocks.push_back(BB);
 
     for (auto BBIt = succ_begin(BB), EndIt = succ_end(BB); BBIt != EndIt;
          BBIt++) {
-      linearizeDominatedBlocks(*BBIt, DomBB, CFG, AllVals, Exit, DT, Visited);
+      collectDominatedRegion(*BBIt, DT, Visited);
     }
   } else {
-    Exit.push_back(BB);
-    errs() << DomBB->getName() << " NOT dominate " << BB->getName() << "\n";
+    Exits.push_back(BB);
+    //errs() << Entry->getName() << " NOT dominate " << BB->getName() << "\n";
   }
-}
-
-static void linearizeDominatedBlocks(BasicBlock *DomBB,
-                                     SmallVectorImpl<BasicBlock *> &CFG,
-                                     SmallVectorImpl<Value *> &AllVals,
-                                     SmallVectorImpl<BasicBlock *> &Exit,
-                                     DominatorTree &DT) {
-  std::set<Value *> Visited;
-  linearizeDominatedBlocks(DomBB, DomBB, CFG, AllVals, Exit, DT, Visited);
 }
 
 bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
@@ -178,22 +210,36 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
   BasicBlock *BBF = BI->getSuccessor(1);
   Value *BrCond = BI->getCondition();
 
-  SmallVector<BasicBlock *, 8> CFGLeft;
-  SmallVector<BasicBlock *, 8> CFGRight;
+  SEMERegion LeftR(BBT, DT);
+  SEMERegion RightR(BBF, DT);
 
-  SmallVector<BasicBlock *, 8> ExitLeft;
-  SmallVector<BasicBlock *, 8> ExitRight;
+  int SizeLeft = 0;
+  int SizeRight = 0;
 
-  SmallVector<Value *, 8> LeftVals;
-  SmallVector<Value *, 8> RightVals;
+  std::set<BasicBlock *> KnownBBs;
+  for (BasicBlock &BB : LeftR) {
+    KnownBBs.insert(&BB);
+    for (Instruction &I : BB) {
+      auto cost = TTI.getInstructionCost(
+          &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
+      SizeLeft += cost.getValue().getValue();
+    }
+  }
+  for (BasicBlock &BB : RightR) {
+    KnownBBs.insert(&BB);
+    for (Instruction &I : BB) {
+      auto cost = TTI.getInstructionCost(
+          &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
+      SizeRight += cost.getValue().getValue();
+    }
+  }
 
-  linearizeDominatedBlocks(BBT, CFGLeft, LeftVals, ExitLeft, DT);
-  linearizeDominatedBlocks(BBF, CFGRight, RightVals, ExitRight, DT);
+
+  bool IsSingleExit = LeftR.getNumExitBlocks() == 1 && RightR.getNumExitBlocks() == 1 &&
+                      LeftR.getUniqueExitBlock() == RightR.getUniqueExitBlock();
 
   if (EnableSOA) {
-    bool IsSOA = CFGLeft.size() == 1 && CFGRight.size() == 1 &&
-                 ExitLeft.size() == 1 && ExitRight.size() == 1 &&
-                 (*ExitLeft.begin()) == (*ExitRight.begin());
+    bool IsSOA = LeftR.size() == 1 && RightR.size() == 1 && IsSingleExit;
     if (!IsSOA) {
       errs() << "Skipping NOT SOA\n";
       return false;
@@ -201,13 +247,59 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     errs() << "Processing SOA-valid Branch\n";
   }
 
-  bool IsSingleExit = ExitLeft.size() == 1 && ExitRight.size() == 1 &&
-                 (*ExitLeft.begin()) == (*ExitRight.begin());
   if (!IsSingleExit) return false;
+
+
+  for (BasicBlock *BB : KnownBBs) {
+    for (auto It = pred_begin(BB), E = pred_end(BB); It!=E; It++) {
+      BasicBlock *PredBB = *It;
+      if (!KnownBBs.count(PredBB) && PredBB!=BI->getParent()) {
+        return false;
+      }
+    }
+  }
+
+
+  // only accept instructions as incoming values from the basic blocks
+  // being merged.
+  for (BasicBlock &BB : LeftR.exits()) {
+    for (PHINode &PHI : BB.phis()) {
+      for (unsigned i = 0; i < PHI.getNumIncomingValues(); i++) {
+        if (KnownBBs.count(PHI.getIncomingBlock(i)))
+          if (!isa<Instruction>(PHI.getIncomingValue(i)))
+            return false;
+      }
+    }
+  }
+  for (BasicBlock &BB : RightR.exits()) {
+    for (PHINode &PHI : BB.phis()) {
+      for (unsigned i = 0; i < PHI.getNumIncomingValues(); i++) {
+        if (KnownBBs.count(PHI.getIncomingBlock(i)))
+          if (!isa<Instruction>(PHI.getIncomingValue(i)))
+            return false;
+      }
+    }
+  }
+
+
+  SmallVector<Value *, 8> F1Vec;
+  for (BasicBlock &BB : LeftR) {
+    F1Vec.push_back(&BB);
+    for (Instruction &I : BB) {
+      F1Vec.push_back(&I);
+    }
+  }
+  SmallVector<Value *, 8> F2Vec;
+  for (BasicBlock &BB : RightR) {
+    F2Vec.push_back(&BB);
+    for (Instruction &I : BB) {
+      F2Vec.push_back(&I);
+    }
+  }
 
   NeedlemanWunschSA<SmallVectorImpl<Value *>> SA(ScoringSystem(-1, 2),
                                                  FunctionMerger::match);
-  AlignedSequence<Value *> AlignedInsts = SA.getAlignment(LeftVals, RightVals);
+  AlignedSequence<Value *> AlignedInsts = SA.getAlignment(F1Vec, F2Vec);
 
   int CountMatchUsefullInsts = 0;
   for (auto &Entry : AlignedInsts) {
@@ -248,45 +340,11 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
   const DataLayout *DL = &F.getParent()->getDataLayout();
   Type *IntPtrTy = DL->getIntPtrType(Context);
 
-  int SizeLeft = 0;
-  int SizeRight = 0;
 
   ValueToValueMapTy VMap;
   // initialize VMap
   for (Argument &Arg : F.args()) {
     VMap[&Arg] = &Arg;
-  }
-  std::set<BasicBlock *> KnownBBs;
-  errs() << "Left:\n";
-  for (Value *V : LeftVals) {
-    if (isa<BasicBlock>(V))
-      KnownBBs.insert(dyn_cast<BasicBlock>(V));
-    else if (Instruction *I = dyn_cast<Instruction>(V)) {
-      I->dump();
-      auto cost = TTI.getInstructionCost(
-          I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
-      SizeLeft += cost.getValue().getValue();
-    }
-  }
-  errs() << "Right:\n";
-  for (Value *V : RightVals) {
-    if (isa<BasicBlock>(V))
-      KnownBBs.insert(dyn_cast<BasicBlock>(V));
-    else if (Instruction *I = dyn_cast<Instruction>(V)) {
-      I->dump();
-      auto cost = TTI.getInstructionCost(
-          I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
-      SizeRight += cost.getValue().getValue();
-    }
-  }
-
-  for (BasicBlock *BB : KnownBBs) {
-    for (auto It = pred_begin(BB), E = pred_end(BB); It!=E; It++) {
-      BasicBlock *PredBB = *It;
-      if (!KnownBBs.count(PredBB) && PredBB!=BI->getParent()) {
-        return false;
-      }
-    }
   }
 
   for (BasicBlock &BB : F) {
@@ -298,36 +356,13 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     }
   }
 
-  for (BasicBlock *BB : ExitLeft) {
-    for (Instruction &I : *BB) {
-      if (PHINode *PHI = dyn_cast<PHINode>(&I)) {
-        for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
-          if (KnownBBs.count(PHI->getIncomingBlock(i)))
-            if (!isa<Instruction>(PHI->getIncomingValue(i)))
-              return false;
-        }
-      }
-    }
-  }
-  for (BasicBlock *BB : ExitRight) {
-    for (Instruction &I : *BB) {
-      if (PHINode *PHI = dyn_cast<PHINode>(&I)) {
-        for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
-          if (KnownBBs.count(PHI->getIncomingBlock(i)))
-            if (!isa<Instruction>(PHI->getIncomingValue(i)))
-              return false;
-        }
-      }
-    }
-  }
-
   FunctionMergingOptions Options = FunctionMergingOptions()
                                        .enableUnifiedReturnTypes(false)
                                        .matchOnlyIdenticalTypes(true);
 
   BasicBlock *EntryBB = BasicBlock::Create(Context, "", &F);
 
-  FunctionMerger::SALSSACodeGen CG(CFGLeft, CFGRight);
+  FunctionMerger::SALSSACodeGen CG(LeftR, RightR);
   CG.setFunctionIdentifier(BrCond)
       .setEntryPoints(BBT, BBF)
       .setReturnTypes(F.getReturnType(), F.getReturnType())
@@ -394,19 +429,19 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     BI->eraseFromParent();
 
     std::set<BasicBlock *> VisitedBB;
-    auto ProcessPHIs = [&](auto &ExitSet) {
-      for (BasicBlock *BB : ExitSet) {
-        if (VisitedBB.count(BB))
+    auto ProcessPHIs = [&](auto ExitSet) {
+      for (BasicBlock &BB : ExitSet) {
+        if (VisitedBB.count(&BB))
           continue;
-        VisitedBB.insert(BB);
+        VisitedBB.insert(&BB);
 
-        for (Instruction &I : *BB) {
+        for (Instruction &I : BB) {
           if (PHINode *PHI = dyn_cast<PHINode>(&I)) {
             std::map<BasicBlock *, std::set<Value *>> NewEntries;
             std::set<BasicBlock *> OldEntries;
             for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
-              BasicBlock *BB = PHI->getIncomingBlock(i);
-              if (KnownBBs.count(BB)) {
+              BasicBlock *InBB = PHI->getIncomingBlock(i);
+              if (KnownBBs.count(InBB)) {
                 if (Instruction *OpI =
                         dyn_cast<Instruction>(PHI->getIncomingValue(i))) {
                   Value *NewV = VMap[OpI];
@@ -418,7 +453,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
 
                   BasicBlock *NewBB =
                       dyn_cast<Instruction>(
-                          VMap[BB->getTerminator()])
+                          VMap[BB.getTerminator()])
                           ->getParent();
 
                   // PHI->setIncomingBlock(i,NewBB);
@@ -430,7 +465,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
                   */
 
                   NewEntries[NewBB].insert(NewV);
-                  OldEntries.insert(BB);
+                  OldEntries.insert(InBB);
                 } else {
                   errs() << "ERROR: Cannot handle non-instruction values!\n";
                 }
@@ -471,8 +506,8 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
         }
       }
     };
-    ProcessPHIs(ExitLeft);
-    ProcessPHIs(ExitRight);
+    ProcessPHIs(LeftR.exits());
+    ProcessPHIs(RightR.exits());
 
     std::vector<Instruction *> DeadInsts;
     for (BasicBlock *BB : KnownBBs) {

@@ -1142,9 +1142,9 @@ RandomLinearizationOfBlocks(BasicBlock *BB,
 }
 
 static unsigned
-RandomLinearizationOfBlocks(Function *F, std::list<BasicBlock *> &OrederedBBs) {
+RandomLinearizationOfBlocks(Function &F, std::list<BasicBlock *> &OrederedBBs) {
   std::set<BasicBlock *> Visited;
-  return RandomLinearizationOfBlocks(&F->getEntryBlock(), OrederedBBs, Visited);
+  return RandomLinearizationOfBlocks(&F.getEntryBlock(), OrederedBBs, Visited);
 }
 
 static unsigned
@@ -1174,14 +1174,14 @@ CanonicalLinearizationOfBlocks(BasicBlock *BB,
 }
 
 static unsigned
-CanonicalLinearizationOfBlocks(Function *F,
+CanonicalLinearizationOfBlocks(Function &F,
                                std::list<BasicBlock *> &OrederedBBs) {
   std::set<BasicBlock *> Visited;
-  return CanonicalLinearizationOfBlocks(&F->getEntryBlock(), OrederedBBs,
+  return CanonicalLinearizationOfBlocks(&F.getEntryBlock(), OrederedBBs,
                                         Visited);
 }
 
-void FunctionMerger::linearize(Function *F, SmallVectorImpl<Value *> &FVec,
+void FunctionMerger::linearize(Function &F, SmallVectorImpl<Value *> &FVec,
                                FunctionMerger::LinearizationKind LK) {
   std::list<BasicBlock *> OrderedBBs;
 
@@ -2500,24 +2500,11 @@ void FunctionMerger::extendAlignedSeq(AlignedSequence<Value *> &AlignedSeq, Alig
 
 bool AcrossBlocks;
 
-FunctionMergeResult
-FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const FunctionMergingOptions &Options) {
-  bool ProfitableFn = true;
-  LLVMContext &Context = *ContextPtr;
-  FunctionMergeResult ErrorResponse(F1, F2, nullptr);
-
-  if (!validMergePair(F1, F2))
-    return ErrorResponse;
-
-#ifdef TIME_STEPS_DEBUG
-  TimeAlign.startTimer();
-  time_align_start = std::chrono::steady_clock::now();
-#endif
+template<typename RegionT>
+AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, const FunctionMergingOptions &Options) {
 
   AlignedSequence<Value *> AlignedSeq;
   if (EnableHyFMNW) { // HyFM [NW]
-    AlignmentStats TotalAlignmentStats;
-
     int B1Max = 0;
     int B2Max = 0;
     size_t MaxMem = 0;
@@ -2530,7 +2517,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     TimeAlignRank.startTimer();
 #endif
     std::vector<BlockFingerprint> Blocks;
-    for (BasicBlock &BB1 : *F1) {
+    for (BasicBlock &BB1 : F1) {
       BlockFingerprint BD1(&BB1);
       MemSize += BD1.footprint();
       NumBB1++;
@@ -2540,7 +2527,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     TimeAlignRank.stopTimer();
 #endif
 
-    for (BasicBlock &BIt : *F2) {
+    for (BasicBlock &BIt : F2) {
 #ifdef TIME_STEPS_DEBUG
       TimeAlignRank.startTimer();
 #endif
@@ -2612,9 +2599,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
       errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize << "\n";
     }
 
-    ProfitableFn = TotalAlignmentStats.isProfitable();
   } else if (EnableHyFMPA) { // HyFM [PA]
-    AlignmentStats TotalAlignmentStats;
 
     int NumBB1 = 0;
     int NumBB2 = 0;
@@ -2624,7 +2609,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     TimeAlignRank.startTimer();
 #endif
     std::map<size_t, std::vector<BlockFingerprint>> BlocksF1;
-    for (BasicBlock &BB1 : *F1) {
+    for (BasicBlock &BB1 : F1) {
       BlockFingerprint BD1(&BB1);
       NumBB1++;
       MemSize += BD1.footprint();
@@ -2634,7 +2619,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     TimeAlignRank.stopTimer();
 #endif
 
-    for (BasicBlock &BIt : *F2) {
+    for (BasicBlock &BIt : F2) {
 #ifdef TIME_STEPS_DEBUG
       TimeAlignRank.startTimer();
 #endif
@@ -2679,7 +2664,6 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
     if (Verbose)
       errs() << "RStats: " << NumBB1 << " , " << NumBB2 << " , " << MemSize << "\n";
 
-    ProfitableFn = TotalAlignmentStats.isProfitable();
   } else { //default SALSSA
     SmallVector<Value *, 8> F1Vec;
     SmallVector<Value *, 8> F2Vec;
@@ -2695,21 +2679,33 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
 
     NeedlemanWunschSA<SmallVectorImpl<Value *>> SA(ScoringSystem(-1, 2), FunctionMerger::match);
 
-    auto MemReq = SA.getMemoryRequirement(F1Vec, F2Vec);
-    auto MemAvailable = getTotalSystemMemory();
-    errs() << "Stats: " << F1Vec.size() << " , " << F2Vec.size() << " , " << MemReq << "\n";
-    if (MemReq > MemAvailable * 0.9) {
-      errs() << "Insufficient Memory\n";
-#ifdef TIME_STEPS_DEBUG
-      TimeAlign.stopTimer();
-      time_align_end = std::chrono::steady_clock::now();
-#endif
-      return ErrorResponse;
-    }
-    
     AlignedSeq = SA.getAlignment(F1Vec, F2Vec);
 
   }
+
+
+  return AlignedSeq;
+}
+
+
+FunctionMergeResult
+FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const FunctionMergingOptions &Options) {
+  bool ProfitableFn = true;
+  LLVMContext &Context = *ContextPtr;
+  FunctionMergeResult ErrorResponse(F1, F2, nullptr);
+
+  if (!validMergePair(F1, F2))
+    return ErrorResponse;
+
+#ifdef TIME_STEPS_DEBUG
+  TimeAlign.startTimer();
+  time_align_start = std::chrono::steady_clock::now();
+#endif
+
+  AlignmentStats TotalAlignmentStats;
+  AlignedSequence<Value *> AlignedSeq = alignBlocks(*F1, *F2, TotalAlignmentStats, Options);
+
+  ProfitableFn = TotalAlignmentStats.isProfitable();
 
 #ifdef TIME_STEPS_DEBUG
   TimeAlign.stopTimer();
