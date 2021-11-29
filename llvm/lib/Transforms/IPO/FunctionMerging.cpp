@@ -51,6 +51,8 @@
 
 #include "llvm/Transforms/IPO/FunctionMerging.h"
 
+#include "llvm/InitializePasses.h"
+
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Dominators.h"
@@ -135,7 +137,7 @@
 
 //#define ENABLE_DEBUG_CODE
 
-#define TIME_STEPS_DEBUG
+//#define TIME_STEPS_DEBUG
 
 using namespace llvm;
 
@@ -1593,17 +1595,43 @@ LLVMContext &Context, Type *IntPtrTy, const FunctionMergingOptions &Options =
 {}) {
 */
 
-template <typename BlockListType>
-void FunctionMerger::CodeGenerator<BlockListType>::destroyGeneratedCode() {
+void FunctionMerger::CodeGenerator::destroyGeneratedCode() {
   for (Instruction *I : CreatedInsts) {
-    I->dropAllReferences();
+    //errs() << "Must delete:";I->dump();
+    for (unsigned i = 0; i<I->getNumOperands(); i++) I->setOperand(i,nullptr);
   }
+  for (auto It = CreatedInsts.begin(),  E=CreatedInsts.end(); It!=E; ) {
+    Instruction *I = *It;
+    It++;
+
+    if (isa<BranchInst>(I)) {
+      CreatedInsts.erase(I);
+      I->eraseFromParent();
+    }
+  }
+  auto Purge = [&](BasicBlock *BB) {
+    errs() << "Deleting " << BB->getName() << "\n";
+    for (auto It = BB->rbegin(), E = BB->rend(); It!=E;) {
+      Instruction *I = &*It;
+      It++;
+      CreatedInsts.erase(I);
+      I->eraseFromParent();
+    }
+    BB->eraseFromParent();
+  };
+  for (BasicBlock *BB : CreatedBBs) {
+    Purge(BB);
+  }
+  //MergedFunc->dump();
+  //for (Instruction *I : CreatedInsts) {
+  //  I->dropAllReferences();
+  //}
+  //errs() << "Deleting final " << CreatedInsts.size() << " insts\n";
   for (Instruction *I : CreatedInsts) {
+    //I->dump();
     I->eraseFromParent();
   }
-  for (BasicBlock *BB : CreatedBBs) {
-    BB->eraseFromParent();
-  }
+
   CreatedInsts.clear();
   CreatedBBs.clear();
 }
@@ -2911,11 +2939,18 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
       MergedFunc = nullptr;
       if (Debug)
         errs() << "ERROR: Failed to generate the merged function!\n";
+    } else if (!CG.commitChanges()) {
+      // F1->dump();
+      // F2->dump();
+      // MergedFunc->dump();
+      MergedFunc->eraseFromParent();
+      MergedFunc = nullptr;
+      if (Debug)
+        errs() << "ERROR: Failed to generate the merged function!\n";
     }
   };
 
-  SALSSACodeGen<Function::BasicBlockListType> CG(F1->getBasicBlockList(),
-                                                 F2->getBasicBlockList());
+  SALSSACodeGen CG(F1->getBasicBlockList(), F2->getBasicBlockList());
   Gen(CG);
 
   /*
@@ -3647,6 +3682,7 @@ bool FunctionMerging::runImpl(
   errs() << "Number of Functions: " << matcher->size() << "\n";
   if (MatcherStats) {
     matcher->print_stats();
+#ifdef TIME_STEPS_DEBUG
     TimeRank.clear();
     TimeCodeGenTotal.clear();
     TimeAlign.clear();
@@ -3661,6 +3697,7 @@ bool FunctionMerging::runImpl(
     TimeUpdate.clear();
     TimePrinting.clear();
     TimeTotal.clear();
+#endif
     return false;
   }
 
@@ -3793,9 +3830,9 @@ bool FunctionMerging::runImpl(
         time_update_end = std::chrono::steady_clock::now();
 #endif
       }
-      time_iteration_end = std::chrono::steady_clock::now();
 
 #ifdef TIME_STEPS_DEBUG
+      time_iteration_end = std::chrono::steady_clock::now();
       TimePrinting.startTimer();
 #endif
 
@@ -4010,8 +4047,7 @@ Value *createCastIfNeeded(Value *V, Type *DstType, IRBuilder<> &Builder,
   return Result;
 }
 
-template <typename BlockListType>
-void FunctionMerger::CodeGenerator<BlockListType>::removeRedundantInstructions(
+void FunctionMerger::CodeGenerator::removeRedundantInstructions(
     std::vector<Instruction *> &WorkInst, DominatorTree &DT) {
   std::set<Instruction *> SkipList;
 
@@ -4067,7 +4103,7 @@ static void postProcessFunction(Function &F) {
 }
 
 template <typename BlockListType>
-static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
+static void CodeGen(FunctionMerger::CodeGenerator *CG, BlockListType &Blocks1, BlockListType &Blocks2,
                     BasicBlock *EntryBB1, BasicBlock *EntryBB2,
                     Function *MergedFunc, Value *IsFunc1, BasicBlock *PreBB,
                     AlignedSequence<Value *> &AlignedSeq,
@@ -4118,7 +4154,7 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
       auto AttrList = CB->getAttributes();
       NewCB->setAttributes(AttrList);
     }*/
-
+    
     return NewI;
   };
 
@@ -4134,6 +4170,7 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
 
       BasicBlock *MergedBB =
           BasicBlock::Create(MergedFunc->getContext(), BBName, MergedFunc);
+      CG->insert(MergedBB);
 
       MaterialNodes[Entry.get(0)] = MergedBB;
       MaterialNodes[Entry.get(1)] = MergedBB;
@@ -4141,6 +4178,7 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
       if (I1 != nullptr && I2 != nullptr) {
         IRBuilder<> Builder(MergedBB);
         Instruction *NewI = CloneInst(Builder, MergedFunc, I1);
+        CG->insert(NewI);
 
         VMap[I1] = NewI;
         VMap[I2] = NewI;
@@ -4173,31 +4211,39 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
         IRBuilder<> Builder(MergedBB);
         for (Instruction &I : *BB1) {
           if (isa<PHINode>(&I)) {
-            VMap[&I] = Builder.CreatePHI(I.getType(), 0);
+	    Instruction *PHI = Builder.CreatePHI(I.getType(), 0); 
+            VMap[&I] = PHI;
+            CG->insert(PHI);
           }
         }
         for (Instruction &I : *BB2) {
           if (isa<PHINode>(&I)) {
-            VMap[&I] = Builder.CreatePHI(I.getType(), 0);
+	    Instruction *PHI = Builder.CreatePHI(I.getType(), 0); 
+            VMap[&I] = PHI;
+            CG->insert(PHI);
           }
         }
       } // end if(instruction)-else
     }
   }
 
-  auto ChainBlocks = [](BasicBlock *SrcBB, BasicBlock *TargetBB,
+  auto ChainBlocks = [&](BasicBlock *SrcBB, BasicBlock *TargetBB,
                         Value *IsFunc1) {
     IRBuilder<> Builder(SrcBB);
     if (SrcBB->getTerminator() == nullptr) {
-      Builder.CreateBr(TargetBB);
+      Instruction *NewBr = Builder.CreateBr(TargetBB);
+      CG->insert(NewBr);
     } else {
       auto *Br = dyn_cast<BranchInst>(SrcBB->getTerminator());
       assert(Br && Br->isUnconditional() &&
              "Branch should be unconditional at this point!");
       BasicBlock *SuccBB = Br->getSuccessor(0);
       // if (SuccBB != TargetBB) {
+      CG->erase(Br);
       Br->eraseFromParent();
-      Builder.CreateCondBr(IsFunc1, SuccBB, TargetBB);
+      
+      Instruction *NewBr = Builder.CreateCondBr(IsFunc1, SuccBB, TargetBB);
+      CG->insert(NewBr);
       //}
     }
   };
@@ -4218,6 +4264,7 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
                                        MergedFunc);
             VMap[BB] = NewBB;
             BlocksFX[NewBB] = BB;
+            CG->insert(NewBB);
 
             // IMPORTANT: make sure any use in a blockaddress constant
             // operation is updated correctly
@@ -4231,7 +4278,9 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
             IRBuilder<> Builder(NewBB);
             for (Instruction &I : *BB) {
               if (isa<PHINode>(&I)) {
-                VMap[&I] = Builder.CreatePHI(I.getType(), 0);
+                Instruction *PHI  = Builder.CreatePHI(I.getType(), 0);
+                VMap[&I] = PHI;
+                CG->insert(PHI);
               }
             }
           }
@@ -4250,7 +4299,8 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
                 ChainBlocks(LastMergedBB, NodeBB, IsFunc1);
               } else {
                 IRBuilder<> Builder(NewBB);
-                Builder.CreateBr(NodeBB);
+                Instruction *NewBr = Builder.CreateBr(NodeBB);
+                CG->insert(NewBr);
                 // errs() << "Chaining newBB " << NewBB->getName() << " with "
                 // << NodeBB->getName() << "\n";
               }
@@ -4263,6 +4313,7 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
                                            MergedFunc);
                 ChainBlocks(LastMergedBB, NewBB, IsFunc1);
                 BlocksFX[NewBB] = BB;
+                CG->insert(NewBB);
                 // errs() << "Splitting last merged " << LastMergedBB->getName()
                 // << " into " << NewBB->getName() << "\n";
               }
@@ -4270,6 +4321,7 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
 
               IRBuilder<> Builder(NewBB);
               Instruction *NewI = CloneInst(Builder, MergedFunc, &I);
+              CG->insert(NewI);
               VMap[&I] = NewI;
               // errs() << "Cloned into " << NewBB->getName() << " : " <<
               // NewI->getName() << " " << NewI->getOpcodeName() << "\n";
@@ -4289,15 +4341,16 @@ static void CodeGen(BlockListType &Blocks1, BlockListType &Blocks2,
 
   if (BB1 == BB2) {
     IRBuilder<> Builder(PreBB);
-    Builder.CreateBr(BB1);
+    Instruction *NewBr = Builder.CreateBr(BB1);
+    CG->insert(NewBr);
   } else {
     IRBuilder<> Builder(PreBB);
-    Builder.CreateCondBr(IsFunc1, BB1, BB2);
+    Instruction *NewBr = Builder.CreateCondBr(IsFunc1, BB1, BB2);
+    CG->insert(NewBr);
   }
 }
 
-template <typename BlockListType>
-bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
+bool FunctionMerger::SALSSACodeGen::generate(
     AlignedSequence<Value *> &AlignedSeq, ValueToValueMapTy &VMap,
     const FunctionMergingOptions &Options) {
 
@@ -4305,36 +4358,29 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
   TimeCodeGen.startTimer();
 #endif
 
-  LLVMContext &Context = CodeGenerator<BlockListType>::getContext();
-  Function *MergedFunc = CodeGenerator<BlockListType>::getMergedFunction();
-  Value *IsFunc1 = CodeGenerator<BlockListType>::getFunctionIdentifier();
-  Type *ReturnType = CodeGenerator<BlockListType>::getMergedReturnType();
+  LLVMContext &Context = CodeGenerator::getContext();
+  Function *MergedFunc = CodeGenerator::getMergedFunction();
+  Value *IsFunc1 = CodeGenerator::getFunctionIdentifier();
+  Type *ReturnType = CodeGenerator::getMergedReturnType();
   bool RequiresUnifiedReturn =
-      CodeGenerator<BlockListType>::getRequiresUnifiedReturn();
-  BasicBlock *EntryBB1 = CodeGenerator<BlockListType>::getEntryBlock1();
-  BasicBlock *EntryBB2 = CodeGenerator<BlockListType>::getEntryBlock2();
-  BasicBlock *PreBB = CodeGenerator<BlockListType>::getPreBlock();
+      CodeGenerator::getRequiresUnifiedReturn();
+  BasicBlock *EntryBB1 = CodeGenerator::getEntryBlock1();
+  BasicBlock *EntryBB2 = CodeGenerator::getEntryBlock2();
+  BasicBlock *PreBB = CodeGenerator::getPreBlock();
 
-  Type *RetType1 = CodeGenerator<BlockListType>::getReturnType1();
-  Type *RetType2 = CodeGenerator<BlockListType>::getReturnType2();
+  Type *RetType1 = CodeGenerator::getReturnType1();
+  Type *RetType2 = CodeGenerator::getReturnType2();
 
-  Type *IntPtrTy = CodeGenerator<BlockListType>::getIntPtrType();
+  Type *IntPtrTy = CodeGenerator::getIntPtrType();
 
-  // BlockListType &Blocks1 = CodeGenerator<BlockListType>::getBlocks1();
-  // BlockListType &Blocks2 = CodeGenerator<BlockListType>::getBlocks2();
+  // BlockListType &Blocks1 = CodeGenerator::getBlocks1();
+  // BlockListType &Blocks2 = CodeGenerator::getBlocks2();
   std::vector<BasicBlock *> &Blocks1 =
-      CodeGenerator<BlockListType>::getBlocks1();
+      CodeGenerator::getBlocks1();
   std::vector<BasicBlock *> &Blocks2 =
-      CodeGenerator<BlockListType>::getBlocks2();
-
-  std::list<Instruction *> LinearOffendingInsts;
-  std::set<Instruction *> OffendingInsts;
-  std::map<Instruction *, std::map<Instruction *, unsigned>>
-      CoalescingCandidates;
+      CodeGenerator::getBlocks2();
 
   std::vector<Instruction *> ListSelects;
-
-  std::vector<AllocaInst *> Allocas;
 
   Value *RetUnifiedAddr = nullptr;
   Value *RetAddr1 = nullptr;
@@ -4346,21 +4392,21 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
   std::unordered_map<BasicBlock *, BasicBlock *> BlocksF2;
   std::unordered_map<Value *, BasicBlock *> MaterialNodes;
 
-  CodeGen(Blocks1, Blocks2, EntryBB1, EntryBB2, MergedFunc, IsFunc1, PreBB,
+  CodeGen(this, Blocks1, Blocks2, EntryBB1, EntryBB2, MergedFunc, IsFunc1, PreBB,
           AlignedSeq, VMap, BlocksF1, BlocksF2, MaterialNodes);
 
   if (RequiresUnifiedReturn) {
     IRBuilder<> Builder(PreBB);
     RetUnifiedAddr = Builder.CreateAlloca(ReturnType);
-    CodeGenerator<BlockListType>::insert(dyn_cast<Instruction>(RetUnifiedAddr));
+    CodeGenerator::insert(dyn_cast<Instruction>(RetUnifiedAddr));
 
     RetAddr1 = Builder.CreateAlloca(RetType1);
     RetAddr2 = Builder.CreateAlloca(RetType2);
-    CodeGenerator<BlockListType>::insert(dyn_cast<Instruction>(RetAddr1));
-    CodeGenerator<BlockListType>::insert(dyn_cast<Instruction>(RetAddr2));
+    CodeGenerator::insert(dyn_cast<Instruction>(RetAddr1));
+    CodeGenerator::insert(dyn_cast<Instruction>(RetAddr2));
   }
 
-  // errs() << "Assigning label operands\n";
+  errs() << "Assigning label operands\n";
 
   std::set<BranchInst *> XorBrConds;
   // assigning label operands
@@ -4481,12 +4527,14 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
             // auto CacheKey = std::pair<BasicBlock *, BasicBlock *>(BB1, BB2);
             BasicBlock *SelectBB =
                 BasicBlock::Create(Context, "bb.select", MergedFunc);
+	    this->insert(SelectBB);
             IRBuilder<> BuilderBB(SelectBB);
 
             BlocksF1[SelectBB] = I1->getParent();
             BlocksF2[SelectBB] = I2->getParent();
 
-            BuilderBB.CreateCondBr(IsFunc1, BB1, BB2);
+            Instruction *NewBr = BuilderBB.CreateCondBr(IsFunc1, BB1, BB2);
+	    this->insert(NewBr);
             V = SelectBB;
           }
 
@@ -4498,12 +4546,15 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
 
             BasicBlock *LPadBB =
                 BasicBlock::Create(Context, "lpad.bb", MergedFunc);
+	    this->insert(LPadBB);
             IRBuilder<> BuilderBB(LPadBB);
 
             Instruction *NewLP = LP1->clone();
+	    this->insert(NewLP);
             BuilderBB.Insert(NewLP);
 
-            BuilderBB.CreateBr(dyn_cast<BasicBlock>(V));
+            Instruction *NewBr = BuilderBB.CreateBr(dyn_cast<BasicBlock>(V));
+	    this->insert(NewBr);
 
             BlocksF1[LPadBB] = I1->getParent();
             BlocksF2[LPadBB] = I2->getParent();
@@ -4545,14 +4596,17 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
 
             BasicBlock *LPadBB =
                 BasicBlock::Create(Context, "lpad.bb", MergedFunc);
+	    this->insert(LPadBB);
             IRBuilder<> BuilderBB(LPadBB);
 
             Instruction *NewLP = LP->clone();
+	    this->insert(NewLP);
             BuilderBB.Insert(NewLP);
             VMap[LP] = NewLP;
             BlocksReMap[LPadBB] = I->getParent(); //FXBB;
 
-            BuilderBB.CreateBr(dyn_cast<BasicBlock>(V));
+            Instruction *NewBr = BuilderBB.CreateBr(dyn_cast<BasicBlock>(V));
+	    this->insert(NewBr);
 
             V = LPadBB;
           }
@@ -4587,7 +4641,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
     }
   }
 
-  // errs() << "Assigning value operands\n";
+  errs() << "Assigning value operands\n";
 
   auto MergeValues = [&](Value *V1, Value *V2,
                          Instruction *InsertPt) -> Value * {
@@ -4600,7 +4654,9 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
     if (V1 == ConstantInt::getFalse(Context) && V2 == ConstantInt::getTrue(Context)) {
       IRBuilder<> Builder(InsertPt);
       /// TODO: create a single not(IsFunc1) for each merged function that needs it
-      return Builder.CreateNot(IsFunc1);
+      Value *NewNot = Builder.CreateNot(IsFunc1);
+      this->insert(NewNot);
+      return NewNot;
     }
 
     auto *IV1 = dyn_cast<Instruction>(V1);
@@ -4617,6 +4673,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
 
     IRBuilder<> Builder(InsertPt);
     Instruction *Sel = (Instruction *)Builder.CreateSelect(IsFunc1, V1, V2);
+    this->insert(Sel);
     ListSelects.push_back(dyn_cast<Instruction>(Sel));
     return Sel;
   };
@@ -4626,20 +4683,30 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
     IRBuilder<> Builder(NewI);
 
     if (I->getOpcode() == Instruction::Ret && RequiresUnifiedReturn) {
+      //errs() << "Ret: "; I->dump();
+      if (I->getNumOperands()==0) return true;
+
       Value *V = MapValue(I->getOperand(0), VMap);
       if (V == nullptr) {
         return false; // ErrorResponse;
       }
       if (V->getType() != ReturnType) {
         // Value *Addr = (IsFuncId1 ? RetAddr1 : RetAddr2);
-        Value *Addr = Builder.CreateAlloca(V->getType());
-        Builder.CreateStore(V, Addr);
+        Instruction *Addr = Builder.CreateAlloca(V->getType());
+	this->insert(Addr);
+        Instruction *Store = Builder.CreateStore(V, Addr);
+	this->insert(Store);
+
         Value *CastedAddr =
             Builder.CreatePointerCast(Addr, RetUnifiedAddr->getType());
-        V = Builder.CreateLoad(ReturnType, CastedAddr);
+	this->insert(CastedAddr);
+        Instruction *Load = Builder.CreateLoad(ReturnType, CastedAddr);
+	this->insert(Load);
+	V = Load;
       }
       NewI->setOperand(0, V);
     } else {
+      //errs() << "Set Operands:"; I->dump();
       for (unsigned i = 0; i < I->getNumOperands(); i++) {
         if (isa<BasicBlock>(I->getOperand(i)))
           continue;
@@ -4727,6 +4794,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
           // NewI->getOperand(i)->getType());
           Value *CastedV = createCastIfNeeded(V, NewI->getOperand(i)->getType(),
                                               Builder, IntPtrTy);
+	  if (CastedV!=V) this->insert(CastedV);
           NewI->setOperand(i, CastedV);
         }
       } else {
@@ -4830,7 +4898,7 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
     return false;
   }
 
-  // errs() << "Assigning PHI operands\n";
+  errs() << "Assigning PHI operands\n";
 
   auto AssignPHIOperandsInBlock =
       [&](BasicBlock *BB,
@@ -4895,66 +4963,10 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
     }
   }
 
-  // errs() << "Collecting offending instructions\n";
-  DominatorTree DT(*MergedFunc);
-
-  for (Instruction &I : instructions(MergedFunc)) {
-    if (auto *PHI = dyn_cast<PHINode>(&I)) {
-      for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
-        BasicBlock *BB = PHI->getIncomingBlock(i);
-        if (BB == nullptr)
-          errs() << "Null incoming block\n";
-        Value *V = PHI->getIncomingValue(i);
-        if (V == nullptr)
-          errs() << "Null incoming value\n";
-        if (auto *IV = dyn_cast<Instruction>(V)) {
-          if (BB->getTerminator() == nullptr) {
-            if (Debug)
-              errs() << "ERROR: Null terminator\n";
-              // MergedFunc->eraseFromParent();
-#ifdef TIME_STEPS_DEBUG
-            TimeCodeGen.stopTimer();
-#endif
-            return false;
-          }
-          if (!DT.dominates(IV, BB->getTerminator())) {
-            if (OffendingInsts.count(IV) == 0) {
-              OffendingInsts.insert(IV);
-              LinearOffendingInsts.push_back(IV);
-            }
-          }
-        }
-      }
-    } else {
-      for (unsigned i = 0; i < I.getNumOperands(); i++) {
-        if (I.getOperand(i) == nullptr) {
-          // MergedFunc->dump();
-          // I.getParent()->dump();
-          // errs() << "Null operand\n";
-          // I.dump();
-          if (Debug)
-            errs() << "ERROR: Null operand\n";
-            // MergedFunc->eraseFromParent();
-#ifdef TIME_STEPS_DEBUG
-          TimeCodeGen.stopTimer();
-#endif
-          return false;
-        }
-        if (auto *IV = dyn_cast<Instruction>(I.getOperand(i))) {
-          if (!DT.dominates(IV, &I)) {
-            if (OffendingInsts.count(IV) == 0) {
-              OffendingInsts.insert(IV);
-              LinearOffendingInsts.push_back(IV);
-            }
-          }
-        }
-      }
-    }
-  }
-
   for (BranchInst *NewBr : XorBrConds) {
     IRBuilder<> Builder(NewBr);
     Value *XorCond = Builder.CreateXor(NewBr->getCondition(), IsFunc1);
+    this->insert(XorCond);
     NewBr->setCondition(XorCond);
   }
 
@@ -4962,11 +4974,10 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
   TimeCodeGen.stopTimer();
 #endif
 
-#ifdef TIME_STEPS_DEBUG
-  TimeCodeGenFix.startTimer();
-#endif
+  return MergedFunc != nullptr;
+}
 
-  auto StoreInstIntoAddr = [](Instruction *IV, Value *Addr) {
+void FunctionMerger::SALSSACodeGen::StoreInstIntoAddr(Instruction *IV, Value *Addr) {
     IRBuilder<> Builder(IV->getParent());
     if (IV->isTerminator()) {
       BasicBlock *SrcBB = IV->getParent();
@@ -5023,9 +5034,10 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
 
       Builder.CreateStore(IV, Addr);
     }
-  };
+}
 
-  auto MemfyInst = [&](std::set<Instruction *> &InstSet) -> AllocaInst * {
+AllocaInst *  FunctionMerger::SALSSACodeGen::MemfyInst(std::set<Instruction *> &InstSet) {
+  BasicBlock *PreBB = CodeGenerator::getPreBlock();
     if (InstSet.empty())
       return nullptr;
     IRBuilder<> Builder(&*PreBB->getFirstInsertionPt());
@@ -5059,7 +5071,83 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
       StoreInstIntoAddr(I, Addr);
 
     return Addr;
-  };
+}
+
+bool FunctionMerger::SALSSACodeGen::commitChanges() {
+
+#ifdef TIME_STEPS_DEBUG
+  TimeCodeGenFix.startTimer();
+#endif
+
+  Function *MergedFunc = CodeGenerator::getMergedFunction();
+  BasicBlock *PreBB = CodeGenerator::getPreBlock();
+
+  std::vector<AllocaInst *> Allocas;
+
+  std::list<Instruction *> LinearOffendingInsts;
+  std::set<Instruction *> OffendingInsts;
+
+
+  errs() << "Collecting offending instructions\n";
+  DominatorTree DT(*MergedFunc);
+
+  for (Instruction &I : instructions(MergedFunc)) {
+    if (auto *PHI = dyn_cast<PHINode>(&I)) {
+      for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
+        BasicBlock *BB = PHI->getIncomingBlock(i);
+        if (BB == nullptr)
+          errs() << "Null incoming block\n";
+        Value *V = PHI->getIncomingValue(i);
+        if (V == nullptr)
+          errs() << "Null incoming value\n";
+        if (auto *IV = dyn_cast<Instruction>(V)) {
+          if (BB->getTerminator() == nullptr) {
+            if (Debug)
+              errs() << "ERROR: Null terminator\n";
+              // MergedFunc->eraseFromParent();
+#ifdef TIME_STEPS_DEBUG
+            TimeCodeGenFix.stopTimer();
+#endif
+            return false;
+          }
+          if (!DT.dominates(IV, BB->getTerminator())) {
+            if (OffendingInsts.count(IV) == 0) {
+              OffendingInsts.insert(IV);
+              LinearOffendingInsts.push_back(IV);
+            }
+          }
+        }
+      }
+    } else {
+      for (unsigned i = 0; i < I.getNumOperands(); i++) {
+        if (I.getOperand(i) == nullptr) {
+          // MergedFunc->dump();
+          // I.getParent()->dump();
+          // errs() << "Null operand\n";
+          // I.dump();
+          if (Debug)
+            errs() << "ERROR: Null operand\n";
+            // MergedFunc->eraseFromParent();
+#ifdef TIME_STEPS_DEBUG
+          TimeCodeGen.stopTimer();
+#endif
+          return false;
+        }
+        if (auto *IV = dyn_cast<Instruction>(I.getOperand(i))) {
+          if (!DT.dominates(IV, &I)) {
+            if (OffendingInsts.count(IV) == 0) {
+              OffendingInsts.insert(IV);
+              LinearOffendingInsts.push_back(IV);
+            }
+          }
+        }
+      }
+    }
+  }
+
+
+
+
 
   auto isCoalescingProfitable = [&](Instruction *I1, Instruction *I2) -> bool {
     std::set<BasicBlock *> BBSet1;
@@ -5126,11 +5214,12 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
         }
       };
 
-  // errs() << "Finishing code\n";
+  errs() << "Finishing code\n";
   if (MergedFunc != nullptr) {
     // errs() << "Offending: " << OffendingInsts.size() << " ";
     // errs() << ((float)OffendingInsts.size())/((float)AlignedSeq.size()) << "
     // : "; if (OffendingInsts.size()>1000) { if (false) {
+    /*
     if (((float)OffendingInsts.size()) / ((float)AlignedSeq.size()) > 4.5) {
       if (Debug)
         errs() << "Bailing out\n";
@@ -5139,7 +5228,8 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
 #endif
       return false;
     } 
-    //errs() << "Fixing Domination:\n";
+    */
+    errs() << "Fixing Domination\n";
     //MergedFunc->dump();
     std::set<Instruction *> Visited;
     for (Instruction *I : LinearOffendingInsts) {
@@ -5161,13 +5251,11 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
         Allocas.push_back(Addr);
     }
 
-    //errs() << "Fixed Domination:\n";
-    //MergedFunc->dump();
+    //errs() << "Mem2Reg\n";
 
     DominatorTree DT(*MergedFunc);
     PromoteMemToReg(Allocas, DT, nullptr);
 
-    //errs() << "Mem2Reg:\n";
     //MergedFunc->dump();
 
     if (verifyFunction(*MergedFunc)) {
@@ -5184,12 +5272,14 @@ bool FunctionMerger::SALSSACodeGen<BlockListType>::generate(
 #ifdef TIME_STEPS_DEBUG
     TimePostOpt.startTimer();
 #endif
+    errs() << "PostProcessing\n";
     postProcessFunction(*MergedFunc);
 #ifdef TIME_STEPS_DEBUG
     TimePostOpt.stopTimer();
 #endif
-    // errs() << "PostProcessing:\n";
     // MergedFunc->dump();
   }
   return MergedFunc != nullptr;
 }
+
+

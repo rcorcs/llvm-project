@@ -47,8 +47,6 @@
 
 //#include "llvm/ADT/KeyValueCache.h"
 
-#include "llvm/InitializePasses.h"
-
 #include "llvm/Analysis/BlockFrequencyInfo.h"
 #include "llvm/Analysis/ProfileSummaryInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
@@ -57,6 +55,7 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
+#include "llvm/IR/Instructions.h"
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringSet.h"
@@ -69,6 +68,7 @@
 #include "llvm/Transforms/IPO/tsl/robin_map.h"
 
 #include <map>
+#include <set>
 #include <vector>
 
 namespace llvm {
@@ -251,7 +251,7 @@ public:
   FunctionMergeResult merge(Function *F1, Function *F2, std::string Name = "",
                             const FunctionMergingOptions &Options = {});
 
-  template <typename BlockListType> class CodeGenerator {
+  class CodeGenerator {
   private:
     LLVMContext *ContextPtr;
     Type *IntPtrTy;
@@ -285,7 +285,14 @@ public:
   public:
     // CodeGenerator(BlockListType &Blocks1, BlockListType &Blocks2) :
     // Blocks1(Blocks1), Blocks2(Blocks2) {}
-    CodeGenerator(BlockListType &Blocks1, BlockListType &Blocks2) {
+    CodeGenerator(SmallVectorImpl<BasicBlock*> &Blocks1, SmallVectorImpl<BasicBlock*> &Blocks2) {
+      for (BasicBlock *BB : Blocks1)
+        this->Blocks1.push_back(BB);
+      for (BasicBlock *BB : Blocks2)
+        this->Blocks2.push_back(BB);
+    }
+
+    CodeGenerator(Function::BasicBlockListType &Blocks1, Function::BasicBlockListType &Blocks2) {
       for (BasicBlock &BB : Blocks1)
         this->Blocks1.push_back(&BB);
       for (BasicBlock &BB : Blocks2)
@@ -358,8 +365,15 @@ public:
 
     Type *getIntPtrType() { return IntPtrTy; }
 
-    void insert(BasicBlock *BB) { CreatedBBs.insert(BB); }
-    void insert(Instruction *I) { CreatedInsts.insert(I); }
+    void insert(Value *V) {
+      if (V==nullptr) return;
+      if (BasicBlock *BB = dyn_cast<BasicBlock>(V))
+        CreatedBBs.insert(BB);
+      else if (Instruction *I = dyn_cast<Instruction>(V))
+        CreatedInsts.insert(I);
+    }
+    //void insert(BasicBlock *BB) { CreatedBBs.insert(BB); }
+    //void insert(Instruction *I) { CreatedInsts.insert(I); }
 
     void erase(BasicBlock *BB) { CreatedBBs.erase(BB); }
     void erase(Instruction *I) { CreatedInsts.erase(I); }
@@ -367,6 +381,8 @@ public:
     virtual bool generate(AlignedSequence<Value *> &AlignedSeq,
                           ValueToValueMapTy &VMap,
                           const FunctionMergingOptions &Options = {}) = 0;
+
+    virtual bool commitChanges() = 0;
 
     void destroyGeneratedCode();
 
@@ -378,16 +394,22 @@ public:
     }
   };
 
-  template <typename BlockListType>
-  class SALSSACodeGen : public FunctionMerger::CodeGenerator<BlockListType> {
+  class SALSSACodeGen : public FunctionMerger::CodeGenerator {
 
+    std::map<Instruction *, std::map<Instruction *, unsigned>>
+      CoalescingCandidates;
   public:
+    template <typename BlockListType>
     SALSSACodeGen(BlockListType &Blocks1, BlockListType &Blocks2)
-        : CodeGenerator<BlockListType>(Blocks1, Blocks2) {}
+        : CodeGenerator(Blocks1, Blocks2) {}
     virtual ~SALSSACodeGen() {}
     virtual bool generate(AlignedSequence<Value *> &AlignedSeq,
                           ValueToValueMapTy &VMap,
                           const FunctionMergingOptions &Options = {}) override;
+    virtual bool commitChanges() override;
+
+    void StoreInstIntoAddr(Instruction *IV, Value *Addr);
+    AllocaInst *MemfyInst(std::set<Instruction *> &InstSet);
   };
 };
 

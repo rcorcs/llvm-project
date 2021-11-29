@@ -115,6 +115,10 @@
 
 using namespace llvm;
 
+#define RCORPrint(_T_)
+//#define RCORPrint(_T_) _T_
+
+
 static cl::opt<bool> VerifyNoAliasScopeDomination(
     "verify-noalias-scope-decl-dom", cl::Hidden, cl::init(false),
     cl::desc("Ensure that llvm.experimental.noalias.scope.decl for identical "
@@ -2606,11 +2610,14 @@ void Verifier::visitFunction(const Function &F) {
 // verifyBasicBlock - Verify that a basic block is well formed...
 //
 void Verifier::visitBasicBlock(BasicBlock &BB) {
+  RCORPrint( errs() << "Visit start BB: " << BB.getName() << " : " << Broken << "\n" );
   InstsInThisBlock.clear();
 
+  RCORPrint( errs() << "Visit BB:1: " << Broken << "\n" );
   // Ensure that basic blocks have terminators!
   Assert(BB.getTerminator(), "Basic Block does not have terminator!", &BB);
 
+  RCORPrint( errs() << "Visit BB:2: " << Broken << "\n" );
   // Check constraints that this basic block imposes on all of the PHI nodes in
   // it.
   if (isa<PHINode>(BB.front())) {
@@ -2618,11 +2625,13 @@ void Verifier::visitBasicBlock(BasicBlock &BB) {
     SmallVector<std::pair<BasicBlock*, Value*>, 8> Values;
     llvm::sort(Preds);
     for (const PHINode &PN : BB.phis()) {
+      RCORPrint( errs() << "Visit BB:2.1: " << Broken << "\n" );
       Assert(PN.getNumIncomingValues() == Preds.size(),
              "PHINode should have one entry for each predecessor of its "
              "parent basic block!",
              &PN);
 
+      RCORPrint( errs() << "Visit BB:2.2: " << Broken << "\n" );
       // Get and sort all incoming values in the PHI node...
       Values.clear();
       Values.reserve(PN.getNumIncomingValues());
@@ -2631,46 +2640,62 @@ void Verifier::visitBasicBlock(BasicBlock &BB) {
             std::make_pair(PN.getIncomingBlock(i), PN.getIncomingValue(i)));
       llvm::sort(Values);
 
+      RCORPrint( errs() << "Visit BB:2.3: " << Broken << "\n" );
+
       for (unsigned i = 0, e = Values.size(); i != e; ++i) {
         // Check to make sure that if there is more than one entry for a
         // particular basic block in this PHI node, that the incoming values are
         // all identical.
         //
+        RCORPrint( errs() << "Visit BB:2.3.1: " << Broken << "\n" );
         Assert(i == 0 || Values[i].first != Values[i - 1].first ||
                    Values[i].second == Values[i - 1].second,
                "PHI node has multiple entries for the same basic block with "
                "different incoming values!",
                &PN, Values[i].first, Values[i].second, Values[i - 1].second);
 
+        RCORPrint( errs() << "Visit BB:2.3.2: " << Broken << "\n" );
         // Check to make sure that the predecessors and PHI node entries are
         // matched up.
         Assert(Values[i].first == Preds[i],
                "PHI node entries do not match predecessors!", &PN,
                Values[i].first, Preds[i]);
+        RCORPrint( errs() << "Visit BB:2.3.3: " << Broken << "\n" );
       }
+
+      RCORPrint( errs() << "Visit BB:2.4: " << Broken << "\n" );
     }
   }
 
+  RCORPrint( errs() << "Visit BB:3: " << Broken << "\n" );
   // Check that all instructions have their parent pointers set up correctly.
   for (auto &I : BB)
   {
     Assert(I.getParent() == &BB, "Instruction has bogus parent pointer!");
   }
+  RCORPrint( errs() << "Visit BB:-: " << Broken << "\n" );
+  RCORPrint( errs() << "Visit end BB: " << BB.getName() << " : " << Broken << "\n" );
 }
 
 void Verifier::visitTerminator(Instruction &I) {
+  RCORPrint( errs() << "Visit Terminator:1: " << Broken << "\n" );
   // Ensure that terminators only exist at the end of the basic block.
   Assert(&I == I.getParent()->getTerminator(),
          "Terminator found in the middle of a basic block!", I.getParent());
+  RCORPrint( errs() << "Visit Terminator:2: " << Broken << "\n" );
   visitInstruction(I);
+  RCORPrint( errs() << "Visit Terminator:-: " << Broken << "\n" );
 }
 
 void Verifier::visitBranchInst(BranchInst &BI) {
+  RCORPrint( errs() << "Visit Br:1: " << Broken << "\n" );
   if (BI.isConditional()) {
     Assert(BI.getCondition()->getType()->isIntegerTy(1),
            "Branch condition is not 'i1' type!", &BI, BI.getCondition());
   }
+  RCORPrint( errs() << "Visit Br:2: " << Broken << "\n" );
   visitTerminator(BI);
+  RCORPrint( errs() << "Visit Br:-: " << Broken << "\n" );
 }
 
 void Verifier::visitReturnInst(ReturnInst &RI) {
@@ -2746,13 +2771,17 @@ void Verifier::visitCallBrInst(CallBrInst &CBI) {
 }
 
 void Verifier::visitSelectInst(SelectInst &SI) {
+  RCORPrint( errs() << "Visit Select:1: " << Broken << "\n" );
   Assert(!SelectInst::areInvalidOperands(SI.getOperand(0), SI.getOperand(1),
                                          SI.getOperand(2)),
          "Invalid operands for select instruction!", &SI);
 
+  RCORPrint( errs() << "Visit Select:2: " << Broken << "\n" );
   Assert(SI.getTrueValue()->getType() == SI.getType(),
          "Select values must have same type as select instruction!", &SI);
+  RCORPrint( errs() << "Visit Select:3: " << Broken << "\n" );
   visitInstruction(SI);
+  RCORPrint( errs() << "Visit Select:4: " << Broken << "\n" );
 }
 
 /// visitUserOp1 - User defined operators shouldn't live beyond the lifetime of
@@ -2898,6 +2927,7 @@ void Verifier::visitSIToFPInst(SIToFPInst &I) {
 }
 
 void Verifier::visitFPToUIInst(FPToUIInst &I) {
+  RCORPrint( errs() << "Visit FPToUI:1: " << Broken << "\n" );
   // Get the source and destination types
   Type *SrcTy = I.getOperand(0)->getType();
   Type *DestTy = I.getType();
@@ -2907,20 +2937,26 @@ void Verifier::visitFPToUIInst(FPToUIInst &I) {
 
   Assert(SrcVec == DstVec,
          "FPToUI source and dest must both be vector or scalar", &I);
+  RCORPrint( errs() << "Visit FPToUI:2: " << Broken << "\n" );
   Assert(SrcTy->isFPOrFPVectorTy(), "FPToUI source must be FP or FP vector",
          &I);
+  RCORPrint( errs() << "Visit FPToUI:3: " << Broken << "\n" );
   Assert(DestTy->isIntOrIntVectorTy(),
          "FPToUI result must be integer or integer vector", &I);
 
+  RCORPrint( errs() << "Visit FPToUI:4: " << Broken << "\n" );
   if (SrcVec && DstVec)
     Assert(cast<VectorType>(SrcTy)->getElementCount() ==
                cast<VectorType>(DestTy)->getElementCount(),
            "FPToUI source and dest vector length mismatch", &I);
 
+  RCORPrint( errs() << "Visit FPToUI:5: " << Broken << "\n" );
   visitInstruction(I);
+  RCORPrint( errs() << "Visit FPToUI:-: " << Broken << "\n" );
 }
 
 void Verifier::visitFPToSIInst(FPToSIInst &I) {
+  RCORPrint( errs() << "Visit FPToSI:1: " << Broken << "\n" );
   // Get the source and destination types
   Type *SrcTy = I.getOperand(0)->getType();
   Type *DestTy = I.getType();
@@ -2928,32 +2964,43 @@ void Verifier::visitFPToSIInst(FPToSIInst &I) {
   bool SrcVec = SrcTy->isVectorTy();
   bool DstVec = DestTy->isVectorTy();
 
+  RCORPrint( errs() << "Visit FPToSI:2: " << Broken << "\n" );
   Assert(SrcVec == DstVec,
          "FPToSI source and dest must both be vector or scalar", &I);
+  RCORPrint( errs() << "Visit FPToSI:3: " << Broken << "\n" );
   Assert(SrcTy->isFPOrFPVectorTy(), "FPToSI source must be FP or FP vector",
          &I);
+  RCORPrint( errs() << "Visit FPToSI:4: " << Broken << "\n" );
   Assert(DestTy->isIntOrIntVectorTy(),
          "FPToSI result must be integer or integer vector", &I);
 
+  RCORPrint( errs() << "Visit FPToSI:5: " << Broken << "\n" );
   if (SrcVec && DstVec)
     Assert(cast<VectorType>(SrcTy)->getElementCount() ==
                cast<VectorType>(DestTy)->getElementCount(),
            "FPToSI source and dest vector length mismatch", &I);
 
+  RCORPrint( errs() << "Visit FPToSI:6: " << Broken << "\n" );
   visitInstruction(I);
+  RCORPrint( errs() << "Visit FPToSI:-: " << Broken << "\n" );
 }
 
 void Verifier::visitPtrToIntInst(PtrToIntInst &I) {
+  RCORPrint( errs() << "Visit PtrToInt:1: " << Broken << "\n" );
   // Get the source and destination types
   Type *SrcTy = I.getOperand(0)->getType();
   Type *DestTy = I.getType();
 
+  RCORPrint( errs() << "Visit PtrToInt:2: " << Broken << "\n" );
   Assert(SrcTy->isPtrOrPtrVectorTy(), "PtrToInt source must be pointer", &I);
 
+  RCORPrint( errs() << "Visit PtrToInt:3: " << Broken << "\n" );
   Assert(DestTy->isIntOrIntVectorTy(), "PtrToInt result must be integral", &I);
+  RCORPrint( errs() << "Visit PtrToInt:4: " << Broken << "\n" );
   Assert(SrcTy->isVectorTy() == DestTy->isVectorTy(), "PtrToInt type mismatch",
          &I);
 
+  RCORPrint( errs() << "Visit PtrToInt:5: " << Broken << "\n" );
   if (SrcTy->isVectorTy()) {
     auto *VSrc = cast<VectorType>(SrcTy);
     auto *VDest = cast<VectorType>(DestTy);
@@ -2961,27 +3008,35 @@ void Verifier::visitPtrToIntInst(PtrToIntInst &I) {
            "PtrToInt Vector width mismatch", &I);
   }
 
+  RCORPrint( errs() << "Visit PtrToInt:6: " << Broken << "\n" );
   visitInstruction(I);
+  RCORPrint( errs() << "Visit PtrToInt:-: " << Broken << "\n" );
 }
 
 void Verifier::visitIntToPtrInst(IntToPtrInst &I) {
+  RCORPrint( errs() << "Visit IntToPtr:1: " << Broken << "\n" );
   // Get the source and destination types
   Type *SrcTy = I.getOperand(0)->getType();
   Type *DestTy = I.getType();
 
   Assert(SrcTy->isIntOrIntVectorTy(),
          "IntToPtr source must be an integral", &I);
+  RCORPrint( errs() << "Visit IntToPtr:2: " << Broken << "\n" );
   Assert(DestTy->isPtrOrPtrVectorTy(), "IntToPtr result must be a pointer", &I);
 
+  RCORPrint( errs() << "Visit IntToPtr:3: " << Broken << "\n" );
   Assert(SrcTy->isVectorTy() == DestTy->isVectorTy(), "IntToPtr type mismatch",
          &I);
+  RCORPrint( errs() << "Visit IntToPtr:4: " << Broken << "\n" );
   if (SrcTy->isVectorTy()) {
     auto *VSrc = cast<VectorType>(SrcTy);
     auto *VDest = cast<VectorType>(DestTy);
     Assert(VSrc->getElementCount() == VDest->getElementCount(),
            "IntToPtr Vector width mismatch", &I);
   }
+  RCORPrint( errs() << "Visit IntToPtr:5: " << Broken << "\n" );
   visitInstruction(I);
+  RCORPrint( errs() << "Visit IntToPtr:-: " << Broken << "\n" );
 }
 
 void Verifier::visitBitCastInst(BitCastInst &I) {
@@ -3011,6 +3066,7 @@ void Verifier::visitAddrSpaceCastInst(AddrSpaceCastInst &I) {
 /// visitPHINode - Ensure that a PHI node is well formed.
 ///
 void Verifier::visitPHINode(PHINode &PN) {
+  RCORPrint( errs() << "Visit PHI:1: " << Broken << "\n" );
   // Ensure that the PHI nodes are all grouped together at the top of the block.
   // This can be tested by checking whether the instruction before this is
   // either nonexistent (because this is begin()) or is a PHI node.  If not,
@@ -3019,29 +3075,41 @@ void Verifier::visitPHINode(PHINode &PN) {
              isa<PHINode>(--BasicBlock::iterator(&PN)),
          "PHI nodes not grouped at top of basic block!", &PN, PN.getParent());
 
+  RCORPrint( errs() << "Visit PHI:2: " << Broken << "\n" );
+
   // Check that a PHI doesn't yield a Token.
   Assert(!PN.getType()->isTokenTy(), "PHI nodes cannot have token type!");
+
+  RCORPrint( errs() << "Visit PHI:3: " << Broken << "\n" );
 
   // Check that all of the values of the PHI node have the same type as the
   // result, and that the incoming blocks are really basic blocks.
   for (Value *IncValue : PN.incoming_values()) {
+    RCORPrint( errs() << "Visit PHI:3.1: " << Broken << "\n" );
     Assert(PN.getType() == IncValue->getType(),
            "PHI node operands are not the same type as the result!", &PN);
+    RCORPrint( errs() << "Visit PHI:3.2: " << Broken << "\n" );
   }
 
+  RCORPrint( errs() << "Visit PHI:4: " << Broken << "\n" );
   // All other PHI node constraints are checked in the visitBasicBlock method.
 
   visitInstruction(PN);
+
+  RCORPrint( errs() << "Visit PHI:-: " << Broken << "\n" );
 }
 
 void Verifier::visitCallBase(CallBase &Call) {
+  RCORPrint( errs() << "Visit CallBase:1: " << Broken << "\n" );
   Assert(Call.getCalledOperand()->getType()->isPointerTy(),
          "Called function must be a pointer!", Call);
   PointerType *FPTy = cast<PointerType>(Call.getCalledOperand()->getType());
 
+  RCORPrint( errs() << "Visit CallBase:2: " << Broken << "\n" );
   Assert(FPTy->isOpaqueOrPointeeTypeMatches(Call.getFunctionType()),
          "Called function is not the same type as the call!", Call);
 
+  RCORPrint( errs() << "Visit CallBase:3: " << Broken << "\n" );
   FunctionType *FTy = Call.getFunctionType();
 
   // Verify that the correct number of arguments are being passed
@@ -3053,17 +3121,20 @@ void Verifier::visitCallBase(CallBase &Call) {
     Assert(Call.arg_size() == FTy->getNumParams(),
            "Incorrect number of arguments passed to called function!", Call);
 
+  RCORPrint( errs() << "Visit CallBase:4: " << Broken << "\n" );
   // Verify that all arguments to the call match the function type.
   for (unsigned i = 0, e = FTy->getNumParams(); i != e; ++i)
     Assert(Call.getArgOperand(i)->getType() == FTy->getParamType(i),
            "Call parameter type does not match function signature!",
            Call.getArgOperand(i), FTy->getParamType(i), Call);
 
+  RCORPrint( errs() << "Visit CallBase:5: " << Broken << "\n" );
   AttributeList Attrs = Call.getAttributes();
 
   Assert(verifyAttributeCount(Attrs, Call.arg_size()),
          "Attribute after last parameter!", Call);
 
+  RCORPrint( errs() << "Visit CallBase:6: " << Broken << "\n" );
   Function *Callee =
       dyn_cast<Function>(Call.getCalledOperand()->stripPointerCasts());
   bool IsIntrinsic = Callee && Callee->isIntrinsic();
@@ -3071,6 +3142,7 @@ void Verifier::visitCallBase(CallBase &Call) {
     Assert(Callee->getValueType() == FTy,
            "Intrinsic called with incompatible signature", Call);
 
+  RCORPrint( errs() << "Visit CallBase:7: " << Broken << "\n" );
   if (Attrs.hasFnAttribute(Attribute::Speculatable)) {
     // Don't allow speculatable on call sites, unless the underlying function
     // declaration is also speculatable.
@@ -3078,6 +3150,7 @@ void Verifier::visitCallBase(CallBase &Call) {
            "speculatable attribute may not apply to call sites", Call);
   }
 
+  RCORPrint( errs() << "Visit CallBase:8: " << Broken << "\n" );
   if (Attrs.hasFnAttribute(Attribute::Preallocated)) {
     Assert(Call.getCalledFunction()->getIntrinsicID() ==
                Intrinsic::call_preallocated_arg,
@@ -3085,9 +3158,11 @@ void Verifier::visitCallBase(CallBase &Call) {
            "llvm.call.preallocated.arg");
   }
 
+  RCORPrint( errs() << "Visit CallBase:9: " << Broken << "\n" );
   // Verify call attributes.
   verifyFunctionAttrs(FTy, Attrs, &Call, IsIntrinsic);
 
+  RCORPrint( errs() << "Visit CallBase:10: " << Broken << "\n" );
   // Conservatively check the inalloca argument.
   // We have a bug if we can find that there is an underlying alloca without
   // inalloca.
@@ -3098,6 +3173,7 @@ void Verifier::visitCallBase(CallBase &Call) {
              "inalloca argument for call has mismatched alloca", AI, Call);
   }
 
+  RCORPrint( errs() << "Visit CallBase:11: " << Broken << "\n" );
   // For each argument of the callsite, if it has the swifterror argument,
   // make sure the underlying alloca/parameter it comes from has a swifterror as
   // well.
@@ -3144,6 +3220,7 @@ void Verifier::visitCallBase(CallBase &Call) {
     }
   }
 
+  RCORPrint( errs() << "Visit CallBase:12: " << Broken << "\n" );
   if (FTy->isVarArg()) {
     // FIXME? is 'nest' even legal here?
     bool SawNest = false;
@@ -3192,6 +3269,7 @@ void Verifier::visitCallBase(CallBase &Call) {
     }
   }
 
+  RCORPrint( errs() << "Visit CallBase:13: " << Broken << "\n" );
   // Verify that there's no metadata unless it's a direct call to an intrinsic.
   if (!IsIntrinsic) {
     for (Type *ParamTy : FTy->params()) {
@@ -3202,6 +3280,7 @@ void Verifier::visitCallBase(CallBase &Call) {
     }
   }
 
+  RCORPrint( errs() << "Visit CallBase:14: " << Broken << "\n" );
   // Verify that indirect calls don't return tokens.
   if (!Call.getCalledFunction()) {
     Assert(!FTy->getReturnType()->isTokenTy(),
@@ -3210,10 +3289,12 @@ void Verifier::visitCallBase(CallBase &Call) {
            "Return type cannot be x86_amx for indirect call!");
   }
 
+  RCORPrint( errs() << "Visit CallBase:15: " << Broken << "\n" );
   if (Function *F = Call.getCalledFunction())
     if (Intrinsic::ID ID = (Intrinsic::ID)F->getIntrinsicID())
       visitIntrinsicCall(ID, Call);
 
+  RCORPrint( errs() << "Visit CallBase:16: " << Broken << "\n" );
   // Verify that a callsite has at most one "deopt", at most one "funclet", at
   // most one "gc-transition", at most one "cfguardtarget",
   // and at most one "preallocated" operand bundle.
@@ -3268,6 +3349,7 @@ void Verifier::visitCallBase(CallBase &Call) {
     }
   }
 
+  RCORPrint( errs() << "Visit CallBase:17: " << Broken << "\n" );
   if (FoundAttachedCallBundle)
     Assert((FTy->getReturnType()->isPointerTy() ||
             (Call.doesNotReturn() && FTy->getReturnType()->isVoidTy())),
@@ -3276,6 +3358,7 @@ void Verifier::visitCallBase(CallBase &Call) {
            "a void return type",
            Call);
 
+  RCORPrint( errs() << "Visit CallBase:18: " << Broken << "\n" );
   // Verify that each inlinable callsite of a debug-info-bearing function in a
   // debug-info-bearing function has a debug location attached to it. Failure to
   // do so causes assertion failures when the inliner sets up inline scope info.
@@ -3286,7 +3369,9 @@ void Verifier::visitCallBase(CallBase &Call) {
              "debug info must have a !dbg location",
              Call);
 
+  RCORPrint( errs() << "Visit CallBase:19: " << Broken << "\n" );
   visitInstruction(Call);
+  RCORPrint( errs() << "Visit CallBase:-: " << Broken << "\n" );
 }
 
 void Verifier::verifyTailCCMustTailAttrs(AttrBuilder Attrs,
@@ -3426,15 +3511,20 @@ void Verifier::verifyMustTailCall(CallInst &CI) {
 }
 
 void Verifier::visitCallInst(CallInst &CI) {
+  RCORPrint( errs() << "Visit CallInst:1: " << Broken << "\n" );
   visitCallBase(CI);
 
+  RCORPrint( errs() << "Visit CallInst:2: " << Broken << "\n" );
   if (CI.isMustTailCall())
     verifyMustTailCall(CI);
+  RCORPrint( errs() << "Visit CallInst:-: " << Broken << "\n" );
 }
 
 void Verifier::visitInvokeInst(InvokeInst &II) {
+  RCORPrint( errs() << "Visit Invoke:1: " << Broken << "\n" );
   visitCallBase(II);
 
+  RCORPrint( errs() << "Visit Invoke:2: " << Broken << "\n" );
   // Verify that the first non-PHI instruction of the unwind destination is an
   // exception handling instruction.
   Assert(
@@ -3442,17 +3532,21 @@ void Verifier::visitInvokeInst(InvokeInst &II) {
       "The unwind destination does not have an exception handling instruction!",
       &II);
 
+  RCORPrint( errs() << "Visit Invoke:3: " << Broken << "\n" );
   visitTerminator(II);
+  RCORPrint( errs() << "Visit Invoke:-: " << Broken << "\n" );
 }
 
 /// visitUnaryOperator - Check the argument to the unary operator.
 ///
 void Verifier::visitUnaryOperator(UnaryOperator &U) {
+  RCORPrint( errs() << "Visit UnaryOp:1: " << Broken << "\n" );
   Assert(U.getType() == U.getOperand(0)->getType(),
          "Unary operators must have same type for"
          "operands and result!",
          &U);
 
+  RCORPrint( errs() << "Visit UnaryOp:2: " << Broken << "\n" );
   switch (U.getOpcode()) {
   // Check that floating-point arithmetic operators are only used with
   // floating-point operands.
@@ -3464,16 +3558,20 @@ void Verifier::visitUnaryOperator(UnaryOperator &U) {
     llvm_unreachable("Unknown UnaryOperator opcode!");
   }
 
+  RCORPrint( errs() << "Visit UnaryOp:3: " << Broken << "\n" );
   visitInstruction(U);
+  RCORPrint( errs() << "Visit UnaryOp:-: " << Broken << "\n" );
 }
 
 /// visitBinaryOperator - Check that both arguments to the binary operator are
 /// of the same type!
 ///
 void Verifier::visitBinaryOperator(BinaryOperator &B) {
+  RCORPrint( errs() << "Visit BinOp:1: " << Broken << "\n" );
   Assert(B.getOperand(0)->getType() == B.getOperand(1)->getType(),
          "Both operands to a binary operator are not of the same type!", &B);
 
+  RCORPrint( errs() << "Visit BinOp:2: " << Broken << "\n" );
   switch (B.getOpcode()) {
   // Check that integer arithmetic operators are only used with
   // integral operands.
@@ -3529,53 +3627,71 @@ void Verifier::visitBinaryOperator(BinaryOperator &B) {
     llvm_unreachable("Unknown BinaryOperator opcode!");
   }
 
+  RCORPrint( errs() << "Visit BinOp:3: " << Broken << "\n" );
   visitInstruction(B);
+  RCORPrint( errs() << "Visit BinOp:-: " << Broken << "\n" );
 }
 
 void Verifier::visitICmpInst(ICmpInst &IC) {
+  RCORPrint( errs() << "Visit ICmpInst:1: " << Broken << "\n" );
   // Check that the operands are the same type
   Type *Op0Ty = IC.getOperand(0)->getType();
   Type *Op1Ty = IC.getOperand(1)->getType();
   Assert(Op0Ty == Op1Ty,
          "Both operands to ICmp instruction are not of the same type!", &IC);
+  RCORPrint( errs() << "Visit ICmpInst:2: " << Broken << "\n" );
   // Check that the operands are the right type
   Assert(Op0Ty->isIntOrIntVectorTy() || Op0Ty->isPtrOrPtrVectorTy(),
          "Invalid operand types for ICmp instruction", &IC);
+  RCORPrint( errs() << "Visit ICmpInst:2: " << Broken << "\n" );
   // Check that the predicate is valid.
   Assert(IC.isIntPredicate(),
          "Invalid predicate in ICmp instruction!", &IC);
 
+  RCORPrint( errs() << "Visit ICmpInst:3: " << Broken << "\n" );
   visitInstruction(IC);
+  RCORPrint( errs() << "Visit ICmpInst:-: " << Broken << "\n" );
 }
 
 void Verifier::visitFCmpInst(FCmpInst &FC) {
+  RCORPrint( errs() << "Visit FCmpInst:1: " << Broken << "\n" );
   // Check that the operands are the same type
   Type *Op0Ty = FC.getOperand(0)->getType();
   Type *Op1Ty = FC.getOperand(1)->getType();
   Assert(Op0Ty == Op1Ty,
          "Both operands to FCmp instruction are not of the same type!", &FC);
+  RCORPrint( errs() << "Visit FCmpInst:2: " << Broken << "\n" );
   // Check that the operands are the right type
   Assert(Op0Ty->isFPOrFPVectorTy(),
          "Invalid operand types for FCmp instruction", &FC);
+  RCORPrint( errs() << "Visit FCmpInst:3: " << Broken << "\n" );
   // Check that the predicate is valid.
   Assert(FC.isFPPredicate(),
          "Invalid predicate in FCmp instruction!", &FC);
 
+  RCORPrint( errs() << "Visit FCmpInst:4: " << Broken << "\n" );
   visitInstruction(FC);
+  RCORPrint( errs() << "Visit FCmpInst:-: " << Broken << "\n" );
 }
 
 void Verifier::visitExtractElementInst(ExtractElementInst &EI) {
+  RCORPrint( errs() << "Visit ExtractElement:1: " << Broken << "\n" );
   Assert(
       ExtractElementInst::isValidOperands(EI.getOperand(0), EI.getOperand(1)),
       "Invalid extractelement operands!", &EI);
+  RCORPrint( errs() << "Visit ExtractElement:2: " << Broken << "\n" );
   visitInstruction(EI);
+  RCORPrint( errs() << "Visit ExtractElement:-: " << Broken << "\n" );
 }
 
 void Verifier::visitInsertElementInst(InsertElementInst &IE) {
+  RCORPrint( errs() << "Visit InsertElement:1: " << Broken << "\n" );
   Assert(InsertElementInst::isValidOperands(IE.getOperand(0), IE.getOperand(1),
                                             IE.getOperand(2)),
          "Invalid insertelement operands!", &IE);
+  RCORPrint( errs() << "Visit InsertElement:2: " << Broken << "\n" );
   visitInstruction(IE);
+  RCORPrint( errs() << "Visit InsertElement:-: " << Broken << "\n" );
 }
 
 void Verifier::visitShuffleVectorInst(ShuffleVectorInst &SV) {
@@ -3588,22 +3704,29 @@ void Verifier::visitShuffleVectorInst(ShuffleVectorInst &SV) {
 void Verifier::visitGetElementPtrInst(GetElementPtrInst &GEP) {
   Type *TargetTy = GEP.getPointerOperandType()->getScalarType();
 
+  RCORPrint( errs() << "Visit GEP:1: " << Broken << "\n" );
+
   Assert(isa<PointerType>(TargetTy),
          "GEP base pointer is not a vector or a vector of pointers", &GEP);
+  RCORPrint( errs() << "Visit GEP:2: " << Broken << "\n" );
   Assert(GEP.getSourceElementType()->isSized(), "GEP into unsized type!", &GEP);
 
+  RCORPrint( errs() << "Visit GEP:3: " << Broken << "\n" );
   SmallVector<Value *, 16> Idxs(GEP.indices());
   Assert(all_of(
       Idxs, [](Value* V) { return V->getType()->isIntOrIntVectorTy(); }),
       "GEP indexes must be integers", &GEP);
+  RCORPrint( errs() << "Visit GEP:4: " << Broken << "\n" );
   Type *ElTy =
       GetElementPtrInst::getIndexedType(GEP.getSourceElementType(), Idxs);
   Assert(ElTy, "Invalid indices for GEP pointer type!", &GEP);
 
+  RCORPrint( errs() << "Visit GEP:5: " << Broken << "\n" );
   Assert(GEP.getType()->isPtrOrPtrVectorTy() &&
              GEP.getResultElementType() == ElTy,
          "GEP is not of right type for indices!", &GEP, ElTy);
 
+  RCORPrint( errs() << "Visit GEP:6: " << Broken << "\n" );
   if (auto *GEPVTy = dyn_cast<VectorType>(GEP.getType())) {
     // Additional checks for vector GEPs.
     ElementCount GEPWidth = GEPVTy->getElementCount();
@@ -3623,12 +3746,15 @@ void Verifier::visitGetElementPtrInst(GetElementPtrInst &GEP) {
     }
   }
 
+  RCORPrint( errs() << "Visit GEP:7: " << Broken << "\n" );
   if (auto *PTy = dyn_cast<PointerType>(GEP.getType())) {
     Assert(GEP.getAddressSpace() == PTy->getAddressSpace(),
            "GEP address space doesn't match type", &GEP);
   }
 
+  RCORPrint( errs() << "Visit GEP:8: " << Broken << "\n" );
   visitInstruction(GEP);
+  RCORPrint( errs() << "Visit GEP:-: " << Broken << "\n" );
 }
 
 static bool isContiguous(const ConstantRange &A, const ConstantRange &B) {
@@ -3691,12 +3817,16 @@ void Verifier::checkAtomicMemAccessSize(Type *Ty, const Instruction *I) {
 }
 
 void Verifier::visitLoadInst(LoadInst &LI) {
+  RCORPrint( errs() << "Visit Load:1: " << Broken << "\n" );
   PointerType *PTy = dyn_cast<PointerType>(LI.getOperand(0)->getType());
   Assert(PTy, "Load operand must be a pointer.", &LI);
+  RCORPrint( errs() << "Visit Load:2: " << Broken << "\n" );
   Type *ElTy = LI.getType();
   Assert(LI.getAlignment() <= Value::MaximumAlignment,
          "huge alignment values are unsupported", &LI);
+  RCORPrint( errs() << "Visit Load:3: " << Broken << "\n" );
   Assert(ElTy->isSized(), "loading unsized types is not allowed", &LI);
+  RCORPrint( errs() << "Visit Load:4: " << Broken << "\n" );
   if (LI.isAtomic()) {
     Assert(LI.getOrdering() != AtomicOrdering::Release &&
                LI.getOrdering() != AtomicOrdering::AcquireRelease,
@@ -3713,18 +3843,25 @@ void Verifier::visitLoadInst(LoadInst &LI) {
            "Non-atomic load cannot have SynchronizationScope specified", &LI);
   }
 
+  RCORPrint( errs() << "Visit Load:5: " << Broken << "\n" );
   visitInstruction(LI);
+  RCORPrint( errs() << "Visit Load:-: " << Broken << "\n" );
 }
 
 void Verifier::visitStoreInst(StoreInst &SI) {
+  RCORPrint( errs() << "Visit Store:1: " << Broken << "\n" );
   PointerType *PTy = dyn_cast<PointerType>(SI.getOperand(1)->getType());
   Assert(PTy, "Store operand must be a pointer.", &SI);
+  RCORPrint( errs() << "Visit Store:2: " << Broken << "\n" );
   Type *ElTy = SI.getOperand(0)->getType();
   Assert(PTy->isOpaqueOrPointeeTypeMatches(ElTy),
          "Stored value type does not match pointer operand type!", &SI, ElTy);
+  RCORPrint( errs() << "Visit Store:3: " << Broken << "\n" );
   Assert(SI.getAlignment() <= Value::MaximumAlignment,
          "huge alignment values are unsupported", &SI);
+  RCORPrint( errs() << "Visit Store:4: " << Broken << "\n" );
   Assert(ElTy->isSized(), "storing unsized types is not allowed", &SI);
+  RCORPrint( errs() << "Visit Store:5: " << Broken << "\n" );
   if (SI.isAtomic()) {
     Assert(SI.getOrdering() != AtomicOrdering::Acquire &&
                SI.getOrdering() != AtomicOrdering::AcquireRelease,
@@ -3740,7 +3877,9 @@ void Verifier::visitStoreInst(StoreInst &SI) {
     Assert(SI.getSyncScopeID() == SyncScope::System,
            "Non-atomic store cannot have SynchronizationScope specified", &SI);
   }
+  RCORPrint( errs() << "Visit Store:6: " << Broken << "\n" );
   visitInstruction(SI);
+  RCORPrint( errs() << "Visit Store:-: " << Broken << "\n" );
 }
 
 /// Check that SwiftErrorVal is used as a swifterror argument in CS.
@@ -3776,19 +3915,25 @@ void Verifier::verifySwiftErrorValue(const Value *SwiftErrorVal) {
 }
 
 void Verifier::visitAllocaInst(AllocaInst &AI) {
+  RCORPrint( errs() << "Visit Alloca:1: " << Broken << "\n" );
   SmallPtrSet<Type*, 4> Visited;
   Assert(AI.getAllocatedType()->isSized(&Visited),
          "Cannot allocate unsized type", &AI);
+  RCORPrint( errs() << "Visit Alloca:2: " << Broken << "\n" );
   Assert(AI.getArraySize()->getType()->isIntegerTy(),
          "Alloca array size must have integer type", &AI);
+  RCORPrint( errs() << "Visit Alloca:3: " << Broken << "\n" );
   Assert(AI.getAlignment() <= Value::MaximumAlignment,
          "huge alignment values are unsupported", &AI);
 
+  RCORPrint( errs() << "Visit Alloca:4: " << Broken << "\n" );
   if (AI.isSwiftError()) {
     verifySwiftErrorValue(&AI);
   }
 
+  RCORPrint( errs() << "Visit Alloca:5: " << Broken << "\n" );
   visitInstruction(AI);
+  RCORPrint( errs() << "Visit Alloca:-: " << Broken << "\n" );
 }
 
 void Verifier::visitAtomicCmpXchgInst(AtomicCmpXchgInst &CXI) {
@@ -3839,20 +3984,26 @@ void Verifier::visitFenceInst(FenceInst &FI) {
 }
 
 void Verifier::visitExtractValueInst(ExtractValueInst &EVI) {
+  RCORPrint( errs() << "Visit ExtractValue:1: " << Broken << "\n" );
   Assert(ExtractValueInst::getIndexedType(EVI.getAggregateOperand()->getType(),
                                           EVI.getIndices()) == EVI.getType(),
          "Invalid ExtractValueInst operands!", &EVI);
 
+  RCORPrint( errs() << "Visit ExtractValue:2: " << Broken << "\n" );
   visitInstruction(EVI);
+  RCORPrint( errs() << "Visit ExtractValue:-: " << Broken << "\n" );
 }
 
 void Verifier::visitInsertValueInst(InsertValueInst &IVI) {
+  RCORPrint( errs() << "Visit InsertValue:1: " << Broken << "\n" );
   Assert(ExtractValueInst::getIndexedType(IVI.getAggregateOperand()->getType(),
                                           IVI.getIndices()) ==
              IVI.getOperand(1)->getType(),
          "Invalid InsertValueInst operands!", &IVI);
 
+  RCORPrint( errs() << "Visit InsertValue:2: " << Broken << "\n" );
   visitInstruction(IVI);
+  RCORPrint( errs() << "Visit InsertValue:-: " << Broken << "\n" );
 }
 
 static Value *getParentPad(Value *EHPad) {
@@ -3863,13 +4014,16 @@ static Value *getParentPad(Value *EHPad) {
 }
 
 void Verifier::visitEHPadPredecessors(Instruction &I) {
+  RCORPrint( errs() << "Visit EHPad:1: " << Broken << "\n" );
   assert(I.isEHPad());
 
+  RCORPrint( errs() << "Visit EHPad:2: " << Broken << "\n" );
   BasicBlock *BB = I.getParent();
   Function *F = BB->getParent();
 
   Assert(BB != &F->getEntryBlock(), "EH pad cannot be in entry block.", &I);
 
+  RCORPrint( errs() << "Visit EHPad:3: " << Broken << "\n" );
   if (auto *LPI = dyn_cast<LandingPadInst>(&I)) {
     // The landingpad instruction defines its parent as a landing pad block. The
     // landing pad block may be branched to only by the unwind edge of an
@@ -3883,6 +4037,7 @@ void Verifier::visitEHPadPredecessors(Instruction &I) {
     }
     return;
   }
+  RCORPrint( errs() << "Visit EHPad:4: " << Broken << "\n" );
   if (auto *CPI = dyn_cast<CatchPadInst>(&I)) {
     if (!pred_empty(BB))
       Assert(BB->getUniquePredecessor() == CPI->getCatchSwitch()->getParent(),
@@ -3895,6 +4050,7 @@ void Verifier::visitEHPadPredecessors(Instruction &I) {
     return;
   }
 
+  RCORPrint( errs() << "Visit EHPad:5: " << Broken << "\n" );
   // Verify that each pred has a legal terminator with a legal to/from EH
   // pad relationship.
   Instruction *ToPad = &I;
@@ -3933,16 +4089,20 @@ void Verifier::visitEHPadPredecessors(Instruction &I) {
              "EH pad jumps through a cycle of pads", FromPad);
     }
   }
+  RCORPrint( errs() << "Visit EHPad:-: " << Broken << "\n" );
 }
 
 void Verifier::visitLandingPadInst(LandingPadInst &LPI) {
+  RCORPrint( errs() << "Visit LandingPad:1: " << Broken << "\n" );
   // The landingpad instruction is ill-formed if it doesn't have any clauses and
   // isn't a cleanup.
   Assert(LPI.getNumClauses() > 0 || LPI.isCleanup(),
          "LandingPadInst needs at least one clause or to be a cleanup.", &LPI);
 
+  RCORPrint( errs() << "Visit LandingPad:2: " << Broken << "\n" );
   visitEHPadPredecessors(LPI);
 
+  RCORPrint( errs() << "Visit LandingPad:3: " << Broken << "\n" );
   if (!LandingPadResultTy)
     LandingPadResultTy = LPI.getType();
   else
@@ -3951,16 +4111,19 @@ void Verifier::visitLandingPadInst(LandingPadInst &LPI) {
            "inside a function.",
            &LPI);
 
+  RCORPrint( errs() << "Visit LandingPad:4: " << Broken << "\n" );
   Function *F = LPI.getParent()->getParent();
   Assert(F->hasPersonalityFn(),
          "LandingPadInst needs to be in a function with a personality.", &LPI);
 
+  RCORPrint( errs() << "Visit LandingPad:5: " << Broken << "\n" );
   // The landingpad instruction must be the first non-PHI instruction in the
   // block.
   Assert(LPI.getParent()->getLandingPadInst() == &LPI,
          "LandingPadInst not the first non-PHI instruction in the block.",
          &LPI);
 
+  RCORPrint( errs() << "Visit LandingPad:6: " << Broken << "\n" );
   for (unsigned i = 0, e = LPI.getNumClauses(); i < e; ++i) {
     Constant *Clause = LPI.getClause(i);
     if (LPI.isCatch(i)) {
@@ -3973,7 +4136,9 @@ void Verifier::visitLandingPadInst(LandingPadInst &LPI) {
     }
   }
 
+  RCORPrint( errs() << "Visit LandingPad:7: " << Broken << "\n" );
   visitInstruction(LPI);
+  RCORPrint( errs() << "Visit LandingPad:-: " << Broken << "\n" );
 }
 
 void Verifier::visitResumeInst(ResumeInst &RI) {
@@ -4022,22 +4187,29 @@ void Verifier::visitCatchReturnInst(CatchReturnInst &CatchReturn) {
 void Verifier::visitCleanupPadInst(CleanupPadInst &CPI) {
   BasicBlock *BB = CPI.getParent();
 
+  RCORPrint( errs() << "Visit CleanupPad:1: " << Broken << "\n" );
+
   Function *F = BB->getParent();
   Assert(F->hasPersonalityFn(),
          "CleanupPadInst needs to be in a function with a personality.", &CPI);
 
+  RCORPrint( errs() << "Visit CleanupPad:2: " << Broken << "\n" );
   // The cleanuppad instruction must be the first non-PHI instruction in the
   // block.
   Assert(BB->getFirstNonPHI() == &CPI,
          "CleanupPadInst not the first non-PHI instruction in the block.",
          &CPI);
 
+  RCORPrint( errs() << "Visit CleanupPad:3: " << Broken << "\n" );
   auto *ParentPad = CPI.getParentPad();
   Assert(isa<ConstantTokenNone>(ParentPad) || isa<FuncletPadInst>(ParentPad),
          "CleanupPadInst has an invalid parent.", &CPI);
 
+  RCORPrint( errs() << "Visit CleanupPad:4: " << Broken << "\n" );
   visitEHPadPredecessors(CPI);
+  RCORPrint( errs() << "Visit CleanupPad:5: " << Broken << "\n" );
   visitFuncletPadInst(CPI);
+  RCORPrint( errs() << "Visit CleanupPad:-: " << Broken << "\n" );
 }
 
 void Verifier::visitFuncletPadInst(FuncletPadInst &FPI) {
@@ -4258,6 +4430,7 @@ void Verifier::visitCleanupReturnInst(CleanupReturnInst &CRI) {
 }
 
 void Verifier::verifyDominatesUse(Instruction &I, unsigned i) {
+  RCORPrint( errs() << "Visit Dominance:1: " << Broken << "\n" );
   Instruction *Op = cast<Instruction>(I.getOperand(i));
   // If the we have an invalid invoke, don't try to compute the dominance.
   // We already reject it in the invoke specific checks and the dominance
@@ -4278,8 +4451,10 @@ void Verifier::verifyDominatesUse(Instruction &I, unsigned i) {
     return;
 
   const Use &U = I.getOperandUse(i);
+  RCORPrint( errs() << "Visit Dominance:2: " << Broken << "\n" );
   Assert(DT.dominates(Op, U),
          "Instruction does not dominate all uses!", Op, &I);
+  RCORPrint( errs() << "Visit Dominance:-: " << Broken << "\n" );
 }
 
 void Verifier::visitDereferenceableMetadata(Instruction& I, MDNode* MD) {

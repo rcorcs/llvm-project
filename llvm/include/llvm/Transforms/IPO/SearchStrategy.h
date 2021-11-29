@@ -1,3 +1,7 @@
+
+#ifndef LLVM_TRANSFORMS_IPO_SEARCHSTRATEGY_H
+#define LLVM_TRANSFORMS_IPO_SEARCHSTRATEGY_H
+
 #include <algorithm>
 #include <functional>
 #include <random>
@@ -194,3 +198,5 @@ public:
 
   uint32_t item_footprint() { return sizeof(uint32_t) * bands * (rows + 1); }
 };
+
+#endif

@@ -141,6 +141,7 @@
 #include "llvm/Transforms/Scalar/AlignmentFromAssumptions.h"
 #include "llvm/Transforms/Scalar/AnnotationRemarks.h"
 #include "llvm/Transforms/Scalar/BDCE.h"
+#include "llvm/Transforms/Scalar/BranchFusion.h"
 #include "llvm/Transforms/Scalar/CallSiteSplitting.h"
 #include "llvm/Transforms/Scalar/ConstantHoisting.h"
 #include "llvm/Transforms/Scalar/ConstraintElimination.h"
@@ -278,6 +279,10 @@ static cl::opt<bool> PerformMandatoryInliningsFirst(
 static cl::opt<bool> EnableO3NonTrivialUnswitching(
     "enable-npm-O3-nontrivial-unswitch", cl::init(true), cl::Hidden,
     cl::ZeroOrMore, cl::desc("Enable non-trivial loop unswitching for -O3"));
+
+static cl::opt<bool> EnableBranchFusion(
+    "enable-brfusion", cl::init(false), cl::Hidden,
+    cl::desc("Enable brfusion"));
 
 PipelineTuningOptions::PipelineTuningOptions() {
   LoopInterleaving = true;
@@ -696,6 +701,9 @@ PassBuilder::buildFunctionSimplificationPipeline(OptimizationLevel Level,
   if (EnableGVNSink) {
     FPM.addPass(GVNSinkPass());
     FPM.addPass(SimplifyCFGPass());
+  }
+  if (EnableBranchFusion) {
+    FPM.addPass(BranchFusionPass());
   }
 
   if (EnableConstraintElimination)
