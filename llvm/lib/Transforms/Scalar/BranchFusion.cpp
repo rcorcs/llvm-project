@@ -247,7 +247,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     errs() << "Processing SOA-valid Branch\n";
   }
 
-  if (!IsSingleExit) return false;
+  //if (!IsSingleExit) return false;
 
 
   for (BasicBlock *BB : KnownBBs) {
@@ -286,6 +286,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
   for (BasicBlock &BB : LeftR) {
     F1Vec.push_back(&BB);
     for (Instruction &I : BB) {
+      if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I))
       F1Vec.push_back(&I);
     }
   }
@@ -293,6 +294,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
   for (BasicBlock &BB : RightR) {
     F2Vec.push_back(&BB);
     for (Instruction &I : BB) {
+      if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I))
       F2Vec.push_back(&I);
     }
   }
@@ -407,7 +409,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     errs() << "Unprofitable Branch Fusion!\n";
     errs() << "Destroying generated code\n";
 
-    F.dump();
+    //F.dump();
     CG.destroyGeneratedCode();
     errs() << "Generated code destroyed\n";
     EntryBB->eraseFromParent();
@@ -423,7 +425,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
            << MergedSize << ": " << ((int)(Profit * 100.0)) << "% Reduction ["
            << CountMatchUsefullInsts << "] : " << GetValueName(&F) << "\n";
 
-    F.dump();
+    //F.dump();
     IRBuilder<> Builder(BI);
     Instruction *NewBI = Builder.CreateBr(EntryBB);
     BI->eraseFromParent();
@@ -451,10 +453,14 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
                   if (NewV == nullptr)
                     errs() << "ERROR: Null mapped value!\n";
 
+		  auto Pair = CG.getNewEdge(InBB, &BB);
+                  BasicBlock *NewBB = Pair.first;
+		  /*
                   BasicBlock *NewBB =
                       dyn_cast<Instruction>(
-                          VMap[BB.getTerminator()])
+                          VMap[InBB->getTerminator()])
                           ->getParent();
+                  */
 
                   // PHI->setIncomingBlock(i,NewBB);
                   /*
@@ -474,12 +480,12 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
             for (BasicBlock *BB : OldEntries) {
               PHI->removeIncomingValue(BB, false);
             }
-            PHI->dump();
+            //PHI->dump();
             for (auto &Pair : NewEntries) {
               if (Pair.second.size() == 1) {
                 Value *V = *Pair.second.begin();
-                errs() << Pair.first->getName() << " -> ";
-                V->dump();
+                //errs() << Pair.first->getName() << " -> ";
+                //V->dump();
                 PHI->addIncoming(V, Pair.first);
               } else {
 
@@ -524,13 +530,14 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
       }
       I->eraseFromParent();
     }
-    F.dump();
+    //F.dump();
     for (BasicBlock *BB : KnownBBs) {
       BB->eraseFromParent();
     }
 
-    F.dump();
+    //F.dump();
     if (!CG.commitChanges()) {
+      F.dump();
       errs() << "ERROR: committing final changes to the fused branches\n";
     }
     return true;

@@ -4516,6 +4516,12 @@ bool FunctionMerger::SALSSACodeGen::generate(
           auto *F1BB = dyn_cast<BasicBlock>(F1V);
           auto *F2BB = dyn_cast<BasicBlock>(F2V);
 
+
+	  BasicBlock *SrcBB1 = nullptr;
+	  BasicBlock *SrcBB2 = nullptr;
+	  BasicBlock *TgtBB1 = nullptr;
+	  BasicBlock *TgtBB2 = nullptr;
+
           if (V1 != V2) {
             auto *BB1 = dyn_cast<BasicBlock>(V1);
             auto *BB2 = dyn_cast<BasicBlock>(V2);
@@ -4532,7 +4538,17 @@ bool FunctionMerger::SALSSACodeGen::generate(
             Instruction *NewBr = BuilderBB.CreateCondBr(IsFunc1, BB1, BB2);
 	    this->insert(NewBr);
             V = SelectBB;
-          }
+
+	    SrcBB1 = SelectBB;
+	    SrcBB2 = SelectBB;
+	    TgtBB1 = BB1;
+	    TgtBB2 = BB2;
+          } else {
+	    SrcBB1 = NewI->getParent();
+	    SrcBB2 = NewI->getParent();
+	    TgtBB1 = dyn_cast<BasicBlock>(V);
+	    TgtBB2 = dyn_cast<BasicBlock>(V);
+	  }
 
           if (F1BB->isLandingPad() || F2BB->isLandingPad()) {
             LandingPadInst *LP1 = F1BB->getLandingPadInst();
@@ -4558,8 +4574,16 @@ bool FunctionMerger::SALSSACodeGen::generate(
             VMap[F1BB->getLandingPadInst()] = NewLP;
             VMap[F2BB->getLandingPadInst()] = NewLP;
 
+	    SrcBB1 = LPadBB;
+	    SrcBB2 = LPadBB;
+
             V = LPadBB;
           }
+
+          addEdgeMap(I1->getParent(), F1BB, SrcBB1, TgtBB1 );
+          addEdgeMap(I2->getParent(), F2BB, SrcBB2, TgtBB2 );
+
+
           NewI->setOperand(i, V);
         }
       }
@@ -4585,6 +4609,9 @@ bool FunctionMerger::SALSSACodeGen::generate(
           if (V == nullptr)
             return false; // ErrorResponse;
 
+	  BasicBlock *SrcBB = NewI->getParent();
+	  BasicBlock *TgtBB = dyn_cast<BasicBlock>(V);
+
           if (FXBB->isLandingPad()) {
 
             LandingPadInst *LP = FXBB->getLandingPadInst();
@@ -4604,8 +4631,12 @@ bool FunctionMerger::SALSSACodeGen::generate(
             Instruction *NewBr = BuilderBB.CreateBr(dyn_cast<BasicBlock>(V));
 	    this->insert(NewBr);
 
+	    SrcBB = LPadBB;
+
             V = LPadBB;
           }
+
+          addEdgeMap(I->getParent(), FXBB, SrcBB, TgtBB );
 
           NewI->setOperand(i, V);
           // if (isa<BranchInst>(NewI))
@@ -4643,6 +4674,10 @@ bool FunctionMerger::SALSSACodeGen::generate(
                          Instruction *InsertPt) -> Value * {
     if (V1 == V2)
       return V1;
+
+    //errs() << "Selecting:\n";
+    //errs() << "V1:";V1->dump();
+    //errs() << "V2:";V2->dump();
 
     if (V1 == ConstantInt::getTrue(Context) && V2 == ConstantInt::getFalse(Context))
       return IsFunc1;
@@ -4733,6 +4768,9 @@ bool FunctionMerger::SALSSACodeGen::generate(
 
     if (I1 != nullptr && I2 != nullptr) {
 
+      //errs() << "Setting operand merged instructions\n";
+      //I1->dump();
+      //I2->dump();
       // Instruction *I1 = dyn_cast<Instruction>(MN->N1->getValue());
       // Instruction *I2 = dyn_cast<Instruction>(MN->N2->getValue());
 
@@ -4862,6 +4900,10 @@ bool FunctionMerger::SALSSACodeGen::generate(
       }
     } // end if isomorphic
     else {
+      //errs() << "Setting operand of unmerged instruction:";
+      //if (I1) I1->dump();
+      //if (I2) I2->dump();
+
       // PDGNode *N = MN->getUniqueNode();
       if (I1 != nullptr && !AssignOperands(I1, true)) {
         if (Debug)
@@ -4905,6 +4947,10 @@ bool FunctionMerger::SALSSACodeGen::generate(
 
         std::set<int> FoundIndices;
 
+	//errs() << "Before:\n";
+	//PHI->dump();
+	//NewPHI->dump();
+
         for (auto It = pred_begin(NewPHI->getParent()),
                   E = pred_end(NewPHI->getParent());
              It != E; It++) {
@@ -4929,6 +4975,10 @@ bool FunctionMerger::SALSSACodeGen::generate(
           // IntPtrTy);
           NewPHI->addIncoming(V, NewPredBB);
         }
+
+	//errs() << "After:\n";
+	//NewPHI->dump();
+
         if (FoundIndices.size() != PHI->getNumIncomingValues())
           return false;
       }
@@ -5046,20 +5096,30 @@ AllocaInst *  FunctionMerger::SALSSACodeGen::MemfyInst(std::set<Instruction *> &
 
         auto *User = cast<Instruction>(UI.getUser());
 
+	Value *NewV = nullptr;
         if (auto *PHI = dyn_cast<PHINode>(User)) {
           /// TODO: make sure getOperandNo is getting the correct incoming edge
           auto InsertionPt = PHI->getIncomingBlock(UI.getOperandNo())->getTerminator();
           /// TODO: If the terminator of the incoming block is the producer of
           //        the value we want to store, the load cannot be inserted between
           //        the producer and the user. Something more complex is needed.
-          if (InsertionPt == I)
-            continue;
+          //if (InsertionPt == I)
+          //  continue;
+	  if (PHI->getIncomingBlock(UI.getOperandNo()) == I->getParent())
+	    continue;
           IRBuilder<> Builder(InsertionPt);
-          UI.set(Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr));
+          //UI.set(Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr));
+          NewV = Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr);
         } else {
           IRBuilder<> Builder(User);
-          UI.set(Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr));
+          //UI.set(Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr));
+          NewV = Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr);
         }
+        UI.set(NewV);
+
+	//errs() << "Memfying:\n";
+	//NewV->dump();
+	//UI.getUser()->dump();
       }
     }
 
@@ -5248,6 +5308,7 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
     }
 
     //errs() << "Mem2Reg\n";
+    //MergedFunc->dump();
 
     DominatorTree DT(*MergedFunc);
     PromoteMemToReg(Allocas, DT, nullptr);

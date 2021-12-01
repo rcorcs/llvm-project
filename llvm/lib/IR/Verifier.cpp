@@ -2655,6 +2655,13 @@ void Verifier::visitBasicBlock(BasicBlock &BB) {
                &PN, Values[i].first, Values[i].second, Values[i - 1].second);
 
         RCORPrint( errs() << "Visit BB:2.3.2: " << Broken << "\n" );
+	/*
+	if (Values[i].first != Preds[i]) {
+	  errs() << "ERROR detected: PHI and predecessors mismatch\n";
+	  PN.dump();
+          BB.dump();
+ 	}
+	*/
         // Check to make sure that the predecessors and PHI node entries are
         // matched up.
         Assert(Values[i].first == Preds[i],

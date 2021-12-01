@@ -270,6 +270,8 @@ public:
     BasicBlock *EntryBB2;
     BasicBlock *PreBB;
 
+    std::map<std::pair<BasicBlock *, BasicBlock*>, std::pair<BasicBlock *, BasicBlock*> > EdgeMap;
+
     Type *RetType1;
     Type *RetType2;
     Type *ReturnType;
@@ -299,6 +301,14 @@ public:
     CodeGenerator &setContext(LLVMContext *ContextPtr) {
       this->ContextPtr = ContextPtr;
       return *this;
+    }
+
+    void addEdgeMap(BasicBlock *BB1, BasicBlock *BB2, BasicBlock *NewBB1, BasicBlock *NewBB2) {
+      EdgeMap[std::pair<BasicBlock *, BasicBlock*>(BB1,BB2)] = std::pair<BasicBlock *, BasicBlock*>(NewBB1,NewBB2);
+    }
+
+    std::pair<BasicBlock *, BasicBlock *> getNewEdge(BasicBlock *BB1, BasicBlock *BB2) {
+      return EdgeMap[std::pair<BasicBlock *, BasicBlock*>(BB1,BB2)];
     }
 
     CodeGenerator &setIntPtrType(Type *IntPtrTy) {
@@ -393,6 +403,7 @@ public:
 
     std::map<Instruction *, std::map<Instruction *, unsigned>>
       CoalescingCandidates;
+
   public:
     template <typename BlockListType>
     SALSSACodeGen(BlockListType &Blocks1, BlockListType &Blocks2)
