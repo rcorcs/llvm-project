@@ -56,6 +56,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/InstIterator.h"
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringSet.h"
@@ -70,6 +71,10 @@
 #include <map>
 #include <set>
 #include <vector>
+
+extern llvm::cl::opt<bool> EnableHyFMNW;
+extern llvm::cl::opt<bool> EnableHyFMPA;
+extern llvm::cl::opt<bool> HyFMProfitability;
 
 namespace llvm {
 
@@ -178,7 +183,6 @@ struct AlignmentStats {
   bool isProfitable() const {return (Matches == Insts) || (CoreMatches > 0);};
 };
 
-
 class FunctionMerger {
 private:
   Module *M;
@@ -202,7 +206,7 @@ private:
 
   enum LinearizationKind { LK_Random, LK_Canonical };
 
-  void linearize(Function &F, SmallVectorImpl<Value *> &FVec,
+  void orderBlocks(Function &F, SmallVectorImpl<BasicBlock *> &FVec,
                  LinearizationKind LK = LinearizationKind::LK_Canonical);
 
   static bool matchInstructions(Instruction *I1, Instruction *I2,
@@ -245,7 +249,7 @@ public:
   static bool match(Value *V1, Value *V2);
 
   template<typename RegionT>
-  AlignedSequence<Value *> alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, const FunctionMergingOptions &Options = {});
+  static AlignedSequence<Value *> alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, const FunctionMergingOptions &Options = {});
 
   void updateCallGraph(FunctionMergeResult &Result,
                        StringSet<> &AlwaysPreserved,
@@ -426,6 +430,227 @@ class FunctionMergingPass : public PassInfoMixin<FunctionMergingPass> {
 public:
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &AM);
 };
+
+
+
+static inst_range getInstructions(Function *F) { return instructions(F); }
+
+static iterator_range<BasicBlock::iterator> getInstructions(BasicBlock *BB) {
+  return make_range(BB->begin(), BB->end());
+}
+
+template <class T> class Fingerprint {
+public:
+  uint64_t magnitude{0};
+  static const size_t MaxOpcode = 68;
+  std::array<uint32_t, MaxOpcode> OpcodeFreq;
+
+  Fingerprint() = default;
+
+  Fingerprint(T owner) {
+    // memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
+    for (size_t i = 0; i < MaxOpcode; i++)
+      OpcodeFreq[i] = 0;
+
+    for (Instruction &I : getInstructions(owner)) {
+      OpcodeFreq[I.getOpcode()]++;
+      if (I.isTerminator())
+        OpcodeFreq[0] += I.getNumSuccessors();
+    }
+    for (size_t i = 0; i < MaxOpcode; i++) {
+      uint64_t val = OpcodeFreq[i];
+      magnitude += val * val;
+    }
+  }
+
+  uint32_t footprint() const { return sizeof(int) * MaxOpcode; }
+
+  float distance(const Fingerprint &FP2) const {
+    int Distance = 0;
+    for (size_t i = 0; i < MaxOpcode; i++) {
+      int Freq1 = OpcodeFreq[i];
+      int Freq2 = FP2.OpcodeFreq[i];
+      Distance += std::abs(Freq1 - Freq2);
+    }
+    return static_cast<float>(Distance);
+  }
+};
+
+class BlockFingerprint : public Fingerprint<BasicBlock *> {
+public:
+  BasicBlock *BB{nullptr};
+  size_t Size{0};
+
+  BlockFingerprint(BasicBlock *BB) : Fingerprint(BB), BB(BB) {
+    for (Instruction &I : *BB) {
+      if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
+        Size++;
+      }
+    }
+  }
+};
+
+template<typename RegionT>
+AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, const FunctionMergingOptions &Options) {
+
+  AlignedSequence<Value *> AlignedSeq;
+  if (EnableHyFMNW) { // HyFM [NW]
+    int B1Max = 0;
+    int B2Max = 0;
+    size_t MaxMem = 0;
+
+    int NumBB1 = 0;
+    int NumBB2 = 0;
+    size_t MemSize = 0;
+
+    std::vector<BlockFingerprint> Blocks;
+    for (BasicBlock &BB1 : F1) {
+      BlockFingerprint BD1(&BB1);
+      MemSize += BD1.footprint();
+      NumBB1++;
+      Blocks.push_back(std::move(BD1));
+    }
+
+    for (BasicBlock &BIt : F2) {
+      NumBB2++;
+      BasicBlock *BB2 = &BIt;
+      BlockFingerprint BD2(BB2);
+
+      auto BestIt = Blocks.end();
+      float BestDist = std::numeric_limits<float>::max();
+      for (auto BDIt = Blocks.begin(), E = Blocks.end(); BDIt != E; BDIt++) {
+        auto D = BD2.distance(*BDIt);
+        if (D < BestDist) {
+          BestDist = D;
+          BestIt = BDIt;
+        }
+      }
+
+      bool MergedBlock = false;
+      if (BestIt != Blocks.end()) {
+        auto &BD1 = *BestIt;
+        BasicBlock *BB1 = BD1.BB;
+
+        SmallVector<Value *, 8> BB1Vec;
+        SmallVector<Value *, 8> BB2Vec;
+
+        BB1Vec.push_back(BB1);
+        for (auto &I : *BB1)
+          if (!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
+            BB1Vec.push_back(&I);
+
+        BB2Vec.push_back(BB2);
+        for (auto &I : *BB2)
+          if (!isa<PHINode>(&I) && !isa<LandingPadInst>(&I))
+            BB2Vec.push_back(&I);
+
+        NeedlemanWunschSA<SmallVectorImpl<Value *>> SA(ScoringSystem(-1, 2), FunctionMerger::match);
+
+        auto MemReq = SA.getMemoryRequirement(BB1Vec, BB2Vec);
+
+        if (MemReq > MaxMem) {
+          MaxMem = MemReq;
+          B1Max = BB1Vec.size();
+          B2Max = BB2Vec.size();
+        }
+
+        AlignedSequence<Value *> AlignedBlocks = SA.getAlignment(BB1Vec, BB2Vec);
+
+        if (!HyFMProfitability || isSAProfitable(AlignedBlocks)) {
+          extendAlignedSeq(AlignedSeq, AlignedBlocks, TotalAlignmentStats);
+          Blocks.erase(BestIt);
+          MergedBlock = true;
+        }
+      }
+
+      if (!MergedBlock)
+        extendAlignedSeq(AlignedSeq, nullptr, BB2, TotalAlignmentStats);
+    }
+
+    for (auto &BD1 : Blocks)
+      extendAlignedSeq(AlignedSeq, BD1.BB, nullptr, TotalAlignmentStats);
+
+  } else if (EnableHyFMPA) { // HyFM [PA]
+
+    int NumBB1 = 0;
+    int NumBB2 = 0;
+    size_t MemSize = 0;
+
+    std::map<size_t, std::vector<BlockFingerprint>> BlocksF1;
+    for (BasicBlock &BB1 : F1) {
+      BlockFingerprint BD1(&BB1);
+      NumBB1++;
+      MemSize += BD1.footprint();
+      BlocksF1[BD1.Size].push_back(std::move(BD1));
+    }
+
+    for (BasicBlock &BIt : F2) {
+      NumBB2++;
+      BasicBlock *BB2 = &BIt;
+      BlockFingerprint BD2(BB2);
+
+      auto &SetRef = BlocksF1[BD2.Size];
+
+      auto BestIt = SetRef.end();
+      float BestDist = std::numeric_limits<float>::max();
+      for (auto BDIt = SetRef.begin(), E = SetRef.end(); BDIt != E; BDIt++) {
+        auto D = BD2.distance(*BDIt);
+        if (D < BestDist) {
+          BestDist = D;
+          BestIt = BDIt;
+        }
+      }
+
+      bool MergedBlock = false;
+      if (BestIt != SetRef.end()) {
+        BasicBlock *BB1 = BestIt->BB;
+
+        if (!HyFMProfitability || isPAProfitable(BB1, BB2)) {
+          extendAlignedSeq(AlignedSeq, BB1, BB2, TotalAlignmentStats);
+          SetRef.erase(BestIt);
+          MergedBlock = true;
+        }
+      }
+
+      if (!MergedBlock)
+        extendAlignedSeq(AlignedSeq, nullptr, BB2, TotalAlignmentStats);
+    }
+
+    for (auto &Pair : BlocksF1)
+      for (auto &BD1 : Pair.second)
+        extendAlignedSeq(AlignedSeq, BD1.BB, nullptr, TotalAlignmentStats);
+
+  } else { //default SALSSA
+    SmallVector<Value *, 8> F1Vec;
+    SmallVector<Value *, 8> F2Vec;
+
+    for (BasicBlock &BB : F1) {
+      F1Vec.push_back(&BB);
+      for (Instruction &I : BB) {
+        if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
+          F1Vec.push_back(&I);
+        }
+      }
+    }
+    for (BasicBlock &BB : F2) {
+      F2Vec.push_back(&BB);
+      for (Instruction &I : BB) {
+        if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
+          F2Vec.push_back(&I);
+        }
+      }
+    }
+
+    NeedlemanWunschSA<SmallVectorImpl<Value *>> SA(ScoringSystem(-1, 2), FunctionMerger::match);
+
+    AlignedSeq = SA.getAlignment(F1Vec, F2Vec);
+
+  }
+
+
+  return AlignedSeq;
+}
+
 
 } // namespace llvm
 #endif

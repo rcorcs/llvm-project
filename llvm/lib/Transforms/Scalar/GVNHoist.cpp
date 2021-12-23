@@ -569,12 +569,22 @@ bool GVNHoist::run(Function &F) {
 
   // FIXME: use lazy evaluation of VN to avoid the fix-point computation.
   while (true) {
-    if (MaxChainLength != -1 && ++ChainLength >= MaxChainLength)
+    if (MaxChainLength != -1 && ++ChainLength >= MaxChainLength) {
+      if (NumHoisted) {
+	  errs() << "Hoisted: " << NumHoisted << "; Func: " << F.getName() << ": " << F.getParent()->getSourceFileName () << "\n";
+	  F.dump();
+      }
       return Res;
+    }
 
     auto HoistStat = hoistExpressions(F);
-    if (HoistStat.first + HoistStat.second == 0)
+    if (HoistStat.first + HoistStat.second == 0) {
+      if (NumHoisted) {
+	  errs() << "Hoisted: " << NumHoisted << "; Func: " << F.getName() << ": " << F.getParent()->getSourceFileName () << "\n";
+	  F.dump();
+      }
       return Res;
+    }
 
     if (HoistStat.second > 0)
       // To address a limitation of the current GVN, we need to rerun the
@@ -585,6 +595,10 @@ bool GVNHoist::run(Function &F) {
     Res = true;
   }
 
+    if (NumHoisted) {
+	  errs() << "Hoisted: " << NumHoisted << "; Func: " << F.getName() << ": " << F.getParent()->getSourceFileName () << "\n";
+	  F.dump();
+    }
   return Res;
 }
 
@@ -1015,6 +1029,7 @@ unsigned GVNHoist::rauw(const SmallVecInsn &Candidates, Instruction *Repl,
         MSSAUpdater->removeMemoryAccess(OldMA);
       }
 
+      errs() << "Removing copy:";I->dump();
       Repl->andIRFlags(I);
       combineKnownMetadata(Repl, I);
       I->replaceAllUsesWith(Repl);
@@ -1137,11 +1152,11 @@ std::pair<unsigned, unsigned> GVNHoist::hoist(HoistingPointList &HPL) {
           continue;
       }
 
+      errs() << "Hoisting:"; Repl->dump();
       // Move the instruction at the end of HoistPt.
       Instruction *Last = DestBB->getTerminator();
       MD->removeInstruction(Repl);
       Repl->moveBefore(Last);
-
       DFSNumber[Repl] = DFSNumber[Last]++;
     }
 

@@ -97,4 +97,5 @@ add_llvm_component_library(LLVMScalarOpts
   InstCombine
   Support
   TransformUtils
+  IPO
   )

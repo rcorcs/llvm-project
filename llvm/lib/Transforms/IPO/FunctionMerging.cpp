@@ -51,6 +51,8 @@
 
 #include "llvm/Transforms/IPO/FunctionMerging.h"
 
+#include "llvm/ADT/PtrToRefUtils.h"
+
 #include "llvm/InitializePasses.h"
 
 #include "llvm/IR/BasicBlock.h"
@@ -180,11 +182,11 @@ static cl::opt<bool>
     HasWholeProgram("func-merging-whole-program", cl::init(false), cl::Hidden,
                     cl::desc("Function merging applied on whole program"));
 
-static cl::opt<bool>
+cl::opt<bool>
     EnableHyFMPA("func-merging-hyfm-pa", cl::init(false), cl::Hidden,
                  cl::desc("Enable HyFM with the Pairwise Alignment"));
 
-static cl::opt<bool>
+cl::opt<bool>
     EnableHyFMNW("func-merging-hyfm-nw", cl::init(false), cl::Hidden,
                  cl::desc("Enable HyFM with the Needleman-Wunsch alignment"));
 
@@ -200,7 +202,7 @@ static cl::opt<unsigned>
     MaxNumSelection("func-merging-max-selects", cl::init(500), cl::Hidden,
                     cl::desc("Maximum number of allowed operand selection"));
 
-static cl::opt<bool> HyFMProfitability(
+cl::opt<bool> HyFMProfitability(
     "hyfm-profitability", cl::init(true), cl::Hidden,
     cl::desc("Try to reuse merged functions for another merge operation"));
 
@@ -308,7 +310,7 @@ static bool CmpTypes(Type *TyL, Type *TyR, const DataLayout *DL) {
     TyR = DL->getIntPtrType(TyR);
 
   if (TyL == TyR)
-    return false;
+    return true;
 
   if (int Res = CmpNumbers(TyL->getTypeID(), TyR->getTypeID()))
     return Res;
@@ -1117,7 +1119,7 @@ bool FunctionMerger::matchWholeBlocks(Value *V1, Value *V2) {
 
 static unsigned
 RandomLinearizationOfBlocks(BasicBlock *BB,
-                            std::list<BasicBlock *> &OrederedBBs,
+                            SmallVectorImpl<BasicBlock *> &OrederedBBs,
                             std::set<BasicBlock *> &Visited) {
   if (Visited.find(BB) != Visited.end())
     return 0;
@@ -1137,19 +1139,19 @@ RandomLinearizationOfBlocks(BasicBlock *BB,
     SumSizes += RandomLinearizationOfBlocks(NextBlock, OrederedBBs, Visited);
   }
 
-  OrederedBBs.push_front(BB);
+  OrederedBBs.push_back(BB);
   return SumSizes + BB->size();
 }
 
 static unsigned
-RandomLinearizationOfBlocks(Function &F, std::list<BasicBlock *> &OrederedBBs) {
+RandomLinearizationOfBlocks(Function &F, SmallVectorImpl<BasicBlock *>  &OrederedBBs) {
   std::set<BasicBlock *> Visited;
   return RandomLinearizationOfBlocks(&F.getEntryBlock(), OrederedBBs, Visited);
 }
 
 static unsigned
 CanonicalLinearizationOfBlocks(BasicBlock *BB,
-                               std::list<BasicBlock *> &OrederedBBs,
+                               SmallVectorImpl<BasicBlock *>  &OrederedBBs,
                                std::set<BasicBlock *> &Visited) {
   if (Visited.find(BB) != Visited.end())
     return 0;
@@ -1169,41 +1171,29 @@ CanonicalLinearizationOfBlocks(BasicBlock *BB,
   //                                             Visited);
   //}
 
-  OrederedBBs.push_front(BB);
+  OrederedBBs.push_back(BB);
   return SumSizes + BB->size();
 }
 
 static unsigned
 CanonicalLinearizationOfBlocks(Function &F,
-                               std::list<BasicBlock *> &OrederedBBs) {
+                               SmallVectorImpl<BasicBlock *>  &OrederedBBs) {
   std::set<BasicBlock *> Visited;
   return CanonicalLinearizationOfBlocks(&F.getEntryBlock(), OrederedBBs,
                                         Visited);
+  std::reverse(OrederedBBs.begin(), OrederedBBs.end());
 }
 
-void FunctionMerger::linearize(Function &F, SmallVectorImpl<Value *> &FVec,
+void FunctionMerger::orderBlocks(Function &F, SmallVectorImpl<BasicBlock *> &OrderedBBs,
                                FunctionMerger::LinearizationKind LK) {
-  std::list<BasicBlock *> OrderedBBs;
-
-  unsigned FReserve = 0;
   switch (LK) {
   case LinearizationKind::LK_Random:
-    FReserve = RandomLinearizationOfBlocks(F, OrderedBBs);
+    RandomLinearizationOfBlocks(F, OrderedBBs);
     break;
   case LinearizationKind::LK_Canonical:
   default:
-    FReserve = CanonicalLinearizationOfBlocks(F, OrderedBBs);
+    CanonicalLinearizationOfBlocks(F, OrderedBBs);
     break;
-  }
-
-  FVec.reserve(FReserve + OrderedBBs.size());
-  for (BasicBlock *BB : OrderedBBs) {
-    FVec.push_back(BB);
-    for (Instruction &I : *BB) {
-      if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
-        FVec.push_back(&I);
-      }
-    }
   }
 }
 
@@ -1638,12 +1628,6 @@ void FunctionMerger::CodeGenerator::destroyGeneratedCode() {
 
 unsigned instToInt(Instruction *I);
 
-inst_range getInstructions(Function *F) { return instructions(F); }
-
-iterator_range<BasicBlock::iterator> getInstructions(BasicBlock *BB) {
-  return make_range(BB->begin(), BB->end());
-}
-
 
 template <class T> class FingerprintMH {
 private:
@@ -1760,58 +1744,6 @@ public:
     size_t nintersect = nHashes - (mismatches / 2);
     int nunion = 2 * nHashes - nintersect;
     return 1.f - (nintersect / (float)nunion);
-  }
-};
-
-
-template <class T> class Fingerprint {
-public:
-  uint64_t magnitude{0};
-  static const size_t MaxOpcode = 68;
-  std::array<uint32_t, MaxOpcode> OpcodeFreq;
-
-  Fingerprint() = default;
-
-  Fingerprint(T owner) {
-    // memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
-    for (size_t i = 0; i < MaxOpcode; i++)
-      OpcodeFreq[i] = 0;
-
-    for (Instruction &I : getInstructions(owner)) {
-      OpcodeFreq[I.getOpcode()]++;
-      if (I.isTerminator())
-        OpcodeFreq[0] += I.getNumSuccessors();
-    }
-    for (size_t i = 0; i < MaxOpcode; i++) {
-      uint64_t val = OpcodeFreq[i];
-      magnitude += val * val;
-    }
-  }
-
-  uint32_t footprint() const { return sizeof(int) * MaxOpcode; }
-
-  float distance(const Fingerprint &FP2) const {
-    int Distance = 0;
-    for (size_t i = 0; i < MaxOpcode; i++) {
-      int Freq1 = OpcodeFreq[i];
-      int Freq2 = FP2.OpcodeFreq[i];
-      Distance += std::abs(Freq1 - Freq2);
-    }
-    return static_cast<float>(Distance);
-  }
-};
-
-class BlockFingerprint : public Fingerprint<BasicBlock *> {
-public:
-  BasicBlock *BB{nullptr};
-  size_t Size{0};
-
-  BlockFingerprint(BasicBlock *BB) : Fingerprint(BB), BB(BB) {
-    for (Instruction &I : *BB) {
-      if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
-        Size++;
-      }
-    }
   }
 };
 
@@ -2500,6 +2432,7 @@ void FunctionMerger::extendAlignedSeq(AlignedSequence<Value *> &AlignedSeq, Alig
 
 bool AcrossBlocks;
 
+/*
 template<typename RegionT>
 AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, const FunctionMergingOptions &Options) {
 
@@ -2671,8 +2604,22 @@ AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, A
 #ifdef TIME_STEPS_DEBUG
     TimeLin.startTimer();
 #endif
-    linearize(F1, F1Vec);
-    linearize(F2, F2Vec);
+    for (BasicBlock &BB : F1) {
+      F1Vec.push_back(&BB);
+      for (Instruction &I : BB) {
+        if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
+          F1Vec.push_back(&I);
+        }
+      }
+    }
+    for (BasicBlock &BB : F2) {
+      F2Vec.push_back(&BB);
+      for (Instruction &I : BB) {
+        if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
+          F2Vec.push_back(&I);
+        }
+      }
+    }
 #ifdef TIME_STEPS_DEBUG
     TimeLin.stopTimer();
 #endif
@@ -2686,7 +2633,7 @@ AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, A
 
   return AlignedSeq;
 }
-
+*/
 
 FunctionMergeResult
 FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const FunctionMergingOptions &Options) {
@@ -2702,8 +2649,17 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
   time_align_start = std::chrono::steady_clock::now();
 #endif
 
+  
+  SmallVector<BasicBlock *, 8> F1Blocks;
+  SmallVector<BasicBlock *, 8> F2Blocks;
+  orderBlocks(*F1, F1Blocks);
+  orderBlocks(*F2, F2Blocks);
+
+  PtrToRefContainer<BasicBlock, SmallVector<BasicBlock *, 8> > F1RefBlocks(F1Blocks);
+  PtrToRefContainer<BasicBlock, SmallVector<BasicBlock *, 8> > F2RefBlocks(F2Blocks);
+
   AlignmentStats TotalAlignmentStats;
-  AlignedSequence<Value *> AlignedSeq = alignBlocks(*F1, *F2, TotalAlignmentStats, Options);
+  AlignedSequence<Value *> AlignedSeq = alignBlocks(F1RefBlocks, F2RefBlocks, TotalAlignmentStats, Options);
 
   ProfitableFn = TotalAlignmentStats.isProfitable();
 
