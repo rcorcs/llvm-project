@@ -16,6 +16,8 @@
 
 #include "llvm/ADT/PtrToRefUtils.h"
 
+#include "llvm/ADT/PostOrderIterator.h"
+
 #include "llvm/ADT/SequenceAlignment.h"
 #include "llvm/ADT/iterator_range.h"
 
@@ -79,6 +81,14 @@ using namespace llvm;
 static cl::opt<bool>
     EnableSOA("brfusion-soa", cl::init(true), cl::Hidden,
               cl::desc("Enable the state-of-the-art brfusion technique"));
+
+static cl::opt<bool>
+    ForceAll("brfusion-force", cl::init(false), cl::Hidden,
+              cl::desc("Force all valid branch fusion transformations found"));
+
+static cl::opt<int>
+    TraversalStrategy("brfusion-traversal", cl::init(0), cl::Hidden,
+              cl::desc("Select which traversal strategy: 0:rpo 1:po 2:dominated-first"));
 
 static std::string GetValueName(const Value *V) {
   if (V) {
@@ -373,7 +383,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
   //bool Profitable = MergedSize < SizeLeft + SizeRight + 2;
   bool Profitable = MergedSize < SizeLeft + SizeRight;
 
-  if (!Profitable) {
+  if (!Profitable && !ForceAll) {
     errs() << "Unprofitable Branch Fusion!\n";
     errs() << "Destroying generated code\n";
 
@@ -471,7 +481,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
                 }
 
                 Builder.SetInsertPoint(Pair.first->getTerminator());
-                Value *LI = Builder.CreateLoad(Addr);
+                Value *LI = Builder.CreateLoad(PHI->getType(), Addr);
 
                 PHI->addIncoming(LI, Pair.first);
               }
@@ -512,29 +522,19 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
   }
 }
 
-bool BranchFusion::runImpl(Function &F) {
-  if (F.isDeclaration())
-    return false;
-
+static void collectFusableBranches(Function &F, std::list<BranchInst*> &ListBIs) {
   PostDominatorTree PDT(F);
-  TargetTransformInfo TTI(F.getParent()->getDataLayout());
 
   std::vector<BranchInst *> BIs;
 
-  errs() << "Processing: " << GetValueName(&F) << "\n";
+  ReversePostOrderTraversal<Function*> RPOT(&F); 
+  for (auto BBIt = RPOT.begin(); BBIt != RPOT.end(); ++BBIt) {
+    BasicBlock *BB = (*BBIt);
 
-  int SizeBefore = 0;
-  for (Instruction &I : instructions(&F)) {
-    auto cost = TTI.getInstructionCost(
-        &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
-    SizeBefore += cost.getValue().getValue();
-  }
-
-  for (BasicBlock &BB : F) {
-    if (BB.getTerminator() == nullptr)
+    if (BB->getTerminator() == nullptr)
       continue;
 
-    BranchInst *BI = dyn_cast<BranchInst>(BB.getTerminator());
+    BranchInst *BI = dyn_cast<BranchInst>(BB->getTerminator());
 
     if (BI != nullptr && BI->isConditional()) {
 
@@ -562,7 +562,9 @@ bool BranchFusion::runImpl(Function &F) {
     }
   }
 
-  {
+  if (TraversalStrategy==1) {
+    std::reverse(BIs.begin(), BIs.end());
+  } else if(TraversalStrategy==2) {
     DominatorTree DT(F);
     DominatorTree *DTPtr = &DT;
     auto SortRuleLambda = [DTPtr](const Instruction *I1,
@@ -575,10 +577,30 @@ bool BranchFusion::runImpl(Function &F) {
     std::sort(BIs.begin(), BIs.end(), SortRuleLambda);
   }
 
-  std::list<BranchInst *> ListBIs;
   for (BranchInst *BI : BIs) {
     ListBIs.push_back(BI);
   }
+}
+
+bool BranchFusion::runImpl(Function &F) {
+  if (F.isDeclaration())
+    return false;
+
+  TargetTransformInfo TTI(F.getParent()->getDataLayout());
+
+
+  errs() << "Processing: " << GetValueName(&F) << "\n";
+
+  int SizeBefore = 0;
+  for (Instruction &I : instructions(&F)) {
+    auto cost = TTI.getInstructionCost(
+        &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
+    SizeBefore += cost.getValue().getValue();
+  }
+
+
+  std::list<BranchInst *> ListBIs;
+  collectFusableBranches(F,ListBIs);
 
   bool Changed = false;
   while (!ListBIs.empty()) {

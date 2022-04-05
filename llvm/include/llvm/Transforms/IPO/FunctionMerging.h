@@ -495,6 +495,7 @@ AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, A
 
   AlignedSequence<Value *> AlignedSeq;
   if (EnableHyFMNW) { // HyFM [NW]
+    errs() << "Running: HyFM-NW\n";
     int B1Max = 0;
     int B2Max = 0;
     size_t MaxMem = 0;
@@ -571,6 +572,7 @@ AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, A
       extendAlignedSeq(AlignedSeq, BD1.BB, nullptr, TotalAlignmentStats);
 
   } else if (EnableHyFMPA) { // HyFM [PA]
+    errs() << "Running: HyFM-PA\n";
 
     int NumBB1 = 0;
     int NumBB2 = 0;
@@ -621,6 +623,7 @@ AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, A
         extendAlignedSeq(AlignedSeq, BD1.BB, nullptr, TotalAlignmentStats);
 
   } else { //default SALSSA
+    errs() << "Running: SALSSA\n";
     SmallVector<Value *, 8> F1Vec;
     SmallVector<Value *, 8> F2Vec;
 
