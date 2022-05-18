@@ -36,6 +36,8 @@ void initializeVectorization(PassRegistry&);
 /// Initialize all passes linked into the InstCombine library.
 void initializeInstCombine(PassRegistry&);
 
+void initializeCFMelder(PassRegistry&);
+
 /// Initialize all passes linked into the AggressiveInstCombine library.
 void initializeAggressiveInstCombine(PassRegistry&);
 
@@ -68,6 +70,7 @@ void initializeModuleAddressSanitizerLegacyPassPass(PassRegistry &);
 void initializeASanGlobalsMetadataWrapperPassPass(PassRegistry &);
 void initializeAddressSanitizerLegacyPassPass(PassRegistry &);
 void initializeAggressiveInstCombinerLegacyPassPass(PassRegistry&);
+void initializeCFMelderLegacyPassPass(PassRegistry &Registry);
 void initializeAliasSetPrinterPass(PassRegistry&);
 void initializeAlignmentFromAssumptionsPass(PassRegistry&);
 void initializeAlwaysInlinerLegacyPassPass(PassRegistry&);

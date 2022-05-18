@@ -14,6 +14,7 @@ set(LLVM_LINK_COMPONENTS
   IPO
   IRReader
   InstCombine
+  CFMelder
   Instrumentation
   MC
   ObjCARCOpts

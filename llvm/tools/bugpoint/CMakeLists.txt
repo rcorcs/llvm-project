@@ -12,6 +12,7 @@ set(LLVM_LINK_COMPONENTS
   IRReader
   AggressiveInstCombine
   InstCombine
+  CFMelder
   Instrumentation
   Linker
   ObjCARCOpts
