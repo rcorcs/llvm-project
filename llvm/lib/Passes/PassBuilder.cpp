@@ -283,7 +283,11 @@ static cl::opt<bool> EnableO3NonTrivialUnswitching(
 
 static cl::opt<bool> EnableBranchFusion(
     "enable-brfusion", cl::init(false), cl::Hidden,
-    cl::desc("Enable brfusion"));
+    cl::desc("enable brfusion"));
+
+static cl::opt<bool> EnableCFMelder(
+    "enable-cfmelder", cl::init(false), cl::Hidden,
+    cl::desc("enable cfmelder"));
 
 PipelineTuningOptions::PipelineTuningOptions() {
   LoopInterleaving = true;
@@ -702,6 +706,9 @@ PassBuilder::buildFunctionSimplificationPipeline(OptimizationLevel Level,
   if (EnableGVNSink) {
     FPM.addPass(GVNSinkPass());
     FPM.addPass(SimplifyCFGPass());
+  }
+  if (EnableCFMelder) {
+    FPM.addPass(CFMelderPass());
   }
   if (EnableBranchFusion) {
     FPM.addPass(BranchFusionPass());
