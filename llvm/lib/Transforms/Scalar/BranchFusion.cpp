@@ -264,28 +264,6 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     }
   }
 
-  // only accept instructions as incoming values from the basic blocks
-  // being merged.
-  for (BasicBlock &BB : LeftR.exits()) {
-    for (PHINode &PHI : BB.phis()) {
-      for (unsigned i = 0; i < PHI.getNumIncomingValues(); i++) {
-        if (KnownBBs.count(PHI.getIncomingBlock(i)))
-          if (!isa<Instruction>(PHI.getIncomingValue(i)))
-            return false;
-      }
-    }
-  }
-  for (BasicBlock &BB : RightR.exits()) {
-    for (PHINode &PHI : BB.phis()) {
-      for (unsigned i = 0; i < PHI.getNumIncomingValues(); i++) {
-        if (KnownBBs.count(PHI.getIncomingBlock(i)))
-          if (!isa<Instruction>(PHI.getIncomingValue(i)))
-            return false;
-      }
-    }
-  }
-
-
   AlignmentStats TotalAlignmentStats;
   AlignedSequence<Value *> AlignedInsts = FunctionMerger::alignBlocks(LeftR, RightR, TotalAlignmentStats);
 
