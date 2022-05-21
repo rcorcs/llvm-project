@@ -79,6 +79,10 @@
 using namespace llvm;
 
 static cl::opt<bool>
+    Debug("brfusion-debug", cl::init(false), cl::Hidden,
+              cl::desc("Enable debug information"));
+
+static cl::opt<bool>
     EnableSOA("brfusion-soa", cl::init(true), cl::Hidden,
               cl::desc("Enable the state-of-the-art brfusion technique"));
 
@@ -200,7 +204,12 @@ void SEMERegion::collectDominatedRegion(BasicBlock *BB, DominatorTree &DT, std::
 
 bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
            TargetTransformInfo &TTI, std::list<BranchInst *> &ListBIs) {
-  BI->dump();
+  if (Debug) {
+    errs() << "Original version\n";
+    F.dump();
+    errs() << "Select branch for merging\n";
+    BI->dump();
+  }
 
   BasicBlock *BBT = BI->getSuccessor(0);
   BasicBlock *BBF = BI->getSuccessor(1);
@@ -364,6 +373,133 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     return false;
   }
 
+  /*
+   Update PHI nodes in the exit blocks from both left and right SEME regions.
+  */
+  std::map<PHINode*,PHINode*> ReplacedPHIs;
+
+  auto ProcessPHIs = [&](auto ExitSet, std::set<BasicBlock *> &VisitedBB) -> bool {
+    for (BasicBlock &BB : ExitSet) {
+      if (VisitedBB.count(&BB))
+        continue;
+      VisitedBB.insert(&BB);
+
+      auto PHIs = BB.phis();
+      
+      for (auto It = PHIs.begin(), E = PHIs.end(); It!=E;) {
+        PHINode *PHI = &*It;
+        It++;
+
+        std::map<BasicBlock *, std::map<  BasicBlock*, Value *   >   > NewEntries;
+        std::set<BasicBlock *> OldEntries;
+        for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
+          BasicBlock *InBB = PHI->getIncomingBlock(i);
+          if (KnownBBs.count(InBB)) {
+      	    Value *NewV = PHI->getIncomingValue(i);
+      	    auto Pair = CG.getNewEdge(InBB, &BB);
+            BasicBlock *NewBB = Pair.first;
+            if (Instruction *OpI =
+                    dyn_cast<Instruction>(PHI->getIncomingValue(i))) {
+              NewV = VMap[OpI];
+
+              if (NewV == nullptr) {
+                errs() << "ERROR: Null mapped value!\n";
+      	  return false;
+      	}
+            } else {
+              errs() << "ERROR: Cannot handle non-instruction values!\n";
+            }
+            NewEntries[NewBB][InBB]=NewV;
+            OldEntries.insert(InBB);
+          }
+        }
+
+        IRBuilder<> Builder(PHI);
+        PHINode *NewPHI = Builder.CreatePHI(PHI->getType(),0);
+        CG.insert(NewPHI);
+        VMap[PHI] = NewPHI;
+        ReplacedPHIs[PHI] = NewPHI;
+
+        //PHI->dump();
+        for (auto &Pair : NewEntries) {
+          if (Pair.second.size() == 1) {
+            Value *V = (*Pair.second.begin()).second;
+            NewPHI->addIncoming(V, Pair.first);
+          } else if (Pair.second.size() == 2) {
+      	/*
+      	Values that were originally coming from different basic blocks that have been merged must be properly handled.
+              In this case, we add a selection in the merged incomming block to produce the correct value for the phi node.
+      	*/
+      	errs() << "Found  PHI incoming from two different blocks\n";
+      	Value *LeftV = nullptr;
+      	Value *RightV = nullptr;
+              for (auto &InnerPair : Pair.second) {
+      	  if (LeftR.contains(InnerPair.first)) {
+      		  errs() << "Value coming from the Left block: " << GetValueName(InnerPair.first) << " : ";
+      		  InnerPair.second->dump();
+      		  LeftV = InnerPair.second;
+      	  }
+      	  if (RightR.contains(InnerPair.first)) {
+      		  errs() << "Value coming from the Right block: " << GetValueName(InnerPair.first) << " : ";
+      		  InnerPair.second->dump();
+      		  RightV = InnerPair.second;
+      	  }
+      	}
+
+      	if (LeftV && RightV) {
+      	  Value *MergedV = LeftV;
+      	  if (LeftV!=RightV) {
+      	    IRBuilder<> Builder(Pair.first->getTerminator());
+      	    //TODO: handle if one of the values is the terminator itself!
+      	    MergedV = Builder.CreateSelect(BrCond,LeftV,RightV);
+      	    if (SelectInst *SelI = dyn_cast<SelectInst>(MergedV))
+                    CG.insert(SelI);
+      	  }
+                NewPHI->addIncoming(MergedV, Pair.first);
+      	} else {
+      	  errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
+      	  return false;
+      	}
+            } else {
+      	errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
+      	return false;
+              /*
+              IRBuilder<> Builder(&*F.getEntryBlock().getFirstInsertionPt());
+              AllocaInst *Addr = Builder.CreateAlloca(PHI->getType());
+              CG.insert(Addr);
+
+              for (Value *V : Pair.second) {
+                if (Instruction *OpI = dyn_cast<Instruction>(V)) {
+                  CG.StoreInstIntoAddr(OpI, Addr);
+                } else {
+                  errs() << "ERROR: must also handle non-instruction values "
+                            "via a select\n";
+                }
+              }
+
+              Builder.SetInsertPoint(Pair.first->getTerminator());
+              Value *LI = Builder.CreateLoad(PHI->getType(), Addr);
+
+              PHI->addIncoming(LI, Pair.first);
+      	*/
+            }
+          }
+        }
+    }
+    return true;
+  };
+ 
+  bool Error = false;
+
+  std::set<BasicBlock *> VisitedBB;
+  Error = Error || !ProcessPHIs(LeftR.exits(),VisitedBB);
+  Error = Error || !ProcessPHIs(RightR.exits(),VisitedBB);
+
+  if (Debug) {
+    errs() << "Modified function\n";
+    F.dump();
+  }
+
   int MergedSize = 0;
   errs() << "Computing size...\n";
   for (Instruction *I : CG) {
@@ -371,92 +507,6 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
         I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
     MergedSize += cost.getValue().getValue();
   }
-
-
-  bool Error = false;
-  {
-  auto CountPHIOverhead = [&](auto ExitSet, std::set<BasicBlock *> &VisitedBB, bool &Error) -> int {
-      int Size = 0;
-      for (BasicBlock &BB : ExitSet) {
-        if (VisitedBB.count(&BB))
-          continue;
-        VisitedBB.insert(&BB);
-
-        for (Instruction &I : BB) {
-          if (PHINode *PHI = dyn_cast<PHINode>(&I)) {
-            std::map<BasicBlock *, std::map<  BasicBlock*, Value *   >   > NewEntries;
-            for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
-              BasicBlock *InBB = PHI->getIncomingBlock(i);
-              if (KnownBBs.count(InBB)) {
-		Value *NewV = PHI->getIncomingValue(i);
-		auto Pair = CG.getNewEdge(InBB, &BB);
-                BasicBlock *NewBB = Pair.first;
-                if (Instruction *OpI =
-                        dyn_cast<Instruction>(PHI->getIncomingValue(i))) {
-                  NewV = VMap[OpI];
-
-                  if (NewV == nullptr) {
-                    errs() << "ERROR: Null mapped value!\n";
-	            Error = true;
-		  }
-                } else {
-                  errs() << "ERROR: Cannot handle non-instruction values!\n";
-                }
-                NewEntries[NewBB][InBB]=NewV;
-              }
-            }
-            for (auto &Pair : NewEntries) {
-              if (Pair.second.size() == 1) {
-              } else if (Pair.second.size() == 2) {
-		/*
-		Values that were originally coming from different basic blocks that have been merged must be properly handled.
-                In this case, we add a selection in the merged incomming block to produce the correct value for the phi node.
-		*/
-		Value *LeftV = nullptr;
-		Value *RightV = nullptr;
-                for (auto &InnerPair : Pair.second) {
-		  if (LeftR.contains(InnerPair.first)) {
-			  LeftV = InnerPair.second;
-		  }
-		  if (RightR.contains(InnerPair.first)) {
-			  RightV = InnerPair.second;
-		  }
-		}
-
-		if (LeftV && RightV) {
-		  Value *MergedV = LeftV;
-		  if (LeftV!=RightV) {
-		    IRBuilder<> Builder(Pair.first->getTerminator());
-		    //TODO: handle if one of the values is the terminator itself!
-		    MergedV = Builder.CreateSelect(BrCond,LeftV,RightV);
-		  }
-		  Size += 1;
-		} else {
-	          Error = true;
-		  errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
-		}
-              } else {
-		Error = true;
-		errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
-	      }
-            }
-          }
-        }
-      }
-
-      return Size;
-    };
-    std::set<BasicBlock *> VisitedBB;
-    MergedSize += CountPHIOverhead(LeftR.exits(),VisitedBB,Error);
-    MergedSize += CountPHIOverhead(RightR.exits(),VisitedBB,Error);
-    }
-
-
-
-
-
-
-
 
   errs() << "SizeLeft: " << SizeLeft << "\n";
   errs() << "SizeRight: " << SizeRight << "\n";
@@ -477,9 +527,10 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     CG.destroyGeneratedCode();
     errs() << "Generated code destroyed\n";
     EntryBB->eraseFromParent();
-    errs() << "Branch fusion reversed\n";
-    F.dump();
-
+    if (Debug) {
+      errs() << "Branch fusion reversed\n";
+      F.dump();
+    }
     return false;
   } else {
     errs() << "Profitable Branch Fusion!\n";
@@ -496,110 +547,16 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     Instruction *NewBI = Builder.CreateBr(EntryBB);
     BI->eraseFromParent();
 
-    std::set<BasicBlock *> VisitedBB;
-    auto ProcessPHIs = [&](auto ExitSet) {
-      for (BasicBlock &BB : ExitSet) {
-        if (VisitedBB.count(&BB))
-          continue;
-        VisitedBB.insert(&BB);
+    std::vector<Instruction *> DeadInsts;
 
-        for (Instruction &I : BB) {
-          if (PHINode *PHI = dyn_cast<PHINode>(&I)) {
-            std::map<BasicBlock *, std::map<  BasicBlock*, Value *   >   > NewEntries;
-            std::set<BasicBlock *> OldEntries;
-            for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
-              BasicBlock *InBB = PHI->getIncomingBlock(i);
-              if (KnownBBs.count(InBB)) {
-		Value *NewV = PHI->getIncomingValue(i);
-		auto Pair = CG.getNewEdge(InBB, &BB);
-                BasicBlock *NewBB = Pair.first;
-                if (Instruction *OpI =
-                        dyn_cast<Instruction>(PHI->getIncomingValue(i))) {
-                  NewV = VMap[OpI];
-
-                  if (NewV == nullptr) {
-                    errs() << "ERROR: Null mapped value!\n";
-		  }
-                } else {
-                  errs() << "ERROR: Cannot handle non-instruction values!\n";
-                }
-                NewEntries[NewBB][InBB]=NewV;
-                OldEntries.insert(InBB);
-              }
-            }
-            for (BasicBlock *BB : OldEntries) {
-              PHI->removeIncomingValue(BB, false);
-            }
-            //PHI->dump();
-            for (auto &Pair : NewEntries) {
-              if (Pair.second.size() == 1) {
-                Value *V = (*Pair.second.begin()).second;
-                PHI->addIncoming(V, Pair.first);
-              } else if (Pair.second.size() == 2) {
-		/*
-		Values that were originally coming from different basic blocks that have been merged must be properly handled.
-                In this case, we add a selection in the merged incomming block to produce the correct value for the phi node.
-		*/
-		errs() << "Found  PHI incoming from two different blocks\n";
-		Value *LeftV = nullptr;
-		Value *RightV = nullptr;
-                for (auto &InnerPair : Pair.second) {
-		  if (LeftR.contains(InnerPair.first)) {
-			  errs() << "Value coming from the Left block: " << GetValueName(InnerPair.first) << " : ";
-			  InnerPair.second->dump();
-			  LeftV = InnerPair.second;
-		  }
-		  if (RightR.contains(InnerPair.first)) {
-			  errs() << "Value coming from the Right block: " << GetValueName(InnerPair.first) << " : ";
-			  InnerPair.second->dump();
-			  RightV = InnerPair.second;
-		  }
-		}
-
-		if (LeftV && RightV) {
-		  Value *MergedV = LeftV;
-		  if (LeftV!=RightV) {
-		    IRBuilder<> Builder(Pair.first->getTerminator());
-		    //TODO: handle if one of the values is the terminator itself!
-		    MergedV = Builder.CreateSelect(BrCond,LeftV,RightV);
-		  }
-                  PHI->addIncoming(MergedV, Pair.first);
-		} else {
-		  errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
-		}
-              } else {
-		      errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
-                /*
-                IRBuilder<> Builder(&*F.getEntryBlock().getFirstInsertionPt());
-                AllocaInst *Addr = Builder.CreateAlloca(PHI->getType());
-                CG.insert(Addr);
-
-                for (Value *V : Pair.second) {
-                  if (Instruction *OpI = dyn_cast<Instruction>(V)) {
-                    CG.StoreInstIntoAddr(OpI, Addr);
-                  } else {
-                    errs() << "ERROR: must also handle non-instruction values "
-                              "via a select\n";
-                  }
-                }
-
-                Builder.SetInsertPoint(Pair.first->getTerminator());
-                Value *LI = Builder.CreateLoad(PHI->getType(), Addr);
-
-                PHI->addIncoming(LI, Pair.first);
-		*/
-              }
-            }
-          }
-        }
-      }
-    };
-    ProcessPHIs(LeftR.exits());
-    ProcessPHIs(RightR.exits());
+    for (auto &Pair : ReplacedPHIs) {
+        Pair.first->replaceAllUsesWith(Pair.second);
+        Pair.first->dropAllReferences();
+        DeadInsts.push_back(Pair.first);
+    }
 
     //errs() << "Before deleting the old code\n";
     //F.dump();
-    std::vector<Instruction *> DeadInsts;
     for (BasicBlock *BB : KnownBBs) {
       for (Instruction &I : *BB) {
         I.replaceAllUsesWith(VMap[&I]);
@@ -624,8 +581,10 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
       F.dump();
       errs() << "ERROR: committing final changes to the fused branches\n";
     }
-    //errs() << "Final version\n";
-    //F.dump();
+    if (Debug) {
+      errs() << "Final version\n";
+      F.dump();
+    }
     return true;
   }
 }
