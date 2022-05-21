@@ -372,6 +372,92 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     MergedSize += cost.getValue().getValue();
   }
 
+
+  bool Error = false;
+  {
+  auto CountPHIOverhead = [&](auto ExitSet, std::set<BasicBlock *> &VisitedBB, bool &Error) -> int {
+      int Size = 0;
+      for (BasicBlock &BB : ExitSet) {
+        if (VisitedBB.count(&BB))
+          continue;
+        VisitedBB.insert(&BB);
+
+        for (Instruction &I : BB) {
+          if (PHINode *PHI = dyn_cast<PHINode>(&I)) {
+            std::map<BasicBlock *, std::map<  BasicBlock*, Value *   >   > NewEntries;
+            for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
+              BasicBlock *InBB = PHI->getIncomingBlock(i);
+              if (KnownBBs.count(InBB)) {
+		Value *NewV = PHI->getIncomingValue(i);
+		auto Pair = CG.getNewEdge(InBB, &BB);
+                BasicBlock *NewBB = Pair.first;
+                if (Instruction *OpI =
+                        dyn_cast<Instruction>(PHI->getIncomingValue(i))) {
+                  NewV = VMap[OpI];
+
+                  if (NewV == nullptr) {
+                    errs() << "ERROR: Null mapped value!\n";
+	            Error = true;
+		  }
+                } else {
+                  errs() << "ERROR: Cannot handle non-instruction values!\n";
+                }
+                NewEntries[NewBB][InBB]=NewV;
+              }
+            }
+            for (auto &Pair : NewEntries) {
+              if (Pair.second.size() == 1) {
+              } else if (Pair.second.size() == 2) {
+		/*
+		Values that were originally coming from different basic blocks that have been merged must be properly handled.
+                In this case, we add a selection in the merged incomming block to produce the correct value for the phi node.
+		*/
+		Value *LeftV = nullptr;
+		Value *RightV = nullptr;
+                for (auto &InnerPair : Pair.second) {
+		  if (LeftR.contains(InnerPair.first)) {
+			  LeftV = InnerPair.second;
+		  }
+		  if (RightR.contains(InnerPair.first)) {
+			  RightV = InnerPair.second;
+		  }
+		}
+
+		if (LeftV && RightV) {
+		  Value *MergedV = LeftV;
+		  if (LeftV!=RightV) {
+		    IRBuilder<> Builder(Pair.first->getTerminator());
+		    //TODO: handle if one of the values is the terminator itself!
+		    MergedV = Builder.CreateSelect(BrCond,LeftV,RightV);
+		  }
+		  Size += 1;
+		} else {
+	          Error = true;
+		  errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
+		}
+              } else {
+		Error = true;
+		errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
+	      }
+            }
+          }
+        }
+      }
+
+      return Size;
+    };
+    std::set<BasicBlock *> VisitedBB;
+    MergedSize += CountPHIOverhead(LeftR.exits(),VisitedBB,Error);
+    MergedSize += CountPHIOverhead(RightR.exits(),VisitedBB,Error);
+    }
+
+
+
+
+
+
+
+
   errs() << "SizeLeft: " << SizeLeft << "\n";
   errs() << "SizeRight: " << SizeRight << "\n";
   errs() << "Original Size: " << (SizeLeft + SizeRight) << "\n";
@@ -383,7 +469,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
   //bool Profitable = MergedSize < SizeLeft + SizeRight + 2;
   bool Profitable = MergedSize < SizeLeft + SizeRight;
 
-  if (!Profitable && !ForceAll) {
+  if (Error || (!Profitable && !ForceAll)) {
     errs() << "Unprofitable Branch Fusion!\n";
     errs() << "Destroying generated code\n";
 
@@ -403,8 +489,8 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
            << MergedSize << ": " << ((int)(Profit * 100.0)) << "% Reduction ["
            << CountMatchUsefullInsts << "] : " << GetValueName(&F) << "\n";
 
-    errs() << "Before binding the code\n";
-    F.dump();
+    //errs() << "Before binding the code\n";
+    //F.dump();
 
     IRBuilder<> Builder(BI);
     Instruction *NewBI = Builder.CreateBr(EntryBB);
@@ -424,37 +510,21 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
             for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
               BasicBlock *InBB = PHI->getIncomingBlock(i);
               if (KnownBBs.count(InBB)) {
+		Value *NewV = PHI->getIncomingValue(i);
+		auto Pair = CG.getNewEdge(InBB, &BB);
+                BasicBlock *NewBB = Pair.first;
                 if (Instruction *OpI =
                         dyn_cast<Instruction>(PHI->getIncomingValue(i))) {
-                  Value *NewV = VMap[OpI];
+                  NewV = VMap[OpI];
 
-                  // PHI->setIncomingValue(i,NewV);
-
-                  if (NewV == nullptr)
+                  if (NewV == nullptr) {
                     errs() << "ERROR: Null mapped value!\n";
-
-		  auto Pair = CG.getNewEdge(InBB, &BB);
-                  BasicBlock *NewBB = Pair.first;
-		  /*
-                  BasicBlock *NewBB =
-                      dyn_cast<Instruction>(
-                          VMap[InBB->getTerminator()])
-                          ->getParent();
-                  */
-
-                  // PHI->setIncomingBlock(i,NewBB);
-                  /*
-                  if (NewEntries.find(NewBB)!=NewEntries.end() &&
-                  NewEntries[NewBB] != NewV) { errs() << "ERROR: Conflicting
-                  mapped values!\n"; NewEntries[NewBB]->dump(); NewV->dump();
-                  }
-                  */
-
-                  NewEntries[NewBB][InBB]=NewV;
-                  OldEntries.insert(InBB);
+		  }
                 } else {
                   errs() << "ERROR: Cannot handle non-instruction values!\n";
                 }
+                NewEntries[NewBB][InBB]=NewV;
+                OldEntries.insert(InBB);
               }
             }
             for (BasicBlock *BB : OldEntries) {
@@ -464,8 +534,6 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
             for (auto &Pair : NewEntries) {
               if (Pair.second.size() == 1) {
                 Value *V = (*Pair.second.begin()).second;
-                //errs() << Pair.first->getName() << " -> ";
-                //V->dump();
                 PHI->addIncoming(V, Pair.first);
               } else if (Pair.second.size() == 2) {
 		/*
@@ -529,8 +597,8 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     ProcessPHIs(LeftR.exits());
     ProcessPHIs(RightR.exits());
 
-    errs() << "Before deleting the old code\n";
-    F.dump();
+    //errs() << "Before deleting the old code\n";
+    //F.dump();
     std::vector<Instruction *> DeadInsts;
     for (BasicBlock *BB : KnownBBs) {
       for (Instruction &I : *BB) {
@@ -550,14 +618,14 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
       BB->eraseFromParent();
     }
 
-    errs() << "After deleting the old code\n";
-    F.dump();
+    //errs() << "After deleting the old code\n";
+    //F.dump();
     if (!CG.commitChanges()) {
       F.dump();
       errs() << "ERROR: committing final changes to the fused branches\n";
     }
-    errs() << "Final version\n";
-    F.dump();
+    //errs() << "Final version\n";
+    //F.dump();
     return true;
   }
 }
