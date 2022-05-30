@@ -216,6 +216,293 @@ void SEMERegion::collectDominatedRegion(BasicBlock *BB, DominatorTree &DT,
   }
 }
 
+
+struct MatchingBlocks {
+  BasicBlock *Blocks[2];
+  std::map<Instruction *, Instruction *> MatchingInsts;
+
+  MatchingBlocks() { Blocks[0] = Blocks[1] = nullptr; }
+
+  MatchingBlocks(BasicBlock *BB0, BasicBlock *BB1) {
+    Blocks[0] = BB0;
+    Blocks[1] = BB1;
+  }
+
+  BasicBlock *operator[](size_t i) { return Blocks[i]; }
+
+  void setMatchingPair(Instruction *I1, Instruction *I2) {
+    MatchingInsts[I1] = I2;
+    MatchingInsts[I2] = I1;
+  }
+
+  bool isMatchingPair(Instruction *I1, Instruction *I2) {
+    if (MatchingInsts.find(I1) == MatchingInsts.end())
+      return false;
+    return (MatchingInsts[I1] == I2);
+  }
+
+  Instruction *getMatchingInstruction(Instruction *I) {
+    if (MatchingInsts.find(I) == MatchingInsts.end())
+      return nullptr;
+    return MatchingInsts[I];
+  }
+};
+
+class DotPrinter {
+public:
+  std::string Str;
+  BranchInst *BI;
+  SEMERegion &LeftR;
+  SEMERegion &RightR;
+  DotPrinter(Function &F, BranchInst *BI, SEMERegion &LeftR, SEMERegion &RightR, AlignedSequence<Value *> &AlignedInsts) : BI(BI), LeftR(LeftR), RightR(RightR) {
+
+    std::map<BasicBlock *, std::string> BB2Id;
+    std::map<BasicBlock *, std::string> PortPrefix;
+
+    write("digraph {\n");
+    std::set<BasicBlock *> Visited;
+    unsigned NId = 0;
+
+    MatchingBlocks MB;
+    int ClosedMB = 0;
+
+    for (auto &Entry : AlignedInsts) {
+      if (Entry.get(0)) {
+        if (isa<BasicBlock>(Entry.get(0)))
+          MB.Blocks[0] = dyn_cast<BasicBlock>(Entry.get(0));
+	else if (Instruction *I = dyn_cast<Instruction>(Entry.get(0))) {
+	  if (I->isTerminator()) ClosedMB = ClosedMB | 1;
+	}
+      }
+      if (Entry.get(1)) {
+        if (isa<BasicBlock>(Entry.get(1)))
+          MB.Blocks[1] = dyn_cast<BasicBlock>(Entry.get(1));
+	else if (Instruction *I = dyn_cast<Instruction>(Entry.get(1))) {
+	  if (I->isTerminator()) ClosedMB = ClosedMB | 2;
+	}
+      }
+
+      if (Entry.match()) {
+        Instruction *I1 = dyn_cast<Instruction>(Entry.get(0));
+        Instruction *I2 = dyn_cast<Instruction>(Entry.get(1));
+        if (I1 && I2) MB.setMatchingPair(I1,I2);
+      }
+
+      if (ClosedMB==3) {
+        if (MB.MatchingInsts.size()) {
+          BasicBlock *BB1 = MB[0];
+          BasicBlock *BB2 = MB[1];
+          std::string Name = std::string("m_bb")+std::to_string(NId);
+          writeNodePair(MB, Name);
+          NId++;
+          Visited.insert(BB1);
+          Visited.insert(BB2);
+
+          BB2Id[BB1] = Name;
+          BB2Id[BB2] = Name;
+          PortPrefix[BB1] = "f1";
+          PortPrefix[BB2] = "f2";
+	}
+        ClosedMB = 0;
+	MB.MatchingInsts.clear();
+      }
+    }
+
+    NId = 0;
+    for (BasicBlock &BB : F) {
+      if (Visited.count(&BB)) continue;
+      std::string Name = std::string("f_bb")+std::to_string(NId);
+      writeNode(BB, Name,"f");
+      NId++;
+      Visited.insert(&BB);
+      BB2Id[&BB] = Name;
+      PortPrefix[&BB] = "f";
+    }
+
+    Visited.clear();
+    for (BasicBlock &BB : F) {
+      if (Visited.count(&BB)) continue;
+      auto *TI = BB.getTerminator();
+      BranchInst *Br = dyn_cast<BranchInst>(TI);
+      for (unsigned i = 0; i<TI->getNumSuccessors(); i++) {
+        write(BB2Id[&BB]+std::string(":")+PortPrefix[&BB]);
+	if (Br && Br->isConditional()) { if (i==0) write("T"); else write("F"); }
+        write(" -> ");
+	std::string NodeAddr = BB2Id[TI->getSuccessor(i)]+std::string(":")+PortPrefix[TI->getSuccessor(i)];
+	write(NodeAddr);
+	write("\n");
+      }
+      Visited.insert(&BB);
+    }
+
+    write("}\n");
+  }
+
+
+  void write(std::string s) {
+    Str += s;
+  }
+
+  void write(const char *s) {
+    Str += s;
+  }
+
+  void writeBlockEntry(BasicBlock &BB) {
+    write(BB.getName().str());
+    write(":");
+  }
+
+  void write(Instruction &I) {
+    raw_string_ostream OS(Str);
+    I.print(OS,false);
+    OS.flush();
+  }
+
+  void writeNode(BasicBlock &BB, std::string Name, std::string Port) {
+    bool HasCondBr = false;
+    if (BranchInst *Br = dyn_cast<BranchInst>(BB.getTerminator())) {
+      HasCondBr = Br->isConditional();
+    }
+    write(Name);
+    write(" [shape = none, ");
+    if (LeftR.contains(&BB))
+      write(" xlabel=\"L\", ");
+    else if (RightR.contains(&BB))
+      write(" xlabel=\"R\", ");
+    write("label  = <<table ");
+    if (LeftR.contains(&BB))
+      write(" bgcolor=\"LightYellow\" ");
+    else if (RightR.contains(&BB))
+      write(" bgcolor=\"LightCyan\" ");
+    write(" border=\"0\" cellspacing=\"0\">\n");
+    if (HasCondBr)
+      write(std::string("<tr><td port=\"")+Port+"\" border=\"1\" colspan=\"2\">");
+    else
+      write(std::string("<tr><td port=\"")+Port+"\" border=\"1\">");
+    writeBlockInnerTable(BB);
+    write("</td></tr>\n");
+    if (HasCondBr)
+      write(std::string("<tr><td border=\"1\" port=\"")+Port+std::string("T\">T</td><td border=\"1\" port=\"")+Port+"F\">F</td></tr>\n");
+    write("</table>> ]\n");
+  }
+
+  void writeNodePair(MatchingBlocks &MB, std::string Name) {
+    BasicBlock *BB1 = MB[0];
+    BasicBlock *BB2 = MB[1];
+
+    bool HasCondBr1 = false;
+    if (BranchInst *Br = dyn_cast<BranchInst>(BB1->getTerminator())) {
+      HasCondBr1 = Br->isConditional();
+    }
+    bool HasCondBr2 = false;
+    if (BranchInst *Br = dyn_cast<BranchInst>(BB2->getTerminator())) {
+      HasCondBr2 = Br->isConditional();
+    }
+
+    write(Name);
+    write(" [shape = none, label  = <<table border=\"0\" cellspacing=\"0\">\n");
+
+    auto It1 = BB1->begin();
+    auto It2 = BB2->begin();
+    write("<tr><td port=\"f1\" border=\"1\" colspan=\"2\">");
+    write("<table bgcolor=\"LightYellow\" border=\"0\">\n");
+    write("<tr><td align=\"left\">");
+    writeBlockEntry(*BB1);
+    write("</td></tr>\n");
+    while (It1!=BB1->end() && It2!=BB2->end()) {
+      if (It1==BB1->end()) {
+        write("<tr><td bgcolor=\"#e8765c70\" align=\"left\"> </td></tr>\n");
+	It2++;
+      } else {
+	Instruction *MI = MB.getMatchingInstruction(&*It1);
+	if (MI) {
+	  while (MI!=(&*It2)) {
+            write("<tr><td bgcolor=\"#e8765c70\" align=\"left\"> </td></tr>\n");
+	    It2++;
+	  }
+          write("<tr><td bgcolor=\"lightgreen\" align=\"left\">");
+          write(*It1);
+          write("</td></tr>\n");
+	  It2++;
+	} else {
+          write("<tr><td bgcolor=\"#e8765c70\" align=\"left\">");
+          write(*It1);
+          write("</td></tr>\n");
+	}
+	It1++;
+      }
+    }
+    write("</table>\n");
+    write("</td>\n");
+
+    It1 = BB1->begin();
+    It2 = BB2->begin();
+    write("<td port=\"f2\" border=\"1\" colspan=\"2\">");
+    write("<table bgcolor=\"LightCyan\" border=\"0\">\n");
+    write("<tr><td align=\"left\">");
+    writeBlockEntry(*BB2);
+    write("</td></tr>\n");
+    while (It1!=BB1->end() && It2!=BB2->end()) {
+      if (It2==BB2->end()) {
+        write("<tr><td bgcolor=\"#e8765c70\" align=\"left\"> </td></tr>\n");
+	It1++;
+      } else {
+	Instruction *MI = MB.getMatchingInstruction(&*It2);
+	if (MB.isMatchingPair(&*It1,&*It2)) {
+          write("<tr><td bgcolor=\"lightgreen\" align=\"left\">");
+          write(*It2);
+          write("</td></tr>\n");
+	  It1++;
+	} else {
+	  while (It1!=BB1->end() && MB.getMatchingInstruction(&*It1)==nullptr) {
+            write("<tr><td bgcolor=\"#e8765c70\" align=\"left\"> </td></tr>\n");
+	    It1++;
+	  }
+          write("<tr><td bgcolor=\"#e8765c70\" align=\"left\">");
+          write(*It2);
+          write("</td></tr>\n");
+	}
+	It2++;
+      }
+    }
+    write("</table>\n");
+    write("</td></tr>\n");
+
+    if (HasCondBr1 || HasCondBr2) {
+      write("<tr>");
+      if (HasCondBr1)
+        write("<td border=\"1\" port=\"f1T\">T</td><td border=\"1\" port=\"f1F\">F</td>\n");
+      else
+        write("<td border=\"0\" colspan=\"2\"> </td>\n");
+      if (HasCondBr2)
+        write("<td border=\"1\" port=\"f2T\">T</td><td border=\"1\" port=\"f2F\">F</td>\n");
+      else
+        write("<td border=\"0\" colspan=\"2\"> </td>\n");
+      write("</tr>\n");
+    }
+
+    write("</table>> ]\n");
+
+  }
+
+  void writeBlockInnerTable(BasicBlock &BB) {
+    write("<table border=\"0\">\n");
+    write("<tr><td align=\"left\">");
+    writeBlockEntry(BB);
+    write("</td></tr>\n");
+    for (Instruction &I: BB) {
+      if (&I==this->BI) {
+        write("<tr><td bgcolor=\"yellow\" align=\"left\">");
+      }else 
+        write("<tr><td align=\"left\">");
+      write(I);
+      write("</td></tr>\n");
+    }
+    write("</table>\n");
+  }
+};
+
+
 bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
            TargetTransformInfo &TTI, std::list<BranchInst *> &ListBIs) {
   if (Debug) {
@@ -234,6 +521,14 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
 
   int SizeLeft = 0;
   int SizeRight = 0;
+
+    errs() << "Select branch for merging\n";
+    BI->dump();
+  errs() << "LEFT REGION:\n";
+  for (BasicBlock &BB : LeftR) BB.dump();
+  errs() << "RIGHT REGION:\n";
+  for (BasicBlock &BB : RightR) BB.dump();
+
 
   std::set<BasicBlock *> KnownBBs;
   for (BasicBlock &BB : LeftR) {
@@ -315,6 +610,9 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
       //   CountMatchUsefullInsts++;
     }
   }
+  DotPrinter DP(F, BI, LeftR, RightR, AlignedInsts);
+  errs() << "DOT:\n";
+  errs() << DP.Str << "\n";
 
   LLVMContext &Context = F.getContext();
   const DataLayout *DL = &F.getParent()->getDataLayout();
@@ -575,7 +873,7 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     // F.dump();
     if (!CG.commitChanges()) {
       F.dump();
-      errs() << "ERROR: committing final changes to the fused branches\n";
+      errs() << "ERROR: committing final changes to the fused branches !!!!!!!\n";
     }
     if (Debug) {
       errs() << "Final version\n";
