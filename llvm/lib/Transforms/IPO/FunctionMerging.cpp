@@ -985,6 +985,240 @@ PairwiseAlignment::PairwiseAlignment(ArrayRef<BasicBlock *> Blocks1,
     CodeAlignment::AlignedBlocks.clear();
 }
 
+class DotPrinter {
+public:
+  std::string Str;
+
+  DotPrinter(Function *F1, Function *F2, PairwiseAlignment &AR) {
+
+
+    std::map<BasicBlock *, std::string> BB2Id;
+    std::map<BasicBlock *, std::string> PortPrefix;
+
+    write("digraph {\n");
+    std::set<BasicBlock *> Visited;
+    unsigned NId = 0;
+    for (auto &MB : AR.AlignedBlocks) {
+      BasicBlock *BB1 = MB[0];
+      BasicBlock *BB2 = MB[1];
+      std::string Name = std::string("m_bb")+std::to_string(NId);
+      writeNodePair(MB, Name);
+      NId++;
+      Visited.insert(BB1);
+      Visited.insert(BB2);
+
+      BB2Id[BB1] = Name;
+      BB2Id[BB2] = Name;
+      PortPrefix[BB1] = "f1";
+      PortPrefix[BB2] = "f2";
+    }
+
+    NId = 0;
+    for (BasicBlock &BB : *F1) {
+      if (Visited.count(&BB)) continue;
+      std::string Name = std::string("f1_bb")+std::to_string(NId);
+      writeNode(BB, Name,"f1");
+      NId++;
+      Visited.insert(&BB);
+      BB2Id[&BB] = Name;
+      PortPrefix[&BB] = "f1";
+    }
+
+    NId = 0;
+    for (BasicBlock &BB : *F2) {
+      if (Visited.count(&BB)) continue;
+      std::string Name = std::string("f2_bb")+std::to_string(NId);
+      writeNode(BB, Name,"f2");
+      NId++;
+      Visited.insert(&BB);
+      BB2Id[&BB] = Name;
+      PortPrefix[&BB] = "f2";
+    }
+
+    Visited.clear();
+    for (BasicBlock &BB : *F1) {
+      if (Visited.count(&BB)) continue;
+      auto *TI = BB.getTerminator();
+      BranchInst *Br = dyn_cast<BranchInst>(TI);
+      for (unsigned i = 0; i<TI->getNumSuccessors(); i++) {
+        write(BB2Id[&BB]+std::string(":")+PortPrefix[&BB]);
+	if (Br && Br->isConditional()) { if (i==0) write("T"); else write("F"); }
+        write(" -> ");
+	std::string NodeAddr = BB2Id[TI->getSuccessor(i)]+std::string(":")+PortPrefix[TI->getSuccessor(i)];
+	write(NodeAddr);
+	write("\n");
+      }
+      Visited.insert(&BB);
+    }
+    for (BasicBlock &BB : *F2) {
+      if (Visited.count(&BB)) continue;
+      auto *TI = BB.getTerminator();
+      BranchInst *Br = dyn_cast<BranchInst>(TI);
+      for (unsigned i = 0; i<TI->getNumSuccessors(); i++) {
+        write(BB2Id[&BB]+std::string(":")+PortPrefix[&BB]);
+	if (Br && Br->isConditional()) { if (i==0) write("T"); else write("F"); }
+        write(" -> ");
+	std::string NodeAddr = BB2Id[TI->getSuccessor(i)]+std::string(":")+PortPrefix[TI->getSuccessor(i)];
+	write(NodeAddr);
+	write("\n");
+      }
+      Visited.insert(&BB);
+    }
+
+    write("}\n");
+  }
+
+
+  void write(std::string s) {
+    Str += s;
+  }
+
+  void write(const char *s) {
+    Str += s;
+  }
+
+  void writeBlockEntry(BasicBlock &BB) {
+    write(BB.getName().str());
+    write(":");
+  }
+
+  void write(Instruction &I) {
+    raw_string_ostream OS(Str);
+    I.print(OS,false);
+    OS.flush();
+  }
+
+  void writeNode(BasicBlock &BB, std::string Name, std::string Port) {
+    bool HasCondBr = false;
+    if (BranchInst *Br = dyn_cast<BranchInst>(BB.getTerminator())) {
+      HasCondBr = Br->isConditional();
+    }
+    write(Name);
+    write(" [shape = none, label  = <<table border=\"0\" cellspacing=\"0\">\n");
+    if (HasCondBr)
+      write(std::string("<tr><td port=\"")+Port+"\" border=\"1\" colspan=\"2\">");
+    else
+      write(std::string("<tr><td port=\"")+Port+"\" border=\"1\">");
+    writeBlockInnerTable(BB);
+    write("</td></tr>\n");
+    if (HasCondBr)
+      write(std::string("<tr><td border=\"1\" port=\"")+Port+std::string("T\">T</td><td border=\"1\" port=\"")+Port+"F\">F</td></tr>\n");
+    write("</table>> ]\n");
+  }
+
+  void writeNodePair(MatchingBlocks &MB, std::string Name) {
+    BasicBlock *BB1 = MB[0];
+    BasicBlock *BB2 = MB[1];
+
+    bool HasCondBr1 = false;
+    if (BranchInst *Br = dyn_cast<BranchInst>(BB1->getTerminator())) {
+      HasCondBr1 = Br->isConditional();
+    }
+    bool HasCondBr2 = false;
+    if (BranchInst *Br = dyn_cast<BranchInst>(BB2->getTerminator())) {
+      HasCondBr2 = Br->isConditional();
+    }
+
+    write(Name);
+    write(" [shape = none, label  = <<table border=\"0\" cellspacing=\"0\">\n");
+
+    auto It1 = BB1->begin();
+    auto It2 = BB2->begin();
+    write("<tr><td port=\"f1\" border=\"1\" colspan=\"2\">");
+    write("<table border=\"0\">\n");
+    write("<tr><td align=\"left\">");
+    writeBlockEntry(*BB1);
+    write("</td></tr>\n");
+    while (It1!=BB1->end() && It2!=BB2->end()) {
+      if (It1==BB1->end()) {
+        write("<tr><td bgcolor=\"#e8765c70\" align=\"left\"> </td></tr>\n");
+	It2++;
+      } else {
+	Instruction *MI = MB.getMatchingInstruction(&*It1);
+	if (MI) {
+	  while (MI!=(&*It2)) {
+            write("<tr><td bgcolor=\"#e8765c70\" align=\"left\"> </td></tr>\n");
+	    It2++;
+	  }
+          write("<tr><td bgcolor=\"lightgreen\" align=\"left\">");
+          write(*It1);
+          write("</td></tr>\n");
+	  It2++;
+	} else {
+          write("<tr><td bgcolor=\"#e8765c70\" align=\"left\">");
+          write(*It1);
+          write("</td></tr>\n");
+	}
+	It1++;
+      }
+    }
+    write("</table>\n");
+    write("</td>\n");
+
+    It1 = BB1->begin();
+    It2 = BB2->begin();
+    write("<td port=\"f2\" border=\"1\" colspan=\"2\">");
+    write("<table border=\"0\">\n");
+    write("<tr><td align=\"left\">");
+    writeBlockEntry(*BB2);
+    write("</td></tr>\n");
+    while (It1!=BB1->end() && It2!=BB2->end()) {
+      if (It2==BB2->end()) {
+        write("<tr><td bgcolor=\"#e8765c70\" align=\"left\"> </td></tr>\n");
+	It1++;
+      } else {
+	Instruction *MI = MB.getMatchingInstruction(&*It2);
+	if (MB.isMatchingPair(&*It1,&*It2)) {
+          write("<tr><td bgcolor=\"lightgreen\" align=\"left\">");
+          write(*It2);
+          write("</td></tr>\n");
+	  It1++;
+	} else {
+	  while (It1!=BB1->end() && MB.getMatchingInstruction(&*It1)==nullptr) {
+            write("<tr><td bgcolor=\"#e8765c70\" align=\"left\"> </td></tr>\n");
+	    It1++;
+	  }
+          write("<tr><td bgcolor=\"#e8765c70\" align=\"left\">");
+          write(*It2);
+          write("</td></tr>\n");
+	}
+	It2++;
+      }
+    }
+    write("</table>\n");
+    write("</td></tr>\n");
+
+    if (HasCondBr1 || HasCondBr2) {
+      write("<tr>");
+      if (HasCondBr1)
+        write("<td border=\"1\" port=\"f1T\">T</td><td border=\"1\" port=\"f1F\">F</td>\n");
+      else
+        write("<td border=\"0\" colspan=\"2\"> </td>\n");
+      if (HasCondBr2)
+        write("<td border=\"1\" port=\"f2T\">T</td><td border=\"1\" port=\"f2F\">F</td>\n");
+      else
+        write("<td border=\"0\" colspan=\"2\"> </td>\n");
+      write("</tr>\n");
+    }
+
+    write("</table>> ]\n");
+
+  }
+
+  void writeBlockInnerTable(BasicBlock &BB) {
+    write("<table border=\"0\">\n");
+    write("<tr><td align=\"left\">");
+    writeBlockEntry(BB);
+    write("</td></tr>\n");
+    for (Instruction &I: BB) {
+      write("<tr><td align=\"left\">");
+      write(I);
+      write("</td></tr>\n");
+    }
+    write("</table>\n");
+  }
+};
+
 // Merges any pair of functions.
 // There are still unsupported features that could yield no merged function.
 //
@@ -1045,6 +1279,9 @@ llvm::MergeFunctions(Function *F1, Function *F2, const char *Name,
   PairwiseAlignment AR(Blocks1, Blocks2, Options);
   if (AR.AlignedBlocks.empty())
     return ErrorResponse;
+
+  DotPrinter DP(F1,F2, AR);
+  errs() << DP.Str << "\n";
 
   CodeMerger CG(M, Blocks1, Blocks2, Options);
 
