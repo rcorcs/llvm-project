@@ -68,6 +68,7 @@
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Transforms/IPO.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/FunctionImportUtils.h"
@@ -118,6 +119,10 @@ static cl::opt<unsigned>
 static cl::opt<bool> ReuseMergedFunctions(
     "func-merging-reuse-merges", cl::init(true), cl::Hidden,
     cl::desc("Try to reuse merged functions for another merge operation"));
+
+static cl::opt<bool>
+    WriteDotFile("func-merging-dot", cl::init(false), cl::Hidden,
+               cl::desc("Write a .dot file with the successful merging decisions"));
 
 struct MatchingBlocks {
   BasicBlock *Blocks[2];
@@ -1219,6 +1224,13 @@ public:
   }
 };
 
+void CodeMergingReport::writeDotFile(std::string Filename) {
+  std::error_code EC;
+  raw_fd_ostream File(Filename, EC, sys::fs::OF_Text);
+  File << DotStr;
+  File.close();
+}
+
 // Merges any pair of functions.
 // There are still unsupported features that could yield no merged function.
 //
@@ -1258,7 +1270,7 @@ public:
 //  Dissimilar basic blocks are simply copied to the merged function.
 FunctionMergeResult
 llvm::MergeFunctions(Function *F1, Function *F2, const char *Name,
-                     const FunctionMergingOptions &Options) {
+                     const FunctionMergingOptions &Options, bool IncludeReport) {
   FunctionMergeResult ErrorResponse(F1, F2, nullptr);
 
   if (F1->getParent() != F2->getParent())
@@ -1280,8 +1292,6 @@ llvm::MergeFunctions(Function *F1, Function *F2, const char *Name,
   if (AR.AlignedBlocks.empty())
     return ErrorResponse;
 
-  DotPrinter DP(F1,F2, AR);
-  errs() << DP.Str << "\n";
 
   CodeMerger CG(M, Blocks1, Blocks2, Options);
 
@@ -1293,6 +1303,11 @@ llvm::MergeFunctions(Function *F1, Function *F2, const char *Name,
   if (!CG.generate(&AR, VMap)) {
     CG.getFunction()->eraseFromParent();
     return ErrorResponse;
+  }
+
+  if (IncludeReport) {
+    DotPrinter DP(F1,F2, AR);
+    Result.setCodeMergingReport(DP.Str);
   }
 
   return Result;
@@ -1477,7 +1492,7 @@ bool FunctionMerging::runImpl(
 
     std::string Name = "merged";
     //    std::string("m.") + F1->getName().str() + "." + F2->getName().str();
-    FunctionMergeResult Result = MergeFunctions(F1, F2, Name.c_str(), Options);
+    FunctionMergeResult Result = MergeFunctions(F1, F2, Name.c_str(), Options, WriteDotFile);
 
     if (Result.getMergedFunction()) {
 
@@ -1518,6 +1533,13 @@ bool FunctionMerging::runImpl(
                                    GTTI(*Result.getMergedFunction())));
           WorkList.push_front(MFD);
         }
+
+	if (WriteDotFile) {
+	  auto Report = Result.getCodeMergingReport();
+	  if (Report.hasValue()) {
+            Report.getValue().writeDotFile("report.dot");
+	  }
+	}
 
       } else {
         if (Result.getMergedFunction() != nullptr)

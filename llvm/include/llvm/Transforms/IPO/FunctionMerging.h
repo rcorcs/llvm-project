@@ -68,6 +68,14 @@ struct FunctionMergingOptions {
   }
 };
 
+class CodeMergingReport {
+  std::string DotStr;
+public:
+  CodeMergingReport(std::string DotStr) : DotStr(DotStr) {}
+  std::string getDotString() { return DotStr; }
+  void writeDotFile(std::string Filename); 
+};
+
 class FunctionMergeResult {
 private:
   Function *F1;
@@ -77,6 +85,8 @@ private:
   bool NeedUnifiedReturn;
   std::map<unsigned, unsigned> ParamMap1;
   std::map<unsigned, unsigned> ParamMap2;
+
+  Optional<CodeMergingReport> Report;
 
   FunctionMergeResult()
       : F1(nullptr), F2(nullptr), MergedFunction(nullptr), HasIdArg(false),
@@ -133,10 +143,17 @@ public:
   }
 
   Function *getMergedFunction() { return MergedFunction; }
+
+  void setCodeMergingReport(CodeMergingReport Report) {
+    this->Report = Report;
+  }
+
+  Optional<CodeMergingReport> getCodeMergingReport() { return Report; }
+
 };
 
 FunctionMergeResult MergeFunctions(Function *F1, Function *F2, const char *Name,
-                                   const FunctionMergingOptions &Options);
+                                   const FunctionMergingOptions &Options, bool IncludeReport=false);
 void ReplaceFunctionByCall(Function *F, FunctionMergeResult &MFR);
 void ReplaceFunctionsByCall(FunctionMergeResult &MFR);
 
