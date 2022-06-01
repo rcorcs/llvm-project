@@ -39,6 +39,7 @@
 #include "llvm/Support/Error.h"
 
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/FileSystem.h"
 
 #include "llvm/Analysis/CFG.h"
 #include "llvm/Analysis/CallGraph.h"
@@ -93,6 +94,11 @@ static cl::opt<int> TraversalStrategy(
     "brfusion-traversal", cl::init(0), cl::Hidden,
     cl::desc("Select which traversal strategy: 0:rpo 1:po 2:dominated-first"));
 
+static cl::opt<bool>
+    WriteDotFile("brfusion-dot", cl::init(false), cl::Hidden,
+             cl::desc("Write .dot files of the successful branch fusion"));
+
+
 static std::string GetValueName(const Value *V) {
   if (V) {
     std::string name;
@@ -104,7 +110,12 @@ static std::string GetValueName(const Value *V) {
 }
 
 class BranchFusion {
+  unsigned CountChanges;
+
+  bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
+           TargetTransformInfo &TTI, std::list<BranchInst *> &ListBIs);
 public:
+  BranchFusion() : CountChanges(0) {}
   bool runImpl(Function &F);
 };
 
@@ -503,7 +514,8 @@ public:
 };
 
 
-bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
+
+bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
            TargetTransformInfo &TTI, std::list<BranchInst *> &ListBIs) {
   if (Debug) {
     errs() << "Original version\n";
@@ -611,8 +623,6 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     }
   }
   DotPrinter DP(F, BI, LeftR, RightR, AlignedInsts);
-  errs() << "DOT:\n";
-  errs() << DP.Str << "\n";
 
   LLVMContext &Context = F.getContext();
   const DataLayout *DL = &F.getParent()->getDataLayout();
@@ -878,6 +888,20 @@ bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
     if (Debug) {
       errs() << "Final version\n";
       F.dump();
+    }
+    
+    if (WriteDotFile) {
+      errs() << "DOT:\n";
+      errs() << DP.Str << "\n";
+
+      std::string Filename = ".brfusion.";
+      Filename += std::to_string(CountChanges) + std::string(".")+std::string(F.getName().str())+".dot";
+      std::error_code EC;
+      raw_fd_ostream File(Filename, EC, sys::fs::OF_Text);
+      File << DP.Str << "\n";
+      File.close();
+
+      CountChanges++;
     }
     return true;
   }
