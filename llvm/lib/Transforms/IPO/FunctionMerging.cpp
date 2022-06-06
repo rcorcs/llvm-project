@@ -1591,7 +1591,9 @@ void FunctionMerger::CodeGenerator::destroyGeneratedCode() {
     }
   }
   auto Purge = [&](BasicBlock *BB) {
-    errs() << "Deleting " << BB->getName() << "\n";
+    if (Debug) {
+      errs() << "Deleting " << BB->getName() << "\n";
+    }
     for (auto It = BB->rbegin(), E = BB->rend(); It!=E;) {
       Instruction *I = &*It;
       It++;
@@ -4146,7 +4148,9 @@ bool FunctionMerger::SALSSACodeGen::generate(
     CodeGenerator::insert(dyn_cast<Instruction>(RetAddr2));
   }
 
-  errs() << "Assigning label operands\n";
+  if (Debug) {
+    errs() << "Assigning label operands\n";
+  }
 
   std::set<BranchInst *> XorBrConds;
   // assigning label operands
@@ -4412,7 +4416,9 @@ bool FunctionMerger::SALSSACodeGen::generate(
     }
   }
 
-  errs() << "Assigning value operands\n";
+  if (Debug) {
+    errs() << "Assigning value operands\n";
+  }
 
   auto MergeValues = [&](Value *V1, Value *V2,
                          Instruction *InsertPt) -> Value * {
@@ -4680,7 +4686,9 @@ bool FunctionMerger::SALSSACodeGen::generate(
     return false;
   }
 
-  errs() << "Assigning PHI operands\n";
+  if (Debug) {
+    errs() << "Assigning PHI operands\n";
+  }
 
   auto AssignPHIOperandsInBlock =
       [&](BasicBlock *BB,
@@ -4888,7 +4896,10 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
   std::set<Instruction *> OffendingInsts;
 
 
-  errs() << "Collecting offending instructions\n";
+  if (Debug) {
+    errs() << "Collecting offending instructions\n";
+  }
+
   DominatorTree DT(*MergedFunc);
 
   for (Instruction &I : instructions(MergedFunc)) {
@@ -5014,7 +5025,9 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
         }
       };
 
-  errs() << "Finishing code\n";
+  if (Debug) {
+    errs() << "Finishing code\n";
+  }
   if (MergedFunc != nullptr) {
     // errs() << "Offending: " << OffendingInsts.size() << " ";
     // errs() << ((float)OffendingInsts.size())/((float)AlignedSeq.size()) << "
@@ -5029,8 +5042,10 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
       return false;
     } 
     */
-    errs() << "Fixing Domination\n";
-    //MergedFunc->dump();
+    if (Debug) {
+      errs() << "Fixing Domination\n";
+      //MergedFunc->dump();
+    }
     std::set<Instruction *> Visited;
     for (Instruction *I : LinearOffendingInsts) {
       if (Visited.find(I) != Visited.end())
@@ -5073,7 +5088,9 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
 #ifdef TIME_STEPS_DEBUG
     TimePostOpt.startTimer();
 #endif
-    errs() << "PostProcessing\n";
+    if (Debug) {
+      errs() << "PostProcessing\n";
+    }
     postProcessFunction(*MergedFunc);
 #ifdef TIME_STEPS_DEBUG
     TimePostOpt.stopTimer();
@@ -5081,7 +5098,6 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
     // MergedFunc->dump();
   }
 
-  errs() << "Reached here!\n";
   return MergedFunc != nullptr;
 }
 

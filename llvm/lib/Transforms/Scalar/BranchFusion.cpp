@@ -534,13 +534,14 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
   int SizeLeft = 0;
   int SizeRight = 0;
 
+  if (Debug) {
     errs() << "Select branch for merging\n";
     BI->dump();
-  errs() << "LEFT REGION:\n";
-  for (BasicBlock &BB : LeftR) BB.dump();
-  errs() << "RIGHT REGION:\n";
-  for (BasicBlock &BB : RightR) BB.dump();
-
+    errs() << "LEFT REGION:\n";
+    for (BasicBlock &BB : LeftR) BB.dump();
+    errs() << "RIGHT REGION:\n";
+    for (BasicBlock &BB : RightR) BB.dump();
+  }
 
   std::set<BasicBlock *> KnownBBs;
   for (BasicBlock &BB : LeftR) {
@@ -591,21 +592,24 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
   int CountMatchUsefullInsts = 0;
   for (auto &Entry : AlignedInsts) {
 
-    errs() << "-----------------------------------------------------\n";
-    if (Entry.get(0)) {
-      if (isa<BasicBlock>(Entry.get(0)))
-        errs() << Entry.get(0)->getName() << "\n";
-      else
-        Entry.get(0)->dump();
-    } else
-      errs() << "\t-\n";
-    if (Entry.get(1)) {
-      if (isa<BasicBlock>(Entry.get(1)))
-        errs() << Entry.get(1)->getName() << "\n";
-      else
-        Entry.get(1)->dump();
-    } else
-      errs() << "\t-\n";
+    if (Debug) {
+      errs() << "-----------------------------------------------------\n";
+      if (Entry.get(0)) {
+        if (isa<BasicBlock>(Entry.get(0)))
+          errs() << Entry.get(0)->getName() << "\n";
+        else
+          Entry.get(0)->dump();
+      } else
+        errs() << "\t-\n";
+      if (Entry.get(1)) {
+        if (isa<BasicBlock>(Entry.get(1)))
+          errs() << Entry.get(1)->getName() << "\n";
+        else
+          Entry.get(1)->dump();
+      } else {
+        errs() << "\t-\n";
+      }
+    }
 
     if (Entry.match()) {
       if (isa<BinaryOperator>(Entry.get(0)))
@@ -660,15 +664,15 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       .setIntPtrType(IntPtrTy);
   if (!CG.generate(AlignedInsts, VMap, Options)) {
     errs() << "ERROR: Failed to generate the fused branches!\n";
-    errs() << "Destroying generated code\n";
-
-    F.dump();
-    CG.destroyGeneratedCode();
-    errs() << "Generated code destroyed\n";
-    EntryBB->eraseFromParent();
-    errs() << "Branch fusion reversed\n";
-    F.dump();
-
+    if (Debug) {
+      errs() << "Destroying generated code\n";
+      F.dump();
+      CG.destroyGeneratedCode();
+      errs() << "Generated code destroyed\n";
+      EntryBB->eraseFromParent();
+      errs() << "Branch fusion reversed\n";
+      F.dump();
+    }
     return false;
   }
 
@@ -690,8 +694,10 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
         PHINode *PHI = &*It;
         It++;
 
-	errs() << "Solving PHI node:";
-	PHI->dump();
+        if (Debug) {
+	  errs() << "Solving PHI node:";
+	  PHI->dump();
+        }
 
         IRBuilder<> Builder(PHI);
         PHINode *NewPHI = Builder.CreatePHI(PHI->getType(), 0);
@@ -715,8 +721,6 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
                 errs() << "ERROR: Null mapped value!\n";
                 return false;
               }
-            } else {
-              errs() << "ERROR: Cannot handle non-instruction values!\n";
             }
             NewEntries[NewBB][InBB] = NewV;
             OldEntries.insert(InBB);
@@ -726,6 +730,7 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
 	  }
         }
 
+        if (Debug) {
 	errs() << "Num entries: " << NewEntries.size() << "\n";
         for (auto &Pair : NewEntries) {
 	  errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
@@ -733,10 +738,16 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
 	    errs() << "Block: " << Pair2.first->getName().str() << " -> "; Pair2.second->dump();
 	  }
 	}
-	errs() << "Creating New PHI\n";
-        // PHI->dump();
+	}
+
+        if (Debug) {
+	  errs() << "Creating New PHI\n";
+          // PHI->dump();
+	}
         for (auto &Pair : NewEntries) {
-	  errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
+          if (Debug) {
+	    errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
+          }
           if (Pair.second.size() == 1) {
             Value *V = (*Pair.second.begin()).second;
             NewPHI->addIncoming(V, Pair.first);
@@ -747,20 +758,26 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
             selection in the merged incomming block to produce the correct value
             for the phi node.
             */
-            errs() << "Found  PHI incoming from two different blocks\n";
+            if (Debug) {
+              errs() << "Found  PHI incoming from two different blocks\n";
+	    }
             Value *LeftV = nullptr;
             Value *RightV = nullptr;
             for (auto &InnerPair : Pair.second) {
               if (LeftR.contains(InnerPair.first)) {
-                errs() << "Value coming from the Left block: "
+		if (Debug) {
+                  errs() << "Value coming from the Left block: "
                        << GetValueName(InnerPair.first) << " : ";
-                InnerPair.second->dump();
+                  InnerPair.second->dump();
+		}
                 LeftV = InnerPair.second;
               }
               if (RightR.contains(InnerPair.first)) {
-                errs() << "Value coming from the Right block: "
+		if (Debug) {
+                  errs() << "Value coming from the Right block: "
                        << GetValueName(InnerPair.first) << " : ";
-                InnerPair.second->dump();
+                  InnerPair.second->dump();
+		}
                 RightV = InnerPair.second;
               }
             }
@@ -803,8 +820,10 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       */
           }
         }
-	errs() << "Resulting PHI node:";
-        NewPHI->dump();
+        if (Debug) {
+	  errs() << "Resulting PHI node:";
+          NewPHI->dump();
+	}
       }
     }
     return true;
@@ -822,17 +841,21 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
   }
 
   int MergedSize = 0;
-  errs() << "Computing size...\n";
+  if (Debug) {
+    errs() << "Computing size...\n";
+  }
   for (Instruction *I : CG) {
     auto cost = TTI.getInstructionCost(
         I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
     MergedSize += cost.getValue().getValue();
   }
 
-  errs() << "SizeLeft: " << SizeLeft << "\n";
-  errs() << "SizeRight: " << SizeRight << "\n";
-  errs() << "Original Size: " << (SizeLeft + SizeRight) << "\n";
-  errs() << "New Size: " << MergedSize << "\n";
+  if (Debug) {
+    errs() << "SizeLeft: " << SizeLeft << "\n";
+    errs() << "SizeRight: " << SizeRight << "\n";
+    errs() << "Original Size: " << (SizeLeft + SizeRight) << "\n";
+    errs() << "New Size: " << MergedSize << "\n";
+  }
 
   errs() << "SizeDiff: " << (SizeLeft + SizeRight) << " X " << MergedSize
          << " : " << ((int)(SizeLeft + SizeRight) - ((int)MergedSize)) << " : ";
@@ -841,12 +864,16 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
   bool Profitable = MergedSize < SizeLeft + SizeRight;
 
   if (Error || (!Profitable && !ForceAll)) {
-    errs() << "Unprofitable Branch Fusion!\n";
-    errs() << "Destroying generated code\n";
+    if (Debug) {
+      errs() << "Unprofitable Branch Fusion!\n";
+      errs() << "Destroying generated code\n";
+    }
 
     // F.dump();
     CG.destroyGeneratedCode();
-    errs() << "Generated code destroyed\n";
+    if (Debug) {
+      errs() << "Generated code destroyed\n";
+    }
     EntryBB->eraseFromParent();
     if (Debug) {
       errs() << "Branch fusion reversed\n";
@@ -896,8 +923,10 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       BB->eraseFromParent();
     }
 
-    errs() << "After deleting the old code\n";
-    F.dump();
+    if (Debug) {
+      errs() << "After deleting the old code\n";
+      //F.dump();
+    }
     if (!CG.commitChanges()) {
       //F.dump();
       errs() << "ERROR: committing final changes to the fused branches !!!!!!!\n";
