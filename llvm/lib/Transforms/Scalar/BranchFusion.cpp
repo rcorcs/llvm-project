@@ -690,6 +690,15 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
         PHINode *PHI = &*It;
         It++;
 
+	errs() << "Solving PHI node:";
+	PHI->dump();
+
+        IRBuilder<> Builder(PHI);
+        PHINode *NewPHI = Builder.CreatePHI(PHI->getType(), 0);
+        CG.insert(NewPHI);
+        VMap[PHI] = NewPHI;
+        ReplacedPHIs[PHI] = NewPHI;
+
         std::map<BasicBlock *, std::map<BasicBlock *, Value *>> NewEntries;
         std::set<BasicBlock *> OldEntries;
         for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
@@ -711,17 +720,23 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
             }
             NewEntries[NewBB][InBB] = NewV;
             OldEntries.insert(InBB);
-          }
+          } else {
+	    //simply copy incoming values from outside the two regions being merged
+	    NewPHI->addIncoming(PHI->getIncomingValue(i),PHI->getIncomingBlock(i));
+	  }
         }
 
-        IRBuilder<> Builder(PHI);
-        PHINode *NewPHI = Builder.CreatePHI(PHI->getType(), 0);
-        CG.insert(NewPHI);
-        VMap[PHI] = NewPHI;
-        ReplacedPHIs[PHI] = NewPHI;
-
+	errs() << "Num entries: " << NewEntries.size() << "\n";
+        for (auto &Pair : NewEntries) {
+	  errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
+	  for (auto &Pair2 : Pair.second) {
+	    errs() << "Block: " << Pair2.first->getName().str() << " -> "; Pair2.second->dump();
+	  }
+	}
+	errs() << "Creating New PHI\n";
         // PHI->dump();
         for (auto &Pair : NewEntries) {
+	  errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
           if (Pair.second.size() == 1) {
             Value *V = (*Pair.second.begin()).second;
             NewPHI->addIncoming(V, Pair.first);
@@ -788,6 +803,8 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       */
           }
         }
+	errs() << "Resulting PHI node:";
+        NewPHI->dump();
       }
     }
     return true;
@@ -879,10 +896,10 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       BB->eraseFromParent();
     }
 
-    // errs() << "After deleting the old code\n";
-    // F.dump();
+    errs() << "After deleting the old code\n";
+    F.dump();
     if (!CG.commitChanges()) {
-      F.dump();
+      //F.dump();
       errs() << "ERROR: committing final changes to the fused branches !!!!!!!\n";
     }
     if (Debug) {
@@ -891,8 +908,8 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
     }
     
     if (WriteDotFile) {
-      errs() << "DOT:\n";
-      errs() << DP.Str << "\n";
+      //errs() << "DOT:\n";
+      //errs() << DP.Str << "\n";
 
       std::string Filename = ".brfusion.";
       Filename += std::to_string(CountChanges) + std::string(".")+std::string(F.getName().str())+".dot";

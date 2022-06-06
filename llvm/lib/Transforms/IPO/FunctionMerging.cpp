@@ -4732,8 +4732,8 @@ bool FunctionMerger::SALSSACodeGen::generate(
 
   for (BasicBlock *BB1 : Blocks1) {
     if (!AssignPHIOperandsInBlock(BB1, BlocksF1)) {
-      if (Debug)
-        errs() << "ERROR: PHI assignment\n";
+      //if (Debug)
+      errs() << "ERROR: PHI assignment\n";
         // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGen.stopTimer();
@@ -4743,8 +4743,8 @@ bool FunctionMerger::SALSSACodeGen::generate(
   }
   for (BasicBlock *BB2 : Blocks2) {
     if (!AssignPHIOperandsInBlock(BB2, BlocksF2)) {
-      if (Debug)
-        errs() << "ERROR: PHI assignment\n";
+      //if (Debug)
+      errs() << "ERROR: PHI assignment\n";
         // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGen.stopTimer();
@@ -4902,8 +4902,8 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
           errs() << "Null incoming value\n";
         if (auto *IV = dyn_cast<Instruction>(V)) {
           if (BB->getTerminator() == nullptr) {
-            if (Debug)
-              errs() << "ERROR: Null terminator\n";
+            //if (Debug)
+            errs() << "ERROR: Null terminator\n";
               // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
             TimeCodeGenFix.stopTimer();
@@ -4925,8 +4925,8 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
           // I.getParent()->dump();
           // errs() << "Null operand\n";
           // I.dump();
-          if (Debug)
-            errs() << "ERROR: Null operand\n";
+          //if (Debug)
+          errs() << "ERROR: Null operand\n";
             // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
           TimeCodeGen.stopTimer();
@@ -5060,8 +5060,8 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
     //MergedFunc->dump();
 
     if (verifyFunction(*MergedFunc)) {
-      if (Verbose)
-        errs() << "ERROR: Produced Broken Function!\n";
+      //if (Verbose)
+      errs() << "ERROR: Produced Broken Function!\n";
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGenFix.stopTimer();
 #endif
@@ -5080,6 +5080,8 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
 #endif
     // MergedFunc->dump();
   }
+
+  errs() << "Reached here!\n";
   return MergedFunc != nullptr;
 }
 
