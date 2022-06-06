@@ -551,11 +551,15 @@ Region* RegionMelder::getRegionToReplicate(BasicBlock * MatchedBlock, BasicBlock
       R = Candidate;
     }
     else {
+      BasicBlock *OldCurr = Curr;
       for(auto* Pred : make_range(pred_begin(Entry), pred_end(Entry))) {
         if (!Candidate->contains(Pred)){
           Curr = Pred;
           break;
         }
+      }
+      if (OldCurr==Curr) {
+	      errs() << "DID NOT CHANGE CURRENT! INFINITE LOOP!\n";
       }
     }
 
