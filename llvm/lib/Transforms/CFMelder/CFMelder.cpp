@@ -112,7 +112,7 @@ static bool runAnalysisOnly(Function &F, DominatorTree &DT,
       INFO << "Valid merge location found at BB ";
       BB.printAsOperand(errs(), false);
       errs() << "\n";
-      RegionAnalyzer MA(&BB, DT, PDT);
+      RegionAnalyzer MA(&BB, DT, PDT, LI);
       MA.computeRegionMatch();
       MA.printAnalysis(INFO);
       INFO << "This merge is : " << (MA.hasAnyProfitableMatch() ? "" : "NOT")
@@ -196,7 +196,7 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
         BB.printAsOperand(errs(), false);
         errs() << "\n";
 
-        RegionAnalyzer MA(&BB, DT, PDT);
+        RegionAnalyzer MA(&BB, DT, PDT, LI);
         MA.computeRegionMatch();
         if (MA.hasAnyProfitableMatch()) {
           INFO << "Melding is profitable\n";
@@ -223,13 +223,12 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
         }
       }
     }
+
+    Changed |= LocalChange;
     // if one melding is requested, exit (debugging)
     if (RunMeldingOnce) {
       break;
     }
-
-    Changed |= LocalChange;
-
   } while (LocalChange);
 
   return Changed;

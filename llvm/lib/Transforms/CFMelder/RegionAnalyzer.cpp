@@ -127,8 +127,8 @@ bool MergeableRegionPair::dominates(std::shared_ptr<MergeableRegionPair> &Other,
 }
 
 RegionAnalyzer::RegionAnalyzer(BasicBlock *BB, DominatorTree &DT,
-                               PostDominatorTree &PDT)
-    : DivergentBB(BB), DT(DT), PDT(PDT) {
+                               PostDominatorTree &PDT, LoopInfo &LI)
+    : DivergentBB(BB), DT(DT), PDT(PDT), LI(LI) {
 
   BranchInst *Bi = dyn_cast<BranchInst>(DivergentBB->getTerminator());
   assert(Bi && Bi->isConditional() &&
@@ -401,13 +401,29 @@ void RegionAnalyzer::findMergeableBBsInPath(
   while (!WorkList.empty()) {
     BasicBlock *Cand = WorkList.pop_back_val();
     Visited.push_back(Cand);
+
+    // FIXME : avoid merging with basic blocks inside loops
+    bool InsideLoop = false;
+    Loop *LoopOfCand = getLI()->getLoopFor(Cand);
+    if (LoopOfCand) {
+      BasicBlock *LoopPreheder = LoopOfCand->getHeader();
+      if (getDT()->dominates(From, LoopPreheder)) {
+        DEBUG << "Ignoring basic blocks inside loops for region replication "
+                 "candidates : block "
+              << Cand->getNameOrAsOperand() << "\n";
+        InsideLoop = true;
+      }
+    }
+
     // if region replication is not allowed, basic blocks that post dominates
     // From can be a meld candidate
-    if (DisableRegionReplication) {
-      if (PDT.dominates(Cand, From))
+    if (!InsideLoop) {
+      if (DisableRegionReplication) {
+        if (PDT.dominates(Cand, From))
+          MeregeableBBs.push_back(Cand);
+      } else {
         MeregeableBBs.push_back(Cand);
-    } else {
-      MeregeableBBs.push_back(Cand);
+      }
     }
 
     for (auto It = succ_begin(Cand); It != succ_end(Cand); ++It) {
@@ -483,8 +499,6 @@ void RegionAnalyzer::findMergeableRegions(BasicBlock &BB) {
          "Left regions are not in dominance order!");
   assert(verifyRegionList(RightRegions, DT) &&
          "Right regions are not in dominance order!");
-
-
 }
 
 unsigned RegionAnalyzer::regionMatchSize() const {
@@ -613,14 +627,15 @@ bool RegionAnalyzer::hasAnyProfitableMatch() {
 
     //   }
 
-    //   // check if replicated region contains store instructions outside the melded blocks
+    //   // check if replicated region contains store instructions outside the
+    //   melded blocks
     //   // if it does don't meld for now
     //   for(auto *BB : ReplicateR->blocks()){
     //     if (BB == BBInsideRegion) continue;
     //     for (auto &I : *BB) {
     //       if(isa<StoreInst>(&I)) {
-    //         DEBUG << "Replicated region contains store instructions outside melded block, no melding performed!\n";
-    //         return false;
+    //         DEBUG << "Replicated region contains store instructions outside
+    //         melded block, no melding performed!\n"; return false;
     //       }
     //     }
     //   }

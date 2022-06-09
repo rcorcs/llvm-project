@@ -4,6 +4,7 @@
 #include "CFMelderUtils.h"
 #include "SeqAlignmentUtils.h"
 #include "llvm/Analysis/DominanceFrontier.h"
+#include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/RegionInfo.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
@@ -110,6 +111,7 @@ private:
   DominatorTree &DT;
   std::shared_ptr<RegionInfo> RI;
   PostDominatorTree &PDT;
+  LoopInfo &LI;
   // DominanceFrontier DF;
 
   // left path and right path regions
@@ -136,7 +138,7 @@ private:
 
 public:
   RegionAnalyzer(BasicBlock *BB, DominatorTree &DT,
-                PostDominatorTree &PDT);
+                PostDominatorTree &PDT, LoopInfo &LI);
 
   void computeRegionMatch();
 
@@ -171,6 +173,7 @@ public:
   PostDominatorTree *getPDT() { return &PDT; }
   DominatorTree *getDT() { return &DT; }
   std::shared_ptr<RegionInfo> getRI() {return RI;}
+  LoopInfo *getLI() {return &LI;}
   // DominanceFrontier *getDF() {return &DF;}
   void recomputeControlFlowAnalyses();
   
