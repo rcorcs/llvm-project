@@ -9,10 +9,20 @@ all : ${obj}
 %.merged.ll : %.c	
 	${clang} ${clang_flags} $^
 	${opt} ${opt_flags} < $(patsubst %.c,%.ll,$^) > $(patsubst %.c,%.optimized.ll,$^)
-	${opt}  ${cfmerger_flags} < $(patsubst %.c,%.optimized.ll,$^) > $@
+	${opt} ${cfmerger_flags} < $(patsubst %.c,%.optimized.ll,$^) > $@
 
 
-test : test1 test2
+test : is_same test1 test2
+
+is_same : ${obj}
+	@cmp -s  $(patsubst %.merged.ll,%.optimized.ll,$^) $^ ; \
+	RETVAL=$$?; \
+	if [ $$RETVAL -eq 0 ]; then \
+					echo "ERROR : transformation did NOT change source IR"; \
+	else \
+					echo "SUCCESS : transformation did change source IR"; \
+	fi
+
 
 test1  : input1.txt
 	@${lli} $(obj) < $^ > output.merged.txt

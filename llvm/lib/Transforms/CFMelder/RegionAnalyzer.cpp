@@ -127,17 +127,19 @@ bool MergeableRegionPair::dominates(std::shared_ptr<MergeableRegionPair> &Other,
 }
 
 RegionAnalyzer::RegionAnalyzer(BasicBlock *BB, DominatorTree &DT,
-                               PostDominatorTree &PDT, LoopInfo &LI)
-    : DivergentBB(BB), DT(DT), PDT(PDT), LI(LI) {
+                               PostDominatorTree &PDT)
+    : DivergentBB(BB), DT(DT), PDT(PDT) {
 
   BranchInst *Bi = dyn_cast<BranchInst>(DivergentBB->getTerminator());
   assert(Bi && Bi->isConditional() &&
          "Top BB needs to have a conditional branch");
   DivergentCondition = Bi->getCondition();
+
+  LI = std::make_shared<LoopInfo>(DT);
   // calculate regions for the function
   DominanceFrontier DF;
   DF.analyze(DT);
-  RI = make_shared<RegionInfo>();
+  RI = std::make_shared<RegionInfo>();
   RI->recalculate(*BB->getParent(), &DT, &PDT, &DF);
 }
 
@@ -463,7 +465,7 @@ void RegionAnalyzer::findMergeableRegions(BasicBlock &BB) {
     BasicBlock *EntryBb = SubR.getEntry();
 
     // check if this region beglongs to left or right paths
-    if (DT.dominates(LeftEntry, EntryBb)) {
+    if (DT.dominates(LeftEntry, EntryBb) && PDT.dominates(EntryBb, LeftEntry)) {
 
       auto ItLR = LeftRegions.begin();
       for (; ItLR != LeftRegions.end(); ItLR++) {
@@ -474,7 +476,7 @@ void RegionAnalyzer::findMergeableRegions(BasicBlock &BB) {
       LeftRegions.insert(ItLR, &SubR);
     }
 
-    if (DT.dominates(RightEntry, EntryBb)) {
+    if (DT.dominates(RightEntry, EntryBb) && PDT.dominates(EntryBb, RightEntry)) {
       // add regions based on dominance order
       auto ItRR = RightRegions.begin();
       for (; ItRR != RightRegions.end(); ItRR++) {
@@ -665,6 +667,8 @@ bool RegionAnalyzer::isRegionMatchProfitable(unsigned Index) {
 void RegionAnalyzer::recomputeControlFlowAnalyses() {
   DT.recalculate(*getParentFunction());
   PDT.recalculate(*getParentFunction());
+
+  LI = std::make_shared<LoopInfo>(DT);
 
   DominanceFrontier DF;
   DF.analyze(DT);
