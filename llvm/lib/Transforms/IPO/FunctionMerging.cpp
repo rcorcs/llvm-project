@@ -159,7 +159,7 @@ static cl::opt<bool>
     MaxParamScore("func-merging-max-param", cl::init(true), cl::Hidden,
                   cl::desc("Maximizing the score for merging parameters"));
 
-static cl::opt<bool> Debug("func-merging-debug", cl::init(true), cl::Hidden,
+static cl::opt<bool> Debug("func-merging-debug", cl::init(false), cl::Hidden,
                            cl::desc("Outputs debug information"));
 
 static cl::opt<bool> Verbose("func-merging-verbose", cl::init(false),
@@ -4714,10 +4714,20 @@ bool FunctionMerger::SALSSACodeGen::generate(
           if (BlocksReMap.find(NewPredBB) != BlocksReMap.end()) {
             int Index = PHI->getBasicBlockIndex(BlocksReMap[NewPredBB]);
             if (Index >= 0) {
+	      //errs() << "Found: " << BlocksReMap[NewPredBB]->getName().str() << " / " << NewPredBB->getName().str() << " ";
               V = MapValue(PHI->getIncomingValue(Index), VMap);
               FoundIndices.insert(Index);
-            }
-          }
+	      //if (V) V->dump();
+	      //else errs() << " nullptr\n";
+            } /*else {
+	      errs() << "Did NOT find block index: " << NewPredBB->getName().str() << " / ";
+	      if (BlocksReMap[NewPredBB]) {
+		      errs() << BlocksReMap[NewPredBB]->getName().str() << "\n";
+	      } else errs() << " nullptr\n";
+	    }*/
+          } /*else {
+	    errs() << "Did NOT find predecessor block: " << NewPredBB->getName().str() << "\n";
+	  }*/
 
           if (V == nullptr)
             V = UndefValue::get(NewPHI->getType());
@@ -4731,8 +4741,19 @@ bool FunctionMerger::SALSSACodeGen::generate(
 	//errs() << "After:\n";
 	//NewPHI->dump();
 
-        if (FoundIndices.size() != PHI->getNumIncomingValues())
+        if (FoundIndices.size() != PHI->getNumIncomingValues()) {
+          /*for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
+	    if (!FoundIndices.count(i)) {
+              auto *BBV = MapValue(PHI->getIncomingBlock(i), VMap);
+              auto *V = MapValue(PHI->getIncomingValue(i), VMap);
+	      if (BBV && V) {
+	        errs() << "Fix PHI: " << BBV->getName().str() << " "; V->dump();
+		//NewPHI->addIncoming(V,dyn_cast<BasicBlock>(BBV));
+	      }
+	    }
+	  }*/
           return false;
+	}
       }
     }
     return true;

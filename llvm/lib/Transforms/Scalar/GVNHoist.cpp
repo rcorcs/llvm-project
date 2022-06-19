@@ -572,7 +572,7 @@ bool GVNHoist::run(Function &F) {
     if (MaxChainLength != -1 && ++ChainLength >= MaxChainLength) {
       if (NumHoisted) {
 	  errs() << "Hoisted: " << NumHoisted << "; Func: " << F.getName() << ": " << F.getParent()->getSourceFileName () << "\n";
-	  F.dump();
+	  //F.dump();
       }
       return Res;
     }
@@ -581,7 +581,7 @@ bool GVNHoist::run(Function &F) {
     if (HoistStat.first + HoistStat.second == 0) {
       if (NumHoisted) {
 	  errs() << "Hoisted: " << NumHoisted << "; Func: " << F.getName() << ": " << F.getParent()->getSourceFileName () << "\n";
-	  F.dump();
+	  //F.dump();
       }
       return Res;
     }
@@ -597,7 +597,7 @@ bool GVNHoist::run(Function &F) {
 
     if (NumHoisted) {
 	  errs() << "Hoisted: " << NumHoisted << "; Func: " << F.getName() << ": " << F.getParent()->getSourceFileName () << "\n";
-	  F.dump();
+	  //F.dump();
     }
   return Res;
 }
@@ -1029,7 +1029,7 @@ unsigned GVNHoist::rauw(const SmallVecInsn &Candidates, Instruction *Repl,
         MSSAUpdater->removeMemoryAccess(OldMA);
       }
 
-      errs() << "Removing copy:";I->dump();
+      //errs() << "Removing copy:";I->dump();
       Repl->andIRFlags(I);
       combineKnownMetadata(Repl, I);
       I->replaceAllUsesWith(Repl);

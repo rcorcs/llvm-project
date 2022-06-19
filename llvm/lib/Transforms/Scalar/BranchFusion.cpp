@@ -129,9 +129,9 @@ PreservedAnalyses BranchFusionPass::run(Function &F,
   // };
 
   BranchFusion BF;
-  if (!BF.runImpl(F)) //, GTTI))
-    return PreservedAnalyses::all();
-  return PreservedAnalyses::none();
+  if (BF.runImpl(F)) //, GTTI))
+    return PreservedAnalyses::none();
+  return PreservedAnalyses::all();
 }
 
 class BranchFusionLegacyPass : public FunctionPass {
@@ -546,6 +546,15 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
   std::set<BasicBlock *> KnownBBs;
   for (BasicBlock &BB : LeftR) {
     KnownBBs.insert(&BB);
+
+    //predecessors must be within the same region or be the entry block
+    for (auto It = pred_begin(&BB), E = pred_end(&BB); It != E; It++) {
+      BasicBlock *PredBB = *It;
+      if (!LeftR.contains(PredBB) && PredBB != BI->getParent()) {
+        return false;
+      }
+    }
+
     for (Instruction &I : BB) {
       auto cost = TTI.getInstructionCost(
           &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
@@ -554,6 +563,15 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
   }
   for (BasicBlock &BB : RightR) {
     KnownBBs.insert(&BB);
+
+    //predecessors must be within the same region or be the entry block
+    for (auto It = pred_begin(&BB), E = pred_end(&BB); It != E; It++) {
+      BasicBlock *PredBB = *It;
+      if (!RightR.contains(PredBB) && PredBB != BI->getParent()) {
+        return false;
+      }
+    }
+
     for (Instruction &I : BB) {
       auto cost = TTI.getInstructionCost(
           &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
@@ -576,6 +594,7 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
 
   // if (!IsSingleExit) return false;
 
+  /* fixed: 
   for (BasicBlock *BB : KnownBBs) {
     for (auto It = pred_begin(BB), E = pred_end(BB); It != E; It++) {
       BasicBlock *PredBB = *It;
@@ -583,7 +602,7 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
         return false;
       }
     }
-  }
+  }*/
 
   AlignmentStats TotalAlignmentStats;
   AlignedSequence<Value *> AlignedInsts =
@@ -626,8 +645,12 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       //   CountMatchUsefullInsts++;
     }
   }
-  DotPrinter DP(F, BI, LeftR, RightR, AlignedInsts);
-
+  
+  std::string DotStr;
+  if (EnableHyFMNW || EnableHyFMPA) {
+    DotPrinter DP(F, BI, LeftR, RightR, AlignedInsts);
+    DotStr = DP.Str;
+  }
   LLVMContext &Context = F.getContext();
   const DataLayout *DL = &F.getParent()->getDataLayout();
   Type *IntPtrTy = DL->getIntPtrType(Context);
@@ -731,13 +754,13 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
         }
 
         if (Debug) {
-	errs() << "Num entries: " << NewEntries.size() << "\n";
-        for (auto &Pair : NewEntries) {
-	  errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
-	  for (auto &Pair2 : Pair.second) {
-	    errs() << "Block: " << Pair2.first->getName().str() << " -> "; Pair2.second->dump();
+	  errs() << "Num entries: " << NewEntries.size() << "\n";
+          for (auto &Pair : NewEntries) {
+	    errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
+	    for (auto &Pair2 : Pair.second) {
+	      errs() << "Block: " << Pair2.first->getName().str() << " -> "; Pair2.second->dump();
+	    }
 	  }
-	}
 	}
 
         if (Debug) {
@@ -864,8 +887,8 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
   bool Profitable = MergedSize < SizeLeft + SizeRight;
 
   if (Error || (!Profitable && !ForceAll)) {
+    errs() << "Unprofitable Branch Fusion!\n";
     if (Debug) {
-      errs() << "Unprofitable Branch Fusion!\n";
       errs() << "Destroying generated code\n";
     }
 
@@ -936,15 +959,12 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       F.dump();
     }
     
-    if (WriteDotFile) {
-      //errs() << "DOT:\n";
-      //errs() << DP.Str << "\n";
-
+    if (WriteDotFile && DotStr.size()) {
       std::string Filename = ".brfusion.";
       Filename += std::to_string(CountChanges) + std::string(".")+std::string(F.getName().str())+".dot";
       std::error_code EC;
       raw_fd_ostream File(Filename, EC, sys::fs::OF_Text);
-      File << DP.Str << "\n";
+      File << DotStr << "\n";
       File.close();
 
       CountChanges++;
