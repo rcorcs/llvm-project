@@ -32,12 +32,12 @@
 
 namespace llvm {
 
-
 // utility functions
 class Utils {
 public:
-  static bool containsUnhandledInstructions(const BasicBlock* BB);
-  static bool isValidMergeLocation(BasicBlock &BB, PostDominatorTree &PDT);
+  static bool containsUnhandledInstructions(const BasicBlock *BB);
+  static bool isValidMergeLocation(BasicBlock &BB, DominatorTree &DT,
+                                   PostDominatorTree &PDT);
   static BasicBlock *makeSingleExit(BasicBlock *BB);
   void getMultiSuccessorExitBlocks(Region *R,
                                    SmallVectorImpl<BasicBlock *> &BBs);
@@ -45,15 +45,16 @@ public:
 
   static bool match(Value *V1, Value *V2);
 
-  static std::pair<unsigned, unsigned> computeLatReductionAtBest(BasicBlock *BB1,
-                                              BasicBlock *BB2) ;
-  static double computeBBSimilarty(BasicBlock *BB1,
-                                   BasicBlock *BB2);
+  static std::pair<unsigned, unsigned>
+  computeLatReductionAtBest(BasicBlock *BB1, BasicBlock *BB2);
+  static double computeBBSimilarty(BasicBlock *BB1, BasicBlock *BB2);
   static double
-  computeRegionSimilarity(const DenseMap<BasicBlock *, BasicBlock *> &Mapping, BasicBlock* LExit);
+  computeRegionSimilarity(const DenseMap<BasicBlock *, BasicBlock *> &Mapping,
+                          BasicBlock *LExit);
+
+  static Region *getRegionWithEntryExit(RegionInfo &RI, BasicBlock *Entry,
+                                        BasicBlock *Exit);
 };
-
-
 
 } // namespace llvm
 

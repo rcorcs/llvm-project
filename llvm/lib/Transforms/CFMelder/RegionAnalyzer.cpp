@@ -410,9 +410,9 @@ void RegionAnalyzer::findMergeableBBsInPath(
     if (LoopOfCand) {
       BasicBlock *LoopPreheder = LoopOfCand->getHeader();
       if (getDT()->dominates(From, LoopPreheder)) {
-        DEBUG << "Ignoring basic blocks inside loops for region replication "
-                 "candidates : block "
-              << Cand->getNameOrAsOperand() << "\n";
+        // DEBUG << "Ignoring basic blocks inside loops for region replication "
+        //          "candidates : block "
+        //       << Cand->getNameOrAsOperand() << "\n";
         InsideLoop = true;
       }
     }
@@ -430,8 +430,9 @@ void RegionAnalyzer::findMergeableBBsInPath(
 
     for (auto It = succ_begin(Cand); It != succ_end(Cand); ++It) {
       BasicBlock *Succ = *It;
-      // add all univisted successors of current BB that are not equal to 'To'
-      if (Succ != To &&
+      // add all univisted successors of current BB that are not equal to "To"
+      // AND each successor must be dominated by "From"
+      if (Succ != To && getDT()->dominates(From, Succ) &&
           std::find(Visited.begin(), Visited.end(), Succ) == Visited.end())
         WorkList.push_back(Succ);
     }

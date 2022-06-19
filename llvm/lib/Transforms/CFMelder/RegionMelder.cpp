@@ -39,6 +39,7 @@ STATISTIC(RegionToRegionMeldings,
 STATISTIC(InstrAlignTime,
           "Time spent in instruction alignment in microseconds");
 
+
 AlignedSeq<Value *> RegionMelder::getAlignmentOfBlocks(BasicBlock *LeftBb,
                                                        BasicBlock *RightBb) {
   // do sequence aligment
@@ -559,16 +560,16 @@ Region *RegionMelder::getRegionToReplicate(BasicBlock *MatchedBlock,
     if (MA.getPDT()->dominates(Entry, PathEntry)) {
       R = Candidate;
     } else {
-      BasicBlock *OldCurr = Curr;
+      // BasicBlock *OldCurr = Curr;
       for (auto *Pred : make_range(pred_begin(Entry), pred_end(Entry))) {
         if (!Candidate->contains(Pred)) {
           Curr = Pred;
           break;
         }
       }
-      if (OldCurr == Curr) {
-        errs() << "DID NOT CHANGE CURRENT! INFINITE LOOP!\n";
-      }
+      // if (OldCurr == Curr) {
+      //   errs() << "DID NOT CHANGE CURRENT! INFINITE LOOP!\n";
+      // }
     }
 
   } while (!R);
@@ -615,13 +616,16 @@ void RegionMelder::merge(unsigned Index) {
     if (MA.requireRegionSimplification(RToReplicate)) {
       INFO << "Replicated region is not a simple region, running region "
               "simplification\n";
-      BasicBlock *Entry = RToReplicate->getEntry();
+      // BasicBlock *Entry = RToReplicate->getEntry();
       ExitToReplicate =
           simplifyRegion(RToReplicate->getExit(), RToReplicate->getEntry());
 
       // recompute control-flow analyses , FIXME : this might be too expensive
       MA.recomputeControlFlowAnalyses();
-      RToReplicate = MA.getRI()->getRegionFor(Entry);
+      RToReplicate = Utils::getRegionWithEntryExit(*MA.getRI(), EntryToReplicate,
+                                            ExitToReplicate);
+      assert(RToReplicate && "Can not find region with given entry and exit");
+
       INFO << "region after region simplification : ";
       errs() << "[";
       RToReplicate->getEntry()->printAsOperand(errs(), false);
@@ -631,9 +635,9 @@ void RegionMelder::merge(unsigned Index) {
 
       RegionAlreadySimplified = true;
     }
-
+    
     // replicate the region
-    RegionReplicator RR(MA, ExpandingLeft);
+    RegionReplicator RR(MA, ExpandingLeft, EnableFullPredication);
     Region *ReplicatedR =
         RR.replicate(ExpandedBlock, MatchedBlock, RToReplicate);
 
@@ -851,7 +855,10 @@ BasicBlock *RegionMelder::simplifyRegion(BasicBlock *Exit, BasicBlock *Entry) {
                                            ParentFunc, Exit);
   // add a jump from new exit to old exit
   BranchInst::Create(Exit, NewExit);
-  Region *MergedR = MA.getRI()->getRegionFor(Entry);
+  Region *MergedR = Utils::getRegionWithEntryExit(*MA.getRI(), Entry, Exit);
+
+  // this can not be nullptr because must exit
+  assert(MergedR && "Can not find region with given entry and exit");
 
   // move relavant phi nodes from old exit to new exit
   SmallVector<BasicBlock *, 4> IncomingBlocksToDelete;
