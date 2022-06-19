@@ -832,12 +832,11 @@ void RegionMelder::updateSplitRangeMap(bool Direction, Instruction *I) {
 }
 
 bool RegionMelder::isExitBlockSafeToMerge(BasicBlock *Exit, BasicBlock *Entry) {
-  Region *R = MA.getRI()->getRegionFor(Entry);
+  Region *R = Utils::getRegionWithEntryExit(*MA.getRI(), Entry, Exit);
+  assert(R && "can not find reigon with entry and exit!");
 
   for (auto It = pred_begin(Exit); It != pred_end(Exit); ++It) {
     if (!R->contains(*It)) {
-      // errs() << "not safe to merge\n";
-      // (*it)->print(errs());
       return false;
     }
   }

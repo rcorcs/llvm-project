@@ -162,8 +162,6 @@ public:
   Function *getParentFunction() const {
     return getDivergentBlock()->getParent();
   }
-  // Region *getTopRegion() { return RI.getRegionFor(TopBb); }
-  // Region *getRegionFor(BasicBlock *BB) { return RI.getRegionFor(BB); }
 
   // control-flow analysis
   PostDominatorTree *getPDT() { return &PDT; }
