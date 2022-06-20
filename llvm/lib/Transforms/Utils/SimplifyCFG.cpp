@@ -6635,6 +6635,7 @@ bool SimplifyCFGOpt::simplifyOnceImpl(BasicBlock *BB) {
       // Let's rerun EliminateDuplicatePHINodes() first,
       // before FoldTwoEntryPHINode() potentially converts them into select's,
       // after which we'd need a whole EarlyCSE pass run to cleanup them.
+      //errs() << "Sinking code in SimplifyCFG\n";
       return true;
     }
 

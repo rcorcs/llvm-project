@@ -704,15 +704,18 @@ PassBuilder::buildFunctionSimplificationPipeline(OptimizationLevel Level,
 
   // Global value numbering based sinking.
   if (EnableGVNSink) {
+    errs() << "Enabling GVN Sink\n";
     FPM.addPass(GVNSinkPass());
     FPM.addPass(SimplifyCFGPass());
   }
+  /*
   if (EnableCFMelder) {
     FPM.addPass(CFMelderPass());
   }
   if (EnableBranchFusion) {
     FPM.addPass(BranchFusionPass());
   }
+  */
 
   if (EnableConstraintElimination)
     FPM.addPass(ConstraintEliminationPass());
@@ -876,6 +879,16 @@ PassBuilder::buildFunctionSimplificationPipeline(OptimizationLevel Level,
       SimplifyCFGOptions().hoistCommonInsts(true).sinkCommonInsts(true)));
   FPM.addPass(InstCombinePass());
   invokePeepholeEPCallbacks(FPM, Level);
+
+  //It is better to run branch fusion after code hoisting and sinking.
+  //Code hoisting and sinking can unify code from multiple blocks while
+  //current branch fusion techniques can only merge two regions at a time.
+  if (EnableCFMelder) {
+    FPM.addPass(CFMelderPass());
+  }
+  if (EnableBranchFusion) {
+    FPM.addPass(BranchFusionPass());
+  }
 
   if (EnableCHR && Level == OptimizationLevel::O3 && PGOOpt &&
       (PGOOpt->Action == PGOOptions::IRUse ||
