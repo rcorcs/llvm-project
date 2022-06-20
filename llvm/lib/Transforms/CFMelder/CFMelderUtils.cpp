@@ -9,8 +9,32 @@
 #include "llvm/IR/Instructions.h"
 using namespace llvm;
 
+Region *Utils::getRegionWithEntryExit(RegionInfo &RI, BasicBlock *Entry,
+                                      BasicBlock *Exit) {
+
+  // errs() << "entry : " << Entry->getNameOrAsOperand() << "\n";
+  // errs() << "exit : " << Exit->getNameOrAsOperand() << "\n";
+  SmallVector<Region *, 32> WorkList;
+  WorkList.push_back(RI.getTopLevelRegion());
+  Region *RFound = nullptr;
+  while (!WorkList.empty()) {
+    Region *R = WorkList.pop_back_val();
+    // R->print(errs());
+    if (R->getEntry() == Entry && R->getExit() == Exit) {
+      // errs() << "found\n";
+      RFound = R;
+      break;
+    }
+
+    for (std::unique_ptr<Region> &SubR : *R) {
+      WorkList.push_back(SubR.get());
+    }
+  }
+  return RFound;
+}
+
 // check for diamond shaped control-flow
-bool Utils::isValidMergeLocation(BasicBlock &BB, PostDominatorTree &PDT) {
+bool Utils::isValidMergeLocation(BasicBlock &BB, DominatorTree &DT, PostDominatorTree &PDT) {
 
   const BranchInst *BI = dyn_cast<BranchInst>(BB.getTerminator());
 
@@ -24,6 +48,10 @@ bool Utils::isValidMergeLocation(BasicBlock &BB, PostDominatorTree &PDT) {
 
   BasicBlock *BBLeft = BI->getSuccessor(0);
   BasicBlock *BBRight = BI->getSuccessor(1);
+
+  // BB must dominate both successors
+  if (!DT.dominates(&BB, BBLeft) || !DT.dominates(&BB, BBRight))
+    return false;
 
   // there can not be edges between successors of BB
   if (Utils::hasEdgeBetween(BBLeft, BBRight))

@@ -134,10 +134,12 @@ RegionAnalyzer::RegionAnalyzer(BasicBlock *BB, DominatorTree &DT,
   assert(Bi && Bi->isConditional() &&
          "Top BB needs to have a conditional branch");
   DivergentCondition = Bi->getCondition();
+
+  LI = std::make_shared<LoopInfo>(DT);
   // calculate regions for the function
   DominanceFrontier DF;
   DF.analyze(DT);
-  RI = make_shared<RegionInfo>();
+  RI = std::make_shared<RegionInfo>();
   RI->recalculate(*BB->getParent(), &DT, &PDT, &DF);
 }
 
@@ -401,19 +403,36 @@ void RegionAnalyzer::findMergeableBBsInPath(
   while (!WorkList.empty()) {
     BasicBlock *Cand = WorkList.pop_back_val();
     Visited.push_back(Cand);
+
+    // FIXME : avoid merging with basic blocks inside loops
+    bool InsideLoop = false;
+    Loop *LoopOfCand = getLI()->getLoopFor(Cand);
+    if (LoopOfCand) {
+      BasicBlock *LoopPreheder = LoopOfCand->getHeader();
+      if (getDT()->dominates(From, LoopPreheder)) {
+        // DEBUG << "Ignoring basic blocks inside loops for region replication "
+        //          "candidates : block "
+        //       << Cand->getNameOrAsOperand() << "\n";
+        InsideLoop = true;
+      }
+    }
+
     // if region replication is not allowed, basic blocks that post dominates
     // From can be a meld candidate
-    if (DisableRegionReplication) {
-      if (PDT.dominates(Cand, From))
+    if (!InsideLoop) {
+      if (DisableRegionReplication) {
+        if (PDT.dominates(Cand, From))
+          MeregeableBBs.push_back(Cand);
+      } else {
         MeregeableBBs.push_back(Cand);
-    } else {
-      MeregeableBBs.push_back(Cand);
+      }
     }
 
     for (auto It = succ_begin(Cand); It != succ_end(Cand); ++It) {
       BasicBlock *Succ = *It;
-      // add all univisted successors of current BB that are not equal to 'To'
-      if (Succ != To &&
+      // add all univisted successors of current BB that are not equal to "To"
+      // AND each successor must be dominated by "From"
+      if (Succ != To && getDT()->dominates(From, Succ) &&
           std::find(Visited.begin(), Visited.end(), Succ) == Visited.end())
         WorkList.push_back(Succ);
     }
@@ -447,7 +466,7 @@ void RegionAnalyzer::findMergeableRegions(BasicBlock &BB) {
     BasicBlock *EntryBb = SubR.getEntry();
 
     // check if this region beglongs to left or right paths
-    if (DT.dominates(LeftEntry, EntryBb)) {
+    if (DT.dominates(LeftEntry, EntryBb) && PDT.dominates(EntryBb, LeftEntry)) {
 
       auto ItLR = LeftRegions.begin();
       for (; ItLR != LeftRegions.end(); ItLR++) {
@@ -458,7 +477,7 @@ void RegionAnalyzer::findMergeableRegions(BasicBlock &BB) {
       LeftRegions.insert(ItLR, &SubR);
     }
 
-    if (DT.dominates(RightEntry, EntryBb)) {
+    if (DT.dominates(RightEntry, EntryBb) && PDT.dominates(EntryBb, RightEntry)) {
       // add regions based on dominance order
       auto ItRR = RightRegions.begin();
       for (; ItRR != RightRegions.end(); ItRR++) {
@@ -483,8 +502,6 @@ void RegionAnalyzer::findMergeableRegions(BasicBlock &BB) {
          "Left regions are not in dominance order!");
   assert(verifyRegionList(RightRegions, DT) &&
          "Right regions are not in dominance order!");
-
-
 }
 
 unsigned RegionAnalyzer::regionMatchSize() const {
@@ -613,14 +630,15 @@ bool RegionAnalyzer::hasAnyProfitableMatch() {
 
     //   }
 
-    //   // check if replicated region contains store instructions outside the melded blocks
+    //   // check if replicated region contains store instructions outside the
+    //   melded blocks
     //   // if it does don't meld for now
     //   for(auto *BB : ReplicateR->blocks()){
     //     if (BB == BBInsideRegion) continue;
     //     for (auto &I : *BB) {
     //       if(isa<StoreInst>(&I)) {
-    //         DEBUG << "Replicated region contains store instructions outside melded block, no melding performed!\n";
-    //         return false;
+    //         DEBUG << "Replicated region contains store instructions outside
+    //         melded block, no melding performed!\n"; return false;
     //       }
     //     }
     //   }
@@ -650,6 +668,8 @@ bool RegionAnalyzer::isRegionMatchProfitable(unsigned Index) {
 void RegionAnalyzer::recomputeControlFlowAnalyses() {
   DT.recalculate(*getParentFunction());
   PDT.recalculate(*getParentFunction());
+
+  LI = std::make_shared<LoopInfo>(DT);
 
   DominanceFrontier DF;
   DF.analyze(DT);
