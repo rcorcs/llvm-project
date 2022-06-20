@@ -13,6 +13,7 @@
 #include "llvm/Transforms/CFMelder/CFMelder.h"
 #include "CFMelderUtils.h"
 #include "RegionMelder.h"
+#include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/DivergenceAnalysis.h"
@@ -100,10 +101,11 @@ static bool runAnalysisOnly(Function &F, DominatorTree &DT,
           "+++++++++++++++\n";
 
   // loop over BBs
-  for (auto &BB : F) {
+  for (auto BBIt : post_order(&F.getEntryBlock())) {
+    BasicBlock &BB = *BBIt;
     // check if this BB is the enrty to a diamond shaped control-flow
     Value *BranchI = dyn_cast<Value>(BB.getTerminator());
-    if (Utils::isValidMergeLocation(BB, PDT) &&
+    if (Utils::isValidMergeLocation(BB, DT, PDT) &&
         (GPUDA->isDivergent(*BranchI) || RunCFMelderAnalysisOnly)) {
 
       // DebugLoc DebugLocation = BB.begin()->getDebugLoc();
@@ -189,9 +191,11 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
   do {
     LocalChange = false;
 
-    for (auto &BB : F) {
+    for (auto &BBIt : post_order(&F.getEntryBlock())) {
+      BasicBlock &BB = *BBIt;
+      // errs() << "BB name : " << BB.getNameOrAsOperand() << "\n";
       // check if this BB is the enrty to a diamond shaped control-flow
-      if (Utils::isValidMergeLocation(BB, PDT)) {
+      if (Utils::isValidMergeLocation(BB, DT, PDT)) {
         INFO << "Valid merge location found at BB ";
         BB.printAsOperand(errs(), false);
         errs() << "\n";
@@ -223,13 +227,12 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
         }
       }
     }
+
+    Changed |= LocalChange;
     // if one melding is requested, exit (debugging)
     if (RunMeldingOnce) {
       break;
     }
-
-    Changed |= LocalChange;
-
   } while (LocalChange);
 
   return Changed;

@@ -1,4 +1,4 @@
-SUBDIRS = cfg1 cfg2 cfg4 cfg5 cfg6 cfg7 cfg8 cfg11 cfg12 cfg9 cfg10 cfg13 cfg14 cfg15 unify_phi
+SUBDIRS =  bitonic_cfg  cost_model loop_with_single_bb nested_if2  nested_if4  nested_if_while   simple_if_else   unify_phi elseif_chain  lud_cfg nested_if  nested_if3 nested_if_asym  nested_if_while2  simple_if_else2
 
 .PHONY: subdirs $(SUBDIRS)
 

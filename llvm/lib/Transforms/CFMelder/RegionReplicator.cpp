@@ -9,21 +9,31 @@ using namespace llvm;
 Region *RegionReplicator::replicate(BasicBlock *ExpandedBlock,
                                     BasicBlock *MatchedBlock,
                                     Region *RegionToReplicate) {
+
+  BasicBlock *EntryToReplicate = RegionToReplicate->getEntry();
+  BasicBlock *ExitToReplicate = RegionToReplicate->getExit();
   // replicate the CFG of region and place the ExpandedBlock in right place
-  BasicBlock *ReplicatedEntry =
+  auto RepEntryExitPair =
       replicateCFG(ExpandedBlock, MatchedBlock, RegionToReplicate);
 
   // recompute CF analysis
   MA.recomputeControlFlowAnalyses();
 
-  Region *ReplicatedR = MA.getRI()->getRegionFor(ReplicatedEntry);
+  Region *ReplicatedR = Utils::getRegionWithEntryExit(
+      *MA.getRI(), RepEntryExitPair.first, RepEntryExitPair.second);
   // place PHI nodes in the replicated region for correct def-use
   addPhiNodes(ExpandedBlock, ReplicatedR);
 
   // concretize the branch conditions within the replicated region
   concretizeBranchConditions(ExpandedBlock, ReplicatedR);
 
-  fullPredicateStores(MA.getRI()->getRegionFor(MatchedBlock), MatchedBlock);
+  if (EnableFullPredication) {
+    errs() << "Full predication enabled\n";
+    Region *OrigRegion = Utils::getRegionWithEntryExit(
+        *MA.getRI(), EntryToReplicate, ExitToReplicate);
+    assert(OrigRegion && "Can not find the replicated region!");
+    fullPredicateStores(OrigRegion, MatchedBlock);
+  }
 
   return ReplicatedR;
 }
@@ -41,9 +51,10 @@ void RegionReplicator::getBasicBlockMapping(
   }
 }
 
-BasicBlock *RegionReplicator::replicateCFG(BasicBlock *ExpandedBlock,
-                                           BasicBlock *MatchedBlock,
-                                           Region *RegionToReplicate) {
+pair<BasicBlock *, BasicBlock *>
+RegionReplicator::replicateCFG(BasicBlock *ExpandedBlock,
+                               BasicBlock *MatchedBlock,
+                               Region *RegionToReplicate) {
   // remember the predessors of expanded block
   SmallVector<BasicBlock *> PredsOfExpandedBlock;
   for (auto It = pred_begin(ExpandedBlock); It != pred_end(ExpandedBlock);
@@ -58,8 +69,39 @@ BasicBlock *RegionReplicator::replicateCFG(BasicBlock *ExpandedBlock,
   WorkList.insert(RegionToReplicate->getEntry());
 
   BasicBlock *ExpandedBlockExit = ExpandedBlock->getUniqueSuccessor();
-  assert(ExpandedBlockExit != nullptr &&
-         "Expanded block does not have a unique successor");
+
+  // if expanded block does not have a unique successor, create one
+  if (!ExpandedBlockExit) {
+    BasicBlock *NewUniqueSucc =
+        BasicBlock::Create(ExpandedBlock->getParent()->getContext(),
+                           "expanded.block.exit", ExpandedBlock->getParent());
+
+    BranchInst *ExpandedBlockBr =
+        dyn_cast<BranchInst>(ExpandedBlock->getTerminator());
+    assert(ExpandedBlockBr != nullptr &&
+           "Expanded block does not have branch instruction at the end! This "
+           "case is not handled!");
+
+    BranchInst::Create(ExpandedBlockBr->getSuccessor(0),
+                       ExpandedBlockBr->getSuccessor(1),
+                       ExpandedBlockBr->getCondition(), NewUniqueSucc);
+
+    // upade incoming blocks of phis in ExpandedBlock's successors
+    for (PHINode &PHI : ExpandedBlockBr->getSuccessor(0)->phis()) {
+      PHI.replaceIncomingBlockWith(ExpandedBlock, NewUniqueSucc);
+    }
+
+    for (PHINode &PHI : ExpandedBlockBr->getSuccessor(1)->phis()) {
+      PHI.replaceIncomingBlockWith(ExpandedBlock, NewUniqueSucc);
+    }
+
+    ExpandedBlockBr->eraseFromParent();
+    BranchInst::Create(NewUniqueSucc, ExpandedBlock);
+
+    ExpandedBlockExit = NewUniqueSucc;
+  }
+  // assert(ExpandedBlockExit != nullptr &&
+  //        "Expanded block does not have a unique successor");
 
   while (!WorkList.empty()) {
     auto Curr = *WorkList.begin();
@@ -146,23 +188,27 @@ BasicBlock *RegionReplicator::replicateCFG(BasicBlock *ExpandedBlock,
 
   // connect the new entry with rest of the control flow
   BasicBlock *OrigEntry = RegionToReplicate->getEntry();
+  BasicBlock *OrigExit = RegionToReplicate->getExit();
   BasicBlock *ReplicatedEntry = Mapping[OrigEntry];
+  BasicBlock *ReplicatedExit = Mapping[OrigExit];
 
   // traverse all predesessors of orig entry and connect to new entry
   for (BasicBlock *Pred : PredsOfExpandedBlock) {
     Pred->getTerminator()->replaceSuccessorWith(ExpandedBlock, ReplicatedEntry);
   }
 
-  return ReplicatedEntry;
+  return pair<BasicBlock *, BasicBlock *>(ReplicatedEntry, ReplicatedExit);
 }
 
-void RegionReplicator::fullPredicateStores(
-    Region *RToReplicate, BasicBlock *MatchedBlock) {
-  
-  for(BasicBlock* BB : RToReplicate->blocks()) {
-    if (BB == MatchedBlock) { continue;}
-    SmallVector<StoreInst*> Stores;
-    for(Instruction & I : make_range(BB->begin(), BB->end())) {
+void RegionReplicator::fullPredicateStores(Region *RToReplicate,
+                                           BasicBlock *MatchedBlock) {
+
+  for (BasicBlock *BB : RToReplicate->blocks()) {
+    if (BB == MatchedBlock) {
+      continue;
+    }
+    SmallVector<StoreInst *> Stores;
+    for (Instruction &I : make_range(BB->begin(), BB->end())) {
       if (isa<StoreInst>(&I)) {
         Stores.push_back(cast<StoreInst>(&I));
       }
@@ -170,26 +216,25 @@ void RegionReplicator::fullPredicateStores(
 
     IRBuilder<> Builder(BB);
     // process the stores
-    for(StoreInst* SI : Stores) {
-      Value* NewData = SI->getValueOperand();
-      Value* Addr = SI->getPointerOperand();
-      // add a load instruction 
+    for (StoreInst *SI : Stores) {
+      Value *NewData = SI->getValueOperand();
+      Value *Addr = SI->getPointerOperand();
+      // add a load instruction
       Builder.SetInsertPoint(SI);
-      LoadInst* OldData = Builder.CreateLoad(Addr, "rr.redun.load");
-      // add a select to pick the right value to store 
-      Value* SelectI = nullptr;
-      if(IsExpandingLeft) {
-        SelectI = SelectInst::Create(MA.getDivergentCondition(), OldData, NewData, "rr.store.sel", SI);
-      }
-      else {
-        SelectI = SelectInst::Create(MA.getDivergentCondition(), NewData, OldData, "rr.store.sel", SI);
+      LoadInst *OldData = Builder.CreateLoad(Addr, "rr.redun.load");
+      // add a select to pick the right value to store
+      Value *SelectI = nullptr;
+      if (IsExpandingLeft) {
+        SelectI = SelectInst::Create(MA.getDivergentCondition(), OldData,
+                                     NewData, "rr.store.sel", SI);
+      } else {
+        SelectI = SelectInst::Create(MA.getDivergentCondition(), NewData,
+                                     OldData, "rr.store.sel", SI);
       }
       // give right value to store
       SI->setOperand(0, SelectI);
-      SI->setOperand(1, Addr); 
-
+      SI->setOperand(1, Addr);
     }
-
   }
 }
 
