@@ -608,6 +608,20 @@ bool RegionAnalyzer::requireRegionReplication() {
          !PDT.dominates(R, RightEntry);
 }
 
+unsigned RegionAnalyzer::getMostProfitableRegionMatchIndex() {
+  if (HasBbMatch) return 0;
+  
+  double MaxProfit = 0.0;
+  unsigned MaxIndex = 0;
+  for (unsigned I = 0; I < BestRegionMatch.size(); I++) {
+    if (BestRegionMatch[I]->getSimilarityScore() > MaxProfit) {
+      MaxIndex = I;
+      MaxProfit = BestRegionMatch[I]->getSimilarityScore();
+    }
+  }
+  return MaxIndex;
+}
+
 bool RegionAnalyzer::hasAnyProfitableMatch() {
   if (HasBbMatch) {
     // FIXME : if this requires region replication we need to be careful about
@@ -652,7 +666,10 @@ bool RegionAnalyzer::hasAnyProfitableMatch() {
   }
 
   if (BestRegionMatch.size() > 0) {
-    return BestRegionMatch[0]->getSimilarityScore() >= SimilarityThreshold;
+    for(auto &RegionPair : BestRegionMatch) {
+      if (RegionPair->getSimilarityScore() >= SimilarityThreshold)
+        return true;
+    }
   }
 
   return false;

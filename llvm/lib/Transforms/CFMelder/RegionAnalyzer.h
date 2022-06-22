@@ -92,8 +92,6 @@ public:
   bool dominates(std::shared_ptr<MergeableRegionPair> &Other,
                  DominatorTree &DT);
 
-  // Region *getLeftRegion() const { return R1; }
-  // Region *getRightRegion() const { return R2; }
   BasicBlock *getLeftEntry() { return LEntry; }
   BasicBlock *getLeftExit() { return LExit; }
 
@@ -167,6 +165,7 @@ public:
   bool hasAnyProfitableMatch();
   bool isRegionMatchProfitable(unsigned Index);
   unsigned regionMatchSize() const;
+  unsigned getMostProfitableRegionMatchIndex();
 
   // region replication, only applicable for BB-region melding
   bool requireRegionReplication();
