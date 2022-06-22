@@ -17,10 +17,11 @@ Region *RegionReplicator::replicate(BasicBlock *ExpandedBlock,
       replicateCFG(ExpandedBlock, MatchedBlock, RegionToReplicate);
 
   // recompute CF analysis
-  MA.recomputeControlFlowAnalyses();
+  MA.getCFGInfo().recompute();
+  auto RI = MA.getCFGInfo().getRegionInfo();
 
   Region *ReplicatedR = Utils::getRegionWithEntryExit(
-      *MA.getRI(), RepEntryExitPair.first, RepEntryExitPair.second);
+      *RI, RepEntryExitPair.first, RepEntryExitPair.second);
   // place PHI nodes in the replicated region for correct def-use
   addPhiNodes(ExpandedBlock, ReplicatedR);
 
@@ -30,7 +31,7 @@ Region *RegionReplicator::replicate(BasicBlock *ExpandedBlock,
   if (EnableFullPredication) {
     errs() << "Full predication enabled\n";
     Region *OrigRegion = Utils::getRegionWithEntryExit(
-        *MA.getRI(), EntryToReplicate, ExitToReplicate);
+        *RI, EntryToReplicate, ExitToReplicate);
     assert(OrigRegion && "Can not find the replicated region!");
     fullPredicateStores(OrigRegion, MatchedBlock);
   }
@@ -241,8 +242,9 @@ void RegionReplicator::fullPredicateStores(Region *RToReplicate,
 void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
                                    Region *ReplicatedRegion) {
   // compute DF
+  DominatorTree &DT = MA.getCFGInfo().getDomTree();
   DominanceFrontier DF;
-  DF.analyze(*MA.getDT());
+  DF.analyze(DT);
 
   // get uses outside the expanded block
   SmallSet<Instruction *, 32> InstrsWithOutsideUses;
@@ -276,7 +278,7 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
             PHINode::Create(I->getType(), 0, "rr.phi", &*BB->begin());
         for (auto PredIt = pred_begin(BB); PredIt != pred_end(BB); ++PredIt) {
           BasicBlock *Pred = *PredIt;
-          if (MA.getDT()->dominates(I->getParent(), Pred)) {
+          if (DT.dominates(I->getParent(), Pred)) {
             NewPHI->addIncoming(I, Pred);
           } else {
             NewPHI->addIncoming(llvm::UndefValue::get(I->getType()), Pred);

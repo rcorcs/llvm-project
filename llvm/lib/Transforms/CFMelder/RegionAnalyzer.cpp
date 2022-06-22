@@ -29,6 +29,31 @@ static cl::opt<bool>
     RunBranchFusionOnly("run-branch-fusion-only", cl::init(false), cl::Hidden,
                         cl::desc("Run branch fusion only, no region-melding"));
 
+
+void ControlFlowGraphInfo::recompute() {
+  DT.recalculate(getFunction());
+  PDT.recalculate(getFunction());
+
+  LI = std::make_shared<LoopInfo>(DT);
+
+  /// calculate regions
+  DominanceFrontier DF;
+  DF.analyze(DT);
+  RI = std::make_shared<RegionInfo>();
+  RI->recalculate(getFunction(), &DT, &PDT, &DF);
+}
+
+ControlFlowGraphInfo::ControlFlowGraphInfo(Function &F, DominatorTree &DT, PostDominatorTree &PDT)
+    : F(F), DT(DT), PDT(PDT) {
+  LI = std::make_shared<LoopInfo>(DT);
+  /// calculate regions
+  DominanceFrontier DF;
+  DF.analyze(DT);
+  RI = std::make_shared<RegionInfo>();
+  RI->recalculate(F, &DT, &PDT, &DF);
+}
+
+
 bool RegionComparator::compare() {
   DenseMap<BasicBlock *, int> LabelMapR1;
   DenseMap<BasicBlock *, int> LabelMapR2;
@@ -126,21 +151,13 @@ bool MergeableRegionPair::dominates(std::shared_ptr<MergeableRegionPair> &Other,
   return true;
 }
 
-RegionAnalyzer::RegionAnalyzer(BasicBlock *BB, DominatorTree &DT,
-                               PostDominatorTree &PDT)
-    : DivergentBB(BB), DT(DT), PDT(PDT) {
+RegionAnalyzer::RegionAnalyzer(BasicBlock *BB, ControlFlowGraphInfo &CFGInfo)
+    : DivergentBB(BB), CFGInfo(CFGInfo) {
 
   BranchInst *Bi = dyn_cast<BranchInst>(DivergentBB->getTerminator());
   assert(Bi && Bi->isConditional() &&
          "Top BB needs to have a conditional branch");
   DivergentCondition = Bi->getCondition();
-
-  LI = std::make_shared<LoopInfo>(DT);
-  // calculate regions for the function
-  DominanceFrontier DF;
-  DF.analyze(DT);
-  RI = std::make_shared<RegionInfo>();
-  RI->recalculate(*BB->getParent(), &DT, &PDT, &DF);
 }
 
 void RegionAnalyzer::computeSARegionMatch() {
@@ -191,6 +208,7 @@ void RegionAnalyzer::computeGreedyRegionMatch() {
     }
   }
 
+  DominatorTree &DT = getCFGInfo().getDomTree();
   // Sort the mergeable region pairs based on their simlarity
   auto Comparator = [&](std::shared_ptr<MergeableRegionPair> &RP1,
                         std::shared_ptr<MergeableRegionPair> &RP2) {
@@ -274,6 +292,7 @@ void RegionAnalyzer::computeRegionMatch() {
       BestBbMatch.second = RightEntry;
     }
 
+    PostDominatorTree &PDT = getCFGInfo().getPostDomTree();
     SmallVector<BasicBlock *, 8> MergeableBlocks;
     BasicBlock *IPDom = PDT.getNode(DivergentBB)->getIDom()->getBlock();
 
@@ -326,27 +345,6 @@ void RegionAnalyzer::computeRegionMatch() {
   }
 }
 
-// bool RegionAnalyzer::regionAlignmentHasSharedBB(Region *R) {
-
-//   // only can happen if you have more than 1 pairs in the alignment
-//   if (BestRegionMatch.size() < 2)
-//     return false;
-
-//   BasicBlock *Exit = R->getExit();
-//   // iterate over the alignment and check if some region shared exit as its
-//   // entry
-//   for (unsigned I = 0; I < BestRegionMatch.size() - 1; ++I) {
-//     auto Pair = BestRegionMatch[I];
-//     auto NextPair = BestRegionMatch[I + 1];
-//     if ((Pair->getLeftExit() == Exit && NextPair->getLeftEntry() == Exit) ||
-//         (Pair->getRightExit() == Exit && NextPair->getRightEntry() == Exit))
-//         {
-//       return true;
-//     }
-//   }
-//   return false;
-// }
-
 BasicBlock *
 RegionAnalyzer::findMostSimilarBb(BasicBlock *BB,
                                   SmallVectorImpl<BasicBlock *> &Candidates) {
@@ -393,8 +391,10 @@ void printRegionList(SmallVectorImpl<Region *> &Regions, DominatorTree &DT) {
 void RegionAnalyzer::findMergeableBBsInPath(
     BasicBlock *From, BasicBlock *To,
     SmallVectorImpl<BasicBlock *> &MeregeableBBs) {
-  // errs() << "From : " << From->getName() << "\n";
-  // errs() << "To : " << To->getName() << "\n";
+  
+  auto LI = getCFGInfo().getLoopInfo();
+  DominatorTree &DT = getCFGInfo().getDomTree();
+  PostDominatorTree &PDT = getCFGInfo().getPostDomTree();
 
   SmallVector<BasicBlock *, 16> WorkList;
   SmallVector<BasicBlock *, 16> Visited;
@@ -406,10 +406,10 @@ void RegionAnalyzer::findMergeableBBsInPath(
 
     // FIXME : avoid merging with basic blocks inside loops
     bool InsideLoop = false;
-    Loop *LoopOfCand = getLI()->getLoopFor(Cand);
+    Loop *LoopOfCand = LI->getLoopFor(Cand);
     if (LoopOfCand) {
       BasicBlock *LoopPreheder = LoopOfCand->getHeader();
-      if (getDT()->dominates(From, LoopPreheder)) {
+      if (DT.dominates(From, LoopPreheder)) {
         // DEBUG << "Ignoring basic blocks inside loops for region replication "
         //          "candidates : block "
         //       << Cand->getNameOrAsOperand() << "\n";
@@ -432,18 +432,18 @@ void RegionAnalyzer::findMergeableBBsInPath(
       BasicBlock *Succ = *It;
       // add all univisted successors of current BB that are not equal to "To"
       // AND each successor must be dominated by "From"
-      if (Succ != To && getDT()->dominates(From, Succ) &&
+      if (Succ != To && DT.dominates(From, Succ) &&
           std::find(Visited.begin(), Visited.end(), Succ) == Visited.end())
         WorkList.push_back(Succ);
     }
   }
-  // errs() << "hello\n";
-
-  // for (BasicBlock *BB : meregeableBBs)
-  //   errs() << "cand : " << BB->getName() << "\n";
 }
 
 void RegionAnalyzer::findMergeableRegions(BasicBlock &BB) {
+  auto RI = getCFGInfo().getRegionInfo();
+  DominatorTree &DT = getCFGInfo().getDomTree();
+  PostDominatorTree &PDT = getCFGInfo().getPostDomTree();
+
   Region *R = RI->getRegionFor(&BB);
 
   assert(BB.getTerminator()->getNumSuccessors() == 2 &&
@@ -602,9 +602,10 @@ bool RegionAnalyzer::requireRegionReplication() {
   BasicBlock *R = BestBbMatch.second;
   BasicBlock *LeftEntry = DivergentBB->getTerminator()->getSuccessor(0);
   BasicBlock *RightEntry = DivergentBB->getTerminator()->getSuccessor(1);
+  PostDominatorTree &PDT = getCFGInfo().getPostDomTree();
 
-  return !getPDT()->dominates(L, LeftEntry) ||
-         !getPDT()->dominates(R, RightEntry);
+  return !PDT.dominates(L, LeftEntry) ||
+         !PDT.dominates(R, RightEntry);
 }
 
 bool RegionAnalyzer::hasAnyProfitableMatch() {
@@ -663,19 +664,6 @@ bool RegionAnalyzer::isRegionMatchProfitable(unsigned Index) {
     return hasAnyProfitableMatch();
   }
   return BestRegionMatch[Index]->getSimilarityScore() >= SimilarityThreshold;
-}
-
-void RegionAnalyzer::recomputeControlFlowAnalyses() {
-  DT.recalculate(*getParentFunction());
-  PDT.recalculate(*getParentFunction());
-
-  LI = std::make_shared<LoopInfo>(DT);
-
-  DominanceFrontier DF;
-  DF.analyze(DT);
-
-  RI = std::make_shared<RegionInfo>();
-  RI->recalculate(*getParentFunction(), &DT, &PDT, &DF);
 }
 
 void RegionAnalyzer::printAnalysis(llvm::raw_ostream &Os) {
