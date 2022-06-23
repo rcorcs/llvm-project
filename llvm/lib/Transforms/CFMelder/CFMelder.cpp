@@ -116,9 +116,8 @@ static bool runAnalysisOnly(Function &F, DominatorTree &DT,
   INFO << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
           "+++++++++++++++\n";
 
-  
   ControlFlowGraphInfo CFGInfo(F, DT, PDT);
-  
+
   for (auto BBIt : post_order(&F.getEntryBlock())) {
     BasicBlock &BB = *BBIt;
     // check if this BB is the enrty to a diamond shaped control-flow
@@ -143,17 +142,14 @@ static bool runAnalysisOnly(Function &F, DominatorTree &DT,
   return false;
 }
 
-static bool simplifyFunction(Function &F, TargetTransformInfo &TTI) {
+static bool simplifyFunction(Function &F, TargetTransformInfo &TTI,
+                             SimplifyCFGOptions &Options) {
   bool Changed = false;
   bool LocalChange = false;
   do {
     LocalChange = false;
     for (auto &BB : make_range(F.begin(), F.end())) {
-      if (simplifyCFG(&BB, TTI, nullptr,
-                      SimplifyCFGOptions()
-                          .setSimplifyCondBranch(false)
-                          .sinkCommonInsts(false)
-                          .hoistCommonInsts(false))) {
+      if (simplifyCFG(&BB, TTI, nullptr, Options)) {
         LocalChange = true;
         break;
       }
@@ -165,7 +161,7 @@ static bool simplifyFunction(Function &F, TargetTransformInfo &TTI) {
   return Changed;
 }
 
-static int ComputeCodeSize(Function *F, TargetTransformInfo &TTI) {
+static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
   int CodeSize = 0;
   for (Instruction &I : instructions(*F)) {
     CodeSize +=
@@ -177,15 +173,82 @@ static int ComputeCodeSize(Function *F, TargetTransformInfo &TTI) {
 static bool runImplCodeSize(Function &F, DominatorTree &DT,
                             PostDominatorTree &PDT, LoopInfo &LI,
                             TargetTransformInfo &TTI) {
+  INFO << "Procesing function : " << F.getName() << "\n";
   Function *Func = &F;
   bool LocalChange = false, Changed = false;
+
+  SimplifyCFGOptions SimplifyCFGOptionsObj;
+
   do {
     for (BasicBlock *BB : post_order(&Func->getEntryBlock())) {
       if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
-        int SizeBefore = ComputeCodeSize(Func, TTI);
+        ControlFlowGraphInfo CFGInfo(*Func, DT, PDT);
+        RegionAnalyzer RA(BB, CFGInfo);
+        RA.computeRegionMatch();
+
+        if (RA.hasAnyProfitableMatch()) {
+
+          int OrigSize = computeCodeSize(Func, TTI);
+
+          // Store the indexes of profitable merges
+          SmallVector<int, 8> Profitable;
+
+          // clone function
+          ValueToValueMapTy VMap;
+          Function *ClonedFunc = CloneFunction(Func, VMap);
+          DominatorTree ClonedDT(*ClonedFunc);
+          PostDominatorTree ClonedPDT(*ClonedFunc);
+          ControlFlowGraphInfo ClonedCFGInfo(*ClonedFunc, ClonedDT, ClonedPDT);
+
+          RegionAnalyzer ClonedRA(dyn_cast<BasicBlock>(VMap[BB]),
+                                  ClonedCFGInfo);
+          ClonedRA.computeRegionMatch();
+
+          for (unsigned I = 0; I < ClonedRA.regionMatchSize(); ++I) {
+            if (!ClonedRA.isRegionMatchProfitable(I))
+              continue;
+
+            int SizeBefore = computeCodeSize(ClonedFunc, TTI);
+            RegionMelder ClonedRM(ClonedRA);
+            ClonedRM.merge(I);
+            int SizeAfter = computeCodeSize(ClonedFunc, TTI);
+            DEBUG << "Size changed from " << SizeBefore << " to " << SizeAfter
+                  << "\n";
+            if (SizeBefore > SizeAfter) {
+              Profitable.push_back(I);
+            }
+          }
+
+          // If there are profitble merges perform them on Func
+          if (!Profitable.empty()) {
+            for (int I : Profitable) {
+              RegionMelder RM(RA);
+              RM.merge(I);
+            }
+            LocalChange = true;
+          }
+
+          // delete the cloned functon
+          ClonedFunc->eraseFromParent();
+
+          if (LocalChange) {
+            simplifyFunction(
+                *Func, TTI,
+                SimplifyCFGOptionsObj.sinkCommonInsts(true).hoistCommonInsts(
+                    true));
+            int FinalSize = computeCodeSize(Func, TTI);
+            double PercentReduction =
+                (OrigSize - FinalSize) * 100 / (double)OrigSize;
+            INFO << "Size reduction : " << OrigSize << " to  " << FinalSize
+                 << " (" << PercentReduction << "%)"
+                 << "\n";
+            break;
+          }
+        }
       }
     }
 
+    Changed |= LocalChange;
   } while (LocalChange);
 
   return Changed;
@@ -226,8 +289,10 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
       return false;
   }
 
+  // simplifyCFG options
+  SimplifyCFGOptions SimplifyCFGOptionsObj;
+
   bool Changed = false, LocalChange = false;
-  
 
   do {
     LocalChange = false;
@@ -259,7 +324,11 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
           if (LocalChange) {
             if (!NoSimplifyCFGAfterMelding) {
               INFO << "Running CFG simplification\n";
-              if (simplifyFunction(F, TTI)) {
+              if (simplifyFunction(
+                      F, TTI,
+                      SimplifyCFGOptionsObj.setSimplifyCondBranch(false)
+                          .sinkCommonInsts(false)
+                          .hoistCommonInsts(false))) {
                 DT.recalculate(F);
                 PDT.recalculate(F);
               }
@@ -327,14 +396,20 @@ PreservedAnalyses CFMelderCodeSizePass::run(Module &M,
                                             ModuleAnalysisManager &MAM) {
   auto &FAM = MAM.getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
   bool Changed = false;
+  SmallVector<Function *, 64> Funcs;
+
   for (auto &F : M) {
     if (F.isDeclaration())
       continue;
-    auto &DT = FAM.getResult<DominatorTreeAnalysis>(F);
-    auto &PDT = FAM.getResult<PostDominatorTreeAnalysis>(F);
-    auto &TTI = FAM.getResult<TargetIRAnalysis>(F);
-    auto &LI = FAM.getResult<LoopAnalysis>(F);
-    Changed |= runImpl(F, DT, PDT, LI, TTI);
+    Funcs.push_back(&F);
+  }
+
+  for (Function *F : Funcs) {
+    auto &DT = FAM.getResult<DominatorTreeAnalysis>(*F);
+    auto &PDT = FAM.getResult<PostDominatorTreeAnalysis>(*F);
+    auto &TTI = FAM.getResult<TargetIRAnalysis>(*F);
+    auto &LI = FAM.getResult<LoopAnalysis>(*F);
+    Changed |= runImplCodeSize(*F, DT, PDT, LI, TTI);
   }
   if (!Changed)
     return PreservedAnalyses::all();
