@@ -142,10 +142,9 @@ private:
   void findMergeableRegions(BasicBlock &BB);
   BasicBlock *findMostSimilarBb(BasicBlock *BB,
                                 SmallVectorImpl<BasicBlock *> &Candidates);
-  // find mergeable BBs such that no additional divergence is introduced
-  // i.e. any BB such that BB post domintes 'From' but not equal to 'To'
-  void findMergeableBBsInPath(BasicBlock *From, BasicBlock *To,
-                              SmallVectorImpl<BasicBlock *> &MeregeableBBs);
+  /// Find mergeable blocks in 'Regions' that are not contained inside local loops
+  void findMergeableBBsInRegions(BasicBlock *From, SmallVectorImpl<Region*> &Regions,
+                              SmallVectorImpl<BasicBlock *> &MergeableBBs);
 
   void computeGreedyRegionMatch();
   void computeSARegionMatch();

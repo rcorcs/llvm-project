@@ -49,8 +49,9 @@ public:
   static bool isValidMergeLocation(BasicBlock &BB, DominatorTree &DT,
                                    PostDominatorTree &PDT);
 
-  /// Returns true if edges 'BB1'->'BB2' or 'BB2'->'BB1' exists 
-  static bool hasEdgeBetween(BasicBlock *BB1, BasicBlock *BB2);
+  /// Returns true if any of blocks L's predecessors are dominated by R
+  /// or any of R's predecessors are dominated by L
+  static bool hasPathBetween(BasicBlock *L, BasicBlock *R, DominatorTree &DT);
 
   /// Checks if value 'V1' can be merged with value 'V2'
   static bool match(Value *V1, Value *V2);

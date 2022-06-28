@@ -180,7 +180,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
   SimplifyCFGOptions SimplifyCFGOptionsObj;
 
   //TODO: before recursively applying CFMelder, we need to update DT and PDT
-  //do {
+  do {
     for (BasicBlock *BB : post_order(&Func->getEntryBlock())) {
       if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
         INFO << "Valid merge location found at block " << BB->getNameOrAsOperand() << "\n";
@@ -244,6 +244,9 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
             INFO << "Size reduction : " << OrigSize << " to  " << FinalSize
                  << " (" << PercentReduction << "%)"
                  << "\n";
+            // recompte DT, PDT
+            DT.recalculate(*Func);
+            PDT.recalculate(*Func);
             break;
           }
         }
@@ -251,7 +254,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
     }
 
     Changed |= LocalChange;
-  //} while (LocalChange);
+  } while (LocalChange);
 
   return Changed;
 }
