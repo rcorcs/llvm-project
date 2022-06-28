@@ -324,9 +324,15 @@ void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
       Type::getInt1Ty(MA.getParentFunction()->getContext()));
   Value *FalseV = ConstantInt::getFalse(
       Type::getInt1Ty(MA.getParentFunction()->getContext()));
+  
+  std::set<BasicBlock *> Visited;
   while (!WorkList.empty()) {
     BasicBlock *Curr = WorkList.pop_back_val();
 
+    if (Visited.count(Curr))
+      continue;
+    Visited.insert(Curr);
+    
     if (Curr == Entry)
       continue;
 
