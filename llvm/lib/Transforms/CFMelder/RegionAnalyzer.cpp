@@ -29,7 +29,6 @@ static cl::opt<bool>
     RunBranchFusionOnly("run-branch-fusion-only", cl::init(false), cl::Hidden,
                         cl::desc("Run branch fusion only, no region-melding"));
 
-
 void ControlFlowGraphInfo::recompute() {
   DT.recalculate(getFunction());
   PDT.recalculate(getFunction());
@@ -43,7 +42,8 @@ void ControlFlowGraphInfo::recompute() {
   RI->recalculate(getFunction(), &DT, &PDT, &DF);
 }
 
-ControlFlowGraphInfo::ControlFlowGraphInfo(Function &F, DominatorTree &DT, PostDominatorTree &PDT)
+ControlFlowGraphInfo::ControlFlowGraphInfo(Function &F, DominatorTree &DT,
+                                           PostDominatorTree &PDT)
     : F(F), DT(DT), PDT(PDT) {
   LI = std::make_shared<LoopInfo>(DT);
   /// calculate regions
@@ -52,7 +52,6 @@ ControlFlowGraphInfo::ControlFlowGraphInfo(Function &F, DominatorTree &DT, PostD
   RI = std::make_shared<RegionInfo>();
   RI->recalculate(F, &DT, &PDT, &DF);
 }
-
 
 bool RegionComparator::compare() {
   DenseMap<BasicBlock *, int> LabelMapR1;
@@ -300,7 +299,7 @@ void RegionAnalyzer::computeRegionMatch() {
 
     if (!BestBbMatch.first) {
       assert(LeftRegions.size() > 0 && BestBbMatch.second);
-      findMergeableBBsInPath(LeftEntry, IPDom, MergeableBlocks);
+      findMergeableBBsInRegions(LeftEntry, LeftRegions, MergeableBlocks);
       if (MergeableBlocks.size()) {
         BestBbMatch.first =
             findMostSimilarBb(BestBbMatch.second, MergeableBlocks);
@@ -310,7 +309,7 @@ void RegionAnalyzer::computeRegionMatch() {
     if (!BestBbMatch.second) {
       assert(RightRegions.size() > 0 && BestBbMatch.first);
       MergeableBlocks.clear();
-      findMergeableBBsInPath(RightEntry, IPDom, MergeableBlocks);
+      findMergeableBBsInRegions(RightEntry, RightRegions, MergeableBlocks);
       if (MergeableBlocks.size()) {
         BestBbMatch.second =
             findMostSimilarBb(BestBbMatch.first, MergeableBlocks);
@@ -388,53 +387,43 @@ void printRegionList(SmallVectorImpl<Region *> &Regions, DominatorTree &DT) {
   }
 }
 
-void RegionAnalyzer::findMergeableBBsInPath(
-    BasicBlock *From, BasicBlock *To,
-    SmallVectorImpl<BasicBlock *> &MeregeableBBs) {
-  
+void RegionAnalyzer::findMergeableBBsInRegions(
+    BasicBlock *From, SmallVectorImpl<Region *> &Regions,
+    SmallVectorImpl<BasicBlock *> &MergeableBBs) {
+
   auto LI = getCFGInfo().getLoopInfo();
-  DominatorTree &DT = getCFGInfo().getDomTree();
-  PostDominatorTree &PDT = getCFGInfo().getPostDomTree();
+  auto &DT = getCFGInfo().getDomTree();
+  auto &PDT = getCFGInfo().getPostDomTree();
 
-  SmallVector<BasicBlock *, 16> WorkList;
-  SmallVector<BasicBlock *, 16> Visited;
-  WorkList.push_back(From);
-
-  while (!WorkList.empty()) {
-    BasicBlock *Cand = WorkList.pop_back_val();
-    Visited.push_back(Cand);
-
-    // FIXME : avoid merging with basic blocks inside loops
-    bool InsideLoop = false;
-    Loop *LoopOfCand = LI->getLoopFor(Cand);
-    if (LoopOfCand) {
-      BasicBlock *LoopHeder = LoopOfCand->getHeader();
-      if (DT.dominates(From, LoopHeder)) {
-        // DEBUG << "Ignoring basic blocks inside loops for region replication "
-        //          "candidates : block "
-        //       << Cand->getNameOrAsOperand() << "\n";
-        InsideLoop = true;
+  auto IsInsideLoop = [&](BasicBlock *BB) -> bool {
+    Loop *LoopOfBB = LI->getLoopFor(BB);
+    if (LoopOfBB) {
+      BasicBlock *LoopHeader = LoopOfBB->getHeader();
+      if (DT.dominates(From, LoopHeader))
+        return true;
+    }
+    return false;
+  };
+  // any basic block containd in the regions is a valid location to merge
+  // including their exits
+  for (Region *R : Regions) {
+    for (auto *Cand : R->blocks()) {
+      // FIXME : avoid merging with basic blocks inside loops
+      // if region replication is not allowed, basic blocks that post dominates
+      // From can be a meld candidate
+      if (!IsInsideLoop(Cand)) {
+        if (DisableRegionReplication) {
+          if (PDT.dominates(Cand, From))
+            MergeableBBs.push_back(Cand);
+        } else {
+          MergeableBBs.push_back(Cand);
+        }
       }
     }
-
-    // if region replication is not allowed, basic blocks that post dominates
-    // From can be a meld candidate
-    if (!InsideLoop) {
-      if (DisableRegionReplication) {
-        if (PDT.dominates(Cand, From))
-          MeregeableBBs.push_back(Cand);
-      } else {
-        MeregeableBBs.push_back(Cand);
-      }
-    }
-
-    for (auto It = succ_begin(Cand); It != succ_end(Cand); ++It) {
-      BasicBlock *Succ = *It;
-      // add all univisted successors of current BB that are not equal to "To"
-      // AND each successor must be dominated by "From"
-      if (Succ != To && DT.dominates(From, Succ) &&
-          std::find(Visited.begin(), Visited.end(), Succ) == Visited.end())
-        WorkList.push_back(Succ);
+    // check region exit
+    BasicBlock* Exit = R->getExit();
+    if (!IsInsideLoop(Exit)){
+      MergeableBBs.push_back(Exit);
     }
   }
 }
@@ -477,7 +466,8 @@ void RegionAnalyzer::findMergeableRegions(BasicBlock &BB) {
       LeftRegions.insert(ItLR, &SubR);
     }
 
-    if (DT.dominates(RightEntry, EntryBb) && PDT.dominates(EntryBb, RightEntry)) {
+    if (DT.dominates(RightEntry, EntryBb) &&
+        PDT.dominates(EntryBb, RightEntry)) {
       // add regions based on dominance order
       auto ItRR = RightRegions.begin();
       for (; ItRR != RightRegions.end(); ItRR++) {
@@ -604,13 +594,13 @@ bool RegionAnalyzer::requireRegionReplication() {
   BasicBlock *RightEntry = DivergentBB->getTerminator()->getSuccessor(1);
   PostDominatorTree &PDT = getCFGInfo().getPostDomTree();
 
-  return !PDT.dominates(L, LeftEntry) ||
-         !PDT.dominates(R, RightEntry);
+  return !PDT.dominates(L, LeftEntry) || !PDT.dominates(R, RightEntry);
 }
 
 unsigned RegionAnalyzer::getMostProfitableRegionMatchIndex() {
-  if (HasBbMatch) return 0;
-  
+  if (HasBbMatch)
+    return 0;
+
   double MaxProfit = 0.0;
   unsigned MaxIndex = 0;
   for (unsigned I = 0; I < BestRegionMatch.size(); I++) {
@@ -666,7 +656,7 @@ bool RegionAnalyzer::hasAnyProfitableMatch() {
   }
 
   if (BestRegionMatch.size() > 0) {
-    for(auto &RegionPair : BestRegionMatch) {
+    for (auto &RegionPair : BestRegionMatch) {
       if (RegionPair->getSimilarityScore() >= SimilarityThreshold)
         return true;
     }

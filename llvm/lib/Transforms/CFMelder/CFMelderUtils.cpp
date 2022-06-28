@@ -43,7 +43,8 @@ Region *Utils::getRegionWithEntryExit(RegionInfo &RI, BasicBlock *Entry,
   return RFound;
 }
 
-bool Utils::isValidMergeLocation(BasicBlock &BB, DominatorTree &DT, PostDominatorTree &PDT) {
+bool Utils::isValidMergeLocation(BasicBlock &BB, DominatorTree &DT,
+                                 PostDominatorTree &PDT) {
 
   const BranchInst *BI = dyn_cast<BranchInst>(BB.getTerminator());
 
@@ -62,7 +63,7 @@ bool Utils::isValidMergeLocation(BasicBlock &BB, DominatorTree &DT, PostDominato
     return false;
 
   // there can not be edges between successors of BB
-  if (Utils::hasEdgeBetween(BBLeft, BBRight))
+  if (Utils::hasPathBetween(BBLeft, BBRight, DT))
     return false;
 
   // successors of BB can not post-dominate each other
@@ -76,52 +77,52 @@ bool Utils::isValidMergeLocation(BasicBlock &BB, DominatorTree &DT, PostDominato
   }
 
   // FIXME : filter regions that contain swithc instructions for now
-  BasicBlock * IPDom = PDT.getNode(&BB)->getIDom()->getBlock();
+  BasicBlock *IPDom = PDT.getNode(&BB)->getIDom()->getBlock();
   SmallVector<BasicBlock *, 32> WorkList;
   SmallSet<BasicBlock *, 32> Visited;
   WorkList.push_back(BBRight);
   WorkList.push_back(BBLeft);
-  while(!WorkList.empty()){
-    BasicBlock* Curr = WorkList.pop_back_val();
+  while (!WorkList.empty()) {
+    BasicBlock *Curr = WorkList.pop_back_val();
     Visited.insert(Curr);
-    if (containsUnhandledInstructions(Curr)) return false;
-    for (unsigned I = 0; I < Curr->getTerminator()->getNumSuccessors(); I++){
-      BasicBlock* Succ = Curr->getTerminator()->getSuccessor(I);
-      if (Visited.find(Succ) == Visited.end() && Succ != &BB && Succ != IPDom){
+    if (containsUnhandledInstructions(Curr))
+      return false;
+    for (unsigned I = 0; I < Curr->getTerminator()->getNumSuccessors(); I++) {
+      BasicBlock *Succ = Curr->getTerminator()->getSuccessor(I);
+      if (Visited.find(Succ) == Visited.end() && Succ != &BB && Succ != IPDom) {
         WorkList.push_back(Succ);
       }
     }
   }
 
-
   return true;
 }
 
-bool Utils::containsUnhandledInstructions(const BasicBlock* BB) {
-  for(const Instruction& I : *BB){
-    if (I.getOpcode() == Instruction::Switch) return true;
+bool Utils::containsUnhandledInstructions(const BasicBlock *BB) {
+  for (const Instruction &I : *BB) {
+    if (I.getOpcode() == Instruction::Switch)
+      return true;
   }
   return false;
 }
 
+bool Utils::hasPathBetween(BasicBlock *L, BasicBlock *R,
+                           DominatorTree &DT) {
 
-bool Utils::hasEdgeBetween(BasicBlock *BB1, BasicBlock *BB2) {
-
-  for (auto It = succ_begin(BB1); It != succ_end(BB1); ++It) {
-    if (*It == BB2)
-      return true;
+  // path exists if any of the predecessors of L is dominated by R
+  for (auto It = pred_begin(L); It != pred_end(R); ++It) {
+    if (DT.dominates(R, *It)) return true;
   }
-
-  for (auto It = succ_begin(BB2); It != succ_end(BB2); ++It) {
-    if (*It == BB1)
-      return true;
+  // OR, any of the predecessors of R are dominated by L
+  for (auto It = pred_begin(R); It != pred_end(R); ++It) {
+    if (DT.dominates(L, *It)) return true;
   }
 
   return false;
 }
 
-std::pair<unsigned, unsigned> Utils::computeLatReductionAtBest(BasicBlock *BB1,
-                                            BasicBlock *BB2) {
+std::pair<unsigned, unsigned>
+Utils::computeLatReductionAtBest(BasicBlock *BB1, BasicBlock *BB2) {
   DenseMap<unsigned, std::pair<unsigned, unsigned>> FreqMap;
   unsigned LatReducedAtBest = 0;
   unsigned TotalLatency = 0;
@@ -129,7 +130,8 @@ std::pair<unsigned, unsigned> Utils::computeLatReductionAtBest(BasicBlock *BB1,
     if (FreqMap.find(It->getOpcode()) == FreqMap.end())
       FreqMap[It->getOpcode()] = std::make_pair(0, 0);
 
-    FreqMap[It->getOpcode()].first += InstructionMatch::getInstructionCost(&(*It));
+    FreqMap[It->getOpcode()].first +=
+        InstructionMatch::getInstructionCost(&(*It));
     TotalLatency += InstructionMatch::getInstructionCost(&(*It));
   }
 
@@ -137,17 +139,18 @@ std::pair<unsigned, unsigned> Utils::computeLatReductionAtBest(BasicBlock *BB1,
     if (FreqMap.find(It->getOpcode()) == FreqMap.end())
       FreqMap[It->getOpcode()] = std::make_pair(0, 0);
 
-    FreqMap[It->getOpcode()].second += InstructionMatch::getInstructionCost(&(*It));
+    FreqMap[It->getOpcode()].second +=
+        InstructionMatch::getInstructionCost(&(*It));
     TotalLatency += InstructionMatch::getInstructionCost(&(*It));
   }
 
   for (auto It : FreqMap) {
     std::pair<unsigned, unsigned> &Counts = It.second;
     // PHI nodes are not melded
-    if(It.first == Instruction::PHI){
+    if (It.first == Instruction::PHI) {
       continue;
     }
-    
+
     LatReducedAtBest += std::min(Counts.first, Counts.second);
   }
 
@@ -158,32 +161,33 @@ double Utils::computeBBSimilarty(BasicBlock *BB1, BasicBlock *BB2) {
   // double NMergeableAtBest = (double)computeMaxNumMergeableInsts(BB1, BB2);
   // double TotalInsts = (double)(BB1->size() + BB2->size());
   // return NMergeableAtBest / TotalInsts;
-  auto LatInfo = computeLatReductionAtBest(BB1,BB2);
+  auto LatInfo = computeLatReductionAtBest(BB1, BB2);
   double LatReductionAtBest = (double)LatInfo.first;
   double TotalLat = (double)LatInfo.second;
-  // errs() << "latency reduction at best in bb : " << LatReductionAtBest << "\n";
-  // errs() << "total latency in bb: " << TotalLat << "\n";
-  return LatReductionAtBest/TotalLat;
+  // errs() << "latency reduction at best in bb : " << LatReductionAtBest <<
+  // "\n"; errs() << "total latency in bb: " << TotalLat << "\n";
+  return LatReductionAtBest / TotalLat;
 }
 
 double Utils::computeRegionSimilarity(
-    const DenseMap<BasicBlock *, BasicBlock *> &Mapping, BasicBlock* LExit) {
+    const DenseMap<BasicBlock *, BasicBlock *> &Mapping, BasicBlock *LExit) {
   unsigned LatReductionAtBest = 0, TotalLat = 0;
   for (auto It : Mapping) {
     // exit is not melded, ignore it's profitablity
     if (It.first == LExit)
       continue;
     auto LatInfo = computeLatReductionAtBest(It.first, It.second);
-    
+
     // NMergeableAtBest += computeMaxNumMergeableInsts(It.first, It.second);
     // TotalInsts += (unsigned)(It.first->size() + It.second->size());
     LatReductionAtBest += LatInfo.first;
     TotalLat += LatInfo.second;
-    // errs() << "BB left : " << It.first->getName() << ", BB right : " << It.second->getName() << "\n";
-    // errs() << "Lat reduction in bb  : " << LatInfo.first << "\n";
-    // errs() << "Total lat in bb: " << LatInfo.second << "\n";
+    // errs() << "BB left : " << It.first->getName() << ", BB right : " <<
+    // It.second->getName() << "\n"; errs() << "Lat reduction in bb  : " <<
+    // LatInfo.first << "\n"; errs() << "Total lat in bb: " << LatInfo.second <<
+    // "\n";
   }
-  // errs() << "latency reduction at best in region: " << LatReductionAtBest << "\n";
-  // errs() << "total latency in region: " << TotalLat << "\n";
+  // errs() << "latency reduction at best in region: " << LatReductionAtBest <<
+  // "\n"; errs() << "total latency in region: " << TotalLat << "\n";
   return (double)LatReductionAtBest / (double)TotalLat;
 }
