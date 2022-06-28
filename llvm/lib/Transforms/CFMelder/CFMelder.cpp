@@ -183,6 +183,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
   //do {
     for (BasicBlock *BB : post_order(&Func->getEntryBlock())) {
       if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
+        INFO << "Valid merge location found at block " << BB->getNameOrAsOperand() << "\n";
         ControlFlowGraphInfo CFGInfo(*Func, DT, PDT);
         RegionAnalyzer RA(BB, CFGInfo);
         RA.computeRegionMatch();

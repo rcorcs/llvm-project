@@ -408,8 +408,8 @@ void RegionAnalyzer::findMergeableBBsInPath(
     bool InsideLoop = false;
     Loop *LoopOfCand = LI->getLoopFor(Cand);
     if (LoopOfCand) {
-      BasicBlock *LoopPreheder = LoopOfCand->getHeader();
-      if (DT.dominates(From, LoopPreheder)) {
+      BasicBlock *LoopHeder = LoopOfCand->getHeader();
+      if (DT.dominates(From, LoopHeder)) {
         // DEBUG << "Ignoring basic blocks inside loops for region replication "
         //          "candidates : block "
         //       << Cand->getNameOrAsOperand() << "\n";

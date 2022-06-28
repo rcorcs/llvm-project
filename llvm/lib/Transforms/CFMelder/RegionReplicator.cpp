@@ -30,8 +30,8 @@ Region *RegionReplicator::replicate(BasicBlock *ExpandedBlock,
 
   if (EnableFullPredication) {
     errs() << "Full predication enabled\n";
-    Region *OrigRegion = Utils::getRegionWithEntryExit(
-        *RI, EntryToReplicate, ExitToReplicate);
+    Region *OrigRegion =
+        Utils::getRegionWithEntryExit(*RI, EntryToReplicate, ExitToReplicate);
     assert(OrigRegion && "Can not find the replicated region!");
     fullPredicateStores(OrigRegion, MatchedBlock);
   }
@@ -318,19 +318,17 @@ void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
   // expanded block is always executed
   BasicBlock *Entry = ReplicatedRegion->getEntry();
   SmallVector<BasicBlock *, 32> WorkList;
+  DenseSet<BasicBlock *> Visited;
 
-  WorkList.push_back(ExpandedBlock);
+  WorkList.push_back(Entry);
   Value *TrueV = ConstantInt::getTrue(
       Type::getInt1Ty(MA.getParentFunction()->getContext()));
   Value *FalseV = ConstantInt::getFalse(
       Type::getInt1Ty(MA.getParentFunction()->getContext()));
   
-  std::set<BasicBlock *> Visited;
   while (!WorkList.empty()) {
     BasicBlock *Curr = WorkList.pop_back_val();
-
-    if (Visited.count(Curr))
-      continue;
+    
     Visited.insert(Curr);
     
     if (Curr == Entry)
@@ -338,6 +336,9 @@ void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
 
     for (auto PredIt = pred_begin(Curr); PredIt != pred_end(Curr); ++PredIt) {
       BasicBlock *Pred = *PredIt;
+
+      if (Visited.count(Pred)) continue;
+
       assert(isa<BranchInst>(Pred->getTerminator()) &&
              "basic block without a branch instruction inside the replicated "
              "region!");
