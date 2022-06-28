@@ -325,18 +325,19 @@ void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
       Type::getInt1Ty(MA.getParentFunction()->getContext()));
   Value *FalseV = ConstantInt::getFalse(
       Type::getInt1Ty(MA.getParentFunction()->getContext()));
+  
   while (!WorkList.empty()) {
     BasicBlock *Curr = WorkList.pop_back_val();
-
+    
     Visited.insert(Curr);
-
+    
     if (Curr == Entry)
       continue;
 
     for (auto PredIt = pred_begin(Curr); PredIt != pred_end(Curr); ++PredIt) {
       BasicBlock *Pred = *PredIt;
 
-      if (Visited.find(Pred) != Visited.end()) continue;
+      if (Visited.count(Pred)) continue;
 
       assert(isa<BranchInst>(Pred->getTerminator()) &&
              "basic block without a branch instruction inside the replicated "

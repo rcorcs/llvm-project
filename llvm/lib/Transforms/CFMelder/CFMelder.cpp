@@ -179,7 +179,8 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
 
   SimplifyCFGOptions SimplifyCFGOptionsObj;
 
-  do {
+  //TODO: before recursively applying CFMelder, we need to update DT and PDT
+  //do {
     for (BasicBlock *BB : post_order(&Func->getEntryBlock())) {
       if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
         INFO << "Valid merge location found at block " << BB->getNameOrAsOperand() << "\n";
@@ -250,7 +251,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
     }
 
     Changed |= LocalChange;
-  } while (LocalChange);
+  //} while (LocalChange);
 
   return Changed;
 }
