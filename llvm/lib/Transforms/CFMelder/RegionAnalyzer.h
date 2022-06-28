@@ -11,6 +11,32 @@
 
 namespace llvm {
 
+/// convienience object to pass control-flow info around
+class ControlFlowGraphInfo {
+private:
+  Function &F;
+  DominatorTree &DT;
+  PostDominatorTree &PDT;
+  std::shared_ptr<RegionInfo> RI;
+  std::shared_ptr<LoopInfo> LI;
+
+public:
+  ControlFlowGraphInfo(Function &F, DominatorTree &DT, PostDominatorTree &PDT);
+  /// recompute analyses
+  void recompute();
+  /// 
+  Function &getFunction() { return F; }
+  /// get dom tree
+  DominatorTree &getDomTree() { return DT; }
+  /// get post-dom tree
+  PostDominatorTree &getPostDomTree() { return PDT; }
+  /// get region info
+  shared_ptr<RegionInfo> getRegionInfo() { return RI; }
+  /// get loop info
+  shared_ptr<LoopInfo> getLoopInfo() { return LI; }
+
+};
+
 class RegionComparator {
 private:
   const Region *R1;
@@ -66,8 +92,6 @@ public:
   bool dominates(std::shared_ptr<MergeableRegionPair> &Other,
                  DominatorTree &DT);
 
-  // Region *getLeftRegion() const { return R1; }
-  // Region *getRightRegion() const { return R2; }
   BasicBlock *getLeftEntry() { return LEntry; }
   BasicBlock *getLeftExit() { return LExit; }
 
@@ -102,11 +126,7 @@ class RegionAnalyzer {
 private:
   BasicBlock *DivergentBB;
   Value *DivergentCondition;
-  DominatorTree &DT;
-  PostDominatorTree &PDT;
-  std::shared_ptr<RegionInfo> RI;
-  std::shared_ptr<LoopInfo> LI;
-  // DominanceFrontier DF;
+  ControlFlowGraphInfo &CFGInfo;
 
   // left path and right path regions
   SmallVector<Region *, 0> LeftRegions;
@@ -131,7 +151,7 @@ private:
   void computeSARegionMatch();
 
 public:
-  RegionAnalyzer(BasicBlock *BB, DominatorTree &DT, PostDominatorTree &PDT);
+  RegionAnalyzer(BasicBlock *BB, ControlFlowGraphInfo &CFGInfo);
 
   void computeRegionMatch();
 
@@ -145,31 +165,24 @@ public:
   bool hasAnyProfitableMatch();
   bool isRegionMatchProfitable(unsigned Index);
   unsigned regionMatchSize() const;
+  unsigned getMostProfitableRegionMatchIndex();
 
   // region replication, only applicable for BB-region melding
   bool requireRegionReplication();
 
   bool requireRegionSimplification(Region *R);
 
-  // region alignment has shared basic blocks
-  // i.e. R's Exit is the entry of the next region in the alignment
-  // bool regionAlignmentHasSharedBB(Region* R);
-
-  // infomation about divergent region
-  // Function *getFunction() const { return TopBb->getParent(); }
+  /// infomation about divergent region
   Value *getDivergentCondition() const { return DivergentCondition; }
+
   BasicBlock *getDivergentBlock() const { return DivergentBB; }
+
   Function *getParentFunction() const {
     return getDivergentBlock()->getParent();
   }
 
-  // control-flow analysis
-  PostDominatorTree *getPDT() { return &PDT; }
-  DominatorTree *getDT() { return &DT; }
-  std::shared_ptr<RegionInfo>& getRI() { return RI; }
-  std::shared_ptr<LoopInfo>& getLI() { return LI; }
-  // DominanceFrontier *getDF() {return &DF;}
-  void recomputeControlFlowAnalyses();
+  /// control-flow analysis
+  ControlFlowGraphInfo &getCFGInfo() { return CFGInfo; }
 
   void printAnalysis(llvm::raw_ostream &OS);
 };

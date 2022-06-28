@@ -16,6 +16,7 @@
 #include "llvm/ADT/PostOrderIterator.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/Analysis/CGSCCPassManager.h"
 #include "llvm/Analysis/DivergenceAnalysis.h"
 #include "llvm/Analysis/DominanceFrontier.h"
 #include "llvm/Analysis/DominanceFrontierImpl.h"
@@ -34,6 +35,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include <algorithm>
 #include <cmath>
@@ -85,6 +87,20 @@ public:
 
   bool runOnFunction(Function &F) override;
 };
+
+class CFMelderCodeSizeLegacyPass : public ModulePass {
+public:
+  static char ID;
+
+  CFMelderCodeSizeLegacyPass() : ModulePass(ID) {
+    initializeCFMelderCodeSizeLegacyPassPass(*PassRegistry::getPassRegistry());
+  }
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override;
+
+  bool runOnModule(Module &M) override;
+};
+
 } // namespace
 
 static bool runAnalysisOnly(Function &F, DominatorTree &DT,
@@ -100,7 +116,8 @@ static bool runAnalysisOnly(Function &F, DominatorTree &DT,
   INFO << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
           "+++++++++++++++\n";
 
-  // loop over BBs
+  ControlFlowGraphInfo CFGInfo(F, DT, PDT);
+
   for (auto BBIt : post_order(&F.getEntryBlock())) {
     BasicBlock &BB = *BBIt;
     // check if this BB is the enrty to a diamond shaped control-flow
@@ -114,7 +131,7 @@ static bool runAnalysisOnly(Function &F, DominatorTree &DT,
       INFO << "Valid merge location found at BB ";
       BB.printAsOperand(errs(), false);
       errs() << "\n";
-      RegionAnalyzer MA(&BB, DT, PDT);
+      RegionAnalyzer MA(&BB, CFGInfo);
       MA.computeRegionMatch();
       MA.printAnalysis(INFO);
       INFO << "This merge is : " << (MA.hasAnyProfitableMatch() ? "" : "NOT")
@@ -125,17 +142,14 @@ static bool runAnalysisOnly(Function &F, DominatorTree &DT,
   return false;
 }
 
-static bool simplifyFunction(Function &F, TargetTransformInfo &TTI) {
+static bool simplifyFunction(Function &F, TargetTransformInfo &TTI,
+                             SimplifyCFGOptions &Options) {
   bool Changed = false;
   bool LocalChange = false;
   do {
     LocalChange = false;
     for (auto &BB : make_range(F.begin(), F.end())) {
-      if (simplifyCFG(&BB, TTI, nullptr,
-                      SimplifyCFGOptions()
-                          .setSimplifyCondBranch(false)
-                          .sinkCommonInsts(false)
-                          .hoistCommonInsts(false))) {
+      if (simplifyCFG(&BB, TTI, nullptr, Options)) {
         LocalChange = true;
         break;
       }
@@ -144,6 +158,99 @@ static bool simplifyFunction(Function &F, TargetTransformInfo &TTI) {
     Changed |= LocalChange;
 
   } while (LocalChange);
+  return Changed;
+}
+
+static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
+  int CodeSize = 0;
+  for (Instruction &I : instructions(*F)) {
+    CodeSize +=
+        TTI.getInstructionCost(&I, TTI::TCK_CodeSize).getValue().getValue();
+  }
+  return CodeSize;
+}
+
+static bool runImplCodeSize(Function &F, DominatorTree &DT,
+                            PostDominatorTree &PDT, LoopInfo &LI,
+                            TargetTransformInfo &TTI) {
+  INFO << "Procesing function : " << F.getName() << "\n";
+  Function *Func = &F;
+  bool LocalChange = false, Changed = false;
+
+  SimplifyCFGOptions SimplifyCFGOptionsObj;
+
+  do {
+    for (BasicBlock *BB : post_order(&Func->getEntryBlock())) {
+      if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
+        ControlFlowGraphInfo CFGInfo(*Func, DT, PDT);
+        RegionAnalyzer RA(BB, CFGInfo);
+        RA.computeRegionMatch();
+
+        if (RA.hasAnyProfitableMatch()) {
+
+          int OrigSize = computeCodeSize(Func, TTI);
+
+          // Store the indexes of profitable merges
+          SmallVector<int, 8> Profitable;
+
+          // clone function
+          ValueToValueMapTy VMap;
+          Function *ClonedFunc = CloneFunction(Func, VMap);
+          DominatorTree ClonedDT(*ClonedFunc);
+          PostDominatorTree ClonedPDT(*ClonedFunc);
+          ControlFlowGraphInfo ClonedCFGInfo(*ClonedFunc, ClonedDT, ClonedPDT);
+
+          RegionAnalyzer ClonedRA(dyn_cast<BasicBlock>(VMap[BB]),
+                                  ClonedCFGInfo);
+          ClonedRA.computeRegionMatch();
+
+          for (unsigned I = 0; I < ClonedRA.regionMatchSize(); ++I) {
+            if (!ClonedRA.isRegionMatchProfitable(I))
+              continue;
+
+            int SizeBefore = computeCodeSize(ClonedFunc, TTI);
+            RegionMelder ClonedRM(ClonedRA);
+            ClonedRM.merge(I);
+            int SizeAfter = computeCodeSize(ClonedFunc, TTI);
+            DEBUG << "Size changed from " << SizeBefore << " to " << SizeAfter
+                  << "\n";
+            if (SizeBefore > SizeAfter) {
+              Profitable.push_back(I);
+            }
+          }
+
+          // If there are profitble merges perform them on Func
+          if (!Profitable.empty()) {
+            for (int I : Profitable) {
+              RegionMelder RM(RA);
+              RM.merge(I);
+            }
+            LocalChange = true;
+          }
+
+          // delete the cloned functon
+          ClonedFunc->eraseFromParent();
+
+          if (LocalChange) {
+            simplifyFunction(
+                *Func, TTI,
+                SimplifyCFGOptionsObj.sinkCommonInsts(true).hoistCommonInsts(
+                    true));
+            int FinalSize = computeCodeSize(Func, TTI);
+            double PercentReduction =
+                (OrigSize - FinalSize) * 100 / (double)OrigSize;
+            INFO << "Size reduction : " << OrigSize << " to  " << FinalSize
+                 << " (" << PercentReduction << "%)"
+                 << "\n";
+            break;
+          }
+        }
+      }
+    }
+
+    Changed |= LocalChange;
+  } while (LocalChange);
+
   return Changed;
 }
 
@@ -182,9 +289,8 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
       return false;
   }
 
-  // if (RunCFMeldingOnlyOnFunction.size() > 0 &&
-  // !F.getName().contains(RunCFMeldingOnlyOnFunction))
-  //   return false;
+  // simplifyCFG options
+  SimplifyCFGOptions SimplifyCFGOptionsObj;
 
   bool Changed = false, LocalChange = false;
 
@@ -200,7 +306,8 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
         BB.printAsOperand(errs(), false);
         errs() << "\n";
 
-        RegionAnalyzer MA(&BB, DT, PDT);
+        ControlFlowGraphInfo CFGInfo(F, DT, PDT);
+        RegionAnalyzer MA(&BB, CFGInfo);
         MA.computeRegionMatch();
         if (MA.hasAnyProfitableMatch()) {
           INFO << "Melding is profitable\n";
@@ -212,12 +319,16 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
             RegionMelder RM(MA);
             RM.merge(I);
             LocalChange = true;
-            MA.recomputeControlFlowAnalyses();
+            CFGInfo.recompute();
           }
           if (LocalChange) {
             if (!NoSimplifyCFGAfterMelding) {
               INFO << "Running CFG simplification\n";
-              if (simplifyFunction(F, TTI)) {
+              if (simplifyFunction(
+                      F, TTI,
+                      SimplifyCFGOptionsObj.setSimplifyCondBranch(false)
+                          .sinkCommonInsts(false)
+                          .hoistCommonInsts(false))) {
                 DT.recalculate(F);
                 PDT.recalculate(F);
               }
@@ -269,9 +380,44 @@ PreservedAnalyses CFMelderPass::run(Function &F, FunctionAnalysisManager &AM) {
   return PA;
 }
 
+bool CFMelderCodeSizeLegacyPass::runOnModule(Module &M) {
+  errs() << "Hello\n";
+  return false;
+}
+
+void CFMelderCodeSizeLegacyPass::getAnalysisUsage(AnalysisUsage &AU) const {
+  AU.addRequired<PostDominatorTreeWrapperPass>();
+  AU.addRequired<DominatorTreeWrapperPass>();
+  AU.addRequired<TargetTransformInfoWrapperPass>();
+  AU.addRequired<LoopInfoWrapperPass>();
+}
+
+PreservedAnalyses CFMelderCodeSizePass::run(Module &M,
+                                            ModuleAnalysisManager &MAM) {
+  auto &FAM = MAM.getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
+  bool Changed = false;
+  SmallVector<Function *, 64> Funcs;
+
+  for (auto &F : M) {
+    if (F.isDeclaration())
+      continue;
+    Funcs.push_back(&F);
+  }
+
+  for (Function *F : Funcs) {
+    auto &DT = FAM.getResult<DominatorTreeAnalysis>(*F);
+    auto &PDT = FAM.getResult<PostDominatorTreeAnalysis>(*F);
+    auto &TTI = FAM.getResult<TargetIRAnalysis>(*F);
+    auto &LI = FAM.getResult<LoopAnalysis>(*F);
+    Changed |= runImplCodeSize(*F, DT, PDT, LI, TTI);
+  }
+  if (!Changed)
+    return PreservedAnalyses::all();
+  PreservedAnalyses PA;
+  return PA;
+}
+
 char CFMelderLegacyPass::ID = 0;
-// static RegisterPass<CFMelderLegacyPass>
-//     Y("cfmelder_", "Merge similar control flow for divergence reduction");
 
 INITIALIZE_PASS_BEGIN(CFMelderLegacyPass, "cfmelder",
                       "Meld similar control-flow", false, false)
@@ -281,23 +427,29 @@ INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
 INITIALIZE_PASS_END(CFMelderLegacyPass, "cfmelder", "Meld similar control-flow",
                     false, false)
 
+char CFMelderCodeSizeLegacyPass::ID = 0;
+
+INITIALIZE_PASS_BEGIN(CFMelderCodeSizeLegacyPass, "cfmelder-codesize",
+                      "Meld similar control-flow for code size reduction",
+                      false, false)
+INITIALIZE_PASS_DEPENDENCY(PostDominatorTreeWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
+INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
+INITIALIZE_PASS_END(CFMelderCodeSizeLegacyPass, "cfmelder-codesize",
+                    "Meld similar control-flow for code size reduction", false,
+                    false)
+
 // Initialization Routines
 void llvm::initializeCFMelder(PassRegistry &Registry) {
   initializeCFMelderLegacyPassPass(Registry);
 }
 
-// void LLVMInitializeAggressiveInstCombiner(LLVMPassRegistryRef R) {
-//   initializeAggressiveInstCombinerLegacyPassPass(*unwrap(R));
-// }
+void llvm::initializeCFMelderCodeSize(PassRegistry &Registry) {
+  initializeCFMelderCodeSizeLegacyPassPass(Registry);
+}
 
 FunctionPass *llvm::createCFMelderPass() { return new CFMelderLegacyPass(); }
 
-// void LLVMAddAggressiveInstCombinerPass(LLVMPassManagerRef PM) {
-//   unwrap(PM)->add(createAggressiveInstCombinerPass());
-// }
-
-bool llvm::runCFMelderPass(Function &F, DominatorTree &DT,
-                           PostDominatorTree &PDT, LoopInfo &LI,
-                           TargetTransformInfo &TTI) {
-  return runImpl(F, DT, PDT, LI, TTI);
+ModulePass *llvm::createCFMelderCodeSizePass() {
+  return new CFMelderCodeSizeLegacyPass();
 }

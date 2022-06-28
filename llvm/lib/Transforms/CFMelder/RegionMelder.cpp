@@ -552,12 +552,14 @@ void RegionMelder::runPostMergeCleanup() {
 
 Region *RegionMelder::getRegionToReplicate(BasicBlock *MatchedBlock,
                                            BasicBlock *PathEntry) {
+  auto RI = MA.getCFGInfo().getRegionInfo();
+  PostDominatorTree &PDT = MA.getCFGInfo().getPostDomTree();
   BasicBlock *Curr = MatchedBlock;
   Region *R = nullptr;
   do {
-    Region *Candidate = MA.getRI()->getRegionFor(Curr);
+    Region *Candidate = RI->getRegionFor(Curr);
     BasicBlock *Entry = Candidate->getEntry();
-    if (MA.getPDT()->dominates(Entry, PathEntry)) {
+    if (PDT.dominates(Entry, PathEntry)) {
       R = Candidate;
     } else {
       // BasicBlock *OldCurr = Curr;
@@ -597,7 +599,7 @@ void RegionMelder::merge(unsigned Index) {
     Region *RToReplicate = nullptr;
     BasicBlock *Left = Mapping.begin()->first, *Right = Mapping.begin()->second;
     bool ExpandingLeft = false;
-    if (MA.getPDT()->dominates(Left, LeftPathEntry)) {
+    if (MA.getCFGInfo().getPostDomTree().dominates(Left, LeftPathEntry)) {
       DEBUG << "Replicating right region\n";
       ExpandedBlock = Left;
       MatchedBlock = Right;
@@ -621,8 +623,8 @@ void RegionMelder::merge(unsigned Index) {
           simplifyRegion(RToReplicate->getExit(), RToReplicate->getEntry());
 
       // recompute control-flow analyses , FIXME : this might be too expensive
-      MA.recomputeControlFlowAnalyses();
-      RToReplicate = Utils::getRegionWithEntryExit(*MA.getRI(), EntryToReplicate,
+      MA.getCFGInfo().recompute();
+      RToReplicate = Utils::getRegionWithEntryExit(*MA.getCFGInfo().getRegionInfo(), EntryToReplicate,
                                             ExitToReplicate);
       assert(RToReplicate && "Can not find region with given entry and exit");
 
@@ -730,11 +732,10 @@ void RegionMelder::merge(unsigned Index) {
     // }
     // while(true);
 
-    // merge
+    // Merge the regions
     cloneInstructions();
     fixOperends();
     runPostMergeCleanup();
-    // parentFunc->print(errs());
     runPostOptimizations();
 
     if (!EnableFullPredication)
@@ -831,17 +832,6 @@ void RegionMelder::updateSplitRangeMap(bool Direction, Instruction *I) {
   }
 }
 
-bool RegionMelder::isExitBlockSafeToMerge(BasicBlock *Exit, BasicBlock *Entry) {
-  Region *R = Utils::getRegionWithEntryExit(*MA.getRI(), Entry, Exit);
-  assert(R && "can not find reigon with entry and exit!");
-
-  for (auto It = pred_begin(Exit); It != pred_end(Exit); ++It) {
-    if (!R->contains(*It)) {
-      return false;
-    }
-  }
-  return true;
-}
 
 BasicBlock *RegionMelder::simplifyRegion(BasicBlock *Exit, BasicBlock *Entry) {
   // only applies for region merges (not needed for bb merges)
@@ -854,7 +844,7 @@ BasicBlock *RegionMelder::simplifyRegion(BasicBlock *Exit, BasicBlock *Entry) {
                                            ParentFunc, Exit);
   // add a jump from new exit to old exit
   BranchInst::Create(Exit, NewExit);
-  Region *MergedR = Utils::getRegionWithEntryExit(*MA.getRI(), Entry, Exit);
+  Region *MergedR = Utils::getRegionWithEntryExit(*MA.getCFGInfo().getRegionInfo(), Entry, Exit);
 
   // this can not be nullptr because must exit
   assert(MergedR && "Can not find region with given entry and exit");
@@ -907,7 +897,7 @@ bool RegionMelder::isInsideMeldedRegion(BasicBlock *BB, BasicBlock *Entry,
     return BB == Entry;
   }
   // melded region has mutiple BBs
-  return (MA.getDT()->dominates(Entry, BB) && MA.getPDT()->dominates(Exit, BB));
+  return (MA.getCFGInfo().getDomTree().dominates(Entry, BB) && MA.getCFGInfo().getPostDomTree().dominates(Exit, BB));
 }
 
 void RegionMelder::mergeOutsideDefsAtEntry() {
@@ -997,20 +987,22 @@ void RegionMelder::mergeOutsideDefsAtEntry() {
   BasicBlock *UnifyingBB = CreateUnifyingBB();
 
   // recompute control-flow analyses
-  MA.recomputeControlFlowAnalyses();
+  MA.getCFGInfo().recompute();
+  DominatorTree &DT = MA.getCFGInfo().getDomTree();
+  PostDominatorTree &PDT = MA.getCFGInfo().getPostDomTree();
 
   // check if there are any def-use chains that are broken
   for (auto &BB : *MA.getParentFunction()) {
     // only need to check basic blocks detween top entry and unify BB
-    if (MA.getDT()->dominates(MA.getDivergentBlock(), &BB) &&
-        MA.getPDT()->dominates(UnifyingBB, &BB)) {
+    if (DT.dominates(MA.getDivergentBlock(), &BB) &&
+        PDT.dominates(UnifyingBB, &BB)) {
       // iterate over all users and check for broken def-uses
       for (auto &Def : make_range(BB.begin(), BB.end())) {
         SmallVector<Instruction *, 32> BrokenUsers;
         for (auto &Use : make_range(Def.use_begin(), Def.use_end())) {
           Instruction *User = dyn_cast<Instruction>(Use.getUser());
           // User->print(errs()); errs() << "\n";
-          if (!MA.getDT()->dominates(&Def, Use)) {
+          if (!DT.dominates(&Def, Use)) {
 
             BrokenUsers.push_back(User);
           }
@@ -1027,7 +1019,7 @@ void RegionMelder::mergeOutsideDefsAtEntry() {
                 MA.getDivergentBlock()->getTerminator()->getSuccessor(0);
             // which path the def is in?
             bool DefInLeft =
-                MA.getDT()->dominates(TopLeftSucc, Def.getParent());
+                DT.dominates(TopLeftSucc, Def.getParent());
 
             // add incoming values for phi
             if (DefInLeft) {
@@ -1090,23 +1082,23 @@ void RegionMelder::runPreMergePasses(bool RegionAlreadySimplified) {
   // check if exit blocks need to be isolated
   if (ExitBlockL) {
     if (!RegionAlreadySimplified) {
-      DEBUG << "Left exit not safe to merge\n";
+      DEBUG << "Simplifying left region\n";
       BasicBlock *OldExitLeft = ExitBlockL;
       ExitBlockL = simplifyRegion(ExitBlockL, EntryBlockL);
       // update the mapping
       updateMapping(ExitBlockL, OldExitLeft, true);
-      MA.recomputeControlFlowAnalyses();
+      MA.getCFGInfo().recompute();
     }
   }
 
   if (ExitBlockR) {
     if (!RegionAlreadySimplified) {
-      DEBUG << "Right exit not safe to merge\n";
+      DEBUG << "Simplifying right region\n";
       BasicBlock *OldExitRight = ExitBlockR;
       ExitBlockR = simplifyRegion(ExitBlockR, EntryBlockR);
       // update the mapping
       updateMapping(ExitBlockR, OldExitRight, false);
-      MA.recomputeControlFlowAnalyses();
+      MA.getCFGInfo().recompute();
     }
   }
 

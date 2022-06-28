@@ -9,6 +9,16 @@
 #include "llvm/IR/Instructions.h"
 using namespace llvm;
 
+bool Utils::requireRegionSimplification(Region *R) {
+  BasicBlock *Exit = R->getExit();
+  for (auto PredIt = pred_begin(Exit); PredIt != pred_end(Exit); ++PredIt) {
+    BasicBlock *Pred = *PredIt;
+    if (!R->contains(Pred))
+      return true;
+  }
+  return false;
+}
+
 Region *Utils::getRegionWithEntryExit(RegionInfo &RI, BasicBlock *Entry,
                                       BasicBlock *Exit) {
 
@@ -33,16 +43,14 @@ Region *Utils::getRegionWithEntryExit(RegionInfo &RI, BasicBlock *Entry,
   return RFound;
 }
 
-// check for diamond shaped control-flow
 bool Utils::isValidMergeLocation(BasicBlock &BB, DominatorTree &DT, PostDominatorTree &PDT) {
 
   const BranchInst *BI = dyn_cast<BranchInst>(BB.getTerminator());
 
-  if (!BI || BI->getNumSuccessors() < 2)
+  if (!BI)
     return false;
 
-  if (BI->getNumSuccessors() > 2) {
-    DEBUG << "BI has more than 2 sucecessors, this case is unhandled\n";
+  if (BI->getNumSuccessors() != 2) {
     return false;
   }
 
@@ -110,38 +118,6 @@ bool Utils::hasEdgeBetween(BasicBlock *BB1, BasicBlock *BB2) {
   }
 
   return false;
-}
-// takes in a BB with multiple succsessors and make it a BB with single
-// successor by moving the branch to a new BB. returns the new BB. if input BB
-// is already has a single successor return null
-BasicBlock *Utils::makeSingleExit(BasicBlock *BB) {
-  BasicBlock *NewBb = nullptr;
-
-  if (BB->getTerminator()->getNumSuccessors() > 1) {
-    BranchInst *BI = dyn_cast<BranchInst>(BB->getTerminator());
-
-    NewBb = BasicBlock::Create(BB->getParent()->getContext(), "region.exit.bb",
-                               BB->getParent(), BB);
-    BranchInst *NewBi = BranchInst::Create(
-        BI->getSuccessor(0), BI->getSuccessor(1), BI->getCondition(), NewBb);
-    BI->replaceAllUsesWith(NewBi);
-    BI->eraseFromParent();
-    BranchInst::Create(NewBb, BB);
-  }
-
-  return NewBb;
-}
-
-void Utils::getMultiSuccessorExitBlocks(Region *R,
-                                        SmallVectorImpl<BasicBlock *> &BBs) {
-  if (R->getExit() && R->getExit()->getTerminator()->getNumSuccessors() > 1) {
-    BBs.push_back(R->getExit());
-  }
-
-  for (auto It = R->begin(); It != R->end(); It++) {
-    Region *SubR = &(**It);
-    getMultiSuccessorExitBlocks(SubR, BBs);
-  }
 }
 
 std::pair<unsigned, unsigned> Utils::computeLatReductionAtBest(BasicBlock *BB1,
