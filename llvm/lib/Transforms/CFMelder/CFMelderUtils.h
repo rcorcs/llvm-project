@@ -41,7 +41,7 @@ public:
   /// follwing condtions are checked here.
   /// - BB must have two successors
   /// - BB must dominate both successors
-  /// - Successors of BB can not have an edge between them
+  /// - Successors of BB can not have a path between them
   /// - Successors of BB can not post-dominate each other
   /// - BB must have post dominator 
   /// - Region encapsulated by BB and its post-dominator can not contain unhandled instructions
