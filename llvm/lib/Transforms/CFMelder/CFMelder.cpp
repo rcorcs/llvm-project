@@ -163,7 +163,6 @@ static bool simplifyFunction(Function &F, TargetTransformInfo &TTI,
 
 static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
   int CodeSize = 0;
-  F->getParent()->print(errs(), nullptr);
   for (Instruction &I : instructions(*F)) {
     CodeSize +=
         TTI.getInstructionCost(&I, TargetTransformInfo::TargetCostKind::TCK_CodeSize).getValue().getValue();
