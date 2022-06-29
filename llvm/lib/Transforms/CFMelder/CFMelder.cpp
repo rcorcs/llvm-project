@@ -181,6 +181,8 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
 
   //TODO: before recursively applying CFMelder, we need to update DT and PDT
   do {
+    LocalChange = false;
+    
     for (BasicBlock *BB : post_order(&Func->getEntryBlock())) {
       if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
         INFO << "Valid merge location found at block " << BB->getNameOrAsOperand() << "\n";
