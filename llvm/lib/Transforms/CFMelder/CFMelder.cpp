@@ -163,9 +163,10 @@ static bool simplifyFunction(Function &F, TargetTransformInfo &TTI,
 
 static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
   int CodeSize = 0;
+  F->getParent()->print(errs(), nullptr);
   for (Instruction &I : instructions(*F)) {
     CodeSize +=
-        TTI.getInstructionCost(&I, TTI::TCK_CodeSize).getValue().getValue();
+        TTI.getInstructionCost(&I, TargetTransformInfo::TargetCostKind::TCK_CodeSize).getValue().getValue();
   }
   return CodeSize;
 }
@@ -179,8 +180,8 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
 
   SimplifyCFGOptions SimplifyCFGOptionsObj;
 
-  //TODO: before recursively applying CFMelder, we need to update DT and PDT
   do {
+    LocalChange = false;
     for (BasicBlock *BB : post_order(&Func->getEntryBlock())) {
       if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
         INFO << "Valid merge location found at block " << BB->getNameOrAsOperand() << "\n";
