@@ -164,8 +164,10 @@ static bool simplifyFunction(Function &F, TargetTransformInfo &TTI,
 static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
   int CodeSize = 0;
   for (Instruction &I : instructions(*F)) {
-    CodeSize +=
-        TTI.getInstructionCost(&I, TargetTransformInfo::TargetCostKind::TCK_CodeSize).getValue().getValue();
+    CodeSize += TTI.getInstructionCost(
+                       &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize)
+                    .getValue()
+                    .getValue();
   }
   return CodeSize;
 }
@@ -179,11 +181,14 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
 
   SimplifyCFGOptions SimplifyCFGOptionsObj;
 
+  int OrigCodeSize = computeCodeSize(&F, TTI);
+
   do {
     LocalChange = false;
     for (BasicBlock *BB : post_order(&Func->getEntryBlock())) {
       if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
-        INFO << "Valid merge location found at block " << BB->getNameOrAsOperand() << "\n";
+        INFO << "Valid merge location found at block "
+             << BB->getNameOrAsOperand() << "\n";
         ControlFlowGraphInfo CFGInfo(*Func, DT, PDT);
         RegionAnalyzer RA(BB, CFGInfo);
         RA.computeRegionMatch();
@@ -238,12 +243,6 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
                 *Func, TTI,
                 SimplifyCFGOptionsObj.sinkCommonInsts(true).hoistCommonInsts(
                     true));
-            int FinalSize = computeCodeSize(Func, TTI);
-            double PercentReduction =
-                (OrigSize - FinalSize) * 100 / (double)OrigSize;
-            INFO << "Size reduction : " << OrigSize << " to  " << FinalSize
-                 << " (" << PercentReduction << "%)"
-                 << "\n";
             // recompte DT, PDT
             DT.recalculate(*Func);
             PDT.recalculate(*Func);
@@ -255,6 +254,15 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
 
     Changed |= LocalChange;
   } while (LocalChange);
+
+  if (Changed) {
+    int FinalCodeSize = computeCodeSize(&F, TTI);
+    double PercentReduction =
+        (OrigCodeSize - FinalCodeSize) * 100 / (double)OrigCodeSize;
+    INFO << "Size reduction for function " << F.getName() << ": " << OrigCodeSize
+         << " to  " << FinalCodeSize << " (" << PercentReduction << "%)"
+         << "\n";
+  }
 
   return Changed;
 }
