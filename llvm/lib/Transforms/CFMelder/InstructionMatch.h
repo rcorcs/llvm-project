@@ -3,23 +3,30 @@
 
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/Transforms/IPO/FunctionMerging.h"
 
 // code is taken from : https://github.com/rcorcs/llvm-project/tree/func-merge
 
 using namespace llvm;
 
-namespace llvm { 
+namespace llvm {
 
 class InstructionMatch {
-private:
-  static bool IdenticalTypesOnly;
-  static bool matchInstructions(Instruction *I1, Instruction *I2);
-
 public:
-  static bool match(Value *V1, Value *V2);
-  static int getInstructionCost(Instruction* I);
+  static bool match(Value *V1, Value *V2) {
+    if (isa<Instruction>(V1) && isa<Instruction>(V2)) {
+      Instruction *I1 = dyn_cast<Instruction>(V1);
+      Instruction *I2 = dyn_cast<Instruction>(V2);
+
+      if (I1->getOpcode() == I2->getOpcode() &&
+          I1->getOpcode() == Instruction::Br)
+        return true;
+    }
+    return FunctionMerger::match(V1, V2);
+  };
+  static int getInstructionCost(Instruction *I);
 };
 
-}
+} // namespace llvm
 
 #endif
