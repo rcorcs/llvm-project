@@ -883,9 +883,11 @@ PassBuilder::buildFunctionSimplificationPipeline(OptimizationLevel Level,
   //It is better to run branch fusion after code hoisting and sinking.
   //Code hoisting and sinking can unify code from multiple blocks while
   //current branch fusion techniques can only merge two regions at a time.
+  /*
   if (EnableCFMelder) {
     FPM.addPass(CFMelderPass());
   }
+  */
   if (EnableBranchFusion) {
     FPM.addPass(BranchFusionPass());
   }
@@ -1219,7 +1221,10 @@ PassBuilder::buildModuleSimplificationPipeline(OptimizationLevel Level,
     MPM.addPass(SyntheticCountsPropagation());
 
   MPM.addPass(buildInlinerPipeline(Level, Phase));
-
+  if (EnableCFMelder) {
+    MPM.addPass(CFMelderCodeSizePass());
+  }
+  
   if (EnableMemProfiler && Phase != ThinOrFullLTOPhase::ThinLTOPreLink) {
     MPM.addPass(createModuleToFunctionPassAdaptor(MemProfilerPass()));
     MPM.addPass(ModuleMemProfilerPass());
