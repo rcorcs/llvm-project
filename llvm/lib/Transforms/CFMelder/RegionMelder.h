@@ -2,7 +2,6 @@
 #define LLVM_LIB_TRANSFORMS_REGION_MELDER_H
 
 #include "RegionAnalyzer.h"
-#include "InstructionMatch.h"
 #include "SmithWaterman.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallVector.h"
@@ -11,8 +10,25 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/ValueMap.h"
 #include "llvm/TableGen/Record.h"
+#include "llvm/Transforms/IPO/FunctionMerging.h"
 
 namespace llvm {
+
+class InstructionMatch {
+public:
+  static bool match(Value *V1, Value *V2) {
+    if (isa<Instruction>(V1) && isa<Instruction>(V2)) {
+      Instruction *I1 = dyn_cast<Instruction>(V1);
+      Instruction *I2 = dyn_cast<Instruction>(V2);
+
+      if (I1->getOpcode() == I2->getOpcode() &&
+          I1->getOpcode() == Instruction::Br)
+        return true;
+    }
+    return FunctionMerger::match(V1, V2);
+  };
+  
+};
 
 
 // simple scoring function for intruction alignment
@@ -27,7 +43,7 @@ public:
     int SavedCycles = 0;
     if (isa<Instruction>(V1)) {
       Instruction *I1 = dyn_cast<Instruction>(V1);
-      SavedCycles = InstructionMatch::getInstructionCost(I1);
+      SavedCycles = Utils::getInstructionCost(I1);
     }
     else if (isa<BasicBlock>(V1)) {
       SavedCycles = 3;

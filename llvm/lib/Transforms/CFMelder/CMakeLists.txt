@@ -25,7 +25,6 @@
 add_llvm_component_library(LLVMCFMelder
   CFMelder.cpp
   CFMelderUtils.cpp 
-  InstructionMatch.cpp
   RegionAnalyzer.cpp
   RegionMelder.cpp
   RegionReplicator.cpp
