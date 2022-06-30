@@ -6,6 +6,7 @@
 #include "llvm/Analysis/DominanceFrontier.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/RegionInfo.h"
+#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
 
@@ -17,14 +18,16 @@ private:
   Function &F;
   DominatorTree &DT;
   PostDominatorTree &PDT;
+  TargetTransformInfo &TTI;
   std::shared_ptr<RegionInfo> RI;
   std::shared_ptr<LoopInfo> LI;
 
 public:
-  ControlFlowGraphInfo(Function &F, DominatorTree &DT, PostDominatorTree &PDT);
+  ControlFlowGraphInfo(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
+                       TargetTransformInfo &TTI);
   /// recompute analyses
   void recompute();
-  /// 
+  ///
   Function &getFunction() { return F; }
   /// get dom tree
   DominatorTree &getDomTree() { return DT; }
@@ -34,7 +37,8 @@ public:
   shared_ptr<RegionInfo> getRegionInfo() { return RI; }
   /// get loop info
   shared_ptr<LoopInfo> getLoopInfo() { return LI; }
-
+  /// get TTI
+  TargetTransformInfo &getTTI() { return TTI; }
 };
 
 class RegionComparator {
@@ -142,9 +146,11 @@ private:
   void findMergeableRegions(BasicBlock &BB);
   BasicBlock *findMostSimilarBb(BasicBlock *BB,
                                 SmallVectorImpl<BasicBlock *> &Candidates);
-  /// Find mergeable blocks in 'Regions' that are not contained inside local loops
-  void findMergeableBBsInRegions(BasicBlock *From, SmallVectorImpl<Region*> &Regions,
-                              SmallVectorImpl<BasicBlock *> &MergeableBBs);
+  /// Find mergeable blocks in 'Regions' that are not contained inside local
+  /// loops
+  void findMergeableBBsInRegions(BasicBlock *From,
+                                 SmallVectorImpl<Region *> &Regions,
+                                 SmallVectorImpl<BasicBlock *> &MergeableBBs);
 
   void computeGreedyRegionMatch();
   void computeSARegionMatch();

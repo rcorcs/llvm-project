@@ -116,7 +116,7 @@ static bool runAnalysisOnly(Function &F, DominatorTree &DT,
   INFO << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
           "+++++++++++++++\n";
 
-  ControlFlowGraphInfo CFGInfo(F, DT, PDT);
+  ControlFlowGraphInfo CFGInfo(F, DT, PDT, TTI);
 
   for (auto BBIt : post_order(&F.getEntryBlock())) {
     BasicBlock &BB = *BBIt;
@@ -189,7 +189,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
       if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
         INFO << "Valid merge location found at block "
              << BB->getNameOrAsOperand() << "\n";
-        ControlFlowGraphInfo CFGInfo(*Func, DT, PDT);
+        ControlFlowGraphInfo CFGInfo(*Func, DT, PDT, TTI);
         RegionAnalyzer RA(BB, CFGInfo);
         RA.computeRegionMatch();
 
@@ -205,7 +205,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
           Function *ClonedFunc = CloneFunction(Func, VMap);
           DominatorTree ClonedDT(*ClonedFunc);
           PostDominatorTree ClonedPDT(*ClonedFunc);
-          ControlFlowGraphInfo ClonedCFGInfo(*ClonedFunc, ClonedDT, ClonedPDT);
+          ControlFlowGraphInfo ClonedCFGInfo(*ClonedFunc, ClonedDT, ClonedPDT, TTI);
 
           RegionAnalyzer ClonedRA(dyn_cast<BasicBlock>(VMap[BB]),
                                   ClonedCFGInfo);
@@ -319,7 +319,7 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
         BB.printAsOperand(errs(), false);
         errs() << "\n";
 
-        ControlFlowGraphInfo CFGInfo(F, DT, PDT);
+        ControlFlowGraphInfo CFGInfo(F, DT, PDT, TTI);
         RegionAnalyzer MA(&BB, CFGInfo);
         MA.computeRegionMatch();
         if (MA.hasAnyProfitableMatch()) {
