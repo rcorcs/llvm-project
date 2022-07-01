@@ -43,8 +43,8 @@ void ControlFlowGraphInfo::recompute() {
 }
 
 ControlFlowGraphInfo::ControlFlowGraphInfo(Function &F, DominatorTree &DT,
-                                           PostDominatorTree &PDT)
-    : F(F), DT(DT), PDT(PDT) {
+                                           PostDominatorTree &PDT, TargetTransformInfo &TTI)
+    : F(F), DT(DT), PDT(PDT), TTI(TTI) {
   LI = std::make_shared<LoopInfo>(DT);
   /// calculate regions
   DominanceFrontier DF;

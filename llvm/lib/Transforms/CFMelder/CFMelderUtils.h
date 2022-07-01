@@ -77,6 +77,9 @@ public:
   /// has predecessors from outside R
   static bool requireRegionSimplification(Region *R);
 
+  /// cutomized instruction latency cost (only used for GPU control-flow melding)
+  static int getInstructionCost(Instruction *I);
+
 };
 
 } // namespace llvm

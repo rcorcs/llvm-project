@@ -22,7 +22,7 @@ private:
     int MaxCost = M(EndRow, EndCol).getCost();
     for (int I = StartRow; I <= EndRow; ++I) {
       for (int J = StartCol; J <= EndCol; ++J) {
-        if (M(I, J).getCost() > MaxCost) {
+        if (M(I, J).getCost() >= MaxCost) {
           Maxi = I;
           Maxj = J;
           MaxCost = M(I, J).getCost();
@@ -66,6 +66,25 @@ private:
       AlignedPair<elemTy> Point(none_value, Seq2[Startj]);
       Soln.insert(Soln.begin(), Point);
       Startj--;
+    }
+
+    // add any remainder from the end of the Matrix
+    if (Maxj == EndCol) {
+      Maxi++;
+      while (Maxi <= EndRow) {
+        AlignedPair<elemTy> Point(Seq1[Maxi], none_value);
+        Soln.insert(Soln.end(), Point);
+        Maxi++;
+      }
+    }
+
+    if (Maxi == EndRow) {
+      Maxj++;
+      while (Maxj <= EndCol) {
+        AlignedPair<elemTy> Point(none_value, Seq2[Maxj]);
+        Soln.insert(Soln.end(), Point);
+        Maxj++;
+      }
     }
 
     return Soln;
@@ -113,7 +132,7 @@ public:
         int TopCost = findMaxGapProfit(M, i - 1, j, Direction::TOP);
         int Cost = DiagCost;
         Direction D = DIAG;
-        bool IsMatch = true;
+        bool IsMatch = ScoringFunc(Seq1[i], Seq2[j]) == 0 ? false : true;
 
         if (Cost < LeftCost) {
           D = LEFT;
@@ -138,7 +157,7 @@ public:
     auto Soln =
         constructSoln(M, Seq1, Seq2, 0, M.getRows() - 1, 0, M.getCols() - 1);
 
-    // remove mismatches if not allowed 
+    // remove mismatches if not allowed
     if (!AllowMismatches) {
       AlignedSeq<elemTy> MisMatchesRmvdSoln;
       for (auto Entry : Soln) {
@@ -151,8 +170,7 @@ public:
           AlignedPair<elemTy> AP2(none_value, Right);
           MisMatchesRmvdSoln.push_back(AP1);
           MisMatchesRmvdSoln.push_back(AP2);
-        }
-        else {
+        } else {
           MisMatchesRmvdSoln.push_back(Entry);
         }
       }

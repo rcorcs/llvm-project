@@ -2,7 +2,6 @@
 #define LLVM_LIB_TRANSFORMS_REGION_MELDER_H
 
 #include "RegionAnalyzer.h"
-#include "InstructionMatch.h"
 #include "SmithWaterman.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallVector.h"
@@ -11,15 +10,61 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/ValueMap.h"
 #include "llvm/TableGen/Record.h"
+#include "llvm/Transforms/IPO/FunctionMerging.h"
 
 namespace llvm {
 
+class InstructionMatch {
+public:
+  static bool match(Value *V1, Value *V2) {
+    if (isa<Instruction>(V1) && isa<Instruction>(V2)) {
+      Instruction *I1 = dyn_cast<Instruction>(V1);
+      Instruction *I2 = dyn_cast<Instruction>(V2);
 
-// simple scoring function for intruction alignment
-struct InstrMeldingProfitabilityModel : public ScoringFunction<Value *> {
+      if (I1->getOpcode() == I2->getOpcode() &&
+          I1->getOpcode() == Instruction::Br)
+        return true;
+    }
+    return FunctionMerger::match(V1, V2);
+  };
+};
+
+// scoring function for instruction alignment based on code size reduction
+struct CodeSizeCostModel : public ScoringFunction<Value *> {
+  TargetTransformInfo *TTI;
+  CodeSizeCostModel(TargetTransformInfo &TTI) : TTI(&TTI) {}
+
 public:
   int operator()(Value *V1, Value *V2) override {
+    if (!InstructionMatch::match(V1, V2))
+      return 0;
 
+    int SavedSize = 0;
+    if (isa<Instruction>(V1)) {
+      SavedSize = TTI->getInstructionCost(
+                         dyn_cast<Instruction>(V1),
+                         TargetTransformInfo::TargetCostKind::TCK_CodeSize)
+                      .getValue()
+                      .getValue();
+    } else if (isa<BasicBlock>(V1)) {
+      SavedSize = 3;
+    }
+    return SavedSize;
+  }
+
+  int gap(int K) override {
+    int BrCost = TTI
+        ->getCFInstrCost(Instruction::Br, TTI::TargetCostKind::TCK_CodeSize)
+        .getValue()
+        .getValue();
+    return BrCost;
+  }
+};
+
+// simple scoring function for instruction alignment for latency reduction
+struct GPULatencyCostModel : public ScoringFunction<Value *> {
+public:
+  int operator()(Value *V1, Value *V2) override {
 
     if (!InstructionMatch::match(V1, V2))
       return 0;
@@ -27,9 +72,8 @@ public:
     int SavedCycles = 0;
     if (isa<Instruction>(V1)) {
       Instruction *I1 = dyn_cast<Instruction>(V1);
-      SavedCycles = InstructionMatch::getInstructionCost(I1);
-    }
-    else if (isa<BasicBlock>(V1)) {
+      SavedCycles = Utils::getInstructionCost(I1);
+    } else if (isa<BasicBlock>(V1)) {
       SavedCycles = 3;
     }
 
@@ -99,8 +143,9 @@ private:
 
   SmallVector<InstrRange, 16> SplitRanges;
 
-  AlignedSeq<Value *> getAlignmentOfBlocks(BasicBlock *LeftBb,
-                                           BasicBlock *RightBb);
+  AlignedSeq<Value *>
+  getAlignmentOfBlocks(BasicBlock *LeftBb, BasicBlock *RightBb,
+                       ScoringFunction<Value *> &ScoringFunc);
   void computeRegionSeqAlignment(DenseMap<BasicBlock *, BasicBlock *> BbMap);
   void linearizeBb(BasicBlock *BB, SmallVectorImpl<Value *> &LinearizedVals);
   void cloneInstructions();
@@ -120,26 +165,25 @@ private:
   // makes the region SESE, after simplification exit block of the region
   // is connected to rest of the CFG with only one edge
   BasicBlock *simplifyRegion(BasicBlock *Exit, BasicBlock *Entry);
-  
+
   bool isExitBlockSafeToMerge(BasicBlock *Exit, BasicBlock *Entry);
   void updateMapping(BasicBlock *NewBb, BasicBlock *OldBb, bool IsLeft);
 
   void runUnpredicationPass();
   void updateSplitRangeMap(bool Direction, Instruction *I);
 
-  bool isInsideMeldedRegion(BasicBlock *BB, BasicBlock* Entry, BasicBlock* Exit);
+  bool isInsideMeldedRegion(BasicBlock *BB, BasicBlock *Entry,
+                            BasicBlock *Exit);
 
   // finds the region whose entry block post dominates the path entry block
-  Region* getRegionToReplicate(BasicBlock * MatchedBlock, BasicBlock* PathEntry);
+  Region *getRegionToReplicate(BasicBlock *MatchedBlock, BasicBlock *PathEntry);
 
 public:
   RegionMelder(RegionAnalyzer &MA) : MA(MA) {}
   // meld I'th region pair
   void merge(unsigned Index);
-
 };
 
 } // namespace llvm
-
 
 #endif

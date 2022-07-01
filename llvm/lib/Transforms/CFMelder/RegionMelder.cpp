@@ -1,6 +1,7 @@
 #include "RegionMelder.h"
 #include "CFMelderUtils.h"
 #include "RegionReplicator.h"
+#include "SeqAlignmentUtils.h"
 #include "llvm/ADT/CachedHashString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/iterator_range.h"
@@ -25,6 +26,10 @@ static cl::opt<bool> EnableFullPredication(
     "enable-full-predication", cl::init(false), cl::Hidden,
     cl::desc("Enable full predication for merged blocks"));
 
+static cl::opt<bool> UseLatencyCostModel(
+    "use-latency-for-alignment", cl::init(false), cl::Hidden,
+    cl::desc("Use latency cost model for instruction alignment"));
+
 static cl::opt<bool>
     DumpSeqAlignStats("dump-seq-align-stats", cl::init(false), cl::Hidden,
                       cl::desc("Dump information on sequence alignment"));
@@ -39,20 +44,15 @@ STATISTIC(RegionToRegionMeldings,
 STATISTIC(InstrAlignTime,
           "Time spent in instruction alignment in microseconds");
 
-
-AlignedSeq<Value *> RegionMelder::getAlignmentOfBlocks(BasicBlock *LeftBb,
-                                                       BasicBlock *RightBb) {
+AlignedSeq<Value *>
+RegionMelder::getAlignmentOfBlocks(BasicBlock *LeftBb, BasicBlock *RightBb,
+                                   ScoringFunction<Value *> &ScoringFunc) {
   // do sequence aligment
   SmallVector<Value *, 32> LSeq;
   SmallVector<Value *, 32> RSeq;
   linearizeBb(LeftBb, LSeq);
   linearizeBb(RightBb, RSeq);
-  // AlignedSequence<Value *> AlignedSeq;
 
-  // NeedlemanWunschSA<SmallVectorImpl<Value *>> SA(ScoringSystem(-1, 2),
-  //                                                InstructionMatch::match);
-  // return SA.getAlignment(LSeq, RSeq);
-  InstrMeldingProfitabilityModel ScoringFunc;
   auto SMSA =
       SmithWaterman<Value *, SmallVectorImpl<Value *>, nullptr>(ScoringFunc);
 
@@ -63,14 +63,22 @@ AlignedSeq<Value *> RegionMelder::getAlignmentOfBlocks(BasicBlock *LeftBb,
 
 void RegionMelder::computeRegionSeqAlignment(
     DenseMap<BasicBlock *, BasicBlock *> BbMap) {
+
+  shared_ptr<ScoringFunction<Value *>> ScoringFuncSize =
+      make_shared<CodeSizeCostModel>(MA.getCFGInfo().getTTI());
+  shared_ptr<ScoringFunction<Value *>> ScoringFuncLat =
+      make_shared<GPULatencyCostModel>();
+
+  auto ScoringFunc = UseLatencyCostModel? ScoringFuncLat : ScoringFuncSize;
+
   for (auto It = BbMap.begin(); It != BbMap.end(); It++) {
     BasicBlock *LBB = It->first;
     BasicBlock *RBB = It->second;
 
-    RegionInstrAlignement.concat(getAlignmentOfBlocks(LBB, RBB));
+    RegionInstrAlignement.concat(getAlignmentOfBlocks(LBB, RBB, *ScoringFunc));
   }
   if (DumpSeqAlignStats) {
-    InstrMeldingProfitabilityModel ScoringFunc;
+
     int SavedCycles = 0;
     for (auto Entry : RegionInstrAlignement) {
       Value *Left = Entry.getLeft();
@@ -78,9 +86,9 @@ void RegionMelder::computeRegionSeqAlignment(
       if (Left && Right) {
         if (isa<BasicBlock>(Left))
           continue;
-        SavedCycles += ScoringFunc(Left, Right);
+        SavedCycles += (*ScoringFunc)(Left, Right);
       } else {
-        SavedCycles -= ScoringFunc.gap(0);
+        SavedCycles -= (*ScoringFunc).gap(0);
       }
     }
     INFO << "Number of cycles saved by alignment : " << SavedCycles << "\n";
@@ -624,8 +632,8 @@ void RegionMelder::merge(unsigned Index) {
 
       // recompute control-flow analyses , FIXME : this might be too expensive
       MA.getCFGInfo().recompute();
-      RToReplicate = Utils::getRegionWithEntryExit(*MA.getCFGInfo().getRegionInfo(), EntryToReplicate,
-                                            ExitToReplicate);
+      RToReplicate = Utils::getRegionWithEntryExit(
+          *MA.getCFGInfo().getRegionInfo(), EntryToReplicate, ExitToReplicate);
       assert(RToReplicate && "Can not find region with given entry and exit");
 
       INFO << "region after region simplification : ";
@@ -637,7 +645,7 @@ void RegionMelder::merge(unsigned Index) {
 
       RegionAlreadySimplified = true;
     }
-    
+
     // replicate the region
     RegionReplicator RR(MA, ExpandingLeft, EnableFullPredication);
     Region *ReplicatedR =
@@ -832,7 +840,6 @@ void RegionMelder::updateSplitRangeMap(bool Direction, Instruction *I) {
   }
 }
 
-
 BasicBlock *RegionMelder::simplifyRegion(BasicBlock *Exit, BasicBlock *Entry) {
   // only applies for region merges (not needed for bb merges)
   // if the exit block of the region (to be merged) has preds from outside that
@@ -844,7 +851,8 @@ BasicBlock *RegionMelder::simplifyRegion(BasicBlock *Exit, BasicBlock *Entry) {
                                            ParentFunc, Exit);
   // add a jump from new exit to old exit
   BranchInst::Create(Exit, NewExit);
-  Region *MergedR = Utils::getRegionWithEntryExit(*MA.getCFGInfo().getRegionInfo(), Entry, Exit);
+  Region *MergedR = Utils::getRegionWithEntryExit(
+      *MA.getCFGInfo().getRegionInfo(), Entry, Exit);
 
   // this can not be nullptr because must exit
   assert(MergedR && "Can not find region with given entry and exit");
@@ -897,7 +905,8 @@ bool RegionMelder::isInsideMeldedRegion(BasicBlock *BB, BasicBlock *Entry,
     return BB == Entry;
   }
   // melded region has mutiple BBs
-  return (MA.getCFGInfo().getDomTree().dominates(Entry, BB) && MA.getCFGInfo().getPostDomTree().dominates(Exit, BB));
+  return (MA.getCFGInfo().getDomTree().dominates(Entry, BB) &&
+          MA.getCFGInfo().getPostDomTree().dominates(Exit, BB));
 }
 
 void RegionMelder::mergeOutsideDefsAtEntry() {
@@ -1018,8 +1027,7 @@ void RegionMelder::mergeOutsideDefsAtEntry() {
             BasicBlock *TopLeftSucc =
                 MA.getDivergentBlock()->getTerminator()->getSuccessor(0);
             // which path the def is in?
-            bool DefInLeft =
-                DT.dominates(TopLeftSucc, Def.getParent());
+            bool DefInLeft = DT.dominates(TopLeftSucc, Def.getParent());
 
             // add incoming values for phi
             if (DefInLeft) {

@@ -1,5 +1,4 @@
 #include "CFMelderUtils.h"
-#include "InstructionMatch.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/CFG.h"
 #include "llvm/Analysis/LoopInfo.h"
@@ -106,16 +105,17 @@ bool Utils::containsUnhandledInstructions(const BasicBlock *BB) {
   return false;
 }
 
-bool Utils::hasPathBetween(BasicBlock *L, BasicBlock *R,
-                           DominatorTree &DT) {
+bool Utils::hasPathBetween(BasicBlock *L, BasicBlock *R, DominatorTree &DT) {
 
   // path exists if any of the predecessors of L is dominated by R
   for (auto It = pred_begin(L); It != pred_end(R); ++It) {
-    if (DT.dominates(R, *It)) return true;
+    if (DT.dominates(R, *It))
+      return true;
   }
   // OR, any of the predecessors of R are dominated by L
   for (auto It = pred_begin(R); It != pred_end(R); ++It) {
-    if (DT.dominates(L, *It)) return true;
+    if (DT.dominates(L, *It))
+      return true;
   }
 
   return false;
@@ -131,8 +131,8 @@ Utils::computeLatReductionAtBest(BasicBlock *BB1, BasicBlock *BB2) {
       FreqMap[It->getOpcode()] = std::make_pair(0, 0);
 
     FreqMap[It->getOpcode()].first +=
-        InstructionMatch::getInstructionCost(&(*It));
-    TotalLatency += InstructionMatch::getInstructionCost(&(*It));
+        Utils::getInstructionCost(&(*It));
+    TotalLatency += Utils::getInstructionCost(&(*It));
   }
 
   for (auto It = BB2->begin(); It != BB2->end(); ++It) {
@@ -140,8 +140,8 @@ Utils::computeLatReductionAtBest(BasicBlock *BB1, BasicBlock *BB2) {
       FreqMap[It->getOpcode()] = std::make_pair(0, 0);
 
     FreqMap[It->getOpcode()].second +=
-        InstructionMatch::getInstructionCost(&(*It));
-    TotalLatency += InstructionMatch::getInstructionCost(&(*It));
+        Utils::getInstructionCost(&(*It));
+    TotalLatency += Utils::getInstructionCost(&(*It));
   }
 
   for (auto It : FreqMap) {
@@ -190,4 +190,31 @@ double Utils::computeRegionSimilarity(
   // errs() << "latency reduction at best in region: " << LatReductionAtBest <<
   // "\n"; errs() << "total latency in region: " << TotalLat << "\n";
   return (double)LatReductionAtBest / (double)TotalLat;
+}
+
+int Utils::getInstructionCost(Instruction *I) {
+  int SavedCycles = 0;
+  switch (I->getOpcode()) {
+  case Instruction::Add:
+  case Instruction::FAdd:
+    SavedCycles = 5;
+    break;
+  case Instruction::Mul:
+  case Instruction::FMul:
+    SavedCycles = 10;
+    break;
+  case Instruction::SDiv:
+  case Instruction::UDiv:
+  case Instruction::FDiv:
+    SavedCycles = 20;
+    break;
+  case Instruction::Store:
+  case Instruction::Load:
+    SavedCycles = 100;
+    break;
+  default:
+    SavedCycles = 3;
+    break;
+  }
+  return SavedCycles;
 }
