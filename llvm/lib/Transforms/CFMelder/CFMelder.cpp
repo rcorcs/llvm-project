@@ -72,6 +72,9 @@ static cl::opt<bool> RunMeldingOnce("run-cfmelding-once", cl::init(false),
                                     cl::Hidden,
                                     cl::desc("Perform one melding and exit"));
 
+static cl::opt<unsigned> MaxIterations("cfmelding-max-iteration", cl::init(3),
+                                    cl::Hidden,
+                                    cl::desc("Maximum number of iterations performed by CFMelder on the whole function"));
 namespace {
 
 class CFMelderLegacyPass : public FunctionPass {
@@ -182,8 +185,11 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
   SimplifyCFGOptions SimplifyCFGOptionsObj;
 
   int OrigCodeSize = computeCodeSize(&F, TTI);
+  unsigned CountIter = 0;
 
   do {
+    CountIter++;
+
     LocalChange = false;
     for (BasicBlock *BB : post_order(&Func->getEntryBlock())) {
       if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
@@ -253,7 +259,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
     }
 
     Changed |= LocalChange;
-  } while (LocalChange);
+  } while (LocalChange && CountIter<MaxIterations);
 
   if (Changed) {
     int FinalCodeSize = computeCodeSize(&F, TTI);
@@ -306,9 +312,11 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
   SimplifyCFGOptions SimplifyCFGOptionsObj;
 
   bool Changed = false, LocalChange = false;
+  unsigned CountIter = 0;
 
   do {
     LocalChange = false;
+    CountIter++;
 
     for (auto &BBIt : post_order(&F.getEntryBlock())) {
       BasicBlock &BB = *BBIt;
@@ -357,7 +365,7 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
     if (RunMeldingOnce) {
       break;
     }
-  } while (LocalChange);
+  } while (LocalChange && CountIter<MaxIterations);
 
   return Changed;
 }
