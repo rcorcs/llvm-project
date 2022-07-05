@@ -247,8 +247,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
           if (LocalChange) {
             simplifyFunction(
                 *Func, TTI,
-                SimplifyCFGOptionsObj.sinkCommonInsts(false).hoistCommonInsts(
-                    false));
+                SimplifyCFGOptionsObj.setSimplifyCondBranch(false));
             // recompte DT, PDT
             DT.recalculate(*Func);
             PDT.recalculate(*Func);
