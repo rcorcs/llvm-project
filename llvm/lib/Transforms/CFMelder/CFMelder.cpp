@@ -72,7 +72,7 @@ static cl::opt<bool> RunMeldingOnce("run-cfmelding-once", cl::init(false),
                                     cl::Hidden,
                                     cl::desc("Perform one melding and exit"));
 
-static cl::opt<unsigned> MaxIterations("cfmelding-max-iteration", cl::init(3),
+static cl::opt<unsigned> MaxIterations("cfmelding-max-iteration", cl::init(10),
                                     cl::Hidden,
                                     cl::desc("Maximum number of iterations performed by CFMelder on the whole function"));
 namespace {
@@ -247,8 +247,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
           if (LocalChange) {
             simplifyFunction(
                 *Func, TTI,
-                SimplifyCFGOptionsObj.sinkCommonInsts(true).hoistCommonInsts(
-                    true));
+                SimplifyCFGOptionsObj.setSimplifyCondBranch(false));
             // recompte DT, PDT
             DT.recalculate(*Func);
             PDT.recalculate(*Func);
