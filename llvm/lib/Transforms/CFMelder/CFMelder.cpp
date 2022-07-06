@@ -247,8 +247,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
           if (LocalChange) {
             simplifyFunction(
                 *Func, TTI,
-                SimplifyCFGOptionsObj.sinkCommonInsts(true).hoistCommonInsts(
-                    true));
+                SimplifyCFGOptionsObj);
             // recompte DT, PDT
             DT.recalculate(*Func);
             PDT.recalculate(*Func);
@@ -397,8 +396,7 @@ PreservedAnalyses CFMelderPass::run(Function &F, FunctionAnalysisManager &AM) {
     return PreservedAnalyses::all();
   }
 
-  PreservedAnalyses PA;
-  return PA;
+  return PreservedAnalyses::none();
 }
 
 bool CFMelderCodeSizeLegacyPass::runOnModule(Module &M) {
