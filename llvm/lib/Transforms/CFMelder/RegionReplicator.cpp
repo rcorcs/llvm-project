@@ -272,6 +272,9 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
            "Exapanded block does not have a DF within the replicated region!");
 
     for (auto *BB : It->second) {
+      // the expanded block is outside any loops, if the dominance frontier includes
+      // loops header ignore it
+      if (BB == I->getParent()) continue;
       // add a phi node only if DF is within the replicated region
       if (ReplicatedRegion->contains(BB) || ReplicatedRegion->getExit() == BB) {
         PHINode *NewPHI =
