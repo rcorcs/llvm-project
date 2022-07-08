@@ -41,6 +41,7 @@ Region *RegionReplicator::replicate(BasicBlock *ExpandedBlock,
     fullPredicateStores(OrigRegion, MatchedBlock);
   }
 
+  // MA.getCFGInfo().getFunction().getParent()->print(errs(), nullptr);
   return ReplicatedR;
 }
 
@@ -287,6 +288,10 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
            "Exapanded block does not have a DF within the replicated region!");
 
     for (auto *BB : It->second) {
+      // the expanded block is outside any loops, if the dominance frontier
+      // includes loops header ignore it
+      if (BB == I->getParent())
+        continue;
       // add a phi node only if DF is within the replicated region
       if (ReplicatedRegion->contains(BB) || ReplicatedRegion->getExit() == BB) {
         PHINode *NewPHI =
@@ -330,43 +335,78 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
   }
 }
 
+static void visitDFS(BasicBlock *From, BasicBlock *To,
+                     SmallVector<BasicBlock *> CurrPath,
+                     DenseSet<BasicBlock *> Visited,
+                     SmallVector<SmallVector<BasicBlock *>> &Paths) {
+  Visited.insert(From);
+  CurrPath.push_back(From);
+
+  if (From == To) {
+    Paths.push_back(CurrPath);
+  } else {
+    for (auto SuccIt = succ_begin(From); SuccIt != succ_end(From); SuccIt++) {
+      BasicBlock *Succ = *SuccIt;
+      if (!Visited.count(Succ)) {
+        visitDFS(Succ, To, CurrPath, Visited, Paths);
+      }
+    }
+  }
+  Visited.erase(From);
+};
+
 void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
                                                   Region *ReplicatedRegion) {
-  // go from expanded block to entry and set branch conditions so that
-  // expanded block is always executed
-  BasicBlock *Entry = ReplicatedRegion->getEntry();
-  SmallVector<BasicBlock *, 32> WorkList;
-  DenseSet<BasicBlock *> Visited;
 
-  WorkList.push_back(Entry);
+  BasicBlock *Entry = ReplicatedRegion->getEntry();
+  BasicBlock *Exit = ReplicatedRegion->getExit();
+
+  SmallVector<SmallVector<BasicBlock *>> Paths;
+  DenseSet<BasicBlock *> Visited;
+  SmallVector<BasicBlock *> CurrPath;
+
+  // use DFS to enumerate all paths from entry to exit 
+  visitDFS(Entry, Exit, CurrPath, Visited, Paths);
+
+  int BestPathIndex = -1;
+  for (unsigned PathIdx = 0; PathIdx < Paths.size(); PathIdx++) {
+    for (auto *BB : Paths[PathIdx]) {
+      if (BB == ExpandedBlock) {
+        if (BestPathIndex == -1)
+          BestPathIndex = PathIdx;
+        else {
+          BestPathIndex = Paths[PathIdx].size() < Paths[BestPathIndex].size()
+                              ? PathIdx
+                              : BestPathIndex;
+        }
+      }
+    }
+  }
+
+  // at least one path must contain ExpandedBlock
+  assert(BestPathIndex != -1 && "None of the paths in replicated region goes "
+                                "through the expanded block!");
+
+  DEBUG << "Path found through the replicated block\n";
+  auto BestPath = Paths[BestPathIndex];
+  // for (unsigned BBIdx = 0; BBIdx < BestPath.size(); BBIdx++) {
+  //   DEBUG << BestPath[BBIdx]->getNameOrAsOperand() << ((BBIdx !=
+  //   BestPath.size() -1 )? " -> " : "\n");
+  // }
+
+  // concretize the branch conditions along the found path
   Value *TrueV = ConstantInt::getTrue(
       Type::getInt1Ty(MA.getParentFunction()->getContext()));
   Value *FalseV = ConstantInt::getFalse(
       Type::getInt1Ty(MA.getParentFunction()->getContext()));
-  
-  while (!WorkList.empty()) {
-    BasicBlock *Curr = WorkList.pop_back_val();
-    
-    Visited.insert(Curr);
-    
-    if (Curr == Entry)
-      continue;
+  for (unsigned BBIdx = 0; BBIdx < BestPath.size() - 1; BBIdx++) {
+    BasicBlock *BB = BestPath[BBIdx];
+    BasicBlock *BBNext = BestPath[BBIdx + 1];
 
-    for (auto PredIt = pred_begin(Curr); PredIt != pred_end(Curr); ++PredIt) {
-      BasicBlock *Pred = *PredIt;
-
-      if (Visited.count(Pred)) continue;
-
-      assert(isa<BranchInst>(Pred->getTerminator()) &&
-             "basic block without a branch instruction inside the replicated "
-             "region!");
-      BranchInst *BI = cast<BranchInst>(Pred->getTerminator());
-      if (BI->isConditional()) {
-
-        Value *Cond = (BI->getSuccessor(0) == Curr) ? TrueV : FalseV;
-        BI->setCondition(Cond);
-      }
-      WorkList.push_back(Pred);
+    BranchInst *BI = dyn_cast<BranchInst>(BB->getTerminator());
+    if (BI->isConditional()) {
+      Value *Cond = (BI->getSuccessor(0) == BBNext) ? TrueV : FalseV;
+      BI->setCondition(Cond);
     }
   }
 }
