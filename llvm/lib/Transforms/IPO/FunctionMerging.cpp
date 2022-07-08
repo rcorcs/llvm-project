@@ -4764,6 +4764,8 @@ bool FunctionMerger::SALSSACodeGen::generate(
       //if (Debug)
       errs() << "ERROR: PHI assignment\n";
         // MergedFunc->eraseFromParent();
+	BB1->dump();
+	MergedFunc->dump();
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGen.stopTimer();
 #endif
@@ -4774,6 +4776,8 @@ bool FunctionMerger::SALSSACodeGen::generate(
     if (!AssignPHIOperandsInBlock(BB2, BlocksF2)) {
       //if (Debug)
       errs() << "ERROR: PHI assignment\n";
+	BB2->dump();
+	MergedFunc->dump();
         // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGen.stopTimer();

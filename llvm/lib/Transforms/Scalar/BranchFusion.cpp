@@ -579,6 +579,12 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
     }
   }
 
+  //TODO: fix issue with PHI-node assignment from Function Merging
+  if (BI->getSuccessor(0)->getUniquePredecessor()!=BI->getParent() ||
+      BI->getSuccessor(1)->getUniquePredecessor()!=BI->getParent()) {
+    return false;
+  }
+
   bool IsSingleExit = LeftR.getNumExitBlocks() == 1 &&
                       RightR.getNumExitBlocks() == 1 &&
                       LeftR.getUniqueExitBlock() == RightR.getUniqueExitBlock();

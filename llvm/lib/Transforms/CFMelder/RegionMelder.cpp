@@ -646,11 +646,13 @@ void RegionMelder::merge(unsigned Index) {
       RegionAlreadySimplified = true;
     }
 
+    errs() << "replicate the region\n";
     // replicate the region
     RegionReplicator RR(MA, ExpandingLeft, EnableFullPredication);
     Region *ReplicatedR =
         RR.replicate(ExpandedBlock, MatchedBlock, RToReplicate);
 
+    errs() << "prepare for melding\n";
     // prepare for melding
     if (ExpandingLeft) {
       EntryBlockL = ReplicatedR->getEntry();
@@ -664,6 +666,7 @@ void RegionMelder::merge(unsigned Index) {
       ExitBlockL = ExitToReplicate;
     }
 
+    errs() << "here\n";
     RR.getBasicBlockMapping(CurrMapping, ExpandingLeft);
 
     BBToRegionMeldings++;
