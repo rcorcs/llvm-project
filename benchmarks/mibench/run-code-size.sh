@@ -20,6 +20,6 @@ for BENCH in ${BENCHMARKS}; do
   cd ..
 
   for VERSION in baseline soa brfusion-pa brfusion-nw cfmelder; do
-    python results.py ${BENCH} ${VERSION} >> ./results.csv
+    python results.py ${BENCH} ../../build/release/bin/llvm-size ${VERSION} >> ./results.csv
   done
 done
