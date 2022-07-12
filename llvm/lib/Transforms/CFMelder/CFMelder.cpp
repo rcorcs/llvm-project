@@ -245,10 +245,6 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
           ClonedFunc->eraseFromParent();
 
           if (LocalChange) {
-            //simplifyFunction(
-            //    *Func, TTI,
-            //    SimplifyCFGOptionsObj.setSimplifyCondBranch(false));
-            // recompte DT, PDT
             DT.recalculate(*Func);
             PDT.recalculate(*Func);
             break;

@@ -4709,33 +4709,22 @@ bool FunctionMerger::SALSSACodeGen::generate(
 
           BasicBlock *NewPredBB = *It;
 
-          Value *V = nullptr;
 
           if (BlocksReMap.find(NewPredBB) != BlocksReMap.end()) {
-            int Index = PHI->getBasicBlockIndex(BlocksReMap[NewPredBB]);
-            if (Index >= 0) {
-	      //errs() << "Found: " << BlocksReMap[NewPredBB]->getName().str() << " / " << NewPredBB->getName().str() << " ";
-              V = MapValue(PHI->getIncomingValue(Index), VMap);
-              FoundIndices.insert(Index);
-	      //if (V) V->dump();
-	      //else errs() << " nullptr\n";
-            } /*else {
-	      errs() << "Did NOT find block index: " << NewPredBB->getName().str() << " / ";
-	      if (BlocksReMap[NewPredBB]) {
-		      errs() << BlocksReMap[NewPredBB]->getName().str() << "\n";
-	      } else errs() << " nullptr\n";
-	    }*/
-          } /*else {
-	    errs() << "Did NOT find predecessor block: " << NewPredBB->getName().str() << "\n";
-	  }*/
-
-          if (V == nullptr)
-            V = UndefValue::get(NewPHI->getType());
-
-          // IRBuilder<> Builder(NewPredBB->getTerminator());
-          // Value *CastedV = createCastIfNeeded(V, NewPHI->getType(), Builder,
-          // IntPtrTy);
-          NewPHI->addIncoming(V, NewPredBB);
+	    for (unsigned Index = 0; Index < PHI->getNumIncomingValues(); Index++) {
+	      if (FoundIndices.count(Index)) continue;
+	      if (PHI->getIncomingBlock(Index)==BlocksReMap[NewPredBB]) {
+                Value *V = MapValue(PHI->getIncomingValue(Index), VMap);
+                FoundIndices.insert(Index);
+                if (V == nullptr)
+                  V = UndefValue::get(NewPHI->getType());
+                NewPHI->addIncoming(V, NewPredBB);
+	      }
+	    }
+          } else {
+            Value *V = UndefValue::get(NewPHI->getType());
+            NewPHI->addIncoming(V, NewPredBB);
+	  } 
         }
 
 	//errs() << "After:\n";
