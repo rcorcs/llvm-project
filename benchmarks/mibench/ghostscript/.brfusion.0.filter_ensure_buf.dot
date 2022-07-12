@@ -1,0 +1,149 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else27:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call28 = call i32 @filter_open(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.1, i64 0, i64 0), i32 %add, %struct.ref_s* nonnull %bsop, %struct.stream_procs* bitcast ({ i32 (%struct.stream_s*, i64*)*, i32 (%struct.stream_s*, i64)*, void (%struct.stream_s*)*, i32 (%struct.stream_s*)*, i32 (%struct.stream_s*)*, i32 (%struct.stream_state_s*, %struct.stream_cursor_read_s*, %struct.stream_cursor_write_s*, i32)*, i32 (%struct.stream_s*, i32)* }* @s_new_read_procs to %struct.stream_procs*), %struct.stream_template_s* nonnull @s_Null1D_template, %struct.stream_state_s* null) #5</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end29</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then25:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call26 = call i32 @filter_open(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.3, i64 0, i64 0), i32 %add, %struct.ref_s* nonnull %bsop, %struct.stream_procs* bitcast ({ i32 (%struct.stream_s*, i64*)*, i32 (%struct.stream_s*, i64)*, void (%struct.stream_s*)*, i32 (%struct.stream_s*)*, i32 (%struct.stream_s*)*, i32 (%struct.stream_state_s*, %struct.stream_cursor_read_s*, %struct.stream_cursor_write_s*, i32)*, i32 (%struct.stream_s*, i32)* }* @s_new_write_procs to %struct.stream_procs*), %struct.stream_template_s* nonnull @s_Null_template, %struct.stream_state_s* null) #5</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end29</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %bsop = alloca %struct.ref_s, align 8</td></tr>
+<tr><td align="left">  %0 = load %struct.stream_s*, %struct.stream_s** %ps, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %add = add i32 %min_buf_size, 1</td></tr>
+<tr><td align="left">  %1 = bitcast %struct.ref_s* %bsop to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %1) #4</td></tr>
+<tr><td align="left">  %modes = getelementptr inbounds %struct.stream_s, %struct.stream_s* %0, i64 0, i32 9</td></tr>
+<tr><td align="left">  %2 = load i8, i8* %modes, align 1, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp = icmp eq i8 %2, 0</td></tr>
+<tr><td align="left">  br i1 %cmp, label %cleanup34, label %lor.lhs.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false:</td></tr>
+<tr><td align="left">  %bsize = getelementptr inbounds %struct.stream_s, %struct.stream_s* %0, i64 0, i32 5</td></tr>
+<tr><td align="left">  %3 = load i32, i32* %bsize, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %cmp2.not = icmp ult i32 %3, %add</td></tr>
+<tr><td align="left">  br i1 %cmp2.not, label %if.end, label %cleanup34</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %cbuf = getelementptr inbounds %struct.stream_s, %struct.stream_s* %0, i64 0, i32 4</td></tr>
+<tr><td align="left">  %4 = load i8*, i8** %cbuf, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp4 = icmp eq i8* %4, null</td></tr>
+<tr><td align="left">  br i1 %cmp4, label %if.then6, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then6:</td></tr>
+<tr><td align="left">  %cmp7 = icmp ugt i32 %add, 128</td></tr>
+<tr><td align="left">  %cond = select i1 %cmp7, i32 %add, i32 128</td></tr>
+<tr><td align="left">  %5 = load %struct.gs_memory_s*, %struct.gs_memory_s** bitcast (%struct.gs_dual_memory_s* @gs_imemory to %struct.gs_memory_s**), align 8, !tbaa !16</td></tr>
+<tr><td align="left">  %alloc_bytes = getelementptr inbounds %struct.gs_memory_s, %struct.gs_memory_s* %5, i64 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %6 = load i8* (%struct.gs_memory_s*, i32, i8*)*, i8* (%struct.gs_memory_s*, i32, i8*)** %alloc_bytes, align 8, !tbaa !18</td></tr>
+<tr><td align="left">  %call = tail call i8* %6(%struct.gs_memory_s* %5, i32 %cond, i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.16, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  %cmp9 = icmp eq i8* %call, null</td></tr>
+<tr><td align="left">  br i1 %cmp9, label %cleanup34, label %if.end12</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end12:</td></tr>
+<tr><td align="left">  store i8* %call, i8** %cbuf, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds i8, i8* %call, i64 -1</td></tr>
+<tr><td align="left">  %limit = getelementptr inbounds %struct.stream_s, %struct.stream_s* %0, i64 0, i32 3, i32 0, i32 1</td></tr>
+<tr><td align="left">  store i8* %add.ptr, i8** %limit, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %ptr17 = getelementptr inbounds %struct.stream_s, %struct.stream_s* %0, i64 0, i32 3, i32 0, i32 0</td></tr>
+<tr><td align="left">  store i8* %add.ptr, i8** %ptr17, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %idx.ext = zext i32 %cond to i64</td></tr>
+<tr><td align="left">  %add.ptr19 = getelementptr inbounds i8, i8* %add.ptr, i64 %idx.ext</td></tr>
+<tr><td align="left">  %7 = getelementptr inbounds %struct.stream_s, %struct.stream_s* %0, i64 0, i32 3, i32 0, i32 2</td></tr>
+<tr><td align="left">  store i8* %add.ptr19, i8** %7, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %cbsize = getelementptr inbounds %struct.stream_s, %struct.stream_s* %0, i64 0, i32 6</td></tr>
+<tr><td align="left">  store i32 %cond, i32* %cbsize, align 4, !tbaa !22</td></tr>
+<tr><td align="left">  store i32 %cond, i32* %bsize, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  br label %cleanup34</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %writing, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool.not, label %if.else27, label %if.then25</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end29:</td></tr>
+<tr><td align="left">  %code.0 = phi i32 [ %call26, %if.then25 ], [ %call28, %if.else27 ]</td></tr>
+<tr><td align="left">  %cmp30 = icmp slt i32 %code.0, 0</td></tr>
+<tr><td align="left">  br i1 %cmp30, label %cleanup34, label %if.end33</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end33:</td></tr>
+<tr><td align="left">  %value = getelementptr inbounds %struct.ref_s, %struct.ref_s* %bsop, i64 0, i32 1</td></tr>
+<tr><td align="left">  %pfile = bitcast %union.v* %value to %struct.stream_s**</td></tr>
+<tr><td align="left">  %8 = load %struct.stream_s*, %struct.stream_s** %pfile, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %strm = getelementptr inbounds %struct.stream_s, %struct.stream_s* %8, i64 0, i32 13</td></tr>
+<tr><td align="left">  store %struct.stream_s* %0, %struct.stream_s** %strm, align 8, !tbaa !23</td></tr>
+<tr><td align="left">  %is_temp = getelementptr inbounds %struct.stream_s, %struct.stream_s* %8, i64 0, i32 14</td></tr>
+<tr><td align="left">  store i32 2, i32* %is_temp, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  store %struct.stream_s* %8, %struct.stream_s** %ps, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br label %cleanup34</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup34:</td></tr>
+<tr><td align="left">  %retval.1 = phi i32 [ %code.0, %if.end33 ], [ 0, %lor.lhs.false ], [ 0, %entry ], [ 0, %if.end12 ], [ -25, %if.then6 ], [ %code.0, %if.end29 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %1) #4</td></tr>
+<tr><td align="left">  ret i32 %retval.1</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb8:f
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> f_bb8:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb5:f
+f_bb3:fT -> f_bb8:f
+f_bb3:fF -> f_bb4:f
+f_bb4:f -> f_bb8:f
+f_bb5:fT -> m_bb0:f1
+f_bb5:fF -> m_bb0:f2
+m_bb0:f2 -> f_bb6:f
+m_bb0:f1 -> f_bb6:f
+f_bb6:fT -> f_bb8:f
+f_bb6:fF -> f_bb7:f
+f_bb7:f -> f_bb8:f
+}
+

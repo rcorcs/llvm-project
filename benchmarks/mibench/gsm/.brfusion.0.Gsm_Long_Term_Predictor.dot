@@ -1,0 +1,1054 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">cond.false:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str, i64 0, i64 0), i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i64 0, i64 0), i32 545, i8* getelementptr inbounds ([97 x i8], [97 x i8]* @__PRETTY_FUNCTION__.Gsm_Long_Term_Predictor, i64 0, i64 0)) #5</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">cond.false3:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.2, i64 0, i64 0), i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i64 0, i64 0), i32 545, i8* getelementptr inbounds ([97 x i8], [97 x i8]* @__PRETTY_FUNCTION__.Gsm_Long_Term_Predictor, i64 0, i64 0)) #5</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %wt.i = alloca [40 x i16], align 16</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i16* %d, null</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool.not, label %cond.false, label %cond.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end:</td></tr>
+<tr><td align="left">  %tobool1.not = icmp eq i16* %dp, null</td></tr>
+<tr><td align="left">  br i1 %tobool1.not, label %cond.false3, label %cond.end4</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end4:</td></tr>
+<tr><td align="left">  %tobool5.not = icmp eq i16* %e, null</td></tr>
+<tr><td align="left">  br i1 %tobool5.not, label %cond.false7, label %cond.end8</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false7:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.3, i64 0, i64 0), i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i64 0, i64 0), i32 545, i8* getelementptr inbounds ([97 x i8], [97 x i8]* @__PRETTY_FUNCTION__.Gsm_Long_Term_Predictor, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end8:</td></tr>
+<tr><td align="left">  %tobool9.not = icmp eq i16* %dpp, null</td></tr>
+<tr><td align="left">  br i1 %tobool9.not, label %cond.false11, label %cond.end12</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false11:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.4, i64 0, i64 0), i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i64 0, i64 0), i32 546, i8* getelementptr inbounds ([97 x i8], [97 x i8]* @__PRETTY_FUNCTION__.Gsm_Long_Term_Predictor, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end12:</td></tr>
+<tr><td align="left">  %tobool13.not = icmp eq i16* %Nc, null</td></tr>
+<tr><td align="left">  br i1 %tobool13.not, label %cond.false15, label %cond.end16</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false15:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.5, i64 0, i64 0), i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i64 0, i64 0), i32 546, i8* getelementptr inbounds ([97 x i8], [97 x i8]* @__PRETTY_FUNCTION__.Gsm_Long_Term_Predictor, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end16:</td></tr>
+<tr><td align="left">  %tobool17.not = icmp eq i16* %bc, null</td></tr>
+<tr><td align="left">  br i1 %tobool17.not, label %cond.false19, label %cond.end20</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false19:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.6, i64 0, i64 0), i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i64 0, i64 0), i32 546, i8* getelementptr inbounds ([97 x i8], [97 x i8]* @__PRETTY_FUNCTION__.Gsm_Long_Term_Predictor, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end20:</td></tr>
+<tr><td align="left">  %0 = bitcast [40 x i16]* %wt.i to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 80, i8* nonnull %0) #6</td></tr>
+<tr><td align="left">  br label %for.cond.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond.i:</td></tr>
+<tr><td align="left">  %indvars.iv.i = phi i64 [ %indvars.iv.next.i, %for.body.i ], [ 0, %cond.end20 ]</td></tr>
+<tr><td align="left">  %dmax.0.i = phi i16 [ %spec.select.i, %for.body.i ], [ 0, %cond.end20 ]</td></tr>
+<tr><td align="left">  %exitcond.not.i = icmp eq i64 %indvars.iv.i, 40</td></tr>
+<tr><td align="left">  br i1 %exitcond.not.i, label %for.end.i, label %for.body.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body.i:</td></tr>
+<tr><td align="left">  %arrayidx.i = getelementptr inbounds i16, i16* %d, i64 %indvars.iv.i</td></tr>
+<tr><td align="left">  %1 = load i16, i16* %arrayidx.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp1.i = icmp slt i16 %1, 0</td></tr>
+<tr><td align="left">  %cmp4.i = icmp eq i16 %1, -32768</td></tr>
+<tr><td align="left">  %sub.i = sub i16 0, %1</td></tr>
+<tr><td align="left">  %cond.i = select i1 %cmp4.i, i16 32767, i16 %sub.i</td></tr>
+<tr><td align="left">  %cond11.i = select i1 %cmp1.i, i16 %cond.i, i16 %1</td></tr>
+<tr><td align="left">  %cmp15.i = icmp sgt i16 %cond11.i, %dmax.0.i</td></tr>
+<tr><td align="left">  %spec.select.i = select i1 %cmp15.i, i16 %cond11.i, i16 %dmax.0.i</td></tr>
+<tr><td align="left">  %indvars.iv.next.i = add nuw nsw i64 %indvars.iv.i, 1</td></tr>
+<tr><td align="left">  br label %for.cond.i, !llvm.loop !7</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end.i:</td></tr>
+<tr><td align="left">  %cmp18.i = icmp eq i16 %dmax.0.i, 0</td></tr>
+<tr><td align="left">  br i1 %cmp18.i, label %for.cond44.preheader.i, label %if.else.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else.i:</td></tr>
+<tr><td align="left">  %cmp22.i = icmp sgt i16 %dmax.0.i, 0</td></tr>
+<tr><td align="left">  br i1 %cmp22.i, label %src.bb.i, label %m.inst.bb.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond44.preheader.i:</td></tr>
+<tr><td align="left">  %2 = phi i32 [ 6, %for.end.i ], [ %141, %src.bb.i ]</td></tr>
+<tr><td align="left">  br label %for.cond44.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond44.i:</td></tr>
+<tr><td align="left">  %indvars.iv703.i = phi i64 [ 0, %for.cond44.preheader.i ], [ %indvars.iv.next704.i, %for.body47.i ]</td></tr>
+<tr><td align="left">  %exitcond705.not.i = icmp eq i64 %indvars.iv703.i, 40</td></tr>
+<tr><td align="left">  br i1 %exitcond705.not.i, label %for.cond58.preheader.i, label %for.body47.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond58.preheader.i:</td></tr>
+<tr><td align="left">  %arrayidx62.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 0</td></tr>
+<tr><td align="left">  %3 = load i16, i16* %arrayidx62.i, align 16, !tbaa !3</td></tr>
+<tr><td align="left">  %conv63.i = sext i16 %3 to i64</td></tr>
+<tr><td align="left">  %arrayidx69.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 1</td></tr>
+<tr><td align="left">  %4 = load i16, i16* %arrayidx69.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv70.i = sext i16 %4 to i64</td></tr>
+<tr><td align="left">  %arrayidx77.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 2</td></tr>
+<tr><td align="left">  %5 = load i16, i16* %arrayidx77.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv78.i = sext i16 %5 to i64</td></tr>
+<tr><td align="left">  %arrayidx86.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 3</td></tr>
+<tr><td align="left">  %6 = load i16, i16* %arrayidx86.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv87.i = sext i16 %6 to i64</td></tr>
+<tr><td align="left">  %arrayidx95.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 4</td></tr>
+<tr><td align="left">  %7 = load i16, i16* %arrayidx95.i, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %conv96.i = sext i16 %7 to i64</td></tr>
+<tr><td align="left">  %arrayidx104.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 5</td></tr>
+<tr><td align="left">  %8 = load i16, i16* %arrayidx104.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv105.i = sext i16 %8 to i64</td></tr>
+<tr><td align="left">  %arrayidx113.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 6</td></tr>
+<tr><td align="left">  %9 = load i16, i16* %arrayidx113.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv114.i = sext i16 %9 to i64</td></tr>
+<tr><td align="left">  %arrayidx122.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 7</td></tr>
+<tr><td align="left">  %10 = load i16, i16* %arrayidx122.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv123.i = sext i16 %10 to i64</td></tr>
+<tr><td align="left">  %arrayidx131.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 8</td></tr>
+<tr><td align="left">  %11 = load i16, i16* %arrayidx131.i, align 16, !tbaa !3</td></tr>
+<tr><td align="left">  %conv132.i = sext i16 %11 to i64</td></tr>
+<tr><td align="left">  %arrayidx140.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 9</td></tr>
+<tr><td align="left">  %12 = load i16, i16* %arrayidx140.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv141.i = sext i16 %12 to i64</td></tr>
+<tr><td align="left">  %arrayidx149.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 10</td></tr>
+<tr><td align="left">  %13 = load i16, i16* %arrayidx149.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv150.i = sext i16 %13 to i64</td></tr>
+<tr><td align="left">  %arrayidx158.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 11</td></tr>
+<tr><td align="left">  %14 = load i16, i16* %arrayidx158.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv159.i = sext i16 %14 to i64</td></tr>
+<tr><td align="left">  %arrayidx167.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 12</td></tr>
+<tr><td align="left">  %15 = load i16, i16* %arrayidx167.i, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %conv168.i = sext i16 %15 to i64</td></tr>
+<tr><td align="left">  %arrayidx176.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 13</td></tr>
+<tr><td align="left">  %16 = load i16, i16* %arrayidx176.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv177.i = sext i16 %16 to i64</td></tr>
+<tr><td align="left">  %arrayidx185.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 14</td></tr>
+<tr><td align="left">  %17 = load i16, i16* %arrayidx185.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv186.i = sext i16 %17 to i64</td></tr>
+<tr><td align="left">  %arrayidx194.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 15</td></tr>
+<tr><td align="left">  %18 = load i16, i16* %arrayidx194.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv195.i = sext i16 %18 to i64</td></tr>
+<tr><td align="left">  %arrayidx203.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 16</td></tr>
+<tr><td align="left">  %19 = load i16, i16* %arrayidx203.i, align 16, !tbaa !3</td></tr>
+<tr><td align="left">  %conv204.i = sext i16 %19 to i64</td></tr>
+<tr><td align="left">  %arrayidx212.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 17</td></tr>
+<tr><td align="left">  %20 = load i16, i16* %arrayidx212.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv213.i = sext i16 %20 to i64</td></tr>
+<tr><td align="left">  %arrayidx221.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 18</td></tr>
+<tr><td align="left">  %21 = load i16, i16* %arrayidx221.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv222.i = sext i16 %21 to i64</td></tr>
+<tr><td align="left">  %arrayidx230.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 19</td></tr>
+<tr><td align="left">  %22 = load i16, i16* %arrayidx230.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv231.i = sext i16 %22 to i64</td></tr>
+<tr><td align="left">  %arrayidx239.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 20</td></tr>
+<tr><td align="left">  %23 = load i16, i16* %arrayidx239.i, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %conv240.i = sext i16 %23 to i64</td></tr>
+<tr><td align="left">  %arrayidx248.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 21</td></tr>
+<tr><td align="left">  %24 = load i16, i16* %arrayidx248.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv249.i = sext i16 %24 to i64</td></tr>
+<tr><td align="left">  %arrayidx257.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 22</td></tr>
+<tr><td align="left">  %25 = load i16, i16* %arrayidx257.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv258.i = sext i16 %25 to i64</td></tr>
+<tr><td align="left">  %arrayidx266.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 23</td></tr>
+<tr><td align="left">  %26 = load i16, i16* %arrayidx266.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv267.i = sext i16 %26 to i64</td></tr>
+<tr><td align="left">  %arrayidx275.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 24</td></tr>
+<tr><td align="left">  %27 = load i16, i16* %arrayidx275.i, align 16, !tbaa !3</td></tr>
+<tr><td align="left">  %conv276.i = sext i16 %27 to i64</td></tr>
+<tr><td align="left">  %arrayidx284.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 25</td></tr>
+<tr><td align="left">  %28 = load i16, i16* %arrayidx284.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv285.i = sext i16 %28 to i64</td></tr>
+<tr><td align="left">  %arrayidx293.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 26</td></tr>
+<tr><td align="left">  %29 = load i16, i16* %arrayidx293.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv294.i = sext i16 %29 to i64</td></tr>
+<tr><td align="left">  %arrayidx302.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 27</td></tr>
+<tr><td align="left">  %30 = load i16, i16* %arrayidx302.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv303.i = sext i16 %30 to i64</td></tr>
+<tr><td align="left">  %arrayidx311.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 28</td></tr>
+<tr><td align="left">  %31 = load i16, i16* %arrayidx311.i, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %conv312.i = sext i16 %31 to i64</td></tr>
+<tr><td align="left">  %arrayidx320.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 29</td></tr>
+<tr><td align="left">  %32 = load i16, i16* %arrayidx320.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv321.i = sext i16 %32 to i64</td></tr>
+<tr><td align="left">  %arrayidx329.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 30</td></tr>
+<tr><td align="left">  %33 = load i16, i16* %arrayidx329.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv330.i = sext i16 %33 to i64</td></tr>
+<tr><td align="left">  %arrayidx338.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 31</td></tr>
+<tr><td align="left">  %34 = load i16, i16* %arrayidx338.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv339.i = sext i16 %34 to i64</td></tr>
+<tr><td align="left">  %arrayidx347.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 32</td></tr>
+<tr><td align="left">  %35 = load i16, i16* %arrayidx347.i, align 16, !tbaa !3</td></tr>
+<tr><td align="left">  %conv348.i = sext i16 %35 to i64</td></tr>
+<tr><td align="left">  %arrayidx356.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 33</td></tr>
+<tr><td align="left">  %36 = load i16, i16* %arrayidx356.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv357.i = sext i16 %36 to i64</td></tr>
+<tr><td align="left">  %arrayidx365.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 34</td></tr>
+<tr><td align="left">  %37 = load i16, i16* %arrayidx365.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv366.i = sext i16 %37 to i64</td></tr>
+<tr><td align="left">  %arrayidx374.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 35</td></tr>
+<tr><td align="left">  %38 = load i16, i16* %arrayidx374.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv375.i = sext i16 %38 to i64</td></tr>
+<tr><td align="left">  %arrayidx383.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 36</td></tr>
+<tr><td align="left">  %39 = load i16, i16* %arrayidx383.i, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %conv384.i = sext i16 %39 to i64</td></tr>
+<tr><td align="left">  %arrayidx392.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 37</td></tr>
+<tr><td align="left">  %40 = load i16, i16* %arrayidx392.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv393.i = sext i16 %40 to i64</td></tr>
+<tr><td align="left">  %arrayidx401.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 38</td></tr>
+<tr><td align="left">  %41 = load i16, i16* %arrayidx401.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv402.i = sext i16 %41 to i64</td></tr>
+<tr><td align="left">  %arrayidx410.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 39</td></tr>
+<tr><td align="left">  %42 = load i16, i16* %arrayidx410.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv411.i = sext i16 %42 to i64</td></tr>
+<tr><td align="left">  br label %for.cond58.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body47.i:</td></tr>
+<tr><td align="left">  %arrayidx49.i = getelementptr inbounds i16, i16* %d, i64 %indvars.iv703.i</td></tr>
+<tr><td align="left">  %43 = load i16, i16* %arrayidx49.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv50.i = sext i16 %43 to i32</td></tr>
+<tr><td align="left">  %shr.i = ashr i32 %conv50.i, %2</td></tr>
+<tr><td align="left">  %conv52.i = trunc i32 %shr.i to i16</td></tr>
+<tr><td align="left">  %arrayidx54.i = getelementptr inbounds [40 x i16], [40 x i16]* %wt.i, i64 0, i64 %indvars.iv703.i</td></tr>
+<tr><td align="left">  store i16 %conv52.i, i16* %arrayidx54.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %indvars.iv.next704.i = add nuw nsw i64 %indvars.iv703.i, 1</td></tr>
+<tr><td align="left">  br label %for.cond44.i, !llvm.loop !9</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond58.i:</td></tr>
+<tr><td align="left">  %indvars.iv706.i = phi i64 [ 40, %for.cond58.preheader.i ], [ %indvars.iv.next707.i, %for.body61.i ]</td></tr>
+<tr><td align="left">  %L_max.0.i = phi i64 [ 0, %for.cond58.preheader.i ], [ %spec.select695.i, %for.body61.i ]</td></tr>
+<tr><td align="left">  %Nc.0.i = phi i16 [ 40, %for.cond58.preheader.i ], [ %spec.select696.i, %for.body61.i ]</td></tr>
+<tr><td align="left">  %lambda.0.i = phi i32 [ 40, %for.cond58.preheader.i ], [ %inc425.i, %for.body61.i ]</td></tr>
+<tr><td align="left">  %exitcond748.not.i = icmp eq i64 %indvars.iv706.i, 121</td></tr>
+<tr><td align="left">  br i1 %exitcond748.not.i, label %for.end426.i, label %for.body61.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body61.i:</td></tr>
+<tr><td align="left">  %44 = sub nsw i64 0, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx66.i = getelementptr inbounds i16, i16* %dp, i64 %44</td></tr>
+<tr><td align="left">  %45 = load i16, i16* %arrayidx66.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv67.i = sext i16 %45 to i64</td></tr>
+<tr><td align="left">  %mul.i = mul nsw i64 %conv67.i, %conv63.i</td></tr>
+<tr><td align="left">  %46 = sub nsw i64 1, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx73.i = getelementptr inbounds i16, i16* %dp, i64 %46</td></tr>
+<tr><td align="left">  %47 = load i16, i16* %arrayidx73.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv74.i = sext i16 %47 to i64</td></tr>
+<tr><td align="left">  %mul75.i = mul nsw i64 %conv74.i, %conv70.i</td></tr>
+<tr><td align="left">  %add.i = add nsw i64 %mul75.i, %mul.i</td></tr>
+<tr><td align="left">  %48 = sub nsw i64 2, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx81.i = getelementptr inbounds i16, i16* %dp, i64 %48</td></tr>
+<tr><td align="left">  %49 = load i16, i16* %arrayidx81.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv82.i = sext i16 %49 to i64</td></tr>
+<tr><td align="left">  %mul83.i = mul nsw i64 %conv82.i, %conv78.i</td></tr>
+<tr><td align="left">  %add85.i = add nsw i64 %add.i, %mul83.i</td></tr>
+<tr><td align="left">  %50 = sub nsw i64 3, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx90.i = getelementptr inbounds i16, i16* %dp, i64 %50</td></tr>
+<tr><td align="left">  %51 = load i16, i16* %arrayidx90.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv91.i = sext i16 %51 to i64</td></tr>
+<tr><td align="left">  %mul92.i = mul nsw i64 %conv91.i, %conv87.i</td></tr>
+<tr><td align="left">  %add94.i = add nsw i64 %add85.i, %mul92.i</td></tr>
+<tr><td align="left">  %52 = sub nsw i64 4, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx99.i = getelementptr inbounds i16, i16* %dp, i64 %52</td></tr>
+<tr><td align="left">  %53 = load i16, i16* %arrayidx99.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv100.i = sext i16 %53 to i64</td></tr>
+<tr><td align="left">  %mul101.i = mul nsw i64 %conv100.i, %conv96.i</td></tr>
+<tr><td align="left">  %add103.i = add nsw i64 %add94.i, %mul101.i</td></tr>
+<tr><td align="left">  %54 = sub nsw i64 5, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx108.i = getelementptr inbounds i16, i16* %dp, i64 %54</td></tr>
+<tr><td align="left">  %55 = load i16, i16* %arrayidx108.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv109.i = sext i16 %55 to i64</td></tr>
+<tr><td align="left">  %mul110.i = mul nsw i64 %conv109.i, %conv105.i</td></tr>
+<tr><td align="left">  %add112.i = add nsw i64 %add103.i, %mul110.i</td></tr>
+<tr><td align="left">  %56 = sub nsw i64 6, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx117.i = getelementptr inbounds i16, i16* %dp, i64 %56</td></tr>
+<tr><td align="left">  %57 = load i16, i16* %arrayidx117.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv118.i = sext i16 %57 to i64</td></tr>
+<tr><td align="left">  %mul119.i = mul nsw i64 %conv118.i, %conv114.i</td></tr>
+<tr><td align="left">  %add121.i = add nsw i64 %add112.i, %mul119.i</td></tr>
+<tr><td align="left">  %58 = sub nsw i64 7, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx126.i = getelementptr inbounds i16, i16* %dp, i64 %58</td></tr>
+<tr><td align="left">  %59 = load i16, i16* %arrayidx126.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv127.i = sext i16 %59 to i64</td></tr>
+<tr><td align="left">  %mul128.i = mul nsw i64 %conv127.i, %conv123.i</td></tr>
+<tr><td align="left">  %add130.i = add nsw i64 %add121.i, %mul128.i</td></tr>
+<tr><td align="left">  %60 = sub nsw i64 8, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx135.i = getelementptr inbounds i16, i16* %dp, i64 %60</td></tr>
+<tr><td align="left">  %61 = load i16, i16* %arrayidx135.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv136.i = sext i16 %61 to i64</td></tr>
+<tr><td align="left">  %mul137.i = mul nsw i64 %conv136.i, %conv132.i</td></tr>
+<tr><td align="left">  %add139.i = add nsw i64 %add130.i, %mul137.i</td></tr>
+<tr><td align="left">  %62 = sub nsw i64 9, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx144.i = getelementptr inbounds i16, i16* %dp, i64 %62</td></tr>
+<tr><td align="left">  %63 = load i16, i16* %arrayidx144.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv145.i = sext i16 %63 to i64</td></tr>
+<tr><td align="left">  %mul146.i = mul nsw i64 %conv145.i, %conv141.i</td></tr>
+<tr><td align="left">  %add148.i = add nsw i64 %add139.i, %mul146.i</td></tr>
+<tr><td align="left">  %64 = sub nsw i64 10, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx153.i = getelementptr inbounds i16, i16* %dp, i64 %64</td></tr>
+<tr><td align="left">  %65 = load i16, i16* %arrayidx153.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv154.i = sext i16 %65 to i64</td></tr>
+<tr><td align="left">  %mul155.i = mul nsw i64 %conv154.i, %conv150.i</td></tr>
+<tr><td align="left">  %add157.i = add nsw i64 %add148.i, %mul155.i</td></tr>
+<tr><td align="left">  %66 = sub nsw i64 11, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx162.i = getelementptr inbounds i16, i16* %dp, i64 %66</td></tr>
+<tr><td align="left">  %67 = load i16, i16* %arrayidx162.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv163.i = sext i16 %67 to i64</td></tr>
+<tr><td align="left">  %mul164.i = mul nsw i64 %conv163.i, %conv159.i</td></tr>
+<tr><td align="left">  %add166.i = add nsw i64 %add157.i, %mul164.i</td></tr>
+<tr><td align="left">  %68 = sub nsw i64 12, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx171.i = getelementptr inbounds i16, i16* %dp, i64 %68</td></tr>
+<tr><td align="left">  %69 = load i16, i16* %arrayidx171.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv172.i = sext i16 %69 to i64</td></tr>
+<tr><td align="left">  %mul173.i = mul nsw i64 %conv172.i, %conv168.i</td></tr>
+<tr><td align="left">  %add175.i = add nsw i64 %add166.i, %mul173.i</td></tr>
+<tr><td align="left">  %70 = sub nsw i64 13, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx180.i = getelementptr inbounds i16, i16* %dp, i64 %70</td></tr>
+<tr><td align="left">  %71 = load i16, i16* %arrayidx180.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv181.i = sext i16 %71 to i64</td></tr>
+<tr><td align="left">  %mul182.i = mul nsw i64 %conv181.i, %conv177.i</td></tr>
+<tr><td align="left">  %add184.i = add nsw i64 %add175.i, %mul182.i</td></tr>
+<tr><td align="left">  %72 = sub nsw i64 14, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx189.i = getelementptr inbounds i16, i16* %dp, i64 %72</td></tr>
+<tr><td align="left">  %73 = load i16, i16* %arrayidx189.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv190.i = sext i16 %73 to i64</td></tr>
+<tr><td align="left">  %mul191.i = mul nsw i64 %conv190.i, %conv186.i</td></tr>
+<tr><td align="left">  %add193.i = add nsw i64 %add184.i, %mul191.i</td></tr>
+<tr><td align="left">  %74 = sub nsw i64 15, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx198.i = getelementptr inbounds i16, i16* %dp, i64 %74</td></tr>
+<tr><td align="left">  %75 = load i16, i16* %arrayidx198.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv199.i = sext i16 %75 to i64</td></tr>
+<tr><td align="left">  %mul200.i = mul nsw i64 %conv199.i, %conv195.i</td></tr>
+<tr><td align="left">  %add202.i = add nsw i64 %add193.i, %mul200.i</td></tr>
+<tr><td align="left">  %76 = sub nsw i64 16, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx207.i = getelementptr inbounds i16, i16* %dp, i64 %76</td></tr>
+<tr><td align="left">  %77 = load i16, i16* %arrayidx207.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv208.i = sext i16 %77 to i64</td></tr>
+<tr><td align="left">  %mul209.i = mul nsw i64 %conv208.i, %conv204.i</td></tr>
+<tr><td align="left">  %add211.i = add nsw i64 %add202.i, %mul209.i</td></tr>
+<tr><td align="left">  %78 = sub nsw i64 17, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx216.i = getelementptr inbounds i16, i16* %dp, i64 %78</td></tr>
+<tr><td align="left">  %79 = load i16, i16* %arrayidx216.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv217.i = sext i16 %79 to i64</td></tr>
+<tr><td align="left">  %mul218.i = mul nsw i64 %conv217.i, %conv213.i</td></tr>
+<tr><td align="left">  %add220.i = add nsw i64 %add211.i, %mul218.i</td></tr>
+<tr><td align="left">  %80 = sub nsw i64 18, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx225.i = getelementptr inbounds i16, i16* %dp, i64 %80</td></tr>
+<tr><td align="left">  %81 = load i16, i16* %arrayidx225.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv226.i = sext i16 %81 to i64</td></tr>
+<tr><td align="left">  %mul227.i = mul nsw i64 %conv226.i, %conv222.i</td></tr>
+<tr><td align="left">  %add229.i = add nsw i64 %add220.i, %mul227.i</td></tr>
+<tr><td align="left">  %82 = sub nsw i64 19, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx234.i = getelementptr inbounds i16, i16* %dp, i64 %82</td></tr>
+<tr><td align="left">  %83 = load i16, i16* %arrayidx234.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv235.i = sext i16 %83 to i64</td></tr>
+<tr><td align="left">  %mul236.i = mul nsw i64 %conv235.i, %conv231.i</td></tr>
+<tr><td align="left">  %add238.i = add nsw i64 %add229.i, %mul236.i</td></tr>
+<tr><td align="left">  %84 = sub nsw i64 20, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx243.i = getelementptr inbounds i16, i16* %dp, i64 %84</td></tr>
+<tr><td align="left">  %85 = load i16, i16* %arrayidx243.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv244.i = sext i16 %85 to i64</td></tr>
+<tr><td align="left">  %mul245.i = mul nsw i64 %conv244.i, %conv240.i</td></tr>
+<tr><td align="left">  %add247.i = add nsw i64 %add238.i, %mul245.i</td></tr>
+<tr><td align="left">  %86 = sub nsw i64 21, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx252.i = getelementptr inbounds i16, i16* %dp, i64 %86</td></tr>
+<tr><td align="left">  %87 = load i16, i16* %arrayidx252.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv253.i = sext i16 %87 to i64</td></tr>
+<tr><td align="left">  %mul254.i = mul nsw i64 %conv253.i, %conv249.i</td></tr>
+<tr><td align="left">  %add256.i = add nsw i64 %add247.i, %mul254.i</td></tr>
+<tr><td align="left">  %88 = sub nsw i64 22, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx261.i = getelementptr inbounds i16, i16* %dp, i64 %88</td></tr>
+<tr><td align="left">  %89 = load i16, i16* %arrayidx261.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv262.i = sext i16 %89 to i64</td></tr>
+<tr><td align="left">  %mul263.i = mul nsw i64 %conv262.i, %conv258.i</td></tr>
+<tr><td align="left">  %add265.i = add nsw i64 %add256.i, %mul263.i</td></tr>
+<tr><td align="left">  %90 = sub nsw i64 23, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx270.i = getelementptr inbounds i16, i16* %dp, i64 %90</td></tr>
+<tr><td align="left">  %91 = load i16, i16* %arrayidx270.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv271.i = sext i16 %91 to i64</td></tr>
+<tr><td align="left">  %mul272.i = mul nsw i64 %conv271.i, %conv267.i</td></tr>
+<tr><td align="left">  %add274.i = add nsw i64 %add265.i, %mul272.i</td></tr>
+<tr><td align="left">  %92 = sub nsw i64 24, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx279.i = getelementptr inbounds i16, i16* %dp, i64 %92</td></tr>
+<tr><td align="left">  %93 = load i16, i16* %arrayidx279.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv280.i = sext i16 %93 to i64</td></tr>
+<tr><td align="left">  %mul281.i = mul nsw i64 %conv280.i, %conv276.i</td></tr>
+<tr><td align="left">  %add283.i = add nsw i64 %add274.i, %mul281.i</td></tr>
+<tr><td align="left">  %94 = sub nsw i64 25, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx288.i = getelementptr inbounds i16, i16* %dp, i64 %94</td></tr>
+<tr><td align="left">  %95 = load i16, i16* %arrayidx288.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv289.i = sext i16 %95 to i64</td></tr>
+<tr><td align="left">  %mul290.i = mul nsw i64 %conv289.i, %conv285.i</td></tr>
+<tr><td align="left">  %add292.i = add nsw i64 %add283.i, %mul290.i</td></tr>
+<tr><td align="left">  %96 = sub nsw i64 26, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx297.i = getelementptr inbounds i16, i16* %dp, i64 %96</td></tr>
+<tr><td align="left">  %97 = load i16, i16* %arrayidx297.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv298.i = sext i16 %97 to i64</td></tr>
+<tr><td align="left">  %mul299.i = mul nsw i64 %conv298.i, %conv294.i</td></tr>
+<tr><td align="left">  %add301.i = add nsw i64 %add292.i, %mul299.i</td></tr>
+<tr><td align="left">  %98 = sub nsw i64 27, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx306.i = getelementptr inbounds i16, i16* %dp, i64 %98</td></tr>
+<tr><td align="left">  %99 = load i16, i16* %arrayidx306.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv307.i = sext i16 %99 to i64</td></tr>
+<tr><td align="left">  %mul308.i = mul nsw i64 %conv307.i, %conv303.i</td></tr>
+<tr><td align="left">  %add310.i = add nsw i64 %add301.i, %mul308.i</td></tr>
+<tr><td align="left">  %100 = sub nsw i64 28, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx315.i = getelementptr inbounds i16, i16* %dp, i64 %100</td></tr>
+<tr><td align="left">  %101 = load i16, i16* %arrayidx315.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv316.i = sext i16 %101 to i64</td></tr>
+<tr><td align="left">  %mul317.i = mul nsw i64 %conv316.i, %conv312.i</td></tr>
+<tr><td align="left">  %add319.i = add nsw i64 %add310.i, %mul317.i</td></tr>
+<tr><td align="left">  %102 = sub nsw i64 29, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx324.i = getelementptr inbounds i16, i16* %dp, i64 %102</td></tr>
+<tr><td align="left">  %103 = load i16, i16* %arrayidx324.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv325.i = sext i16 %103 to i64</td></tr>
+<tr><td align="left">  %mul326.i = mul nsw i64 %conv325.i, %conv321.i</td></tr>
+<tr><td align="left">  %add328.i = add nsw i64 %add319.i, %mul326.i</td></tr>
+<tr><td align="left">  %104 = sub nsw i64 30, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx333.i = getelementptr inbounds i16, i16* %dp, i64 %104</td></tr>
+<tr><td align="left">  %105 = load i16, i16* %arrayidx333.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv334.i = sext i16 %105 to i64</td></tr>
+<tr><td align="left">  %mul335.i = mul nsw i64 %conv334.i, %conv330.i</td></tr>
+<tr><td align="left">  %add337.i = add nsw i64 %add328.i, %mul335.i</td></tr>
+<tr><td align="left">  %106 = sub nsw i64 31, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx342.i = getelementptr inbounds i16, i16* %dp, i64 %106</td></tr>
+<tr><td align="left">  %107 = load i16, i16* %arrayidx342.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv343.i = sext i16 %107 to i64</td></tr>
+<tr><td align="left">  %mul344.i = mul nsw i64 %conv343.i, %conv339.i</td></tr>
+<tr><td align="left">  %add346.i = add nsw i64 %add337.i, %mul344.i</td></tr>
+<tr><td align="left">  %108 = sub nsw i64 32, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx351.i = getelementptr inbounds i16, i16* %dp, i64 %108</td></tr>
+<tr><td align="left">  %109 = load i16, i16* %arrayidx351.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv352.i = sext i16 %109 to i64</td></tr>
+<tr><td align="left">  %mul353.i = mul nsw i64 %conv352.i, %conv348.i</td></tr>
+<tr><td align="left">  %add355.i = add nsw i64 %add346.i, %mul353.i</td></tr>
+<tr><td align="left">  %110 = sub nsw i64 33, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx360.i = getelementptr inbounds i16, i16* %dp, i64 %110</td></tr>
+<tr><td align="left">  %111 = load i16, i16* %arrayidx360.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv361.i = sext i16 %111 to i64</td></tr>
+<tr><td align="left">  %mul362.i = mul nsw i64 %conv361.i, %conv357.i</td></tr>
+<tr><td align="left">  %add364.i = add nsw i64 %add355.i, %mul362.i</td></tr>
+<tr><td align="left">  %112 = sub nsw i64 34, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx369.i = getelementptr inbounds i16, i16* %dp, i64 %112</td></tr>
+<tr><td align="left">  %113 = load i16, i16* %arrayidx369.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv370.i = sext i16 %113 to i64</td></tr>
+<tr><td align="left">  %mul371.i = mul nsw i64 %conv370.i, %conv366.i</td></tr>
+<tr><td align="left">  %add373.i = add nsw i64 %add364.i, %mul371.i</td></tr>
+<tr><td align="left">  %114 = sub nsw i64 35, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx378.i = getelementptr inbounds i16, i16* %dp, i64 %114</td></tr>
+<tr><td align="left">  %115 = load i16, i16* %arrayidx378.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv379.i = sext i16 %115 to i64</td></tr>
+<tr><td align="left">  %mul380.i = mul nsw i64 %conv379.i, %conv375.i</td></tr>
+<tr><td align="left">  %add382.i = add nsw i64 %add373.i, %mul380.i</td></tr>
+<tr><td align="left">  %116 = sub nsw i64 36, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx387.i = getelementptr inbounds i16, i16* %dp, i64 %116</td></tr>
+<tr><td align="left">  %117 = load i16, i16* %arrayidx387.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv388.i = sext i16 %117 to i64</td></tr>
+<tr><td align="left">  %mul389.i = mul nsw i64 %conv388.i, %conv384.i</td></tr>
+<tr><td align="left">  %add391.i = add nsw i64 %add382.i, %mul389.i</td></tr>
+<tr><td align="left">  %118 = sub nsw i64 37, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx396.i = getelementptr inbounds i16, i16* %dp, i64 %118</td></tr>
+<tr><td align="left">  %119 = load i16, i16* %arrayidx396.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv397.i = sext i16 %119 to i64</td></tr>
+<tr><td align="left">  %mul398.i = mul nsw i64 %conv397.i, %conv393.i</td></tr>
+<tr><td align="left">  %add400.i = add nsw i64 %add391.i, %mul398.i</td></tr>
+<tr><td align="left">  %120 = sub nsw i64 38, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx405.i = getelementptr inbounds i16, i16* %dp, i64 %120</td></tr>
+<tr><td align="left">  %121 = load i16, i16* %arrayidx405.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv406.i = sext i16 %121 to i64</td></tr>
+<tr><td align="left">  %mul407.i = mul nsw i64 %conv406.i, %conv402.i</td></tr>
+<tr><td align="left">  %add409.i = add nsw i64 %add400.i, %mul407.i</td></tr>
+<tr><td align="left">  %122 = sub nsw i64 39, %indvars.iv706.i</td></tr>
+<tr><td align="left">  %arrayidx414.i = getelementptr inbounds i16, i16* %dp, i64 %122</td></tr>
+<tr><td align="left">  %123 = load i16, i16* %arrayidx414.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv415.i = sext i16 %123 to i64</td></tr>
+<tr><td align="left">  %mul416.i = mul nsw i64 %conv415.i, %conv411.i</td></tr>
+<tr><td align="left">  %add418.i = add nsw i64 %add409.i, %mul416.i</td></tr>
+<tr><td align="left">  %cmp419.i = icmp sgt i64 %add418.i, %L_max.0.i</td></tr>
+<tr><td align="left">  %conv422.i = trunc i32 %lambda.0.i to i16</td></tr>
+<tr><td align="left">  %spec.select695.i = select i1 %cmp419.i, i64 %add418.i, i64 %L_max.0.i</td></tr>
+<tr><td align="left">  %spec.select696.i = select i1 %cmp419.i, i16 %conv422.i, i16 %Nc.0.i</td></tr>
+<tr><td align="left">  %indvars.iv.next707.i = add nuw nsw i64 %indvars.iv706.i, 1</td></tr>
+<tr><td align="left">  %inc425.i = add nuw nsw i32 %lambda.0.i, 1</td></tr>
+<tr><td align="left">  br label %for.cond58.i, !llvm.loop !10</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb21 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end426.i:</td></tr>
+<tr><td align="left">  store i16 %Nc.0.i, i16* %Nc, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp429.i = icmp slt i32 %2, 101</td></tr>
+<tr><td align="left">  br i1 %cmp429.i, label %cond.end436.i, label %cond.false435.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb22 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false435.i:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([28 x i8], [28 x i8]* @.str.11, i64 0, i64 0), i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i64 0, i64 0), i32 165, i8* getelementptr inbounds ([71 x i8], [71 x i8]* @__PRETTY_FUNCTION__.Calculation_of_the_LTP_parameters, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb23 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end436.i:</td></tr>
+<tr><td align="left">  %shl427.i = shl i64 %L_max.0.i, 1</td></tr>
+<tr><td align="left">  %sub438.i = sub nsw i32 6, %2</td></tr>
+<tr><td align="left">  %sh_prom.i = zext i32 %sub438.i to i64</td></tr>
+<tr><td align="left">  %shr439.i = ashr i64 %shl427.i, %sh_prom.i</td></tr>
+<tr><td align="left">  %Nc.0.off.i = add i16 %Nc.0.i, -40</td></tr>
+<tr><td align="left">  %124 = icmp ult i16 %Nc.0.off.i, 81</td></tr>
+<tr><td align="left">  br i1 %124, label %for.cond450.preheader.i, label %cond.false448.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond450.preheader.i:</td></tr>
+<tr><td align="left">  %125 = zext i16 %Nc.0.i to i64</td></tr>
+<tr><td align="left">  br label %for.cond450.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb25 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false448.i:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([22 x i8], [22 x i8]* @.str.12, i64 0, i64 0), i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i64 0, i64 0), i32 168, i8* getelementptr inbounds ([71 x i8], [71 x i8]* @__PRETTY_FUNCTION__.Calculation_of_the_LTP_parameters, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond450.i:</td></tr>
+<tr><td align="left">  %indvars.iv749.i = phi i64 [ 0, %for.cond450.preheader.i ], [ %indvars.iv.next750.i, %for.body453.i ]</td></tr>
+<tr><td align="left">  %L_power.0.i = phi i64 [ 0, %for.cond450.preheader.i ], [ %add462.i, %for.body453.i ]</td></tr>
+<tr><td align="left">  %exitcond752.not.i = icmp eq i64 %indvars.iv749.i, 40</td></tr>
+<tr><td align="left">  br i1 %exitcond752.not.i, label %for.end465.i, label %for.body453.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb27 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body453.i:</td></tr>
+<tr><td align="left">  %126 = sub nsw i64 %indvars.iv749.i, %125</td></tr>
+<tr><td align="left">  %arrayidx457.i = getelementptr inbounds i16, i16* %dp, i64 %126</td></tr>
+<tr><td align="left">  %127 = load i16, i16* %arrayidx457.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %128 = ashr i16 %127, 3</td></tr>
+<tr><td align="left">  %conv460.i = sext i16 %128 to i64</td></tr>
+<tr><td align="left">  %mul461.i = mul nsw i64 %conv460.i, %conv460.i</td></tr>
+<tr><td align="left">  %add462.i = add nuw nsw i64 %mul461.i, %L_power.0.i</td></tr>
+<tr><td align="left">  %indvars.iv.next750.i = add nuw nsw i64 %indvars.iv749.i, 1</td></tr>
+<tr><td align="left">  br label %for.cond450.i, !llvm.loop !11</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb28 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end465.i:</td></tr>
+<tr><td align="left">  %shl466.i = shl nuw i64 %L_power.0.i, 1</td></tr>
+<tr><td align="left">  %cmp467.i = icmp slt i64 %shr439.i, 1</td></tr>
+<tr><td align="left">  br i1 %cmp467.i, label %Calculation_of_the_LTP_parameters.exit.thread48, label %if.end470.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb29 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">Calculation_of_the_LTP_parameters.exit.thread48:</td></tr>
+<tr><td align="left">  store i16 0, i16* %bc, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 80, i8* nonnull %0) #6</td></tr>
+<tr><td align="left">  %129 = load i16, i16* %Nc, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  br label %for.cond.preheader.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end470.i:</td></tr>
+<tr><td align="left">  %cmp471.not.i = icmp slt i64 %shr439.i, %shl466.i</td></tr>
+<tr><td align="left">  br i1 %cmp471.not.i, label %if.end474.i, label %Calculation_of_the_LTP_parameters.exit.thread</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb31 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end474.i:</td></tr>
+<tr><td align="left">  %call475.i = tail call signext i16 @gsm_norm(i64 %shl466.i) #7</td></tr>
+<tr><td align="left">  %conv476.i = sext i16 %call475.i to i64</td></tr>
+<tr><td align="left">  %sh_prom477.i = and i64 %conv476.i, 4294967295</td></tr>
+<tr><td align="left">  %shl478.i = shl i64 %shr439.i, %sh_prom477.i</td></tr>
+<tr><td align="left">  %shl483.i = shl i64 %shl466.i, %sh_prom477.i</td></tr>
+<tr><td align="left">  %130 = lshr i64 %shl483.i, 16</td></tr>
+<tr><td align="left">  %conv485.i = trunc i64 %130 to i16</td></tr>
+<tr><td align="left">  %131 = trunc i64 %shl478.i to i32</td></tr>
+<tr><td align="left">  %conv491.i = ashr i32 %131, 16</td></tr>
+<tr><td align="left">  br label %for.cond486.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb32 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond486.i:</td></tr>
+<tr><td align="left">  %indvars.iv753.i = phi i64 [ %indvars.iv.next754.i, %for.inc500.i ], [ 0, %if.end474.i ]</td></tr>
+<tr><td align="left">  %exitcond755.not.i = icmp eq i64 %indvars.iv753.i, 3</td></tr>
+<tr><td align="left">  br i1 %exitcond755.not.i, label %Calculation_of_the_LTP_parameters.exit.thread, label %for.body490.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb33 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body490.i:</td></tr>
+<tr><td align="left">  %arrayidx493.i = getelementptr inbounds [4 x i16], [4 x i16]* @gsm_DLB, i64 0, i64 %indvars.iv753.i</td></tr>
+<tr><td align="left">  %132 = load i16, i16* %arrayidx493.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %call494.i = tail call signext i16 @gsm_mult(i16 signext %conv485.i, i16 signext %132) #7</td></tr>
+<tr><td align="left">  %conv495.i = sext i16 %call494.i to i32</td></tr>
+<tr><td align="left">  %cmp496.not.i = icmp sgt i32 %conv491.i, %conv495.i</td></tr>
+<tr><td align="left">  br i1 %cmp496.not.i, label %for.inc500.i, label %Calculation_of_the_LTP_parameters.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb34 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc500.i:</td></tr>
+<tr><td align="left">  %indvars.iv.next754.i = add nuw nsw i64 %indvars.iv753.i, 1</td></tr>
+<tr><td align="left">  br label %for.cond486.i, !llvm.loop !12</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb35 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">m.inst.bb.i:</td></tr>
+<tr><td align="left">  %133 = phi i32 [ 108, %src.bb.i ], [ 101, %if.else.i ]</td></tr>
+<tr><td align="left">  %134 = phi i8* [ getelementptr inbounds ([10 x i8], [10 x i8]* @.str.10, i64 0, i64 0), %src.bb.i ], [ getelementptr inbounds ([9 x i8], [9 x i8]* @.str.9, i64 0, i64 0), %if.else.i ]</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* nonnull %134, i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.1, i64 0, i64 0), i32 %133, i8* getelementptr inbounds ([71 x i8], [71 x i8]* @__PRETTY_FUNCTION__.Calculation_of_the_LTP_parameters, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb36 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">src.bb.i:</td></tr>
+<tr><td align="left">  %135 = zext i16 %dmax.0.i to i64</td></tr>
+<tr><td align="left">  %136 = shl nuw nsw i64 %135, 16</td></tr>
+<tr><td align="left">  %137 = tail call signext i16 @gsm_norm(i64 %136) #7</td></tr>
+<tr><td align="left">  %138 = icmp sgt i16 %137, 6</td></tr>
+<tr><td align="left">  %139 = sub i16 6, %137</td></tr>
+<tr><td align="left">  %140 = select i1 %138, i16 0, i16 %139</td></tr>
+<tr><td align="left">  %141 = sext i16 %140 to i32</td></tr>
+<tr><td align="left">  %142 = icmp sgt i16 %140, -1</td></tr>
+<tr><td align="left">  br i1 %142, label %for.cond44.preheader.i, label %m.inst.bb.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb37 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">Calculation_of_the_LTP_parameters.exit.thread:</td></tr>
+<tr><td align="left">  store i16 3, i16* %bc, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 80, i8* nonnull %0) #6</td></tr>
+<tr><td align="left">  %143 = load i16, i16* %Nc, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  br label %for.cond108.preheader.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb38 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">Calculation_of_the_LTP_parameters.exit:</td></tr>
+<tr><td align="left">  %144 = trunc i64 %indvars.iv753.i to i16</td></tr>
+<tr><td align="left">  store i16 %144, i16* %bc, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 80, i8* nonnull %0) #6</td></tr>
+<tr><td align="left">  %145 = load i16, i16* %Nc, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv.i = sext i16 %144 to i32</td></tr>
+<tr><td align="left">  switch i32 %conv.i, label %Long_term_analysis_filtering.exit [
+    i32 0, label %for.cond.preheader.i
+    i32 1, label %for.cond26.preheader.i
+    i32 2, label %for.cond67.preheader.i
+    i32 3, label %for.cond108.preheader.i
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond108.preheader.i:</td></tr>
+<tr><td align="left">  %146 = phi i16 [ %143, %Calculation_of_the_LTP_parameters.exit.thread ], [ %145, %Calculation_of_the_LTP_parameters.exit ]</td></tr>
+<tr><td align="left">  %147 = sext i16 %146 to i64</td></tr>
+<tr><td align="left">  br label %for.cond108.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb40 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond67.preheader.i:</td></tr>
+<tr><td align="left">  %148 = sext i16 %145 to i64</td></tr>
+<tr><td align="left">  br label %for.cond67.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb41 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond26.preheader.i:</td></tr>
+<tr><td align="left">  %149 = sext i16 %145 to i64</td></tr>
+<tr><td align="left">  br label %for.cond26.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb42 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond.preheader.i:</td></tr>
+<tr><td align="left">  %150 = phi i16 [ %129, %Calculation_of_the_LTP_parameters.exit.thread48 ], [ %145, %Calculation_of_the_LTP_parameters.exit ]</td></tr>
+<tr><td align="left">  %151 = sext i16 %150 to i64</td></tr>
+<tr><td align="left">  br label %for.cond.i31</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb43 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond.i31:</td></tr>
+<tr><td align="left">  %indvars.iv219.i = phi i64 [ 0, %for.cond.preheader.i ], [ %indvars.iv.next220.i, %for.body.i37 ]</td></tr>
+<tr><td align="left">  %exitcond222.not.i = icmp eq i64 %indvars.iv219.i, 40</td></tr>
+<tr><td align="left">  br i1 %exitcond222.not.i, label %Long_term_analysis_filtering.exit, label %for.body.i37</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb44 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body.i37:</td></tr>
+<tr><td align="left">  %152 = sub nsw i64 %indvars.iv219.i, %151</td></tr>
+<tr><td align="left">  %arrayidx.i32 = getelementptr inbounds i16, i16* %dp, i64 %152</td></tr>
+<tr><td align="left">  %153 = load i16, i16* %arrayidx.i32, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv3.i = sext i16 %153 to i32</td></tr>
+<tr><td align="left">  %mul.i33 = mul nsw i32 %conv3.i, 3277</td></tr>
+<tr><td align="left">  %add.i34 = add nsw i32 %mul.i33, 16384</td></tr>
+<tr><td align="left">  %shr.i35 = ashr i32 %add.i34, 15</td></tr>
+<tr><td align="left">  %conv4.i = trunc i32 %shr.i35 to i16</td></tr>
+<tr><td align="left">  %arrayidx6.i = getelementptr inbounds i16, i16* %dpp, i64 %indvars.iv219.i</td></tr>
+<tr><td align="left">  store i16 %conv4.i, i16* %arrayidx6.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %arrayidx8.i = getelementptr inbounds i16, i16* %d, i64 %indvars.iv219.i</td></tr>
+<tr><td align="left">  %154 = load i16, i16* %arrayidx8.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv9.i = sext i16 %154 to i64</td></tr>
+<tr><td align="left">  %conv12.i = sext i32 %shr.i35 to i64</td></tr>
+<tr><td align="left">  %sub13.i = sub nsw i64 %conv9.i, %conv12.i</td></tr>
+<tr><td align="left">  %cmp16.inv.i = icmp sgt i64 %sub13.i, -32768</td></tr>
+<tr><td align="left">  %cond.i36 = select i1 %cmp16.inv.i, i64 %sub13.i, i64 -32768</td></tr>
+<tr><td align="left">  %155 = icmp slt i64 %cond.i36, 32767</td></tr>
+<tr><td align="left">  %cond21.i = select i1 %155, i64 %cond.i36, i64 32767</td></tr>
+<tr><td align="left">  %conv22.i = trunc i64 %cond21.i to i16</td></tr>
+<tr><td align="left">  %arrayidx24.i = getelementptr inbounds i16, i16* %e, i64 %indvars.iv219.i</td></tr>
+<tr><td align="left">  store i16 %conv22.i, i16* %arrayidx24.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %indvars.iv.next220.i = add nuw nsw i64 %indvars.iv219.i, 1</td></tr>
+<tr><td align="left">  br label %for.cond.i31, !llvm.loop !13</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb45 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond26.i:</td></tr>
+<tr><td align="left">  %indvars.iv215.i = phi i64 [ 0, %for.cond26.preheader.i ], [ %indvars.iv.next216.i, %for.body29.i ]</td></tr>
+<tr><td align="left">  %exitcond218.not.i = icmp eq i64 %indvars.iv215.i, 40</td></tr>
+<tr><td align="left">  br i1 %exitcond218.not.i, label %Long_term_analysis_filtering.exit, label %for.body29.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb46 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body29.i:</td></tr>
+<tr><td align="left">  %156 = sub nsw i64 %indvars.iv215.i, %149</td></tr>
+<tr><td align="left">  %arrayidx33.i = getelementptr inbounds i16, i16* %dp, i64 %156</td></tr>
+<tr><td align="left">  %157 = load i16, i16* %arrayidx33.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv34.i = sext i16 %157 to i32</td></tr>
+<tr><td align="left">  %mul35.i = mul nsw i32 %conv34.i, 11469</td></tr>
+<tr><td align="left">  %add36.i = add nsw i32 %mul35.i, 16384</td></tr>
+<tr><td align="left">  %158 = lshr i32 %add36.i, 15</td></tr>
+<tr><td align="left">  %conv38.i = trunc i32 %158 to i16</td></tr>
+<tr><td align="left">  %arrayidx40.i = getelementptr inbounds i16, i16* %dpp, i64 %indvars.iv215.i</td></tr>
+<tr><td align="left">  store i16 %conv38.i, i16* %arrayidx40.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %arrayidx42.i = getelementptr inbounds i16, i16* %d, i64 %indvars.iv215.i</td></tr>
+<tr><td align="left">  %159 = load i16, i16* %arrayidx42.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %160 = tail call i16 @llvm.ssub.sat.i16(i16 %159, i16 %conv38.i) #6</td></tr>
+<tr><td align="left">  %arrayidx62.i38 = getelementptr inbounds i16, i16* %e, i64 %indvars.iv215.i</td></tr>
+<tr><td align="left">  store i16 %160, i16* %arrayidx62.i38, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %indvars.iv.next216.i = add nuw nsw i64 %indvars.iv215.i, 1</td></tr>
+<tr><td align="left">  br label %for.cond26.i, !llvm.loop !14</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb47 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond67.i:</td></tr>
+<tr><td align="left">  %indvars.iv211.i = phi i64 [ 0, %for.cond67.preheader.i ], [ %indvars.iv.next212.i, %for.body70.i ]</td></tr>
+<tr><td align="left">  %exitcond214.not.i = icmp eq i64 %indvars.iv211.i, 40</td></tr>
+<tr><td align="left">  br i1 %exitcond214.not.i, label %Long_term_analysis_filtering.exit, label %for.body70.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb48 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body70.i:</td></tr>
+<tr><td align="left">  %161 = sub nsw i64 %indvars.iv211.i, %148</td></tr>
+<tr><td align="left">  %arrayidx74.i = getelementptr inbounds i16, i16* %dp, i64 %161</td></tr>
+<tr><td align="left">  %162 = load i16, i16* %arrayidx74.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv75.i = sext i16 %162 to i64</td></tr>
+<tr><td align="left">  %mul76.i = mul nsw i64 %conv75.i, 21299</td></tr>
+<tr><td align="left">  %add77.i = add nsw i64 %mul76.i, 16384</td></tr>
+<tr><td align="left">  %163 = lshr i64 %add77.i, 15</td></tr>
+<tr><td align="left">  %conv79.i = trunc i64 %163 to i16</td></tr>
+<tr><td align="left">  %arrayidx81.i39 = getelementptr inbounds i16, i16* %dpp, i64 %indvars.iv211.i</td></tr>
+<tr><td align="left">  store i16 %conv79.i, i16* %arrayidx81.i39, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %arrayidx83.i = getelementptr inbounds i16, i16* %d, i64 %indvars.iv211.i</td></tr>
+<tr><td align="left">  %164 = load i16, i16* %arrayidx83.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv84.i = sext i16 %164 to i64</td></tr>
+<tr><td align="left">  %sext203.i = shl i64 %163, 48</td></tr>
+<tr><td align="left">  %conv87.i40 = ashr exact i64 %sext203.i, 48</td></tr>
+<tr><td align="left">  %sub88.i = sub nsw i64 %conv84.i, %conv87.i40</td></tr>
+<tr><td align="left">  %cmp93.inv.i = icmp sgt i64 %sub88.i, -32768</td></tr>
+<tr><td align="left">  %cond98.i = select i1 %cmp93.inv.i, i64 %sub88.i, i64 -32768</td></tr>
+<tr><td align="left">  %165 = icmp slt i64 %cond98.i, 32767</td></tr>
+<tr><td align="left">  %cond100.i = select i1 %165, i64 %cond98.i, i64 32767</td></tr>
+<tr><td align="left">  %conv101.i = trunc i64 %cond100.i to i16</td></tr>
+<tr><td align="left">  %arrayidx103.i = getelementptr inbounds i16, i16* %e, i64 %indvars.iv211.i</td></tr>
+<tr><td align="left">  store i16 %conv101.i, i16* %arrayidx103.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %indvars.iv.next212.i = add nuw nsw i64 %indvars.iv211.i, 1</td></tr>
+<tr><td align="left">  br label %for.cond67.i, !llvm.loop !15</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb49 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond108.i:</td></tr>
+<tr><td align="left">  %indvars.iv.i41 = phi i64 [ 0, %for.cond108.preheader.i ], [ %indvars.iv.next.i45, %for.body111.i ]</td></tr>
+<tr><td align="left">  %exitcond.not.i42 = icmp eq i64 %indvars.iv.i41, 40</td></tr>
+<tr><td align="left">  br i1 %exitcond.not.i42, label %Long_term_analysis_filtering.exit, label %for.body111.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb50 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body111.i:</td></tr>
+<tr><td align="left">  %166 = sub nsw i64 %indvars.iv.i41, %147</td></tr>
+<tr><td align="left">  %arrayidx115.i = getelementptr inbounds i16, i16* %dp, i64 %166</td></tr>
+<tr><td align="left">  %167 = load i16, i16* %arrayidx115.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv116.i = sext i16 %167 to i64</td></tr>
+<tr><td align="left">  %mul117.i = mul nsw i64 %conv116.i, 32767</td></tr>
+<tr><td align="left">  %add118.i = add nsw i64 %mul117.i, 16384</td></tr>
+<tr><td align="left">  %168 = lshr i64 %add118.i, 15</td></tr>
+<tr><td align="left">  %conv120.i = trunc i64 %168 to i16</td></tr>
+<tr><td align="left">  %arrayidx122.i43 = getelementptr inbounds i16, i16* %dpp, i64 %indvars.iv.i41</td></tr>
+<tr><td align="left">  store i16 %conv120.i, i16* %arrayidx122.i43, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %arrayidx124.i = getelementptr inbounds i16, i16* %d, i64 %indvars.iv.i41</td></tr>
+<tr><td align="left">  %169 = load i16, i16* %arrayidx124.i, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv125.i = sext i16 %169 to i64</td></tr>
+<tr><td align="left">  %sext.i = shl i64 %168, 48</td></tr>
+<tr><td align="left">  %conv128.i = ashr exact i64 %sext.i, 48</td></tr>
+<tr><td align="left">  %sub129.i = sub nsw i64 %conv125.i, %conv128.i</td></tr>
+<tr><td align="left">  %cmp134.inv.i = icmp sgt i64 %sub129.i, -32768</td></tr>
+<tr><td align="left">  %cond139.i = select i1 %cmp134.inv.i, i64 %sub129.i, i64 -32768</td></tr>
+<tr><td align="left">  %170 = icmp slt i64 %cond139.i, 32767</td></tr>
+<tr><td align="left">  %cond141.i = select i1 %170, i64 %cond139.i, i64 32767</td></tr>
+<tr><td align="left">  %conv142.i = trunc i64 %cond141.i to i16</td></tr>
+<tr><td align="left">  %arrayidx144.i44 = getelementptr inbounds i16, i16* %e, i64 %indvars.iv.i41</td></tr>
+<tr><td align="left">  store i16 %conv142.i, i16* %arrayidx144.i44, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %indvars.iv.next.i45 = add nuw nsw i64 %indvars.iv.i41, 1</td></tr>
+<tr><td align="left">  br label %for.cond108.i, !llvm.loop !16</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb51 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">Long_term_analysis_filtering.exit:</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> m_bb0:f1
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> m_bb0:f2
+f_bb1:fF -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb4:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb6:f
+f_bb6:fT -> f_bb7:f
+f_bb6:fF -> f_bb8:f
+f_bb8:fT -> f_bb9:f
+f_bb8:fF -> f_bb10:f
+f_bb10:f -> f_bb11:f
+f_bb11:fT -> f_bb13:f
+f_bb11:fF -> f_bb12:f
+f_bb12:f -> f_bb11:f
+f_bb13:fT -> f_bb15:f
+f_bb13:fF -> f_bb14:f
+f_bb14:fT -> f_bb36:f
+f_bb14:fF -> f_bb35:f
+f_bb15:f -> f_bb16:f
+f_bb16:fT -> f_bb17:f
+f_bb16:fF -> f_bb18:f
+f_bb17:f -> f_bb19:f
+f_bb18:f -> f_bb16:f
+f_bb19:fT -> f_bb21:f
+f_bb19:fF -> f_bb20:f
+f_bb20:f -> f_bb19:f
+f_bb21:fT -> f_bb23:f
+f_bb21:fF -> f_bb22:f
+f_bb23:fT -> f_bb24:f
+f_bb23:fF -> f_bb25:f
+f_bb24:f -> f_bb26:f
+f_bb26:fT -> f_bb28:f
+f_bb26:fF -> f_bb27:f
+f_bb27:f -> f_bb26:f
+f_bb28:fT -> f_bb29:f
+f_bb28:fF -> f_bb30:f
+f_bb29:f -> f_bb42:f
+f_bb30:fT -> f_bb31:f
+f_bb30:fF -> f_bb37:f
+f_bb31:f -> f_bb32:f
+f_bb32:fT -> f_bb37:f
+f_bb32:fF -> f_bb33:f
+f_bb33:fT -> f_bb34:f
+f_bb33:fF -> f_bb38:f
+f_bb34:f -> f_bb32:f
+f_bb36:fT -> f_bb15:f
+f_bb36:fF -> f_bb35:f
+f_bb37:f -> f_bb39:f
+f_bb38:f -> f_bb51:f
+f_bb38:f -> f_bb42:f
+f_bb38:f -> f_bb41:f
+f_bb38:f -> f_bb40:f
+f_bb38:f -> f_bb39:f
+f_bb39:f -> f_bb49:f
+f_bb40:f -> f_bb47:f
+f_bb41:f -> f_bb45:f
+f_bb42:f -> f_bb43:f
+f_bb43:fT -> f_bb51:f
+f_bb43:fF -> f_bb44:f
+f_bb44:f -> f_bb43:f
+f_bb45:fT -> f_bb51:f
+f_bb45:fF -> f_bb46:f
+f_bb46:f -> f_bb45:f
+f_bb47:fT -> f_bb51:f
+f_bb47:fF -> f_bb48:f
+f_bb48:f -> f_bb47:f
+f_bb49:fT -> f_bb51:f
+f_bb49:fF -> f_bb50:f
+f_bb50:f -> f_bb49:f
+}
+

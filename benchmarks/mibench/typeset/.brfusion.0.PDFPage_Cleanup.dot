@@ -1,0 +1,835 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then2.i222:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call.i221 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.75, i64 0, i64 0), i32 0, %struct.FILE_POS* %29, %struct.FILE_POS* %29) #23</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %if.end36</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then2.i230:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call.i229 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.75, i64 0, i64 0), i32 0, %struct.FILE_POS* %33, %struct.FILE_POS* %33) #23</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %0 = load %struct.t_qsave_entry*, %struct.t_qsave_entry** @g_qsave_stack, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq %struct.t_qsave_entry* %0, null</td></tr>
+<tr><td align="left">  %1 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br i1 %cmp.not, label %Assert.exit, label %if.then2.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then2.i:</td></tr>
+<tr><td align="left">  %call.i = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.75, i64 0, i64 0), i32 0, %struct.FILE_POS* %1, %struct.FILE_POS* %1) #23</td></tr>
+<tr><td align="left">  br label %Assert.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">Assert.exit:</td></tr>
+<tr><td align="left">  %2 = load i32, i32* @g_page_contents_obj_num, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp1.not = icmp eq i32 %2, 0</td></tr>
+<tr><td align="left">  br i1 %cmp1.not, label %if.end9, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %.b.i = load i1, i1* @g_in_buffering_mode, align 4</td></tr>
+<tr><td align="left">  br i1 %.b.i, label %if.then.i.i, label %PDFPage_End.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then.i.i:</td></tr>
+<tr><td align="left">  store i32 0, i32* @g_buffer_pos, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i8 0, i8* getelementptr inbounds ([1024 x i8], [1024 x i8]* @g_buffer, i64 0, i64 0), align 16, !tbaa !9</td></tr>
+<tr><td align="left">  store i1 false, i1* @g_in_buffering_mode, align 4</td></tr>
+<tr><td align="left">  %.pr.i.i = load %struct.t_qsave_marking_entry*, %struct.t_qsave_marking_entry** @g_qsave_marking_stack, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp.not4.i.i = icmp eq %struct.t_qsave_marking_entry* %.pr.i.i, null</td></tr>
+<tr><td align="left">  br i1 %cmp.not4.i.i, label %if.end.i, label %while.body.i.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body.i.i:</td></tr>
+<tr><td align="left">  %3 = phi %struct.t_qsave_marking_entry* [ %4, %while.body.i.i ], [ %.pr.i.i, %if.then.i.i ]</td></tr>
+<tr><td align="left">  %m_next_entry.i.i = getelementptr inbounds %struct.t_qsave_marking_entry, %struct.t_qsave_marking_entry* %3, i64 0, i32 0</td></tr>
+<tr><td align="left">  %4 = load %struct.t_qsave_marking_entry*, %struct.t_qsave_marking_entry** %m_next_entry.i.i, align 8, !tbaa !10</td></tr>
+<tr><td align="left">  store %struct.t_qsave_marking_entry* %4, %struct.t_qsave_marking_entry** @g_qsave_marking_stack, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %5 = bitcast %struct.t_qsave_marking_entry* %3 to i8*</td></tr>
+<tr><td align="left">  tail call void @free(i8* %5) #23</td></tr>
+<tr><td align="left">  %cmp.not.i.i = icmp eq %struct.t_qsave_marking_entry* %4, null</td></tr>
+<tr><td align="left">  br i1 %cmp.not.i.i, label %while.end.i.i, label %while.body.i.i, !llvm.loop !12</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.end.i.i:</td></tr>
+<tr><td align="left">  %.pr.i = load i8, i8* getelementptr inbounds ([1024 x i8], [1024 x i8]* @g_buffer, i64 0, i64 0), align 16, !tbaa !9</td></tr>
+<tr><td align="left">  %cmp.i.i.i = icmp eq i8 %.pr.i, 0</td></tr>
+<tr><td align="left">  br i1 %cmp.i.i.i, label %if.end.i, label %if.end.i.i.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end.i.i.i:</td></tr>
+<tr><td align="left">  %call.i.i.i = tail call i32 @fputs(i8* nonnull getelementptr inbounds ([1024 x i8], [1024 x i8]* @g_buffer, i64 0, i64 0), %struct._IO_FILE* %in_fp) #23</td></tr>
+<tr><td align="left">  br label %if.end.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end.i:</td></tr>
+<tr><td align="left">  %.pr = load i32, i32* @g_page_contents_obj_num, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp.not.i = icmp eq i32 %.pr, 0</td></tr>
+<tr><td align="left">  %6 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br i1 %cmp.not.i, label %if.then2.i.i, label %PDFPage_End.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then2.i.i:</td></tr>
+<tr><td align="left">  %call.i.i = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.75, i64 0, i64 0), i32 0, %struct.FILE_POS* %6, %struct.FILE_POS* %6) #23</td></tr>
+<tr><td align="left">  br label %PDFPage_End.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">PDFPage_End.exit:</td></tr>
+<tr><td align="left">  %call.i215 = tail call i64 @ftell(%struct._IO_FILE* %in_fp) #23</td></tr>
+<tr><td align="left">  %7 = load i32, i32* @g_page_start_offset, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %8 = trunc i64 %call.i215 to i32</td></tr>
+<tr><td align="left">  %conv2.i = sub i32 %8, %7</td></tr>
+<tr><td align="left">  %9 = tail call i64 @fwrite(i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.134, i64 0, i64 0), i64 17, i64 1, %struct._IO_FILE* %in_fp) #23</td></tr>
+<tr><td align="left">  %10 = load i32, i32* @g_page_length_obj_num, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  tail call fastcc void @PDFObject_WriteObj(%struct._IO_FILE* %in_fp, i32 %10)</td></tr>
+<tr><td align="left">  %call5 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.23, i64 0, i64 0), i32 %conv2.i)</td></tr>
+<tr><td align="left">  %entry6.0242 = load %struct.t_font_list_entry*, %struct.t_font_list_entry** @g_font_list, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp7.not243 = icmp eq %struct.t_font_list_entry* %entry6.0242, null</td></tr>
+<tr><td align="left">  br i1 %cmp7.not243, label %if.end9, label %while.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  %entry6.0244 = phi %struct.t_font_list_entry* [ %entry6.0, %PDFFont_WriteFontResource.exit ], [ %entry6.0242, %PDFPage_End.exit ]</td></tr>
+<tr><td align="left">  %m_font_resource_in_pdf.i = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry6.0244, i64 0, i32 6</td></tr>
+<tr><td align="left">  %11 = load i32, i32* %m_font_resource_in_pdf.i, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %tobool.not.i216 = icmp eq i32 %11, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not.i216, label %if.then.i, label %PDFFont_WriteFontResource.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then.i:</td></tr>
+<tr><td align="left">  store i32 1, i32* %m_font_resource_in_pdf.i, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %m_pdf_object_number.i.i = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry6.0244, i64 0, i32 5</td></tr>
+<tr><td align="left">  %12 = load i32, i32* %m_pdf_object_number.i.i, align 4, !tbaa !16</td></tr>
+<tr><td align="left">  %cmp.i.i = icmp eq i32 %12, 0</td></tr>
+<tr><td align="left">  br i1 %cmp.i.i, label %if.then.i.i218, label %PDFFont_WriteObject.exit.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then.i.i218:</td></tr>
+<tr><td align="left">  %call.i.i217 = tail call fastcc i32 @PDFObject_New() #23</td></tr>
+<tr><td align="left">  store i32 %call.i.i217, i32* %m_pdf_object_number.i.i, align 4, !tbaa !16</td></tr>
+<tr><td align="left">  br label %PDFFont_WriteObject.exit.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">PDFFont_WriteObject.exit.i:</td></tr>
+<tr><td align="left">  %13 = phi i32 [ %call.i.i217, %if.then.i.i218 ], [ %12, %if.then.i ]</td></tr>
+<tr><td align="left">  tail call fastcc void @PDFObject_WriteObj(%struct._IO_FILE* %in_fp, i32 %13) #23</td></tr>
+<tr><td align="left">  %14 = tail call i64 @fwrite(i8* getelementptr inbounds ([32 x i8], [32 x i8]* @.str.137, i64 0, i64 0), i64 31, i64 1, %struct._IO_FILE* %in_fp) #23</td></tr>
+<tr><td align="left">  %m_PDF_font_name.i = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry6.0244, i64 0, i32 1</td></tr>
+<tr><td align="left">  %15 = load i8*, i8** %m_PDF_font_name.i, align 8, !tbaa !17</td></tr>
+<tr><td align="left">  %call5.i = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.138, i64 0, i64 0), i8* %15) #23</td></tr>
+<tr><td align="left">  %m_actual_font_name6.i = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry6.0244, i64 0, i32 3</td></tr>
+<tr><td align="left">  %16 = load i8*, i8** %m_actual_font_name6.i, align 8, !tbaa !18</td></tr>
+<tr><td align="left">  %call7.i = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.139, i64 0, i64 0), i8* %16) #23</td></tr>
+<tr><td align="left">  %m_font_encoding_obj.i = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry6.0244, i64 0, i32 4</td></tr>
+<tr><td align="left">  %17 = load i32, i32* %m_font_encoding_obj.i, align 8, !tbaa !19</td></tr>
+<tr><td align="left">  %cmp.not.i219 = icmp eq i32 %17, 0</td></tr>
+<tr><td align="left">  br i1 %cmp.not.i219, label %if.end17.i, label %if.then13.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then13.i:</td></tr>
+<tr><td align="left">  %18 = tail call i64 @fwrite(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.140, i64 0, i64 0), i64 10, i64 1, %struct._IO_FILE* %in_fp) #23</td></tr>
+<tr><td align="left">  %19 = load i32, i32* %m_font_encoding_obj.i, align 8, !tbaa !19</td></tr>
+<tr><td align="left">  %call.i36.i = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.169, i64 0, i64 0), i32 %19) #23</td></tr>
+<tr><td align="left">  %fputc.i = tail call i32 @fputc(i32 10, %struct._IO_FILE* %in_fp) #23</td></tr>
+<tr><td align="left">  br label %if.end17.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end17.i:</td></tr>
+<tr><td align="left">  %20 = tail call i64 @fwrite(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.41, i64 0, i64 0), i64 10, i64 1, %struct._IO_FILE* %in_fp) #23</td></tr>
+<tr><td align="left">  br label %PDFFont_WriteFontResource.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">PDFFont_WriteFontResource.exit:</td></tr>
+<tr><td align="left">  %m_next_font_entry = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry6.0244, i64 0, i32 0</td></tr>
+<tr><td align="left">  %entry6.0 = load %struct.t_font_list_entry*, %struct.t_font_list_entry** %m_next_font_entry, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp7.not = icmp eq %struct.t_font_list_entry* %entry6.0, null</td></tr>
+<tr><td align="left">  br i1 %cmp7.not, label %if.end9, label %while.body, !llvm.loop !20</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end9:</td></tr>
+<tr><td align="left">  %source.0246 = load %struct.t_source_annot_entry*, %struct.t_source_annot_entry** @g_source_annot_list, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp11.not247 = icmp eq %struct.t_source_annot_entry* %source.0246, null</td></tr>
+<tr><td align="left">  br i1 %cmp11.not247, label %while.end18, label %while.body13.preheader</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.body13.preheader:</td></tr>
+<tr><td align="left">  %.pre257 = load i32, i32* @g_page_object_num, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %while.body13</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb20 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body13:</td></tr>
+<tr><td align="left">  %21 = phi i32 [ %23, %if.end17 ], [ %.pre257, %while.body13.preheader ]</td></tr>
+<tr><td align="left">  %source.0249 = phi %struct.t_source_annot_entry* [ %source.0, %if.end17 ], [ %source.0246, %while.body13.preheader ]</td></tr>
+<tr><td align="left">  %hasAnnot.0248 = phi i32 [ %hasAnnot.1, %if.end17 ], [ 0, %while.body13.preheader ]</td></tr>
+<tr><td align="left">  %m_this_page_object_num = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %source.0249, i64 0, i32 9</td></tr>
+<tr><td align="left">  %22 = load i32, i32* %m_this_page_object_num, align 4, !tbaa !21</td></tr>
+<tr><td align="left">  %cmp14 = icmp eq i32 %22, %21</td></tr>
+<tr><td align="left">  br i1 %cmp14, label %if.then16, label %if.end17</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb21 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then16:</td></tr>
+<tr><td align="left">  tail call fastcc void @PDFSourceAnnot_Write(%struct._IO_FILE* %in_fp, %struct.t_source_annot_entry* nonnull %source.0249)</td></tr>
+<tr><td align="left">  %.pre = load i32, i32* @g_page_object_num, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %if.end17</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb22 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end17:</td></tr>
+<tr><td align="left">  %23 = phi i32 [ %.pre, %if.then16 ], [ %21, %while.body13 ]</td></tr>
+<tr><td align="left">  %hasAnnot.1 = phi i32 [ 1, %if.then16 ], [ %hasAnnot.0248, %while.body13 ]</td></tr>
+<tr><td align="left">  %m_next_entry = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %source.0249, i64 0, i32 0</td></tr>
+<tr><td align="left">  %source.0 = load %struct.t_source_annot_entry*, %struct.t_source_annot_entry** %m_next_entry, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp11.not = icmp eq %struct.t_source_annot_entry* %source.0, null</td></tr>
+<tr><td align="left">  br i1 %cmp11.not, label %while.end18, label %while.body13, !llvm.loop !23</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.end18:</td></tr>
+<tr><td align="left">  %hasAnnot.0.lcssa = phi i32 [ 0, %if.end9 ], [ %hasAnnot.1, %if.end17 ]</td></tr>
+<tr><td align="left">  %24 = load i32, i32* @g_page_count, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %sub = add i32 %24, -1</td></tr>
+<tr><td align="left">  %rem = and i32 %sub, 63</td></tr>
+<tr><td align="left">  %25 = load %struct.t_page_block*, %struct.t_page_block** @g_cur_page_block, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp20 = icmp eq i32 %rem, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp20, label %if.then22, label %if.else38</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then22:</td></tr>
+<tr><td align="left">  %call23 = tail call noalias align 16 dereferenceable_or_null(264) i8* @malloc(i64 264) #23</td></tr>
+<tr><td align="left">  %26 = bitcast i8* %call23 to %struct.t_page_block*</td></tr>
+<tr><td align="left">  %cmp24 = icmp eq i8* %call23, null</td></tr>
+<tr><td align="left">  br i1 %cmp24, label %if.then26, label %if.end28</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb25 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then26:</td></tr>
+<tr><td align="left">  %27 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %call27 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 48, i32 38, i8* getelementptr inbounds ([35 x i8], [35 x i8]* @.str.24, i64 0, i64 0), i32 1, %struct.FILE_POS* %27) #23</td></tr>
+<tr><td align="left">  br label %if.end28</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end28:</td></tr>
+<tr><td align="left">  %cmp29 = icmp ult i32 %sub, 64</td></tr>
+<tr><td align="left">  br i1 %cmp29, label %if.then31, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb27 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then31:</td></tr>
+<tr><td align="left">  %28 = load %struct.t_page_block*, %struct.t_page_block** @g_page_block_list, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp32.not = icmp eq %struct.t_page_block* %28, null</td></tr>
+<tr><td align="left">  %29 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br i1 %cmp32.not, label %if.end36, label %if.then2.i222</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb28 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %30 = load %struct.t_page_block*, %struct.t_page_block** @g_cur_page_block, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp34.not = icmp eq %struct.t_page_block* %30, null</td></tr>
+<tr><td align="left">  %31 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %32 = bitcast %struct.t_page_block* %30 to i8**</td></tr>
+<tr><td align="left">  br i1 %cmp34.not, label %if.then2.i226, label %if.end36</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb29 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then2.i226:</td></tr>
+<tr><td align="left">  %call.i225 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.75, i64 0, i64 0), i32 0, %struct.FILE_POS* %31, %struct.FILE_POS* %31) #23</td></tr>
+<tr><td align="left">  %.pre258 = load i8**, i8*** bitcast (%struct.t_page_block** @g_cur_page_block to i8***), align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br label %if.end36</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end36:</td></tr>
+<tr><td align="left">  %.sink = phi i8** [ bitcast (%struct.t_page_block** @g_page_block_list to i8**), %if.then31 ], [ bitcast (%struct.t_page_block** @g_page_block_list to i8**), %if.then2.i222 ], [ %32, %if.else ], [ %.pre258, %if.then2.i226 ]</td></tr>
+<tr><td align="left">  store i8* %call23, i8** %.sink, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %m_next_block37 = getelementptr inbounds %struct.t_page_block, %struct.t_page_block* %26, i64 0, i32 0</td></tr>
+<tr><td align="left">  store %struct.t_page_block* null, %struct.t_page_block** %m_next_block37, align 16, !tbaa !24</td></tr>
+<tr><td align="left">  store i8* %call23, i8** bitcast (%struct.t_page_block** @g_cur_page_block to i8**), align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br label %if.end45</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb31 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else38:</td></tr>
+<tr><td align="left">  %cmp39.not = icmp eq %struct.t_page_block* %25, null</td></tr>
+<tr><td align="left">  %33 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br i1 %cmp39.not, label %if.then2.i230, label %if.end45</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb32 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end45:</td></tr>
+<tr><td align="left">  %the_block.0 = phi %struct.t_page_block* [ %26, %if.end36 ], [ %25, %if.else38 ]</td></tr>
+<tr><td align="left">  %34 = load i32, i32* @g_page_object_num, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %idxprom = zext i32 %rem to i64</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds %struct.t_page_block, %struct.t_page_block* %the_block.0, i64 0, i32 1, i64 %idxprom</td></tr>
+<tr><td align="left">  store i32 %34, i32* %arrayidx, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  tail call fastcc void @PDFObject_WriteObj(%struct._IO_FILE* %in_fp, i32 %34)</td></tr>
+<tr><td align="left">  %35 = tail call i64 @fwrite(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.26, i64 0, i64 0), i64 15, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %36 = load i32, i32* @g_doc_h_bound, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %37 = load i32, i32* @g_doc_v_bound, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call47 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([24 x i8], [24 x i8]* @.str.27, i64 0, i64 0), i32 %36, i32 %37)</td></tr>
+<tr><td align="left">  %38 = tail call i64 @fwrite(i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str.28, i64 0, i64 0), i64 8, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %39 = load i32, i32* @g_pages_root, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call.i232 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.169, i64 0, i64 0), i32 %39) #23</td></tr>
+<tr><td align="left">  %fputc = tail call i32 @fputc(i32 10, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %40 = load i32, i32* @g_page_contents_obj_num, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp50.not = icmp eq i32 %40, 0</td></tr>
+<tr><td align="left">  br i1 %cmp50.not, label %if.end55, label %if.then52</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb33 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then52:</td></tr>
+<tr><td align="left">  %41 = tail call i64 @fwrite(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.30, i64 0, i64 0), i64 10, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %42 = load i32, i32* @g_page_contents_obj_num, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call.i233 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.169, i64 0, i64 0), i32 %42) #23</td></tr>
+<tr><td align="left">  %fputc214 = tail call i32 @fputc(i32 10, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  br label %if.end55</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb34 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end55:</td></tr>
+<tr><td align="left">  %.b208 = load i1, i1* @g_page_uses_fonts, align 4</td></tr>
+<tr><td align="left">  %.b210 = load i1, i1* @g_page_has_text, align 4</td></tr>
+<tr><td align="left">  %or.cond = select i1 %.b208, i1 true, i1 %.b210</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %if.then60, label %if.end89</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb35 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then60:</td></tr>
+<tr><td align="left">  %43 = tail call i64 @fwrite(i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.31, i64 0, i64 0), i64 14, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %.b207.pr = load i1, i1* @g_page_uses_fonts, align 4</td></tr>
+<tr><td align="left">  br i1 %.b207.pr, label %if.then64, label %if.end78thread-pre-split</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb36 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then64:</td></tr>
+<tr><td align="left">  %44 = load %struct.t_font_list_entry*, %struct.t_font_list_entry** @g_font_list, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %45 = tail call i64 @fwrite(i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str.32, i64 0, i64 0), i64 8, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %cmp68.not250 = icmp eq %struct.t_font_list_entry* %44, null</td></tr>
+<tr><td align="left">  br i1 %cmp68.not250, label %while.end76, label %while.body70</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb37 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body70:</td></tr>
+<tr><td align="left">  %entry65.0251 = phi %struct.t_font_list_entry* [ %51, %if.end74 ], [ %44, %if.then64 ]</td></tr>
+<tr><td align="left">  %m_in_use = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry65.0251, i64 0, i32 7</td></tr>
+<tr><td align="left">  %46 = load i32, i32* %m_in_use, align 4, !tbaa !26</td></tr>
+<tr><td align="left">  %tobool71.not = icmp eq i32 %46, 0</td></tr>
+<tr><td align="left">  br i1 %tobool71.not, label %if.end74, label %if.then72</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb38 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then72:</td></tr>
+<tr><td align="left">  %m_PDF_font_name = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry65.0251, i64 0, i32 1</td></tr>
+<tr><td align="left">  %47 = load i8*, i8** %m_PDF_font_name, align 8, !tbaa !17</td></tr>
+<tr><td align="left">  %call73 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.33, i64 0, i64 0), i8* %47)</td></tr>
+<tr><td align="left">  %m_pdf_object_number.i = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry65.0251, i64 0, i32 5</td></tr>
+<tr><td align="left">  %48 = load i32, i32* %m_pdf_object_number.i, align 4, !tbaa !16</td></tr>
+<tr><td align="left">  %cmp.not.i234 = icmp eq i32 %48, 0</td></tr>
+<tr><td align="left">  %49 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br i1 %cmp.not.i234, label %if.then2.i.i236, label %PDFFont_WriteObjectRef.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb39 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then2.i.i236:</td></tr>
+<tr><td align="left">  %call.i.i235 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.75, i64 0, i64 0), i32 0, %struct.FILE_POS* %49, %struct.FILE_POS* %49) #23</td></tr>
+<tr><td align="left">  %.pre.i = load i32, i32* %m_pdf_object_number.i, align 4, !tbaa !16</td></tr>
+<tr><td align="left">  br label %PDFFont_WriteObjectRef.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb40 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">PDFFont_WriteObjectRef.exit:</td></tr>
+<tr><td align="left">  %50 = phi i32 [ %48, %if.then72 ], [ %.pre.i, %if.then2.i.i236 ]</td></tr>
+<tr><td align="left">  %call.i3.i = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.169, i64 0, i64 0), i32 %50) #23</td></tr>
+<tr><td align="left">  br label %if.end74</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb41 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end74:</td></tr>
+<tr><td align="left">  %m_next_font_entry75 = getelementptr inbounds %struct.t_font_list_entry, %struct.t_font_list_entry* %entry65.0251, i64 0, i32 0</td></tr>
+<tr><td align="left">  %51 = load %struct.t_font_list_entry*, %struct.t_font_list_entry** %m_next_font_entry75, align 8, !tbaa !27</td></tr>
+<tr><td align="left">  %cmp68.not = icmp eq %struct.t_font_list_entry* %51, null</td></tr>
+<tr><td align="left">  br i1 %cmp68.not, label %while.end76, label %while.body70, !llvm.loop !28</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb42 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.end76:</td></tr>
+<tr><td align="left">  %52 = tail call i64 @fwrite(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.34, i64 0, i64 0), i64 4, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  br label %if.end78thread-pre-split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb43 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end78thread-pre-split:</td></tr>
+<tr><td align="left">  %.b212.pr = load i1, i1* @g_page_has_text, align 4</td></tr>
+<tr><td align="left">  br i1 %.b212.pr, label %if.then82, label %if.end89</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb44 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then82:</td></tr>
+<tr><td align="left">  %53 = tail call i64 @fwrite(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.35, i64 0, i64 0), i64 15, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %.b211 = load i1, i1* @g_page_has_text, align 4</td></tr>
+<tr><td align="left">  br i1 %.b211, label %if.then85, label %if.end87</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb45 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then85:</td></tr>
+<tr><td align="left">  %54 = tail call i64 @fwrite(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.36, i64 0, i64 0), i64 6, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  br label %if.end87</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb46 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end87:</td></tr>
+<tr><td align="left">  %55 = tail call i64 @fwrite(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.37, i64 0, i64 0), i64 3, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %.b209.pre = load i1, i1* @g_page_has_text, align 4</td></tr>
+<tr><td align="left">  br label %if.end89</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb47 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end89:</td></tr>
+<tr><td align="left">  %.b209 = phi i1 [ false, %if.end78thread-pre-split ], [ %.b209.pre, %if.end87 ], [ false, %if.end55 ]</td></tr>
+<tr><td align="left">  %.b = load i1, i1* @g_page_uses_fonts, align 4</td></tr>
+<tr><td align="left">  %or.cond136 = select i1 %.b, i1 true, i1 %.b209</td></tr>
+<tr><td align="left">  br i1 %or.cond136, label %if.then95, label %if.end97</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb48 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then95:</td></tr>
+<tr><td align="left">  %56 = tail call i64 @fwrite(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.38, i64 0, i64 0), i64 3, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  br label %if.end97</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb49 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end97:</td></tr>
+<tr><td align="left">  %tobool98.not = icmp eq i32 %hasAnnot.0.lcssa, 0</td></tr>
+<tr><td align="left">  br i1 %tobool98.not, label %if.end132, label %if.then99</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb50 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then99:</td></tr>
+<tr><td align="left">  %57 = load %struct.t_source_annot_entry*, %struct.t_source_annot_entry** @g_source_annot_list, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %58 = tail call i64 @fwrite(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.39, i64 0, i64 0), i64 9, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %cmp103.not253 = icmp eq %struct.t_source_annot_entry* %57, null</td></tr>
+<tr><td align="left">  br i1 %cmp103.not253, label %while.end130, label %while.body105</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb51 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body105:</td></tr>
+<tr><td align="left">  %previous_entry.0255 = phi %struct.t_source_annot_entry* [ %previous_entry.1, %if.end129 ], [ null, %if.then99 ]</td></tr>
+<tr><td align="left">  %entry100.0254 = phi %struct.t_source_annot_entry* [ %entry100.1, %if.end129 ], [ %57, %if.then99 ]</td></tr>
+<tr><td align="left">  %m_this_page_object_num106 = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %entry100.0254, i64 0, i32 9</td></tr>
+<tr><td align="left">  %59 = load i32, i32* %m_this_page_object_num106, align 4, !tbaa !21</td></tr>
+<tr><td align="left">  %60 = load i32, i32* @g_page_object_num, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp107 = icmp eq i32 %59, %60</td></tr>
+<tr><td align="left">  br i1 %cmp107, label %if.then109, label %if.else127</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb52 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then109:</td></tr>
+<tr><td align="left">  %fputc213 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  %m_this_object_num = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %entry100.0254, i64 0, i32 8</td></tr>
+<tr><td align="left">  %61 = load i32, i32* %m_this_object_num, align 8, !tbaa !29</td></tr>
+<tr><td align="left">  %call.i237 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.169, i64 0, i64 0), i32 %61) #23</td></tr>
+<tr><td align="left">  %m_written_to_PDF_file = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %entry100.0254, i64 0, i32 12</td></tr>
+<tr><td align="left">  %62 = load i32, i32* %m_written_to_PDF_file, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  %tobool111.not = icmp eq i32 %62, 0</td></tr>
+<tr><td align="left">  %m_next_entry125 = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %entry100.0254, i64 0, i32 0</td></tr>
+<tr><td align="left">  %63 = load %struct.t_source_annot_entry*, %struct.t_source_annot_entry** %m_next_entry125, align 8, !tbaa !31</td></tr>
+<tr><td align="left">  br i1 %tobool111.not, label %if.end129, label %if.then112</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb53 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then112:</td></tr>
+<tr><td align="left">  %64 = load %struct.t_source_annot_entry*, %struct.t_source_annot_entry** @g_source_annot_list, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp114 = icmp eq %struct.t_source_annot_entry* %64, %entry100.0254</td></tr>
+<tr><td align="left">  br i1 %cmp114, label %if.then116, label %if.end117</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb54 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then116:</td></tr>
+<tr><td align="left">  store %struct.t_source_annot_entry* %63, %struct.t_source_annot_entry** @g_source_annot_list, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br label %if.end117</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb55 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end117:</td></tr>
+<tr><td align="left">  %cmp118.not = icmp eq %struct.t_source_annot_entry* %previous_entry.0255, null</td></tr>
+<tr><td align="left">  br i1 %cmp118.not, label %if.end122, label %if.then120</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb56 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then120:</td></tr>
+<tr><td align="left">  %m_next_entry121 = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %previous_entry.0255, i64 0, i32 0</td></tr>
+<tr><td align="left">  store %struct.t_source_annot_entry* %63, %struct.t_source_annot_entry** %m_next_entry121, align 8, !tbaa !31</td></tr>
+<tr><td align="left">  br label %if.end122</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb57 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end122:</td></tr>
+<tr><td align="left">  %m_name.i = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %entry100.0254, i64 0, i32 2</td></tr>
+<tr><td align="left">  %65 = load i8*, i8** %m_name.i, align 8, !tbaa !32</td></tr>
+<tr><td align="left">  %cmp.not.i238 = icmp eq i8* %65, null</td></tr>
+<tr><td align="left">  br i1 %cmp.not.i238, label %if.end.i240, label %if.then.i239</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb58 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then.i239:</td></tr>
+<tr><td align="left">  tail call void @free(i8* nonnull %65) #23</td></tr>
+<tr><td align="left">  br label %if.end.i240</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb59 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end.i240:</td></tr>
+<tr><td align="left">  %m_file_spec.i = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %entry100.0254, i64 0, i32 3</td></tr>
+<tr><td align="left">  %66 = load i8*, i8** %m_file_spec.i, align 8, !tbaa !33</td></tr>
+<tr><td align="left">  %cmp2.not.i = icmp eq i8* %66, null</td></tr>
+<tr><td align="left">  br i1 %cmp2.not.i, label %PDFSourceAnnot_Dispose.exit, label %if.then3.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb60 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then3.i:</td></tr>
+<tr><td align="left">  tail call void @free(i8* nonnull %66) #23</td></tr>
+<tr><td align="left">  br label %PDFSourceAnnot_Dispose.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb61 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">PDFSourceAnnot_Dispose.exit:</td></tr>
+<tr><td align="left">  %67 = bitcast %struct.t_source_annot_entry* %entry100.0254 to i8*</td></tr>
+<tr><td align="left">  tail call void @free(i8* %67) #23</td></tr>
+<tr><td align="left">  br label %if.end129</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb62 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else127:</td></tr>
+<tr><td align="left">  %m_next_entry128 = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %entry100.0254, i64 0, i32 0</td></tr>
+<tr><td align="left">  %68 = load %struct.t_source_annot_entry*, %struct.t_source_annot_entry** %m_next_entry128, align 8, !tbaa !31</td></tr>
+<tr><td align="left">  br label %if.end129</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb63 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end129:</td></tr>
+<tr><td align="left">  %entry100.1 = phi %struct.t_source_annot_entry* [ %63, %PDFSourceAnnot_Dispose.exit ], [ %68, %if.else127 ], [ %63, %if.then109 ]</td></tr>
+<tr><td align="left">  %previous_entry.1 = phi %struct.t_source_annot_entry* [ %previous_entry.0255, %PDFSourceAnnot_Dispose.exit ], [ %entry100.0254, %if.else127 ], [ %entry100.0254, %if.then109 ]</td></tr>
+<tr><td align="left">  %cmp103.not = icmp eq %struct.t_source_annot_entry* %entry100.1, null</td></tr>
+<tr><td align="left">  br i1 %cmp103.not, label %while.end130, label %while.body105, !llvm.loop !34</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb64 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.end130:</td></tr>
+<tr><td align="left">  %69 = tail call i64 @fwrite(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.37, i64 0, i64 0), i64 3, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  br label %if.end132</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb65 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end132:</td></tr>
+<tr><td align="left">  %70 = tail call i64 @fwrite(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.41, i64 0, i64 0), i64 10, i64 1, %struct._IO_FILE* %in_fp)</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb2:f
+f_bb0:fF -> f_bb1:f
+f_bb1:f -> f_bb2:f
+f_bb2:fT -> f_bb18:f
+f_bb2:fF -> f_bb3:f
+f_bb3:fT -> f_bb4:f
+f_bb3:fF -> f_bb10:f
+f_bb4:fT -> f_bb8:f
+f_bb4:fF -> f_bb5:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> f_bb5:f
+f_bb6:fT -> f_bb8:f
+f_bb6:fF -> f_bb7:f
+f_bb7:f -> f_bb8:f
+f_bb8:fT -> f_bb9:f
+f_bb8:fF -> f_bb10:f
+f_bb9:f -> f_bb10:f
+f_bb10:fT -> f_bb18:f
+f_bb10:fF -> f_bb11:f
+f_bb11:fT -> f_bb12:f
+f_bb11:fF -> f_bb17:f
+f_bb12:fT -> f_bb13:f
+f_bb12:fF -> f_bb14:f
+f_bb13:f -> f_bb14:f
+f_bb14:fT -> f_bb16:f
+f_bb14:fF -> f_bb15:f
+f_bb15:f -> f_bb16:f
+f_bb16:f -> f_bb17:f
+f_bb17:fT -> f_bb18:f
+f_bb17:fF -> f_bb11:f
+f_bb18:fT -> f_bb23:f
+f_bb18:fF -> f_bb19:f
+f_bb19:f -> f_bb20:f
+f_bb20:fT -> f_bb21:f
+f_bb20:fF -> f_bb22:f
+f_bb21:f -> f_bb22:f
+f_bb22:fT -> f_bb23:f
+f_bb22:fF -> f_bb20:f
+f_bb23:fT -> f_bb24:f
+f_bb23:fF -> f_bb31:f
+f_bb24:fT -> f_bb25:f
+f_bb24:fF -> f_bb26:f
+f_bb25:f -> f_bb26:f
+f_bb26:fT -> f_bb27:f
+f_bb26:fF -> f_bb28:f
+f_bb27:fT -> f_bb30:f
+f_bb27:fF -> m_bb0:f1
+m_bb0:f1 -> f_bb30:f
+f_bb28:fT -> f_bb29:f
+f_bb28:fF -> f_bb30:f
+f_bb29:f -> f_bb30:f
+f_bb30:f -> f_bb32:f
+f_bb31:fT -> m_bb0:f2
+f_bb31:fF -> f_bb32:f
+f_bb32:fT -> f_bb34:f
+f_bb32:fF -> f_bb33:f
+f_bb33:f -> f_bb34:f
+f_bb34:fT -> f_bb35:f
+f_bb34:fF -> f_bb47:f
+f_bb35:fT -> f_bb36:f
+f_bb35:fF -> f_bb43:f
+f_bb36:fT -> f_bb42:f
+f_bb36:fF -> f_bb37:f
+f_bb37:fT -> f_bb41:f
+f_bb37:fF -> f_bb38:f
+f_bb38:fT -> f_bb39:f
+f_bb38:fF -> f_bb40:f
+f_bb39:f -> f_bb40:f
+f_bb40:f -> f_bb41:f
+f_bb41:fT -> f_bb42:f
+f_bb41:fF -> f_bb37:f
+f_bb42:f -> f_bb43:f
+f_bb43:fT -> f_bb44:f
+f_bb43:fF -> f_bb47:f
+f_bb44:fT -> f_bb45:f
+f_bb44:fF -> f_bb46:f
+f_bb45:f -> f_bb46:f
+f_bb46:f -> f_bb47:f
+f_bb47:fT -> f_bb48:f
+f_bb47:fF -> f_bb49:f
+f_bb48:f -> f_bb49:f
+f_bb49:fT -> f_bb65:f
+f_bb49:fF -> f_bb50:f
+f_bb50:fT -> f_bb64:f
+f_bb50:fF -> f_bb51:f
+f_bb51:fT -> f_bb52:f
+f_bb51:fF -> f_bb62:f
+f_bb52:fT -> f_bb63:f
+f_bb52:fF -> f_bb53:f
+f_bb53:fT -> f_bb54:f
+f_bb53:fF -> f_bb55:f
+f_bb54:f -> f_bb55:f
+f_bb55:fT -> f_bb57:f
+f_bb55:fF -> f_bb56:f
+f_bb56:f -> f_bb57:f
+f_bb57:fT -> f_bb59:f
+f_bb57:fF -> f_bb58:f
+f_bb58:f -> f_bb59:f
+f_bb59:fT -> f_bb61:f
+f_bb59:fF -> f_bb60:f
+f_bb60:f -> f_bb61:f
+f_bb61:f -> f_bb63:f
+f_bb62:f -> f_bb63:f
+f_bb63:fT -> f_bb64:f
+f_bb63:fF -> f_bb51:f
+f_bb64:f -> f_bb65:f
+}
+

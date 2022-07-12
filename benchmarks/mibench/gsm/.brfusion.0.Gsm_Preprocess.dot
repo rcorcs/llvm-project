@@ -1,0 +1,217 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">cond.false21:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.3, i64 0, i64 0), i8* getelementptr inbounds ([17 x i8], [17 x i8]* @.str.1, i64 0, i64 0), i32 81, i8* getelementptr inbounds ([56 x i8], [56 x i8]* @__PRETTY_FUNCTION__.Gsm_Preprocess, i64 0, i64 0)) #2</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">cond.false:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str, i64 0, i64 0), i8* getelementptr inbounds ([17 x i8], [17 x i8]* @.str.1, i64 0, i64 0), i32 64, i8* getelementptr inbounds ([56 x i8], [56 x i8]* @__PRETTY_FUNCTION__.Gsm_Preprocess, i64 0, i64 0)) #2</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %z11 = getelementptr inbounds %struct.gsm_state, %struct.gsm_state* %S, i64 0, i32 1</td></tr>
+<tr><td align="left">  %0 = load i16, i16* %z11, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %L_z22 = getelementptr inbounds %struct.gsm_state, %struct.gsm_state* %S, i64 0, i32 2</td></tr>
+<tr><td align="left">  %1 = load i64, i64* %L_z22, align 8, !tbaa !10</td></tr>
+<tr><td align="left">  %mp3 = getelementptr inbounds %struct.gsm_state, %struct.gsm_state* %S, i64 0, i32 3</td></tr>
+<tr><td align="left">  %2 = load i32, i32* %mp3, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  %conv = trunc i32 %2 to i16</td></tr>
+<tr><td align="left">  br label %while.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond:</td></tr>
+<tr><td align="left">  %mp.0 = phi i16 [ %conv, %entry ], [ %conv95, %cond.end73 ]</td></tr>
+<tr><td align="left">  %L_z2.0 = phi i64 [ %1, %entry ], [ %cond74, %cond.end73 ]</td></tr>
+<tr><td align="left">  %z1.0 = phi i16 [ %0, %entry ], [ %shl, %cond.end73 ]</td></tr>
+<tr><td align="left">  %so.addr.0 = phi i16* [ %so, %entry ], [ %incdec.ptr111, %cond.end73 ]</td></tr>
+<tr><td align="left">  %s.addr.0 = phi i16* [ %s, %entry ], [ %incdec.ptr, %cond.end73 ]</td></tr>
+<tr><td align="left">  %k.0 = phi i32 [ 160, %entry ], [ %dec, %cond.end73 ]</td></tr>
+<tr><td align="left">  %dec = add nsw i32 %k.0, -1</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %k.0, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %while.end, label %while.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  %3 = load i16, i16* %s.addr.0, align 2, !tbaa !12</td></tr>
+<tr><td align="left">  %4 = ashr i16 %3, 1</td></tr>
+<tr><td align="left">  %shl = and i16 %4, -4</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds i16, i16* %s.addr.0, i64 1</td></tr>
+<tr><td align="left">  %cmp = icmp sgt i16 %shl, -16385</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp, label %cond.end, label %cond.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end:</td></tr>
+<tr><td align="left">  %cmp9 = icmp slt i16 %shl, 16381</td></tr>
+<tr><td align="left">  br i1 %cmp9, label %cond.end13, label %cond.false12</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false12:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @.str.2, i64 0, i64 0), i8* getelementptr inbounds ([17 x i8], [17 x i8]* @.str.1, i64 0, i64 0), i32 65, i8* getelementptr inbounds ([56 x i8], [56 x i8]* @__PRETTY_FUNCTION__.Gsm_Preprocess, i64 0, i64 0)) #2</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end13:</td></tr>
+<tr><td align="left">  %sub = sub i16 %shl, %z1.0</td></tr>
+<tr><td align="left">  %cmp18.not = icmp eq i16 %sub, -32768</td></tr>
+<tr><td align="left">  br i1 %cmp18.not, label %cond.false21, label %cond.end22</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end22:</td></tr>
+<tr><td align="left">  %conv23 = sext i16 %sub to i64</td></tr>
+<tr><td align="left">  %shl24 = shl nsw i64 %conv23, 15</td></tr>
+<tr><td align="left">  %5 = shl i64 %L_z2.0, 33</td></tr>
+<tr><td align="left">  %conv27 = ashr i64 %5, 48</td></tr>
+<tr><td align="left">  %shl28.neg = mul nsw i64 %conv27, -32768</td></tr>
+<tr><td align="left">  %sub29 = add i64 %shl28.neg, %L_z2.0</td></tr>
+<tr><td align="left">  %sext = shl i64 %sub29, 48</td></tr>
+<tr><td align="left">  %conv31 = ashr exact i64 %sext, 48</td></tr>
+<tr><td align="left">  %mul = mul nsw i64 %conv31, 32735</td></tr>
+<tr><td align="left">  %add = add nsw i64 %mul, 16384</td></tr>
+<tr><td align="left">  %shr32 = ashr i64 %add, 15</td></tr>
+<tr><td align="left">  %add33 = add nsw i64 %shl24, %shr32</td></tr>
+<tr><td align="left">  %mul35 = mul nsw i64 %conv27, 32735</td></tr>
+<tr><td align="left">  %cmp36 = icmp slt i64 %5, 0</td></tr>
+<tr><td align="left">  br i1 %cmp36, label %cond.true38, label %cond.false58</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.true38:</td></tr>
+<tr><td align="left">  %cmp39 = icmp sgt i64 %add33, -1</td></tr>
+<tr><td align="left">  br i1 %cmp39, label %cond.true41, label %cond.false43</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.true41:</td></tr>
+<tr><td align="left">  %add42 = add nsw i64 %add33, %mul35</td></tr>
+<tr><td align="left">  br label %cond.end73</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false43:</td></tr>
+<tr><td align="left">  %sub45 = xor i64 %mul35, -1</td></tr>
+<tr><td align="left">  %sub47 = xor i64 %add33, -1</td></tr>
+<tr><td align="left">  %add48 = add nsw i64 %sub47, %sub45</td></tr>
+<tr><td align="left">  %cmp49 = icmp ugt i64 %add48, 2147483646</td></tr>
+<tr><td align="left">  %sub54 = sub nsw i64 -2, %add48</td></tr>
+<tr><td align="left">  %cond = select i1 %cmp49, i64 -2147483648, i64 %sub54</td></tr>
+<tr><td align="left">  br label %cond.end73</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.false58:</td></tr>
+<tr><td align="left">  %cmp59 = icmp slt i64 %add33, 1</td></tr>
+<tr><td align="left">  %add62 = add nsw i64 %add33, %mul35</td></tr>
+<tr><td align="left">  br i1 %cmp59, label %cond.end73, label %cond.false63</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false63:</td></tr>
+<tr><td align="left">  %cmp65.inv = icmp ult i64 %add62, 2147483647</td></tr>
+<tr><td align="left">  %cond70 = select i1 %cmp65.inv, i64 %add62, i64 2147483647</td></tr>
+<tr><td align="left">  br label %cond.end73</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end73:</td></tr>
+<tr><td align="left">  %cond74 = phi i64 [ %add42, %cond.true41 ], [ %cond, %cond.false43 ], [ %cond70, %cond.false63 ], [ %add62, %cond.false58 ]</td></tr>
+<tr><td align="left">  %cmp75 = icmp slt i64 %cond74, 0</td></tr>
+<tr><td align="left">  %add78 = add i64 %cond74, 16384</td></tr>
+<tr><td align="left">  %cmp81.inv = icmp ult i64 %add78, 2147483647</td></tr>
+<tr><td align="left">  %6 = or i1 %cmp75, %cmp81.inv</td></tr>
+<tr><td align="left">  %conv89 = sext i16 %mp.0 to i64</td></tr>
+<tr><td align="left">  %add78.op = lshr i64 %add78, 15</td></tr>
+<tr><td align="left">  %7 = select i1 %6, i64 %add78.op, i64 65535</td></tr>
+<tr><td align="left">  %conv95 = trunc i64 %7 to i16</td></tr>
+<tr><td align="left">  %sext163 = shl i64 %7, 48</td></tr>
+<tr><td align="left">  %conv96 = ashr exact i64 %sext163, 48</td></tr>
+<tr><td align="left">  %add91 = mul nsw i64 %conv89, -242064356802560</td></tr>
+<tr><td align="left">  %8 = add nsw i64 %add91, 140737488355328</td></tr>
+<tr><td align="left">  %conv97 = ashr i64 %8, 48</td></tr>
+<tr><td align="left">  %add98 = add nsw i64 %conv96, %conv97</td></tr>
+<tr><td align="left">  %9 = icmp sgt i64 %add98, -32768</td></tr>
+<tr><td align="left">  %10 = select i1 %9, i64 %add98, i64 -32768</td></tr>
+<tr><td align="left">  %11 = icmp slt i64 %10, 32767</td></tr>
+<tr><td align="left">  %cond109 = select i1 %11, i64 %10, i64 32767</td></tr>
+<tr><td align="left">  %conv110 = trunc i64 %cond109 to i16</td></tr>
+<tr><td align="left">  %incdec.ptr111 = getelementptr inbounds i16, i16* %so.addr.0, i64 1</td></tr>
+<tr><td align="left">  store i16 %conv110, i16* %so.addr.0, align 2, !tbaa !12</td></tr>
+<tr><td align="left">  br label %while.cond, !llvm.loop !13</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.end:</td></tr>
+<tr><td align="left">  store i16 %z1.0, i16* %z11, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  store i64 %L_z2.0, i64* %L_z22, align 8, !tbaa !10</td></tr>
+<tr><td align="left">  %conv114 = sext i16 %mp.0 to i32</td></tr>
+<tr><td align="left">  store i32 %conv114, i32* %mp3, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb1:fT -> f_bb13:f
+f_bb1:fF -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> m_bb0:f2
+f_bb3:fT -> f_bb5:f
+f_bb3:fF -> f_bb4:f
+f_bb5:fT -> m_bb0:f1
+f_bb5:fF -> f_bb6:f
+f_bb6:fT -> f_bb7:f
+f_bb6:fF -> f_bb10:f
+f_bb7:fT -> f_bb8:f
+f_bb7:fF -> f_bb9:f
+f_bb8:f -> f_bb12:f
+f_bb9:f -> f_bb12:f
+f_bb10:fT -> f_bb12:f
+f_bb10:fF -> f_bb11:f
+f_bb11:f -> f_bb12:f
+f_bb12:f -> f_bb1:f
+}
+

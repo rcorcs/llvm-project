@@ -1,0 +1,395 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else181:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %ofpos184 = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %5, i64 0, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call185 = call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 46, i32 2, i8* getelementptr inbounds ([56 x i8], [56 x i8]* @.str.9, i64 0, i64 0), i32 2, %struct.FILE_POS* nonnull %ofpos184, i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.6, i64 0, i64 0)) #8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then162:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %ofpos165 = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %5, i64 0, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call166 = call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 46, i32 1, i8* getelementptr inbounds ([54 x i8], [54 x i8]* @.str.5, i64 0, i64 0), i32 2, %struct.FILE_POS* nonnull %ofpos165, i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.6, i64 0, i64 0)) #8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %bt = alloca [2 x %union.rec*], align 16</td></tr>
+<tr><td align="left">  %ft = alloca [2 x %union.rec*], align 16</td></tr>
+<tr><td align="left">  %ntarget = alloca %union.rec*, align 8</td></tr>
+<tr><td align="left">  %nenclose = alloca %union.rec*, align 8</td></tr>
+<tr><td align="left">  %crs = alloca %union.rec*, align 8</td></tr>
+<tr><td align="left">  %0 = bitcast [2 x %union.rec*]* %bt to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %0) #8</td></tr>
+<tr><td align="left">  %1 = bitcast [2 x %union.rec*]* %ft to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %1) #8</td></tr>
+<tr><td align="left">  %2 = bitcast %union.rec** %ntarget to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %2) #8</td></tr>
+<tr><td align="left">  %3 = bitcast %union.rec** %nenclose to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %3) #8</td></tr>
+<tr><td align="left">  %4 = bitcast %union.rec** %crs to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %4) #8</td></tr>
+<tr><td align="left">  %5 = getelementptr inbounds %union.rec, %union.rec* %x, i64 0, i32 0, i32 1</td></tr>
+<tr><td align="left">  %otype = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %5, i64 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %6 = load i8, i8* %otype, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp = icmp eq i8 %6, 2</td></tr>
+<tr><td align="left">  br i1 %cmp, label %if.end, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %7 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str, i64 0, i64 0), i32 0, %struct.FILE_POS* %7, i8* getelementptr inbounds ([34 x i8], [34 x i8]* @.str.1, i64 0, i64 0)) #8</td></tr>
+<tr><td align="left">  br label %if.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %8 = getelementptr inbounds %union.rec, %union.rec* %x, i64 0, i32 0, i32 5</td></tr>
+<tr><td align="left">  %9 = bitcast %union.rec** %8 to %struct.word_type**</td></tr>
+<tr><td align="left">  %10 = load %struct.word_type*, %struct.word_type** %9, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %ou2 = getelementptr inbounds %struct.word_type, %struct.word_type* %10, i64 0, i32 2</td></tr>
+<tr><td align="left">  %os26 = bitcast %union.SECOND_UNION* %ou2 to %struct.anon.5*</td></tr>
+<tr><td align="left">  %ohas_target = getelementptr inbounds %struct.anon.5, %struct.anon.5* %os26, i64 0, i32 1</td></tr>
+<tr><td align="left">  %11 = bitcast [3 x i8]* %ohas_target to i24*</td></tr>
+<tr><td align="left">  %bf.load = load i24, i24* %11, align 1</td></tr>
+<tr><td align="left">  %12 = and i24 %bf.load, 64</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i24 %12, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %if.then3, label %if.end5</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then3:</td></tr>
+<tr><td align="left">  %13 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call4 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str, i64 0, i64 0), i32 0, %struct.FILE_POS* %13, i8* getelementptr inbounds ([31 x i8], [31 x i8]* @.str.2, i64 0, i64 0)) #8</td></tr>
+<tr><td align="left">  br label %if.end5</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end5:</td></tr>
+<tr><td align="left">  %link.0.in241 = getelementptr inbounds %union.rec, %union.rec* %x, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %link.0242 = load %union.rec*, %union.rec** %link.0.in241, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp7.not243 = icmp eq %union.rec* %link.0242, %x</td></tr>
+<tr><td align="left">  br i1 %cmp7.not243, label %if.then83, label %for.cond12.preheader</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond12.preheader:</td></tr>
+<tr><td align="left">  %link.0244 = phi %union.rec* [ %link.0, %for.inc75 ], [ %link.0242, %if.end5 ]</td></tr>
+<tr><td align="left">  br label %for.cond12</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond12:</td></tr>
+<tr><td align="left">  %link.0.pn = phi %union.rec* [ %y.0, %for.cond12 ], [ %link.0244, %for.cond12.preheader ]</td></tr>
+<tr><td align="left">  %y.0.in = getelementptr inbounds %union.rec, %union.rec* %link.0.pn, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  %y.0 = load %union.rec*, %union.rec** %y.0.in, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %otype16 = getelementptr inbounds %union.rec, %union.rec* %y.0, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %14 = load i8, i8* %otype16, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  switch i8 %14, label %for.inc75 [
+    i8 0, label %for.cond12
+    i8 10, label %land.lhs.true
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true:</td></tr>
+<tr><td align="left">  %15 = getelementptr inbounds %union.rec, %union.rec* %y.0, i64 0, i32 0, i32 5</td></tr>
+<tr><td align="left">  %16 = bitcast %union.rec** %15 to %struct.symbol_type**</td></tr>
+<tr><td align="left">  %17 = load %struct.symbol_type*, %struct.symbol_type** %16, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %ois_optimize = getelementptr inbounds %struct.symbol_type, %struct.symbol_type* %17, i64 0, i32 16</td></tr>
+<tr><td align="left">  %bf.load34 = load i8, i8* %ois_optimize, align 2</td></tr>
+<tr><td align="left">  %bf.clear35 = and i8 %bf.load34, 1</td></tr>
+<tr><td align="left">  %tobool37.not = icmp eq i8 %bf.clear35, 0</td></tr>
+<tr><td align="left">  br i1 %tobool37.not, label %for.inc75, label %if.then38</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then38:</td></tr>
+<tr><td align="left">  %osucc42 = getelementptr inbounds %union.rec, %union.rec* %y.0, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %18 = load %union.rec*, %union.rec** %osucc42, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp43.not = icmp eq %union.rec* %18, %y.0</td></tr>
+<tr><td align="left">  br i1 %cmp43.not, label %if.then45, label %if.then38.if.end47_crit_edge</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then38.if.end47_crit_edge:</td></tr>
+<tr><td align="left">  %19 = bitcast %union.rec* %18 to %struct.word_type*</td></tr>
+<tr><td align="left">  br label %if.end47</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then45:</td></tr>
+<tr><td align="left">  %20 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call46 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str, i64 0, i64 0), i32 0, %struct.FILE_POS* %20, i8* getelementptr inbounds ([25 x i8], [25 x i8]* @.str.3, i64 0, i64 0)) #8</td></tr>
+<tr><td align="left">  %.phi.trans.insert = bitcast %union.rec** %osucc42 to %struct.word_type**</td></tr>
+<tr><td align="left">  %.pre = load %struct.word_type*, %struct.word_type** %.phi.trans.insert, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br label %if.end47</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end47:</td></tr>
+<tr><td align="left">  %21 = phi %struct.word_type* [ %.pre, %if.then45 ], [ %19, %if.then38.if.end47_crit_edge ]</td></tr>
+<tr><td align="left">  %opred55 = getelementptr inbounds %struct.word_type, %struct.word_type* %21, i64 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  br label %for.cond56</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond56:</td></tr>
+<tr><td align="left">  %res.0.in = phi %union.rec** [ %opred55, %if.end47 ], [ %opred69, %for.cond56 ]</td></tr>
+<tr><td align="left">  %res.0 = load %union.rec*, %union.rec** %res.0.in, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %otype60 = getelementptr inbounds %union.rec, %union.rec* %res.0, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %22 = load i8, i8* %otype60, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp62 = icmp eq i8 %22, 0</td></tr>
+<tr><td align="left">  %opred69 = getelementptr inbounds %union.rec, %union.rec* %res.0, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  br i1 %cmp62, label %for.cond56, label %for.end80, !llvm.loop !8</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.inc75:</td></tr>
+<tr><td align="left">  %link.0.in = getelementptr inbounds %union.rec, %union.rec* %link.0244, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %link.0 = load %union.rec*, %union.rec** %link.0.in, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp7.not = icmp eq %union.rec* %link.0, %x</td></tr>
+<tr><td align="left">  br i1 %cmp7.not, label %if.then83, label %for.cond12.preheader, !llvm.loop !10</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end80:</td></tr>
+<tr><td align="left">  %ofpos = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %5, i64 0, i32 0</td></tr>
+<tr><td align="left">  %call73 = tail call %union.rec* @CopyObject(%union.rec* nonnull %res.0, %struct.FILE_POS* nonnull %ofpos) #8</td></tr>
+<tr><td align="left">  %cmp81 = icmp eq %union.rec* %call73, null</td></tr>
+<tr><td align="left">  br i1 %cmp81, label %if.then83, label %if.end139</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then83:</td></tr>
+<tr><td align="left">  %23 = load %struct.word_type*, %struct.word_type** %9, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %osucc89 = getelementptr inbounds %struct.word_type, %struct.word_type* %23, i64 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %.cast = bitcast %struct.word_type* %23 to %union.rec*</td></tr>
+<tr><td align="left">  %link.1245 = load %union.rec*, %union.rec** %osucc89, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp93.not246 = icmp eq %union.rec* %link.1245, %.cast</td></tr>
+<tr><td align="left">  br i1 %cmp93.not246, label %if.then137, label %for.cond100.preheader</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb16 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond90:</td></tr>
+<tr><td align="left">  %osucc132 = getelementptr inbounds %union.rec, %union.rec* %link.1247, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %link.1 = load %union.rec*, %union.rec** %osucc132, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp93.not = icmp eq %union.rec* %link.1, %.cast</td></tr>
+<tr><td align="left">  br i1 %cmp93.not, label %if.then137, label %for.cond100.preheader, !llvm.loop !11</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond100.preheader:</td></tr>
+<tr><td align="left">  %link.1247 = phi %union.rec* [ %link.1, %for.cond90 ], [ %link.1245, %if.then83 ]</td></tr>
+<tr><td align="left">  br label %for.cond100</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond100:</td></tr>
+<tr><td align="left">  %link.1.pn = phi %union.rec* [ %y.1, %for.cond100 ], [ %link.1247, %for.cond100.preheader ]</td></tr>
+<tr><td align="left">  %y.1.in = getelementptr inbounds %union.rec, %union.rec* %link.1.pn, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  %y.1 = load %union.rec*, %union.rec** %y.1.in, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %otype104 = getelementptr inbounds %union.rec, %union.rec* %y.1, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %24 = load i8, i8* %otype104, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp106 = icmp eq i8 %24, 0</td></tr>
+<tr><td align="left">  br i1 %cmp106, label %for.cond100, label %for.end114, !llvm.loop !12</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end114:</td></tr>
+<tr><td align="left">  %os6115 = bitcast %union.rec* %y.1 to %struct.symbol_type*</td></tr>
+<tr><td align="left">  %ois_optimize116 = getelementptr inbounds %struct.symbol_type, %struct.symbol_type* %os6115, i64 0, i32 16</td></tr>
+<tr><td align="left">  %bf.load117 = load i8, i8* %ois_optimize116, align 2</td></tr>
+<tr><td align="left">  %bf.clear118 = and i8 %bf.load117, 1</td></tr>
+<tr><td align="left">  %tobool120.not = icmp eq i8 %bf.clear118, 0</td></tr>
+<tr><td align="left">  br i1 %tobool120.not, label %for.cond90, label %if.end134</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end134:</td></tr>
+<tr><td align="left">  %osym_body = getelementptr inbounds %union.rec, %union.rec* %y.1, i64 0, i32 0, i32 3, i32 1</td></tr>
+<tr><td align="left">  %25 = bitcast [8 x i8]* %osym_body to %union.rec**</td></tr>
+<tr><td align="left">  %26 = load %union.rec*, %union.rec** %25, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %ofpos125 = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %5, i64 0, i32 0</td></tr>
+<tr><td align="left">  %call126 = tail call %union.rec* @CopyObject(%union.rec* %26, %struct.FILE_POS* nonnull %ofpos125) #8</td></tr>
+<tr><td align="left">  %cmp135.not = icmp eq %union.rec* %call126, null</td></tr>
+<tr><td align="left">  br i1 %cmp135.not, label %if.then137, label %if.end139</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb21 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then137:</td></tr>
+<tr><td align="left">  %27 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call138 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str, i64 0, i64 0), i32 0, %struct.FILE_POS* %27, i8* getelementptr inbounds ([29 x i8], [29 x i8]* @.str.4, i64 0, i64 0)) #8</td></tr>
+<tr><td align="left">  br label %if.end139</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb22 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end139:</td></tr>
+<tr><td align="left">  %res.2235 = phi %union.rec* [ null, %if.then137 ], [ %call126, %if.end134 ], [ %call73, %for.end80 ]</td></tr>
+<tr><td align="left">  store %union.rec* null, %union.rec** %crs, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  store %union.rec* null, %union.rec** %nenclose, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  store %union.rec* null, %union.rec** %ntarget, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %arrayidx140 = getelementptr inbounds [2 x %union.rec*], [2 x %union.rec*]* %ft, i64 0, i64 1</td></tr>
+<tr><td align="left">  store %union.rec* null, %union.rec** %arrayidx140, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %arrayidx141 = getelementptr inbounds [2 x %union.rec*], [2 x %union.rec*]* %bt, i64 0, i64 1</td></tr>
+<tr><td align="left">  store %union.rec* null, %union.rec** %arrayidx141, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %arrayidx142 = getelementptr inbounds [2 x %union.rec*], [2 x %union.rec*]* %ft, i64 0, i64 0</td></tr>
+<tr><td align="left">  store %union.rec* null, %union.rec** %arrayidx142, align 16, !tbaa !6</td></tr>
+<tr><td align="left">  %arrayidx143 = getelementptr inbounds [2 x %union.rec*], [2 x %union.rec*]* %bt, i64 0, i64 0</td></tr>
+<tr><td align="left">  store %union.rec* null, %union.rec** %arrayidx143, align 16, !tbaa !6</td></tr>
+<tr><td align="left">  %osave_style = getelementptr inbounds %union.rec, %union.rec* %x, i64 0, i32 0, i32 4, i32 0</td></tr>
+<tr><td align="left">  %call146 = call %union.rec* @Manifest(%union.rec* %res.2235, %union.rec* %env, %struct.STYLE* nonnull %osave_style, %union.rec** nonnull %arrayidx143, %union.rec** nonnull %arrayidx142, %union.rec** nonnull %ntarget, %union.rec** nonnull %crs, i32 1, i32 0, %union.rec** nonnull %nenclose, i32 0) #8</td></tr>
+<tr><td align="left">  %call147 = call %union.rec* @ReplaceWithTidy(%union.rec* %call146, i32 1) #8</td></tr>
+<tr><td align="left">  %otype151 = getelementptr inbounds %union.rec, %union.rec* %call147, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %28 = load i8, i8* %otype151, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %.off = add i8 %28, -11</td></tr>
+<tr><td align="left">  %switch = icmp ult i8 %.off, 2</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %switch, label %if.else, label %if.then162</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %ostring = getelementptr inbounds %union.rec, %union.rec* %call147, i64 0, i32 0, i32 4</td></tr>
+<tr><td align="left">  %arraydecay168 = bitcast %union.FOURTH_UNION* %ostring to i8*</td></tr>
+<tr><td align="left">  %call169 = call i32 @strcmp(i8* noundef nonnull %arraydecay168, i8* noundef nonnull dereferenceable(4) getelementptr inbounds ([4 x i8], [4 x i8]* @.str.7, i64 0, i64 0)) #9</td></tr>
+<tr><td align="left">  %cmp170 = icmp eq i32 %call169, 0</td></tr>
+<tr><td align="left">  br i1 %cmp170, label %cleanup, label %if.else173</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else173:</td></tr>
+<tr><td align="left">  %call177 = call i32 @strcmp(i8* noundef nonnull %arraydecay168, i8* noundef nonnull dereferenceable(3) getelementptr inbounds ([3 x i8], [3 x i8]* @.str.8, i64 0, i64 0)) #9</td></tr>
+<tr><td align="left">  %cmp178 = icmp eq i32 %call177, 0</td></tr>
+<tr><td align="left">  br i1 %cmp178, label %cleanup, label %if.else181</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb25 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ 0, %if.else181 ], [ 0, %if.then162 ], [ 1, %if.else ], [ 0, %if.else173 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %4) #8</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %3) #8</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %2) #8</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %1) #8</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %0) #8</td></tr>
+<tr><td align="left">  ret i32 %retval.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb2:f
+f_bb0:fF -> f_bb1:f
+f_bb1:f -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb4:f
+f_bb3:f -> f_bb4:f
+f_bb4:fT -> f_bb15:f
+f_bb4:fF -> f_bb5:f
+f_bb5:f -> f_bb6:f
+f_bb6:f -> f_bb13:f
+f_bb6:f -> f_bb6:f
+f_bb6:f -> f_bb7:f
+f_bb7:fT -> f_bb13:f
+f_bb7:fF -> f_bb8:f
+f_bb8:fT -> f_bb10:f
+f_bb8:fF -> f_bb9:f
+f_bb9:f -> f_bb11:f
+f_bb10:f -> f_bb11:f
+f_bb11:f -> f_bb12:f
+f_bb12:fT -> f_bb12:f
+f_bb12:fF -> f_bb14:f
+f_bb13:fT -> f_bb15:f
+f_bb13:fF -> f_bb5:f
+f_bb14:fT -> f_bb15:f
+f_bb14:fF -> f_bb22:f
+f_bb15:fT -> f_bb21:f
+f_bb15:fF -> f_bb17:f
+f_bb16:fT -> f_bb21:f
+f_bb16:fF -> f_bb17:f
+f_bb17:f -> f_bb18:f
+f_bb18:fT -> f_bb18:f
+f_bb18:fF -> f_bb19:f
+f_bb19:fT -> f_bb16:f
+f_bb19:fF -> f_bb20:f
+f_bb20:fT -> f_bb21:f
+f_bb20:fF -> f_bb22:f
+f_bb21:f -> f_bb22:f
+f_bb22:fT -> f_bb23:f
+f_bb22:fF -> m_bb0:f2
+m_bb0:f2 -> f_bb25:f
+f_bb23:fT -> f_bb25:f
+f_bb23:fF -> f_bb24:f
+f_bb24:fT -> f_bb25:f
+f_bb24:fF -> m_bb0:f1
+m_bb0:f1 -> f_bb25:f
+}
+

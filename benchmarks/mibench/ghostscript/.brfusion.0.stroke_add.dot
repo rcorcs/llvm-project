@@ -1,0 +1,369 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then23:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %x25 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 1, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %16 = load i64, i64* %x25, align 8, !tbaa !22</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %idxprom160 = zext i32 %npoints.0 to i64</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %x26 = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 %idxprom160, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i64 %16, i64* %x26, align 16, !tbaa !23</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %y29 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 1, i32 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %17 = load i64, i64* %y29, align 8, !tbaa !24</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %y32 = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 %idxprom160, i32 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i64 %17, i64* %y32, align 8, !tbaa !25</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %inc = add nuw nsw i32 %npoints.0, 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arraydecay33 = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call34 = call fastcc i32 @add_points(%struct.gx_path_s* %ppath, %struct.gs_fixed_point_s* nonnull %arraydecay33, i32 %inc, i32 %moveto_first.0) #11</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp35 = icmp slt i32 %call34, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp35, label %cleanup, label %if.end37</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then47:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %x50 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 1, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %19 = load i64, i64* %x50, align 8, !tbaa !22</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %idxprom51162 = zext i32 %npoints.0 to i64</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %x53 = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 %idxprom51162, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i64 %19, i64* %x53, align 16, !tbaa !23</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %y56 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 1, i32 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %20 = load i64, i64* %y56, align 8, !tbaa !24</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %y59 = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 %idxprom51162, i32 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i64 %20, i64* %y59, align 8, !tbaa !25</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %inc60 = add nuw nsw i32 %npoints.0, 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arraydecay61 = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call62 = call fastcc i32 @add_points(%struct.gx_path_s* %ppath, %struct.gs_fixed_point_s* nonnull %arraydecay61, i32 %inc60, i32 %moveto_first.0) #11</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp63 = icmp slt i32 %call62, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp63, label %cleanup, label %if.end65</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+m_bb1 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.end37:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %e = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call39 = call fastcc i32 @add_round_cap(%struct.gx_path_s* %ppath, %struct.endpoint_s* nonnull %e) #11</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %done</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.end65:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %e48 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call67 = call fastcc i32 @add_round_cap(%struct.gx_path_s* %ppath, %struct.endpoint_s* nonnull %e48) #11</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %done</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %points = alloca [8 x %struct.gs_fixed_point_s], align 16</td></tr>
+<tr><td align="left">  %line_params = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1</td></tr>
+<tr><td align="left">  %0 = bitcast [8 x %struct.gs_fixed_point_s]* %points to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 128, i8* nonnull %0) #10</td></tr>
+<tr><td align="left">  %thin = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 3</td></tr>
+<tr><td align="left">  %1 = load i32, i32* %thin, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %1, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %if.end, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %x.i = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %2 = load i64, i64* %x.i, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  %x2.i = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %3 = load i64, i64* %x2.i, align 8, !tbaa !12</td></tr>
+<tr><td align="left">  %sub.i = sub nsw i64 %2, %3</td></tr>
+<tr><td align="left">  %y.i = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 0, i32 1</td></tr>
+<tr><td align="left">  %4 = load i64, i64* %y.i, align 8, !tbaa !13</td></tr>
+<tr><td align="left">  %y7.i = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 0, i32 0, i32 1</td></tr>
+<tr><td align="left">  %5 = load i64, i64* %y7.i, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %sub8.i = sub nsw i64 %4, %5</td></tr>
+<tr><td align="left">  %6 = tail call i64 @llvm.abs.i64(i64 %sub.i, i1 true) #10</td></tr>
+<tr><td align="left">  %7 = tail call i64 @llvm.abs.i64(i64 %sub8.i, i1 true) #10</td></tr>
+<tr><td align="left">  %cmp16.i = icmp ugt i64 %6, %7</td></tr>
+<tr><td align="left">  br i1 %cmp16.i, label %if.then.i, label %if.else.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then.i:</td></tr>
+<tr><td align="left">  %cmp20.i = icmp sgt i64 %sub.i, -1</td></tr>
+<tr><td align="left">  %cond21.i = select i1 %cmp20.i, i64 2048, i64 -2048</td></tr>
+<tr><td align="left">  br label %set_thin_widths.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else.i:</td></tr>
+<tr><td align="left">  %cmp32.i = icmp sgt i64 %sub8.i, -1</td></tr>
+<tr><td align="left">  %cond33.i = select i1 %cmp32.i, i64 2048, i64 -2048</td></tr>
+<tr><td align="left">  %sub37.i = sub nsw i64 0, %cond33.i</td></tr>
+<tr><td align="left">  br label %set_thin_widths.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">set_thin_widths.exit:</td></tr>
+<tr><td align="left">  %cond33.sink.i = phi i64 [ 0, %if.then.i ], [ %cond33.i, %if.else.i ]</td></tr>
+<tr><td align="left">  %sub37.sink.i = phi i64 [ 0, %if.then.i ], [ %sub37.i, %if.else.i ]</td></tr>
+<tr><td align="left">  %.sink59.i = phi i64 [ %cond21.i, %if.then.i ], [ 0, %if.else.i ]</td></tr>
+<tr><td align="left">  %8 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 3, i32 1</td></tr>
+<tr><td align="left">  store i64 %cond33.sink.i, i64* %8, align 8</td></tr>
+<tr><td align="left">  %9 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 2, i32 0</td></tr>
+<tr><td align="left">  store i64 %sub37.sink.i, i64* %9, align 8</td></tr>
+<tr><td align="left">  %10 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 3, i32 0</td></tr>
+<tr><td align="left">  store i64 %.sink59.i, i64* %10, align 8</td></tr>
+<tr><td align="left">  %11 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 2, i32 1</td></tr>
+<tr><td align="left">  store i64 %.sink59.i, i64* %11, align 8</td></tr>
+<tr><td align="left">  tail call fastcc void @adjust_stroke(%struct.partial_line_s* nonnull %plp, %struct.gs_imager_state_s* %pis, i32 1) #11</td></tr>
+<tr><td align="left">  tail call fastcc void @compute_caps(%struct.partial_line_s* nonnull %plp) #11</td></tr>
+<tr><td align="left">  br label %if.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %cmp = icmp eq i32 %first, 0</td></tr>
+<tr><td align="left">  br i1 %cmp, label %land.lhs.true, label %cond.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true:</td></tr>
+<tr><td align="left">  %cap = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 1</td></tr>
+<tr><td align="left">  %12 = load i32, i32* %cap, align 4, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp1 = icmp eq i32 %12, 1</td></tr>
+<tr><td align="left">  br i1 %cmp1, label %if.then2, label %cond.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then2:</td></tr>
+<tr><td align="left">  %x = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 0, i32 1, i32 0</td></tr>
+<tr><td align="left">  %13 = load i64, i64* %x, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %y = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 0, i32 1, i32 1</td></tr>
+<tr><td align="left">  %14 = load i64, i64* %y, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %call = tail call i32 @gx_path_add_point(%struct.gx_path_s* %ppath, i64 %13, i64 %14) #12</td></tr>
+<tr><td align="left">  %cmp5 = icmp slt i32 %call, 0</td></tr>
+<tr><td align="left">  br i1 %cmp5, label %cleanup, label %lor.lhs.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false:</td></tr>
+<tr><td align="left">  %o = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 0</td></tr>
+<tr><td align="left">  %call7 = tail call fastcc i32 @add_round_cap(%struct.gx_path_s* %ppath, %struct.endpoint_s* %o) #11</td></tr>
+<tr><td align="left">  %cmp8 = icmp slt i32 %call7, 0</td></tr>
+<tr><td align="left">  br i1 %cmp8, label %cleanup, label %if.end18</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end:</td></tr>
+<tr><td align="left">  %cond = phi i32 [ 0, %if.end ], [ %12, %land.lhs.true ]</td></tr>
+<tr><td align="left">  %o13 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 0</td></tr>
+<tr><td align="left">  %arraydecay = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 0</td></tr>
+<tr><td align="left">  %call14 = call fastcc i32 @cap_points(i32 %cond, %struct.endpoint_s* %o13, %struct.gs_fixed_point_s* nonnull %arraydecay) #11</td></tr>
+<tr><td align="left">  %cmp15 = icmp slt i32 %call14, 0</td></tr>
+<tr><td align="left">  br i1 %cmp15, label %cleanup, label %if.end18</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end18:</td></tr>
+<tr><td align="left">  %npoints.0 = phi i32 [ %call14, %cond.end ], [ 0, %lor.lhs.false ]</td></tr>
+<tr><td align="left">  %moveto_first.0 = phi i32 [ 1, %cond.end ], [ 0, %lor.lhs.false ]</td></tr>
+<tr><td align="left">  %cmp19 = icmp eq %struct.partial_line_s* %nplp, null</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp19, label %if.then20, label %if.else45</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then20:</td></tr>
+<tr><td align="left">  %cap21 = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 1</td></tr>
+<tr><td align="left">  %15 = load i32, i32* %cap21, align 4, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp22 = icmp eq i32 %15, 1</td></tr>
+<tr><td align="left">  br i1 %cmp22, label %if.then23, label %if.end40</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end40:</td></tr>
+<tr><td align="left">  %e42 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1</td></tr>
+<tr><td align="left">  %idx.ext161 = zext i32 %npoints.0 to i64</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 %idx.ext161</td></tr>
+<tr><td align="left">  %call44 = call fastcc i32 @cap_points(i32 %15, %struct.endpoint_s* nonnull %e42, %struct.gs_fixed_point_s* nonnull %add.ptr) #11</td></tr>
+<tr><td align="left">  br label %if.end84</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else45:</td></tr>
+<tr><td align="left">  %join = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 2</td></tr>
+<tr><td align="left">  %18 = load i32, i32* %join, align 8, !tbaa !26</td></tr>
+<tr><td align="left">  %cmp46 = icmp eq i32 %18, 1</td></tr>
+<tr><td align="left">  br i1 %cmp46, label %if.then47, label %if.else68</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else68:</td></tr>
+<tr><td align="left">  %thin69 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %nplp, i64 0, i32 3</td></tr>
+<tr><td align="left">  %21 = load i32, i32* %thin69, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %tobool70.not = icmp eq i32 %21, 0</td></tr>
+<tr><td align="left">  %idx.ext79163 = zext i32 %npoints.0 to i64</td></tr>
+<tr><td align="left">  %add.ptr80 = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 %idx.ext79163</td></tr>
+<tr><td align="left">  br i1 %tobool70.not, label %if.else77, label %if.end84.thread</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end84.thread:</td></tr>
+<tr><td align="left">  %x.i155 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 1, i32 0</td></tr>
+<tr><td align="left">  %22 = load i64, i64* %x.i155, align 8, !tbaa !27</td></tr>
+<tr><td align="left">  %x1.i = getelementptr inbounds %struct.gs_fixed_point_s, %struct.gs_fixed_point_s* %add.ptr80, i64 0, i32 0</td></tr>
+<tr><td align="left">  store i64 %22, i64* %x1.i, align 16, !tbaa !23</td></tr>
+<tr><td align="left">  %y.i156 = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 1, i32 1</td></tr>
+<tr><td align="left">  %23 = load i64, i64* %y.i156, align 8, !tbaa !28</td></tr>
+<tr><td align="left">  %y4.i = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 %idx.ext79163, i32 1</td></tr>
+<tr><td align="left">  store i64 %23, i64* %y4.i, align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %x5.i = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 2, i32 0</td></tr>
+<tr><td align="left">  %24 = load i64, i64* %x5.i, align 8, !tbaa !29</td></tr>
+<tr><td align="left">  %x7.i = getelementptr inbounds %struct.gs_fixed_point_s, %struct.gs_fixed_point_s* %add.ptr80, i64 1, i32 0</td></tr>
+<tr><td align="left">  store i64 %24, i64* %x7.i, align 16, !tbaa !23</td></tr>
+<tr><td align="left">  %y9.i = getelementptr inbounds %struct.partial_line_s, %struct.partial_line_s* %plp, i64 0, i32 1, i32 2, i32 1</td></tr>
+<tr><td align="left">  %25 = load i64, i64* %y9.i, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  %y68.i = getelementptr inbounds %struct.gs_fixed_point_s, %struct.gs_fixed_point_s* %add.ptr80, i64 1, i32 1</td></tr>
+<tr><td align="left">  store i64 %25, i64* %y68.i, align 8, !tbaa !25</td></tr>
+<tr><td align="left">  br label %if.end87</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else77:</td></tr>
+<tr><td align="left">  %call81 = call fastcc i32 @line_join_points(%struct.gx_line_params_s* nonnull %line_params, %struct.partial_line_s* nonnull %plp, %struct.partial_line_s* nonnull %nplp, %struct.gs_fixed_point_s* nonnull %add.ptr80) #11</td></tr>
+<tr><td align="left">  br label %if.end84</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end84:</td></tr>
+<tr><td align="left">  %code.1 = phi i32 [ %call44, %if.end40 ], [ %call81, %if.else77 ]</td></tr>
+<tr><td align="left">  %cmp85 = icmp slt i32 %code.1, 0</td></tr>
+<tr><td align="left">  br i1 %cmp85, label %cleanup, label %if.end87</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end87:</td></tr>
+<tr><td align="left">  %code.1159 = phi i32 [ 2, %if.end84.thread ], [ %code.1, %if.end84 ]</td></tr>
+<tr><td align="left">  %arraydecay88 = getelementptr inbounds [8 x %struct.gs_fixed_point_s], [8 x %struct.gs_fixed_point_s]* %points, i64 0, i64 0</td></tr>
+<tr><td align="left">  %add = add nuw nsw i32 %code.1159, %npoints.0</td></tr>
+<tr><td align="left">  %call89 = call fastcc i32 @add_points(%struct.gx_path_s* %ppath, %struct.gs_fixed_point_s* nonnull %arraydecay88, i32 %add, i32 %moveto_first.0) #11</td></tr>
+<tr><td align="left">  br label %done</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb19 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">done:</td></tr>
+<tr><td align="left">  %code.2 = phi i32 [ %call39, %if.end37 ], [ %call89, %if.end87 ], [ %call67, %if.end65 ]</td></tr>
+<tr><td align="left">  %cmp90 = icmp slt i32 %code.2, 0</td></tr>
+<tr><td align="left">  br i1 %cmp90, label %cleanup, label %if.end92</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end92:</td></tr>
+<tr><td align="left">  %call93 = call i32 @gx_path_close_subpath_notes(%struct.gx_path_s* %ppath, i32 0) #12</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb21 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ %call93, %if.end92 ], [ %call, %if.then2 ], [ %call7, %lor.lhs.false ], [ %call14, %cond.end ], [ %call34, %if.then23 ], [ %call62, %if.then47 ], [ %code.1, %if.end84 ], [ %code.2, %done ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 128, i8* nonnull %0) #10</td></tr>
+<tr><td align="left">  ret i32 %retval.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb5:f
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> f_bb3:f
+f_bb2:f -> f_bb4:f
+f_bb3:f -> f_bb4:f
+f_bb4:f -> f_bb5:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> f_bb9:f
+f_bb6:fT -> f_bb7:f
+f_bb6:fF -> f_bb9:f
+f_bb7:fT -> f_bb21:f
+f_bb7:fF -> f_bb8:f
+f_bb8:fT -> f_bb21:f
+f_bb8:fF -> f_bb10:f
+f_bb9:fT -> f_bb21:f
+f_bb9:fF -> f_bb10:f
+f_bb10:fT -> f_bb11:f
+f_bb10:fF -> f_bb13:f
+f_bb11:fT -> m_bb0:f1
+f_bb11:fF -> f_bb12:f
+m_bb0:f1T -> f_bb21:f
+m_bb0:f1F -> m_bb1:f1
+m_bb1:f1 -> f_bb19:f
+f_bb12:f -> f_bb17:f
+f_bb13:fT -> m_bb0:f2
+f_bb13:fF -> f_bb14:f
+m_bb0:f2T -> f_bb21:f
+m_bb0:f2F -> m_bb1:f2
+m_bb1:f2 -> f_bb19:f
+f_bb14:fT -> f_bb16:f
+f_bb14:fF -> f_bb15:f
+f_bb15:f -> f_bb18:f
+f_bb16:f -> f_bb17:f
+f_bb17:fT -> f_bb21:f
+f_bb17:fF -> f_bb18:f
+f_bb18:f -> f_bb19:f
+f_bb19:fT -> f_bb21:f
+f_bb19:fF -> f_bb20:f
+f_bb20:f -> f_bb21:f
+}
+

@@ -1,0 +1,1189 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">sw.default:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %97 = load i32 (%struct.gx_device_s*, i64, i64, i64, i64, i64, i64, %struct.gx_device_color_s*, i32)*, i32 (%struct.gx_device_s*, i64, i64, i64, i64, i64, i64, %struct.gx_device_color_s*, i32)** %fill_parallelogram, align 8, !tbaa !72</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub779 = sub nsw i64 %pnext.sroa.0.0, %xrun.0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub780 = sub nsw i64 %pnext.sroa.23.0, %yrun.0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %dev_color781 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.9, i64 0, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call782 = call i32 %97(%struct.gx_device_s* %dev, i64 %xrun.0, i64 %yrun.0, i64 %sub779, i64 %sub780, i64 %sub56, i64 %sub64, %struct.gx_device_color_s* %dev_color781, i32 %1) #8</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %sw.epilog783</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">while.end:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %98 = load i32 (%struct.gx_device_s*, i64, i64, i64, i64, i64, i64, %struct.gx_device_color_s*, i32)*, i32 (%struct.gx_device_s*, i64, i64, i64, i64, i64, i64, %struct.gx_device_color_s*, i32)** %fill_parallelogram, align 8, !tbaa !72</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub802 = sub nsw i64 %pnext.sroa.0.0, %xrun.0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub803 = sub nsw i64 %pnext.sroa.23.0, %yrun.0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %dev_color804 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.1, i64 0, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call805 = call i32 %98(%struct.gx_device_s* %dev, i64 %xrun.0, i64 %yrun.0, i64 %sub802, i64 %sub803, i64 %sub56, i64 %sub64, %struct.gx_device_color_s* %dev_color804, i32 %1) #8</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %cmp806 = icmp slt i32 %call805, 0</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %cond811 = select i1 %cmp806, i32 %call805, i32 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %cc = alloca %struct.gs_client_color_s, align 8</td></tr>
+<tr><td align="left">  %empty_clue = alloca %struct.gx_image_clue_s, align 8</td></tr>
+<tr><td align="left">  %clue_temp = alloca %struct.gx_image_clue_s, align 8</td></tr>
+<tr><td align="left">  %pis1 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 14</td></tr>
+<tr><td align="left">  %0 = load %struct.gs_imager_state_s*, %struct.gs_imager_state_s** %pis1, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %log_op = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 30</td></tr>
+<tr><td align="left">  %1 = load i32, i32* %log_op, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %posture2 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 23</td></tr>
+<tr><td align="left">  %2 = load i32, i32* %posture2, align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %pcs3 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 15</td></tr>
+<tr><td align="left">  %3 = load %struct.gs_color_space_s*, %struct.gs_color_space_s** %pcs3, align 8, !tbaa !23</td></tr>
+<tr><td align="left">  %type = getelementptr inbounds %struct.gs_color_space_s, %struct.gs_color_space_s* %3, i64 0, i32 0</td></tr>
+<tr><td align="left">  %4 = load %struct.gs_color_space_type_s*, %struct.gs_color_space_type_s** %type, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %remap_color4 = getelementptr inbounds %struct.gs_color_space_type_s, %struct.gs_color_space_type_s* %4, i64 0, i32 7</td></tr>
+<tr><td align="left">  %5 = load i32 (%struct.gs_client_color_s*, %struct.gs_color_space_s*, %struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)*, i32 (%struct.gs_client_color_s*, %struct.gs_color_space_s*, %struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)** %remap_color4, align 8, !tbaa !26</td></tr>
+<tr><td align="left">  %6 = bitcast %struct.gs_client_color_s* %cc to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 24, i8* nonnull %6) #7</td></tr>
+<tr><td align="left">  %device_color5 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 27</td></tr>
+<tr><td align="left">  %7 = load i8, i8* %device_color5, align 1, !tbaa !28</td></tr>
+<tr><td align="left">  %call = tail call %struct.gx_color_map_procs_s* @gx_device_cmap_procs(%struct.gx_device_s* %dev) #8</td></tr>
+<tr><td align="left">  %map_rgb6 = getelementptr inbounds %struct.gx_color_map_procs_s, %struct.gx_color_map_procs_s* %call, i64 0, i32 1</td></tr>
+<tr><td align="left">  %8 = load void (i16, i16, i16, %struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)*, void (i16, i16, i16, %struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)** %map_rgb6, align 8, !tbaa !29</td></tr>
+<tr><td align="left">  %map_cmyk7 = getelementptr inbounds %struct.gx_color_map_procs_s, %struct.gx_color_map_procs_s* %call, i64 0, i32 2</td></tr>
+<tr><td align="left">  %9 = load void (i16, i16, i16, i16, %struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)*, void (i16, i16, i16, i16, %struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)** %map_cmyk7, align 8, !tbaa !31</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 49, i64 0</td></tr>
+<tr><td align="left">  %arrayidx9 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 49, i64 1</td></tr>
+<tr><td align="left">  %10 = bitcast %struct.gx_image_clue_s* %empty_clue to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 104, i8* nonnull %10) #7</td></tr>
+<tr><td align="left">  %11 = bitcast %struct.gx_image_clue_s* %clue_temp to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 104, i8* nonnull %11) #7</td></tr>
+<tr><td align="left">  %spp10 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 3</td></tr>
+<tr><td align="left">  %12 = load i8, i8* %spp10, align 1, !tbaa !32</td></tr>
+<tr><td align="left">  %conv11 = zext i8 %12 to i32</td></tr>
+<tr><td align="left">  %mul = mul nsw i32 %conv11, %data_x</td></tr>
+<tr><td align="left">  %idx.ext = sext i32 %mul to i64</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds i8, i8* %buffer, i64 %idx.ext</td></tr>
+<tr><td align="left">  %x = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 10, i32 0</td></tr>
+<tr><td align="left">  %13 = load i64, i64* %x, align 8, !tbaa !33</td></tr>
+<tr><td align="left">  %14 = tail call i64 @llvm.abs.i64(i64 %13, i1 true)</td></tr>
+<tr><td align="left">  %15 = lshr i64 %14, 12</td></tr>
+<tr><td align="left">  %conv17 = trunc i64 %15 to i32</td></tr>
+<tr><td align="left">  %w18 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 9, i32 2</td></tr>
+<tr><td align="left">  %16 = load i32, i32* %w18, align 8, !tbaa !34</td></tr>
+<tr><td align="left">  %cmp19 = icmp sgt i32 %16, %conv17</td></tr>
+<tr><td align="left">  br i1 %cmp19, label %land.rhs, label %land.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">land.rhs:</td></tr>
+<tr><td align="left">  %y = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 10, i32 1</td></tr>
+<tr><td align="left">  %17 = load i64, i64* %y, align 8, !tbaa !35</td></tr>
+<tr><td align="left">  %18 = tail call i64 @llvm.abs.i64(i64 %17, i1 true)</td></tr>
+<tr><td align="left">  %19 = lshr i64 %18, 12</td></tr>
+<tr><td align="left">  %conv34 = trunc i64 %19 to i32</td></tr>
+<tr><td align="left">  %cmp37 = icmp sgt i32 %16, %conv34</td></tr>
+<tr><td align="left">  br label %land.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.end:</td></tr>
+<tr><td align="left">  %20 = phi i1 [ false, %entry ], [ %cmp37, %land.rhs ]</td></tr>
+<tr><td align="left">  %idx.ext39 = zext i32 %w to i64</td></tr>
+<tr><td align="left">  %add.ptr40 = getelementptr inbounds i8, i8* %add.ptr, i64 %idx.ext39</td></tr>
+<tr><td align="left">  %bps = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 0</td></tr>
+<tr><td align="left">  %21 = load i8, i8* %bps, align 8, !tbaa !36</td></tr>
+<tr><td align="left">  %conv41 = zext i8 %21 to i32</td></tr>
+<tr><td align="left">  %mul42 = mul nuw nsw i32 %conv41, %conv11</td></tr>
+<tr><td align="left">  %cmp43 = icmp ult i32 %mul42, 13</td></tr>
+<tr><td align="left">  %cmp45 = icmp eq i32 %h, 0</td></tr>
+<tr><td align="left">  br i1 %cmp45, label %cleanup, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %pnext.sroa.0.0..sroa_idx = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %pnext.sroa.0.0.copyload = load i64, i64* %pnext.sroa.0.0..sroa_idx, align 8, !tbaa.struct !37</td></tr>
+<tr><td align="left">  %pnext.sroa.13.0..sroa_idx1149 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 0, i32 0, i32 1</td></tr>
+<tr><td align="left">  %pnext.sroa.13.0.copyload = load i32, i32* %pnext.sroa.13.0..sroa_idx1149, align 8, !tbaa.struct !40</td></tr>
+<tr><td align="left">  %pnext.sroa.181155.0..sroa_idx1156 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 0, i32 1, i32 0</td></tr>
+<tr><td align="left">  %pnext.sroa.181155.0.copyload = load i64, i64* %pnext.sroa.181155.0..sroa_idx1156, align 8, !tbaa.struct !41</td></tr>
+<tr><td align="left">  %pnext.sroa.20.0..sroa_idx1159 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 0, i32 1, i32 1</td></tr>
+<tr><td align="left">  %pnext.sroa.20.0.copyload = load i32, i32* %pnext.sroa.20.0..sroa_idx1159, align 8, !tbaa.struct !42</td></tr>
+<tr><td align="left">  %pnext.sroa.22.0..sroa_idx1162 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 0, i32 1, i32 2</td></tr>
+<tr><td align="left">  %pnext.sroa.22.0.copyload = load i32, i32* %pnext.sroa.22.0..sroa_idx1162, align 4, !tbaa.struct !43</td></tr>
+<tr><td align="left">  %pnext.sroa.23.0..sroa_idx1164 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %pnext.sroa.23.0.copyload = load i64, i64* %pnext.sroa.23.0..sroa_idx1164, align 8, !tbaa.struct !44</td></tr>
+<tr><td align="left">  %pnext.sroa.33.0..sroa_idx1174 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 1, i32 0, i32 1</td></tr>
+<tr><td align="left">  %pnext.sroa.33.0.copyload = load i32, i32* %pnext.sroa.33.0..sroa_idx1174, align 8, !tbaa.struct !45</td></tr>
+<tr><td align="left">  %pnext.sroa.381180.0..sroa_idx1181 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 1, i32 1, i32 0</td></tr>
+<tr><td align="left">  %pnext.sroa.381180.0.copyload = load i64, i64* %pnext.sroa.381180.0..sroa_idx1181, align 8, !tbaa.struct !46</td></tr>
+<tr><td align="left">  %pnext.sroa.40.0..sroa_idx1184 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 1, i32 1, i32 1</td></tr>
+<tr><td align="left">  %pnext.sroa.40.0.copyload = load i32, i32* %pnext.sroa.40.0..sroa_idx1184, align 8, !tbaa.struct !47</td></tr>
+<tr><td align="left">  %pnext.sroa.42.0..sroa_idx1187 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 1, i32 1, i32 1, i32 2</td></tr>
+<tr><td align="left">  %pnext.sroa.42.0.copyload = load i32, i32* %pnext.sroa.42.0..sroa_idx1187, align 4, !tbaa.struct !48</td></tr>
+<tr><td align="left">  %Q54 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 0, i32 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %22 = load i64, i64* %Q54, align 8, !tbaa !49</td></tr>
+<tr><td align="left">  %x55 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 38, i32 0</td></tr>
+<tr><td align="left">  %23 = load i64, i64* %x55, align 8, !tbaa !50</td></tr>
+<tr><td align="left">  %sub56 = sub nsw i64 %22, %23</td></tr>
+<tr><td align="left">  %Q61 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 40, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %24 = load i64, i64* %Q61, align 8, !tbaa !51</td></tr>
+<tr><td align="left">  %y63 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 38, i32 1</td></tr>
+<tr><td align="left">  %25 = load i64, i64* %y63, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  %sub64 = sub nsw i64 %24, %25</td></tr>
+<tr><td align="left">  switch i32 %2, label %do.end [
+    i32 0, label %sw.bb
+    i32 1, label %sw.bb67
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb:</td></tr>
+<tr><td align="left">  %yci = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 44</td></tr>
+<tr><td align="left">  %hci = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 45</td></tr>
+<tr><td align="left">  br label %do.end.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb67:</td></tr>
+<tr><td align="left">  %xci = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 46</td></tr>
+<tr><td align="left">  %wci = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 47</td></tr>
+<tr><td align="left">  br label %do.end.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">do.end.sink.split:</td></tr>
+<tr><td align="left">  %hci.sink = phi i32* [ %hci, %sw.bb ], [ %wci, %sw.bb67 ]</td></tr>
+<tr><td align="left">  %pnext.sroa.0.0.copyload.sink = phi i64 [ %pnext.sroa.0.0.copyload, %sw.bb ], [ %pnext.sroa.23.0.copyload, %sw.bb67 ]</td></tr>
+<tr><td align="left">  %vci.0.ph.in = phi i32* [ %yci, %sw.bb ], [ %xci, %sw.bb67 ]</td></tr>
+<tr><td align="left">  %vci.0.ph = load i32, i32* %vci.0.ph.in, align 8, !tbaa !39</td></tr>
+<tr><td align="left">  %26 = load i32, i32* %hci.sink, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %add = add nsw i64 %pnext.sroa.0.0.copyload.sink, 2048</td></tr>
+<tr><td align="left">  %27 = lshr i64 %add, 12</td></tr>
+<tr><td align="left">  %conv66 = trunc i64 %27 to i32</td></tr>
+<tr><td align="left">  br label %do.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.end:</td></tr>
+<tr><td align="left">  %vdi.0 = phi i32 [ undef, %if.end ], [ %26, %do.end.sink.split ]</td></tr>
+<tr><td align="left">  %vci.0 = phi i32 [ undef, %if.end ], [ %vci.0.ph, %do.end.sink.split ]</td></tr>
+<tr><td align="left">  %irun.0 = phi i32 [ undef, %if.end ], [ %conv66, %do.end.sink.split ]</td></tr>
+<tr><td align="left">  br i1 %cmp43, label %if.then72, label %if.end75</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then72:</td></tr>
+<tr><td align="left">  %colors = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %empty_clue, i64 0, i32 0, i32 1</td></tr>
+<tr><td align="left">  %pure = bitcast %union._c* %colors to i64*</td></tr>
+<tr><td align="left">  store i64 -1, i64* %pure, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %type74 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %empty_clue, i64 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  store %struct.gx_device_color_procs_s* @gx_dc_procs_pure, %struct.gx_device_color_procs_s** %type74, align 8, !tbaa !54</td></tr>
+<tr><td align="left">  br label %if.end75</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end75:</td></tr>
+<tr><td align="left">  %pic.0 = phi %struct.gx_image_clue_s* [ %empty_clue, %if.then72 ], [ %arrayidx, %do.end ]</td></tr>
+<tr><td align="left">  %arrayidx76 = getelementptr inbounds %struct.gs_client_color_s, %struct.gs_client_color_s* %cc, i64 0, i32 0, i32 0, i64 3</td></tr>
+<tr><td align="left">  %arrayidx79 = getelementptr inbounds %struct.gs_client_color_s, %struct.gs_client_color_s* %cc, i64 0, i32 0, i32 0, i64 2</td></tr>
+<tr><td align="left">  %arrayidx82 = getelementptr inbounds %struct.gs_client_color_s, %struct.gs_client_color_s* %cc, i64 0, i32 0, i32 0, i64 1</td></tr>
+<tr><td align="left">  %arrayidx85 = getelementptr inbounds %struct.gs_client_color_s, %struct.gs_client_color_s* %cc, i64 0, i32 0, i32 0, i64 0</td></tr>
+<tr><td align="left">  %28 = bitcast %struct.gs_client_color_s* %cc to i8*</td></tr>
+<tr><td align="left">  call void @llvm.memset.p0i8.i64(i8* noundef nonnull align 8 dereferenceable(24) %28, i8 0, i64 24, i1 false)</td></tr>
+<tr><td align="left">  %29 = load i8, i8* %add.ptr, align 1, !tbaa !53</td></tr>
+<tr><td align="left">  %neg = xor i8 %29, -1</td></tr>
+<tr><td align="left">  %30 = sub i32 0, %pnext.sroa.20.0.copyload</td></tr>
+<tr><td align="left">  %31 = sub i32 0, %pnext.sroa.40.0.copyload</td></tr>
+<tr><td align="left">  %cmp161 = icmp eq i8 %12, 4</td></tr>
+<tr><td align="left">  %tobool483.not = icmp eq i8 %7, 0</td></tr>
+<tr><td align="left">  %decoding = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 3, i32 3</td></tr>
+<tr><td align="left">  %arrayidx363 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 3, i32 1, i64 0</td></tr>
+<tr><td align="left">  %decode_factor = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 3, i32 2</td></tr>
+<tr><td align="left">  %decoding538 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 0, i32 3</td></tr>
+<tr><td align="left">  %arrayidx566 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 0, i32 1, i64 0</td></tr>
+<tr><td align="left">  %decode_factor574 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 0, i32 2</td></tr>
+<tr><td align="left">  %decoding583 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 1, i32 3</td></tr>
+<tr><td align="left">  %arrayidx611 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 1, i32 1, i64 0</td></tr>
+<tr><td align="left">  %decode_factor619 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 1, i32 2</td></tr>
+<tr><td align="left">  %decoding628 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 2, i32 3</td></tr>
+<tr><td align="left">  %arrayidx656 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 2, i32 1, i64 0</td></tr>
+<tr><td align="left">  %decode_factor664 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 2, i32 2</td></tr>
+<tr><td align="left">  %fill_parallelogram = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %dev, i64 0, i32 21, i32 28</td></tr>
+<tr><td align="left">  br label %while.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond:</td></tr>
+<tr><td align="left">  %pic.1 = phi %struct.gx_image_clue_s* [ %pic.0, %if.end75 ], [ %pic.11, %inc ]</td></tr>
+<tr><td align="left">  %pic_next.0 = phi %struct.gx_image_clue_s* [ %arrayidx9, %if.end75 ], [ %pic_next.8, %inc ]</td></tr>
+<tr><td align="left">  %pnext.sroa.0.0 = phi i64 [ %pnext.sroa.0.0.copyload, %if.end75 ], [ %add123, %inc ]</td></tr>
+<tr><td align="left">  %psrc.0 = phi i8* [ %add.ptr, %if.end75 ], [ %psrc.6, %inc ]</td></tr>
+<tr><td align="left">  %xrun.0 = phi i64 [ %pnext.sroa.0.0.copyload, %if.end75 ], [ %xrun.3, %inc ]</td></tr>
+<tr><td align="left">  %yrun.0 = phi i64 [ %pnext.sroa.23.0.copyload, %if.end75 ], [ %yrun.3, %inc ]</td></tr>
+<tr><td align="left">  %irun.1 = phi i32 [ %irun.0, %if.end75 ], [ %irun.4, %inc ]</td></tr>
+<tr><td align="left">  %run.sroa.7.sroa.0.0 = phi i24 [ 0, %if.end75 ], [ %run.sroa.7.sroa.0.1, %inc ]</td></tr>
+<tr><td align="left">  %run.sroa.0.0 = phi i8 [ %neg, %if.end75 ], [ %run.sroa.0.1, %inc ]</td></tr>
+<tr><td align="left">  %next.sroa.49.0 = phi i8 [ 0, %if.end75 ], [ %next.sroa.49.6, %inc ]</td></tr>
+<tr><td align="left">  %pnext.sroa.13.0 = phi i32 [ %pnext.sroa.13.0.copyload, %if.end75 ], [ %pnext.sroa.13.1, %inc ]</td></tr>
+<tr><td align="left">  %pnext.sroa.23.0 = phi i64 [ %pnext.sroa.23.0.copyload, %if.end75 ], [ %add160, %inc ]</td></tr>
+<tr><td align="left">  %pnext.sroa.33.0 = phi i32 [ %pnext.sroa.33.0.copyload, %if.end75 ], [ %pnext.sroa.33.1, %inc ]</td></tr>
+<tr><td align="left">  %cmp90 = icmp ult i8* %psrc.0, %add.ptr40</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp90, label %while.body, label %while.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  %cmp95.not = icmp ult i32 %pnext.sroa.13.0, %pnext.sroa.20.0.copyload</td></tr>
+<tr><td align="left">  %pnext.sroa.13.1.p = select i1 %cmp95.not, i32 %pnext.sroa.22.0.copyload, i32 %30</td></tr>
+<tr><td align="left">  %pnext.sroa.13.1 = add i32 %pnext.sroa.13.1.p, %pnext.sroa.13.0</td></tr>
+<tr><td align="left">  %add117 = zext i1 %cmp95.not to i64</td></tr>
+<tr><td align="left">  %cond119 = add nsw i64 %pnext.sroa.181155.0.copyload, %add117</td></tr>
+<tr><td align="left">  %add123 = add nsw i64 %cond119, %pnext.sroa.0.0</td></tr>
+<tr><td align="left">  %cmp130.not = icmp ult i32 %pnext.sroa.33.0, %pnext.sroa.40.0.copyload</td></tr>
+<tr><td align="left">  %pnext.sroa.33.1.p = select i1 %cmp130.not, i32 %pnext.sroa.42.0.copyload, i32 %31</td></tr>
+<tr><td align="left">  %pnext.sroa.33.1 = add i32 %pnext.sroa.33.1.p, %pnext.sroa.33.0</td></tr>
+<tr><td align="left">  %add154 = zext i1 %cmp130.not to i64</td></tr>
+<tr><td align="left">  %cond156 = add nsw i64 %pnext.sroa.381180.0.copyload, %add154</td></tr>
+<tr><td align="left">  %add160 = add nsw i64 %cond156, %pnext.sroa.23.0</td></tr>
+<tr><td align="left">  %32 = load i8, i8* %psrc.0, align 1, !tbaa !53</td></tr>
+<tr><td align="left">  %arrayidx167 = getelementptr inbounds i8, i8* %psrc.0, i64 1</td></tr>
+<tr><td align="left">  %33 = load i8, i8* %arrayidx167, align 1, !tbaa !53</td></tr>
+<tr><td align="left">  %arrayidx170 = getelementptr inbounds i8, i8* %psrc.0, i64 2</td></tr>
+<tr><td align="left">  %34 = load i8, i8* %arrayidx170, align 1, !tbaa !53</td></tr>
+<tr><td align="left">  %arrayidx173 = getelementptr inbounds i8, i8* %psrc.0, i64 3</td></tr>
+<tr><td align="left">  br i1 %cmp161, label %if.then163, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then163:</td></tr>
+<tr><td align="left">  %35 = load i8, i8* %arrayidx173, align 1, !tbaa !53</td></tr>
+<tr><td align="left">  %add.ptr176 = getelementptr inbounds i8, i8* %psrc.0, i64 4</td></tr>
+<tr><td align="left">  %next.sroa.49.0.insert.ext = zext i8 %35 to i32</td></tr>
+<tr><td align="left">  %next.sroa.49.0.insert.shift = shl nuw i32 %next.sroa.49.0.insert.ext, 24</td></tr>
+<tr><td align="left">  %next.sroa.36.0.insert.ext = zext i8 %34 to i32</td></tr>
+<tr><td align="left">  %next.sroa.36.0.insert.shift = shl nuw nsw i32 %next.sroa.36.0.insert.ext, 16</td></tr>
+<tr><td align="left">  %next.sroa.23.0.insert.ext = zext i8 %33 to i32</td></tr>
+<tr><td align="left">  %next.sroa.23.0.insert.shift = shl nuw nsw i32 %next.sroa.23.0.insert.ext, 8</td></tr>
+<tr><td align="left">  %next.sroa.0.0.insert.ext = zext i8 %32 to i32</td></tr>
+<tr><td align="left">  %next.sroa.36.0.insert.insert = or i32 %next.sroa.23.0.insert.shift, %next.sroa.0.0.insert.ext</td></tr>
+<tr><td align="left">  %next.sroa.23.0.insert.insert = or i32 %next.sroa.36.0.insert.insert, %next.sroa.36.0.insert.shift</td></tr>
+<tr><td align="left">  %next.sroa.0.0.insert.insert = or i32 %next.sroa.23.0.insert.insert, %next.sroa.49.0.insert.shift</td></tr>
+<tr><td align="left">  %run.sroa.7.0.insert.ext = zext i24 %run.sroa.7.sroa.0.0 to i32</td></tr>
+<tr><td align="left">  %run.sroa.7.0.insert.shift = shl nuw i32 %run.sroa.7.0.insert.ext, 8</td></tr>
+<tr><td align="left">  %run.sroa.0.0.insert.ext = zext i8 %run.sroa.0.0 to i32</td></tr>
+<tr><td align="left">  %run.sroa.0.0.insert.insert = or i32 %run.sroa.7.0.insert.shift, %run.sroa.0.0.insert.ext</td></tr>
+<tr><td align="left">  %cmp179 = icmp eq i32 %next.sroa.0.0.insert.insert, %run.sroa.0.0.insert.insert</td></tr>
+<tr><td align="left">  br i1 %cmp179, label %inc, label %lor.lhs.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false:</td></tr>
+<tr><td align="left">  br i1 %20, label %land.lhs.true, label %if.end233</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true:</td></tr>
+<tr><td align="left">  %cmp185 = icmp sgt i64 %cond119, 0</td></tr>
+<tr><td align="left">  %sub198.sink.v = select i1 %cmp185, i64 -2049, i64 -2048</td></tr>
+<tr><td align="left">  %sub198.sink = add nsw i64 %pnext.sroa.0.0, %sub198.sink.v</td></tr>
+<tr><td align="left">  %sub197.sink.v = select i1 %cmp185, i64 -2048, i64 -2049</td></tr>
+<tr><td align="left">  %sub197.sink = add nsw i64 %add123, %sub197.sink.v</td></tr>
+<tr><td align="left">  %xor199 = xor i64 %sub197.sink, %sub198.sink</td></tr>
+<tr><td align="left">  %cmp202.not = icmp ult i64 %xor199, 4096</td></tr>
+<tr><td align="left">  br i1 %cmp202.not, label %land.lhs.true204, label %if.end233</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true204:</td></tr>
+<tr><td align="left">  %cmp208 = icmp sgt i64 %cond156, 0</td></tr>
+<tr><td align="left">  %sub222.sink.v = select i1 %cmp208, i64 -2049, i64 -2048</td></tr>
+<tr><td align="left">  %sub222.sink = add nsw i64 %pnext.sroa.23.0, %sub222.sink.v</td></tr>
+<tr><td align="left">  %sub221.sink.v = select i1 %cmp208, i64 -2048, i64 -2049</td></tr>
+<tr><td align="left">  %sub221.sink = add nsw i64 %add160, %sub221.sink.v</td></tr>
+<tr><td align="left">  %xor223 = xor i64 %sub221.sink, %sub222.sink</td></tr>
+<tr><td align="left">  %cmp227.not = icmp ugt i64 %xor223, 4095</td></tr>
+<tr><td align="left">  %cmp230.not = icmp ugt i8* %add.ptr176, %add.ptr40</td></tr>
+<tr><td align="left">  %or.cond = select i1 %cmp227.not, i1 true, i1 %cmp230.not</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %if.end233, label %inc</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end233:</td></tr>
+<tr><td align="left">  br i1 %cmp43, label %if.then235, label %if.end267</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then235:</td></tr>
+<tr><td align="left">  %shl = shl nuw nsw i32 %next.sroa.23.0.insert.ext, 2</td></tr>
+<tr><td align="left">  %add243 = add nuw nsw i32 %shl, %next.sroa.0.0.insert.ext</td></tr>
+<tr><td align="left">  %shl247 = shl nuw nsw i32 %next.sroa.36.0.insert.ext, 4</td></tr>
+<tr><td align="left">  %add248 = add nuw nsw i32 %add243, %shl247</td></tr>
+<tr><td align="left">  %shl252 = shl nuw nsw i32 %next.sroa.49.0.insert.ext, 6</td></tr>
+<tr><td align="left">  %add253 = add nuw nsw i32 %add248, %shl252</td></tr>
+<tr><td align="left">  %and254 = and i32 %add253, 255</td></tr>
+<tr><td align="left">  %36 = zext i32 %and254 to i64</td></tr>
+<tr><td align="left">  %arrayidx255 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 49, i64 %36</td></tr>
+<tr><td align="left">  %key = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 49, i64 %36, i32 1</td></tr>
+<tr><td align="left">  %37 = load i32, i32* %key, align 8, !tbaa !60</td></tr>
+<tr><td align="left">  %cmp257 = icmp eq i32 %37, %next.sroa.0.0.insert.insert</td></tr>
+<tr><td align="left">  br i1 %cmp257, label %do.end682, label %if.end260</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end260:</td></tr>
+<tr><td align="left">  %cmp261 = icmp eq %struct.gx_image_clue_s* %arrayidx255, %pic.1</td></tr>
+<tr><td align="left">  br i1 %cmp261, label %if.then263, label %if.end264</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then263:</td></tr>
+<tr><td align="left">  %38 = bitcast %struct.gx_image_clue_s* %pic.1 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.memcpy.p0i8.p0i8.i64(i8* noundef nonnull align 8 dereferenceable(104) %11, i8* noundef nonnull align 8 dereferenceable(104) %38, i64 104, i1 false), !tbaa.struct !61</td></tr>
+<tr><td align="left">  br label %if.end264</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end264:</td></tr>
+<tr><td align="left">  %pic.2 = phi %struct.gx_image_clue_s* [ %clue_temp, %if.then263 ], [ %pic.1, %if.end260 ]</td></tr>
+<tr><td align="left">  store i32 %next.sroa.0.0.insert.insert, i32* %key, align 8, !tbaa !60</td></tr>
+<tr><td align="left">  br label %if.end267</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb21 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end267:</td></tr>
+<tr><td align="left">  %pic.3 = phi %struct.gx_image_clue_s* [ %pic.2, %if.end264 ], [ %pic.1, %if.end233 ]</td></tr>
+<tr><td align="left">  %pic_next.1 = phi %struct.gx_image_clue_s* [ %arrayidx255, %if.end264 ], [ %pic_next.0, %if.end233 ]</td></tr>
+<tr><td align="left">  br i1 %tobool483.not, label %if.end335, label %if.then269</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb22 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then269:</td></tr>
+<tr><td align="left">  %shl274 = shl nuw nsw i32 %next.sroa.0.0.insert.ext, 7</td></tr>
+<tr><td align="left">  %39 = lshr i32 %next.sroa.0.0.insert.ext, 1</td></tr>
+<tr><td align="left">  %add279 = or i32 %shl274, %39</td></tr>
+<tr><td align="left">  %40 = lshr i32 %next.sroa.0.0.insert.ext, 5</td></tr>
+<tr><td align="left">  %sub284 = sub nsw i32 %add279, %40</td></tr>
+<tr><td align="left">  %conv285 = trunc i32 %sub284 to i16</td></tr>
+<tr><td align="left">  %shl290 = shl nuw nsw i32 %next.sroa.23.0.insert.ext, 7</td></tr>
+<tr><td align="left">  %41 = lshr i32 %next.sroa.23.0.insert.ext, 1</td></tr>
+<tr><td align="left">  %add295 = or i32 %shl290, %41</td></tr>
+<tr><td align="left">  %42 = lshr i32 %next.sroa.23.0.insert.ext, 5</td></tr>
+<tr><td align="left">  %sub300 = sub nsw i32 %add295, %42</td></tr>
+<tr><td align="left">  %conv301 = trunc i32 %sub300 to i16</td></tr>
+<tr><td align="left">  %shl306 = shl nuw nsw i32 %next.sroa.36.0.insert.ext, 7</td></tr>
+<tr><td align="left">  %43 = lshr i32 %next.sroa.36.0.insert.ext, 1</td></tr>
+<tr><td align="left">  %add311 = or i32 %shl306, %43</td></tr>
+<tr><td align="left">  %44 = lshr i32 %next.sroa.36.0.insert.ext, 5</td></tr>
+<tr><td align="left">  %sub316 = sub nsw i32 %add311, %44</td></tr>
+<tr><td align="left">  %conv317 = trunc i32 %sub316 to i16</td></tr>
+<tr><td align="left">  %shl322 = shl nuw nsw i32 %next.sroa.49.0.insert.ext, 7</td></tr>
+<tr><td align="left">  %45 = lshr i32 %next.sroa.49.0.insert.ext, 1</td></tr>
+<tr><td align="left">  %add327 = or i32 %shl322, %45</td></tr>
+<tr><td align="left">  %46 = lshr i32 %next.sroa.49.0.insert.ext, 5</td></tr>
+<tr><td align="left">  %sub332 = sub nsw i32 %add327, %46</td></tr>
+<tr><td align="left">  %conv333 = trunc i32 %sub332 to i16</td></tr>
+<tr><td align="left">  %dev_color334 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic_next.1, i64 0, i32 0</td></tr>
+<tr><td align="left">  call void %9(i16 signext %conv285, i16 signext %conv301, i16 signext %conv317, i16 signext %conv333, %struct.gx_device_color_s* %dev_color334, %struct.gs_imager_state_s* %0, %struct.gx_device_s* %dev, i32 1) #8</td></tr>
+<tr><td align="left">  br label %mapped</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb23 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end335:</td></tr>
+<tr><td align="left">  %47 = load i32, i32* %decoding, align 8, !tbaa !65</td></tr>
+<tr><td align="left">  switch i32 %47, label %if.end535 [
+    i32 0, label %sw.bb337
+    i32 1, label %sw.bb347
+    i32 2, label %sw.bb359
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb337:</td></tr>
+<tr><td align="left">  %conv341 = uitofp i8 %35 to double</td></tr>
+<tr><td align="left">  %mul342 = fmul double %conv341, 0x3F70101010101010</td></tr>
+<tr><td align="left">  %conv343 = fptrunc double %mul342 to float</td></tr>
+<tr><td align="left">  br label %if.end535.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb25 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb347:</td></tr>
+<tr><td align="left">  %48 = lshr i32 %next.sroa.49.0.insert.ext, 4</td></tr>
+<tr><td align="left">  %idxprom354 = zext i32 %48 to i64</td></tr>
+<tr><td align="left">  %arrayidx355 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 3, i32 1, i64 %idxprom354</td></tr>
+<tr><td align="left">  %49 = load float, float* %arrayidx355, align 4, !tbaa !68</td></tr>
+<tr><td align="left">  br label %if.end535.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb359:</td></tr>
+<tr><td align="left">  %50 = load float, float* %arrayidx363, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  %conv364 = fpext float %50 to double</td></tr>
+<tr><td align="left">  %conv368 = uitofp i8 %35 to double</td></tr>
+<tr><td align="left">  %51 = load double, double* %decode_factor, align 8, !tbaa !69</td></tr>
+<tr><td align="left">  %52 = call double @llvm.fmuladd.f64(double %conv368, double %51, double %conv364)</td></tr>
+<tr><td align="left">  %conv372 = fptrunc double %52 to float</td></tr>
+<tr><td align="left">  br label %if.end535.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb27 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %next.sroa.49.0.insert.ext997 = zext i8 %next.sroa.49.0 to i32</td></tr>
+<tr><td align="left">  %next.sroa.49.0.insert.shift998 = shl nuw i32 %next.sroa.49.0.insert.ext997, 24</td></tr>
+<tr><td align="left">  %next.sroa.36.0.insert.ext957 = zext i8 %34 to i32</td></tr>
+<tr><td align="left">  %next.sroa.36.0.insert.shift958 = shl nuw nsw i32 %next.sroa.36.0.insert.ext957, 16</td></tr>
+<tr><td align="left">  %next.sroa.36.0.insert.insert960 = or i32 %next.sroa.36.0.insert.shift958, %next.sroa.49.0.insert.shift998</td></tr>
+<tr><td align="left">  %next.sroa.23.0.insert.ext917 = zext i8 %33 to i32</td></tr>
+<tr><td align="left">  %next.sroa.23.0.insert.shift918 = shl nuw nsw i32 %next.sroa.23.0.insert.ext917, 8</td></tr>
+<tr><td align="left">  %next.sroa.23.0.insert.insert920 = or i32 %next.sroa.36.0.insert.insert960, %next.sroa.23.0.insert.shift918</td></tr>
+<tr><td align="left">  %next.sroa.0.0.insert.ext891 = zext i8 %32 to i32</td></tr>
+<tr><td align="left">  %next.sroa.0.0.insert.insert893 = or i32 %next.sroa.23.0.insert.insert920, %next.sroa.0.0.insert.ext891</td></tr>
+<tr><td align="left">  %run.sroa.7.0.insert.ext1027 = zext i24 %run.sroa.7.sroa.0.0 to i32</td></tr>
+<tr><td align="left">  %run.sroa.7.0.insert.shift1028 = shl nuw i32 %run.sroa.7.0.insert.ext1027, 8</td></tr>
+<tr><td align="left">  %run.sroa.0.0.insert.ext1023 = zext i8 %run.sroa.0.0 to i32</td></tr>
+<tr><td align="left">  %run.sroa.0.0.insert.insert1025 = or i32 %run.sroa.7.0.insert.shift1028, %run.sroa.0.0.insert.ext1023</td></tr>
+<tr><td align="left">  %cmp392 = icmp eq i32 %next.sroa.0.0.insert.insert893, %run.sroa.0.0.insert.insert1025</td></tr>
+<tr><td align="left">  br i1 %cmp392, label %inc, label %lor.lhs.false394</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb28 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false394:</td></tr>
+<tr><td align="left">  br i1 %20, label %land.lhs.true396, label %if.end450</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb29 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true396:</td></tr>
+<tr><td align="left">  %cmp400 = icmp sgt i64 %cond119, 0</td></tr>
+<tr><td align="left">  %sub414.sink.v = select i1 %cmp400, i64 -2049, i64 -2048</td></tr>
+<tr><td align="left">  %sub414.sink = add nsw i64 %pnext.sroa.0.0, %sub414.sink.v</td></tr>
+<tr><td align="left">  %sub413.sink.v = select i1 %cmp400, i64 -2048, i64 -2049</td></tr>
+<tr><td align="left">  %sub413.sink = add nsw i64 %add123, %sub413.sink.v</td></tr>
+<tr><td align="left">  %xor415 = xor i64 %sub413.sink, %sub414.sink</td></tr>
+<tr><td align="left">  %cmp419.not = icmp ult i64 %xor415, 4096</td></tr>
+<tr><td align="left">  br i1 %cmp419.not, label %land.lhs.true421, label %if.end450</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true421:</td></tr>
+<tr><td align="left">  %cmp425 = icmp sgt i64 %cond156, 0</td></tr>
+<tr><td align="left">  %sub439.sink.v = select i1 %cmp425, i64 -2049, i64 -2048</td></tr>
+<tr><td align="left">  %sub439.sink = add nsw i64 %pnext.sroa.23.0, %sub439.sink.v</td></tr>
+<tr><td align="left">  %sub438.sink.v = select i1 %cmp425, i64 -2048, i64 -2049</td></tr>
+<tr><td align="left">  %sub438.sink = add nsw i64 %add160, %sub438.sink.v</td></tr>
+<tr><td align="left">  %xor440 = xor i64 %sub438.sink, %sub439.sink</td></tr>
+<tr><td align="left">  %cmp444.not = icmp ugt i64 %xor440, 4095</td></tr>
+<tr><td align="left">  %cmp447.not = icmp ugt i8* %arrayidx173, %add.ptr40</td></tr>
+<tr><td align="left">  %or.cond1251 = select i1 %cmp444.not, i1 true, i1 %cmp447.not</td></tr>
+<tr><td align="left">  br i1 %or.cond1251, label %if.end450, label %inc</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb31 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end450:</td></tr>
+<tr><td align="left">  br i1 %cmp43, label %if.then452, label %if.end482</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb32 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then452:</td></tr>
+<tr><td align="left">  %shl460 = shl nuw nsw i32 %next.sroa.23.0.insert.ext917, 2</td></tr>
+<tr><td align="left">  %add461 = add nuw nsw i32 %shl460, %next.sroa.0.0.insert.ext891</td></tr>
+<tr><td align="left">  %shl465 = shl nuw nsw i32 %next.sroa.36.0.insert.ext957, 4</td></tr>
+<tr><td align="left">  %add466 = add nuw nsw i32 %add461, %shl465</td></tr>
+<tr><td align="left">  %and467 = and i32 %add466, 255</td></tr>
+<tr><td align="left">  %53 = zext i32 %and467 to i64</td></tr>
+<tr><td align="left">  %arrayidx469 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 49, i64 %53</td></tr>
+<tr><td align="left">  %key470 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 49, i64 %53, i32 1</td></tr>
+<tr><td align="left">  %54 = load i32, i32* %key470, align 8, !tbaa !60</td></tr>
+<tr><td align="left">  %cmp472 = icmp eq i32 %54, %next.sroa.0.0.insert.insert893</td></tr>
+<tr><td align="left">  br i1 %cmp472, label %do.end682, label %if.end475</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb33 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end475:</td></tr>
+<tr><td align="left">  %cmp476 = icmp eq %struct.gx_image_clue_s* %arrayidx469, %pic.1</td></tr>
+<tr><td align="left">  br i1 %cmp476, label %if.then478, label %if.end479</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb34 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then478:</td></tr>
+<tr><td align="left">  %55 = bitcast %struct.gx_image_clue_s* %pic.1 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.memcpy.p0i8.p0i8.i64(i8* noundef nonnull align 8 dereferenceable(104) %11, i8* noundef nonnull align 8 dereferenceable(104) %55, i64 104, i1 false), !tbaa.struct !61</td></tr>
+<tr><td align="left">  br label %if.end479</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb35 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end479:</td></tr>
+<tr><td align="left">  %pic.4 = phi %struct.gx_image_clue_s* [ %clue_temp, %if.then478 ], [ %pic.1, %if.end475 ]</td></tr>
+<tr><td align="left">  store i32 %next.sroa.0.0.insert.insert893, i32* %key470, align 8, !tbaa !60</td></tr>
+<tr><td align="left">  br label %if.end482</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb36 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end482:</td></tr>
+<tr><td align="left">  %pic.5 = phi %struct.gx_image_clue_s* [ %pic.4, %if.end479 ], [ %pic.1, %if.end450 ]</td></tr>
+<tr><td align="left">  %pic_next.2 = phi %struct.gx_image_clue_s* [ %arrayidx469, %if.end479 ], [ %pic_next.0, %if.end450 ]</td></tr>
+<tr><td align="left">  br i1 %tobool483.not, label %if.end535, label %if.then484</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb37 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then484:</td></tr>
+<tr><td align="left">  %shl489 = shl nuw nsw i32 %next.sroa.0.0.insert.ext891, 7</td></tr>
+<tr><td align="left">  %56 = lshr i32 %next.sroa.0.0.insert.ext891, 1</td></tr>
+<tr><td align="left">  %add494 = or i32 %shl489, %56</td></tr>
+<tr><td align="left">  %57 = lshr i32 %next.sroa.0.0.insert.ext891, 5</td></tr>
+<tr><td align="left">  %sub499 = sub nsw i32 %add494, %57</td></tr>
+<tr><td align="left">  %conv500 = trunc i32 %sub499 to i16</td></tr>
+<tr><td align="left">  %shl505 = shl nuw nsw i32 %next.sroa.23.0.insert.ext917, 7</td></tr>
+<tr><td align="left">  %58 = lshr i32 %next.sroa.23.0.insert.ext917, 1</td></tr>
+<tr><td align="left">  %add510 = or i32 %shl505, %58</td></tr>
+<tr><td align="left">  %59 = lshr i32 %next.sroa.23.0.insert.ext917, 5</td></tr>
+<tr><td align="left">  %sub515 = sub nsw i32 %add510, %59</td></tr>
+<tr><td align="left">  %conv516 = trunc i32 %sub515 to i16</td></tr>
+<tr><td align="left">  %shl521 = shl nuw nsw i32 %next.sroa.36.0.insert.ext957, 7</td></tr>
+<tr><td align="left">  %60 = lshr i32 %next.sroa.36.0.insert.ext957, 1</td></tr>
+<tr><td align="left">  %add526 = or i32 %shl521, %60</td></tr>
+<tr><td align="left">  %61 = lshr i32 %next.sroa.36.0.insert.ext957, 5</td></tr>
+<tr><td align="left">  %sub531 = sub nsw i32 %add526, %61</td></tr>
+<tr><td align="left">  %conv532 = trunc i32 %sub531 to i16</td></tr>
+<tr><td align="left">  %dev_color533 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic_next.2, i64 0, i32 0</td></tr>
+<tr><td align="left">  call void %8(i16 signext %conv500, i16 signext %conv516, i16 signext %conv532, %struct.gx_device_color_s* %dev_color533, %struct.gs_imager_state_s* %0, %struct.gx_device_s* %dev, i32 1) #8</td></tr>
+<tr><td align="left">  br label %mapped</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb38 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end535.sink.split:</td></tr>
+<tr><td align="left">  %conv372.sink = phi float [ %conv372, %sw.bb359 ], [ %49, %sw.bb347 ], [ %conv343, %sw.bb337 ]</td></tr>
+<tr><td align="left">  store float %conv372.sink, float* %arrayidx76, align 4, !tbaa !68</td></tr>
+<tr><td align="left">  br label %if.end535</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end535:</td></tr>
+<tr><td align="left">  %pic.6 = phi %struct.gx_image_clue_s* [ %pic.3, %if.end335 ], [ %pic.5, %if.end482 ], [ %pic.3, %if.end535.sink.split ]</td></tr>
+<tr><td align="left">  %pic_next.3 = phi %struct.gx_image_clue_s* [ %pic_next.1, %if.end335 ], [ %pic_next.2, %if.end482 ], [ %pic_next.1, %if.end535.sink.split ]</td></tr>
+<tr><td align="left">  %psrc.1 = phi i8* [ %add.ptr176, %if.end335 ], [ %arrayidx173, %if.end482 ], [ %add.ptr176, %if.end535.sink.split ]</td></tr>
+<tr><td align="left">  %next.sroa.49.1 = phi i8 [ %35, %if.end335 ], [ %next.sroa.49.0, %if.end482 ], [ %35, %if.end535.sink.split ]</td></tr>
+<tr><td align="left">  %62 = load i32, i32* %decoding538, align 8, !tbaa !65</td></tr>
+<tr><td align="left">  switch i32 %62, label %sw.epilog580 [
+    i32 0, label %sw.bb539
+    i32 1, label %sw.bb549
+    i32 2, label %sw.bb562
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb40 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb539:</td></tr>
+<tr><td align="left">  %conv543 = uitofp i8 %32 to double</td></tr>
+<tr><td align="left">  %mul544 = fmul double %conv543, 0x3F70101010101010</td></tr>
+<tr><td align="left">  %conv545 = fptrunc double %mul544 to float</td></tr>
+<tr><td align="left">  store float %conv545, float* %arrayidx85, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  br label %sw.epilog580</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb41 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb549:</td></tr>
+<tr><td align="left">  %63 = lshr i8 %32, 4</td></tr>
+<tr><td align="left">  %idxprom557 = zext i8 %63 to i64</td></tr>
+<tr><td align="left">  %arrayidx558 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 0, i32 1, i64 %idxprom557</td></tr>
+<tr><td align="left">  %64 = load float, float* %arrayidx558, align 4, !tbaa !68</td></tr>
+<tr><td align="left">  store float %64, float* %arrayidx85, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  br label %sw.epilog580</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb42 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb562:</td></tr>
+<tr><td align="left">  %65 = load float, float* %arrayidx566, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  %conv567 = fpext float %65 to double</td></tr>
+<tr><td align="left">  %conv571 = uitofp i8 %32 to double</td></tr>
+<tr><td align="left">  %66 = load double, double* %decode_factor574, align 8, !tbaa !69</td></tr>
+<tr><td align="left">  %67 = call double @llvm.fmuladd.f64(double %conv571, double %66, double %conv567)</td></tr>
+<tr><td align="left">  %conv576 = fptrunc double %67 to float</td></tr>
+<tr><td align="left">  store float %conv576, float* %arrayidx85, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  br label %sw.epilog580</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb43 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.epilog580:</td></tr>
+<tr><td align="left">  %68 = load i32, i32* %decoding583, align 8, !tbaa !65</td></tr>
+<tr><td align="left">  switch i32 %68, label %sw.epilog625 [
+    i32 0, label %sw.bb584
+    i32 1, label %sw.bb594
+    i32 2, label %sw.bb607
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb44 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb584:</td></tr>
+<tr><td align="left">  %conv588 = uitofp i8 %33 to double</td></tr>
+<tr><td align="left">  %mul589 = fmul double %conv588, 0x3F70101010101010</td></tr>
+<tr><td align="left">  %conv590 = fptrunc double %mul589 to float</td></tr>
+<tr><td align="left">  br label %sw.epilog625.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb45 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb594:</td></tr>
+<tr><td align="left">  %69 = lshr i8 %33, 4</td></tr>
+<tr><td align="left">  %idxprom602 = zext i8 %69 to i64</td></tr>
+<tr><td align="left">  %arrayidx603 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 1, i32 1, i64 %idxprom602</td></tr>
+<tr><td align="left">  %70 = load float, float* %arrayidx603, align 4, !tbaa !68</td></tr>
+<tr><td align="left">  br label %sw.epilog625.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb46 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb607:</td></tr>
+<tr><td align="left">  %71 = load float, float* %arrayidx611, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  %conv612 = fpext float %71 to double</td></tr>
+<tr><td align="left">  %conv616 = uitofp i8 %33 to double</td></tr>
+<tr><td align="left">  %72 = load double, double* %decode_factor619, align 8, !tbaa !69</td></tr>
+<tr><td align="left">  %73 = call double @llvm.fmuladd.f64(double %conv616, double %72, double %conv612)</td></tr>
+<tr><td align="left">  %conv621 = fptrunc double %73 to float</td></tr>
+<tr><td align="left">  br label %sw.epilog625.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb47 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.epilog625.sink.split:</td></tr>
+<tr><td align="left">  %conv621.sink = phi float [ %conv621, %sw.bb607 ], [ %70, %sw.bb594 ], [ %conv590, %sw.bb584 ]</td></tr>
+<tr><td align="left">  store float %conv621.sink, float* %arrayidx82, align 4, !tbaa !68</td></tr>
+<tr><td align="left">  br label %sw.epilog625</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb48 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.epilog625:</td></tr>
+<tr><td align="left">  %74 = load i32, i32* %decoding628, align 8, !tbaa !65</td></tr>
+<tr><td align="left">  switch i32 %74, label %do.end673 [
+    i32 0, label %sw.bb629
+    i32 1, label %sw.bb639
+    i32 2, label %sw.bb652
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb49 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb629:</td></tr>
+<tr><td align="left">  %conv633 = uitofp i8 %34 to double</td></tr>
+<tr><td align="left">  %mul634 = fmul double %conv633, 0x3F70101010101010</td></tr>
+<tr><td align="left">  %conv635 = fptrunc double %mul634 to float</td></tr>
+<tr><td align="left">  br label %do.end673.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb50 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb639:</td></tr>
+<tr><td align="left">  %75 = lshr i8 %34, 4</td></tr>
+<tr><td align="left">  %idxprom647 = zext i8 %75 to i64</td></tr>
+<tr><td align="left">  %arrayidx648 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 2, i32 1, i64 %idxprom647</td></tr>
+<tr><td align="left">  %76 = load float, float* %arrayidx648, align 4, !tbaa !68</td></tr>
+<tr><td align="left">  br label %do.end673.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb51 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb652:</td></tr>
+<tr><td align="left">  %77 = load float, float* %arrayidx656, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  %conv657 = fpext float %77 to double</td></tr>
+<tr><td align="left">  %conv661 = uitofp i8 %34 to double</td></tr>
+<tr><td align="left">  %78 = load double, double* %decode_factor664, align 8, !tbaa !69</td></tr>
+<tr><td align="left">  %79 = call double @llvm.fmuladd.f64(double %conv661, double %78, double %conv657)</td></tr>
+<tr><td align="left">  %conv666 = fptrunc double %79 to float</td></tr>
+<tr><td align="left">  br label %do.end673.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb52 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">do.end673.sink.split:</td></tr>
+<tr><td align="left">  %conv635.sink = phi float [ %conv635, %sw.bb629 ], [ %76, %sw.bb639 ], [ %conv666, %sw.bb652 ]</td></tr>
+<tr><td align="left">  store float %conv635.sink, float* %arrayidx79, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  br label %do.end673</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb53 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">do.end673:</td></tr>
+<tr><td align="left">  %dev_color674 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic_next.3, i64 0, i32 0</td></tr>
+<tr><td align="left">  %call675 = call i32 %5(%struct.gs_client_color_s* nonnull %cc, %struct.gs_color_space_s* %3, %struct.gx_device_color_s* %dev_color674, %struct.gs_imager_state_s* %0, %struct.gx_device_s* %dev, i32 1) #8</td></tr>
+<tr><td align="left">  br label %mapped</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb54 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">mapped:</td></tr>
+<tr><td align="left">  %pic.7 = phi %struct.gx_image_clue_s* [ %pic.3, %if.then269 ], [ %pic.6, %do.end673 ], [ %pic.5, %if.then484 ]</td></tr>
+<tr><td align="left">  %pic_next.4 = phi %struct.gx_image_clue_s* [ %pic_next.1, %if.then269 ], [ %pic_next.3, %do.end673 ], [ %pic_next.2, %if.then484 ]</td></tr>
+<tr><td align="left">  %psrc.2 = phi i8* [ %add.ptr176, %if.then269 ], [ %psrc.1, %do.end673 ], [ %arrayidx173, %if.then484 ]</td></tr>
+<tr><td align="left">  %next.sroa.49.2 = phi i8 [ %35, %if.then269 ], [ %next.sroa.49.1, %do.end673 ], [ %next.sroa.49.0, %if.then484 ]</td></tr>
+<tr><td align="left">  %cmp676 = icmp eq %struct.gx_image_clue_s* %pic.7, %pic_next.4</td></tr>
+<tr><td align="left">  br i1 %cmp676, label %fill, label %do.end682</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb55 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.end682:</td></tr>
+<tr><td align="left">  %pic.8 = phi %struct.gx_image_clue_s* [ %pic.1, %if.then235 ], [ %pic.7, %mapped ], [ %pic.1, %if.then452 ]</td></tr>
+<tr><td align="left">  %pic_next.5 = phi %struct.gx_image_clue_s* [ %arrayidx255, %if.then235 ], [ %pic_next.4, %mapped ], [ %arrayidx469, %if.then452 ]</td></tr>
+<tr><td align="left">  %psrc.3 = phi i8* [ %add.ptr176, %if.then235 ], [ %psrc.2, %mapped ], [ %arrayidx173, %if.then452 ]</td></tr>
+<tr><td align="left">  %next.sroa.49.3 = phi i8 [ %35, %if.then235 ], [ %next.sroa.49.2, %mapped ], [ %next.sroa.49.0, %if.then452 ]</td></tr>
+<tr><td align="left">  %type684 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.8, i64 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %80 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** %type684, align 8, !tbaa !54</td></tr>
+<tr><td align="left">  %cmp685 = icmp eq %struct.gx_device_color_procs_s* %80, @gx_dc_procs_pure</td></tr>
+<tr><td align="left">  br i1 %cmp685, label %cond.true687, label %cond.false701</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb56 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.true687:</td></tr>
+<tr><td align="left">  %type689 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic_next.5, i64 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %81 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** %type689, align 8, !tbaa !54</td></tr>
+<tr><td align="left">  %cmp690 = icmp eq %struct.gx_device_color_procs_s* %81, @gx_dc_procs_pure</td></tr>
+<tr><td align="left">  br i1 %cmp690, label %land.lhs.true692, label %fill</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb57 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true692:</td></tr>
+<tr><td align="left">  %colors694 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.8, i64 0, i32 0, i32 1</td></tr>
+<tr><td align="left">  %pure695 = bitcast %union._c* %colors694 to i64*</td></tr>
+<tr><td align="left">  %82 = load i64, i64* %pure695, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %colors697 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic_next.5, i64 0, i32 0, i32 1</td></tr>
+<tr><td align="left">  %pure698 = bitcast %union._c* %colors697 to i64*</td></tr>
+<tr><td align="left">  %83 = load i64, i64* %pure698, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %cmp699 = icmp eq i64 %82, %83</td></tr>
+<tr><td align="left">  br i1 %cmp699, label %set, label %fill</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb58 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.false701:</td></tr>
+<tr><td align="left">  %cmp704 = icmp eq %struct.gx_device_color_procs_s* %80, @gx_dc_procs_ht_binary</td></tr>
+<tr><td align="left">  br i1 %cmp704, label %cond.true706, label %fill</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb59 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.true706:</td></tr>
+<tr><td align="left">  %type708 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic_next.5, i64 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %84 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** %type708, align 8, !tbaa !54</td></tr>
+<tr><td align="left">  %cmp709 = icmp eq %struct.gx_device_color_procs_s* %84, @gx_dc_procs_ht_binary</td></tr>
+<tr><td align="left">  br i1 %cmp709, label %land.lhs.true711, label %fill</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb60 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true711:</td></tr>
+<tr><td align="left">  %arrayidx714 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.8, i64 0, i32 0, i32 1, i32 0, i32 1, i64 0</td></tr>
+<tr><td align="left">  %85 = load i64, i64* %arrayidx714, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %arrayidx719 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic_next.5, i64 0, i32 0, i32 1, i32 0, i32 1, i64 0</td></tr>
+<tr><td align="left">  %86 = load i64, i64* %arrayidx719, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %cmp720 = icmp eq i64 %85, %86</td></tr>
+<tr><td align="left">  br i1 %cmp720, label %land.lhs.true722, label %fill</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb61 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true722:</td></tr>
+<tr><td align="left">  %arrayidx727 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.8, i64 0, i32 0, i32 1, i32 0, i32 1, i64 1</td></tr>
+<tr><td align="left">  %87 = load i64, i64* %arrayidx727, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %arrayidx732 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic_next.5, i64 0, i32 0, i32 1, i32 0, i32 1, i64 1</td></tr>
+<tr><td align="left">  %88 = load i64, i64* %arrayidx732, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %cmp733 = icmp eq i64 %87, %88</td></tr>
+<tr><td align="left">  br i1 %cmp733, label %land.lhs.true735, label %fill</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb62 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true735:</td></tr>
+<tr><td align="left">  %b_level = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.8, i64 0, i32 0, i32 1, i32 0, i32 2</td></tr>
+<tr><td align="left">  %89 = load i32, i32* %b_level, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %b_level742 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic_next.5, i64 0, i32 0, i32 1, i32 0, i32 2</td></tr>
+<tr><td align="left">  %90 = load i32, i32* %b_level742, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %cmp743 = icmp eq i32 %89, %90</td></tr>
+<tr><td align="left">  br i1 %cmp743, label %set, label %fill</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb63 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">fill:</td></tr>
+<tr><td align="left">  %pic.9 = phi %struct.gx_image_clue_s* [ %pic.8, %land.lhs.true692 ], [ %pic.8, %cond.true687 ], [ %pic.8, %land.lhs.true735 ], [ %pic.8, %land.lhs.true722 ], [ %pic.8, %land.lhs.true711 ], [ %pic.8, %cond.true706 ], [ %pic.8, %cond.false701 ], [ %pic.7, %mapped ]</td></tr>
+<tr><td align="left">  %pic_next.6 = phi %struct.gx_image_clue_s* [ %pic_next.5, %land.lhs.true692 ], [ %pic_next.5, %cond.true687 ], [ %pic_next.5, %land.lhs.true735 ], [ %pic_next.5, %land.lhs.true722 ], [ %pic_next.5, %land.lhs.true711 ], [ %pic_next.5, %cond.true706 ], [ %pic_next.5, %cond.false701 ], [ %pic.7, %mapped ]</td></tr>
+<tr><td align="left">  %psrc.4 = phi i8* [ %psrc.3, %land.lhs.true692 ], [ %psrc.3, %cond.true687 ], [ %psrc.3, %land.lhs.true735 ], [ %psrc.3, %land.lhs.true722 ], [ %psrc.3, %land.lhs.true711 ], [ %psrc.3, %cond.true706 ], [ %psrc.3, %cond.false701 ], [ %psrc.2, %mapped ]</td></tr>
+<tr><td align="left">  %next.sroa.49.4 = phi i8 [ %next.sroa.49.3, %land.lhs.true692 ], [ %next.sroa.49.3, %cond.true687 ], [ %next.sroa.49.3, %land.lhs.true735 ], [ %next.sroa.49.3, %land.lhs.true722 ], [ %next.sroa.49.3, %land.lhs.true711 ], [ %next.sroa.49.3, %cond.true706 ], [ %next.sroa.49.3, %cond.false701 ], [ %next.sroa.49.2, %mapped ]</td></tr>
+<tr><td align="left">  switch i32 %2, label %sw.default [
+    i32 0, label %sw.bb748
+    i32 1, label %sw.bb763
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb64 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb748:</td></tr>
+<tr><td align="left">  %add749 = add nsw i64 %pnext.sroa.0.0, 2048</td></tr>
+<tr><td align="left">  %91 = lshr i64 %add749, 12</td></tr>
+<tr><td align="left">  %conv751 = trunc i64 %91 to i32</td></tr>
+<tr><td align="left">  %sub752 = sub nsw i32 %conv751, %irun.1</td></tr>
+<tr><td align="left">  %cmp753 = icmp slt i32 %sub752, 0</td></tr>
+<tr><td align="left">  %sub757 = sub nsw i32 0, %sub752</td></tr>
+<tr><td align="left">  %spec.select = select i1 %cmp753, i32 %conv751, i32 %irun.1</td></tr>
+<tr><td align="left">  %spec.select1252 = select i1 %cmp753, i32 %sub757, i32 %sub752</td></tr>
+<tr><td align="left">  %dev_color759 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.9, i64 0, i32 0</td></tr>
+<tr><td align="left">  %type760 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.9, i64 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %92 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** %type760, align 8, !tbaa !54</td></tr>
+<tr><td align="left">  %fill_rectangle = getelementptr inbounds %struct.gx_device_color_procs_s, %struct.gx_device_color_procs_s* %92, i64 0, i32 1</td></tr>
+<tr><td align="left">  %93 = load i32 (%struct.gx_device_color_s*, i32, i32, i32, i32, %struct.gx_device_s*, i32, %struct.gx_rop_source_s*)*, i32 (%struct.gx_device_color_s*, i32, i32, i32, i32, %struct.gx_device_s*, i32, %struct.gx_rop_source_s*)** %fill_rectangle, align 8, !tbaa !70</td></tr>
+<tr><td align="left">  %call762 = call i32 %93(%struct.gx_device_color_s* %dev_color759, i32 %spec.select, i32 %vci.0, i32 %spec.select1252, i32 %vdi.0, %struct.gx_device_s* %dev, i32 %1, %struct.gx_rop_source_s* null) #8</td></tr>
+<tr><td align="left">  br label %sw.epilog783</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb65 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb763:</td></tr>
+<tr><td align="left">  %add764 = add nsw i64 %pnext.sroa.23.0, 2048</td></tr>
+<tr><td align="left">  %94 = lshr i64 %add764, 12</td></tr>
+<tr><td align="left">  %conv766 = trunc i64 %94 to i32</td></tr>
+<tr><td align="left">  %sub767 = sub nsw i32 %conv766, %irun.1</td></tr>
+<tr><td align="left">  %cmp768 = icmp slt i32 %sub767, 0</td></tr>
+<tr><td align="left">  %sub772 = sub nsw i32 0, %sub767</td></tr>
+<tr><td align="left">  %spec.select1253 = select i1 %cmp768, i32 %conv766, i32 %irun.1</td></tr>
+<tr><td align="left">  %spec.select1254 = select i1 %cmp768, i32 %sub772, i32 %sub767</td></tr>
+<tr><td align="left">  %dev_color774 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.9, i64 0, i32 0</td></tr>
+<tr><td align="left">  %type775 = getelementptr inbounds %struct.gx_image_clue_s, %struct.gx_image_clue_s* %pic.9, i64 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %95 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** %type775, align 8, !tbaa !54</td></tr>
+<tr><td align="left">  %fill_rectangle776 = getelementptr inbounds %struct.gx_device_color_procs_s, %struct.gx_device_color_procs_s* %95, i64 0, i32 1</td></tr>
+<tr><td align="left">  %96 = load i32 (%struct.gx_device_color_s*, i32, i32, i32, i32, %struct.gx_device_s*, i32, %struct.gx_rop_source_s*)*, i32 (%struct.gx_device_color_s*, i32, i32, i32, i32, %struct.gx_device_s*, i32, %struct.gx_rop_source_s*)** %fill_rectangle776, align 8, !tbaa !70</td></tr>
+<tr><td align="left">  %call778 = call i32 %96(%struct.gx_device_color_s* %dev_color774, i32 %vci.0, i32 %spec.select1253, i32 %vdi.0, i32 %spec.select1254, %struct.gx_device_s* %dev, i32 %1, %struct.gx_rop_source_s* null) #8</td></tr>
+<tr><td align="left">  br label %sw.epilog783</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb66 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.epilog783:</td></tr>
+<tr><td align="left">  %xrun.1 = phi i64 [ %pnext.sroa.0.0, %sw.default ], [ %xrun.0, %sw.bb763 ], [ %pnext.sroa.0.0, %sw.bb748 ]</td></tr>
+<tr><td align="left">  %yrun.1 = phi i64 [ %pnext.sroa.23.0, %sw.default ], [ %pnext.sroa.23.0, %sw.bb763 ], [ %yrun.0, %sw.bb748 ]</td></tr>
+<tr><td align="left">  %irun.2 = phi i32 [ %irun.1, %sw.default ], [ %conv766, %sw.bb763 ], [ %conv751, %sw.bb748 ]</td></tr>
+<tr><td align="left">  %code.0 = phi i32 [ %call782, %sw.default ], [ %call778, %sw.bb763 ], [ %call762, %sw.bb748 ]</td></tr>
+<tr><td align="left">  %cmp784 = icmp slt i32 %code.0, 0</td></tr>
+<tr><td align="left">  br i1 %cmp784, label %cleanup, label %if.end787</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb67 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end787:</td></tr>
+<tr><td align="left">  %pic_next.6.pic.9 = select i1 %cmp43, %struct.gx_image_clue_s* %pic_next.6, %struct.gx_image_clue_s* %pic.9</td></tr>
+<tr><td align="left">  br label %set</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb68 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">set:</td></tr>
+<tr><td align="left">  %pic.10 = phi %struct.gx_image_clue_s* [ %pic.8, %land.lhs.true692 ], [ %pic.8, %land.lhs.true735 ], [ %pic_next.6, %if.end787 ]</td></tr>
+<tr><td align="left">  %pic_next.7 = phi %struct.gx_image_clue_s* [ %pic_next.5, %land.lhs.true692 ], [ %pic_next.5, %land.lhs.true735 ], [ %pic_next.6.pic.9, %if.end787 ]</td></tr>
+<tr><td align="left">  %psrc.5 = phi i8* [ %psrc.3, %land.lhs.true692 ], [ %psrc.3, %land.lhs.true735 ], [ %psrc.4, %if.end787 ]</td></tr>
+<tr><td align="left">  %xrun.2 = phi i64 [ %xrun.0, %land.lhs.true692 ], [ %xrun.0, %land.lhs.true735 ], [ %xrun.1, %if.end787 ]</td></tr>
+<tr><td align="left">  %yrun.2 = phi i64 [ %yrun.0, %land.lhs.true692 ], [ %yrun.0, %land.lhs.true735 ], [ %yrun.1, %if.end787 ]</td></tr>
+<tr><td align="left">  %irun.3 = phi i32 [ %irun.1, %land.lhs.true692 ], [ %irun.1, %land.lhs.true735 ], [ %irun.2, %if.end787 ]</td></tr>
+<tr><td align="left">  %next.sroa.49.5 = phi i8 [ %next.sroa.49.3, %land.lhs.true692 ], [ %next.sroa.49.3, %land.lhs.true735 ], [ %next.sroa.49.4, %if.end787 ]</td></tr>
+<tr><td align="left">  %next.sroa.49.0.insert.ext1012 = zext i8 %next.sroa.49.5 to i32</td></tr>
+<tr><td align="left">  %next.sroa.49.0.insert.shift1013 = shl nuw nsw i32 %next.sroa.49.0.insert.ext1012, 16</td></tr>
+<tr><td align="left">  %next.sroa.36.0.insert.ext972 = zext i8 %34 to i32</td></tr>
+<tr><td align="left">  %next.sroa.36.0.insert.shift973 = shl nuw nsw i32 %next.sroa.36.0.insert.ext972, 8</td></tr>
+<tr><td align="left">  %next.sroa.36.0.insert.insert975 = or i32 %next.sroa.36.0.insert.shift973, %next.sroa.49.0.insert.shift1013</td></tr>
+<tr><td align="left">  %next.sroa.23.0.insert.ext932 = zext i8 %33 to i32</td></tr>
+<tr><td align="left">  %next.sroa.23.0.insert.insert935 = or i32 %next.sroa.36.0.insert.insert975, %next.sroa.23.0.insert.ext932</td></tr>
+<tr><td align="left">  %run.sroa.7.0.extract.trunc = trunc i32 %next.sroa.23.0.insert.insert935 to i24</td></tr>
+<tr><td align="left">  br label %inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb69 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">inc:</td></tr>
+<tr><td align="left">  %pic.11 = phi %struct.gx_image_clue_s* [ %pic.1, %if.then163 ], [ %pic.10, %set ], [ %pic.1, %if.else ], [ %pic.1, %land.lhs.true204 ], [ %pic.1, %land.lhs.true421 ]</td></tr>
+<tr><td align="left">  %pic_next.8 = phi %struct.gx_image_clue_s* [ %pic_next.0, %if.then163 ], [ %pic_next.7, %set ], [ %pic_next.0, %if.else ], [ %pic_next.0, %land.lhs.true204 ], [ %pic_next.0, %land.lhs.true421 ]</td></tr>
+<tr><td align="left">  %psrc.6 = phi i8* [ %add.ptr176, %if.then163 ], [ %psrc.5, %set ], [ %arrayidx173, %if.else ], [ %add.ptr176, %land.lhs.true204 ], [ %arrayidx173, %land.lhs.true421 ]</td></tr>
+<tr><td align="left">  %xrun.3 = phi i64 [ %xrun.0, %if.then163 ], [ %xrun.2, %set ], [ %xrun.0, %if.else ], [ %xrun.0, %land.lhs.true204 ], [ %xrun.0, %land.lhs.true421 ]</td></tr>
+<tr><td align="left">  %yrun.3 = phi i64 [ %yrun.0, %if.then163 ], [ %yrun.2, %set ], [ %yrun.0, %if.else ], [ %yrun.0, %land.lhs.true204 ], [ %yrun.0, %land.lhs.true421 ]</td></tr>
+<tr><td align="left">  %irun.4 = phi i32 [ %irun.1, %if.then163 ], [ %irun.3, %set ], [ %irun.1, %if.else ], [ %irun.1, %land.lhs.true204 ], [ %irun.1, %land.lhs.true421 ]</td></tr>
+<tr><td align="left">  %run.sroa.7.sroa.0.1 = phi i24 [ %run.sroa.7.sroa.0.0, %if.then163 ], [ %run.sroa.7.0.extract.trunc, %set ], [ %run.sroa.7.sroa.0.0, %if.else ], [ %run.sroa.7.sroa.0.0, %land.lhs.true204 ], [ %run.sroa.7.sroa.0.0, %land.lhs.true421 ]</td></tr>
+<tr><td align="left">  %run.sroa.0.1 = phi i8 [ %run.sroa.0.0, %if.then163 ], [ %32, %set ], [ %run.sroa.0.0, %if.else ], [ %run.sroa.0.0, %land.lhs.true204 ], [ %run.sroa.0.0, %land.lhs.true421 ]</td></tr>
+<tr><td align="left">  %next.sroa.49.6 = phi i8 [ %35, %if.then163 ], [ %next.sroa.49.5, %set ], [ %next.sroa.49.0, %if.else ], [ %35, %land.lhs.true204 ], [ %next.sroa.49.0, %land.lhs.true421 ]</td></tr>
+<tr><td align="left">  br label %while.cond, !llvm.loop !77</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb70 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ %cond811, %while.end ], [ 0, %land.end ], [ %code.0, %sw.epilog783 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 104, i8* nonnull %11) #7</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 104, i8* nonnull %10) #7</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 24, i8* nonnull %6) #7</td></tr>
+<tr><td align="left">  ret i32 %retval.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> f_bb2:f
+f_bb1:f -> f_bb2:f
+f_bb2:fT -> f_bb70:f
+f_bb2:fF -> f_bb3:f
+f_bb3:f -> f_bb7:f
+f_bb3:f -> f_bb4:f
+f_bb3:f -> f_bb5:f
+f_bb4:f -> f_bb6:f
+f_bb5:f -> f_bb6:f
+f_bb6:f -> f_bb7:f
+f_bb7:fT -> f_bb8:f
+f_bb7:fF -> f_bb9:f
+f_bb8:f -> f_bb9:f
+f_bb9:f -> f_bb10:f
+f_bb10:fT -> f_bb11:f
+f_bb10:fF -> m_bb0:f2
+f_bb11:fT -> f_bb12:f
+f_bb11:fF -> f_bb27:f
+f_bb12:fT -> f_bb69:f
+f_bb12:fF -> f_bb13:f
+f_bb13:fT -> f_bb14:f
+f_bb13:fF -> f_bb16:f
+f_bb14:fT -> f_bb15:f
+f_bb14:fF -> f_bb16:f
+f_bb15:fT -> f_bb16:f
+f_bb15:fF -> f_bb69:f
+f_bb16:fT -> f_bb17:f
+f_bb16:fF -> f_bb21:f
+f_bb17:fT -> f_bb55:f
+f_bb17:fF -> f_bb18:f
+f_bb18:fT -> f_bb19:f
+f_bb18:fF -> f_bb20:f
+f_bb19:f -> f_bb20:f
+f_bb20:f -> f_bb21:f
+f_bb21:fT -> f_bb23:f
+f_bb21:fF -> f_bb22:f
+f_bb22:f -> f_bb54:f
+f_bb23:f -> f_bb39:f
+f_bb23:f -> f_bb24:f
+f_bb23:f -> f_bb25:f
+f_bb23:f -> f_bb26:f
+f_bb24:f -> f_bb38:f
+f_bb25:f -> f_bb38:f
+f_bb26:f -> f_bb38:f
+f_bb27:fT -> f_bb69:f
+f_bb27:fF -> f_bb28:f
+f_bb28:fT -> f_bb29:f
+f_bb28:fF -> f_bb31:f
+f_bb29:fT -> f_bb30:f
+f_bb29:fF -> f_bb31:f
+f_bb30:fT -> f_bb31:f
+f_bb30:fF -> f_bb69:f
+f_bb31:fT -> f_bb32:f
+f_bb31:fF -> f_bb36:f
+f_bb32:fT -> f_bb55:f
+f_bb32:fF -> f_bb33:f
+f_bb33:fT -> f_bb34:f
+f_bb33:fF -> f_bb35:f
+f_bb34:f -> f_bb35:f
+f_bb35:f -> f_bb36:f
+f_bb36:fT -> f_bb39:f
+f_bb36:fF -> f_bb37:f
+f_bb37:f -> f_bb54:f
+f_bb38:f -> f_bb39:f
+f_bb39:f -> f_bb43:f
+f_bb39:f -> f_bb40:f
+f_bb39:f -> f_bb41:f
+f_bb39:f -> f_bb42:f
+f_bb40:f -> f_bb43:f
+f_bb41:f -> f_bb43:f
+f_bb42:f -> f_bb43:f
+f_bb43:f -> f_bb48:f
+f_bb43:f -> f_bb44:f
+f_bb43:f -> f_bb45:f
+f_bb43:f -> f_bb46:f
+f_bb44:f -> f_bb47:f
+f_bb45:f -> f_bb47:f
+f_bb46:f -> f_bb47:f
+f_bb47:f -> f_bb48:f
+f_bb48:f -> f_bb53:f
+f_bb48:f -> f_bb49:f
+f_bb48:f -> f_bb50:f
+f_bb48:f -> f_bb51:f
+f_bb49:f -> f_bb52:f
+f_bb50:f -> f_bb52:f
+f_bb51:f -> f_bb52:f
+f_bb52:f -> f_bb53:f
+f_bb53:f -> f_bb54:f
+f_bb54:fT -> f_bb63:f
+f_bb54:fF -> f_bb55:f
+f_bb55:fT -> f_bb56:f
+f_bb55:fF -> f_bb58:f
+f_bb56:fT -> f_bb57:f
+f_bb56:fF -> f_bb63:f
+f_bb57:fT -> f_bb68:f
+f_bb57:fF -> f_bb63:f
+f_bb58:fT -> f_bb59:f
+f_bb58:fF -> f_bb63:f
+f_bb59:fT -> f_bb60:f
+f_bb59:fF -> f_bb63:f
+f_bb60:fT -> f_bb61:f
+f_bb60:fF -> f_bb63:f
+f_bb61:fT -> f_bb62:f
+f_bb61:fF -> f_bb63:f
+f_bb62:fT -> f_bb68:f
+f_bb62:fF -> f_bb63:f
+f_bb63:f -> m_bb0:f1
+f_bb63:f -> f_bb64:f
+f_bb63:f -> f_bb65:f
+f_bb64:f -> f_bb66:f
+f_bb65:f -> f_bb66:f
+m_bb0:f1 -> f_bb66:f
+f_bb66:fT -> f_bb70:f
+f_bb66:fF -> f_bb67:f
+f_bb67:f -> f_bb68:f
+f_bb68:f -> f_bb69:f
+f_bb69:f -> f_bb10:f
+m_bb0:f2 -> f_bb70:f
+}
+

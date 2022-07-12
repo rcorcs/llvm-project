@@ -1,0 +1,188 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then21:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %9 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !3</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call22 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %9, i8* getelementptr inbounds ([29 x i8], [29 x i8]* @.str.4, i64 0, i64 0), i8* %filename) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call23 = call i32 @fclose(%struct._IO_FILE* nonnull %call) #9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then4:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %4 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !3</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call5 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %4, i8* getelementptr inbounds ([28 x i8], [28 x i8]* @.str.2, i64 0, i64 0), i8* %filename) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call6 = call i32 @fclose(%struct._IO_FILE* nonnull %call) #9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %termchar = alloca i32, align 4</td></tr>
+<tr><td align="left">  %val = alloca i64, align 8</td></tr>
+<tr><td align="left">  %table = alloca [64 x i32], align 16</td></tr>
+<tr><td align="left">  %0 = bitcast i32* %termchar to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %0) #8</td></tr>
+<tr><td align="left">  %1 = bitcast i64* %val to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %1) #8</td></tr>
+<tr><td align="left">  %2 = bitcast [64 x i32]* %table to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 256, i8* nonnull %2) #8</td></tr>
+<tr><td align="left">  %call = tail call %struct._IO_FILE* @fopen(i8* %filename, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str, i64 0, i64 0)) #9</td></tr>
+<tr><td align="left">  %cmp = icmp eq %struct._IO_FILE* %call, null</td></tr>
+<tr><td align="left">  br i1 %cmp, label %if.then, label %while.cond.preheader</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.cond.preheader:</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds [64 x i32], [64 x i32]* %table, i64 0, i64 0</td></tr>
+<tr><td align="left">  br label %while.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %3 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %call1 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %3, i8* getelementptr inbounds ([26 x i8], [26 x i8]* @.str.1, i64 0, i64 0), i8* %filename) #10</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond:</td></tr>
+<tr><td align="left">  %tblno.0 = phi i32 [ %inc18, %for.end ], [ 0, %while.cond.preheader ]</td></tr>
+<tr><td align="left">  %call2 = call fastcc i32 @read_text_integer(%struct._IO_FILE* nonnull %call, i64* nonnull %val, i32* nonnull %termchar) #9</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %call2, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool.not, label %while.end, label %while.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  %exitcond47 = icmp eq i32 %tblno.0, 4</td></tr>
+<tr><td align="left">  br i1 %exitcond47, label %if.then4, label %if.end7</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end7:</td></tr>
+<tr><td align="left">  %5 = load i64, i64* %val, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %conv = trunc i64 %5 to i32</td></tr>
+<tr><td align="left">  store i32 %conv, i32* %arrayidx, align 16, !tbaa !9</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ %indvars.iv.next, %if.end15 ], [ 1, %if.end7 ]</td></tr>
+<tr><td align="left">  %exitcond.not = icmp eq i64 %indvars.iv, 64</td></tr>
+<tr><td align="left">  br i1 %exitcond.not, label %for.end, label %for.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %call10 = call fastcc i32 @read_text_integer(%struct._IO_FILE* nonnull %call, i64* nonnull %val, i32* nonnull %termchar) #9</td></tr>
+<tr><td align="left">  %tobool11.not = icmp eq i32 %call10, 0</td></tr>
+<tr><td align="left">  br i1 %tobool11.not, label %if.then12, label %if.end15</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then12:</td></tr>
+<tr><td align="left">  %6 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %call13 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %6, i8* getelementptr inbounds ([31 x i8], [31 x i8]* @.str.3, i64 0, i64 0), i8* %filename) #10</td></tr>
+<tr><td align="left">  %call14 = call i32 @fclose(%struct._IO_FILE* nonnull %call) #9</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end15:</td></tr>
+<tr><td align="left">  %7 = load i64, i64* %val, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %conv16 = trunc i64 %7 to i32</td></tr>
+<tr><td align="left">  %arrayidx17 = getelementptr inbounds [64 x i32], [64 x i32]* %table, i64 0, i64 %indvars.iv</td></tr>
+<tr><td align="left">  store i32 %conv16, i32* %arrayidx17, align 4, !tbaa !9</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !11</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  call void @jpeg_add_quant_table(%struct.jpeg_compress_struct* %cinfo, i32 %tblno.0, i32* nonnull %arrayidx, i32 %scale_factor, i32 %force_baseline) #11</td></tr>
+<tr><td align="left">  %inc18 = add nuw nsw i32 %tblno.0, 1</td></tr>
+<tr><td align="left">  br label %while.cond, !llvm.loop !13</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.end:</td></tr>
+<tr><td align="left">  %8 = load i32, i32* %termchar, align 4, !tbaa !9</td></tr>
+<tr><td align="left">  %cmp19.not = icmp eq i32 %8, -1</td></tr>
+<tr><td align="left">  br i1 %cmp19.not, label %if.end24, label %if.then21</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end24:</td></tr>
+<tr><td align="left">  %call25 = call i32 @fclose(%struct._IO_FILE* nonnull %call) #9</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ 0, %if.then ], [ 0, %if.then4 ], [ 0, %if.then12 ], [ 0, %if.then21 ], [ 1, %if.end24 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 256, i8* nonnull %2) #8</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %1) #8</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %0) #8</td></tr>
+<tr><td align="left">  ret i32 %retval.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb2:f
+f_bb0:fF -> f_bb1:f
+f_bb1:f -> f_bb3:f
+f_bb2:f -> f_bb13:f
+f_bb3:fT -> f_bb11:f
+f_bb3:fF -> f_bb4:f
+f_bb4:fT -> m_bb0:f2
+f_bb4:fF -> f_bb5:f
+m_bb0:f2 -> f_bb13:f
+f_bb5:f -> f_bb6:f
+f_bb6:fT -> f_bb10:f
+f_bb6:fF -> f_bb7:f
+f_bb7:fT -> f_bb8:f
+f_bb7:fF -> f_bb9:f
+f_bb8:f -> f_bb13:f
+f_bb9:f -> f_bb6:f
+f_bb10:f -> f_bb3:f
+f_bb11:fT -> f_bb12:f
+f_bb11:fF -> m_bb0:f1
+m_bb0:f1 -> f_bb13:f
+f_bb12:f -> f_bb13:f
+}
+

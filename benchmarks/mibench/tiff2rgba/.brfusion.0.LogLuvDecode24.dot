@@ -1,0 +1,205 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else5:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.5, i64 0, i64 0), i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.1, i64 0, i64 0), i32 225, i8* getelementptr inbounds ([57 x i8], [57 x i8]* @__PRETTY_FUNCTION__.LogLuvDecode24, i64 0, i64 0)) #15</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.10, i64 0, i64 0), i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.1, i64 0, i64 0), i32 224, i8* getelementptr inbounds ([57 x i8], [57 x i8]* @__PRETTY_FUNCTION__.LogLuvDecode24, i64 0, i64 0)) #15</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %tif_data = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 37</td></tr>
+<tr><td align="left">  %0 = bitcast i8** %tif_data to %struct.logLuvState**</td></tr>
+<tr><td align="left">  %1 = load %struct.logLuvState*, %struct.logLuvState** %0, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp = icmp eq i16 %s, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp, label %if.end, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %cmp2.not = icmp eq %struct.logLuvState* %1, null</td></tr>
+<tr><td align="left">  br i1 %cmp2.not, label %if.else5, label %if.end6</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end6:</td></tr>
+<tr><td align="left">  %pixel_size = getelementptr inbounds %struct.logLuvState, %struct.logLuvState* %1, i64 0, i32 1</td></tr>
+<tr><td align="left">  %2 = load i32, i32* %pixel_size, align 4, !tbaa !14</td></tr>
+<tr><td align="left">  %div = sdiv i32 %occ, %2</td></tr>
+<tr><td align="left">  %user_datafmt = getelementptr inbounds %struct.logLuvState, %struct.logLuvState* %1, i64 0, i32 0</td></tr>
+<tr><td align="left">  %3 = load i32, i32* %user_datafmt, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  %cmp7 = icmp eq i32 %3, 2</td></tr>
+<tr><td align="left">  br i1 %cmp7, label %if.then9, label %if.else10</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then9:</td></tr>
+<tr><td align="left">  %4 = bitcast i8* %op to i32*</td></tr>
+<tr><td align="left">  br label %if.end17</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else10:</td></tr>
+<tr><td align="left">  %tbuflen = getelementptr inbounds %struct.logLuvState, %struct.logLuvState* %1, i64 0, i32 3</td></tr>
+<tr><td align="left">  %5 = load i16, i16* %tbuflen, align 8, !tbaa !17</td></tr>
+<tr><td align="left">  %conv11 = sext i16 %5 to i32</td></tr>
+<tr><td align="left">  %cmp12.not = icmp sgt i32 %div, %conv11</td></tr>
+<tr><td align="left">  br i1 %cmp12.not, label %if.else15, label %if.end16</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else15:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.11, i64 0, i64 0), i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.1, i64 0, i64 0), i32 232, i8* getelementptr inbounds ([57 x i8], [57 x i8]* @__PRETTY_FUNCTION__.LogLuvDecode24, i64 0, i64 0)) #15</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end16:</td></tr>
+<tr><td align="left">  %tbuf = getelementptr inbounds %struct.logLuvState, %struct.logLuvState* %1, i64 0, i32 2</td></tr>
+<tr><td align="left">  %6 = bitcast i8*** %tbuf to i32**</td></tr>
+<tr><td align="left">  %7 = load i32*, i32** %6, align 8, !tbaa !18</td></tr>
+<tr><td align="left">  br label %if.end17</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end17:</td></tr>
+<tr><td align="left">  %tp.0 = phi i32* [ %4, %if.then9 ], [ %7, %if.end16 ]</td></tr>
+<tr><td align="left">  %8 = bitcast i32* %tp.0 to i8*</td></tr>
+<tr><td align="left">  %mul = shl i32 %div, 2</td></tr>
+<tr><td align="left">  tail call void @_TIFFmemset(i8* %8, i32 0, i32 %mul) #16</td></tr>
+<tr><td align="left">  %tif_rawcp = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 42</td></tr>
+<tr><td align="left">  %9 = load i8*, i8** %tif_rawcp, align 8, !tbaa !19</td></tr>
+<tr><td align="left">  %tif_rawcc = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 43</td></tr>
+<tr><td align="left">  %10 = load i32, i32* %tif_rawcc, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %11 = sext i32 %div to i64</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ %indvars.iv.next, %for.body ], [ 0, %if.end17 ]</td></tr>
+<tr><td align="left">  %cc.0 = phi i32 [ %sub, %for.body ], [ %10, %if.end17 ]</td></tr>
+<tr><td align="left">  %bp.0 = phi i8* [ %add.ptr, %for.body ], [ %9, %if.end17 ]</td></tr>
+<tr><td align="left">  %cmp20 = icmp slt i64 %indvars.iv, %11</td></tr>
+<tr><td align="left">  %cmp22 = icmp sgt i32 %cc.0, 0</td></tr>
+<tr><td align="left">  %12 = select i1 %cmp20, i1 %cmp22, i1 false</td></tr>
+<tr><td align="left">  br i1 %12, label %for.body, label %for.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %13 = load i8, i8* %bp.0, align 1, !tbaa !21</td></tr>
+<tr><td align="left">  %conv24 = zext i8 %13 to i32</td></tr>
+<tr><td align="left">  %shl = shl nuw nsw i32 %conv24, 16</td></tr>
+<tr><td align="left">  %arrayidx25 = getelementptr inbounds i8, i8* %bp.0, i64 1</td></tr>
+<tr><td align="left">  %14 = load i8, i8* %arrayidx25, align 1, !tbaa !21</td></tr>
+<tr><td align="left">  %conv26 = zext i8 %14 to i32</td></tr>
+<tr><td align="left">  %shl27 = shl nuw nsw i32 %conv26, 8</td></tr>
+<tr><td align="left">  %or = or i32 %shl27, %shl</td></tr>
+<tr><td align="left">  %arrayidx28 = getelementptr inbounds i8, i8* %bp.0, i64 2</td></tr>
+<tr><td align="left">  %15 = load i8, i8* %arrayidx28, align 1, !tbaa !21</td></tr>
+<tr><td align="left">  %conv29 = zext i8 %15 to i32</td></tr>
+<tr><td align="left">  %or30 = or i32 %or, %conv29</td></tr>
+<tr><td align="left">  %arrayidx31 = getelementptr inbounds i32, i32* %tp.0, i64 %indvars.iv</td></tr>
+<tr><td align="left">  store i32 %or30, i32* %arrayidx31, align 4, !tbaa !22</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds i8, i8* %bp.0, i64 3</td></tr>
+<tr><td align="left">  %sub = add nsw i32 %cc.0, -3</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !23</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  %16 = trunc i64 %indvars.iv to i32</td></tr>
+<tr><td align="left">  store i8* %bp.0, i8** %tif_rawcp, align 8, !tbaa !19</td></tr>
+<tr><td align="left">  store i32 %cc.0, i32* %tif_rawcc, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %cmp34.not = icmp eq i32 %div, %16</td></tr>
+<tr><td align="left">  br i1 %cmp34.not, label %if.end38, label %if.then36</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then36:</td></tr>
+<tr><td align="left">  %tif_name = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 0</td></tr>
+<tr><td align="left">  %17 = load i8*, i8** %tif_name, align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %tif_row = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 11</td></tr>
+<tr><td align="left">  %18 = load i32, i32* %tif_row, align 8, !tbaa !26</td></tr>
+<tr><td align="left">  %sub37 = sub nsw i32 %div, %16</td></tr>
+<tr><td align="left">  tail call void (i8*, i8*, ...) @TIFFError(i8* %17, i8* getelementptr inbounds ([60 x i8], [60 x i8]* @.str.12, i64 0, i64 0), i32 %18, i32 %sub37) #16</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end38:</td></tr>
+<tr><td align="left">  %tfunc = getelementptr inbounds %struct.logLuvState, %struct.logLuvState* %1, i64 0, i32 4</td></tr>
+<tr><td align="left">  %19 = load void (%struct.logLuvState*, i8*, i32)*, void (%struct.logLuvState*, i8*, i32)** %tfunc, align 8, !tbaa !27</td></tr>
+<tr><td align="left">  tail call void %19(%struct.logLuvState* nonnull %1, i8* %op, i32 %div) #16</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ 0, %if.then36 ], [ 1, %if.end38 ]</td></tr>
+<tr><td align="left">  ret i32 %retval.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> m_bb0:f2
+f_bb1:fT -> m_bb0:f1
+f_bb1:fF -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb4:f
+f_bb3:f -> f_bb7:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb6:f
+f_bb6:f -> f_bb7:f
+f_bb7:f -> f_bb8:f
+f_bb8:fT -> f_bb9:f
+f_bb8:fF -> f_bb10:f
+f_bb9:f -> f_bb8:f
+f_bb10:fT -> f_bb12:f
+f_bb10:fF -> f_bb11:f
+f_bb11:f -> f_bb13:f
+f_bb12:f -> f_bb13:f
+}
+

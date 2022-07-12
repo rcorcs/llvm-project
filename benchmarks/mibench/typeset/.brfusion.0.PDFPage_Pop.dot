@@ -1,0 +1,99 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp.not, label %if.then2.i, label %Assert.exit</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp.not, label %Assert.exit17, label %if.then2.i16</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+m_bb1 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then2.i:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call.i = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.75, i64 0, i64 0), i32 0, %struct.FILE_POS* %6, %struct.FILE_POS* %6) #21</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %Assert.exit</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then2.i16:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call.i15 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.75, i64 0, i64 0), i32 0, %struct.FILE_POS* %6, %struct.FILE_POS* %6) #21</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %Assert.exit17</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %0 = load %struct.t_qsave_entry*, %struct.t_qsave_entry** @g_qsave_stack, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %m_page_h_origin = getelementptr inbounds %struct.t_qsave_entry, %struct.t_qsave_entry* %0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %1 = load i32, i32* %m_page_h_origin, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 %1, i32* @g_page_h_origin, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  %m_page_v_origin = getelementptr inbounds %struct.t_qsave_entry, %struct.t_qsave_entry* %0, i64 0, i32 2</td></tr>
+<tr><td align="left">  %2 = load i32, i32* %m_page_v_origin, align 4, !tbaa !12</td></tr>
+<tr><td align="left">  store i32 %2, i32* @g_page_v_origin, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  %m_next_entry = getelementptr inbounds %struct.t_qsave_entry, %struct.t_qsave_entry* %0, i64 0, i32 0</td></tr>
+<tr><td align="left">  %3 = load %struct.t_qsave_entry*, %struct.t_qsave_entry** %m_next_entry, align 8, !tbaa !13</td></tr>
+<tr><td align="left">  store %struct.t_qsave_entry* %3, %struct.t_qsave_entry** @g_qsave_stack, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %4 = bitcast %struct.t_qsave_entry* %0 to i8*</td></tr>
+<tr><td align="left">  tail call void @free(i8* %4) #21</td></tr>
+<tr><td align="left">  %.b = load i1, i1* @g_in_buffering_mode, align 4</td></tr>
+<tr><td align="left">  %5 = load %struct.t_qsave_marking_entry*, %struct.t_qsave_marking_entry** @g_qsave_marking_stack, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq %struct.t_qsave_marking_entry* %5, null</td></tr>
+<tr><td align="left">  %6 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !3</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %.b, label %if.then, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">Assert.exit:</td></tr>
+<tr><td align="left">  %m_next_entry3 = getelementptr inbounds %struct.t_qsave_marking_entry, %struct.t_qsave_marking_entry* %5, i64 0, i32 0</td></tr>
+<tr><td align="left">  %7 = load %struct.t_qsave_marking_entry*, %struct.t_qsave_marking_entry** %m_next_entry3, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  store %struct.t_qsave_marking_entry* %7, %struct.t_qsave_marking_entry** @g_qsave_marking_stack, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %m_buffer_pos = getelementptr inbounds %struct.t_qsave_marking_entry, %struct.t_qsave_marking_entry* %5, i64 0, i32 1</td></tr>
+<tr><td align="left">  %8 = load i32, i32* %m_buffer_pos, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  store i32 %8, i32* @g_buffer_pos, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  %idxprom = zext i32 %8 to i64</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds [1024 x i8], [1024 x i8]* @g_buffer, i64 0, i64 %idxprom</td></tr>
+<tr><td align="left">  store i8 0, i8* %arrayidx, align 1, !tbaa !17</td></tr>
+<tr><td align="left">  %9 = bitcast %struct.t_qsave_marking_entry* %5 to i8*</td></tr>
+<tr><td align="left">  tail call void @free(i8* %9) #21</td></tr>
+<tr><td align="left">  br label %if.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">Assert.exit17:</td></tr>
+<tr><td align="left">  tail call void @PDFPage_Write(%struct._IO_FILE* %in_fp, i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.9, i64 0, i64 0))</td></tr>
+<tr><td align="left">  br label %if.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> m_bb0:f1
+f_bb0:fF -> m_bb0:f2
+m_bb0:f1T -> m_bb1:f1
+m_bb0:f1F -> f_bb1:f
+m_bb1:f1 -> f_bb1:f
+f_bb1:f -> f_bb3:f
+m_bb0:f2T -> f_bb2:f
+m_bb0:f2F -> m_bb1:f2
+m_bb1:f2 -> f_bb2:f
+f_bb2:f -> f_bb3:f
+}
+

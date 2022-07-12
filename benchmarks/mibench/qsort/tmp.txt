@@ -1,0 +1,163 @@
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -O3 -emit-llvm -c src/qsort_large.c -o src/qsort_large.bc 
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/llvm-link src/qsort_large.bc -o build/rolled.ll -S
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang++ -std=gnu++98 -B /usr/bin -x ir build/rolled.ll -Oz -fno-unroll-loops -fno-vectorize -fno-slp-vectorize  -mllvm -reroll-loops=3 -o build/rolled.o -lm -fno-align-functions -s -c
+clang-12: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+clang-12: warning: argument unused during compilation: '-s' [-Wunused-command-line-argument]
+Done Loop Roller!
+Creating Node
+Match: 0
+3 x 3
+Final Match: 0
+GEPSeq2
+BinOP?
+  store i32 %7, i32* %x11, align 8, !tbaa !8
+New Alternating Pattern:
+1:  store i32 %7, i32* %x11, align 8, !tbaa !8
+1:  store i32 %9, i32* %z17, align 8, !tbaa !12
+2:  store i32 %8, i32* %y14, align 4, !tbaa !11
+
+while.body:                                       ; preds = %land.lhs.true6
+  %7 = load i32, i32* %x, align 4, !tbaa !6
+  %x11 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 0
+  store i32 %7, i32* %x11, align 8, !tbaa !8
+  %8 = load i32, i32* %y, align 4, !tbaa !6
+  %y14 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 1
+  store i32 %8, i32* %y14, align 4, !tbaa !11
+  %9 = load i32, i32* %z, align 4, !tbaa !6
+  %z17 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 2
+  store i32 %9, i32* %z17, align 8, !tbaa !12
+  %conv = sitofp i32 %7 to double
+  %square = fmul double %conv, %conv
+  %conv19 = sitofp i32 %8 to double
+  %square61 = fmul double %conv19, %conv19
+  %add = fadd double %square, %square61
+  %conv21 = sitofp i32 %9 to double
+  %square62 = fmul double %conv21, %conv21
+  %add23 = fadd double %add, %square62
+  %call24 = call double @sqrt(double %add23) #8
+  %distance = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 3
+  store double %call24, double* %distance, align 8, !tbaa !13
+  %indvars.iv.next71 = add nuw nsw i64 %indvars.iv70, 1
+  %inc = add nuw nsw i32 %count.067, 1
+  %call2 = call i32 (%struct._IO_FILE*, i8*, ...) @__isoc99_fscanf(%struct._IO_FILE* %call1, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.2, i64 0, i64 0), i32* nonnull %x) #8
+  %cmp3 = icmp eq i32 %call2, 1
+  br i1 %cmp3, label %land.lhs.true, label %if.end.loopexit
+
+Mismatching
+digraph VTree {
+0 [label="mismatch", style="filled" , fillcolor="#ff6671", shape=box];
+}
+
+
+while.body:                                       ; preds = %land.lhs.true6
+  %7 = load i32, i32* %x, align 4, !tbaa !6
+  %x11 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 0
+  store i32 %7, i32* %x11, align 8, !tbaa !8
+  %8 = load i32, i32* %y, align 4, !tbaa !6
+  %y14 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 1
+  store i32 %8, i32* %y14, align 4, !tbaa !11
+  %9 = load i32, i32* %z, align 4, !tbaa !6
+  %z17 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 2
+  store i32 %9, i32* %z17, align 8, !tbaa !12
+  %conv = sitofp i32 %7 to double
+  %square = fmul double %conv, %conv
+  %conv19 = sitofp i32 %8 to double
+  %square61 = fmul double %conv19, %conv19
+  %add = fadd double %square, %square61
+  %conv21 = sitofp i32 %9 to double
+  %square62 = fmul double %conv21, %conv21
+  %add23 = fadd double %add, %square62
+  %call24 = call double @sqrt(double %add23) #8
+  %distance = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 3
+  store double %call24, double* %distance, align 8, !tbaa !13
+  %indvars.iv.next71 = add nuw nsw i64 %indvars.iv70, 1
+  %inc = add nuw nsw i32 %count.067, 1
+  %call2 = call i32 (%struct._IO_FILE*, i8*, ...) @__isoc99_fscanf(%struct._IO_FILE* %call1, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.2, i64 0, i64 0), i32* nonnull %x) #8
+  %cmp3 = icmp eq i32 %call2, 1
+  br i1 %cmp3, label %land.lhs.true, label %if.end.loopexit
+
+Trying AGAIN
+Trying AGAIN
+Trying AGAIN
+Done Loop Roller!
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang++ -std=gnu++98 -B /usr/bin -x ir build/rolled.ll -Oz -fno-unroll-loops -fno-vectorize -fno-slp-vectorize  -mllvm -reroll-loops=3 -o build/rolled -lm -fno-align-functions -s
+Done Loop Roller!
+Creating Node
+Match: 0
+3 x 3
+Final Match: 0
+GEPSeq2
+BinOP?
+  store i32 %7, i32* %x11, align 8, !tbaa !8
+New Alternating Pattern:
+1:  store i32 %7, i32* %x11, align 8, !tbaa !8
+1:  store i32 %9, i32* %z17, align 8, !tbaa !12
+2:  store i32 %8, i32* %y14, align 4, !tbaa !11
+
+while.body:                                       ; preds = %land.lhs.true6
+  %7 = load i32, i32* %x, align 4, !tbaa !6
+  %x11 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 0
+  store i32 %7, i32* %x11, align 8, !tbaa !8
+  %8 = load i32, i32* %y, align 4, !tbaa !6
+  %y14 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 1
+  store i32 %8, i32* %y14, align 4, !tbaa !11
+  %9 = load i32, i32* %z, align 4, !tbaa !6
+  %z17 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 2
+  store i32 %9, i32* %z17, align 8, !tbaa !12
+  %conv = sitofp i32 %7 to double
+  %square = fmul double %conv, %conv
+  %conv19 = sitofp i32 %8 to double
+  %square61 = fmul double %conv19, %conv19
+  %add = fadd double %square, %square61
+  %conv21 = sitofp i32 %9 to double
+  %square62 = fmul double %conv21, %conv21
+  %add23 = fadd double %add, %square62
+  %call24 = call double @sqrt(double %add23) #8
+  %distance = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 3
+  store double %call24, double* %distance, align 8, !tbaa !13
+  %indvars.iv.next71 = add nuw nsw i64 %indvars.iv70, 1
+  %inc = add nuw nsw i32 %count.067, 1
+  %call2 = call i32 (%struct._IO_FILE*, i8*, ...) @__isoc99_fscanf(%struct._IO_FILE* %call1, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.2, i64 0, i64 0), i32* nonnull %x) #8
+  %cmp3 = icmp eq i32 %call2, 1
+  br i1 %cmp3, label %land.lhs.true, label %if.end.loopexit
+
+Mismatching
+digraph VTree {
+0 [label="mismatch", style="filled" , fillcolor="#ff6671", shape=box];
+}
+
+
+while.body:                                       ; preds = %land.lhs.true6
+  %7 = load i32, i32* %x, align 4, !tbaa !6
+  %x11 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 0
+  store i32 %7, i32* %x11, align 8, !tbaa !8
+  %8 = load i32, i32* %y, align 4, !tbaa !6
+  %y14 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 1
+  store i32 %8, i32* %y14, align 4, !tbaa !11
+  %9 = load i32, i32* %z, align 4, !tbaa !6
+  %z17 = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 2
+  store i32 %9, i32* %z17, align 8, !tbaa !12
+  %conv = sitofp i32 %7 to double
+  %square = fmul double %conv, %conv
+  %conv19 = sitofp i32 %8 to double
+  %square61 = fmul double %conv19, %conv19
+  %add = fadd double %square, %square61
+  %conv21 = sitofp i32 %9 to double
+  %square62 = fmul double %conv21, %conv21
+  %add23 = fadd double %add, %square62
+  %call24 = call double @sqrt(double %add23) #8
+  %distance = getelementptr inbounds [60000 x %struct.my3DVertexStruct], [60000 x %struct.my3DVertexStruct]* %array, i64 0, i64 %indvars.iv70, i32 3
+  store double %call24, double* %distance, align 8, !tbaa !13
+  %indvars.iv.next71 = add nuw nsw i64 %indvars.iv70, 1
+  %inc = add nuw nsw i32 %count.067, 1
+  %call2 = call i32 (%struct._IO_FILE*, i8*, ...) @__isoc99_fscanf(%struct._IO_FILE* %call1, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.2, i64 0, i64 0), i32* nonnull %x) #8
+  %cmp3 = icmp eq i32 %call2, 1
+  br i1 %cmp3, label %land.lhs.true, label %if.end.loopexit
+
+Trying AGAIN
+Trying AGAIN
+Trying AGAIN
+Done Loop Roller!
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/llvm-size -B -d build/rolled
+   text	   data	    bss	    dec	    hex	filename
+   2387	    640	     16	   3043	    be3	build/rolled

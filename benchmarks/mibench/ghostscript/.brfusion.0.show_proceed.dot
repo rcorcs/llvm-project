@@ -1,0 +1,962 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.end69:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %34 = load i64, i64* %chr, align 8, !tbaa !52</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %35 = load i64, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %callbacks71 = getelementptr inbounds %struct.gs_font_s, %struct.gs_font_s* %pfont.1, i64 0, i32 15, i32 4</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call72 = call %struct.cached_char_s* @gx_lookup_xfont_char(%struct.gs_state_s* %0, %struct.cached_fm_pair_s* %pair.3, i64 %34, i64 %35, %struct.gx_xfont_callbacks_s* nonnull %callbacks71, i32 %1) #10</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %no_cache</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then57:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %30 = load i64, i64* %chr, align 8, !tbaa !52</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %31 = load i64, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %callbacks = getelementptr inbounds %struct.gs_font_s, %struct.gs_font_s* %pfont.1, i64 0, i32 15, i32 4</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call59 = call %struct.cached_char_s* @gx_lookup_xfont_char(%struct.gs_state_s* %0, %struct.cached_fm_pair_s* %pair.3, i64 %30, i64 %31, %struct.gx_xfont_callbacks_s* nonnull %callbacks, i32 %1) #10</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %cmp60 = icmp eq %struct.cached_char_s* %call59, null</td></tr>
+</table>
+</td></tr>
+<tr><td border="0" colspan="2"> </td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %chr = alloca i64, align 8</td></tr>
+<tr><td align="left">  %glyph = alloca i64, align 8</td></tr>
+<tr><td align="left">  %box_path = alloca %struct.gx_path_s, align 8</td></tr>
+<tr><td align="left">  %pt = alloca %struct.gs_fixed_point_s, align 8</td></tr>
+<tr><td align="left">  %pgs1 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 0</td></tr>
+<tr><td align="left">  %0 = load %struct.gs_state_s*, %struct.gs_state_s** %pgs1, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %call = tail call %struct.gs_font_s* @gs_rootfont(%struct.gs_state_s* %0) #10</td></tr>
+<tr><td align="left">  %WMode = getelementptr inbounds %struct.gs_font_s, %struct.gs_font_s* %call, i64 0, i32 12</td></tr>
+<tr><td align="left">  %1 = load i32, i32* %WMode, align 4, !tbaa !19</td></tr>
+<tr><td align="left">  %next_char2 = getelementptr inbounds %struct.gs_font_s, %struct.gs_font_s* %call, i64 0, i32 15, i32 1</td></tr>
+<tr><td align="left">  %2 = load i32 (%struct.gs_show_enum_s*, i64*)*, i32 (%struct.gs_show_enum_s*, i64*)** %next_char2, align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %next_glyph4 = getelementptr inbounds %struct.gs_font_s, %struct.gs_font_s* %call, i64 0, i32 15, i32 7</td></tr>
+<tr><td align="left">  %3 = load i32 (%struct.gs_show_enum_s*, i64*, i64*)*, i32 (%struct.gs_show_enum_s*, i64*, i64*)** %next_glyph4, align 8, !tbaa !26</td></tr>
+<tr><td align="left">  %4 = bitcast i64* %chr to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %4) #11</td></tr>
+<tr><td align="left">  %5 = bitcast i64* %glyph to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %5) #11</td></tr>
+<tr><td align="left">  %device = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 43</td></tr>
+<tr><td align="left">  %6 = load %struct.gx_device_s*, %struct.gx_device_s** %device, align 8, !tbaa !27</td></tr>
+<tr><td align="left">  %get_alpha_bits = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %6, i64 0, i32 21, i32 20</td></tr>
+<tr><td align="left">  %7 = load i32 (%struct.gx_device_s*, i32)*, i32 (%struct.gx_device_s*, i32)** %get_alpha_bits, align 8, !tbaa !34</td></tr>
+<tr><td align="left">  %call5 = tail call i32 %7(%struct.gx_device_s* %6, i32 0) #10</td></tr>
+<tr><td align="left">  %charpath_flag = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 11</td></tr>
+<tr><td align="left">  %8 = load i32, i32* %charpath_flag, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %cmp = icmp eq i32 %8, 0</td></tr>
+<tr><td align="left">  br i1 %cmp, label %land.lhs.true, label %if.end11</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true:</td></tr>
+<tr><td align="left">  %stringwidth_flag = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 13</td></tr>
+<tr><td align="left">  %9 = load i32, i32* %stringwidth_flag, align 8, !tbaa !40</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %9, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %if.then, label %if.end11</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %dev_color = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 34</td></tr>
+<tr><td align="left">  %10 = load %struct.gx_device_color_s*, %struct.gx_device_color_s** %dev_color, align 8, !tbaa !41</td></tr>
+<tr><td align="left">  %type = getelementptr inbounds %struct.gx_device_color_s, %struct.gx_device_color_s* %10, i64 0, i32 0</td></tr>
+<tr><td align="left">  %11 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** %type, align 8, !tbaa !42</td></tr>
+<tr><td align="left">  %load = getelementptr inbounds %struct.gx_device_color_procs_s, %struct.gx_device_color_procs_s* %11, i64 0, i32 0</td></tr>
+<tr><td align="left">  %12 = load i32 (%struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)*, i32 (%struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)** %load, align 8, !tbaa !47</td></tr>
+<tr><td align="left">  %13 = bitcast %struct.gs_state_s* %0 to %struct.gs_imager_state_s*</td></tr>
+<tr><td align="left">  %14 = load %struct.gx_device_s*, %struct.gx_device_s** %device, align 8, !tbaa !27</td></tr>
+<tr><td align="left">  %call8 = tail call i32 %12(%struct.gx_device_color_s* %10, %struct.gs_imager_state_s* %13, %struct.gx_device_s* %14, i32 0) #10</td></tr>
+<tr><td align="left">  %cmp9 = icmp slt i32 %call8, 0</td></tr>
+<tr><td align="left">  br i1 %cmp9, label %cleanup341, label %if.end11</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end11:</td></tr>
+<tr><td align="left">  %depth = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 33, i32 0</td></tr>
+<tr><td align="left">  %font = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 35</td></tr>
+<tr><td align="left">  %can_cache = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 14</td></tr>
+<tr><td align="left">  %cmp157 = icmp eq i32 (%struct.gs_show_enum_s*, i64*)* %2, null</td></tr>
+<tr><td align="left">  %current_char179 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 25</td></tr>
+<tr><td align="left">  %encode_char183 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 19</td></tr>
+<tr><td align="left">  %char_tm_valid = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 38</td></tr>
+<tr><td align="left">  %15 = bitcast %struct.gx_path_s* %box_path to i8*</td></tr>
+<tr><td align="left">  %16 = bitcast %struct.gs_fixed_point_s* %pt to i8*</td></tr>
+<tr><td align="left">  %path = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 28</td></tr>
+<tr><td align="left">  %x = getelementptr inbounds %struct.gs_fixed_point_s, %struct.gs_fixed_point_s* %pt, i64 0, i32 0</td></tr>
+<tr><td align="left">  %ftx = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 17</td></tr>
+<tr><td align="left">  %y = getelementptr inbounds %struct.gs_fixed_point_s, %struct.gs_fixed_point_s* %pt, i64 0, i32 1</td></tr>
+<tr><td align="left">  %fty = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 18</td></tr>
+<tr><td align="left">  %memory = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 0</td></tr>
+<tr><td align="left">  %show_gstate = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 41</td></tr>
+<tr><td align="left">  %stringwidth_flag124 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 13</td></tr>
+<tr><td align="left">  %slow_show = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 10</td></tr>
+<tr><td align="left">  %x143 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 27, i32 0</td></tr>
+<tr><td align="left">  %y147 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 27, i32 1</td></tr>
+<tr><td align="left">  %current_glyph188 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 26</td></tr>
+<tr><td align="left">  %in_cachedevice = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 39</td></tr>
+<tr><td align="left">  %y195 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 32, i32 1</td></tr>
+<tr><td align="left">  %x197 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 32, i32 0</td></tr>
+<tr><td align="left">  %in_charpath = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 40</td></tr>
+<tr><td align="left">  %show_gstate199 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 12</td></tr>
+<tr><td align="left">  %saved = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 22</td></tr>
+<tr><td align="left">  %stroke_adjust = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 8</td></tr>
+<tr><td align="left">  %x227 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 28, i32 0</td></tr>
+<tr><td align="left">  %y230 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 28, i32 1</td></tr>
+<tr><td align="left">  %txy_fixed_valid = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 2, i32 8</td></tr>
+<tr><td align="left">  %txy_fixed_valid234 = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 37, i32 8</td></tr>
+<tr><td align="left">  %tx_fixed = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 2, i32 6</td></tr>
+<tr><td align="left">  %ty_fixed = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 2, i32 7</td></tr>
+<tr><td align="left">  %tx253 = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 2, i32 4</td></tr>
+<tr><td align="left">  %ty257 = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %0, i64 0, i32 2, i32 5</td></tr>
+<tr><td align="left">  %width_status = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 31</td></tr>
+<tr><td align="left">  %continue_proc = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 34</td></tr>
+<tr><td align="left">  %cc310 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 29</td></tr>
+<tr><td align="left">  br label %more</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">more:</td></tr>
+<tr><td align="left">  %pair.0 = phi %struct.cached_fm_pair_s* [ null, %if.end11 ], [ %pair.4, %if.end325 ]</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ undef, %if.end11 ], [ %retval.4, %if.end325 ]</td></tr>
+<tr><td align="left">  %17 = load i32, i32* %depth, align 8, !tbaa !49</td></tr>
+<tr><td align="left">  %cmp12 = icmp slt i32 %17, 0</td></tr>
+<tr><td align="left">  %idxprom = sext i32 %17 to i64</td></tr>
+<tr><td align="left">  %font16 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 33, i32 1, i64 %idxprom, i32 0</td></tr>
+<tr><td align="left">  %cond.in = select i1 %cmp12, %struct.gs_font_s** %font, %struct.gs_font_s** %font16</td></tr>
+<tr><td align="left">  %cond = load %struct.gs_font_s*, %struct.gs_font_s** %cond.in, align 8, !tbaa !50</td></tr>
+<tr><td align="left">  %18 = load i32, i32* %can_cache, align 4, !tbaa !51</td></tr>
+<tr><td align="left">  %cmp17 = icmp sgt i32 %18, -1</td></tr>
+<tr><td align="left">  br i1 %cmp17, label %for.cond, label %if.else156</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %pair.1 = phi %struct.cached_fm_pair_s* [ %pair.3, %if.end152 ], [ %pair.0, %more ]</td></tr>
+<tr><td align="left">  %pfont.0 = phi %struct.gs_font_s* [ %pfont.1, %if.end152 ], [ %cond, %more ]</td></tr>
+<tr><td align="left">  %retval.1 = phi i32 [ %retval.3, %if.end152 ], [ %retval.0, %more ]</td></tr>
+<tr><td align="left">  br i1 %cmp157, label %cond.true20, label %cond.false22</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.true20:</td></tr>
+<tr><td align="left">  %call21 = call i32 %3(%struct.gs_show_enum_s* nonnull %penum, i64* nonnull %chr, i64* nonnull %glyph) #10</td></tr>
+<tr><td align="left">  br label %cond.end24</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false22:</td></tr>
+<tr><td align="left">  store i64 2147483647, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  %call23 = call i32 %2(%struct.gs_show_enum_s* nonnull %penum, i64* nonnull %chr) #10</td></tr>
+<tr><td align="left">  br label %cond.end24</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end24:</td></tr>
+<tr><td align="left">  %cond25 = phi i32 [ %call21, %cond.true20 ], [ %call23, %cond.false22 ]</td></tr>
+<tr><td align="left">  switch i32 %cond25, label %cleanup341 [
+    i32 2, label %sw.bb
+    i32 1, label %sw.bb27
+    i32 0, label %sw.bb36
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb:</td></tr>
+<tr><td align="left">  %call26 = call fastcc i32 @show_finish(%struct.gs_show_enum_s* nonnull %penum) #12</td></tr>
+<tr><td align="left">  br label %cleanup341</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb27:</td></tr>
+<tr><td align="left">  %19 = load i32, i32* %depth, align 8, !tbaa !49</td></tr>
+<tr><td align="left">  %idxprom32 = sext i32 %19 to i64</td></tr>
+<tr><td align="left">  %font34 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 33, i32 1, i64 %idxprom32, i32 0</td></tr>
+<tr><td align="left">  %20 = load %struct.gs_font_s*, %struct.gs_font_s** %font34, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  store i32 0, i32* %char_tm_valid, align 8, !tbaa !55</td></tr>
+<tr><td align="left">  %call35 = call fastcc i32 @show_state_setup(%struct.gs_show_enum_s* nonnull %penum) #12</td></tr>
+<tr><td align="left">  br label %sw.bb36</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb36:</td></tr>
+<tr><td align="left">  %pair.2 = phi %struct.cached_fm_pair_s* [ %pair.1, %cond.end24 ], [ null, %sw.bb27 ]</td></tr>
+<tr><td align="left">  %pfont.1 = phi %struct.gs_font_s* [ %pfont.0, %cond.end24 ], [ %20, %sw.bb27 ]</td></tr>
+<tr><td align="left">  %21 = load i64, i64* %chr, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  store i64 %21, i64* %current_char179, align 8, !tbaa !56</td></tr>
+<tr><td align="left">  %22 = load i64, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  %cmp37 = icmp eq i64 %22, 2147483647</td></tr>
+<tr><td align="left">  br i1 %cmp37, label %if.then38, label %if.end44</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then38:</td></tr>
+<tr><td align="left">  %23 = load i64 (%struct.gs_show_enum_s*, %struct.gs_font_s*, i64*)*, i64 (%struct.gs_show_enum_s*, %struct.gs_font_s*, i64*)** %encode_char183, align 8, !tbaa !57</td></tr>
+<tr><td align="left">  %call39 = call i64 %23(%struct.gs_show_enum_s* nonnull %penum, %struct.gs_font_s* %pfont.1, i64* nonnull %chr) #10</td></tr>
+<tr><td align="left">  store i64 %call39, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  %24 = load i64, i64* %chr, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  store i64 %24, i64* %current_char179, align 8, !tbaa !56</td></tr>
+<tr><td align="left">  %cmp41 = icmp eq i64 %call39, 2147483647</td></tr>
+<tr><td align="left">  br i1 %cmp41, label %no_cache, label %if.end44</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end44:</td></tr>
+<tr><td align="left">  %25 = phi i64 [ %call39, %if.then38 ], [ %22, %sw.bb36 ]</td></tr>
+<tr><td align="left">  %cmp45 = icmp eq %struct.cached_fm_pair_s* %pair.2, null</td></tr>
+<tr><td align="left">  br i1 %cmp45, label %if.then46, label %if.end48</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then46:</td></tr>
+<tr><td align="left">  %call47 = call %struct.cached_fm_pair_s* @gx_lookup_fm_pair(%struct.gs_font_s* %pfont.1, %struct.gs_state_s* %0) #10</td></tr>
+<tr><td align="left">  %.pre = load i64, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  br label %if.end48</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb15 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end48:</td></tr>
+<tr><td align="left">  %26 = phi i64 [ %.pre, %if.then46 ], [ %25, %if.end44 ]</td></tr>
+<tr><td align="left">  %pair.3 = phi %struct.cached_fm_pair_s* [ %call47, %if.then46 ], [ %pair.2, %if.end44 ]</td></tr>
+<tr><td align="left">  %call49 = call %struct.cached_char_s* @gx_lookup_cached_char(%struct.gs_font_s* %pfont.1, %struct.cached_fm_pair_s* %pair.3, i64 %26, i32 %1, i32 %call5) #10</td></tr>
+<tr><td align="left">  %cmp50 = icmp eq %struct.cached_char_s* %call49, null</td></tr>
+<tr><td align="left">  br i1 %cmp50, label %if.then51, label %if.end74</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb16 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then51:</td></tr>
+<tr><td align="left">  %ExactSize = getelementptr inbounds %struct.gs_font_s, %struct.gs_font_s* %pfont.1, i64 0, i32 9</td></tr>
+<tr><td align="left">  %27 = load i32, i32* %ExactSize, align 8, !tbaa !58</td></tr>
+<tr><td align="left">  %cmp52 = icmp eq i32 %27, 0</td></tr>
+<tr><td align="left">  br i1 %cmp52, label %no_cache, label %lor.lhs.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false:</td></tr>
+<tr><td align="left">  %PaintType = getelementptr inbounds %struct.gs_font_s, %struct.gs_font_s* %pfont.1, i64 0, i32 13</td></tr>
+<tr><td align="left">  %28 = load i32, i32* %PaintType, align 8, !tbaa !59</td></tr>
+<tr><td align="left">  %cmp53 = icmp eq i32 %28, 2</td></tr>
+<tr><td align="left">  br i1 %cmp53, label %no_cache, label %if.end55</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end55:</td></tr>
+<tr><td align="left">  %BitmapWidths = getelementptr inbounds %struct.gs_font_s, %struct.gs_font_s* %pfont.1, i64 0, i32 8</td></tr>
+<tr><td align="left">  %29 = load i32, i32* %BitmapWidths, align 4, !tbaa !60</td></tr>
+<tr><td align="left">  %tobool56.not = icmp eq i32 %29, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool56.not, label %if.else, label %if.then57</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %32 = load i32, i32* %stringwidth_flag124, align 8, !tbaa !40</td></tr>
+<tr><td align="left">  %cmp64.not = icmp eq i32 %32, 0</td></tr>
+<tr><td align="left">  br i1 %cmp64.not, label %lor.lhs.false65, label %no_cache</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false65:</td></tr>
+<tr><td align="left">  %33 = load i32, i32* %charpath_flag, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %cmp67.not = icmp eq i32 %33, 0</td></tr>
+<tr><td align="left">  br i1 %cmp67.not, label %if.end69, label %no_cache</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb21 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end74:</td></tr>
+<tr><td align="left">  %cc.0 = phi %struct.cached_char_s* [ %call59, %if.then57 ], [ %call49, %if.end48 ]</td></tr>
+<tr><td align="left">  %36 = load i32, i32* %charpath_flag, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %cmp76.not = icmp eq i32 %36, 0</td></tr>
+<tr><td align="left">  br i1 %cmp76.not, label %if.else123, label %if.then77</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb22 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then77:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 128, i8* nonnull %15) #11</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %16) #11</td></tr>
+<tr><td align="left">  %37 = load %struct.gx_path_s*, %struct.gx_path_s** %path, align 8, !tbaa !61</td></tr>
+<tr><td align="left">  %call78 = call i32 @gx_path_current_point(%struct.gx_path_s* %37, %struct.gs_fixed_point_s* nonnull %pt) #10</td></tr>
+<tr><td align="left">  %cmp79 = icmp slt i32 %call78, 0</td></tr>
+<tr><td align="left">  br i1 %cmp79, label %cleanup, label %if.end81</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end81:</td></tr>
+<tr><td align="left">  %38 = load i64, i64* %x, align 8, !tbaa !62</td></tr>
+<tr><td align="left">  %x82 = getelementptr inbounds %struct.cached_char_s, %struct.cached_char_s* %cc.0, i64 0, i32 14, i32 0</td></tr>
+<tr><td align="left">  %39 = load i64, i64* %x82, align 8, !tbaa !63</td></tr>
+<tr><td align="left">  %sub = add i64 %38, 2048</td></tr>
+<tr><td align="left">  %add = sub i64 %sub, %39</td></tr>
+<tr><td align="left">  %and = and i64 %add, -4096</td></tr>
+<tr><td align="left">  %40 = load i32, i32* %ftx, align 8, !tbaa !66</td></tr>
+<tr><td align="left">  %conv = sext i32 %40 to i64</td></tr>
+<tr><td align="left">  %shl = shl nsw i64 %conv, 12</td></tr>
+<tr><td align="left">  %add83 = add nsw i64 %shl, %and</td></tr>
+<tr><td align="left">  %41 = load i64, i64* %y, align 8, !tbaa !67</td></tr>
+<tr><td align="left">  %y85 = getelementptr inbounds %struct.cached_char_s, %struct.cached_char_s* %cc.0, i64 0, i32 14, i32 1</td></tr>
+<tr><td align="left">  %42 = load i64, i64* %y85, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  %sub86 = add i64 %41, 2048</td></tr>
+<tr><td align="left">  %add87 = sub i64 %sub86, %42</td></tr>
+<tr><td align="left">  %and88 = and i64 %add87, -4096</td></tr>
+<tr><td align="left">  %43 = load i32, i32* %fty, align 4, !tbaa !69</td></tr>
+<tr><td align="left">  %conv89 = sext i32 %43 to i64</td></tr>
+<tr><td align="left">  %shl90 = shl nsw i64 %conv89, 12</td></tr>
+<tr><td align="left">  %add91 = add nsw i64 %shl90, %and88</td></tr>
+<tr><td align="left">  %width = getelementptr inbounds %struct.cached_char_s, %struct.cached_char_s* %cc.0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %44 = load i16, i16* %width, align 8, !tbaa !70</td></tr>
+<tr><td align="left">  %conv92 = zext i16 %44 to i64</td></tr>
+<tr><td align="left">  %shl93 = shl nuw nsw i64 %conv92, 12</td></tr>
+<tr><td align="left">  %add94 = add nsw i64 %shl93, %add83</td></tr>
+<tr><td align="left">  %height = getelementptr inbounds %struct.cached_char_s, %struct.cached_char_s* %cc.0, i64 0, i32 2</td></tr>
+<tr><td align="left">  %45 = load i16, i16* %height, align 2, !tbaa !71</td></tr>
+<tr><td align="left">  %conv95 = zext i16 %45 to i64</td></tr>
+<tr><td align="left">  %shl96 = shl nuw nsw i64 %conv95, 12</td></tr>
+<tr><td align="left">  %add97 = add nsw i64 %shl96, %add91</td></tr>
+<tr><td align="left">  %46 = load %struct.gs_memory_s*, %struct.gs_memory_s** %memory, align 8, !tbaa !72</td></tr>
+<tr><td align="left">  call void @gx_path_init(%struct.gx_path_s* nonnull %box_path, %struct.gs_memory_s* %46) #10</td></tr>
+<tr><td align="left">  %call98 = call i32 @gx_path_add_rectangle(%struct.gx_path_s* nonnull %box_path, i64 %add83, i64 %add91, i64 %add94, i64 %add97) #10</td></tr>
+<tr><td align="left">  %cmp99 = icmp sgt i32 %call98, -1</td></tr>
+<tr><td align="left">  br i1 %cmp99, label %if.end105, label %if.end113</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb24 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end105:</td></tr>
+<tr><td align="left">  %47 = load %struct.gs_state_s*, %struct.gs_state_s** %show_gstate, align 8, !tbaa !73</td></tr>
+<tr><td align="left">  %path102 = getelementptr inbounds %struct.gs_state_s, %struct.gs_state_s* %47, i64 0, i32 28</td></tr>
+<tr><td align="left">  %48 = load %struct.gx_path_s*, %struct.gx_path_s** %path102, align 8, !tbaa !61</td></tr>
+<tr><td align="left">  %49 = load i32, i32* %charpath_flag, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %call104 = call i32 @gx_path_add_char_path(%struct.gx_path_s* %48, %struct.gx_path_s* nonnull %box_path, i32 %49) #10</td></tr>
+<tr><td align="left">  %cmp106 = icmp sgt i32 %call104, -1</td></tr>
+<tr><td align="left">  br i1 %cmp106, label %if.then108, label %if.end113</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb25 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then108:</td></tr>
+<tr><td align="left">  %50 = load %struct.gx_path_s*, %struct.gx_path_s** %path, align 8, !tbaa !61</td></tr>
+<tr><td align="left">  %51 = load i64, i64* %x, align 8, !tbaa !62</td></tr>
+<tr><td align="left">  %52 = load i64, i64* %y, align 8, !tbaa !67</td></tr>
+<tr><td align="left">  %call112 = call i32 @gx_path_add_point(%struct.gx_path_s* %50, i64 %51, i64 %52) #10</td></tr>
+<tr><td align="left">  br label %if.end113</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end113:</td></tr>
+<tr><td align="left">  %code.1 = phi i32 [ %call112, %if.then108 ], [ %call104, %if.end105 ], [ %call98, %if.end81 ]</td></tr>
+<tr><td align="left">  call void @gx_path_release(%struct.gx_path_s* nonnull %box_path) #10</td></tr>
+<tr><td align="left">  %cmp114 = icmp slt i32 %code.1, 0</td></tr>
+<tr><td align="left">  %not.cmp114 = xor i1 %cmp114, true</td></tr>
+<tr><td align="left">  %code.1.retval.1 = select i1 %cmp114, i32 %code.1, i32 %retval.1</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb27 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %cond355 = phi i1 [ false, %if.then77 ], [ %not.cmp114, %if.end113 ]</td></tr>
+<tr><td align="left">  %retval.2 = phi i32 [ %call78, %if.then77 ], [ %code.1.retval.1, %if.end113 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %16) #11</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 128, i8* nonnull %15) #11</td></tr>
+<tr><td align="left">  br i1 %cond355, label %if.end138, label %cleanup341</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb28 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else123:</td></tr>
+<tr><td align="left">  %53 = load i32, i32* %stringwidth_flag124, align 8, !tbaa !40</td></tr>
+<tr><td align="left">  %tobool125.not = icmp eq i32 %53, 0</td></tr>
+<tr><td align="left">  br i1 %tobool125.not, label %if.then126, label %if.end138</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb29 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then126:</td></tr>
+<tr><td align="left">  %call127 = call i32 @gx_image_cached_char(%struct.gs_show_enum_s* nonnull %penum, %struct.cached_char_s* nonnull %cc.0) #10</td></tr>
+<tr><td align="left">  %cmp128 = icmp slt i32 %call127, 0</td></tr>
+<tr><td align="left">  br i1 %cmp128, label %cleanup341, label %if.else131</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb30 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else131:</td></tr>
+<tr><td align="left">  %cmp132.not = icmp eq i32 %call127, 0</td></tr>
+<tr><td align="left">  br i1 %cmp132.not, label %if.end138, label %no_cache</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb31 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end138:</td></tr>
+<tr><td align="left">  %retval.3 = phi i32 [ %retval.2, %cleanup ], [ %retval.1, %if.else123 ], [ %retval.1, %if.else131 ]</td></tr>
+<tr><td align="left">  %54 = load i32, i32* %slow_show, align 8, !tbaa !74</td></tr>
+<tr><td align="left">  %tobool139.not = icmp eq i32 %54, 0</td></tr>
+<tr><td align="left">  br i1 %tobool139.not, label %if.else149, label %if.then140</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb32 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then140:</td></tr>
+<tr><td align="left">  %x141 = getelementptr inbounds %struct.cached_char_s, %struct.cached_char_s* %cc.0, i64 0, i32 13, i32 0</td></tr>
+<tr><td align="left">  %55 = load i64, i64* %x141, align 8, !tbaa !75</td></tr>
+<tr><td align="left">  store i64 %55, i64* %x143, align 8, !tbaa !76</td></tr>
+<tr><td align="left">  %y145 = getelementptr inbounds %struct.cached_char_s, %struct.cached_char_s* %cc.0, i64 0, i32 13, i32 1</td></tr>
+<tr><td align="left">  %56 = load i64, i64* %y145, align 8, !tbaa !77</td></tr>
+<tr><td align="left">  store i64 %56, i64* %y147, align 8, !tbaa !78</td></tr>
+<tr><td align="left">  %call148 = call fastcc i32 @show_move(%struct.gs_show_enum_s* nonnull %penum) #12</td></tr>
+<tr><td align="left">  br label %if.end152</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb33 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else149:</td></tr>
+<tr><td align="left">  %wxy150 = getelementptr inbounds %struct.cached_char_s, %struct.cached_char_s* %cc.0, i64 0, i32 13</td></tr>
+<tr><td align="left">  %call151 = call fastcc i32 @show_fast_move(%struct.gs_state_s* %0, %struct.gs_fixed_point_s* nonnull %wxy150) #12</td></tr>
+<tr><td align="left">  br label %if.end152</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb34 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end152:</td></tr>
+<tr><td align="left">  %code.2 = phi i32 [ %call148, %if.then140 ], [ %call151, %if.else149 ]</td></tr>
+<tr><td align="left">  %tobool153.not = icmp eq i32 %code.2, 0</td></tr>
+<tr><td align="left">  br i1 %tobool153.not, label %for.cond, label %if.then154, !llvm.loop !79</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb35 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then154:</td></tr>
+<tr><td align="left">  %57 = load i64, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  store i64 %57, i64* %current_glyph188, align 8, !tbaa !81</td></tr>
+<tr><td align="left">  br label %cleanup341</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb36 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else156:</td></tr>
+<tr><td align="left">  br i1 %cmp157, label %cond.true159, label %cond.false161</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb37 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.true159:</td></tr>
+<tr><td align="left">  %call160 = call i32 %3(%struct.gs_show_enum_s* nonnull %penum, i64* nonnull %chr, i64* nonnull %glyph) #10</td></tr>
+<tr><td align="left">  br label %cond.end163</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb38 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false161:</td></tr>
+<tr><td align="left">  store i64 2147483647, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  %call162 = call i32 %2(%struct.gs_show_enum_s* nonnull %penum, i64* nonnull %chr) #10</td></tr>
+<tr><td align="left">  br label %cond.end163</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end163:</td></tr>
+<tr><td align="left">  %cond164 = phi i32 [ %call160, %cond.true159 ], [ %call162, %cond.false161 ]</td></tr>
+<tr><td align="left">  switch i32 %cond164, label %cleanup341 [
+    i32 2, label %sw.bb166
+    i32 1, label %sw.bb168
+    i32 0, label %sw.epilog178
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb40 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb166:</td></tr>
+<tr><td align="left">  %call167 = call fastcc i32 @show_finish(%struct.gs_show_enum_s* nonnull %penum) #12</td></tr>
+<tr><td align="left">  br label %cleanup341</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb41 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb168:</td></tr>
+<tr><td align="left">  %58 = load i32, i32* %depth, align 8, !tbaa !49</td></tr>
+<tr><td align="left">  %idxprom173 = sext i32 %58 to i64</td></tr>
+<tr><td align="left">  %font175 = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 33, i32 1, i64 %idxprom173, i32 0</td></tr>
+<tr><td align="left">  %59 = load %struct.gs_font_s*, %struct.gs_font_s** %font175, align 8, !tbaa !53</td></tr>
+<tr><td align="left">  %call176 = call fastcc i32 @show_state_setup(%struct.gs_show_enum_s* nonnull %penum) #12</td></tr>
+<tr><td align="left">  br label %sw.epilog178</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb42 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.epilog178:</td></tr>
+<tr><td align="left">  %pfont.2 = phi %struct.gs_font_s* [ %cond, %cond.end163 ], [ %59, %sw.bb168 ]</td></tr>
+<tr><td align="left">  %60 = load i64, i64* %chr, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  store i64 %60, i64* %current_char179, align 8, !tbaa !56</td></tr>
+<tr><td align="left">  %61 = load i64, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  %cmp180.not = icmp eq i64 %61, 2147483647</td></tr>
+<tr><td align="left">  br i1 %cmp180.not, label %no_cache, label %if.then182</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb43 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then182:</td></tr>
+<tr><td align="left">  %62 = load i64 (%struct.gs_show_enum_s*, %struct.gs_font_s*, i64*)*, i64 (%struct.gs_show_enum_s*, %struct.gs_font_s*, i64*)** %encode_char183, align 8, !tbaa !57</td></tr>
+<tr><td align="left">  %call184 = call i64 %62(%struct.gs_show_enum_s* nonnull %penum, %struct.gs_font_s* %pfont.2, i64* nonnull %chr) #10</td></tr>
+<tr><td align="left">  store i64 %call184, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  %63 = load i64, i64* %chr, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  store i64 %63, i64* %current_char179, align 8, !tbaa !56</td></tr>
+<tr><td align="left">  br label %no_cache</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb44 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">no_cache:</td></tr>
+<tr><td align="left">  %cc.1 = phi %struct.cached_char_s* [ null, %if.else ], [ null, %lor.lhs.false65 ], [ %call72, %if.end69 ], [ null, %if.then182 ], [ null, %sw.epilog178 ], [ null, %lor.lhs.false ], [ null, %if.then51 ], [ null, %if.then57 ], [ null, %if.then38 ], [ null, %if.else131 ]</td></tr>
+<tr><td align="left">  %pair.4 = phi %struct.cached_fm_pair_s* [ %pair.3, %if.else ], [ %pair.3, %lor.lhs.false65 ], [ %pair.3, %if.end69 ], [ %pair.0, %if.then182 ], [ %pair.0, %sw.epilog178 ], [ %pair.3, %lor.lhs.false ], [ %pair.3, %if.then51 ], [ %pair.3, %if.then57 ], [ %pair.2, %if.then38 ], [ %pair.3, %if.else131 ]</td></tr>
+<tr><td align="left">  %pfont.3 = phi %struct.gs_font_s* [ %pfont.1, %if.else ], [ %pfont.1, %lor.lhs.false65 ], [ %pfont.1, %if.end69 ], [ %pfont.2, %if.then182 ], [ %pfont.2, %sw.epilog178 ], [ %pfont.1, %lor.lhs.false ], [ %pfont.1, %if.then51 ], [ %pfont.1, %if.then57 ], [ %pfont.1, %if.then38 ], [ %pfont.1, %if.else131 ]</td></tr>
+<tr><td align="left">  %retval.4 = phi i32 [ %retval.1, %if.else ], [ %retval.1, %lor.lhs.false65 ], [ %retval.1, %if.end69 ], [ %retval.0, %if.then182 ], [ %retval.0, %sw.epilog178 ], [ %retval.1, %lor.lhs.false ], [ %retval.1, %if.then51 ], [ %retval.1, %if.then57 ], [ %retval.1, %if.then38 ], [ %retval.1, %if.else131 ]</td></tr>
+<tr><td align="left">  %64 = load i64, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  store i64 %64, i64* %current_glyph188, align 8, !tbaa !81</td></tr>
+<tr><td align="left">  %call189 = call i32 @gs_gsave(%struct.gs_state_s* %0) #10</td></tr>
+<tr><td align="left">  %cmp190 = icmp slt i32 %call189, 0</td></tr>
+<tr><td align="left">  br i1 %cmp190, label %cleanup341, label %if.end193</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb45 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end193:</td></tr>
+<tr><td align="left">  store %struct.gs_font_s* %pfont.3, %struct.gs_font_s** %font, align 8, !tbaa !82</td></tr>
+<tr><td align="left">  store i8 0, i8* %in_cachedevice, align 4, !tbaa !83</td></tr>
+<tr><td align="left">  store i32 0, i32* %y195, align 4, !tbaa !84</td></tr>
+<tr><td align="left">  store i32 0, i32* %x197, align 4, !tbaa !85</td></tr>
+<tr><td align="left">  %65 = load i32, i32* %charpath_flag, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  store i32 %65, i32* %in_charpath, align 8, !tbaa !86</td></tr>
+<tr><td align="left">  %66 = load %struct.gs_state_s*, %struct.gs_state_s** %show_gstate199, align 8, !tbaa !87</td></tr>
+<tr><td align="left">  %cmp200 = icmp eq %struct.gs_state_s* %66, %0</td></tr>
+<tr><td align="left">  br i1 %cmp200, label %cond.true202, label %cond.end205</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb46 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.true202:</td></tr>
+<tr><td align="left">  %67 = load %struct.gs_state_s*, %struct.gs_state_s** %saved, align 8, !tbaa !88</td></tr>
+<tr><td align="left">  br label %cond.end205</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb47 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end205:</td></tr>
+<tr><td align="left">  %cond206 = phi %struct.gs_state_s* [ %67, %cond.true202 ], [ %66, %if.end193 ]</td></tr>
+<tr><td align="left">  store %struct.gs_state_s* %cond206, %struct.gs_state_s** %show_gstate, align 8, !tbaa !73</td></tr>
+<tr><td align="left">  store i32 0, i32* %stroke_adjust, align 8, !tbaa !89</td></tr>
+<tr><td align="left">  %68 = load %struct.gx_path_s*, %struct.gx_path_s** %path, align 8, !tbaa !61</td></tr>
+<tr><td align="left">  %state_flags = getelementptr inbounds %struct.gx_path_s, %struct.gx_path_s* %68, i64 0, i32 11</td></tr>
+<tr><td align="left">  %69 = load i8, i8* %state_flags, align 1, !tbaa !90</td></tr>
+<tr><td align="left">  %70 = and i8 %69, 1</td></tr>
+<tr><td align="left">  %cmp211.not = icmp eq i8 %70, 0</td></tr>
+<tr><td align="left">  br i1 %cmp211.not, label %rret, label %if.end225</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb48 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end225:</td></tr>
+<tr><td align="left">  %x215 = getelementptr inbounds %struct.gx_path_s, %struct.gx_path_s* %68, i64 0, i32 7, i32 0</td></tr>
+<tr><td align="left">  %71 = load i64, i64* %x215, align 8, !tbaa !93</td></tr>
+<tr><td align="left">  %y218 = getelementptr inbounds %struct.gx_path_s, %struct.gx_path_s* %68, i64 0, i32 7, i32 1</td></tr>
+<tr><td align="left">  %72 = load i64, i64* %y218, align 8, !tbaa !94</td></tr>
+<tr><td align="left">  store i64 %71, i64* %x227, align 8, !tbaa !95</td></tr>
+<tr><td align="left">  store i64 %72, i64* %y230, align 8, !tbaa !96</td></tr>
+<tr><td align="left">  %call231 = call i32 @gs_currentcharmatrix(%struct.gs_state_s* nonnull %0, %struct.gs_matrix_s* null, i32 1) #10</td></tr>
+<tr><td align="left">  %73 = load i32, i32* %txy_fixed_valid, align 8, !tbaa !97</td></tr>
+<tr><td align="left">  %tobool232.not = icmp eq i32 %73, 0</td></tr>
+<tr><td align="left">  br i1 %tobool232.not, label %if.else250, label %land.lhs.true233</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb49 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true233:</td></tr>
+<tr><td align="left">  %74 = load i32, i32* %txy_fixed_valid234, align 8, !tbaa !98</td></tr>
+<tr><td align="left">  %tobool235.not = icmp eq i32 %74, 0</td></tr>
+<tr><td align="left">  br i1 %tobool235.not, label %if.else250, label %if.then236</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb50 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then236:</td></tr>
+<tr><td align="left">  %75 = load i64, i64* %tx_fixed, align 8, !tbaa !99</td></tr>
+<tr><td align="left">  %76 = load i64, i64* %ty_fixed, align 8, !tbaa !100</td></tr>
+<tr><td align="left">  %call239 = call i32 @gs_settocharmatrix(%struct.gs_state_s* nonnull %0) #10</td></tr>
+<tr><td align="left">  %77 = load i64, i64* %tx_fixed, align 8, !tbaa !99</td></tr>
+<tr><td align="left">  %sub242 = sub i64 %71, %75</td></tr>
+<tr><td align="left">  %add244 = add i64 %sub242, %77</td></tr>
+<tr><td align="left">  %78 = load i64, i64* %ty_fixed, align 8, !tbaa !100</td></tr>
+<tr><td align="left">  %sub247 = sub i64 %72, %76</td></tr>
+<tr><td align="left">  %add249 = add i64 %sub247, %78</td></tr>
+<tr><td align="left">  br label %if.end296</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb51 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else250:</td></tr>
+<tr><td align="left">  %79 = load float, float* %tx253, align 8, !tbaa !101</td></tr>
+<tr><td align="left">  %conv254 = fpext float %79 to double</td></tr>
+<tr><td align="left">  %80 = load float, float* %ty257, align 4, !tbaa !102</td></tr>
+<tr><td align="left">  %conv258 = fpext float %80 to double</td></tr>
+<tr><td align="left">  %call259 = call i32 @gs_settocharmatrix(%struct.gs_state_s* nonnull %0) #10</td></tr>
+<tr><td align="left">  %conv261 = sitofp i64 %71 to double</td></tr>
+<tr><td align="left">  %81 = load float, float* %tx253, align 8, !tbaa !101</td></tr>
+<tr><td align="left">  %conv264 = fpext float %81 to double</td></tr>
+<tr><td align="left">  %sub265 = fsub double %conv264, %conv254</td></tr>
+<tr><td align="left">  %82 = call double @llvm.fmuladd.f64(double %conv261, double 0x3F30000000000000, double %sub265)</td></tr>
+<tr><td align="left">  %conv267 = sitofp i64 %72 to double</td></tr>
+<tr><td align="left">  %83 = load float, float* %ty257, align 4, !tbaa !102</td></tr>
+<tr><td align="left">  %conv270 = fpext float %83 to double</td></tr>
+<tr><td align="left">  %sub271 = fsub double %conv270, %conv258</td></tr>
+<tr><td align="left">  %84 = call double @llvm.fmuladd.f64(double %conv267, double 0x3F30000000000000, double %sub271)</td></tr>
+<tr><td align="left">  %cmp272 = fcmp oge double %82, 0xC320000000000000</td></tr>
+<tr><td align="left">  %cmp275 = fcmp olt double %82, 0x4320000000000000</td></tr>
+<tr><td align="left">  %or.cond = and i1 %cmp272, %cmp275</td></tr>
+<tr><td align="left">  %cmp278 = fcmp oge double %84, 0xC320000000000000</td></tr>
+<tr><td align="left">  %or.cond356 = select i1 %or.cond, i1 %cmp278, i1 false</td></tr>
+<tr><td align="left">  %cmp281 = fcmp olt double %84, 0x4320000000000000</td></tr>
+<tr><td align="left">  %or.cond357 = select i1 %or.cond356, i1 %cmp281, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond357, label %cleanup290.thread, label %rret</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb52 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup290.thread:</td></tr>
+<tr><td align="left">  %mul = fmul double %82, 4.096000e+03</td></tr>
+<tr><td align="left">  %conv285 = fptosi double %mul to i64</td></tr>
+<tr><td align="left">  %mul287 = fmul double %84, 4.096000e+03</td></tr>
+<tr><td align="left">  %conv288 = fptosi double %mul287 to i64</td></tr>
+<tr><td align="left">  br label %if.end296</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb53 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end296:</td></tr>
+<tr><td align="left">  %cpt.sroa.0.3 = phi i64 [ %add244, %if.then236 ], [ %conv285, %cleanup290.thread ]</td></tr>
+<tr><td align="left">  %cpt.sroa.9.3 = phi i64 [ %add249, %if.then236 ], [ %conv288, %cleanup290.thread ]</td></tr>
+<tr><td align="left">  %call297 = call i32 @gs_newpath(%struct.gs_state_s* nonnull %0) #10</td></tr>
+<tr><td align="left">  %85 = load i32, i32* %charpath_flag, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %cmp.i = icmp eq i32 %85, 0</td></tr>
+<tr><td align="left">  %add.i = add nsw i64 %cpt.sroa.0.3, 2048</td></tr>
+<tr><td align="left">  %and.i = and i64 %add.i, -4096</td></tr>
+<tr><td align="left">  %add1.i = add nsw i64 %cpt.sroa.9.3, 2048</td></tr>
+<tr><td align="left">  %and2.i = and i64 %add1.i, -4096</td></tr>
+<tr><td align="left">  %cpt_y.addr.0.i = select i1 %cmp.i, i64 %and2.i, i64 %cpt.sroa.9.3</td></tr>
+<tr><td align="left">  %cpt_x.addr.0.i = select i1 %cmp.i, i64 %and.i, i64 %cpt.sroa.0.3</td></tr>
+<tr><td align="left">  %call.i = call i32 @gx_translate_to_fixed(%struct.gs_state_s* nonnull %0, i64 %cpt_x.addr.0.i, i64 %cpt_y.addr.0.i) #10</td></tr>
+<tr><td align="left">  %cmp302 = icmp slt i32 %call.i, 0</td></tr>
+<tr><td align="left">  br i1 %cmp302, label %rret, label %cleanup.cont309</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb54 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup.cont309:</td></tr>
+<tr><td align="left">  store i32 0, i32* %width_status, align 8, !tbaa !103</td></tr>
+<tr><td align="left">  store i32 (%struct.gs_show_enum_s*)* @continue_show_update, i32 (%struct.gs_show_enum_s*)** %continue_proc, align 8, !tbaa !104</td></tr>
+<tr><td align="left">  store %struct.cached_char_s* %cc.1, %struct.cached_char_s** %cc310, align 8, !tbaa !105</td></tr>
+<tr><td align="left">  %build_char = getelementptr inbounds %struct.gs_font_s, %struct.gs_font_s* %pfont.3, i64 0, i32 15, i32 3</td></tr>
+<tr><td align="left">  %build_char312 = bitcast {}** %build_char to i32 (%struct.gs_show_enum_s*, %struct.gs_state_s*, %struct.gs_font_s*, i64, i64)**</td></tr>
+<tr><td align="left">  %86 = load i32 (%struct.gs_show_enum_s*, %struct.gs_state_s*, %struct.gs_font_s*, i64, i64)*, i32 (%struct.gs_show_enum_s*, %struct.gs_state_s*, %struct.gs_font_s*, i64, i64)** %build_char312, align 8, !tbaa !106</td></tr>
+<tr><td align="left">  %87 = load i64, i64* %chr, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  %88 = load i64, i64* %glyph, align 8, !tbaa !52</td></tr>
+<tr><td align="left">  %call313 = call i32 %86(%struct.gs_show_enum_s* nonnull %penum, %struct.gs_state_s* nonnull %0, %struct.gs_font_s* %pfont.3, i64 %87, i64 %88) #10</td></tr>
+<tr><td align="left">  %cmp314 = icmp slt i32 %call313, 0</td></tr>
+<tr><td align="left">  br i1 %cmp314, label %rret, label %if.end317</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb55 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end317:</td></tr>
+<tr><td align="left">  %cmp318 = icmp eq i32 %call313, 0</td></tr>
+<tr><td align="left">  br i1 %cmp318, label %if.then320, label %if.end330</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb56 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then320:</td></tr>
+<tr><td align="left">  %call321 = call fastcc i32 @show_update(%struct.gs_show_enum_s* nonnull %penum) #12</td></tr>
+<tr><td align="left">  %cmp322 = icmp slt i32 %call321, 0</td></tr>
+<tr><td align="left">  br i1 %cmp322, label %rret, label %if.end325</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb57 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end325:</td></tr>
+<tr><td align="left">  %call326 = call fastcc i32 @show_move(%struct.gs_show_enum_s* nonnull %penum) #12</td></tr>
+<tr><td align="left">  %tobool327.not = icmp eq i32 %call326, 0</td></tr>
+<tr><td align="left">  br i1 %tobool327.not, label %more, label %cleanup341</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb58 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end330:</td></tr>
+<tr><td align="left">  %dev_cache = getelementptr inbounds %struct.gs_show_enum_s, %struct.gs_show_enum_s* %penum, i64 0, i32 21</td></tr>
+<tr><td align="left">  %89 = load %struct.gx_device_memory_s*, %struct.gx_device_memory_s** %dev_cache, align 8, !tbaa !107</td></tr>
+<tr><td align="left">  %cmp331 = icmp eq %struct.gx_device_memory_s* %89, null</td></tr>
+<tr><td align="left">  br i1 %cmp331, label %if.then333, label %cleanup341</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb59 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then333:</td></tr>
+<tr><td align="left">  %call334 = call fastcc i32 @show_cache_setup(%struct.gs_show_enum_s* nonnull %penum) #12</td></tr>
+<tr><td align="left">  %cmp335 = icmp slt i32 %call334, 0</td></tr>
+<tr><td align="left">  br i1 %cmp335, label %rret, label %cleanup341</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb60 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">rret:</td></tr>
+<tr><td align="left">  %code.5 = phi i32 [ %call334, %if.then333 ], [ %call.i, %if.end296 ], [ -14, %cond.end205 ], [ -13, %if.else250 ], [ %call313, %cleanup.cont309 ], [ %call321, %if.then320 ]</td></tr>
+<tr><td align="left">  %call340 = call i32 @gs_grestore(%struct.gs_state_s* nonnull %0) #10</td></tr>
+<tr><td align="left">  br label %cleanup341</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb61 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup341:</td></tr>
+<tr><td align="left">  %retval.5 = phi i32 [ %code.5, %rret ], [ %code.2, %if.then154 ], [ %call26, %sw.bb ], [ %call167, %sw.bb166 ], [ %call8, %if.then ], [ 1, %if.then333 ], [ 1, %if.end330 ], [ %call127, %if.then126 ], [ %cond25, %cond.end24 ], [ %retval.2, %cleanup ], [ %call326, %if.end325 ], [ %call189, %no_cache ], [ %cond164, %cond.end163 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %5) #11</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %4) #11</td></tr>
+<tr><td align="left">  ret i32 %retval.5</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> f_bb3:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> f_bb3:f
+f_bb2:fT -> f_bb61:f
+f_bb2:fF -> f_bb3:f
+f_bb3:f -> f_bb4:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb36:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> f_bb7:f
+f_bb6:f -> f_bb8:f
+f_bb7:f -> f_bb8:f
+f_bb8:f -> f_bb61:f
+f_bb8:f -> f_bb9:f
+f_bb8:f -> f_bb10:f
+f_bb8:f -> f_bb11:f
+f_bb9:f -> f_bb61:f
+f_bb10:f -> f_bb11:f
+f_bb11:fT -> f_bb12:f
+f_bb11:fF -> f_bb13:f
+f_bb12:fT -> f_bb44:f
+f_bb12:fF -> f_bb13:f
+f_bb13:fT -> f_bb14:f
+f_bb13:fF -> f_bb15:f
+f_bb14:f -> f_bb15:f
+f_bb15:fT -> f_bb16:f
+f_bb15:fF -> f_bb21:f
+f_bb16:fT -> f_bb44:f
+f_bb16:fF -> f_bb17:f
+f_bb17:fT -> f_bb44:f
+f_bb17:fF -> f_bb18:f
+f_bb18:fT -> f_bb19:f
+f_bb18:fF -> m_bb0:f2
+m_bb0:f2T -> f_bb44:f
+m_bb0:f2F -> f_bb21:f
+f_bb19:fT -> f_bb20:f
+f_bb19:fF -> f_bb44:f
+f_bb20:fT -> m_bb0:f1
+f_bb20:fF -> f_bb44:f
+m_bb0:f1 -> f_bb44:f
+f_bb21:fT -> f_bb28:f
+f_bb21:fF -> f_bb22:f
+f_bb22:fT -> f_bb27:f
+f_bb22:fF -> f_bb23:f
+f_bb23:fT -> f_bb24:f
+f_bb23:fF -> f_bb26:f
+f_bb24:fT -> f_bb25:f
+f_bb24:fF -> f_bb26:f
+f_bb25:f -> f_bb26:f
+f_bb26:f -> f_bb27:f
+f_bb27:fT -> f_bb31:f
+f_bb27:fF -> f_bb61:f
+f_bb28:fT -> f_bb29:f
+f_bb28:fF -> f_bb31:f
+f_bb29:fT -> f_bb61:f
+f_bb29:fF -> f_bb30:f
+f_bb30:fT -> f_bb31:f
+f_bb30:fF -> f_bb44:f
+f_bb31:fT -> f_bb33:f
+f_bb31:fF -> f_bb32:f
+f_bb32:f -> f_bb34:f
+f_bb33:f -> f_bb34:f
+f_bb34:fT -> f_bb5:f
+f_bb34:fF -> f_bb35:f
+f_bb35:f -> f_bb61:f
+f_bb36:fT -> f_bb37:f
+f_bb36:fF -> f_bb38:f
+f_bb37:f -> f_bb39:f
+f_bb38:f -> f_bb39:f
+f_bb39:f -> f_bb61:f
+f_bb39:f -> f_bb40:f
+f_bb39:f -> f_bb41:f
+f_bb39:f -> f_bb42:f
+f_bb40:f -> f_bb61:f
+f_bb41:f -> f_bb42:f
+f_bb42:fT -> f_bb44:f
+f_bb42:fF -> f_bb43:f
+f_bb43:f -> f_bb44:f
+f_bb44:fT -> f_bb61:f
+f_bb44:fF -> f_bb45:f
+f_bb45:fT -> f_bb46:f
+f_bb45:fF -> f_bb47:f
+f_bb46:f -> f_bb47:f
+f_bb47:fT -> f_bb60:f
+f_bb47:fF -> f_bb48:f
+f_bb48:fT -> f_bb51:f
+f_bb48:fF -> f_bb49:f
+f_bb49:fT -> f_bb51:f
+f_bb49:fF -> f_bb50:f
+f_bb50:f -> f_bb53:f
+f_bb51:fT -> f_bb52:f
+f_bb51:fF -> f_bb60:f
+f_bb52:f -> f_bb53:f
+f_bb53:fT -> f_bb60:f
+f_bb53:fF -> f_bb54:f
+f_bb54:fT -> f_bb60:f
+f_bb54:fF -> f_bb55:f
+f_bb55:fT -> f_bb56:f
+f_bb55:fF -> f_bb58:f
+f_bb56:fT -> f_bb60:f
+f_bb56:fF -> f_bb57:f
+f_bb57:fT -> f_bb4:f
+f_bb57:fF -> f_bb61:f
+f_bb58:fT -> f_bb59:f
+f_bb58:fF -> f_bb61:f
+f_bb59:fT -> f_bb60:f
+f_bb59:fF -> f_bb61:f
+f_bb60:f -> f_bb61:f
+}
+

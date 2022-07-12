@@ -1,0 +1,58 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %0 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !3</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call1 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %0, i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.20, i64 0, i64 0), i8* %filename) #15</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @exit(i32 0) #16</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then8:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %3 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !3</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call9 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %3, i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.24, i64 0, i64 0), i8* %filename) #15</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @exit(i32 0) #16</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %call = tail call %struct._IO_FILE* @fopen(i8* %filename, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.19, i64 0, i64 0)) #14</td></tr>
+<tr><td align="left">  %cmp = icmp eq %struct._IO_FILE* %call, null</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp, label %if.then, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %1 = tail call i64 @fwrite(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.21, i64 0, i64 0), i64 3, i64 1, %struct._IO_FILE* nonnull %call)</td></tr>
+<tr><td align="left">  %call3 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* nonnull %call, i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.22, i64 0, i64 0), i32 %x_size, i32 %y_size) #14</td></tr>
+<tr><td align="left">  %2 = tail call i64 @fwrite(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.23, i64 0, i64 0), i64 4, i64 1, %struct._IO_FILE* nonnull %call)</td></tr>
+<tr><td align="left">  %mul = mul nsw i32 %y_size, %x_size</td></tr>
+<tr><td align="left">  %conv = sext i32 %mul to i64</td></tr>
+<tr><td align="left">  %call5 = tail call i64 @fwrite(i8* %in, i64 %conv, i64 1, %struct._IO_FILE* nonnull %call) #14</td></tr>
+<tr><td align="left">  %cmp6.not = icmp eq i64 %call5, 1</td></tr>
+<tr><td align="left">  br i1 %cmp6.not, label %if.end10, label %if.then8</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end10:</td></tr>
+<tr><td align="left">  %call11 = tail call i32 @fclose(%struct._IO_FILE* nonnull %call) #14</td></tr>
+<tr><td align="left">  ret i32 undef</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> m_bb0:f1
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> m_bb0:f2
+}
+

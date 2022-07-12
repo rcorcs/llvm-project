@@ -1,0 +1,289 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.5, i64 0, i64 0), i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.1, i64 0, i64 0), i32 1115, i8* getelementptr inbounds ([28 x i8], [28 x i8]* @__PRETTY_FUNCTION__.LogLuvInitState, i64 0, i64 0)) #8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else4:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([41 x i8], [41 x i8]* @.str.6, i64 0, i64 0), i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.1, i64 0, i64 0), i32 1116, i8* getelementptr inbounds ([28 x i8], [28 x i8]* @__PRETTY_FUNCTION__.LogLuvInitState, i64 0, i64 0)) #8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %tif_data = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 37</td></tr>
+<tr><td align="left">  %0 = bitcast i8** %tif_data to %struct.logLuvState**</td></tr>
+<tr><td align="left">  %1 = load %struct.logLuvState*, %struct.logLuvState** %0, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq %struct.logLuvState* %1, null</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp.not, label %if.else, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %td_photometric = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 6, i32 11</td></tr>
+<tr><td align="left">  %2 = load i16, i16* %td_photometric, align 2, !tbaa !14</td></tr>
+<tr><td align="left">  %cmp1 = icmp eq i16 %2, -32691</td></tr>
+<tr><td align="left">  br i1 %cmp1, label %if.end5, label %if.else4</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end5:</td></tr>
+<tr><td align="left">  %td_planarconfig = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 6, i32 24</td></tr>
+<tr><td align="left">  %3 = load i16, i16* %td_planarconfig, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp7.not = icmp eq i16 %3, 1</td></tr>
+<tr><td align="left">  br i1 %cmp7.not, label %if.end10, label %if.then9</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then9:</td></tr>
+<tr><td align="left">  tail call void (i8*, i8*, ...) @TIFFError(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @LogLuvInitState.module, i64 0, i64 0), i8* getelementptr inbounds ([53 x i8], [53 x i8]* @.str.7, i64 0, i64 0)) #9</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end10:</td></tr>
+<tr><td align="left">  %user_datafmt = getelementptr inbounds %struct.logLuvState, %struct.logLuvState* %1, i64 0, i32 0</td></tr>
+<tr><td align="left">  %4 = load i32, i32* %user_datafmt, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  %cmp11 = icmp eq i32 %4, -1</td></tr>
+<tr><td align="left">  br i1 %cmp11, label %if.then13, label %if.end15</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then13:</td></tr>
+<tr><td align="left">  %td_bitspersample.i = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 6, i32 8</td></tr>
+<tr><td align="left">  %5 = load i16, i16* %td_bitspersample.i, align 4, !tbaa !18</td></tr>
+<tr><td align="left">  %conv.i = zext i16 %5 to i32</td></tr>
+<tr><td align="left">  %shl.i = shl nuw nsw i32 %conv.i, 3</td></tr>
+<tr><td align="left">  %td_sampleformat.i = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 6, i32 9</td></tr>
+<tr><td align="left">  %6 = load i16, i16* %td_sampleformat.i, align 2, !tbaa !19</td></tr>
+<tr><td align="left">  %conv1.i = zext i16 %6 to i32</td></tr>
+<tr><td align="left">  %or.i = or i32 %shl.i, %conv1.i</td></tr>
+<tr><td align="left">  switch i32 %or.i, label %sw.default.i [
+    i32 259, label %sw.epilog.i
+    i32 260, label %sw.bb2.i
+    i32 257, label %sw.bb2.i
+    i32 258, label %sw.bb2.i
+    i32 132, label %sw.bb3.i
+    i32 130, label %sw.bb3.i
+    i32 129, label %sw.bb3.i
+    i32 68, label %sw.bb4.i
+    i32 65, label %sw.bb4.i
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb2.i:</td></tr>
+<tr><td align="left">  br label %sw.epilog.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb3.i:</td></tr>
+<tr><td align="left">  br label %sw.epilog.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb4.i:</td></tr>
+<tr><td align="left">  br label %sw.epilog.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.default.i:</td></tr>
+<tr><td align="left">  br label %sw.epilog.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.epilog.i:</td></tr>
+<tr><td align="left">  %cmp9.i = phi i32 [ -1, %sw.default.i ], [ 3, %sw.bb4.i ], [ 1, %sw.bb3.i ], [ -1, %sw.bb2.i ], [ 0, %if.then13 ]</td></tr>
+<tr><td align="left">  %cmp.not.i = phi i32 [ -1, %sw.default.i ], [ -1, %sw.bb4.i ], [ -1, %sw.bb3.i ], [ 2, %sw.bb2.i ], [ -1, %if.then13 ]</td></tr>
+<tr><td align="left">  %td_samplesperpixel.i = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 6, i32 15</td></tr>
+<tr><td align="left">  %7 = load i16, i16* %td_samplesperpixel.i, align 2, !tbaa !20</td></tr>
+<tr><td align="left">  switch i16 %7, label %sw.default13.i [
+    i16 1, label %LogLuvGuessDataFmt.exit
+    i16 3, label %sw.bb8.i
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb8.i:</td></tr>
+<tr><td align="left">  br label %LogLuvGuessDataFmt.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.default13.i:</td></tr>
+<tr><td align="left">  br label %LogLuvGuessDataFmt.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">LogLuvGuessDataFmt.exit:</td></tr>
+<tr><td align="left">  %guess.1.i = phi i32 [ -1, %sw.default13.i ], [ %cmp9.i, %sw.bb8.i ], [ %cmp.not.i, %sw.epilog.i ]</td></tr>
+<tr><td align="left">  store i32 %guess.1.i, i32* %user_datafmt, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  br label %if.end15</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end15:</td></tr>
+<tr><td align="left">  %8 = phi i32 [ %guess.1.i, %LogLuvGuessDataFmt.exit ], [ %4, %if.end10 ]</td></tr>
+<tr><td align="left">  switch i32 %8, label %sw.default [
+    i32 0, label %sw.epilog
+    i32 1, label %sw.bb17
+    i32 2, label %sw.bb19
+    i32 3, label %sw.bb21
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb17:</td></tr>
+<tr><td align="left">  br label %sw.epilog</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb19:</td></tr>
+<tr><td align="left">  br label %sw.epilog</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb21:</td></tr>
+<tr><td align="left">  br label %sw.epilog</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.default:</td></tr>
+<tr><td align="left">  %tif_name = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 0</td></tr>
+<tr><td align="left">  %9 = load i8*, i8** %tif_name, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  tail call void (i8*, i8*, ...) @TIFFError(i8* %9, i8* getelementptr inbounds ([53 x i8], [53 x i8]* @.str.8, i64 0, i64 0)) #9</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.epilog:</td></tr>
+<tr><td align="left">  %.sink = phi i32 [ 3, %sw.bb21 ], [ 4, %sw.bb19 ], [ 6, %sw.bb17 ], [ 12, %if.end15 ]</td></tr>
+<tr><td align="left">  %pixel_size22 = getelementptr inbounds %struct.logLuvState, %struct.logLuvState* %1, i64 0, i32 1</td></tr>
+<tr><td align="left">  store i32 %.sink, i32* %pixel_size22, align 4, !tbaa !22</td></tr>
+<tr><td align="left">  %td_imagewidth = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 6, i32 1</td></tr>
+<tr><td align="left">  %10 = load i32, i32* %td_imagewidth, align 8, !tbaa !23</td></tr>
+<tr><td align="left">  %td_rowsperstrip = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 6, i32 16</td></tr>
+<tr><td align="left">  %11 = load i32, i32* %td_rowsperstrip, align 4, !tbaa !24</td></tr>
+<tr><td align="left">  %mul = mul i32 %11, %10</td></tr>
+<tr><td align="left">  %conv23 = trunc i32 %mul to i16</td></tr>
+<tr><td align="left">  %tbuflen = getelementptr inbounds %struct.logLuvState, %struct.logLuvState* %1, i64 0, i32 3</td></tr>
+<tr><td align="left">  store i16 %conv23, i16* %tbuflen, align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %sext = shl i32 %mul, 16</td></tr>
+<tr><td align="left">  %mul26 = ashr exact i32 %sext, 14</td></tr>
+<tr><td align="left">  %call28 = tail call i8* @_TIFFmalloc(i32 %mul26) #9</td></tr>
+<tr><td align="left">  %tbuf = getelementptr inbounds %struct.logLuvState, %struct.logLuvState* %1, i64 0, i32 2</td></tr>
+<tr><td align="left">  %12 = bitcast i8*** %tbuf to i8**</td></tr>
+<tr><td align="left">  store i8* %call28, i8** %12, align 8, !tbaa !26</td></tr>
+<tr><td align="left">  %cmp30 = icmp eq i8* %call28, null</td></tr>
+<tr><td align="left">  br i1 %cmp30, label %if.then32, label %cleanup</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then32:</td></tr>
+<tr><td align="left">  %tif_name33 = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 0</td></tr>
+<tr><td align="left">  %13 = load i8*, i8** %tif_name33, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  tail call void (i8*, i8*, ...) @TIFFError(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @LogLuvInitState.module, i64 0, i64 0), i8* getelementptr inbounds ([43 x i8], [43 x i8]* @.str.9, i64 0, i64 0), i8* %13) #9</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb21 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ 0, %if.then9 ], [ 0, %sw.default ], [ 0, %if.then32 ], [ 1, %sw.epilog ]</td></tr>
+<tr><td align="left">  ret i32 %retval.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> m_bb0:f1
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> m_bb0:f2
+f_bb2:fT -> f_bb4:f
+f_bb2:fF -> f_bb3:f
+f_bb3:f -> f_bb21:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb14:f
+f_bb5:f -> f_bb9:f
+f_bb5:f -> f_bb10:f
+f_bb5:f -> f_bb6:f
+f_bb5:f -> f_bb6:f
+f_bb5:f -> f_bb6:f
+f_bb5:f -> f_bb7:f
+f_bb5:f -> f_bb7:f
+f_bb5:f -> f_bb7:f
+f_bb5:f -> f_bb8:f
+f_bb5:f -> f_bb8:f
+f_bb6:f -> f_bb10:f
+f_bb7:f -> f_bb10:f
+f_bb8:f -> f_bb10:f
+f_bb9:f -> f_bb10:f
+f_bb10:f -> f_bb12:f
+f_bb10:f -> f_bb13:f
+f_bb10:f -> f_bb11:f
+f_bb11:f -> f_bb13:f
+f_bb12:f -> f_bb13:f
+f_bb13:f -> f_bb14:f
+f_bb14:f -> f_bb18:f
+f_bb14:f -> f_bb19:f
+f_bb14:f -> f_bb15:f
+f_bb14:f -> f_bb16:f
+f_bb14:f -> f_bb17:f
+f_bb15:f -> f_bb19:f
+f_bb16:f -> f_bb19:f
+f_bb17:f -> f_bb19:f
+f_bb18:f -> f_bb21:f
+f_bb19:fT -> f_bb20:f
+f_bb19:fF -> f_bb21:f
+f_bb20:f -> f_bb21:f
+}
+

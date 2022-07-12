@@ -1,0 +1,769 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then204:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp207.not = icmp eq i32 %l_shift.2, %sub</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp207.not, label %if.end211, label %if.then209</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then236:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp239.not = icmp eq i32 %l_shift.0, %sub</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp239.not, label %if.end243, label %if.then241</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+m_bb1 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.end211:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %58 = load i32 (%struct.gx_device_s*, i8*, i32, i32, i64, i32, i32, i32, i32)*, i32 (%struct.gx_device_s*, i8*, i32, i32, i64, i32, i32, i32, i32)** %copy_color, align 8, !tbaa !74</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %59 = load i8*, i8** %line115, align 8, !tbaa !34</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub213 = sub nsw i32 %l_xprev.0, %33</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub214 = sub nsw i32 %x113.0, %l_xprev.0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call215 = call i32 %58(%struct.gx_device_s* %dev, i8* %59, i32 %sub213, i32 %shl, i64 0, i32 %l_xprev.0, i32 %add112, i32 %sub214, i32 1) #7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp216 = icmp slt i32 %call215, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp216, label %cleanup281, label %if.end220</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.end243:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %62 = load i32 (%struct.gx_device_s*, i8*, i32, i32, i64, i32, i32, i32, i32)*, i32 (%struct.gx_device_s*, i8*, i32, i32, i64, i32, i32, i32, i32)** %copy_color, align 8, !tbaa !74</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %63 = load i8*, i8** %line115, align 8, !tbaa !34</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub247 = sub nsw i32 %l_xprev.0, %33</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub248 = sub nsw i32 %x113.0, %l_xprev.0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call249 = call i32 %62(%struct.gx_device_s* %dev, i8* %63, i32 %sub247, i32 %shl, i64 0, i32 %l_xprev.0, i32 %add112, i32 %sub248, i32 1) #7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp250 = icmp slt i32 %call249, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp250, label %cleanup281, label %if.end257</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+m_bb2 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then209:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %conv210 = trunc i32 %l_bits.2 to i8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i8 %conv210, i8* %l_dst.5, align 1, !tbaa !37</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end211</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then241:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %conv242 = trunc i32 %l_bits.0 to i8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i8 %conv242, i8* %l_dst.0, align 1, !tbaa !37</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end243</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %r = alloca %struct.stream_cursor_read_s, align 8</td></tr>
+<tr><td align="left">  %w = alloca %struct.stream_cursor_write_s, align 8</td></tr>
+<tr><td align="left">  %cc = alloca %struct.gs_client_color_s, align 8</td></tr>
+<tr><td align="left">  %devc = alloca %struct.gx_device_color_s, align 8</td></tr>
+<tr><td align="left">  %scaler = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 36</td></tr>
+<tr><td align="left">  %0 = load %struct.stream_IScale_state_s*, %struct.stream_IScale_state_s** %scaler, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %pis1 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 14</td></tr>
+<tr><td align="left">  %1 = load %struct.gs_imager_state_s*, %struct.gs_imager_state_s** %pis1, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %pcs2 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 15</td></tr>
+<tr><td align="left">  %2 = load %struct.gs_color_space_s*, %struct.gs_color_space_s** %pcs2, align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %log_op = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 30</td></tr>
+<tr><td align="left">  %3 = load i32, i32* %log_op, align 8, !tbaa !23</td></tr>
+<tr><td align="left">  %Colors = getelementptr inbounds %struct.stream_IScale_state_s, %struct.stream_IScale_state_s* %0, i64 0, i32 3</td></tr>
+<tr><td align="left">  %4 = load i32, i32* %Colors, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %5 = bitcast %struct.stream_cursor_read_s* %r to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 24, i8* nonnull %5) #6</td></tr>
+<tr><td align="left">  %6 = bitcast %struct.stream_cursor_write_s* %w to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 24, i8* nonnull %6) #6</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq i32 %h, 0</td></tr>
+<tr><td align="left">  br i1 %cmp.not, label %if.else96, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %WidthIn = getelementptr inbounds %struct.stream_IScale_state_s, %struct.stream_IScale_state_s* %0, i64 0, i32 6</td></tr>
+<tr><td align="left">  %7 = load i32, i32* %WidthIn, align 4, !tbaa !28</td></tr>
+<tr><td align="left">  %sizeofPixelIn = getelementptr inbounds %struct.stream_IScale_state_s, %struct.stream_IScale_state_s* %0, i64 0, i32 12</td></tr>
+<tr><td align="left">  %8 = load i32, i32* %sizeofPixelIn, align 4, !tbaa !29</td></tr>
+<tr><td align="left">  %mul = mul i32 %8, %4</td></tr>
+<tr><td align="left">  %mul3 = mul i32 %mul, %7</td></tr>
+<tr><td align="left">  %mul6 = mul i32 %mul, %data_x</td></tr>
+<tr><td align="left">  %idx.ext = sext i32 %mul6 to i64</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds i8, i8* %buffer, i64 %idx.ext</td></tr>
+<tr><td align="left">  %cmp8 = icmp eq i32 %8, 1</td></tr>
+<tr><td align="left">  br i1 %cmp8, label %if.then9, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then9:</td></tr>
+<tr><td align="left">  %add.ptr10 = getelementptr inbounds i8, i8* %add.ptr, i64 -1</td></tr>
+<tr><td align="left">  %ptr = getelementptr inbounds %struct.stream_cursor_read_s, %struct.stream_cursor_read_s* %r, i64 0, i32 0</td></tr>
+<tr><td align="left">  store i8* %add.ptr10, i8** %ptr, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  br label %if.end92</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %bps11 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 0</td></tr>
+<tr><td align="left">  %9 = load i8, i8* %bps11, align 8, !tbaa !32</td></tr>
+<tr><td align="left">  %spp = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 3</td></tr>
+<tr><td align="left">  %10 = load i8, i8* %spp, align 1, !tbaa !33</td></tr>
+<tr><td align="left">  %line = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 20</td></tr>
+<tr><td align="left">  %11 = load i8*, i8** %line, align 8, !tbaa !34</td></tr>
+<tr><td align="left">  %12 = bitcast i8* %11 to i16*</td></tr>
+<tr><td align="left">  %13 = bitcast %struct.gs_client_color_s* %cc to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 24, i8* nonnull %13) #6</td></tr>
+<tr><td align="left">  %add.ptr13 = getelementptr inbounds i8, i8* %11, i64 -1</td></tr>
+<tr><td align="left">  %ptr14 = getelementptr inbounds %struct.stream_cursor_read_s, %struct.stream_cursor_read_s* %r, i64 0, i32 0</td></tr>
+<tr><td align="left">  store i8* %add.ptr13, i8** %ptr14, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  %cmp18 = icmp ult i8 %9, 9</td></tr>
+<tr><td align="left">  %type = getelementptr inbounds %struct.gs_color_space_s, %struct.gs_color_space_s* %2, i64 0, i32 0</td></tr>
+<tr><td align="left">  %idx.ext89 = sext i32 %4 to i64</td></tr>
+<tr><td align="left">  %wide.trip.count = zext i8 %10 to i64</td></tr>
+<tr><td align="left">  %wide.trip.count500 = zext i8 %10 to i64</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %14 = phi i32 [ %7, %if.else ], [ %.pre, %if.end ]</td></tr>
+<tr><td align="left">  %i.0 = phi i32 [ 0, %if.else ], [ %inc88, %if.end ]</td></tr>
+<tr><td align="left">  %psrc.0 = phi i16* [ %12, %if.else ], [ %add.ptr90, %if.end ]</td></tr>
+<tr><td align="left">  %pdata.0 = phi i8* [ %add.ptr, %if.else ], [ %pdata.3, %if.end ]</td></tr>
+<tr><td align="left">  %cmp16 = icmp slt i32 %i.0, %14</td></tr>
+<tr><td align="left">  br i1 %cmp16, label %for.body, label %for.end91</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  br i1 %cmp18, label %for.cond21, label %for.cond61</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond21:</td></tr>
+<tr><td align="left">  %indvars.iv498 = phi i64 [ %indvars.iv.next499, %for.inc ], [ 0, %for.body ]</td></tr>
+<tr><td align="left">  %pdata.1 = phi i8* [ %incdec.ptr, %for.inc ], [ %pdata.0, %for.body ]</td></tr>
+<tr><td align="left">  %exitcond501.not = icmp eq i64 %indvars.iv498, %wide.trip.count500</td></tr>
+<tr><td align="left">  br i1 %exitcond501.not, label %if.end, label %for.body24</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body24:</td></tr>
+<tr><td align="left">  %decoding = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 %indvars.iv498, i32 3</td></tr>
+<tr><td align="left">  %15 = load i32, i32* %decoding, align 8, !tbaa !35</td></tr>
+<tr><td align="left">  switch i32 %15, label %for.inc [
+    i32 0, label %sw.bb
+    i32 1, label %sw.bb31
+    i32 2, label %sw.bb42
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb:</td></tr>
+<tr><td align="left">  %16 = load i8, i8* %pdata.1, align 1, !tbaa !37</td></tr>
+<tr><td align="left">  %conv26 = uitofp i8 %16 to double</td></tr>
+<tr><td align="left">  %mul27 = fmul double %conv26, 0x3F70101010101010</td></tr>
+<tr><td align="left">  %conv28 = fptrunc double %mul27 to float</td></tr>
+<tr><td align="left">  br label %for.inc.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb31:</td></tr>
+<tr><td align="left">  %17 = load i8, i8* %pdata.1, align 1, !tbaa !37</td></tr>
+<tr><td align="left">  %18 = lshr i8 %17, 4</td></tr>
+<tr><td align="left">  %idxprom36 = zext i8 %18 to i64</td></tr>
+<tr><td align="left">  %arrayidx37 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 %indvars.iv498, i32 1, i64 %idxprom36</td></tr>
+<tr><td align="left">  %19 = load float, float* %arrayidx37, align 4, !tbaa !38</td></tr>
+<tr><td align="left">  br label %for.inc.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb42:</td></tr>
+<tr><td align="left">  %arrayidx47 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 %indvars.iv498, i32 1, i64 0</td></tr>
+<tr><td align="left">  %20 = load float, float* %arrayidx47, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %conv48 = fpext float %20 to double</td></tr>
+<tr><td align="left">  %21 = load i8, i8* %pdata.1, align 1, !tbaa !37</td></tr>
+<tr><td align="left">  %conv50 = uitofp i8 %21 to double</td></tr>
+<tr><td align="left">  %decode_factor = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 %indvars.iv498, i32 2</td></tr>
+<tr><td align="left">  %22 = load double, double* %decode_factor, align 8, !tbaa !39</td></tr>
+<tr><td align="left">  %23 = call double @llvm.fmuladd.f64(double %conv50, double %22, double %conv48)</td></tr>
+<tr><td align="left">  %conv55 = fptrunc double %23 to float</td></tr>
+<tr><td align="left">  br label %for.inc.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc.sink.split:</td></tr>
+<tr><td align="left">  %conv28.sink = phi float [ %conv28, %sw.bb ], [ %19, %sw.bb31 ], [ %conv55, %sw.bb42 ]</td></tr>
+<tr><td align="left">  %arrayidx30 = getelementptr inbounds %struct.gs_client_color_s, %struct.gs_client_color_s* %cc, i64 0, i32 0, i32 0, i64 %indvars.iv498</td></tr>
+<tr><td align="left">  store float %conv28.sink, float* %arrayidx30, align 4, !tbaa !38</td></tr>
+<tr><td align="left">  br label %for.inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc:</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds i8, i8* %pdata.1, i64 1</td></tr>
+<tr><td align="left">  %indvars.iv.next499 = add nuw nsw i64 %indvars.iv498, 1</td></tr>
+<tr><td align="left">  br label %for.cond21, !llvm.loop !40</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond61:</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ %indvars.iv.next, %for.body64 ], [ 0, %for.body ]</td></tr>
+<tr><td align="left">  %pdata.2 = phi i8* [ %add.ptr84, %for.body64 ], [ %pdata.0, %for.body ]</td></tr>
+<tr><td align="left">  %exitcond.not = icmp eq i64 %indvars.iv, %wide.trip.count</td></tr>
+<tr><td align="left">  br i1 %exitcond.not, label %if.end, label %for.body64</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body64:</td></tr>
+<tr><td align="left">  %arrayidx69 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 %indvars.iv, i32 1, i64 0</td></tr>
+<tr><td align="left">  %24 = load float, float* %arrayidx69, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %conv70 = fpext float %24 to double</td></tr>
+<tr><td align="left">  %25 = bitcast i8* %pdata.2 to i16*</td></tr>
+<tr><td align="left">  %26 = load i16, i16* %25, align 2, !tbaa !42</td></tr>
+<tr><td align="left">  %conv72 = sitofp i16 %26 to double</td></tr>
+<tr><td align="left">  %decode_factor76 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 48, i64 %indvars.iv, i32 2</td></tr>
+<tr><td align="left">  %27 = load double, double* %decode_factor76, align 8, !tbaa !39</td></tr>
+<tr><td align="left">  %28 = call double @llvm.fmuladd.f64(double %conv72, double %27, double %conv70)</td></tr>
+<tr><td align="left">  %conv78 = fptrunc double %28 to float</td></tr>
+<tr><td align="left">  %arrayidx82 = getelementptr inbounds %struct.gs_client_color_s, %struct.gs_client_color_s* %cc, i64 0, i32 0, i32 0, i64 %indvars.iv</td></tr>
+<tr><td align="left">  store float %conv78, float* %arrayidx82, align 4, !tbaa !38</td></tr>
+<tr><td align="left">  %add.ptr84 = getelementptr inbounds i8, i8* %pdata.2, i64 2</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  br label %for.cond61, !llvm.loop !44</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb15 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %pdata.3 = phi i8* [ %pdata.1, %for.cond21 ], [ %pdata.2, %for.cond61 ]</td></tr>
+<tr><td align="left">  %29 = load %struct.gs_color_space_type_s*, %struct.gs_color_space_type_s** %type, align 8, !tbaa !45</td></tr>
+<tr><td align="left">  %concretize_color = getelementptr inbounds %struct.gs_color_space_type_s, %struct.gs_color_space_type_s* %29, i64 0, i32 5</td></tr>
+<tr><td align="left">  %30 = load i32 (%struct.gs_client_color_s*, %struct.gs_color_space_s*, i16*, %struct.gs_imager_state_s*)*, i32 (%struct.gs_client_color_s*, %struct.gs_color_space_s*, i16*, %struct.gs_imager_state_s*)** %concretize_color, align 8, !tbaa !47</td></tr>
+<tr><td align="left">  %call = call i32 %30(%struct.gs_client_color_s* nonnull %cc, %struct.gs_color_space_s* %2, i16* %psrc.0, %struct.gs_imager_state_s* %1) #7</td></tr>
+<tr><td align="left">  %inc88 = add nuw nsw i32 %i.0, 1</td></tr>
+<tr><td align="left">  %add.ptr90 = getelementptr inbounds i16, i16* %psrc.0, i64 %idx.ext89</td></tr>
+<tr><td align="left">  %.pre = load i32, i32* %WidthIn, align 4, !tbaa !28</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !49</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end91:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 24, i8* nonnull %13) #6</td></tr>
+<tr><td align="left">  %.pre502 = load i8*, i8** %ptr14, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  br label %if.end92</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end92:</td></tr>
+<tr><td align="left">  %31 = phi i8* [ %.pre502, %for.end91 ], [ %add.ptr10, %if.then9 ]</td></tr>
+<tr><td align="left">  %idx.ext94 = zext i32 %mul3 to i64</td></tr>
+<tr><td align="left">  %add.ptr95 = getelementptr inbounds i8, i8* %31, i64 %idx.ext94</td></tr>
+<tr><td align="left">  %limit = getelementptr inbounds %struct.stream_cursor_read_s, %struct.stream_cursor_read_s* %r, i64 0, i32 1</td></tr>
+<tr><td align="left">  store i8* %add.ptr95, i8** %limit, align 8, !tbaa !50</td></tr>
+<tr><td align="left">  br label %if.end99</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else96:</td></tr>
+<tr><td align="left">  %32 = bitcast %struct.stream_cursor_read_s* %r to i8*</td></tr>
+<tr><td align="left">  call void @llvm.memset.p0i8.i64(i8* noundef nonnull align 8 dereferenceable(16) %32, i8 0, i64 16, i1 false)</td></tr>
+<tr><td align="left">  br label %if.end99</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb19 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end99:</td></tr>
+<tr><td align="left">  %x = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 43, i32 0</td></tr>
+<tr><td align="left">  %33 = load i32, i32* %x, align 8, !tbaa !51</td></tr>
+<tr><td align="left">  %y = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 43, i32 1</td></tr>
+<tr><td align="left">  %34 = load i32, i32* %y, align 4, !tbaa !52</td></tr>
+<tr><td align="left">  %WidthOut = getelementptr inbounds %struct.stream_IScale_state_s, %struct.stream_IScale_state_s* %0, i64 0, i32 10</td></tr>
+<tr><td align="left">  %35 = load i32, i32* %WidthOut, align 4, !tbaa !53</td></tr>
+<tr><td align="left">  %type101 = getelementptr inbounds %struct.gs_color_space_s, %struct.gs_color_space_s* %2, i64 0, i32 0</td></tr>
+<tr><td align="left">  %36 = load %struct.gs_color_space_type_s*, %struct.gs_color_space_type_s** %type101, align 8, !tbaa !45</td></tr>
+<tr><td align="left">  %concrete_space = getelementptr inbounds %struct.gs_color_space_type_s, %struct.gs_color_space_type_s* %36, i64 0, i32 4</td></tr>
+<tr><td align="left">  %37 = load %struct.gs_color_space_s* (%struct.gs_color_space_s*, %struct.gs_imager_state_s*)*, %struct.gs_color_space_s* (%struct.gs_color_space_s*, %struct.gs_imager_state_s*)** %concrete_space, align 8, !tbaa !54</td></tr>
+<tr><td align="left">  %call102 = call %struct.gs_color_space_s* %37(%struct.gs_color_space_s* %2, %struct.gs_imager_state_s* %1) #7</td></tr>
+<tr><td align="left">  %depth = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %dev, i64 0, i32 7, i32 1</td></tr>
+<tr><td align="left">  %38 = load i32, i32* %depth, align 4, !tbaa !55</td></tr>
+<tr><td align="left">  %mul103 = mul nsw i32 %38, %35</td></tr>
+<tr><td align="left">  %add = add nsw i32 %mul103, 31</td></tr>
+<tr><td align="left">  %39 = ashr i32 %add, 3</td></tr>
+<tr><td align="left">  %shl = and i32 %39, -4</td></tr>
+<tr><td align="left">  %yy = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 8, i32 3</td></tr>
+<tr><td align="left">  %40 = load float, float* %yy, align 4, !tbaa !60</td></tr>
+<tr><td align="left">  %cmp105 = fcmp ogt float %40, 0.000000e+00</td></tr>
+<tr><td align="left">  %not.cmp105 = xor i1 %cmp105, true</td></tr>
+<tr><td align="left">  %dec = sext i1 %not.cmp105 to i32</td></tr>
+<tr><td align="left">  %yo.0 = add nsw i32 %34, %dec</td></tr>
+<tr><td align="left">  %line_xy = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 41</td></tr>
+<tr><td align="left">  %41 = bitcast %struct.gx_device_color_s* %devc to i8*</td></tr>
+<tr><td align="left">  %line115 = getelementptr inbounds %struct.gx_image_enum_s, %struct.gx_image_enum_s* %penum, i64 0, i32 20</td></tr>
+<tr><td align="left">  %sub = sub nsw i32 8, %38</td></tr>
+<tr><td align="left">  %mul117 = mul nsw i32 %35, %4</td></tr>
+<tr><td align="left">  %conv118 = sext i32 %mul117 to i64</td></tr>
+<tr><td align="left">  %mul119 = shl nsw i64 %conv118, 3</td></tr>
+<tr><td align="left">  %add.ptr121.idx = add nsw i64 %mul119, -1</td></tr>
+<tr><td align="left">  %limit122 = getelementptr inbounds %struct.stream_cursor_write_s, %struct.stream_cursor_write_s* %w, i64 0, i32 2</td></tr>
+<tr><td align="left">  %sizeofPixelOut = getelementptr inbounds %struct.stream_IScale_state_s, %struct.stream_IScale_state_s* %0, i64 0, i32 13</td></tr>
+<tr><td align="left">  %ptr130 = getelementptr inbounds %struct.stream_cursor_write_s, %struct.stream_cursor_write_s* %w, i64 0, i32 1</td></tr>
+<tr><td align="left">  %42 = load i32 (%struct.stream_state_s*, %struct.stream_cursor_read_s*, %struct.stream_cursor_write_s*, i32)*, i32 (%struct.stream_state_s*, %struct.stream_cursor_read_s*, %struct.stream_cursor_write_s*, i32)** getelementptr inbounds (%struct.stream_template_s, %struct.stream_template_s* @s_IScale_template, i64 0, i32 2), align 8, !tbaa !61</td></tr>
+<tr><td align="left">  %43 = bitcast %struct.stream_IScale_state_s* %0 to %struct.stream_state_s*</td></tr>
+<tr><td align="left">  %ptr261 = getelementptr inbounds %struct.stream_cursor_read_s, %struct.stream_cursor_read_s* %r, i64 0, i32 0</td></tr>
+<tr><td align="left">  %limit262 = getelementptr inbounds %struct.stream_cursor_read_s, %struct.stream_cursor_read_s* %r, i64 0, i32 1</td></tr>
+<tr><td align="left">  %add146 = add nsw i32 %35, %33</td></tr>
+<tr><td align="left">  %type150 = getelementptr inbounds %struct.gs_color_space_s, %struct.gs_color_space_s* %call102, i64 0, i32 0</td></tr>
+<tr><td align="left">  %type152 = getelementptr inbounds %struct.gx_device_color_s, %struct.gx_device_color_s* %devc, i64 0, i32 0</td></tr>
+<tr><td align="left">  %cmp186 = icmp slt i32 %38, 8</td></tr>
+<tr><td align="left">  %shr198481 = lshr i32 %38, 3</td></tr>
+<tr><td align="left">  %44 = zext i32 %shr198481 to i64</td></tr>
+<tr><td align="left">  %copy_color = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %dev, i64 0, i32 21, i32 10</td></tr>
+<tr><td align="left">  %colors = getelementptr inbounds %struct.gx_device_color_s, %struct.gx_device_color_s* %devc, i64 0, i32 1</td></tr>
+<tr><td align="left">  %pure = bitcast %union._c* %colors to i64*</td></tr>
+<tr><td align="left">  %shr156 = ashr i32 %38, 3</td></tr>
+<tr><td align="left">  %idx.ext231 = sext i32 %4 to i64</td></tr>
+<tr><td align="left">  br label %for.cond110</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb20 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond110:</td></tr>
+<tr><td align="left">  %45 = load i32, i32* %line_xy, align 8, !tbaa !63</td></tr>
+<tr><td align="left">  %46 = sub i32 0, %45</td></tr>
+<tr><td align="left">  %47 = select i1 %cmp105, i32 %45, i32 %46</td></tr>
+<tr><td align="left">  %add112 = add nsw i32 %yo.0, %47</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 96, i8* nonnull %41) #6</td></tr>
+<tr><td align="left">  %48 = load i8*, i8** %line115, align 8, !tbaa !34</td></tr>
+<tr><td align="left">  %add.ptr121 = getelementptr inbounds i8, i8* %48, i64 %add.ptr121.idx</td></tr>
+<tr><td align="left">  store i8* %add.ptr121, i8** %limit122, align 8, !tbaa !64</td></tr>
+<tr><td align="left">  %49 = load i32, i32* %sizeofPixelOut, align 8, !tbaa !66</td></tr>
+<tr><td align="left">  %conv126 = sext i32 %49 to i64</td></tr>
+<tr><td align="left">  %sub127.neg = add nsw i64 %conv126, -8</td></tr>
+<tr><td align="left">  %mul128.neg = mul nsw i64 %sub127.neg, %conv118</td></tr>
+<tr><td align="left">  %add.ptr129 = getelementptr inbounds i8, i8* %add.ptr121, i64 %mul128.neg</td></tr>
+<tr><td align="left">  store i8* %add.ptr129, i8** %ptr130, align 8, !tbaa !67</td></tr>
+<tr><td align="left">  %call133 = call i32 %42(%struct.stream_state_s* %43, %struct.stream_cursor_read_s* nonnull %r, %struct.stream_cursor_write_s* nonnull %w, i32 0) #7</td></tr>
+<tr><td align="left">  %50 = icmp slt i32 %call133, -1</td></tr>
+<tr><td align="left">  br i1 %50, label %cleanup281, label %if.end139</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb21 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end139:</td></tr>
+<tr><td align="left">  %51 = load i8*, i8** %ptr130, align 8, !tbaa !67</td></tr>
+<tr><td align="left">  %52 = load i8*, i8** %limit122, align 8, !tbaa !64</td></tr>
+<tr><td align="left">  %cmp142 = icmp eq i8* %51, %52</td></tr>
+<tr><td align="left">  br i1 %cmp142, label %for.cond145.preheader, label %if.end260</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb22 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond145.preheader:</td></tr>
+<tr><td align="left">  %add.ptr132 = getelementptr inbounds i8, i8* %add.ptr129, i64 1</td></tr>
+<tr><td align="left">  %53 = bitcast i8* %add.ptr132 to i16*</td></tr>
+<tr><td align="left">  br label %for.cond145</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb23 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond145:</td></tr>
+<tr><td align="left">  %x113.0 = phi i32 [ %inc230, %for.inc229 ], [ %33, %for.cond145.preheader ]</td></tr>
+<tr><td align="left">  %psrc114.0 = phi i16* [ %add.ptr232, %for.inc229 ], [ %53, %for.cond145.preheader ]</td></tr>
+<tr><td align="left">  %l_dst.0 = phi i8* [ %l_dst.6, %for.inc229 ], [ %48, %for.cond145.preheader ]</td></tr>
+<tr><td align="left">  %l_bits.0 = phi i32 [ %l_bits.3, %for.inc229 ], [ 0, %for.cond145.preheader ]</td></tr>
+<tr><td align="left">  %l_shift.0 = phi i32 [ %l_shift.3, %for.inc229 ], [ %sub, %for.cond145.preheader ]</td></tr>
+<tr><td align="left">  %l_xprev.0 = phi i32 [ %l_xprev.1, %for.inc229 ], [ %33, %for.cond145.preheader ]</td></tr>
+<tr><td align="left">  %cmp147 = icmp slt i32 %x113.0, %add146</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp147, label %for.body149, label %for.end233</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body149:</td></tr>
+<tr><td align="left">  %54 = load %struct.gs_color_space_type_s*, %struct.gs_color_space_type_s** %type150, align 8, !tbaa !45</td></tr>
+<tr><td align="left">  %remap_concrete_color = getelementptr inbounds %struct.gs_color_space_type_s, %struct.gs_color_space_type_s* %54, i64 0, i32 6</td></tr>
+<tr><td align="left">  %55 = load i32 (i16*, %struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)*, i32 (i16*, %struct.gx_device_color_s*, %struct.gs_imager_state_s*, %struct.gx_device_s*, i32)** %remap_concrete_color, align 8, !tbaa !68</td></tr>
+<tr><td align="left">  %call151 = call i32 %55(i16* %psrc114.0, %struct.gx_device_color_s* nonnull %devc, %struct.gs_imager_state_s* %1, %struct.gx_device_s* %dev, i32 1) #7</td></tr>
+<tr><td align="left">  %56 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** %type152, align 8, !tbaa !69</td></tr>
+<tr><td align="left">  %cmp153 = icmp eq %struct.gx_device_color_procs_s* %56, @gx_dc_procs_pure</td></tr>
+<tr><td align="left">  br i1 %cmp153, label %if.then155, label %if.else185</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb25 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then155:</td></tr>
+<tr><td align="left">  %57 = load i64, i64* %pure, align 8, !tbaa !37</td></tr>
+<tr><td align="left">  switch i32 %shr156, label %for.inc229 [
+    i32 0, label %sw.bb157
+    i32 4, label %sw.bb169
+    i32 3, label %sw.bb173
+    i32 2, label %sw.bb177
+    i32 1, label %sw.bb181
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb157:</td></tr>
+<tr><td align="left">  %sh_prom = zext i32 %l_shift.0 to i64</td></tr>
+<tr><td align="left">  %shl158 = shl i64 %57, %sh_prom</td></tr>
+<tr><td align="left">  %conv159 = trunc i64 %shl158 to i32</td></tr>
+<tr><td align="left">  %add160 = add i32 %l_bits.0, %conv159</td></tr>
+<tr><td align="left">  %sub161 = sub nsw i32 %l_shift.0, %38</td></tr>
+<tr><td align="left">  %cmp162 = icmp slt i32 %sub161, 0</td></tr>
+<tr><td align="left">  br i1 %cmp162, label %if.then164, label %for.inc229</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb27 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then164:</td></tr>
+<tr><td align="left">  %conv165 = trunc i32 %add160 to i8</td></tr>
+<tr><td align="left">  %incdec.ptr166 = getelementptr inbounds i8, i8* %l_dst.0, i64 1</td></tr>
+<tr><td align="left">  store i8 %conv165, i8* %l_dst.0, align 1, !tbaa !37</td></tr>
+<tr><td align="left">  %add167 = add nsw i32 %sub161, 8</td></tr>
+<tr><td align="left">  br label %for.inc229</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb28 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb169:</td></tr>
+<tr><td align="left">  %shr170 = lshr i64 %57, 24</td></tr>
+<tr><td align="left">  %conv171 = trunc i64 %shr170 to i8</td></tr>
+<tr><td align="left">  %incdec.ptr172 = getelementptr inbounds i8, i8* %l_dst.0, i64 1</td></tr>
+<tr><td align="left">  store i8 %conv171, i8* %l_dst.0, align 1, !tbaa !37</td></tr>
+<tr><td align="left">  br label %sw.bb173</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb29 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb173:</td></tr>
+<tr><td align="left">  %l_dst.1 = phi i8* [ %l_dst.0, %if.then155 ], [ %incdec.ptr172, %sw.bb169 ]</td></tr>
+<tr><td align="left">  %shr174 = lshr i64 %57, 16</td></tr>
+<tr><td align="left">  %conv175 = trunc i64 %shr174 to i8</td></tr>
+<tr><td align="left">  %incdec.ptr176 = getelementptr inbounds i8, i8* %l_dst.1, i64 1</td></tr>
+<tr><td align="left">  store i8 %conv175, i8* %l_dst.1, align 1, !tbaa !37</td></tr>
+<tr><td align="left">  br label %sw.bb177</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb177:</td></tr>
+<tr><td align="left">  %l_dst.2 = phi i8* [ %l_dst.0, %if.then155 ], [ %incdec.ptr176, %sw.bb173 ]</td></tr>
+<tr><td align="left">  %shr178 = lshr i64 %57, 8</td></tr>
+<tr><td align="left">  %conv179 = trunc i64 %shr178 to i8</td></tr>
+<tr><td align="left">  %incdec.ptr180 = getelementptr inbounds i8, i8* %l_dst.2, i64 1</td></tr>
+<tr><td align="left">  store i8 %conv179, i8* %l_dst.2, align 1, !tbaa !37</td></tr>
+<tr><td align="left">  br label %sw.bb181</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb31 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb181:</td></tr>
+<tr><td align="left">  %l_dst.3 = phi i8* [ %l_dst.0, %if.then155 ], [ %incdec.ptr180, %sw.bb177 ]</td></tr>
+<tr><td align="left">  %conv182 = trunc i64 %57 to i8</td></tr>
+<tr><td align="left">  %incdec.ptr183 = getelementptr inbounds i8, i8* %l_dst.3, i64 1</td></tr>
+<tr><td align="left">  store i8 %conv182, i8* %l_dst.3, align 1, !tbaa !37</td></tr>
+<tr><td align="left">  br label %for.inc229</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb32 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else185:</td></tr>
+<tr><td align="left">  br i1 %cmp186, label %if.then188, label %if.else197</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb33 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then188:</td></tr>
+<tr><td align="left">  %sub189 = sub nsw i32 %l_shift.0, %38</td></tr>
+<tr><td align="left">  %cmp190 = icmp slt i32 %sub189, 0</td></tr>
+<tr><td align="left">  br i1 %cmp190, label %if.then192, label %if.end201</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb34 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then192:</td></tr>
+<tr><td align="left">  %conv193 = trunc i32 %l_bits.0 to i8</td></tr>
+<tr><td align="left">  %incdec.ptr194 = getelementptr inbounds i8, i8* %l_dst.0, i64 1</td></tr>
+<tr><td align="left">  store i8 %conv193, i8* %l_dst.0, align 1, !tbaa !37</td></tr>
+<tr><td align="left">  %add195 = add nsw i32 %sub189, 8</td></tr>
+<tr><td align="left">  br label %if.end201</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb35 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else197:</td></tr>
+<tr><td align="left">  %add.ptr200 = getelementptr inbounds i8, i8* %l_dst.0, i64 %44</td></tr>
+<tr><td align="left">  br label %if.end201</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb36 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end201:</td></tr>
+<tr><td align="left">  %l_dst.5 = phi i8* [ %incdec.ptr194, %if.then192 ], [ %l_dst.0, %if.then188 ], [ %add.ptr200, %if.else197 ]</td></tr>
+<tr><td align="left">  %l_bits.2 = phi i32 [ 0, %if.then192 ], [ %l_bits.0, %if.then188 ], [ %l_bits.0, %if.else197 ]</td></tr>
+<tr><td align="left">  %l_shift.2 = phi i32 [ %add195, %if.then192 ], [ %sub189, %if.then188 ], [ %l_shift.0, %if.else197 ]</td></tr>
+<tr><td align="left">  %cmp202 = icmp sgt i32 %x113.0, %l_xprev.0</td></tr>
+<tr><td align="left">  br i1 %cmp202, label %if.then204, label %if.end220</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb37 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end220:</td></tr>
+<tr><td align="left">  %60 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** %type152, align 8, !tbaa !69</td></tr>
+<tr><td align="left">  %fill_rectangle = getelementptr inbounds %struct.gx_device_color_procs_s, %struct.gx_device_color_procs_s* %60, i64 0, i32 1</td></tr>
+<tr><td align="left">  %61 = load i32 (%struct.gx_device_color_s*, i32, i32, i32, i32, %struct.gx_device_s*, i32, %struct.gx_rop_source_s*)*, i32 (%struct.gx_device_color_s*, i32, i32, i32, i32, %struct.gx_device_s*, i32, %struct.gx_rop_source_s*)** %fill_rectangle, align 8, !tbaa !75</td></tr>
+<tr><td align="left">  %call222 = call i32 %61(%struct.gx_device_color_s* nonnull %devc, i32 %x113.0, i32 %add112, i32 1, i32 1, %struct.gx_device_s* %dev, i32 %3, %struct.gx_rop_source_s* null) #7</td></tr>
+<tr><td align="left">  %cmp223 = icmp slt i32 %call222, 0</td></tr>
+<tr><td align="left">  br i1 %cmp223, label %cleanup281, label %if.end226</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb38 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end226:</td></tr>
+<tr><td align="left">  %add227 = add nsw i32 %x113.0, 1</td></tr>
+<tr><td align="left">  br label %for.inc229</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc229:</td></tr>
+<tr><td align="left">  %l_dst.6 = phi i8* [ %l_dst.5, %if.end226 ], [ %l_dst.0, %if.then155 ], [ %incdec.ptr183, %sw.bb181 ], [ %incdec.ptr166, %if.then164 ], [ %l_dst.0, %sw.bb157 ]</td></tr>
+<tr><td align="left">  %l_bits.3 = phi i32 [ %l_bits.2, %if.end226 ], [ %l_bits.0, %if.then155 ], [ %l_bits.0, %sw.bb181 ], [ 0, %if.then164 ], [ %add160, %sw.bb157 ]</td></tr>
+<tr><td align="left">  %l_shift.3 = phi i32 [ %l_shift.2, %if.end226 ], [ %l_shift.0, %if.then155 ], [ %l_shift.0, %sw.bb181 ], [ %add167, %if.then164 ], [ %sub161, %sw.bb157 ]</td></tr>
+<tr><td align="left">  %l_xprev.1 = phi i32 [ %add227, %if.end226 ], [ %l_xprev.0, %if.then155 ], [ %l_xprev.0, %sw.bb181 ], [ %l_xprev.0, %if.then164 ], [ %l_xprev.0, %sw.bb157 ]</td></tr>
+<tr><td align="left">  %inc230 = add nsw i32 %x113.0, 1</td></tr>
+<tr><td align="left">  %add.ptr232 = getelementptr inbounds i16, i16* %psrc114.0, i64 %idx.ext231</td></tr>
+<tr><td align="left">  br label %for.cond145, !llvm.loop !77</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb40 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end233:</td></tr>
+<tr><td align="left">  %cmp234 = icmp sgt i32 %x113.0, %l_xprev.0</td></tr>
+<tr><td align="left">  br i1 %cmp234, label %if.then236, label %if.end257</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb41 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end257:</td></tr>
+<tr><td align="left">  %64 = load i32, i32* %line_xy, align 8, !tbaa !63</td></tr>
+<tr><td align="left">  %inc259 = add nsw i32 %64, 1</td></tr>
+<tr><td align="left">  store i32 %inc259, i32* %line_xy, align 8, !tbaa !63</td></tr>
+<tr><td align="left">  br label %cleanup269, !llvm.loop !78</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb42 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end260:</td></tr>
+<tr><td align="left">  %65 = load i8*, i8** %ptr261, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  %66 = load i8*, i8** %limit262, align 8, !tbaa !50</td></tr>
+<tr><td align="left">  %cmp263 = icmp eq i8* %65, %66</td></tr>
+<tr><td align="left">  %cmp265 = icmp eq i32 %call133, -1</td></tr>
+<tr><td align="left">  %or.cond302 = select i1 %cmp263, i1 true, i1 %cmp265</td></tr>
+<tr><td align="left">  br i1 %or.cond302, label %67, label %cleanup269</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb43 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup269:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 96, i8* nonnull %41) #6</td></tr>
+<tr><td align="left">  br label %for.cond110</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb44 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup281:</td></tr>
+<tr><td align="left">  %retval.7.ph = phi i32 [ %call222, %if.end220 ], [ %call215, %if.end211 ], [ -12, %for.cond110 ], [ %call249, %if.end243 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 96, i8* nonnull %41) #6</td></tr>
+<tr><td align="left">  br label %68</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb45 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 96, i8* nonnull %41) #6</td></tr>
+<tr><td align="left">  %cmp290478 = icmp ne i32 %h, 0</td></tr>
+<tr><td align="left">  %cond479 = zext i1 %cmp290478 to i32</td></tr>
+<tr><td align="left">  br label %68</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb46 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">:</td></tr>
+<tr><td align="left">  %69 = phi i32 [ %cond479, %67 ], [ %retval.7.ph, %cleanup281 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 24, i8* nonnull %6) #6</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 24, i8* nonnull %5) #6</td></tr>
+<tr><td align="left">  ret i32 %69</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb18:f
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> f_bb3:f
+f_bb2:f -> f_bb17:f
+f_bb3:f -> f_bb4:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb16:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> f_bb13:f
+f_bb6:fT -> f_bb15:f
+f_bb6:fF -> f_bb7:f
+f_bb7:f -> f_bb12:f
+f_bb7:f -> f_bb8:f
+f_bb7:f -> f_bb9:f
+f_bb7:f -> f_bb10:f
+f_bb8:f -> f_bb11:f
+f_bb9:f -> f_bb11:f
+f_bb10:f -> f_bb11:f
+f_bb11:f -> f_bb12:f
+f_bb12:f -> f_bb6:f
+f_bb13:fT -> f_bb15:f
+f_bb13:fF -> f_bb14:f
+f_bb14:f -> f_bb13:f
+f_bb15:f -> f_bb4:f
+f_bb16:f -> f_bb17:f
+f_bb17:f -> f_bb19:f
+f_bb18:f -> f_bb19:f
+f_bb19:f -> f_bb20:f
+f_bb20:fT -> f_bb44:f
+f_bb20:fF -> f_bb21:f
+f_bb21:fT -> f_bb22:f
+f_bb21:fF -> f_bb42:f
+f_bb22:f -> f_bb23:f
+f_bb23:fT -> f_bb24:f
+f_bb23:fF -> f_bb40:f
+f_bb24:fT -> f_bb25:f
+f_bb24:fF -> f_bb32:f
+f_bb25:f -> f_bb39:f
+f_bb25:f -> f_bb26:f
+f_bb25:f -> f_bb28:f
+f_bb25:f -> f_bb29:f
+f_bb25:f -> f_bb30:f
+f_bb25:f -> f_bb31:f
+f_bb26:fT -> f_bb27:f
+f_bb26:fF -> f_bb39:f
+f_bb27:f -> f_bb39:f
+f_bb28:f -> f_bb29:f
+f_bb29:f -> f_bb30:f
+f_bb30:f -> f_bb31:f
+f_bb31:f -> f_bb39:f
+f_bb32:fT -> f_bb33:f
+f_bb32:fF -> f_bb35:f
+f_bb33:fT -> f_bb34:f
+f_bb33:fF -> f_bb36:f
+f_bb34:f -> f_bb36:f
+f_bb35:f -> f_bb36:f
+f_bb36:fT -> m_bb0:f1
+f_bb36:fF -> f_bb37:f
+m_bb0:f1T -> m_bb1:f1
+m_bb0:f1F -> m_bb2:f1
+m_bb2:f1 -> m_bb1:f1
+m_bb1:f1T -> f_bb44:f
+m_bb1:f1F -> f_bb37:f
+f_bb37:fT -> f_bb44:f
+f_bb37:fF -> f_bb38:f
+f_bb38:f -> f_bb39:f
+f_bb39:f -> f_bb23:f
+f_bb40:fT -> m_bb0:f2
+f_bb40:fF -> f_bb41:f
+m_bb0:f2T -> m_bb1:f2
+m_bb0:f2F -> m_bb2:f2
+m_bb2:f2 -> m_bb1:f2
+m_bb1:f2T -> f_bb44:f
+m_bb1:f2F -> f_bb41:f
+f_bb41:f -> f_bb43:f
+f_bb42:fT -> f_bb45:f
+f_bb42:fF -> f_bb43:f
+f_bb43:f -> f_bb20:f
+f_bb44:f -> f_bb46:f
+f_bb45:f -> f_bb46:f
+}
+

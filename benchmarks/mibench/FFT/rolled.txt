@@ -1,0 +1,19 @@
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/fftmisc.c -o src/fftmisc.o   -mllvm -reroll-loops=3
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/fourierf.c -o src/fourierf.o   -mllvm -reroll-loops=3
+Gains: 9 - 25 = -16; Width: 3; Unprofitable;
+Gains: 4 - 16 = -12; Width: 2; Unprofitable;
+Gains: 4 - 16 = -12; Width: 2; Unprofitable;
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/main.c -o src/main.o   -mllvm -reroll-loops=3
+src/main.c:26:13: warning: implicitly declaring library function 'strncmp' with type 'int (const char *, const char *, unsigned long)' [-Wimplicit-function-declaration]
+                invfft = !strncmp(argv[3],"-i",2);
+                          ^
+src/main.c:26:13: note: include the header <string.h> or explicitly provide a declaration for 'strncmp'
+Gains: 8 - 22 = -14; Width: 2; Unprofitable;
+Gains: 12 - 18 = -6; Width: 6; Unprofitable;
+1 warning generated.
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang++ -std=gnu++98 -B /usr/bin src/fftmisc.o src/fourierf.o src/main.o -Oz  -mllvm -reroll-loops=3 -o rolled -lm -fno-align-functions -s
+clang-12: warning: argument unused during compilation: '-mllvm -reroll-loops=3' [-Wunused-command-line-argument]
+#du -bc src/fftmisc.o src/fourierf.o src/main.o | awk 'END { print  }' > rolled.osize
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/llvm-size -B -d rolled
+   text	   data	    bss	    dec	    hex	filename
+   4486	    688	     16	   5190	   1446	rolled

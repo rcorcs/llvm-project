@@ -1,0 +1,82 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">cond.true6:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub = add i8 %6, -1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call10 = tail call fastcc i32 @pbm_print_page_loop(%struct.gx_device_printer_s* nonnull %pdev, i8 signext %sub, %struct._IO_FILE* %pstream, i32 (%struct.gx_device_printer_s*, i8*, i32, %struct._IO_FILE*)* nonnull @ppm_pgm_print_row) #8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cond.end17</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">cond.false11:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub14 = add i8 %6, -2</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call16 = tail call fastcc i32 @pbm_print_page_loop(%struct.gx_device_printer_s* nonnull %pdev, i8 signext %sub14, %struct._IO_FILE* %pstream, i32 (%struct.gx_device_printer_s*, i8*, i32, %struct._IO_FILE*)* nonnull @pxm_pbm_print_row) #8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cond.end17</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %0 = bitcast %struct.gx_device_printer_s* %pdev to %struct.gx_device_pbm_s*</td></tr>
+<tr><td align="left">  %uses_color = getelementptr inbounds %struct.gx_device_pbm_s, %struct.gx_device_pbm_s* %0, i64 0, i32 40</td></tr>
+<tr><td align="left">  %1 = load i8, i8* %uses_color, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp = icmp ugt i8 %1, 1</td></tr>
+<tr><td align="left">  br i1 %cmp, label %cond.true, label %lor.lhs.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false:</td></tr>
+<tr><td align="left">  %optimize = getelementptr inbounds %struct.gx_device_pbm_s, %struct.gx_device_pbm_s* %0, i64 0, i32 39</td></tr>
+<tr><td align="left">  %2 = load i8, i8* %optimize, align 1, !tbaa !17</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i8 %2, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %cond.true, label %cond.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.true:</td></tr>
+<tr><td align="left">  %magic = getelementptr inbounds %struct.gx_device_printer_s, %struct.gx_device_printer_s* %pdev, i64 1</td></tr>
+<tr><td align="left">  %3 = bitcast %struct.gx_device_printer_s* %magic to i8*</td></tr>
+<tr><td align="left">  %4 = load i8, i8* %3, align 8, !tbaa !18</td></tr>
+<tr><td align="left">  %call = tail call fastcc i32 @pbm_print_page_loop(%struct.gx_device_printer_s* nonnull %pdev, i8 signext %4, %struct._IO_FILE* %pstream, i32 (%struct.gx_device_printer_s*, i8*, i32, %struct._IO_FILE*)* nonnull @ppm_print_row) #8</td></tr>
+<tr><td align="left">  br label %cond.end17</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.false:</td></tr>
+<tr><td align="left">  %cmp4 = icmp eq i8 %1, 1</td></tr>
+<tr><td align="left">  %magic7 = getelementptr inbounds %struct.gx_device_printer_s, %struct.gx_device_printer_s* %pdev, i64 1</td></tr>
+<tr><td align="left">  %5 = bitcast %struct.gx_device_printer_s* %magic7 to i8*</td></tr>
+<tr><td align="left">  %6 = load i8, i8* %5, align 8, !tbaa !18</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp4, label %cond.true6, label %cond.false11</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end17:</td></tr>
+<tr><td align="left">  %cond18 = phi i32 [ %call, %cond.true ], [ %call10, %cond.true6 ], [ %call16, %cond.false11 ]</td></tr>
+<tr><td align="left">  ret i32 %cond18</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb2:f
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> f_bb3:f
+f_bb2:f -> f_bb4:f
+f_bb3:fT -> m_bb0:f1
+f_bb3:fF -> m_bb0:f2
+m_bb0:f1 -> f_bb4:f
+m_bb0:f2 -> f_bb4:f
+}
+

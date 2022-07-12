@@ -1,0 +1,999 @@
+/home/rodrigo/test-salssa-fm/release/bin/opt --march=thumb-linux-gnueabi  -mergefunc -func-merging -func-merging-salssa=true -func-merging-operand-reorder=true -func-merging-coalescing=true -func-merging-ranking-threshold=0 -func-merging-sa-method=1 -func-merging-whole-program=true -func-merging-threshold=0 -func-merging-explore=1 -func-merging-max-param=true -func-merging-identic-type=true -func-merging-similarity-pruning=true -func-merging-unify-return=false -func-merging-debug=true -func-merging-verbose=false build/_main_._all_._files_._linked_.bc -o build/main.tmp.bc
+#FSize: 216
+#FSize: 137
+#FSize: 19
+#FSize: 238
+#FSize: 1
+#FSize: 32
+#FSize: 52
+#FSize: 54
+#FSize: 40
+#FSize: 92
+#FSize: 103
+#FSize: 42
+#FSize: 6
+#FSize: 49
+#FSize: 26
+#FSize: 1
+#FSize: 54
+#FSize: 81
+#FSize: 35
+#FSize: 63
+#FSize: 64
+#FSize: 45
+#FSize: 76
+#FSize: 81
+#FSize: 113
+#FSize: 197
+#FSize: 31
+#FSize: 117
+#FSize: 130
+#FSize: 808
+#FSize: 65
+#FSize: 103
+#FSize: 68
+#FSize: 111
+#FSize: 49
+#FSize: 15
+#FSize: 1198
+#FSize: 47
+#FSize: 64
+#FSize: 256
+#FSize: 175
+#FSize: 336
+#FSize: 4
+#FSize: 5
+#FSize: 17
+#FSize: 5
+#FSize: 2
+#FSize: 2
+#FSize: 2
+#FSize: 2
+#FSize: 2
+#FSize: 6
+#FSize: 24
+#FSize: 26
+#FSize: 26
+#FSize: 4
+#FSize: 1
+#FSize: 1
+#FSize: 58
+#FSize: 36
+#FSize: 2
+#FSize: 2
+#FSize: 54
+#FSize: 30
+#FSize: 56
+#FSize: 60
+#FSize: 3
+#FSize: 3
+#FSize: 29
+#FSize: 37
+#FSize: 167
+#FSize: 22
+#FSize: 22
+#FSize: 68
+#FSize: 139
+#FSize: 28
+#FSize: 149
+#FSize: 138
+#FSize: 173
+#FSize: 68
+#FSize: 52
+#FSize: 250
+#FSize: 154
+#FSize: 19
+#FSize: 106
+#FSize: 120
+#FSize: 68
+#FSize: 46
+#FSize: 49
+#FSize: 44
+#FSize: 44
+#FSize: 185
+#FSize: 127
+#FSize: 129
+#FSize: 110
+#FSize: 13
+#FSize: 73
+#FSize: 70
+#FSize: 109
+#FSize: 10
+#FSize: 72
+#FSize: 194
+#FSize: 16
+#FSize: 132
+#FSize: 121
+#FSize: 107
+#FSize: 6
+#FSize: 50
+#FSize: 45
+#FSize: 280
+#FSize: 184
+#FSize: 55
+#FSize: 1
+#FSize: 300
+#FSize: 257
+#FSize: 225
+#FSize: 140
+#FSize: 1
+#FSize: 9
+#FSize: 89
+#FSize: 27
+#FSize: 52
+#FSize: 54
+#FSize: 76
+#FSize: 64
+#FSize: 112
+#FSize: 99
+#FSize: 18
+#FSize: 178
+#FSize: 28
+#FSize: 170
+#FSize: 260
+#FSize: 138
+#FSize: 15
+#FSize: 75
+#FSize: 74
+#FSize: 61
+#FSize: 73
+#FSize: 33
+#FSize: 52
+#FSize: 165
+#FSize: 1
+#FSize: 5
+#FSize: 81
+#FSize: 62
+#FSize: 41
+#FSize: 90
+#FSize: 175
+#FSize: 58
+#FSize: 43
+#FSize: 7
+#FSize: 17
+#FSize: 146
+#FSize: 228
+#FSize: 338
+#FSize: 128
+#FSize: 513
+#FSize: 58
+#FSize: 77
+#FSize: 238
+#FSize: 29
+#FSize: 102
+#FSize: 276
+#FSize: 129
+#FSize: 1
+#FSize: 30
+#FSize: 127
+#FSize: 26
+#FSize: 64
+#FSize: 210
+#FSize: 78
+#FSize: 93
+#FSize: 40
+#FSize: 81
+#FSize: 17
+#FSize: 65
+#FSize: 37
+#FSize: 31
+#FSize: 39
+#FSize: 87
+#FSize: 14
+#FSize: 114
+#FSize: 56
+#FSize: 53
+#FSize: 29
+#FSize: 192
+#FSize: 8
+#FSize: 139
+#FSize: 123
+#FSize: 220
+#FSize: 33
+#FSize: 6
+#FSize: 124
+#FSize: 172
+#FSize: 132
+#FSize: 49
+#FSize: 3
+#FSize: 13
+#FSize: 15
+#FSize: 125
+#FSize: 25
+#FSize: 287
+#FSize: 323
+#FSize: 42
+#FSize: 48
+#FSize: 145
+#FSize: 111
+#FSize: 106
+#FSize: 134
+#FSize: 53
+#FSize: 302
+#FSize: 53
+#FSize: 30
+#FSize: 66
+#FSize: 65
+#FSize: 28
+#FSize: 164
+#FSize: 135
+#FSize: 129
+#FSize: 44
+#FSize: 214
+#FSize: 170
+#FSize: 184
+#FSize: 105
+#FSize: 321
+#FSize: 40
+#FSize: 313
+#FSize: 27
+#FSize: 21
+#FSize: 66
+#FSize: 83
+#FSize: 123
+#FSize: 3
+#FSize: 36
+#FSize: 29
+#FSize: 58
+#FSize: 66
+#FSize: 76
+#FSize: 163
+#FSize: 12
+#FSize: 74
+#FSize: 2
+#FSize: 2
+#FSize: 79
+#FSize: 35
+#FSize: 108
+#FSize: 39
+#FSize: 59
+#FSize: 80
+#FSize: 29
+#FSize: 17
+#FSize: 32
+#FSize: 37
+#FSize: 49
+#FSize: 10
+#FSize: 12
+#FSize: 13
+#FSize: 10
+#FSize: 10
+#FSize: 90
+#FSize: 1
+#FSize: 376
+#FSize: 42
+#FSize: 50
+#FSize: 107
+#FSize: 60
+#FSize: 3
+#FSize: 3
+#FSize: 31
+#FSize: 109
+#FSize: 27
+#FSize: 41
+#FSize: 619
+#FSize: 158
+#FSize: 14
+#FSize: 39
+#FSize: 88
+#FSize: 150
+#FSize: 151
+#FSize: 113
+#FSize: 83
+#FSize: 26
+#FSize: 99
+#FSize: 355
+#FSize: 30
+#FSize: 253
+#FSize: 25
+#FSize: 209
+#FSize: 5
+#FSize: 27
+#FSize: 8
+#FSize: 30
+#FSize: 12
+#FSize: 70
+#FSize: 7
+#FSize: 25
+#FSize: 16
+#FSize: 26
+#FSize: 41
+#FSize: 37
+#FSize: 136
+#FSize: 94
+#FSize: 4
+#FSize: 109
+#FSize: 139
+#FSize: 120
+#FSize: 1
+#FSize: 166
+#FSize: 28
+#FSize: 418
+#NumFunctions: 310
+Merged: @finish_output_ppm, @finish_output_tga = @finish_output_ppm
+Merged: @start_iMCU_row, @start_iMCU_row.50 = @start_iMCU_row
+Merged: @jpeg_destroy_compress, @jpeg_destroy_decompress = @jpeg_destroy_compress
+Merged: @jpeg_abort_compress, @jpeg_abort_decompress = @jpeg_abort_compress
+NumFunctions: 309
+Attempting: @read_markers, @encode_mcu_huff
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 1174 + 750 <= 6743? (0) Reduction: -250% 1 : @read_markers; @encode_mcu_huff | Score 3.499501e-01
+Attempting: @encode_mcu_huff, @encode_mcu_AC_refine
+Invalid Function: @encode_mcu_huff, @encode_mcu_AC_refine
+Attempting: @jinit_c_master_control, @encode_mcu_AC_refine
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 564 + 478 <= 2283? (0) Reduction: -119% 1 : @jinit_c_master_control; @encode_mcu_AC_refine | Score 3.604240e-01
+Attempting: @encode_mcu_AC_refine, @encode_mcu_AC_first
+Estimated Sizes: 478 + 327 <= 815? (0) Reduction: -1% 1 : @encode_mcu_AC_refine; @encode_mcu_AC_first | Score 3.924794e-01
+Attempting: @decompress_smooth_data, @decode_mcu
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 433 + 345 <= 1363? (0) Reduction: -75% 1 : @decompress_smooth_data; @decode_mcu | Score 3.764554e-01
+Attempting: @parse_switches, @update_box
+Estimated Sizes: 401 + 223 <= 1474? (0) Reduction: -136% 1 : @parse_switches; @update_box | Score 3.381038e-01
+Attempting: @finish_output_bmp, @jpeg_simple_progression
+Estimated Sizes: 370 + 264 <= 771? (0) Reduction: -21% 1 : @finish_output_bmp; @jpeg_simple_progression | Score 3.390558e-01
+Attempting: @decode_mcu, @decode_mcu_AC_refine
+Estimated Sizes: 345 + 291 <= 1230? (0) Reduction: -93% 1 : @decode_mcu; @decode_mcu_AC_refine | Score 4.378698e-01
+Attempting: @encode_mcu_AC_first, @decode_mcu_AC_refine
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 327 + 291 <= 1170? (0) Reduction: -89% 1 : @encode_mcu_AC_first; @decode_mcu_AC_refine | Score 4.127466e-01
+Attempting: @get_sof, @emit_eobrun
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 321 + 229 <= 800? (0) Reduction: -45% 1 : @get_sof; @emit_eobrun | Score 3.710801e-01
+Attempting: @decode_mcu_AC_refine, @finish_pass1
+Estimated Sizes: 291 + 252 <= 1647? (0) Reduction: -203% 1 : @decode_mcu_AC_refine; @finish_pass1 | Score 3.843594e-01
+Attempting: @jpeg_idct_islow, @jpeg_idct_ifast
+Estimated Sizes: 289 + 252 <= 661? (0) Reduction: -22% 1 : @jpeg_idct_islow; @jpeg_idct_ifast | Score 4.380306e-01
+Attempting: @jpeg_set_colorspace, @jpeg_simple_progression
+Estimated Sizes: 275 + 264 <= 809? (0) Reduction: -50% 1 : @jpeg_set_colorspace; @jpeg_simple_progression | Score 3.639344e-01
+Attempting: @jinit_master_decompress, @jinit_1pass_quantizer
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 256 + 218 <= 666? (0) Reduction: -40% 1 : @jinit_master_decompress; @jinit_1pass_quantizer | Score 3.831579e-01
+Attempting: @finish_pass1, @encode_mcu_DC_first
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 252 + 220 <= 1085? (0) Reduction: -129% 1 : @finish_pass1; @encode_mcu_DC_first | Score 3.838583e-01
+Attempting: @emit_header, @encode_mcu_DC_first
+Estimated Sizes: 252 + 220 <= 676? (0) Reduction: -43% 1 : @emit_header; @encode_mcu_DC_first | Score 3.404762e-01
+Attempting: @jpeg_idct_ifast, @jpeg_idct_4x4
+Estimated Sizes: 252 + 197 <= 630? (0) Reduction: -40% 1 : @jpeg_idct_ifast; @jpeg_idct_4x4 | Score 4.085366e-01
+Attempting: @get_app0, @get_app14
+Estimated Sizes: 247 + 165 <= 402? (1) Reduction: 2% 1 : @get_app0; @get_app14 | Score 4.037123e-01
+Merged: @get_app0, @get_app14 = @.m.f.0
+Attempting: @.m.f.0, @consume_markers
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 394 + 239 <= 855? (0) Reduction: -35% 1 : @.m.f.0; @consume_markers | Score 3.043478e-01
+Attempting: @fill_inverse_cmap, @emit_eobrun
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 246 + 229 <= 849? (0) Reduction: -78% 1 : @fill_inverse_cmap; @emit_eobrun | Score 3.513011e-01
+Attempting: @consume_markers, @jinit_1pass_quantizer
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 239 + 218 <= 662? (0) Reduction: -44% 1 : @consume_markers; @jinit_1pass_quantizer | Score 4.016736e-01
+Attempting: @jpeg_idct_float, @jpeg_fdct_float
+Estimated Sizes: 237 + 121 <= 561? (0) Reduction: -56% 1 : @jpeg_idct_float; @jpeg_fdct_float | Score 3.125000e-01
+Attempting: @process_data_context_main, @realize_virt_arrays
+Estimated Sizes: 232 + 192 <= 714? (0) Reduction: -68% 1 : @process_data_context_main; @realize_virt_arrays | Score 3.876543e-01
+Attempting: @emit_eobrun, @encode_mcu_DC_first
+Estimated Sizes: 229 + 220 <= 503? (0) Reduction: -12% 1 : @emit_eobrun; @encode_mcu_DC_first | Score 4.506438e-01
+Attempting: @update_box, @jinit_1pass_quantizer
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 223 + 218 <= 765? (0) Reduction: -73% 1 : @update_box; @jinit_1pass_quantizer | Score 3.298755e-01
+Attempting: @encode_mcu_DC_first, @jinit_1pass_quantizer
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Invalid Function: @encode_mcu_DC_first, @jinit_1pass_quantizer
+Attempting: @jinit_1pass_quantizer, @jpeg_gen_optimal_table
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 218 + 159 <= 651? (0) Reduction: -72% 1 : @jinit_1pass_quantizer; @jpeg_gen_optimal_table | Score 4.004739e-01
+Attempting: @start_input_pass, @per_scan_setup
+Estimated Sizes: 212 + 157 <= 343? (1) Reduction: 7% 1 : @start_input_pass; @per_scan_setup | Score 4.122563e-01
+Merged: @start_input_pass, @per_scan_setup = @.m.f.1
+Attempting: @.m.f.1, @jpeg_calc_output_dimensions
+Estimated Sizes: 338 + 179 <= 747? (0) Reduction: -44% 1 : @.m.f.1; @jpeg_calc_output_dimensions | Score 3.094340e-01
+Attempting: @jinit_color_converter, @jinit_color_deconverter
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 212 + 151 <= 410? (0) Reduction: -12% 1 : @jinit_color_converter; @jinit_color_deconverter | Score 3.846154e-01
+Attempting: @start_pass_phuff_decoder, @jpeg_consume_input
+Estimated Sizes: 208 + 164 <= 488? (0) Reduction: -31% 1 : @start_pass_phuff_decoder; @jpeg_consume_input | Score 3.700787e-01
+Attempting: @h2v2_smooth_downsample, @fullsize_smooth_downsample
+Estimated Sizes: 202 + 119 <= 358? (0) Reduction: -11% 1 : @h2v2_smooth_downsample; @fullsize_smooth_downsample | Score 3.679525e-01
+Attempting: @read_color_map, @jpeg_gen_optimal_table
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 197 + 159 <= 527? (0) Reduction: -48% 1 : @read_color_map; @jpeg_gen_optimal_table | Score 3.709677e-01
+Attempting: @jpeg_idct_4x4, @jpeg_idct_2x2
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 197 + 122 <= 395? (0) Reduction: -23% 1 : @jpeg_idct_4x4; @jpeg_idct_2x2 | Score 3.852691e-01
+Attempting: @realize_virt_arrays, @jpeg_calc_output_dimensions
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 192 + 179 <= 578? (0) Reduction: -55% 1 : @realize_virt_arrays; @jpeg_calc_output_dimensions | Score 3.994413e-01
+Attempting: @main1, @next_marker
+Estimated Sizes: 179 + 102 <= 383? (0) Reduction: -36% 1 : @main1; @next_marker | Score 3.510204e-01
+Attempting: @jpeg_calc_output_dimensions, @decode_mcu_DC_first
+Estimated Sizes: 179 + 159 <= 617? (0) Reduction: -82% 1 : @jpeg_calc_output_dimensions; @decode_mcu_DC_first | Score 4.110787e-01
+Attempting: @decode_mcu_AC_first, @decode_mcu_DC_first
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 176 + 159 <= 322? (1) Reduction: 3% 1 : @decode_mcu_AC_first; @decode_mcu_DC_first | Score 4.548023e-01
+Merged: @decode_mcu_AC_first, @decode_mcu_DC_first = @.m.f.2
+Attempting: @prepare_for_pass, @jpeg_read_coefficients
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 171 + 128 <= 401? (0) Reduction: -34% 1 : @prepare_for_pass; @jpeg_read_coefficients | Score 3.310345e-01
+Attempting: @jpeg_fdct_islow, @jpeg_fdct_ifast
+Estimated Sizes: 169 + 135 <= 386? (0) Reduction: -26% 1 : @jpeg_fdct_islow; @jpeg_fdct_ifast | Score 4.129032e-01
+Attempting: @jinit_upsampler, @jinit_downsampler
+Estimated Sizes: 169 + 126 <= 386? (0) Reduction: -30% 1 : @jinit_upsampler; @jinit_downsampler | Score 4.006849e-01
+Attempting: @jpeg_consume_input, @jpeg_copy_critical_parameters
+Estimated Sizes: 164 + 160 <= 424? (0) Reduction: -30% 1 : @jpeg_consume_input; @jpeg_copy_critical_parameters | Score 3.798220e-01
+Attempting: @h2v2_merged_upsample, @h2v1_merged_upsample
+Estimated Sizes: 164 + 115 <= 215? (1) Reduction: 22% 1 : @h2v2_merged_upsample; @h2v1_merged_upsample | Score 4.049080e-01
+Merged: @h2v2_merged_upsample, @h2v1_merged_upsample = @.m.f.3
+Attempting: @.m.f.3, @jpeg_gen_optimal_table
+Estimated Sizes: 201 + 159 <= 674? (0) Reduction: -87% 1 : @.m.f.3; @jpeg_gen_optimal_table | Score 3.011494e-01
+Attempting: @jpeg_copy_critical_parameters, @jinit_color_deconverter
+Estimated Sizes: 160 + 151 <= 437? (0) Reduction: -40% 1 : @jpeg_copy_critical_parameters; @jinit_color_deconverter | Score 3.761194e-01
+Attempting: @jpeg_gen_optimal_table, @jpeg_make_d_derived_tbl
+Estimated Sizes: 159 + 115 <= 623? (0) Reduction: -127% 1 : @jpeg_gen_optimal_table; @jpeg_make_d_derived_tbl | Score 3.908046e-01
+Attempting: @pre_process_context, @pre_process_data
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Invalid Function: @pre_process_context, @pre_process_data
+Attempting: @compress_data, @compress_output
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 158 + 155 <= 466? (0) Reduction: -48% 1 : @compress_data; @compress_output | Score 4.269006e-01
+Attempting: @pass2_fs_dither, @fullsize_smooth_downsample
+Estimated Sizes: 157 + 119 <= 459? (0) Reduction: -66% 1 : @pass2_fs_dither; @fullsize_smooth_downsample | Score 3.826367e-01
+Attempting: @decompress_onepass, @pre_process_data
+Estimated Sizes: 157 + 148 <= 654? (0) Reduction: -114% 1 : @decompress_onepass; @pre_process_data | Score 3.980263e-01
+Attempting: @write_scan_header, @encode_mcu_DC_refine
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 156 + 120 <= 469? (0) Reduction: -69% 1 : @write_scan_header; @encode_mcu_DC_refine | Score 3.944223e-01
+Attempting: @compress_output, @consume_data
+Estimated Sizes: 155 + 128 <= 348? (0) Reduction: -22% 1 : @compress_output; @consume_data | Score 4.037855e-01
+Attempting: @prepare_for_output_pass, @start_pass_1_quant
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 153 + 135 <= 395? (0) Reduction: -37% 1 : @prepare_for_output_pass; @start_pass_1_quant | Score 3.435374e-01
+Attempting: @jinit_color_deconverter, @start_pass_phuff
+Estimated Sizes: 151 + 147 <= 403? (0) Reduction: -35% 1 : @jinit_color_deconverter; @start_pass_phuff | Score 3.697749e-01
+Attempting: @pre_process_data, @encode_mcu_gather
+Estimated Sizes: 148 + 121 <= 554? (0) Reduction: -105% 1 : @pre_process_data; @encode_mcu_gather | Score 3.955224e-01
+Attempting: @compress_first_pass, @compress_output.51
+Invalid Function: @compress_first_pass, @compress_output.51
+Attempting: @start_pass_phuff, @start_pass_huff
+Estimated Sizes: 147 + 118 <= 290? (0) Reduction: -9% 1 : @start_pass_phuff; @start_pass_huff | Score 4.106464e-01
+Attempting: @jpeg_set_defaults, @start_pass_huff
+Estimated Sizes: 142 + 118 <= 343? (0) Reduction: -31% 1 : @jpeg_set_defaults; @start_pass_huff | Score 3.553719e-01
+Attempting: @jinit_c_prep_controller, @jinit_d_main_controller
+Estimated Sizes: 140 + 137 <= 356? (0) Reduction: -28% 1 : @jinit_c_prep_controller; @jinit_d_main_controller | Score 4.208633e-01
+Attempting: @jinit_d_main_controller, @start_pass_main.33
+Estimated Sizes: 137 + 111 <= 376? (0) Reduction: -51% 1 : @jinit_d_main_controller; @start_pass_main.33 | Score 3.816794e-01
+Attempting: @start_pass_fdctmgr, @start_pass
+Estimated Sizes: 136 + 121 <= 292? (0) Reduction: -13% 1 : @start_pass_fdctmgr; @start_pass | Score 4.270463e-01
+Attempting: @start_pass_1_quant, @encode_mcu_DC_refine
+Estimated Sizes: 135 + 120 <= 374? (0) Reduction: -46% 1 : @start_pass_1_quant; @encode_mcu_DC_refine | Score 3.992537e-01
+Attempting: @consume_data, @compress_output.51
+Estimated Sizes: 128 + 117 <= 241? (1) Reduction: 1% 1 : @consume_data; @compress_output.51 | Score 4.552239e-01
+Merged: @consume_data, @compress_output.51 = @.m.f.4
+Attempting: @.m.f.4, @jpeg_make_d_derived_tbl
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 229 + 115 <= 665? (0) Reduction: -93% 1 : @.m.f.4; @jpeg_make_d_derived_tbl | Score 2.913580e-01
+Attempting: @write_colormap, @next_marker
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Invalid Function: @write_colormap, @next_marker
+Attempting: @jpeg_read_coefficients, @jinit_downsampler
+Estimated Sizes: 128 + 126 <= 444? (0) Reduction: -74% 1 : @jpeg_read_coefficients; @jinit_downsampler | Score 3.716475e-01
+Attempting: @access_virt_barray, @jinit_downsampler
+Estimated Sizes: 126 + 126 <= 376? (0) Reduction: -49% 1 : @access_virt_barray; @jinit_downsampler | Score 3.759690e-01
+Attempting: @jinit_downsampler, @access_virt_sarray
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 126 + 125 <= 444? (0) Reduction: -76% 1 : @jinit_downsampler; @access_virt_sarray | Score 3.789062e-01
+Attempting: @access_virt_sarray, @start_pass_main.33
+Estimated Sizes: 125 + 111 <= 432? (0) Reduction: -83% 1 : @access_virt_sarray; @start_pass_main.33 | Score 3.640000e-01
+Attempting: @jpeg_idct_2x2, @forward_DCT
+Estimated Sizes: 122 + 106 <= 382? (0) Reduction: -67% 1 : @jpeg_idct_2x2; @forward_DCT | Score 3.588710e-01
+Attempting: @decompress_data, @encode_mcu_gather
+Estimated Sizes: 121 + 121 <= 438? (0) Reduction: -80% 1 : @decompress_data; @encode_mcu_gather | Score 3.720000e-01
+Attempting: @encode_mcu_gather, @encode_mcu_DC_refine
+Estimated Sizes: 121 + 120 <= 468? (0) Reduction: -94% 1 : @encode_mcu_gather; @encode_mcu_DC_refine | Score 4.147287e-01
+Attempting: @start_pass, @start_pass_main.33
+Estimated Sizes: 121 + 111 <= 373? (0) Reduction: -60% 1 : @start_pass; @start_pass_main.33 | Score 3.590734e-01
+Attempting: @encode_mcu_DC_refine, @emit_restart
+Estimated Sizes: 120 + 105 <= 277? (0) Reduction: -23% 1 : @encode_mcu_DC_refine; @emit_restart | Score 4.000000e-01
+Attempting: @jinit_2pass_quantizer, @start_pass_2_quant
+Estimated Sizes: 119 + 102 <= 233? (0) Reduction: -5% 1 : @jinit_2pass_quantizer; @start_pass_2_quant | Score 3.947369e-01
+Attempting: @fullsize_smooth_downsample, @h2v2_fancy_upsample
+Estimated Sizes: 119 + 97 <= 317? (0) Reduction: -46% 1 : @fullsize_smooth_downsample; @h2v2_fancy_upsample | Score 3.914894e-01
+Attempting: @start_pass_huff, @start_pass_2_quant
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 118 + 102 <= 300? (0) Reduction: -36% 1 : @start_pass_huff; @start_pass_2_quant | Score 3.839286e-01
+Attempting: @jpeg_make_d_derived_tbl, @jpeg_make_c_derived_tbl
+Estimated Sizes: 115 + 86 <= 239? (0) Reduction: -18% 1 : @jpeg_make_d_derived_tbl; @jpeg_make_c_derived_tbl | Score 4.128788e-01
+Attempting: @start_pass_main.33, @select_scan_parameters
+Estimated Sizes: 111 + 82 <= 274? (0) Reduction: -41% 1 : @start_pass_main.33; @select_scan_parameters | Score 3.649289e-01
+Attempting: @free_pool, @alloc_small
+Estimated Sizes: 107 + 103 <= 325? (0) Reduction: -54% 1 : @free_pool; @alloc_small | Score 3.913043e-01
+Attempting: @forward_DCT, @jpeg_make_c_derived_tbl
+Estimated Sizes: 106 + 86 <= 346? (0) Reduction: -80% 1 : @forward_DCT; @jpeg_make_c_derived_tbl | Score 3.928571e-01
+Attempting: @jpeg_finish_compress, @jpeg_write_raw_data
+Estimated Sizes: 106 + 79 <= 215? (0) Reduction: -16% 1 : @jpeg_finish_compress; @jpeg_write_raw_data | Score 3.736842e-01
+Attempting: @jpeg_write_coefficients, @start_pass_2_quant
+Estimated Sizes: 105 + 102 <= 252? (0) Reduction: -21% 1 : @jpeg_write_coefficients; @start_pass_2_quant | Score 3.592233e-01
+Attempting: @emit_restart, @next_marker
+Estimated Sizes: 105 + 102 <= 344? (0) Reduction: -66% 1 : @emit_restart; @next_marker | Score 4.037559e-01
+Attempting: @put_pixel_rows.30, @finish_pass_phuff
+Estimated Sizes: 104 + 74 <= 292? (0) Reduction: -64% 1 : @put_pixel_rows.30; @finish_pass_phuff | Score 3.769633e-01
+Attempting: @jinit_merged_upsampler, @jinit_write_ppm
+Estimated Sizes: 103 + 74 <= 210? (0) Reduction: -18% 1 : @jinit_merged_upsampler; @jinit_write_ppm | Score 3.650794e-01
+Attempting: @alloc_small, @alloc_large
+Estimated Sizes: 103 + 61 <= 150? (1) Reduction: 8% 1 : @alloc_small; @alloc_large | Score 3.617021e-01
+Merged: @alloc_small, @alloc_large = @.m.f.5
+Attempting: @.m.f.5, @jpeg_make_c_derived_tbl
+Estimated Sizes: 138 + 86 <= 399? (0) Reduction: -78% 1 : @.m.f.5; @jpeg_make_c_derived_tbl | Score 3.239437e-01
+Attempting: @start_pass_2_quant, @start_pass_huff_decoder
+Estimated Sizes: 102 + 102 <= 266? (0) Reduction: -30% 1 : @start_pass_2_quant; @start_pass_huff_decoder | Score 3.543689e-01
+Attempting: @start_pass_huff_decoder, @select_scan_parameters
+Estimated Sizes: 102 + 82 <= 252? (0) Reduction: -36% 1 : @start_pass_huff_decoder; @select_scan_parameters | Score 3.796791e-01
+Attempting: @next_marker, @jpeg_fill_bit_buffer
+Estimated Sizes: 102 + 97 <= 331? (0) Reduction: -66% 1 : @next_marker; @jpeg_fill_bit_buffer | Score 3.883929e-01
+Attempting: @start_output_pass, @use_merged_upsample
+Estimated Sizes: 100 + 68 <= 248? (0) Reduction: -47% 1 : @start_output_pass; @use_merged_upsample | Score 3.559322e-01
+Attempting: @emit_sof, @sep_upsample
+Estimated Sizes: 98 + 78 <= 235? (0) Reduction: -33% 1 : @emit_sof; @sep_upsample | Score 3.600000e-01
+Attempting: @h2v2_fancy_upsample, @h2v1_fancy_upsample
+Estimated Sizes: 97 + 73 <= 196? (0) Reduction: -15% 1 : @h2v2_fancy_upsample; @h2v1_fancy_upsample | Score 4.171123e-01
+Attempting: @jpeg_fill_bit_buffer, @jpeg_make_c_derived_tbl
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 97 + 86 <= 353? (0) Reduction: -92% 1 : @jpeg_fill_bit_buffer; @jpeg_make_c_derived_tbl | Score 3.716814e-01
+Attempting: @forward_DCT_float, @h2v1_fancy_upsample
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 96 + 73 <= 266? (0) Reduction: -57% 1 : @forward_DCT_float; @h2v1_fancy_upsample | Score 3.405405e-01
+Attempting: @cmyk_ycck_convert, @rgb_ycc_convert
+Estimated Sizes: 94 + 84 <= 154? (1) Reduction: 13% 1 : @cmyk_ycck_convert; @rgb_ycc_convert | Score 4.717949e-01
+Merged: @cmyk_ycck_convert, @rgb_ycc_convert = @.m.f.6
+Attempting: @.m.f.6, @quantize_fs_dither
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 138 + 93 <= 391? (0) Reduction: -69% 1 : @.m.f.6; @quantize_fs_dither | Score 3.419118e-01
+Attempting: @jinit_d_coef_controller, @jinit_c_coef_controller
+Estimated Sizes: 93 + 72 <= 169? (0) Reduction: -2% 1 : @jinit_d_coef_controller; @jinit_c_coef_controller | Score 3.937500e-01
+Attempting: @quantize_fs_dither, @int_downsample
+Estimated Sizes: 93 + 91 <= 333? (0) Reduction: -80% 1 : @quantize_fs_dither; @int_downsample | Score 3.902439e-01
+Attempting: @decode_mcu_DC_refine, @finish_pass_huff
+Estimated Sizes: 93 + 85 <= 251? (0) Reduction: -41% 1 : @decode_mcu_DC_refine; @finish_pass_huff | Score 3.798077e-01
+Attempting: @int_downsample, @create_colorindex
+Estimated Sizes: 91 + 90 <= 301? (0) Reduction: -66% 1 : @int_downsample; @create_colorindex | Score 4.120879e-01
+Attempting: @create_colorindex, @h2v2_downsample
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 90 + 70 <= 267? (0) Reduction: -66% 1 : @create_colorindex; @h2v2_downsample | Score 4.011976e-01
+Attempting: @start_output_tga, @jinit_write_gif
+Estimated Sizes: 89 + 87 <= 222? (0) Reduction: -26% 1 : @start_output_tga; @jinit_write_gif | Score 3.809524e-01
+Attempting: @jinit_memory_mgr, @jinit_write_ppm
+Estimated Sizes: 88 + 74 <= 221? (0) Reduction: -36% 1 : @jinit_memory_mgr; @jinit_write_ppm | Score 2.956989e-01
+Attempting: @jinit_write_bmp, @jinit_write_ppm
+Estimated Sizes: 88 + 74 <= 163? (0) Reduction: 0% 1 : @jinit_write_bmp; @jinit_write_ppm | Score 4.176471e-01
+Attempting: @jinit_write_gif, @jinit_compress_master
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 87 + 69 <= 192? (0) Reduction: -23% 1 : @jinit_write_gif; @jinit_compress_master | Score 3.448276e-01
+Attempting: @jpeg_make_c_derived_tbl, @h2v2_downsample
+Estimated Sizes: 86 + 70 <= 283? (0) Reduction: -81% 1 : @jpeg_make_c_derived_tbl; @h2v2_downsample | Score 3.664922e-01
+Attempting: @finish_pass_huff, @jpeg_huff_decode
+Estimated Sizes: 85 + 81 <= 255? (0) Reduction: -53% 1 : @finish_pass_huff; @jpeg_huff_decode | Score 4.032258e-01
+Attempting: @select_scan_parameters, @jpeg_start_decompress
+Estimated Sizes: 82 + 73 <= 230? (0) Reduction: -48% 1 : @select_scan_parameters; @jpeg_start_decompress | Score 3.803681e-01
+Attempting: @jpeg_huff_decode, @write_frame_header
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 81 + 78 <= 225? (0) Reduction: -41% 1 : @jpeg_huff_decode; @write_frame_header | Score 3.734940e-01
+Attempting: @format_message, @use_merged_upsample
+Estimated Sizes: 80 + 68 <= 202? (0) Reduction: -36% 1 : @format_message; @use_merged_upsample | Score 3.695652e-01
+Attempting: @jpeg_write_raw_data, @jpeg_read_raw_data
+Estimated Sizes: 79 + 70 <= 153? (0) Reduction: -2% 1 : @jpeg_write_raw_data; @jpeg_read_raw_data | Score 4.480520e-01
+Attempting: @ycck_cmyk_convert, @ycc_rgb_convert
+Estimated Sizes: 78 + 70 <= 141? (1) Reduction: 4% 1 : @ycck_cmyk_convert; @ycc_rgb_convert | Score 4.561403e-01
+Merged: @ycck_cmyk_convert, @ycc_rgb_convert = @.m.f.7
+Attempting: @.m.f.7, @quantize3_ord_dither
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 125 + 68 <= 277? (0) Reduction: -43% 1 : @.m.f.7; @quantize3_ord_dither | Score 2.991071e-01
+Attempting: @write_frame_header, @use_merged_upsample
+Estimated Sizes: 78 + 68 <= 223? (0) Reduction: -52% 1 : @write_frame_header; @use_merged_upsample | Score 3.973510e-01
+Attempting: @sep_upsample, @do_sarray_io
+Estimated Sizes: 78 + 76 <= 235? (0) Reduction: -52% 1 : @sep_upsample; @do_sarray_io | Score 3.750000e-01
+Attempting: @do_barray_io, @do_sarray_io
+Estimated Sizes: 77 + 76 <= 132? (1) Reduction: 13% 1 : @do_barray_io; @do_sarray_io | Score 4.685315e-01
+Merged: @do_barray_io, @do_sarray_io = @.m.f.8
+Attempting: @start_pass_dpost, @jpeg_CreateDecompress
+OptimizationTriggered: Labels of Conditional Branch Reordering
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 76 + 55 <= 176? (0) Reduction: -34% 1 : @start_pass_dpost; @jpeg_CreateDecompress | Score 3.617021e-01
+Attempting: @post_process_prepass, @post_process_2pass
+Estimated Sizes: 75 + 70 <= 142? (1) Reduction: 2% 1 : @post_process_prepass; @post_process_2pass | Score 4.409449e-01
+Merged: @post_process_prepass, @post_process_2pass = @.m.f.9
+Attempting: @.m.f.9, @merged_2v_upsample
+Estimated Sizes: 122 + 70 <= 263? (0) Reduction: -36% 1 : @.m.f.9; @merged_2v_upsample | Score 3.141361e-01
+Attempting: @output_pass_setup, @jpeg_start_decompress
+Estimated Sizes: 75 + 73 <= 185? (0) Reduction: -25% 1 : @output_pass_setup; @jpeg_start_decompress | Score 3.825503e-01
+Attempting: @finish_pass_phuff, @merged_2v_upsample
+Estimated Sizes: 74 + 70 <= 261? (0) Reduction: -81% 1 : @finish_pass_phuff; @merged_2v_upsample | Score 3.959731e-01
+Attempting: @jinit_write_ppm, @jinit_d_post_controller
+Estimated Sizes: 74 + 62 <= 170? (0) Reduction: -25% 1 : @jinit_write_ppm; @jinit_d_post_controller | Score 3.432836e-01
+Attempting: @jpeg_write_scanlines, @jpeg_read_raw_data
+Estimated Sizes: 74 + 70 <= 164? (0) Reduction: -13% 1 : @jpeg_write_scanlines; @jpeg_read_raw_data | Score 4.228188e-01
+Attempting: @h2v1_fancy_upsample, @h2v2_downsample
+Estimated Sizes: 73 + 70 <= 209? (0) Reduction: -46% 1 : @h2v1_fancy_upsample; @h2v2_downsample | Score 3.757962e-01
+Attempting: @emit_dht, @emit_dqt
+Estimated Sizes: 73 + 68 <= 145? (0) Reduction: -2% 1 : @emit_dht; @emit_dqt | Score 4.112903e-01
+Attempting: @jpeg_start_decompress, @jpeg_read_raw_data
+Estimated Sizes: 73 + 70 <= 183? (0) Reduction: -27% 1 : @jpeg_start_decompress; @jpeg_read_raw_data | Score 3.918919e-01
+Attempting: @jinit_c_coef_controller, @jinit_phuff_decoder
+Estimated Sizes: 72 + 39 <= 139? (0) Reduction: -25% 1 : @jinit_c_coef_controller; @jinit_phuff_decoder | Score 3.636364e-01
+Attempting: @COM_handler, @emit_dqt
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 71 + 68 <= 190? (0) Reduction: -36% 1 : @COM_handler; @emit_dqt | Score 3.783784e-01
+Attempting: @merged_2v_upsample, @jpeg_resync_to_restart
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 70 + 69 <= 201? (0) Reduction: -44% 1 : @merged_2v_upsample; @jpeg_resync_to_restart | Score 3.571429e-01
+Attempting: @jpeg_read_raw_data, @jpeg_read_scanlines
+Estimated Sizes: 70 + 58 <= 101? (1) Reduction: 21% 1 : @jpeg_read_raw_data; @jpeg_read_scanlines | Score 4.179105e-01
+Merged: @jpeg_read_raw_data, @jpeg_read_scanlines = @.m.f.10
+Attempting: @.m.f.10, @jpeg_CreateDecompress
+Estimated Sizes: 94 + 55 <= 197? (0) Reduction: -32% 1 : @.m.f.10; @jpeg_CreateDecompress | Score 3.375000e-01
+Attempting: @h2v2_downsample, @h2v1_downsample
+Estimated Sizes: 70 + 57 <= 114? (1) Reduction: 10% 1 : @h2v2_downsample; @h2v1_downsample | Score 4.507042e-01
+Merged: @h2v2_downsample, @h2v1_downsample = @.m.f.11
+Attempting: @.m.f.11, @quantize_ord_dither
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 100 + 58 <= 269? (0) Reduction: -70% 1 : @.m.f.11; @quantize_ord_dither | Score 3.052632e-01
+Attempting: @jpeg_resync_to_restart, @emit_dqt
+Estimated Sizes: 69 + 68 <= 183? (0) Reduction: -33% 1 : @jpeg_resync_to_restart; @emit_dqt | Score 3.809524e-01
+Attempting: @jinit_compress_master, @jpeg_finish_decompress
+Estimated Sizes: 69 + 66 <= 166? (0) Reduction: -22% 1 : @jinit_compress_master; @jpeg_finish_decompress | Score 3.888889e-01
+Attempting: @emit_dqt, @jpeg_add_quant_table
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 68 + 49 <= 138? (0) Reduction: -17% 1 : @emit_dqt; @jpeg_add_quant_table | Score 3.831776e-01
+Attempting: @quantize3_ord_dither, @quantize_ord_dither
+Estimated Sizes: 68 + 58 <= 178? (0) Reduction: -41% 1 : @quantize3_ord_dither; @quantize_ord_dither | Score 4.142857e-01
+Attempting: @use_merged_upsample, @process_data_simple_main
+Estimated Sizes: 68 + 63 <= 195? (0) Reduction: -48% 1 : @use_merged_upsample; @process_data_simple_main | Score 3.387097e-01
+Attempting: @jpeg_finish_decompress, @jpeg_CreateDecompress
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 66 + 55 <= 138? (0) Reduction: -14% 1 : @jpeg_finish_decompress; @jpeg_CreateDecompress | Score 3.671875e-01
+Attempting: @skip_variable, @read_restart_marker
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 64 + 48 <= 144? (0) Reduction: -28% 1 : @skip_variable; @read_restart_marker | Score 3.693694e-01
+Attempting: @process_data_simple_main, @output
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 63 + 54 <= 161? (0) Reduction: -37% 1 : @process_data_simple_main; @output | Score 3.761468e-01
+Attempting: @write_header, @add_map_entry
+Estimated Sizes: 63 + 50 <= 141? (0) Reduction: -24% 1 : @write_header; @add_map_entry | Score 3.170732e-01
+Attempting: @jinit_d_post_controller, @jinit_c_main_controller
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 62 + 54 <= 150? (0) Reduction: -29% 1 : @jinit_d_post_controller; @jinit_c_main_controller | Score 3.796296e-01
+Attempting: @build_ycc_rgb_table, @rgb_ycc_start
+Estimated Sizes: 62 + 50 <= 152? (0) Reduction: -35% 1 : @build_ycc_rgb_table; @rgb_ycc_start | Score 3.596491e-01
+Attempting: @finish_pass_gather, @finish_pass_gather_phuff
+Estimated Sizes: 61 + 53 <= 148? (0) Reduction: -29% 1 : @finish_pass_gather; @finish_pass_gather_phuff | Score 4.146341e-01
+Attempting: @finish_output_gif, @jpeg_finish_output
+Estimated Sizes: 61 + 51 <= 142? (0) Reduction: -26% 1 : @finish_output_gif; @jpeg_finish_output | Score 3.518519e-01
+Attempting: @int_upsample, @color_quantize
+Estimated Sizes: 58 + 44 <= 178? (0) Reduction: -74% 1 : @int_upsample; @color_quantize | Score 4.336283e-01
+Attempting: @quantize_ord_dither, @color_quantize
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 58 + 44 <= 165? (0) Reduction: -61% 1 : @quantize_ord_dither; @color_quantize | Score 4.152542e-01
+Attempting: @start_pass_coef.49, @jpeg_CreateDecompress
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 57 + 55 <= 162? (0) Reduction: -44% 1 : @start_pass_coef.49; @jpeg_CreateDecompress | Score 3.680000e-01
+Attempting: @jpeg_CreateDecompress, @jpeg_CreateCompress
+Estimated Sizes: 55 + 53 <= 115? (0) Reduction: -6% 1 : @jpeg_CreateDecompress; @jpeg_CreateCompress | Score 4.750000e-01
+Attempting: @jinit_c_main_controller, @jinit_phuff_decoder
+Estimated Sizes: 54 + 39 <= 131? (0) Reduction: -40% 1 : @jinit_c_main_controller; @jinit_phuff_decoder | Score 3.775510e-01
+Attempting: @output, @rgb_gray_convert
+Estimated Sizes: 54 + 48 <= 153? (0) Reduction: -50% 1 : @output; @rgb_gray_convert | Score 3.364486e-01
+Attempting: @pass2_no_dither, @prescan_quantize
+Estimated Sizes: 54 + 42 <= 103? (0) Reduction: -7% 1 : @pass2_no_dither; @prescan_quantize | Score 4.400000e-01
+Attempting: @jpeg_CreateCompress, @jpeg_read_header
+Estimated Sizes: 53 + 34 <= 113? (0) Reduction: -29% 1 : @jpeg_CreateCompress; @jpeg_read_header | Score 3.402062e-01
+Attempting: @finish_pass_gather_phuff, @write_tables_only
+Estimated Sizes: 53 + 51 <= 147? (0) Reduction: -41% 1 : @finish_pass_gather_phuff; @write_tables_only | Score 3.617021e-01
+Attempting: @write_tables_only, @jpeg_suppress_tables
+Estimated Sizes: 51 + 30 <= 95? (0) Reduction: -17% 1 : @write_tables_only; @jpeg_suppress_tables | Score 3.880597e-01
+Attempting: @jpeg_finish_output, @jpeg_add_quant_table
+Estimated Sizes: 51 + 49 <= 119? (0) Reduction: -18% 1 : @jpeg_finish_output; @jpeg_add_quant_table | Score 3.762376e-01
+Attempting: @add_map_entry, @color_quantize
+Estimated Sizes: 50 + 44 <= 135? (0) Reduction: -43% 1 : @add_map_entry; @color_quantize | Score 3.839286e-01
+Attempting: @rgb_ycc_start, @init_error_limit
+Estimated Sizes: 50 + 45 <= 134? (0) Reduction: -41% 1 : @rgb_ycc_start; @init_error_limit | Score 3.431373e-01
+Attempting: @alloc_barray, @null_convert
+Estimated Sizes: 50 + 33 <= 140? (0) Reduction: -68% 1 : @alloc_barray; @null_convert | Score 3.370787e-01
+Attempting: @jpeg_add_quant_table, @jpeg_start_output
+Estimated Sizes: 49 + 32 <= 95? (0) Reduction: -17% 1 : @jpeg_add_quant_table; @jpeg_start_output | Score 3.658537e-01
+Attempting: @put_pixel_rows.126, @put_gray_rows.125
+Estimated Sizes: 49 + 41 <= 78? (1) Reduction: 13% 1 : @put_pixel_rows.126; @put_gray_rows.125 | Score 4.565217e-01
+Merged: @put_pixel_rows.126, @put_gray_rows.125 = @.m.f.12
+Attempting: @.m.f.12, @put_demapped_rgb
+Estimated Sizes: 66 + 45 <= 140? (0) Reduction: -26% 1 : @.m.f.12; @put_demapped_rgb | Score 3.387097e-01
+Attempting: @rgb_gray_convert, @color_quantize
+Estimated Sizes: 48 + 44 <= 165? (0) Reduction: -79% 1 : @rgb_gray_convert; @color_quantize | Score 3.796296e-01
+Attempting: @read_restart_marker, @read_pbm_integer
+Estimated Sizes: 48 + 38 <= 117? (0) Reduction: -36% 1 : @read_restart_marker; @read_pbm_integer | Score 3.555556e-01
+Attempting: @jpeg_new_colormap, @jpeg_read_header
+Estimated Sizes: 47 + 34 <= 93? (0) Reduction: -14% 1 : @jpeg_new_colormap; @jpeg_read_header | Score 3.820225e-01
+Attempting: @alloc_sarray, @null_convert
+Estimated Sizes: 47 + 33 <= 144? (0) Reduction: -80% 1 : @alloc_sarray; @null_convert | Score 3.604651e-01
+Attempting: @fill_input_buffer, @jpeg_read_header
+Estimated Sizes: 47 + 34 <= 97? (0) Reduction: -19% 1 : @fill_input_buffer; @jpeg_read_header | Score 3.720930e-01
+Attempting: @jpeg_start_compress, @jpeg_read_header
+Estimated Sizes: 46 + 34 <= 97? (0) Reduction: -21% 1 : @jpeg_start_compress; @jpeg_read_header | Score 3.780488e-01
+Attempting: @init_error_limit, @jinit_phuff_decoder
+Estimated Sizes: 45 + 39 <= 107? (0) Reduction: -27% 1 : @init_error_limit; @jinit_phuff_decoder | Score 3.617021e-01
+Attempting: @put_demapped_rgb, @put_demapped_gray.60
+Estimated Sizes: 45 + 35 <= 69? (1) Reduction: 13% 1 : @put_demapped_rgb; @put_demapped_gray.60 | Score 4.302326e-01
+Merged: @put_demapped_rgb, @put_demapped_gray.60 = @.m.f.13
+Attempting: @.m.f.13, @color_quantize3
+Estimated Sizes: 57 + 45 <= 152? (0) Reduction: -49% 1 : @.m.f.13; @color_quantize3 | Score 3.644068e-01
+Attempting: @color_quantize3, @color_quantize
+Estimated Sizes: 45 + 44 <= 110? (0) Reduction: -23% 1 : @color_quantize3; @color_quantize | Score 4.056604e-01
+Attempting: @color_quantize, @null_convert.25
+Estimated Sizes: 44 + 34 <= 139? (0) Reduction: -78% 1 : @color_quantize; @null_convert.25 | Score 4.315789e-01
+Attempting: @jinit_marker_reader, @jinit_phuff_decoder
+Estimated Sizes: 43 + 39 <= 114? (0) Reduction: -39% 1 : @jinit_marker_reader; @jinit_phuff_decoder | Score 3.118280e-01
+Attempting: @jpeg_write_tables, @jpeg_read_header
+Estimated Sizes: 43 + 34 <= 88? (0) Reduction: -14% 1 : @jpeg_write_tables; @jpeg_read_header | Score 3.589744e-01
+Attempting: @prescan_quantize, @grayscale_convert
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 42 + 26 <= 104? (0) Reduction: -52% 1 : @prescan_quantize; @grayscale_convert | Score 3.636364e-01
+Attempting: @process_restart, @finish_pass_master
+Estimated Sizes: 42 + 39 <= 117? (0) Reduction: -44% 1 : @process_restart; @finish_pass_master | Score 3.544304e-01
+Attempting: @term_destination, @jpeg_read_header
+Estimated Sizes: 42 + 34 <= 99? (0) Reduction: -30% 1 : @term_destination; @jpeg_read_header | Score 3.717949e-01
+Attempting: @jinit_write_targa, @jinit_inverse_dct
+Estimated Sizes: 41 + 36 <= 98? (0) Reduction: -27% 1 : @jinit_write_targa; @jinit_inverse_dct | Score 3.506494e-01
+Attempting: @process_data_simple_main.34, @emit_message
+Estimated Sizes: 41 + 31 <= 109? (0) Reduction: -51% 1 : @process_data_simple_main.34; @emit_message | Score 3.174603e-01
+Attempting: @post_process_1pass, @fullsize_downsample
+Estimated Sizes: 41 + 31 <= 118? (0) Reduction: -63% 1 : @post_process_1pass; @fullsize_downsample | Score 3.114754e-01
+Attempting: @h2v2_upsample, @h2v1_upsample
+Estimated Sizes: 40 + 30 <= 74? (0) Reduction: -5% 1 : @h2v2_upsample; @h2v1_upsample | Score 4.729730e-01
+Attempting: @jinit_forward_dct, @jinit_input_controller
+Estimated Sizes: 40 + 23 <= 88? (0) Reduction: -39% 1 : @jinit_forward_dct; @jinit_input_controller | Score 3.076923e-01
+Attempting: @jpeg_stdio_src, @jinit_inverse_dct
+Estimated Sizes: 40 + 36 <= 90? (0) Reduction: -18% 1 : @jpeg_stdio_src; @jinit_inverse_dct | Score 3.037975e-01
+Attempting: @finish_pass_master, @jpeg_start_output
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 39 + 32 <= 96? (0) Reduction: -35% 1 : @finish_pass_master; @jpeg_start_output | Score 3.333333e-01
+Attempting: @jinit_phuff_decoder, @jinit_inverse_dct
+Estimated Sizes: 39 + 36 <= 87? (0) Reduction: -15% 1 : @jinit_phuff_decoder; @jinit_inverse_dct | Score 3.827161e-01
+Attempting: @put_pixel_rows, @put_demapped_gray
+Estimated Sizes: 38 + 35 <= 74? (0) Reduction: -1% 1 : @put_pixel_rows; @put_demapped_gray | Score 4.473684e-01
+Attempting: @read_pbm_integer, @jpeg_read_header
+Estimated Sizes: 38 + 34 <= 89? (0) Reduction: -23% 1 : @read_pbm_integer; @jpeg_read_header | Score 3.750000e-01
+Attempting: @fill_dc_scans, @jpeg_suppress_tables
+Estimated Sizes: 37 + 30 <= 109? (0) Reduction: -62% 1 : @fill_dc_scans; @jpeg_suppress_tables | Score 3.150685e-01
+Attempting: @start_output_ppm, @jpeg_start_output
+Estimated Sizes: 37 + 32 <= 89? (0) Reduction: -28% 1 : @start_output_ppm; @jpeg_start_output | Score 4.032258e-01
+Attempting: @jinit_inverse_dct, @jinit_huff_decoder
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 36 + 23 <= 77? (0) Reduction: -30% 1 : @jinit_inverse_dct; @jinit_huff_decoder | Score 3.174603e-01
+Attempting: @put_demapped_gray, @put_gray_rows
+Estimated Sizes: 35 + 30 <= 59? (1) Reduction: 9% 1 : @put_demapped_gray; @put_gray_rows | Score 4.558823e-01
+Merged: @put_demapped_gray, @put_gray_rows = @.m.f.14
+Attempting: @.m.f.14, @h2v1_upsample
+Estimated Sizes: 47 + 30 <= 140? (0) Reduction: -81% 1 : @.m.f.14; @h2v1_upsample | Score 3.595506e-01
+Attempting: @request_virt_sarray, @start_pass_main
+Estimated Sizes: 35 + 27 <= 108? (0) Reduction: -74% 1 : @request_virt_sarray; @start_pass_main | Score 2.702703e-01
+Attempting: @request_virt_barray, @start_pass_main
+Estimated Sizes: 35 + 27 <= 108? (0) Reduction: -74% 1 : @request_virt_barray; @start_pass_main | Score 2.702703e-01
+Attempting: @jpeg_default_colorspace, @jpeg_read_header
+Estimated Sizes: 35 + 34 <= 78? (0) Reduction: -13% 1 : @jpeg_default_colorspace; @jpeg_read_header | Score 3.387097e-01
+Attempting: @null_convert.25, @null_convert
+Estimated Sizes: 34 + 33 <= 99? (0) Reduction: -47% 1 : @null_convert.25; @null_convert | Score 4.938272e-01
+Attempting: @jpeg_read_header, @emit_message
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 34 + 31 <= 96? (0) Reduction: -47% 1 : @jpeg_read_header; @emit_message | Score 3.880597e-01
+Attempting: @null_convert, @grayscale_convert
+Estimated Sizes: 33 + 26 <= 93? (0) Reduction: -57% 1 : @null_convert; @grayscale_convert | Score 4.444444e-01
+Attempting: @jpeg_start_output, @jpeg_write_marker
+Estimated Sizes: 32 + 28 <= 64? (0) Reduction: -6% 1 : @jpeg_start_output; @jpeg_write_marker | Score 3.833333e-01
+Attempting: @keymatch, @grayscale_convert
+Estimated Sizes: 32 + 26 <= 97? (0) Reduction: -67% 1 : @keymatch; @grayscale_convert | Score 3.676471e-01
+Attempting: @sep_downsample, @grayscale_convert
+Estimated Sizes: 32 + 26 <= 101? (0) Reduction: -74% 1 : @sep_downsample; @grayscale_convert | Score 3.064516e-01
+Attempting: @emit_message, @flush_packet
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 31 + 31 <= 84? (0) Reduction: -35% 1 : @emit_message; @flush_packet | Score 3.728814e-01
+Attempting: @fullsize_downsample, @grayscale_convert
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 31 + 26 <= 112? (0) Reduction: -96% 1 : @fullsize_downsample; @grayscale_convert | Score 3.448276e-01
+Attempting: @flush_packet, @emit_byte
+Estimated Sizes: 31 + 27 <= 70? (0) Reduction: -20% 1 : @flush_packet; @emit_byte | Score 3.965517e-01
+Attempting: @read_backing_store, @write_backing_store
+Estimated Sizes: 31 + 31 <= 58? (1) Reduction: 6% 1 : @read_backing_store; @write_backing_store | Score 5.000000e-01
+Merged: @read_backing_store, @write_backing_store = @.m.f.15
+Attempting: @.m.f.15, @jpeg_open_backing_store
+Estimated Sizes: 42 + 21 <= 80? (0) Reduction: -26% 1 : @.m.f.15; @jpeg_open_backing_store | Score 3.333333e-01
+Attempting: @write_any_marker, @main
+Estimated Sizes: 30 + 17 <= 76? (0) Reduction: -61% 1 : @write_any_marker; @main | Score 3.611111e-01
+Attempting: @copy_pixel_rows, @h2v1_upsample
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 30 + 30 <= 104? (0) Reduction: -73% 1 : @copy_pixel_rows; @h2v1_upsample | Score 3.880597e-01
+Attempting: @jpeg_suppress_tables, @h2v1_upsample
+Estimated Sizes: 30 + 30 <= 110? (0) Reduction: -83% 1 : @jpeg_suppress_tables; @h2v1_upsample | Score 3.030303e-01
+Attempting: @h2v1_upsample, @grayscale_convert
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 30 + 26 <= 105? (0) Reduction: -87% 1 : @h2v1_upsample; @grayscale_convert | Score 4.477612e-01
+Attempting: @jpeg_write_marker, @jpeg_input_complete
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 28 + 20 <= 56? (0) Reduction: -16% 1 : @jpeg_write_marker; @jpeg_input_complete | Score 4.081633e-01
+Attempting: @jpeg_getc, @emit_byte
+Estimated Sizes: 28 + 27 <= 64? (0) Reduction: -16% 1 : @jpeg_getc; @emit_byte | Score 4.067796e-01
+Attempting: @jpeg_set_quality, @jpeg_quality_scaling
+Estimated Sizes: 28 + 16 <= 31? (1) Reduction: 29% 1 : @jpeg_set_quality; @jpeg_quality_scaling | Score 4.642857e-01
+Merged: @jpeg_set_quality, @jpeg_quality_scaling = @.m.f.16
+Attempting: @.m.f.16, @main
+Estimated Sizes: 31 + 17 <= 73? (0) Reduction: -52% 1 : @.m.f.16; @main | Score 3.333333e-01
+Attempting: @jinit_huff_encoder, @jinit_huff_decoder
+Estimated Sizes: 27 + 23 <= 67? (0) Reduction: -34% 1 : @jinit_huff_encoder; @jinit_huff_decoder | Score 3.684210e-01
+Attempting: @alloc_fs_workspace, @skip_input_data
+Estimated Sizes: 27 + 21 <= 67? (0) Reduction: -39% 1 : @alloc_fs_workspace; @skip_input_data | Score 3.207547e-01
+Attempting: @start_pass_main, @start_pass_prep
+Estimated Sizes: 27 + 25 <= 71? (0) Reduction: -36% 1 : @start_pass_main; @start_pass_prep | Score 3.793103e-01
+Attempting: @jpeg_set_marker_processor, @emit_byte
+Estimated Sizes: 27 + 27 <= 70? (0) Reduction: -29% 1 : @jpeg_set_marker_processor; @emit_byte | Score 3.448276e-01
+Attempting: @emit_byte, @dump_buffer
+Estimated Sizes: 27 + 26 <= 49? (1) Reduction: 7% 1 : @emit_byte; @dump_buffer | Score 3.965517e-01
+Merged: @emit_byte, @dump_buffer = @.m.f.17
+Attempting: @.m.f.17, @start_pass_prep
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 49 + 25 <= 101? (0) Reduction: -36% 1 : @.m.f.17; @start_pass_prep | Score 2.891566e-01
+Attempting: @start_iMCU_row, @start_iMCU_row.263
+Estimated Sizes: 27 + 27 <= 68? (0) Reduction: -25% 1 : @start_iMCU_row; @start_iMCU_row.263 | Score 4.464286e-01
+Attempting: @start_iMCU_row.263, @start_pass_prep
+Estimated Sizes: 27 + 25 <= 72? (0) Reduction: -38% 1 : @start_iMCU_row.263; @start_pass_prep | Score 3.035714e-01
+Attempting: @jpeg_std_error, @reset_marker_reader
+Estimated Sizes: 26 + 15 <= 58? (0) Reduction: -41% 1 : @jpeg_std_error; @reset_marker_reader | Score 2.857143e-01
+Attempting: @grayscale_convert, @skip_input_data
+Estimated Sizes: 26 + 21 <= 81? (0) Reduction: -72% 1 : @grayscale_convert; @skip_input_data | Score 3.620690e-01
+Attempting: @start_pass_prep, @jpeg_input_complete
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 25 + 20 <= 69? (0) Reduction: -53% 1 : @start_pass_prep; @jpeg_input_complete | Score 3.800000e-01
+Attempting: @empty_output_buffer, @jpeg_input_complete
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 25 + 20 <= 69? (0) Reduction: -53% 1 : @empty_output_buffer; @jpeg_input_complete | Score 3.750000e-01
+Attempting: @jinit_huff_decoder, @jinit_marker_writer
+Estimated Sizes: 23 + 21 <= 62? (0) Reduction: -40% 1 : @jinit_huff_decoder; @jinit_marker_writer | Score 3.396226e-01
+Attempting: @jpeg_stdio_dest, @init_destination
+Estimated Sizes: 23 + 15 <= 44? (0) Reduction: -15% 1 : @jpeg_stdio_dest; @init_destination | Score 3.170732e-01
+Attempting: @jinit_input_controller, @jinit_marker_writer
+Estimated Sizes: 23 + 21 <= 68? (0) Reduction: -54% 1 : @jinit_input_controller; @jinit_marker_writer | Score 3.508772e-01
+Attempting: @reset_input_controller, @start_pass_coef
+Estimated Sizes: 22 + 16 <= 62? (0) Reduction: -63% 1 : @reset_input_controller; @start_pass_coef | Score 3.255814e-01
+Attempting: @skip_input_data, @jcopy_sample_rows
+Estimated Sizes: 21 + 18 <= 56? (0) Reduction: -43% 1 : @skip_input_data; @jcopy_sample_rows | Score 2.790698e-01
+Attempting: @jinit_marker_writer, @jinit_phuff_encoder
+Estimated Sizes: 21 + 15 <= 45? (0) Reduction: -25% 1 : @jinit_marker_writer; @jinit_phuff_encoder | Score 3.181818e-01
+Attempting: @jpeg_input_complete, @jpeg_has_multiple_scans
+Estimated Sizes: 20 + 20 <= 26? (1) Reduction: 35% 1 : @jpeg_input_complete; @jpeg_has_multiple_scans | Score 5.000000e-01
+Merged: @jpeg_input_complete, @jpeg_has_multiple_scans = @.m.f.18
+Attempting: @.m.f.18, @start_pass_coef
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 26 + 16 <= 64? (0) Reduction: -52% 1 : @.m.f.18; @start_pass_coef | Score 3.260870e-01
+Attempting: @start_output_gif, @self_destruct
+Estimated Sizes: 19 + 18 <= 55? (0) Reduction: -48% 1 : @start_output_gif; @self_destruct | Score 3.333333e-01
+Attempting: @merged_1v_upsample, @start_pass_merged_upsample
+Estimated Sizes: 19 + 9 <= 56? (0) Reduction: -100% 1 : @merged_1v_upsample; @start_pass_merged_upsample | Score 2.692308e-01
+Attempting: @self_destruct, @main
+Estimated Sizes: 18 + 17 <= 53? (0) Reduction: -51% 1 : @self_destruct; @main | Score 3.214286e-01
+Attempting: @finish_output_pass, @jpeg_abort
+Estimated Sizes: 18 + 14 <= 48? (0) Reduction: -50% 1 : @finish_output_pass; @jpeg_abort | Score 2.580645e-01
+Attempting: @jcopy_sample_rows, @main
+OptimizationTriggered: Labels of Conditional Branch Reordering
+Estimated Sizes: 18 + 17 <= 55? (0) Reduction: -57% 1 : @jcopy_sample_rows; @main | Score 3.125000e-01
+Attempting: @finish_output_ppm, @new_color_map_1_quant
+Estimated Sizes: 17 + 7 <= 38? (0) Reduction: -58% 1 : @finish_output_ppm; @new_color_map_1_quant | Score 3.461539e-01
+Attempting: @start_pass_coef, @new_color_map_1_quant
+Estimated Sizes: 16 + 7 <= 38? (0) Reduction: -65% 1 : @start_pass_coef; @new_color_map_1_quant | Score 3.333333e-01
+Attempting: @jinit_phuff_encoder, @init_destination
+Estimated Sizes: 15 + 15 <= 51? (0) Reduction: -70% 1 : @jinit_phuff_encoder; @init_destination | Score 3.636364e-01
+Attempting: @reset_marker_reader, @start_pass_upsample
+Estimated Sizes: 15 + 11 <= 44? (0) Reduction: -69% 1 : @reset_marker_reader; @start_pass_upsample | Score 2.592593e-01
+Attempting: @jpeg_abort, @start_pass_upsample
+Estimated Sizes: 14 + 11 <= 42? (0) Reduction: -68% 1 : @jpeg_abort; @start_pass_upsample | Score 2.916667e-01
+Attempting: @put_3bytes, @close_backing_store
+Estimated Sizes: 14 + 5 <= 31? (0) Reduction: -63% 1 : @put_3bytes; @close_backing_store | Score 3.333333e-01
+Attempting: @jpeg_set_linear_quality, @write_file_trailer
+Estimated Sizes: 13 + 7 <= 33? (0) Reduction: -64% 1 : @jpeg_set_linear_quality; @write_file_trailer | Score 5.000000e-01
+Attempting: @output_message, @error_exit
+Estimated Sizes: 12 + 10 <= 34? (0) Reduction: -54% 1 : @output_message; @error_exit | Score 3.000000e-01
+Attempting: @put_pixel_rows.61, @grayscale_convert.24
+Estimated Sizes: 12 + 11 <= 45? (0) Reduction: -95% 1 : @put_pixel_rows.61; @grayscale_convert.24 | Score 2.666667e-01
+Attempting: @start_pass_upsample, @start_pass_merged_upsample
+Estimated Sizes: 11 + 9 <= 31? (0) Reduction: -55% 1 : @start_pass_upsample; @start_pass_merged_upsample | Score 3.636364e-01
+Attempting: @grayscale_convert.24, @start_input_pass.262
+Estimated Sizes: 11 + 5 <= 36? (0) Reduction: -125% 1 : @grayscale_convert.24; @start_input_pass.262 | Score 3.333333e-01
+Attempting: @start_pass_merged_upsample, @reset_error_mgr
+Estimated Sizes: 9 + 6 <= 32? (0) Reduction: -113% 1 : @start_pass_merged_upsample; @reset_error_mgr | Score 2.941177e-01
+Attempting: @jround_up, @jdiv_round_up
+Estimated Sizes: 8 + 7 <= 17? (0) Reduction: -13% 1 : @jround_up; @jdiv_round_up | Score 3.333333e-01
+Attempting: @write_file_trailer, @jpeg_free_large
+Estimated Sizes: 7 + 3 <= 30? (0) Reduction: -200% 1 : @write_file_trailer; @jpeg_free_large | Score 4.000000e-01
+Attempting: @new_color_map_1_quant, @reset_error_mgr
+Estimated Sizes: 7 + 6 <= 28? (0) Reduction: -115% 1 : @new_color_map_1_quant; @reset_error_mgr | Score 3.750000e-01
+Attempting: @jcopy_block_row, @jpeg_abort_decompress
+Estimated Sizes: 6 + 3 <= 11? (0) Reduction: -22% 1 : @jcopy_block_row; @jpeg_abort_decompress | Score 2.500000e-01
+Attempting: @new_color_map_2_quant, @init_source
+Estimated Sizes: 5 + 5 <= 23? (0) Reduction: -129% 1 : @new_color_map_2_quant; @init_source | Score 2.500000e-01
+Attempting: @start_input_pass.262, @jpeg_free_large
+Estimated Sizes: 5 + 3 <= 24? (0) Reduction: -200% 1 : @start_input_pass.262; @jpeg_free_large | Score 3.333333e-01
+Attempting: @close_backing_store, @write_stdout
+Estimated Sizes: 5 + 2 <= 16? (0) Reduction: -128% 1 : @close_backing_store; @write_stdout | Score 3.333333e-01
+Attempting: @finish_output_tga, @jpeg_free_large
+Estimated Sizes: 4 + 3 <= 25? (0) Reduction: -257% 1 : @finish_output_tga; @jpeg_free_large | Score 3.333333e-01
+Attempting: @jpeg_abort_decompress, @jpeg_destroy_decompress
+Estimated Sizes: 3 + 3 <= 8? (0) Reduction: -33% 1 : @jpeg_abort_decompress; @jpeg_destroy_decompress | Score 5.000000e-01
+Attempting: @jpeg_destroy_decompress, @jpeg_free_large
+Estimated Sizes: 3 + 3 <= 15? (0) Reduction: -150% 1 : @jpeg_destroy_decompress; @jpeg_free_large | Score 4.000000e-01
+Attempting: @jpeg_free_large, @jpeg_free_small
+Estimated Sizes: 3 + 3 <= 15? (0) Reduction: -150% 1 : @jpeg_free_large; @jpeg_free_small | Score 5.000000e-01
+Attempting: @jpeg_destroy_compress, @jpeg_abort_compress
+Estimated Sizes: 3 + 3 <= 12? (0) Reduction: -100% 1 : @jpeg_destroy_compress; @jpeg_abort_compress | Score 5.000000e-01
+Attempting: @jpeg_get_large, @jpeg_get_small
+Estimated Sizes: 3 + 3 <= 13? (0) Reduction: -116% 1 : @jpeg_get_large; @jpeg_get_small | Score 5.000000e-01
+Attempting: @jpeg_free_small, @jzero_far
+Estimated Sizes: 3 + 2 <= 13? (0) Reduction: -160% 1 : @jpeg_free_small; @jzero_far | Score 5.000000e-01
+Attempting: @jpeg_get_small, @term_source
+Estimated Sizes: 3 + 1 <= 19? (0) Reduction: -375% 1 : @jpeg_get_small; @term_source | Score 3.333333e-01
+Attempting: @jpeg_abort_compress, @jzero_far
+Estimated Sizes: 3 + 2 <= 13? (0) Reduction: -160% 1 : @jpeg_abort_compress; @jzero_far | Score 4.000000e-01
+Attempting: @noop_upsample, @fullsize_upsample
+Estimated Sizes: 2 + 2 <= 17? (0) Reduction: -325% 1 : @noop_upsample; @fullsize_upsample | Score 5.000000e-01
+Attempting: @write_stdout, @read_stdin
+Estimated Sizes: 2 + 2 <= 3? (1) Reduction: 25% 1 : @write_stdout; @read_stdin | Score 5.000000e-01
+Merged: @write_stdout, @read_stdin = @.m.f.19
+Attempting: @jzero_far, @term_source
+Estimated Sizes: 2 + 1 <= 10? (0) Reduction: -233% 1 : @jzero_far; @term_source | Score 3.333333e-01
+Attempting: @fullsize_upsample, @term_source
+Estimated Sizes: 2 + 1 <= 20? (0) Reduction: -566% 1 : @fullsize_upsample; @term_source | Score 3.333333e-01
+Attempting: @term_source, @finish_pass2
+Estimated Sizes: 1 + 1 <= 11? (0) Reduction: -450% 1 : @term_source; @finish_pass2 | Score 5.000000e-01
+Attempting: @finish_pass2, @jpeg_mem_term
+Estimated Sizes: 1 + 1 <= 11? (0) Reduction: -450% 1 : @finish_pass2; @jpeg_mem_term | Score 5.000000e-01
+Attempting: @jpeg_mem_term, @jpeg_mem_init
+Estimated Sizes: 1 + 1 <= 10? (0) Reduction: -400% 1 : @jpeg_mem_term; @jpeg_mem_init | Score 5.000000e-01
+Attempting: @jpeg_mem_init, @finish_pass_1_quant
+Estimated Sizes: 1 + 1 <= 12? (0) Reduction: -500% 1 : @jpeg_mem_init; @finish_pass_1_quant | Score 5.000000e-01
+Attempting: @finish_pass_1_quant, @start_pass_dcolor
+Estimated Sizes: 1 + 1 <= 9? (0) Reduction: -350% 1 : @finish_pass_1_quant; @start_pass_dcolor | Score 5.000000e-01
+Attempting: @start_pass_dcolor, @dummy_consume_data
+Estimated Sizes: 1 + 1 <= 12? (0) Reduction: -500% 1 : @start_pass_dcolor; @dummy_consume_data | Score 5.000000e-01
+Attempting: @dummy_consume_data, @null_method
+Estimated Sizes: 1 + 1 <= 12? (0) Reduction: -500% 1 : @dummy_consume_data; @null_method | Score 5.000000e-01
+Attempting: @null_method, @start_pass_downsample
+Estimated Sizes: 1 + 1 <= 9? (0) Reduction: -350% 1 : @null_method; @start_pass_downsample | Score 5.000000e-01
+Attempting: @start_pass_downsample, @start_output_bmp
+Estimated Sizes: 1 + 1 <= 13? (0) Reduction: -550% 1 : @start_pass_downsample; @start_output_bmp | Score 5.000000e-01
+Total operand reordering: 0/0 (nan %)
+Average number of trials before merging: 0.000000e+00
+Maximum number of trials before merging: 0
+/home/rodrigo/test-salssa-fm/release/bin/llvm-dis build/main.tmp.bc -o build/main.fm2.ll
+/home/rodrigo/test-salssa-fm/release/bin/clang++ -std=gnu++98 --target=thumb-linux-gnueabi -mfloat-abi=hard -I/home/rodrigo/arm9.2/arm-none-linux-gnueabihf/libc/usr/include/ -I/home/rodrigo/arm9.2/arm-none-linux-gnueabihf/include/c++/9.2.1/ -I/home/rodrigo/arm9.2/arm-none-linux-gnueabihf/include/c++/9.2.1/arm-none-linux-gnueabihf/ -x ir build/main.tmp.bc -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -o build/main.o.fm2 -c -lm
+clang-11: warning: -lm: 'linker' input unused [-Wunused-command-line-argument]
+clang-11: warning: argument unused during compilation: '-I /home/rodrigo/arm9.2/arm-none-linux-gnueabihf/libc/usr/include/' [-Wunused-command-line-argument]
+clang-11: warning: argument unused during compilation: '-I /home/rodrigo/arm9.2/arm-none-linux-gnueabihf/include/c++/9.2.1/' [-Wunused-command-line-argument]
+clang-11: warning: argument unused during compilation: '-I /home/rodrigo/arm9.2/arm-none-linux-gnueabihf/include/c++/9.2.1/arm-none-linux-gnueabihf/' [-Wunused-command-line-argument]
+#/home/rodrigo/test-salssa-fm/release/bin/clang -std=gnu89 --target=thumb-linux-gnueabi -mfloat-abi=hard --sysroot=/home/rodrigo/arm9.2/arm-none-linux-gnueabihf/libc/  -x ir build/main.tmp.bc -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -o build/main.fm2 -lm 

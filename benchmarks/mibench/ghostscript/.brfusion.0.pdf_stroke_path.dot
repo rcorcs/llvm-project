@@ -1,0 +1,580 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then9:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call10 = tail call i32 @gx_default_stroke_path(%struct.gx_device_s* nonnull %dev, %struct.gs_imager_state_s* nonnull %pis, %struct.gx_path_s* %ppath, %struct.gx_stroke_params_s* %params, %struct.gx_device_color_s* nonnull %pdcolor, %struct.gx_clip_path_s* %pcpath) #13</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call = tail call i32 @gx_default_stroke_path(%struct.gx_device_s* nonnull %dev, %struct.gs_imager_state_s* nonnull %pis, %struct.gx_path_s* %ppath, %struct.gx_stroke_params_s* %params, %struct.gx_device_color_s* nonnull %pdcolor, %struct.gx_clip_path_s* %pcpath) #13</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %0 = bitcast %struct.gx_device_s* %dev to %struct.gx_device_pdf_s*</td></tr>
+<tr><td align="left">  %strm = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %dev, i64 1, i32 14, i64 1</td></tr>
+<tr><td align="left">  %1 = bitcast float* %strm to %struct.stream_s**</td></tr>
+<tr><td align="left">  %2 = load %struct.stream_s*, %struct.stream_s** %1, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %dash = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 7</td></tr>
+<tr><td align="left">  %pattern_size1 = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 7, i32 1</td></tr>
+<tr><td align="left">  %3 = load i32, i32* %pattern_size1, align 8, !tbaa !32</td></tr>
+<tr><td align="left">  %type = getelementptr inbounds %struct.gx_device_color_s, %struct.gx_device_color_s* %pdcolor, i64 0, i32 0</td></tr>
+<tr><td align="left">  %4 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** %type, align 8, !tbaa !33</td></tr>
+<tr><td align="left">  %5 = load %struct.gx_device_color_procs_s*, %struct.gx_device_color_procs_s** @gx_dc_type_pure, align 8, !tbaa !34</td></tr>
+<tr><td align="left">  %cmp = icmp eq %struct.gx_device_color_procs_s* %4, %5</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp, label %if.end, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %call2 = tail call i32 @pdf_open_page(%struct.gx_device_pdf_s* nonnull %0, i32 1) #14</td></tr>
+<tr><td align="left">  %cmp3 = icmp slt i32 %call2, 0</td></tr>
+<tr><td align="left">  br i1 %cmp3, label %cleanup, label %if.end5</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end5:</td></tr>
+<tr><td align="left">  %scale6 = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %dev, i64 2, i32 21, i32 4</td></tr>
+<tr><td align="left">  %x = bitcast i32 (%struct.gx_device_s*)** %scale6 to double*</td></tr>
+<tr><td align="left">  %6 = load double, double* %x, align 8, !tbaa !35</td></tr>
+<tr><td align="left">  %y = getelementptr inbounds i32 (%struct.gx_device_s*)*, i32 (%struct.gx_device_s*)** %scale6, i64 1</td></tr>
+<tr><td align="left">  %7 = bitcast i32 (%struct.gx_device_s*)** %y to double*</td></tr>
+<tr><td align="left">  %8 = load double, double* %7, align 8, !tbaa !36</td></tr>
+<tr><td align="left">  %cmp8 = fcmp une double %6, %8</td></tr>
+<tr><td align="left">  br i1 %cmp8, label %if.then9, label %if.end11</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end11:</td></tr>
+<tr><td align="left">  %ctm = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 2</td></tr>
+<tr><td align="left">  %xy = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 2, i32 1</td></tr>
+<tr><td align="left">  %9 = load float, float* %xy, align 4, !tbaa !37</td></tr>
+<tr><td align="left">  %cmp12 = fcmp oeq float %9, 0.000000e+00</td></tr>
+<tr><td align="left">  br i1 %cmp12, label %land.lhs.true, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true:</td></tr>
+<tr><td align="left">  %yx = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 2, i32 2</td></tr>
+<tr><td align="left">  %10 = load float, float* %yx, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %cmp14 = fcmp oeq float %10, 0.000000e+00</td></tr>
+<tr><td align="left">  br i1 %cmp14, label %if.then15, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then15:</td></tr>
+<tr><td align="left">  %xx = getelementptr inbounds %struct.gs_matrix_fixed_s, %struct.gs_matrix_fixed_s* %ctm, i64 0, i32 0</td></tr>
+<tr><td align="left">  %11 = load float, float* %xx, align 8, !tbaa !39</td></tr>
+<tr><td align="left">  %12 = tail call float @llvm.fabs.f32(float %11)</td></tr>
+<tr><td align="left">  %13 = fpext float %12 to double</td></tr>
+<tr><td align="left">  %yy = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 2, i32 3</td></tr>
+<tr><td align="left">  %14 = load float, float* %yy, align 4, !tbaa !40</td></tr>
+<tr><td align="left">  %15 = tail call float @llvm.fabs.f32(float %14)</td></tr>
+<tr><td align="left">  %cmp19 = fcmp une float %15, %12</td></tr>
+<tr><td align="left">  br i1 %cmp19, label %if.then21, label %if.end89</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then21:</td></tr>
+<tr><td align="left">  %call22 = tail call i32 @gx_default_stroke_path(%struct.gx_device_s* nonnull %dev, %struct.gs_imager_state_s* nonnull %pis, %struct.gx_path_s* %ppath, %struct.gx_stroke_params_s* %params, %struct.gx_device_color_s* nonnull %pdcolor, %struct.gx_clip_path_s* %pcpath) #13</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %xx25 = getelementptr inbounds %struct.gs_matrix_fixed_s, %struct.gs_matrix_fixed_s* %ctm, i64 0, i32 0</td></tr>
+<tr><td align="left">  %16 = load float, float* %xx25, align 8, !tbaa !39</td></tr>
+<tr><td align="left">  %cmp26 = fcmp oeq float %16, 0.000000e+00</td></tr>
+<tr><td align="left">  %yy30 = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 2, i32 3</td></tr>
+<tr><td align="left">  %17 = load float, float* %yy30, align 4, !tbaa !40</td></tr>
+<tr><td align="left">  %cmp31 = fcmp oeq float %17, 0.000000e+00</td></tr>
+<tr><td align="left">  %or.cond383 = select i1 %cmp26, i1 %cmp31, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond383, label %if.then33, label %if.else45</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then33:</td></tr>
+<tr><td align="left">  %18 = tail call float @llvm.fabs.f32(float %9)</td></tr>
+<tr><td align="left">  %19 = fpext float %18 to double</td></tr>
+<tr><td align="left">  %yx38 = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 2, i32 2</td></tr>
+<tr><td align="left">  %20 = load float, float* %yx38, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %21 = tail call float @llvm.fabs.f32(float %20)</td></tr>
+<tr><td align="left">  %cmp40 = fcmp une float %21, %18</td></tr>
+<tr><td align="left">  br i1 %cmp40, label %if.then42, label %if.end89</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then42:</td></tr>
+<tr><td align="left">  %call43 = tail call i32 @gx_default_stroke_path(%struct.gx_device_s* nonnull %dev, %struct.gs_imager_state_s* nonnull %pis, %struct.gx_path_s* %ppath, %struct.gx_stroke_params_s* %params, %struct.gx_device_color_s* nonnull %pdcolor, %struct.gx_clip_path_s* %pcpath) #13</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else45:</td></tr>
+<tr><td align="left">  %cmp50 = fcmp oeq float %16, %17</td></tr>
+<tr><td align="left">  br i1 %cmp50, label %land.lhs.true52, label %lor.lhs.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true52:</td></tr>
+<tr><td align="left">  %yx56 = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 2, i32 2</td></tr>
+<tr><td align="left">  %22 = load float, float* %yx56, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %fneg = fneg float %22</td></tr>
+<tr><td align="left">  %cmp57 = fcmp oeq float %9, %fneg</td></tr>
+<tr><td align="left">  br i1 %cmp57, label %if.then73, label %lor.lhs.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false:</td></tr>
+<tr><td align="left">  %fneg63 = fneg float %17</td></tr>
+<tr><td align="left">  %cmp64 = fcmp oeq float %16, %fneg63</td></tr>
+<tr><td align="left">  br i1 %cmp64, label %land.lhs.true66, label %if.else85</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true66:</td></tr>
+<tr><td align="left">  %yx70 = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 2, i32 2</td></tr>
+<tr><td align="left">  %23 = load float, float* %yx70, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %cmp71 = fcmp oeq float %9, %23</td></tr>
+<tr><td align="left">  br i1 %cmp71, label %if.then73, label %if.else85</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then73:</td></tr>
+<tr><td align="left">  %mul82 = fmul float %9, %9</td></tr>
+<tr><td align="left">  %24 = tail call float @llvm.fmuladd.f32(float %16, float %16, float %mul82)</td></tr>
+<tr><td align="left">  %conv83 = fpext float %24 to double</td></tr>
+<tr><td align="left">  %call84 = tail call double @sqrt(double %conv83) #13</td></tr>
+<tr><td align="left">  %.pre382 = load double, double* %x, align 8, !tbaa !35</td></tr>
+<tr><td align="left">  br label %if.end89</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else85:</td></tr>
+<tr><td align="left">  %call86 = tail call i32 @gx_default_stroke_path(%struct.gx_device_s* nonnull %dev, %struct.gs_imager_state_s* nonnull %pis, %struct.gx_path_s* %ppath, %struct.gx_stroke_params_s* %params, %struct.gx_device_color_s* nonnull %pdcolor, %struct.gx_clip_path_s* %pcpath) #13</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end89:</td></tr>
+<tr><td align="left">  %25 = phi double [ %6, %if.then15 ], [ %6, %if.then33 ], [ %.pre382, %if.then73 ]</td></tr>
+<tr><td align="left">  %scale.0 = phi double [ %13, %if.then15 ], [ %19, %if.then33 ], [ %call84, %if.then73 ]</td></tr>
+<tr><td align="left">  %div = fdiv double %scale.0, %25</td></tr>
+<tr><td align="left">  %call92 = tail call i32 @pdf_put_clip_path(%struct.gx_device_pdf_s* nonnull %0, %struct.gx_clip_path_s* %pcpath) #14</td></tr>
+<tr><td align="left">  %colors = getelementptr inbounds %struct.gx_device_color_s, %struct.gx_device_color_s* %pdcolor, i64 0, i32 1</td></tr>
+<tr><td align="left">  %pure = bitcast %union._c* %colors to i64*</td></tr>
+<tr><td align="left">  %26 = load i64, i64* %pure, align 8, !tbaa !41</td></tr>
+<tr><td align="left">  %stroke_color = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %dev, i64 2, i32 14, i64 1</td></tr>
+<tr><td align="left">  %27 = bitcast float* %stroke_color to %struct.gx_device_color_s*</td></tr>
+<tr><td align="left">  %call93 = tail call i32 @pdf_set_color(%struct.gx_device_pdf_s* nonnull %0, i64 %26, %struct.gx_device_color_s* nonnull %27, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.82, i64 0, i64 0)) #14</td></tr>
+<tr><td align="left">  %offset = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 7, i32 2</td></tr>
+<tr><td align="left">  %28 = load float, float* %offset, align 4, !tbaa !42</td></tr>
+<tr><td align="left">  %conv96 = fpext float %28 to double</td></tr>
+<tr><td align="left">  %mul = fmul double %div, %conv96</td></tr>
+<tr><td align="left">  %conv97 = fptrunc double %mul to float</td></tr>
+<tr><td align="left">  %line_params98 = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %dev, i64 8, i32 21, i32 1</td></tr>
+<tr><td align="left">  %29 = bitcast void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %line_params98 to %struct.gx_line_params_s*</td></tr>
+<tr><td align="left">  %dash99 = getelementptr inbounds void (%struct.gx_device_s*, %struct.gs_matrix_s*)*, void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %line_params98, i64 4</td></tr>
+<tr><td align="left">  %30 = bitcast void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %dash99 to %struct.gx_dash_params_s*</td></tr>
+<tr><td align="left">  %offset100 = getelementptr inbounds %struct.gx_dash_params_s, %struct.gx_dash_params_s* %30, i64 0, i32 2</td></tr>
+<tr><td align="left">  %31 = load float, float* %offset100, align 4, !tbaa !43</td></tr>
+<tr><td align="left">  %cmp101 = fcmp une float %31, %conv97</td></tr>
+<tr><td align="left">  br i1 %cmp101, label %if.then120, label %lor.lhs.false103</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false103:</td></tr>
+<tr><td align="left">  %pattern_size106 = getelementptr inbounds void (%struct.gx_device_s*, %struct.gs_matrix_s*)*, void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %line_params98, i64 5</td></tr>
+<tr><td align="left">  %32 = bitcast void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %pattern_size106 to i32*</td></tr>
+<tr><td align="left">  %33 = load i32, i32* %32, align 8, !tbaa !44</td></tr>
+<tr><td align="left">  %cmp107 = icmp ne i32 %3, %33</td></tr>
+<tr><td align="left">  %cmp110 = icmp sgt i32 %3, 11</td></tr>
+<tr><td align="left">  %or.cond = or i1 %cmp110, %cmp107</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %if.then120, label %lor.lhs.false112</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false112:</td></tr>
+<tr><td align="left">  %cmp113.not = icmp eq i32 %3, 0</td></tr>
+<tr><td align="left">  br i1 %cmp113.not, label %if.end155, label %land.lhs.true115</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">land.lhs.true115:</td></tr>
+<tr><td align="left">  %dash_pattern = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %dev, i64 1, i32 21, i32 33</td></tr>
+<tr><td align="left">  %arraydecay = bitcast i32 (%struct.gx_device_s*, i8*, i32)** %dash_pattern to float*</td></tr>
+<tr><td align="left">  %conv118 = fptrunc double %div to float</td></tr>
+<tr><td align="left">  %34 = load i32, i32* %pattern_size1, align 8, !tbaa !45</td></tr>
+<tr><td align="left">  %pattern.i = getelementptr inbounds %struct.gx_dash_params_s, %struct.gx_dash_params_s* %dash, i64 0, i32 0</td></tr>
+<tr><td align="left">  %wide.trip.count.i = zext i32 %34 to i64</td></tr>
+<tr><td align="left">  br label %for.cond.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond.i:</td></tr>
+<tr><td align="left">  %indvars.iv.i = phi i64 [ %indvars.iv.next.i, %for.body.i ], [ 0, %land.lhs.true115 ]</td></tr>
+<tr><td align="left">  %exitcond.not.i = icmp eq i64 %indvars.iv.i, %wide.trip.count.i</td></tr>
+<tr><td align="left">  br i1 %exitcond.not.i, label %if.end155, label %for.body.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb21 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body.i:</td></tr>
+<tr><td align="left">  %arrayidx.i = getelementptr inbounds float, float* %arraydecay, i64 %indvars.iv.i</td></tr>
+<tr><td align="left">  %35 = load float, float* %arrayidx.i, align 4, !tbaa !46</td></tr>
+<tr><td align="left">  %36 = load float*, float** %pattern.i, align 8, !tbaa !47</td></tr>
+<tr><td align="left">  %arrayidx2.i = getelementptr inbounds float, float* %36, i64 %indvars.iv.i</td></tr>
+<tr><td align="left">  %37 = load float, float* %arrayidx2.i, align 4, !tbaa !46</td></tr>
+<tr><td align="left">  %mul.i = fmul float %37, %conv118</td></tr>
+<tr><td align="left">  %cmp3.i = fcmp une float %35, %mul.i</td></tr>
+<tr><td align="left">  %indvars.iv.next.i = add nuw nsw i64 %indvars.iv.i, 1</td></tr>
+<tr><td align="left">  br i1 %cmp3.i, label %if.then120, label %for.cond.i, !llvm.loop !48</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb22 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then120:</td></tr>
+<tr><td align="left">  %call121 = tail call i32 @pputs(%struct.stream_s* %2, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.83, i64 0, i64 0)) #13</td></tr>
+<tr><td align="left">  %pattern_size124 = getelementptr inbounds void (%struct.gx_device_s*, %struct.gs_matrix_s*)*, void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %line_params98, i64 5</td></tr>
+<tr><td align="left">  %38 = bitcast void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %pattern_size124 to i32*</td></tr>
+<tr><td align="left">  store i32 %3, i32* %38, align 8, !tbaa !44</td></tr>
+<tr><td align="left">  %pattern = getelementptr inbounds %struct.gx_dash_params_s, %struct.gx_dash_params_s* %dash, i64 0, i32 0</td></tr>
+<tr><td align="left">  %dash_pattern135 = getelementptr inbounds %struct.gx_device_s, %struct.gx_device_s* %dev, i64 1, i32 21, i32 33</td></tr>
+<tr><td align="left">  %39 = bitcast i32 (%struct.gx_device_s*, i8*, i32)** %dash_pattern135 to [11 x float]*</td></tr>
+<tr><td align="left">  %smax = call i32 @llvm.smax.i32(i32 %3, i32 0)</td></tr>
+<tr><td align="left">  %wide.trip.count = zext i32 %smax to i64</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb23 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ %indvars.iv.next, %if.end138 ], [ 0, %if.then120 ]</td></tr>
+<tr><td align="left">  %exitcond.not = icmp eq i64 %indvars.iv, %wide.trip.count</td></tr>
+<tr><td align="left">  br i1 %exitcond.not, label %for.end, label %for.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %40 = load float*, float** %pattern, align 8, !tbaa !50</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds float, float* %40, i64 %indvars.iv</td></tr>
+<tr><td align="left">  %41 = load float, float* %arrayidx, align 4, !tbaa !46</td></tr>
+<tr><td align="left">  %conv129 = fpext float %41 to double</td></tr>
+<tr><td align="left">  %mul130 = fmul double %div, %conv129</td></tr>
+<tr><td align="left">  %conv131 = fptrunc double %mul130 to float</td></tr>
+<tr><td align="left">  %cmp132 = icmp ult i64 %indvars.iv, 11</td></tr>
+<tr><td align="left">  br i1 %cmp132, label %if.then134, label %if.end138</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb25 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then134:</td></tr>
+<tr><td align="left">  %arrayidx137 = getelementptr inbounds [11 x float], [11 x float]* %39, i64 0, i64 %indvars.iv</td></tr>
+<tr><td align="left">  store float %conv131, float* %arrayidx137, align 4, !tbaa !46</td></tr>
+<tr><td align="left">  br label %if.end138</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end138:</td></tr>
+<tr><td align="left">  %conv139 = fpext float %conv131 to double</td></tr>
+<tr><td align="left">  %call140 = tail call i8* @pprintg1(%struct.stream_s* %2, i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.84, i64 0, i64 0), double %conv139) #13</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !51</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb27 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  %42 = load float, float* %offset, align 4, !tbaa !42</td></tr>
+<tr><td align="left">  %conv144 = fpext float %42 to double</td></tr>
+<tr><td align="left">  %mul145 = fmul double %div, %conv144</td></tr>
+<tr><td align="left">  %conv146 = fptrunc double %mul145 to float</td></tr>
+<tr><td align="left">  store float %conv146, float* %offset100, align 4, !tbaa !43</td></tr>
+<tr><td align="left">  %conv153 = fpext float %conv146 to double</td></tr>
+<tr><td align="left">  %call154 = tail call i8* @pprintg1(%struct.stream_s* %2, i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str.85, i64 0, i64 0), double %conv153) #13</td></tr>
+<tr><td align="left">  br label %if.end155</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb28 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end155:</td></tr>
+<tr><td align="left">  %flatness = getelementptr inbounds %struct.gx_stroke_params_s, %struct.gx_stroke_params_s* %params, i64 0, i32 0</td></tr>
+<tr><td align="left">  %43 = load float, float* %flatness, align 4, !tbaa !52</td></tr>
+<tr><td align="left">  %flatness156 = getelementptr inbounds %struct.gx_device_pdf_s, %struct.gx_device_pdf_s* %0, i64 0, i32 59</td></tr>
+<tr><td align="left">  %44 = load float, float* %flatness156, align 4, !tbaa !54</td></tr>
+<tr><td align="left">  %cmp157 = fcmp une float %43, %44</td></tr>
+<tr><td align="left">  br i1 %cmp157, label %if.then159, label %if.end165</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb29 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then159:</td></tr>
+<tr><td align="left">  %conv161 = fpext float %43 to double</td></tr>
+<tr><td align="left">  %call162 = tail call i8* @pprintg1(%struct.stream_s* %2, i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.79, i64 0, i64 0), double %conv161) #13</td></tr>
+<tr><td align="left">  %45 = load float, float* %flatness, align 4, !tbaa !52</td></tr>
+<tr><td align="left">  store float %45, float* %flatness156, align 4, !tbaa !54</td></tr>
+<tr><td align="left">  br label %if.end165</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end165:</td></tr>
+<tr><td align="left">  %half_width = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 0</td></tr>
+<tr><td align="left">  %46 = load float, float* %half_width, align 8, !tbaa !55</td></tr>
+<tr><td align="left">  %conv167 = fpext float %46 to double</td></tr>
+<tr><td align="left">  %mul168 = fmul double %div, %conv167</td></tr>
+<tr><td align="left">  %conv169 = fptrunc double %mul168 to float</td></tr>
+<tr><td align="left">  %half_width171 = bitcast void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %line_params98 to float*</td></tr>
+<tr><td align="left">  %47 = load float, float* %half_width171, align 8, !tbaa !56</td></tr>
+<tr><td align="left">  %cmp172 = fcmp une float %47, %conv169</td></tr>
+<tr><td align="left">  br i1 %cmp172, label %if.then174, label %if.end187</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb31 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then174:</td></tr>
+<tr><td align="left">  store float %conv169, float* %half_width171, align 8, !tbaa !56</td></tr>
+<tr><td align="left">  %mul184 = fmul float %conv169, 2.000000e+00</td></tr>
+<tr><td align="left">  %conv185 = fpext float %mul184 to double</td></tr>
+<tr><td align="left">  %call186 = tail call i8* @pprintg1(%struct.stream_s* %2, i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.86, i64 0, i64 0), double %conv185) #13</td></tr>
+<tr><td align="left">  br label %if.end187</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb32 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end187:</td></tr>
+<tr><td align="left">  %miter_limit = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 3</td></tr>
+<tr><td align="left">  %48 = load float, float* %miter_limit, align 4, !tbaa !57</td></tr>
+<tr><td align="left">  %miter_limit190 = getelementptr inbounds %struct.gx_line_params_s, %struct.gx_line_params_s* %29, i64 0, i32 3</td></tr>
+<tr><td align="left">  %49 = load float, float* %miter_limit190, align 4, !tbaa !58</td></tr>
+<tr><td align="left">  %cmp191 = fcmp une float %48, %49</td></tr>
+<tr><td align="left">  br i1 %cmp191, label %if.then193, label %if.end203</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb33 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then193:</td></tr>
+<tr><td align="left">  %conv196 = fpext float %48 to double</td></tr>
+<tr><td align="left">  %call197 = tail call i8* @pprintg1(%struct.stream_s* %2, i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.87, i64 0, i64 0), double %conv196) #13</td></tr>
+<tr><td align="left">  %50 = load float, float* %miter_limit, align 4, !tbaa !57</td></tr>
+<tr><td align="left">  %conv201 = fpext float %50 to double</td></tr>
+<tr><td align="left">  %call202 = tail call i32 @gx_set_miter_limit(%struct.gx_line_params_s* nonnull %29, double %conv201) #13</td></tr>
+<tr><td align="left">  br label %if.end203</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb34 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end203:</td></tr>
+<tr><td align="left">  %cap = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 1</td></tr>
+<tr><td align="left">  %51 = load i32, i32* %cap, align 4, !tbaa !59</td></tr>
+<tr><td align="left">  %cap206 = getelementptr inbounds %struct.gx_line_params_s, %struct.gx_line_params_s* %29, i64 0, i32 1</td></tr>
+<tr><td align="left">  %52 = load i32, i32* %cap206, align 4, !tbaa !60</td></tr>
+<tr><td align="left">  %cmp207.not = icmp eq i32 %51, %52</td></tr>
+<tr><td align="left">  br i1 %cmp207.not, label %if.end217, label %if.then209</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb35 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then209:</td></tr>
+<tr><td align="left">  %call212 = tail call i8* @pprintd1(%struct.stream_s* %2, i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.88, i64 0, i64 0), i32 %51) #13</td></tr>
+<tr><td align="left">  %53 = load i32, i32* %cap, align 4, !tbaa !59</td></tr>
+<tr><td align="left">  store i32 %53, i32* %cap206, align 4, !tbaa !60</td></tr>
+<tr><td align="left">  br label %if.end217</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb36 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end217:</td></tr>
+<tr><td align="left">  %join = getelementptr inbounds %struct.gs_imager_state_s, %struct.gs_imager_state_s* %pis, i64 0, i32 1, i32 2</td></tr>
+<tr><td align="left">  %54 = load i32, i32* %join, align 8, !tbaa !61</td></tr>
+<tr><td align="left">  %join220 = getelementptr inbounds void (%struct.gx_device_s*, %struct.gs_matrix_s*)*, void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %line_params98, i64 1</td></tr>
+<tr><td align="left">  %55 = bitcast void (%struct.gx_device_s*, %struct.gs_matrix_s*)** %join220 to i32*</td></tr>
+<tr><td align="left">  %56 = load i32, i32* %55, align 8, !tbaa !62</td></tr>
+<tr><td align="left">  %cmp221.not = icmp eq i32 %54, %56</td></tr>
+<tr><td align="left">  br i1 %cmp221.not, label %if.end231, label %if.then223</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb37 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then223:</td></tr>
+<tr><td align="left">  %call226 = tail call i8* @pprintd1(%struct.stream_s* %2, i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.89, i64 0, i64 0), i32 %54) #13</td></tr>
+<tr><td align="left">  %57 = load i32, i32* %join, align 8, !tbaa !61</td></tr>
+<tr><td align="left">  store i32 %57, i32* %55, align 8, !tbaa !62</td></tr>
+<tr><td align="left">  br label %if.end231</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb38 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end231:</td></tr>
+<tr><td align="left">  %call232 = tail call fastcc i32 @pdf_put_path(%struct.gx_device_pdf_s* nonnull %0, %struct.gx_path_s* %ppath, i32 0) #14</td></tr>
+<tr><td align="left">  %tobool237.not = icmp eq i32 %call232, 0</td></tr>
+<tr><td align="left">  %cond = select i1 %tobool237.not, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.91, i64 0, i64 0), i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.90, i64 0, i64 0)</td></tr>
+<tr><td align="left">  %call238 = tail call i32 @pputs(%struct.stream_s* %2, i8* %cond) #13</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ %call10, %if.then9 ], [ %call22, %if.then21 ], [ 0, %if.end231 ], [ %call43, %if.then42 ], [ %call86, %if.else85 ], [ %call, %if.then ], [ %call2, %if.end ]</td></tr>
+<tr><td align="left">  ret i32 %retval.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> m_bb0:f2
+m_bb0:f2 -> f_bb39:f
+f_bb1:fT -> f_bb39:f
+f_bb1:fF -> f_bb2:f
+f_bb2:fT -> m_bb0:f1
+f_bb2:fF -> f_bb3:f
+m_bb0:f1 -> f_bb39:f
+f_bb3:fT -> f_bb4:f
+f_bb3:fF -> f_bb7:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb7:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> f_bb16:f
+f_bb6:f -> f_bb39:f
+f_bb7:fT -> f_bb8:f
+f_bb7:fF -> f_bb10:f
+f_bb8:fT -> f_bb9:f
+f_bb8:fF -> f_bb16:f
+f_bb9:f -> f_bb39:f
+f_bb10:fT -> f_bb11:f
+f_bb10:fF -> f_bb12:f
+f_bb11:fT -> f_bb14:f
+f_bb11:fF -> f_bb12:f
+f_bb12:fT -> f_bb13:f
+f_bb12:fF -> f_bb15:f
+f_bb13:fT -> f_bb14:f
+f_bb13:fF -> f_bb15:f
+f_bb14:f -> f_bb16:f
+f_bb15:f -> f_bb39:f
+f_bb16:fT -> f_bb22:f
+f_bb16:fF -> f_bb17:f
+f_bb17:fT -> f_bb22:f
+f_bb17:fF -> f_bb18:f
+f_bb18:fT -> f_bb28:f
+f_bb18:fF -> f_bb19:f
+f_bb19:f -> f_bb20:f
+f_bb20:fT -> f_bb28:f
+f_bb20:fF -> f_bb21:f
+f_bb21:fT -> f_bb22:f
+f_bb21:fF -> f_bb20:f
+f_bb22:f -> f_bb23:f
+f_bb23:fT -> f_bb27:f
+f_bb23:fF -> f_bb24:f
+f_bb24:fT -> f_bb25:f
+f_bb24:fF -> f_bb26:f
+f_bb25:f -> f_bb26:f
+f_bb26:f -> f_bb23:f
+f_bb27:f -> f_bb28:f
+f_bb28:fT -> f_bb29:f
+f_bb28:fF -> f_bb30:f
+f_bb29:f -> f_bb30:f
+f_bb30:fT -> f_bb31:f
+f_bb30:fF -> f_bb32:f
+f_bb31:f -> f_bb32:f
+f_bb32:fT -> f_bb33:f
+f_bb32:fF -> f_bb34:f
+f_bb33:f -> f_bb34:f
+f_bb34:fT -> f_bb36:f
+f_bb34:fF -> f_bb35:f
+f_bb35:f -> f_bb36:f
+f_bb36:fT -> f_bb38:f
+f_bb36:fF -> f_bb37:f
+f_bb37:f -> f_bb38:f
+f_bb38:f -> f_bb39:f
+}
+

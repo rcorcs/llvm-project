@@ -1,0 +1,112 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">cond.false4:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call6 = call i32 @gs_distance_transform2fixed(%struct.gs_matrix_fixed_s* %pmat, double %conv5, double 0.000000e+00, %struct.gs_fixed_point_s* nonnull %wxy) #7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cond.end7</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">cond.true3:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call = call i32 @gs_distance_transform2fixed(%struct.gs_matrix_fixed_s* %pmat, double 0.000000e+00, double %conv5, %struct.gs_fixed_point_s* nonnull %wxy) #7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cond.end7</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %wxy = alloca %struct.gs_fixed_point_s, align 8</td></tr>
+<tr><td align="left">  %0 = bitcast %struct.gs_fixed_point_s* %wxy to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %0) #6</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %to_y, 0</td></tr>
+<tr><td align="left">  %y = getelementptr inbounds %struct.gs_fixed_point_s, %struct.gs_fixed_point_s* %wxy, i64 0, i32 1</td></tr>
+<tr><td align="left">  %x = getelementptr inbounds %struct.gs_fixed_point_s, %struct.gs_fixed_point_s* %wxy, i64 0, i32 0</td></tr>
+<tr><td align="left">  %count = getelementptr inbounds %struct.stem_snap_table, %struct.stem_snap_table* %psst, i64 0, i32 0</td></tr>
+<tr><td align="left">  %1 = load i32, i32* %count, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %count1 = getelementptr inbounds %struct.a_stem_table, %struct.a_stem_table* %pst, i64 0, i32 0</td></tr>
+<tr><td align="left">  %tobool2.not = icmp eq i32 %from_y, 0</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ %indvars.iv.next, %cleanup ], [ 0, %entry ]</td></tr>
+<tr><td align="left">  %j.0 = phi i32 [ %j.1, %cleanup ], [ %1, %entry ]</td></tr>
+<tr><td align="left">  %2 = load i32, i32* %count1, align 4, !tbaa !8</td></tr>
+<tr><td align="left">  %3 = sext i32 %2 to i64</td></tr>
+<tr><td align="left">  %cmp = icmp slt i64 %indvars.iv, %3</td></tr>
+<tr><td align="left">  br i1 %cmp, label %for.body, label %for.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds %struct.a_stem_table, %struct.a_stem_table* %pst, i64 0, i32 1, i64 %indvars.iv</td></tr>
+<tr><td align="left">  %4 = load float, float* %arrayidx, align 4, !tbaa !10</td></tr>
+<tr><td align="left">  %conv5 = fpext float %4 to double</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool2.not, label %cond.false4, label %cond.true3</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end7:</td></tr>
+<tr><td align="left">  %cond8 = phi i32 [ %call, %cond.true3 ], [ %call6, %cond.false4 ]</td></tr>
+<tr><td align="left">  %cmp9 = icmp slt i32 %cond8, 0</td></tr>
+<tr><td align="left">  br i1 %cmp9, label %cleanup, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %x.val = load i64, i64* %x, align 8</td></tr>
+<tr><td align="left">  %y.val = load i64, i64* %y, align 8</td></tr>
+<tr><td align="left">  %5 = select i1 %tobool.not, i64 %x.val, i64 %y.val</td></tr>
+<tr><td align="left">  %6 = call i64 @llvm.abs.i64(i64 %5, i1 true)</td></tr>
+<tr><td align="left">  %idxprom17 = sext i32 %j.0 to i64</td></tr>
+<tr><td align="left">  %arrayidx18 = getelementptr inbounds %struct.stem_snap_table, %struct.stem_snap_table* %psst, i64 0, i32 1, i64 %idxprom17</td></tr>
+<tr><td align="left">  store i64 %6, i64* %arrayidx18, align 8, !tbaa !12</td></tr>
+<tr><td align="left">  %inc = add nsw i32 %j.0, 1</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %j.1 = phi i32 [ %inc, %if.end ], [ %j.0, %cond.end7 ]</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !14</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  store i32 %j.0, i32* %count, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %0) #6</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> f_bb6:f
+f_bb2:fT -> m_bb0:f1
+f_bb2:fF -> m_bb0:f2
+m_bb0:f2 -> f_bb3:f
+m_bb0:f1 -> f_bb3:f
+f_bb3:fT -> f_bb5:f
+f_bb3:fF -> f_bb4:f
+f_bb4:f -> f_bb5:f
+f_bb5:f -> f_bb1:f
+}
+

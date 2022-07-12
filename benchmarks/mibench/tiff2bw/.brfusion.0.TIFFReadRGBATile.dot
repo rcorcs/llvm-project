@@ -1,0 +1,232 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call1 = tail call i8* @TIFFFileName(%struct.tiff* %tif) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void (i8*, i8*, ...) @TIFFError(i8* %call1, i8* getelementptr inbounds ([49 x i8], [49 x i8]* @.str.22, i64 0, i64 0)) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then6:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call7 = call i8* @TIFFFileName(%struct.tiff* %tif) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void (i8*, i8*, ...) @TIFFError(i8* %call7, i8* getelementptr inbounds ([71 x i8], [71 x i8]* @.str.23, i64 0, i64 0)) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %emsg = alloca [1024 x i8], align 16</td></tr>
+<tr><td align="left">  %img = alloca %struct._TIFFRGBAImage, align 8</td></tr>
+<tr><td align="left">  %tile_xsize = alloca i32, align 4</td></tr>
+<tr><td align="left">  %tile_ysize = alloca i32, align 4</td></tr>
+<tr><td align="left">  %0 = getelementptr inbounds [1024 x i8], [1024 x i8]* %emsg, i64 0, i64 0</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 1024, i8* nonnull %0) #9</td></tr>
+<tr><td align="left">  %1 = bitcast %struct._TIFFRGBAImage* %img to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 120, i8* nonnull %1) #9</td></tr>
+<tr><td align="left">  %2 = bitcast i32* %tile_xsize to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %2) #9</td></tr>
+<tr><td align="left">  %3 = bitcast i32* %tile_ysize to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %3) #9</td></tr>
+<tr><td align="left">  %call = tail call i32 @TIFFIsTiled(%struct.tiff* %tif) #10</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %call, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool.not, label %if.then, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %call2 = call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %tif, i32 322, i32* nonnull %tile_xsize) #10</td></tr>
+<tr><td align="left">  %call3 = call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %tif, i32 323, i32* nonnull %tile_ysize) #10</td></tr>
+<tr><td align="left">  %4 = load i32, i32* %tile_xsize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %rem = urem i32 %col, %4</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq i32 %rem, 0</td></tr>
+<tr><td align="left">  br i1 %cmp.not, label %lor.lhs.false, label %if.then6</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false:</td></tr>
+<tr><td align="left">  %5 = load i32, i32* %tile_ysize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %rem4 = urem i32 %row, %5</td></tr>
+<tr><td align="left">  %cmp5.not = icmp eq i32 %rem4, 0</td></tr>
+<tr><td align="left">  br i1 %cmp5.not, label %if.end8, label %if.then6</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end8:</td></tr>
+<tr><td align="left">  %call9 = call i32 @TIFFRGBAImageBegin(%struct._TIFFRGBAImage* nonnull %img, %struct.tiff* %tif, i32 0, i8* nonnull %0) #11</td></tr>
+<tr><td align="left">  %tobool10.not = icmp eq i32 %call9, 0</td></tr>
+<tr><td align="left">  br i1 %tobool10.not, label %if.then11, label %if.end14</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then11:</td></tr>
+<tr><td align="left">  %call12 = call i8* @TIFFFileName(%struct.tiff* %tif) #10</td></tr>
+<tr><td align="left">  call void (i8*, i8*, ...) @TIFFError(i8* %call12, i8* nonnull %0) #10</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end14:</td></tr>
+<tr><td align="left">  %6 = load i32, i32* %tile_ysize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %add = add i32 %6, %row</td></tr>
+<tr><td align="left">  %height = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 5</td></tr>
+<tr><td align="left">  %7 = load i32, i32* %height, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp15 = icmp ugt i32 %add, %7</td></tr>
+<tr><td align="left">  %sub = sub i32 %7, %row</td></tr>
+<tr><td align="left">  %read_ysize.0 = select i1 %cmp15, i32 %sub, i32 %6</td></tr>
+<tr><td align="left">  %8 = load i32, i32* %tile_xsize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %add19 = add i32 %8, %col</td></tr>
+<tr><td align="left">  %width = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 4</td></tr>
+<tr><td align="left">  %9 = load i32, i32* %width, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  %cmp20 = icmp ugt i32 %add19, %9</td></tr>
+<tr><td align="left">  %sub23 = sub i32 %9, %col</td></tr>
+<tr><td align="left">  %read_xsize.0 = select i1 %cmp20, i32 %sub23, i32 %8</td></tr>
+<tr><td align="left">  %row_offset = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 19</td></tr>
+<tr><td align="left">  store i32 %row, i32* %row_offset, align 8, !tbaa !12</td></tr>
+<tr><td align="left">  %col_offset = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 20</td></tr>
+<tr><td align="left">  store i32 %col, i32* %col_offset, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  %call26 = call i32 @TIFFRGBAImageGet(%struct._TIFFRGBAImage* nonnull %img, i32* %raster, i32 %read_xsize.0, i32 %read_ysize.0) #11</td></tr>
+<tr><td align="left">  call void @TIFFRGBAImageEnd(%struct._TIFFRGBAImage* nonnull %img) #11</td></tr>
+<tr><td align="left">  %10 = load i32, i32* %tile_xsize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp27 = icmp eq i32 %read_xsize.0, %10</td></tr>
+<tr><td align="left">  %11 = load i32, i32* %tile_ysize, align 4</td></tr>
+<tr><td align="left">  %cmp28 = icmp eq i32 %read_ysize.0, %11</td></tr>
+<tr><td align="left">  %or.cond = select i1 %cmp27, i1 %cmp28, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %cleanup, label %for.cond.preheader</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond.preheader:</td></tr>
+<tr><td align="left">  %conv = zext i32 %read_xsize.0 to i64</td></tr>
+<tr><td align="left">  %mul39 = shl i32 %read_xsize.0, 2</td></tr>
+<tr><td align="left">  %wide.trip.count = zext i32 %read_ysize.0 to i64</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ 0, %for.cond.preheader ], [ %indvars.iv.next, %for.body ]</td></tr>
+<tr><td align="left">  %i_row.0 = phi i32 [ 0, %for.cond.preheader ], [ %inc, %for.body ]</td></tr>
+<tr><td align="left">  %exitcond.not = icmp eq i64 %indvars.iv, %wide.trip.count</td></tr>
+<tr><td align="left">  br i1 %exitcond.not, label %for.cond52, label %for.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %12 = load i32, i32* %tile_ysize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %13 = xor i32 %i_row.0, -1</td></tr>
+<tr><td align="left">  %sub33 = add i32 %12, %13</td></tr>
+<tr><td align="left">  %14 = load i32, i32* %tile_xsize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %mul = mul i32 %sub33, %14</td></tr>
+<tr><td align="left">  %idx.ext = zext i32 %mul to i64</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds i32, i32* %raster, i64 %idx.ext</td></tr>
+<tr><td align="left">  %15 = bitcast i32* %add.ptr to i8*</td></tr>
+<tr><td align="left">  %sub35 = add i32 %read_ysize.0, %13</td></tr>
+<tr><td align="left">  %mul36 = mul i32 %sub35, %read_xsize.0</td></tr>
+<tr><td align="left">  %idx.ext37 = zext i32 %mul36 to i64</td></tr>
+<tr><td align="left">  %add.ptr38 = getelementptr inbounds i32, i32* %raster, i64 %idx.ext37</td></tr>
+<tr><td align="left">  %16 = bitcast i32* %add.ptr38 to i8*</td></tr>
+<tr><td align="left">  call void @_TIFFmemcpy(i8* %15, i8* %16, i32 %mul39) #10</td></tr>
+<tr><td align="left">  %17 = load i32, i32* %tile_ysize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %sub42 = add i32 %17, %13</td></tr>
+<tr><td align="left">  %18 = load i32, i32* %tile_xsize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %mul43 = mul i32 %sub42, %18</td></tr>
+<tr><td align="left">  %idx.ext44 = zext i32 %mul43 to i64</td></tr>
+<tr><td align="left">  %add.ptr47.idx = add nuw nsw i64 %idx.ext44, %conv</td></tr>
+<tr><td align="left">  %add.ptr47 = getelementptr inbounds i32, i32* %raster, i64 %add.ptr47.idx</td></tr>
+<tr><td align="left">  %19 = bitcast i32* %add.ptr47 to i8*</td></tr>
+<tr><td align="left">  %sub48 = sub i32 %18, %read_xsize.0</td></tr>
+<tr><td align="left">  %mul50 = shl i32 %sub48, 2</td></tr>
+<tr><td align="left">  call void @_TIFFmemset(i8* %19, i32 0, i32 %mul50) #10</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  %inc = add nuw i32 %i_row.0, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !14</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond52:</td></tr>
+<tr><td align="left">  %i_row.1 = phi i32 [ %inc65, %for.body55 ], [ %read_ysize.0, %for.cond ]</td></tr>
+<tr><td align="left">  %20 = load i32, i32* %tile_ysize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp53 = icmp ugt i32 %20, %i_row.1</td></tr>
+<tr><td align="left">  br i1 %cmp53, label %for.body55, label %cleanup</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body55:</td></tr>
+<tr><td align="left">  %21 = xor i32 %i_row.1, -1</td></tr>
+<tr><td align="left">  %sub57 = add i32 %20, %21</td></tr>
+<tr><td align="left">  %22 = load i32, i32* %tile_xsize, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %mul58 = mul i32 %22, %sub57</td></tr>
+<tr><td align="left">  %idx.ext59 = zext i32 %mul58 to i64</td></tr>
+<tr><td align="left">  %add.ptr60 = getelementptr inbounds i32, i32* %raster, i64 %idx.ext59</td></tr>
+<tr><td align="left">  %23 = bitcast i32* %add.ptr60 to i8*</td></tr>
+<tr><td align="left">  %mul62 = shl i32 %22, 2</td></tr>
+<tr><td align="left">  call void @_TIFFmemset(i8* %23, i32 0, i32 %mul62) #10</td></tr>
+<tr><td align="left">  %inc65 = add nuw i32 %i_row.1, 1</td></tr>
+<tr><td align="left">  br label %for.cond52, !llvm.loop !16</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ 0, %if.then6 ], [ 0, %if.then11 ], [ 0, %if.then ], [ %call26, %if.end14 ], [ %call26, %for.cond52 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %3) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %2) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 120, i8* nonnull %1) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 1024, i8* nonnull %0) #9</td></tr>
+<tr><td align="left">  ret i32 %retval.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> m_bb0:f1
+f_bb0:fF -> f_bb1:f
+m_bb0:f1 -> f_bb11:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> m_bb0:f2
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> m_bb0:f2
+m_bb0:f2 -> f_bb11:f
+f_bb3:fT -> f_bb4:f
+f_bb3:fF -> f_bb5:f
+f_bb4:f -> f_bb11:f
+f_bb5:fT -> f_bb11:f
+f_bb5:fF -> f_bb6:f
+f_bb6:f -> f_bb7:f
+f_bb7:fT -> f_bb9:f
+f_bb7:fF -> f_bb8:f
+f_bb8:f -> f_bb7:f
+f_bb9:fT -> f_bb10:f
+f_bb9:fF -> f_bb11:f
+f_bb10:f -> f_bb9:f
+}
+

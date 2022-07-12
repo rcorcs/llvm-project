@@ -1,0 +1,724 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.4, i64 0, i64 0), i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.1, i64 0, i64 0), i32 324, i8* getelementptr inbounds ([52 x i8], [52 x i8]* @__PRETTY_FUNCTION__.LZWDecode, i64 0, i64 0)) #4</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else138:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([72 x i8], [72 x i8]* @.str.8, i64 0, i64 0), i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.1, i64 0, i64 0), i32 398, i8* getelementptr inbounds ([52 x i8], [52 x i8]* @__PRETTY_FUNCTION__.LZWDecode, i64 0, i64 0)) #4</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %tif_data = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 37</td></tr>
+<tr><td align="left">  %0 = bitcast i8** %tif_data to %struct.LZWDecodeState**</td></tr>
+<tr><td align="left">  %1 = load %struct.LZWDecodeState*, %struct.LZWDecodeState** %0, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %conv = sext i32 %occ0 to i64</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq %struct.LZWDecodeState* %1, null</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp.not, label %if.else, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %dec_restart = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 2</td></tr>
+<tr><td align="left">  %2 = load i64, i64* %dec_restart, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i64 %2, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %if.end41, label %if.then2</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then2:</td></tr>
+<tr><td align="left">  %dec_codep = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 5</td></tr>
+<tr><td align="left">  %3 = load %struct.code_ent*, %struct.code_ent** %dec_codep, align 8, !tbaa !19</td></tr>
+<tr><td align="left">  %length = getelementptr inbounds %struct.code_ent, %struct.code_ent* %3, i64 0, i32 1</td></tr>
+<tr><td align="left">  %4 = load i16, i16* %length, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %conv3 = zext i16 %4 to i64</td></tr>
+<tr><td align="left">  %sub = sub nsw i64 %conv3, %2</td></tr>
+<tr><td align="left">  %cmp5 = icmp sgt i64 %sub, %conv</td></tr>
+<tr><td align="left">  br i1 %cmp5, label %if.then7, label %if.end24</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then7:</td></tr>
+<tr><td align="left">  %add = add nsw i64 %2, %conv</td></tr>
+<tr><td align="left">  store i64 %add, i64* %dec_restart, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  br label %do.body</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.body:</td></tr>
+<tr><td align="left">  %codep.0 = phi %struct.code_ent* [ %3, %if.then7 ], [ %5, %do.body ]</td></tr>
+<tr><td align="left">  %residue.0 = phi i64 [ %sub, %if.then7 ], [ %dec, %do.body ]</td></tr>
+<tr><td align="left">  %next = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.0, i64 0, i32 0</td></tr>
+<tr><td align="left">  %5 = load %struct.code_ent*, %struct.code_ent** %next, align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %dec = add nsw i64 %residue.0, -1</td></tr>
+<tr><td align="left">  %cmp9 = icmp sgt i64 %dec, %conv</td></tr>
+<tr><td align="left">  %tobool11 = icmp ne %struct.code_ent* %5, null</td></tr>
+<tr><td align="left">  %6 = select i1 %cmp9, i1 %tobool11, i1 false</td></tr>
+<tr><td align="left">  br i1 %6, label %do.body, label %do.end, !llvm.loop !23</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.end:</td></tr>
+<tr><td align="left">  br i1 %tobool11, label %if.then13, label %cleanup</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then13:</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds i8, i8* %op0, i64 %conv</td></tr>
+<tr><td align="left">  br label %do.body14</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.body14:</td></tr>
+<tr><td align="left">  %tp.0 = phi i8* [ %add.ptr, %if.then13 ], [ %incdec.ptr, %do.body14 ]</td></tr>
+<tr><td align="left">  %occ.0 = phi i64 [ %conv, %if.then13 ], [ %dec17, %do.body14 ]</td></tr>
+<tr><td align="left">  %codep.1 = phi %struct.code_ent* [ %5, %if.then13 ], [ %8, %do.body14 ]</td></tr>
+<tr><td align="left">  %value = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.1, i64 0, i32 2</td></tr>
+<tr><td align="left">  %7 = load i8, i8* %value, align 2, !tbaa !25</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds i8, i8* %tp.0, i64 -1</td></tr>
+<tr><td align="left">  store i8 %7, i8* %incdec.ptr, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %next15 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.1, i64 0, i32 0</td></tr>
+<tr><td align="left">  %8 = load %struct.code_ent*, %struct.code_ent** %next15, align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %dec17 = add nsw i64 %occ.0, -1</td></tr>
+<tr><td align="left">  %tobool18 = icmp ne i64 %dec17, 0</td></tr>
+<tr><td align="left">  %tobool20 = icmp ne %struct.code_ent* %8, null</td></tr>
+<tr><td align="left">  %9 = select i1 %tobool18, i1 %tobool20, i1 false</td></tr>
+<tr><td align="left">  br i1 %9, label %do.body14, label %cleanup, !llvm.loop !27</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end24:</td></tr>
+<tr><td align="left">  %add.ptr25 = getelementptr inbounds i8, i8* %op0, i64 %sub</td></tr>
+<tr><td align="left">  br label %do.body27</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.body27:</td></tr>
+<tr><td align="left">  %tp.1 = phi i8* [ %add.ptr25, %if.end24 ], [ %incdec.ptr28, %do.body27 ]</td></tr>
+<tr><td align="left">  %codep.2 = phi %struct.code_ent* [ %3, %if.end24 ], [ %11, %do.body27 ]</td></tr>
+<tr><td align="left">  %residue.1 = phi i64 [ %sub, %if.end24 ], [ %dec34, %do.body27 ]</td></tr>
+<tr><td align="left">  %incdec.ptr28 = getelementptr inbounds i8, i8* %tp.1, i64 -1</td></tr>
+<tr><td align="left">  %value29 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.2, i64 0, i32 2</td></tr>
+<tr><td align="left">  %10 = load i8, i8* %value29, align 2, !tbaa !25</td></tr>
+<tr><td align="left">  %next31 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.2, i64 0, i32 0</td></tr>
+<tr><td align="left">  %11 = load %struct.code_ent*, %struct.code_ent** %next31, align 8, !tbaa !22</td></tr>
+<tr><td align="left">  store i8 %10, i8* %incdec.ptr28, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %dec34 = add nsw i64 %residue.1, -1</td></tr>
+<tr><td align="left">  %tobool35 = icmp ne i64 %dec34, 0</td></tr>
+<tr><td align="left">  %tobool37 = icmp ne %struct.code_ent* %11, null</td></tr>
+<tr><td align="left">  %12 = select i1 %tobool35, i1 %tobool37, i1 false</td></tr>
+<tr><td align="left">  br i1 %12, label %do.body27, label %do.end39, !llvm.loop !28</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">do.end39:</td></tr>
+<tr><td align="left">  %sub26 = sub nsw i64 %conv, %sub</td></tr>
+<tr><td align="left">  store i64 0, i64* %dec_restart, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %occ.2 = phi i64 [ %sub26, %do.end39 ], [ %conv, %do.end ], [ %dec17, %do.body14 ]</td></tr>
+<tr><td align="left">  %op.0 = phi i8* [ %add.ptr25, %do.end39 ], [ %op0, %do.end ], [ %op0, %do.body14 ]</td></tr>
+<tr><td align="left">  br i1 %cmp5, label %cleanup259, label %if.end41</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end41:</td></tr>
+<tr><td align="left">  %occ.3 = phi i64 [ %occ.2, %cleanup ], [ %conv, %if.end ]</td></tr>
+<tr><td align="left">  %op.1 = phi i8* [ %op.0, %cleanup ], [ %op0, %if.end ]</td></tr>
+<tr><td align="left">  %tif_rawcp = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 42</td></tr>
+<tr><td align="left">  %13 = load i8*, i8** %tif_rawcp, align 8, !tbaa !29</td></tr>
+<tr><td align="left">  %nbits42 = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 0, i32 1</td></tr>
+<tr><td align="left">  %14 = load i16, i16* %nbits42, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  %conv43 = zext i16 %14 to i64</td></tr>
+<tr><td align="left">  %nextdata45 = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 0, i32 4</td></tr>
+<tr><td align="left">  %15 = load i64, i64* %nextdata45, align 8, !tbaa !31</td></tr>
+<tr><td align="left">  %nextbits47 = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 0, i32 5</td></tr>
+<tr><td align="left">  %16 = load i64, i64* %nextbits47, align 8, !tbaa !32</td></tr>
+<tr><td align="left">  %dec_nbitsmask = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 1</td></tr>
+<tr><td align="left">  %17 = load i64, i64* %dec_nbitsmask, align 8, !tbaa !33</td></tr>
+<tr><td align="left">  %dec_oldcodep = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 6</td></tr>
+<tr><td align="left">  %18 = load %struct.code_ent*, %struct.code_ent** %dec_oldcodep, align 8, !tbaa !34</td></tr>
+<tr><td align="left">  %dec_free_entp = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 7</td></tr>
+<tr><td align="left">  %19 = load %struct.code_ent*, %struct.code_ent** %dec_free_entp, align 8, !tbaa !35</td></tr>
+<tr><td align="left">  %dec_maxcodep = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 8</td></tr>
+<tr><td align="left">  %20 = load %struct.code_ent*, %struct.code_ent** %dec_maxcodep, align 8, !tbaa !36</td></tr>
+<tr><td align="left">  %dec_bitsleft = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 3</td></tr>
+<tr><td align="left">  %dec_codetab = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 9</td></tr>
+<tr><td align="left">  br label %while.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond:</td></tr>
+<tr><td align="left">  %bp.0 = phi i8* [ %13, %if.end41 ], [ %bp.0.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %occ.4 = phi i64 [ %occ.3, %if.end41 ], [ %occ.4.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %nbits.0 = phi i64 [ %conv43, %if.end41 ], [ %nbits.0.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %nextbits.0 = phi i64 [ %16, %if.end41 ], [ %nextbits.0.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %nextdata.0 = phi i64 [ %15, %if.end41 ], [ %nextdata.0.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %nbitsmask.0 = phi i64 [ %17, %if.end41 ], [ %nbitsmask.0.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %free_entp.0 = phi %struct.code_ent* [ %19, %if.end41 ], [ %free_entp.0.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %maxcodep.0 = phi %struct.code_ent* [ %20, %if.end41 ], [ %maxcodep.0.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %oldcodep.0 = phi %struct.code_ent* [ %18, %if.end41 ], [ %oldcodep.0.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %op.2 = phi i8* [ %op.1, %if.end41 ], [ %op.2.be, %while.cond.backedge ]</td></tr>
+<tr><td align="left">  %cmp48 = icmp sgt i64 %occ.4, 0</td></tr>
+<tr><td align="left">  br i1 %cmp48, label %while.body, label %while.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  %21 = load i64, i64* %dec_bitsleft, align 8, !tbaa !37</td></tr>
+<tr><td align="left">  %cmp50 = icmp slt i64 %21, %nbits.0</td></tr>
+<tr><td align="left">  br i1 %cmp50, label %if.end71.thread, label %if.else53</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end71.thread:</td></tr>
+<tr><td align="left">  %tif_name = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 0</td></tr>
+<tr><td align="left">  %22 = load i8*, i8** %tif_name, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %tif_curstrip = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 13</td></tr>
+<tr><td align="left">  %23 = load i32, i32* %tif_curstrip, align 8, !tbaa !39</td></tr>
+<tr><td align="left">  tail call void (i8*, i8*, ...) @TIFFWarning(i8* %22, i8* getelementptr inbounds ([49 x i8], [49 x i8]* @.str.7, i64 0, i64 0), i32 %23) #5</td></tr>
+<tr><td align="left">  br label %while.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else53:</td></tr>
+<tr><td align="left">  %shl = shl i64 %nextdata.0, 8</td></tr>
+<tr><td align="left">  %incdec.ptr54 = getelementptr inbounds i8, i8* %bp.0, i64 1</td></tr>
+<tr><td align="left">  %24 = load i8, i8* %bp.0, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %conv55 = zext i8 %24 to i64</td></tr>
+<tr><td align="left">  %or = or i64 %shl, %conv55</td></tr>
+<tr><td align="left">  %add56 = add nsw i64 %nextbits.0, 8</td></tr>
+<tr><td align="left">  %cmp57 = icmp slt i64 %add56, %nbits.0</td></tr>
+<tr><td align="left">  br i1 %cmp57, label %if.then59, label %if.end71</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then59:</td></tr>
+<tr><td align="left">  %shl60 = shl i64 %or, 8</td></tr>
+<tr><td align="left">  %incdec.ptr61 = getelementptr inbounds i8, i8* %bp.0, i64 2</td></tr>
+<tr><td align="left">  %25 = load i8, i8* %incdec.ptr54, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %conv62 = zext i8 %25 to i64</td></tr>
+<tr><td align="left">  %or63 = or i64 %shl60, %conv62</td></tr>
+<tr><td align="left">  %add64 = add nsw i64 %nextbits.0, 16</td></tr>
+<tr><td align="left">  br label %if.end71</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end71:</td></tr>
+<tr><td align="left">  %bp.1 = phi i8* [ %incdec.ptr61, %if.then59 ], [ %incdec.ptr54, %if.else53 ]</td></tr>
+<tr><td align="left">  %nextbits.1 = phi i64 [ %add64, %if.then59 ], [ %add56, %if.else53 ]</td></tr>
+<tr><td align="left">  %nextdata.1 = phi i64 [ %or63, %if.then59 ], [ %or, %if.else53 ]</td></tr>
+<tr><td align="left">  %sub66 = sub nsw i64 %nextbits.1, %nbits.0</td></tr>
+<tr><td align="left">  %shr = ashr i64 %nextdata.1, %sub66</td></tr>
+<tr><td align="left">  %and = and i64 %shr, %nbitsmask.0</td></tr>
+<tr><td align="left">  %conv67 = trunc i64 %and to i16</td></tr>
+<tr><td align="left">  %sub70 = sub nsw i64 %21, %nbits.0</td></tr>
+<tr><td align="left">  store i64 %sub70, i64* %dec_bitsleft, align 8, !tbaa !37</td></tr>
+<tr><td align="left">  switch i16 %conv67, label %if.end125 [
+    i16 257, label %while.end
+    i16 256, label %if.then80
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then80:</td></tr>
+<tr><td align="left">  %26 = load %struct.code_ent*, %struct.code_ent** %dec_codetab, align 8, !tbaa !40</td></tr>
+<tr><td align="left">  %add.ptr81 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %26, i64 258</td></tr>
+<tr><td align="left">  %add.ptr84 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %26, i64 510</td></tr>
+<tr><td align="left">  %cmp86 = icmp slt i64 %sub70, 9</td></tr>
+<tr><td align="left">  br i1 %cmp86, label %if.end113.thread, label %if.else91</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end113.thread:</td></tr>
+<tr><td align="left">  %tif_name89 = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 0</td></tr>
+<tr><td align="left">  %27 = load i8*, i8** %tif_name89, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %tif_curstrip90 = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 13</td></tr>
+<tr><td align="left">  %28 = load i32, i32* %tif_curstrip90, align 8, !tbaa !39</td></tr>
+<tr><td align="left">  tail call void (i8*, i8*, ...) @TIFFWarning(i8* %27, i8* getelementptr inbounds ([49 x i8], [49 x i8]* @.str.7, i64 0, i64 0), i32 %28) #5</td></tr>
+<tr><td align="left">  br label %while.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb21 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else91:</td></tr>
+<tr><td align="left">  %shl92 = shl i64 %nextdata.1, 8</td></tr>
+<tr><td align="left">  %incdec.ptr93 = getelementptr inbounds i8, i8* %bp.1, i64 1</td></tr>
+<tr><td align="left">  %29 = load i8, i8* %bp.1, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %conv94 = zext i8 %29 to i64</td></tr>
+<tr><td align="left">  %or95 = or i64 %shl92, %conv94</td></tr>
+<tr><td align="left">  %add96 = add nsw i64 %sub66, 8</td></tr>
+<tr><td align="left">  %cmp97 = icmp slt i64 %sub66, 1</td></tr>
+<tr><td align="left">  br i1 %cmp97, label %if.then99, label %if.end113</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb22 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then99:</td></tr>
+<tr><td align="left">  %shl100 = shl i64 %or95, 8</td></tr>
+<tr><td align="left">  %incdec.ptr101 = getelementptr inbounds i8, i8* %bp.1, i64 2</td></tr>
+<tr><td align="left">  %30 = load i8, i8* %incdec.ptr93, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %conv102 = zext i8 %30 to i64</td></tr>
+<tr><td align="left">  %or103 = or i64 %shl100, %conv102</td></tr>
+<tr><td align="left">  %add104 = add nsw i64 %sub66, 16</td></tr>
+<tr><td align="left">  br label %if.end113</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb23 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end113:</td></tr>
+<tr><td align="left">  %bp.3 = phi i8* [ %incdec.ptr101, %if.then99 ], [ %incdec.ptr93, %if.else91 ]</td></tr>
+<tr><td align="left">  %nextbits.3 = phi i64 [ %add104, %if.then99 ], [ %add96, %if.else91 ]</td></tr>
+<tr><td align="left">  %nextdata.3 = phi i64 [ %or103, %if.then99 ], [ %or95, %if.else91 ]</td></tr>
+<tr><td align="left">  %sub106 = add nsw i64 %nextbits.3, -9</td></tr>
+<tr><td align="left">  %shr107 = ashr i64 %nextdata.3, %sub106</td></tr>
+<tr><td align="left">  %31 = trunc i64 %shr107 to i16</td></tr>
+<tr><td align="left">  %conv109 = and i16 %31, 511</td></tr>
+<tr><td align="left">  %sub112 = add nsw i64 %sub70, -9</td></tr>
+<tr><td align="left">  store i64 %sub112, i64* %dec_bitsleft, align 8, !tbaa !37</td></tr>
+<tr><td align="left">  %cmp115 = icmp eq i16 %conv109, 257</td></tr>
+<tr><td align="left">  br i1 %cmp115, label %while.end, label %if.end118</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end118:</td></tr>
+<tr><td align="left">  %conv119 = trunc i64 %shr107 to i8</td></tr>
+<tr><td align="left">  %incdec.ptr120 = getelementptr inbounds i8, i8* %op.2, i64 1</td></tr>
+<tr><td align="left">  store i8 %conv119, i8* %op.2, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %dec121 = add nsw i64 %occ.4, -1</td></tr>
+<tr><td align="left">  %32 = load %struct.code_ent*, %struct.code_ent** %dec_codetab, align 8, !tbaa !40</td></tr>
+<tr><td align="left">  %idx.ext = zext i16 %conv109 to i64</td></tr>
+<tr><td align="left">  %add.ptr124 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %32, i64 %idx.ext</td></tr>
+<tr><td align="left">  br label %while.cond.backedge</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb25 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.cond.backedge:</td></tr>
+<tr><td align="left">  %bp.0.be = phi i8* [ %bp.3, %if.end118 ], [ %bp.1, %if.else237 ], [ %bp.1, %if.end232 ]</td></tr>
+<tr><td align="left">  %occ.4.be = phi i64 [ %dec121, %if.end118 ], [ %dec240, %if.else237 ], [ %sub236, %if.end232 ]</td></tr>
+<tr><td align="left">  %nbits.0.be = phi i64 [ 9, %if.end118 ], [ %nbits.1, %if.else237 ], [ %nbits.1, %if.end232 ]</td></tr>
+<tr><td align="left">  %nextbits.0.be = phi i64 [ %sub106, %if.end118 ], [ %sub66, %if.else237 ], [ %sub66, %if.end232 ]</td></tr>
+<tr><td align="left">  %nextdata.0.be = phi i64 [ %nextdata.3, %if.end118 ], [ %nextdata.1, %if.else237 ], [ %nextdata.1, %if.end232 ]</td></tr>
+<tr><td align="left">  %nbitsmask.0.be = phi i64 [ 511, %if.end118 ], [ %nbitsmask.1, %if.else237 ], [ %nbitsmask.1, %if.end232 ]</td></tr>
+<tr><td align="left">  %free_entp.0.be = phi %struct.code_ent* [ %add.ptr81, %if.end118 ], [ %incdec.ptr157, %if.else237 ], [ %incdec.ptr157, %if.end232 ]</td></tr>
+<tr><td align="left">  %maxcodep.0.be = phi %struct.code_ent* [ %add.ptr84, %if.end118 ], [ %maxcodep.1, %if.else237 ], [ %maxcodep.1, %if.end232 ]</td></tr>
+<tr><td align="left">  %oldcodep.0.be = phi %struct.code_ent* [ %add.ptr124, %if.end118 ], [ %add.ptr129, %if.else237 ], [ %add.ptr129, %if.end232 ]</td></tr>
+<tr><td align="left">  %op.2.be = phi i8* [ %incdec.ptr120, %if.end118 ], [ %incdec.ptr239, %if.else237 ], [ %add.ptr215, %if.end232 ]</td></tr>
+<tr><td align="left">  br label %while.cond, !llvm.loop !41</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end125:</td></tr>
+<tr><td align="left">  %33 = load %struct.code_ent*, %struct.code_ent** %dec_codetab, align 8, !tbaa !40</td></tr>
+<tr><td align="left">  %idx.ext128 = and i64 %and, 65535</td></tr>
+<tr><td align="left">  %add.ptr129 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %33, i64 %idx.ext128</td></tr>
+<tr><td align="left">  %cmp131.not = icmp ule %struct.code_ent* %33, %free_entp.0</td></tr>
+<tr><td align="left">  %arrayidx134 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %33, i64 5119</td></tr>
+<tr><td align="left">  %cmp135 = icmp ult %struct.code_ent* %free_entp.0, %arrayidx134</td></tr>
+<tr><td align="left">  %or.cond = select i1 %cmp131.not, i1 %cmp135, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %if.end139, label %if.else138</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb27 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end139:</td></tr>
+<tr><td align="left">  %next140 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %free_entp.0, i64 0, i32 0</td></tr>
+<tr><td align="left">  store %struct.code_ent* %oldcodep.0, %struct.code_ent** %next140, align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %firstchar = getelementptr inbounds %struct.code_ent, %struct.code_ent* %oldcodep.0, i64 0, i32 3</td></tr>
+<tr><td align="left">  %34 = load i8, i8* %firstchar, align 1, !tbaa !42</td></tr>
+<tr><td align="left">  %firstchar142 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %free_entp.0, i64 0, i32 3</td></tr>
+<tr><td align="left">  store i8 %34, i8* %firstchar142, align 1, !tbaa !42</td></tr>
+<tr><td align="left">  %length144 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %oldcodep.0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %35 = load i16, i16* %length144, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %add146 = add i16 %35, 1</td></tr>
+<tr><td align="left">  %length148 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %free_entp.0, i64 0, i32 1</td></tr>
+<tr><td align="left">  store i16 %add146, i16* %length148, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %cmp149 = icmp ult %struct.code_ent* %add.ptr129, %free_entp.0</td></tr>
+<tr><td align="left">  %firstchar151 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %33, i64 %idx.ext128, i32 3</td></tr>
+<tr><td align="left">  %cond.in.in = select i1 %cmp149, i8* %firstchar151, i8* %firstchar142</td></tr>
+<tr><td align="left">  %cond.in458 = load i8, i8* %cond.in.in, align 1, !tbaa !42</td></tr>
+<tr><td align="left">  %value156 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %free_entp.0, i64 0, i32 2</td></tr>
+<tr><td align="left">  store i8 %cond.in458, i8* %value156, align 2, !tbaa !25</td></tr>
+<tr><td align="left">  %incdec.ptr157 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %free_entp.0, i64 1</td></tr>
+<tr><td align="left">  %cmp158 = icmp ugt %struct.code_ent* %incdec.ptr157, %maxcodep.0</td></tr>
+<tr><td align="left">  br i1 %cmp158, label %if.then160, label %if.end170</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb28 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then160:</td></tr>
+<tr><td align="left">  %inc = add nsw i64 %nbits.0, 1</td></tr>
+<tr><td align="left">  %cmp161.inv = icmp slt i64 %nbits.0, 12</td></tr>
+<tr><td align="left">  %spec.store.select = select i1 %cmp161.inv, i64 %inc, i64 12</td></tr>
+<tr><td align="left">  %notmask = shl nsw i64 -1, %spec.store.select</td></tr>
+<tr><td align="left">  %sub166 = xor i64 %notmask, -1</td></tr>
+<tr><td align="left">  %add.ptr169.idx = sub nsw i64 -2, %notmask</td></tr>
+<tr><td align="left">  %add.ptr169 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %33, i64 %add.ptr169.idx</td></tr>
+<tr><td align="left">  br label %if.end170</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb29 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end170:</td></tr>
+<tr><td align="left">  %nbits.1 = phi i64 [ %spec.store.select, %if.then160 ], [ %nbits.0, %if.end139 ]</td></tr>
+<tr><td align="left">  %nbitsmask.1 = phi i64 [ %sub166, %if.then160 ], [ %nbitsmask.0, %if.end139 ]</td></tr>
+<tr><td align="left">  %maxcodep.1 = phi %struct.code_ent* [ %add.ptr169, %if.then160 ], [ %maxcodep.0, %if.end139 ]</td></tr>
+<tr><td align="left">  %cmp172 = icmp ugt i16 %conv67, 255</td></tr>
+<tr><td align="left">  br i1 %cmp172, label %if.then174, label %if.else237</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then174:</td></tr>
+<tr><td align="left">  %length175 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %33, i64 %idx.ext128, i32 1</td></tr>
+<tr><td align="left">  %36 = load i16, i16* %length175, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %conv176 = zext i16 %36 to i64</td></tr>
+<tr><td align="left">  %cmp177 = icmp slt i64 %occ.4, %conv176</td></tr>
+<tr><td align="left">  br i1 %cmp177, label %if.then179, label %if.end211</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb31 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then179:</td></tr>
+<tr><td align="left">  %dec_codep180 = getelementptr inbounds %struct.LZWDecodeState, %struct.LZWDecodeState* %1, i64 0, i32 5</td></tr>
+<tr><td align="left">  store %struct.code_ent* %add.ptr129, %struct.code_ent** %dec_codep180, align 8, !tbaa !19</td></tr>
+<tr><td align="left">  br label %do.body181</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb32 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.body181:</td></tr>
+<tr><td align="left">  %codep.3 = phi %struct.code_ent* [ %add.ptr129, %if.then179 ], [ %37, %land.rhs185 ]</td></tr>
+<tr><td align="left">  %next182 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.3, i64 0, i32 0</td></tr>
+<tr><td align="left">  %37 = load %struct.code_ent*, %struct.code_ent** %next182, align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %tobool184.not = icmp eq %struct.code_ent* %37, null</td></tr>
+<tr><td align="left">  br i1 %tobool184.not, label %while.end, label %land.rhs185</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb33 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.rhs185:</td></tr>
+<tr><td align="left">  %length186 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %37, i64 0, i32 1</td></tr>
+<tr><td align="left">  %38 = load i16, i16* %length186, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %conv187 = zext i16 %38 to i64</td></tr>
+<tr><td align="left">  %cmp188 = icmp slt i64 %occ.4, %conv187</td></tr>
+<tr><td align="left">  br i1 %cmp188, label %do.body181, label %if.then193, !llvm.loop !43</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb34 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then193:</td></tr>
+<tr><td align="left">  store i64 %occ.4, i64* %dec_restart, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %add.ptr195 = getelementptr inbounds i8, i8* %op.2, i64 %occ.4</td></tr>
+<tr><td align="left">  br label %do.body196</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb35 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.body196:</td></tr>
+<tr><td align="left">  %tp.2 = phi i8* [ %add.ptr195, %if.then193 ], [ %incdec.ptr198, %do.body196 ]</td></tr>
+<tr><td align="left">  %occ.5 = phi i64 [ %occ.4, %if.then193 ], [ %dec201, %do.body196 ]</td></tr>
+<tr><td align="left">  %codep.4 = phi %struct.code_ent* [ %37, %if.then193 ], [ %40, %do.body196 ]</td></tr>
+<tr><td align="left">  %value197 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.4, i64 0, i32 2</td></tr>
+<tr><td align="left">  %39 = load i8, i8* %value197, align 2, !tbaa !25</td></tr>
+<tr><td align="left">  %incdec.ptr198 = getelementptr inbounds i8, i8* %tp.2, i64 -1</td></tr>
+<tr><td align="left">  store i8 %39, i8* %incdec.ptr198, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %next199 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.4, i64 0, i32 0</td></tr>
+<tr><td align="left">  %40 = load %struct.code_ent*, %struct.code_ent** %next199, align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %dec201 = add nsw i64 %occ.5, -1</td></tr>
+<tr><td align="left">  %tobool202 = icmp ne i64 %dec201, 0</td></tr>
+<tr><td align="left">  %tobool204 = icmp ne %struct.code_ent* %40, null</td></tr>
+<tr><td align="left">  %41 = select i1 %tobool202, i1 %tobool204, i1 false</td></tr>
+<tr><td align="left">  br i1 %41, label %do.body196, label %do.end206, !llvm.loop !44</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb36 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.end206:</td></tr>
+<tr><td align="left">  br i1 %tobool204, label %if.then208, label %while.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb37 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then208:</td></tr>
+<tr><td align="left">  tail call fastcc void @codeLoop(%struct.tiff* %tif) #6</td></tr>
+<tr><td align="left">  br label %while.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb38 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end211:</td></tr>
+<tr><td align="left">  %add.ptr215 = getelementptr inbounds i8, i8* %op.2, i64 %conv176</td></tr>
+<tr><td align="left">  br label %do.body216</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.body216:</td></tr>
+<tr><td align="left">  %tp.3 = phi i8* [ %add.ptr215, %if.end211 ], [ %incdec.ptr218, %do.body216 ]</td></tr>
+<tr><td align="left">  %codep.5 = phi %struct.code_ent* [ %add.ptr129, %if.end211 ], [ %43, %do.body216 ]</td></tr>
+<tr><td align="left">  %incdec.ptr218 = getelementptr inbounds i8, i8* %tp.3, i64 -1</td></tr>
+<tr><td align="left">  %value219 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.5, i64 0, i32 2</td></tr>
+<tr><td align="left">  %42 = load i8, i8* %value219, align 2, !tbaa !25</td></tr>
+<tr><td align="left">  %next221 = getelementptr inbounds %struct.code_ent, %struct.code_ent* %codep.5, i64 0, i32 0</td></tr>
+<tr><td align="left">  %43 = load %struct.code_ent*, %struct.code_ent** %next221, align 8, !tbaa !22</td></tr>
+<tr><td align="left">  store i8 %42, i8* %incdec.ptr218, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %tobool224 = icmp ne %struct.code_ent* %43, null</td></tr>
+<tr><td align="left">  %cmp226 = icmp ugt i8* %incdec.ptr218, %op.2</td></tr>
+<tr><td align="left">  %44 = select i1 %tobool224, i1 %cmp226, i1 false</td></tr>
+<tr><td align="left">  br i1 %44, label %do.body216, label %do.end229, !llvm.loop !45</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb40 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">do.end229:</td></tr>
+<tr><td align="left">  br i1 %tobool224, label %if.then231, label %if.end232</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb41 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then231:</td></tr>
+<tr><td align="left">  tail call fastcc void @codeLoop(%struct.tiff* %tif) #6</td></tr>
+<tr><td align="left">  br label %while.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb42 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end232:</td></tr>
+<tr><td align="left">  %sub236 = sub nsw i64 %occ.4, %conv176</td></tr>
+<tr><td align="left">  br label %while.cond.backedge</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb43 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else237:</td></tr>
+<tr><td align="left">  %conv238 = trunc i64 %and to i8</td></tr>
+<tr><td align="left">  %incdec.ptr239 = getelementptr inbounds i8, i8* %op.2, i64 1</td></tr>
+<tr><td align="left">  store i8 %conv238, i8* %op.2, align 1, !tbaa !26</td></tr>
+<tr><td align="left">  %dec240 = add nsw i64 %occ.4, -1</td></tr>
+<tr><td align="left">  br label %while.cond.backedge</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb44 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.end:</td></tr>
+<tr><td align="left">  %bp.5 = phi i8* [ %bp.1, %if.then208 ], [ %bp.1, %do.end206 ], [ %bp.1, %if.then231 ], [ %bp.0, %if.end71.thread ], [ %bp.1, %if.end113.thread ], [ %bp.1, %do.body181 ], [ %bp.0, %while.cond ], [ %bp.3, %if.end113 ], [ %bp.1, %if.end71 ]</td></tr>
+<tr><td align="left">  %occ.7 = phi i64 [ %dec201, %if.then208 ], [ %dec201, %do.end206 ], [ %occ.4, %if.then231 ], [ %occ.4, %if.end71.thread ], [ %occ.4, %if.end113.thread ], [ %occ.4, %do.body181 ], [ %occ.4, %while.cond ], [ %occ.4, %if.end113 ], [ %occ.4, %if.end71 ]</td></tr>
+<tr><td align="left">  %nbits.2 = phi i64 [ %nbits.1, %if.then208 ], [ %nbits.1, %do.end206 ], [ %nbits.1, %if.then231 ], [ %nbits.0, %if.end71.thread ], [ 9, %if.end113.thread ], [ %nbits.1, %do.body181 ], [ %nbits.0, %while.cond ], [ 9, %if.end113 ], [ %nbits.0, %if.end71 ]</td></tr>
+<tr><td align="left">  %nextbits.5 = phi i64 [ %sub66, %if.then208 ], [ %sub66, %do.end206 ], [ %sub66, %if.then231 ], [ %nextbits.0, %if.end71.thread ], [ %sub66, %if.end113.thread ], [ %sub66, %do.body181 ], [ %nextbits.0, %while.cond ], [ %sub106, %if.end113 ], [ %sub66, %if.end71 ]</td></tr>
+<tr><td align="left">  %nextdata.5 = phi i64 [ %nextdata.1, %if.then208 ], [ %nextdata.1, %do.end206 ], [ %nextdata.1, %if.then231 ], [ %nextdata.0, %if.end71.thread ], [ %nextdata.1, %if.end113.thread ], [ %nextdata.1, %do.body181 ], [ %nextdata.0, %while.cond ], [ %nextdata.3, %if.end113 ], [ %nextdata.1, %if.end71 ]</td></tr>
+<tr><td align="left">  %nbitsmask.2 = phi i64 [ %nbitsmask.1, %if.then208 ], [ %nbitsmask.1, %do.end206 ], [ %nbitsmask.1, %if.then231 ], [ %nbitsmask.0, %if.end71.thread ], [ 511, %if.end113.thread ], [ %nbitsmask.1, %do.body181 ], [ %nbitsmask.0, %while.cond ], [ 511, %if.end113 ], [ %nbitsmask.0, %if.end71 ]</td></tr>
+<tr><td align="left">  %free_entp.1 = phi %struct.code_ent* [ %incdec.ptr157, %if.then208 ], [ %incdec.ptr157, %do.end206 ], [ %incdec.ptr157, %if.then231 ], [ %free_entp.0, %if.end71.thread ], [ %add.ptr81, %if.end113.thread ], [ %incdec.ptr157, %do.body181 ], [ %free_entp.0, %while.cond ], [ %add.ptr81, %if.end113 ], [ %free_entp.0, %if.end71 ]</td></tr>
+<tr><td align="left">  %maxcodep.2 = phi %struct.code_ent* [ %maxcodep.1, %if.then208 ], [ %maxcodep.1, %do.end206 ], [ %maxcodep.1, %if.then231 ], [ %maxcodep.0, %if.end71.thread ], [ %add.ptr84, %if.end113.thread ], [ %maxcodep.1, %do.body181 ], [ %maxcodep.0, %while.cond ], [ %add.ptr84, %if.end113 ], [ %maxcodep.0, %if.end71 ]</td></tr>
+<tr><td align="left">  %oldcodep.1 = phi %struct.code_ent* [ %add.ptr129, %if.then208 ], [ %add.ptr129, %do.end206 ], [ %add.ptr129, %if.then231 ], [ %oldcodep.0, %if.end71.thread ], [ %oldcodep.0, %if.end113.thread ], [ %add.ptr129, %do.body181 ], [ %oldcodep.0, %while.cond ], [ %oldcodep.0, %if.end113 ], [ %oldcodep.0, %if.end71 ]</td></tr>
+<tr><td align="left">  store i8* %bp.5, i8** %tif_rawcp, align 8, !tbaa !29</td></tr>
+<tr><td align="left">  %conv243 = trunc i64 %nbits.2 to i16</td></tr>
+<tr><td align="left">  store i16 %conv243, i16* %nbits42, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  store i64 %nextdata.5, i64* %nextdata45, align 8, !tbaa !31</td></tr>
+<tr><td align="left">  store i64 %nextbits.5, i64* %nextbits47, align 8, !tbaa !32</td></tr>
+<tr><td align="left">  store i64 %nbitsmask.2, i64* %dec_nbitsmask, align 8, !tbaa !33</td></tr>
+<tr><td align="left">  store %struct.code_ent* %oldcodep.1, %struct.code_ent** %dec_oldcodep, align 8, !tbaa !34</td></tr>
+<tr><td align="left">  store %struct.code_ent* %free_entp.1, %struct.code_ent** %dec_free_entp, align 8, !tbaa !35</td></tr>
+<tr><td align="left">  store %struct.code_ent* %maxcodep.2, %struct.code_ent** %dec_maxcodep, align 8, !tbaa !36</td></tr>
+<tr><td align="left">  %cmp254 = icmp sgt i64 %occ.7, 0</td></tr>
+<tr><td align="left">  br i1 %cmp254, label %if.then256, label %cleanup259</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb45 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then256:</td></tr>
+<tr><td align="left">  %tif_name257 = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 0</td></tr>
+<tr><td align="left">  %45 = load i8*, i8** %tif_name257, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %tif_row = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 11</td></tr>
+<tr><td align="left">  %46 = load i32, i32* %tif_row, align 8, !tbaa !46</td></tr>
+<tr><td align="left">  tail call void (i8*, i8*, ...) @TIFFError(i8* %45, i8* getelementptr inbounds ([59 x i8], [59 x i8]* @.str.10, i64 0, i64 0), i32 %46, i64 %occ.7) #5</td></tr>
+<tr><td align="left">  br label %cleanup259</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb46 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup259:</td></tr>
+<tr><td align="left">  %retval.1 = phi i32 [ 0, %if.then256 ], [ 1, %cleanup ], [ 1, %while.end ]</td></tr>
+<tr><td align="left">  ret i32 %retval.1</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> m_bb0:f1
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> f_bb12:f
+f_bb1:fF -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb8:f
+f_bb3:f -> f_bb4:f
+f_bb4:fT -> f_bb4:f
+f_bb4:fF -> f_bb5:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> f_bb11:f
+f_bb6:f -> f_bb7:f
+f_bb7:fT -> f_bb7:f
+f_bb7:fF -> f_bb11:f
+f_bb8:f -> f_bb9:f
+f_bb9:fT -> f_bb9:f
+f_bb9:fF -> f_bb10:f
+f_bb10:f -> f_bb11:f
+f_bb11:fT -> f_bb46:f
+f_bb11:fF -> f_bb12:f
+f_bb12:f -> f_bb13:f
+f_bb13:fT -> f_bb14:f
+f_bb13:fF -> f_bb44:f
+f_bb14:fT -> f_bb15:f
+f_bb14:fF -> f_bb16:f
+f_bb15:f -> f_bb44:f
+f_bb16:fT -> f_bb17:f
+f_bb16:fF -> f_bb18:f
+f_bb17:f -> f_bb18:f
+f_bb18:f -> f_bb26:f
+f_bb18:f -> f_bb44:f
+f_bb18:f -> f_bb19:f
+f_bb19:fT -> f_bb20:f
+f_bb19:fF -> f_bb21:f
+f_bb20:f -> f_bb44:f
+f_bb21:fT -> f_bb22:f
+f_bb21:fF -> f_bb23:f
+f_bb22:f -> f_bb23:f
+f_bb23:fT -> f_bb44:f
+f_bb23:fF -> f_bb24:f
+f_bb24:f -> f_bb25:f
+f_bb25:f -> f_bb13:f
+f_bb26:fT -> f_bb27:f
+f_bb26:fF -> m_bb0:f2
+f_bb27:fT -> f_bb28:f
+f_bb27:fF -> f_bb29:f
+f_bb28:f -> f_bb29:f
+f_bb29:fT -> f_bb30:f
+f_bb29:fF -> f_bb43:f
+f_bb30:fT -> f_bb31:f
+f_bb30:fF -> f_bb38:f
+f_bb31:f -> f_bb32:f
+f_bb32:fT -> f_bb44:f
+f_bb32:fF -> f_bb33:f
+f_bb33:fT -> f_bb32:f
+f_bb33:fF -> f_bb34:f
+f_bb34:f -> f_bb35:f
+f_bb35:fT -> f_bb35:f
+f_bb35:fF -> f_bb36:f
+f_bb36:fT -> f_bb37:f
+f_bb36:fF -> f_bb44:f
+f_bb37:f -> f_bb44:f
+f_bb38:f -> f_bb39:f
+f_bb39:fT -> f_bb39:f
+f_bb39:fF -> f_bb40:f
+f_bb40:fT -> f_bb41:f
+f_bb40:fF -> f_bb42:f
+f_bb41:f -> f_bb44:f
+f_bb42:f -> f_bb25:f
+f_bb43:f -> f_bb25:f
+f_bb44:fT -> f_bb45:f
+f_bb44:fF -> f_bb46:f
+f_bb45:f -> f_bb46:f
+}
+
