@@ -43,7 +43,8 @@ void ControlFlowGraphInfo::recompute() {
 }
 
 ControlFlowGraphInfo::ControlFlowGraphInfo(Function &F, DominatorTree &DT,
-                                           PostDominatorTree &PDT, TargetTransformInfo &TTI)
+                                           PostDominatorTree &PDT,
+                                           TargetTransformInfo &TTI)
     : F(F), DT(DT), PDT(PDT), TTI(TTI) {
   LI = std::make_shared<LoopInfo>(DT);
   /// calculate regions
@@ -248,7 +249,7 @@ void RegionAnalyzer::computeRegionMatch() {
     if (LeftUniqueSucc && RightUniqueSucc &&
         LeftUniqueSucc == RightUniqueSucc) {
       BestBbMatchSimilarityScore =
-          Utils::computeBBSimilarty(LeftEntry, RightEntry);
+          Utils::computeBlockSimilarity(LeftEntry, RightEntry);
       DEBUG << "Branch fusion can be applied to basic blocks ";
       LeftEntry->printAsOperand(errs(), false);
       errs() << ", ";
@@ -267,7 +268,7 @@ void RegionAnalyzer::computeRegionMatch() {
   // Case 1 : No regions found. L and R paths have single BB
   if (LeftRegions.empty() && RightRegions.empty()) {
     BestBbMatchSimilarityScore =
-        Utils::computeBBSimilarty(LeftEntry, RightEntry);
+        Utils::computeBlockSimilarity(LeftEntry, RightEntry);
     DEBUG << "Basic blocks ";
     LeftEntry->printAsOperand(errs(), false);
     errs() << ", ";
@@ -297,12 +298,21 @@ void RegionAnalyzer::computeRegionMatch() {
 
     assert(IPDom && "No IPDOM for divergent branch! This case is not handled");
 
+    Region *ReplicatedRegion = nullptr;
+
     if (!BestBbMatch.first) {
       assert(LeftRegions.size() > 0 && BestBbMatch.second);
       findMergeableBBsInRegions(LeftEntry, LeftRegions, MergeableBlocks);
       if (MergeableBlocks.size()) {
         BestBbMatch.first =
             findMostSimilarBb(BestBbMatch.second, MergeableBlocks);
+
+        for (auto *R : LeftRegions) {
+          if (R->contains(BestBbMatch.first)) {
+            ReplicatedRegion = R;
+            break;
+          }
+        }
       }
     }
 
@@ -313,20 +323,45 @@ void RegionAnalyzer::computeRegionMatch() {
       if (MergeableBlocks.size()) {
         BestBbMatch.second =
             findMostSimilarBb(BestBbMatch.first, MergeableBlocks);
+        for (auto *R : RightRegions) {
+          if (R->contains(BestBbMatch.second)) {
+            ReplicatedRegion = R;
+            break;
+          }
+        }
       }
     }
 
     // if profitable match is found
     if (BestBbMatch.first && BestBbMatch.second) {
-      BestBbMatchSimilarityScore =
-          Utils::computeBBSimilarty(BestBbMatch.first, BestBbMatch.second);
-      DEBUG << "BB to region merge detected for basic blocks ";
-      BestBbMatch.first->printAsOperand(errs(), false);
-      errs() << " ,";
-      BestBbMatch.second->printAsOperand(errs(), false);
-      errs();
-      errs() << ", similarity score " << BestBbMatchSimilarityScore << "\n";
       HasBbMatch = true;
+
+      BasicBlock *L = BestBbMatch.first;
+      BasicBlock *R = BestBbMatch.second;
+
+      DEBUG << "Block to region melding is possible with blocks "
+            << Utils::getNameStr(L) << ", " << Utils::getNameStr(R) << "\n";
+
+      if (requireRegionReplication()) {
+        // utility function to get branch cost
+        auto GetBrCost = [&]() -> int {
+          return getCFGInfo()
+              .getTTI()
+              .getCFInstrCost(Instruction::Br, TTI::TCK_CodeSize)
+              .getValue()
+              .getValue();
+        };
+        DEBUG << "Melding requires region replication\n";
+        BestBbMatchSimilarityScore = Utils::computeBlockSimilarity(
+            // BestBbMatch.first, BestBbMatch.second, ReplicatedRegion, GetBrCost);
+            BestBbMatch.first, BestBbMatch.second);
+
+      } else {
+        BestBbMatchSimilarityScore = Utils::computeBlockSimilarity(
+            BestBbMatch.first, BestBbMatch.second);
+      }
+
+      DEBUG << "Similarity score = " << BestBbMatchSimilarityScore << "\n";
     }
 
     return;
@@ -349,10 +384,10 @@ RegionAnalyzer::findMostSimilarBb(BasicBlock *BB,
                                   SmallVectorImpl<BasicBlock *> &Candidates) {
   assert(Candidates.size() > 0 && "empty basicblock candidate list!");
   BasicBlock *MostSimilar = Candidates[0];
-  double BestScore = Utils::computeBBSimilarty(BB, MostSimilar);
+  double BestScore = Utils::computeBlockSimilarity(BB, MostSimilar);
   // MergeableRegionPair::ComputeBBSimilarity(BB, candidates[0]);
   for (BasicBlock *Candidate : Candidates) {
-    double Score = Utils::computeBBSimilarty(BB, Candidate);
+    double Score = Utils::computeBlockSimilarity(BB, Candidate);
     if (Score > BestScore) {
       MostSimilar = Candidate;
       BestScore = Score;
@@ -421,8 +456,8 @@ void RegionAnalyzer::findMergeableBBsInRegions(
       }
     }
     // check region exit
-    BasicBlock* Exit = R->getExit();
-    if (!IsInsideLoop(Exit)){
+    BasicBlock *Exit = R->getExit();
+    if (!IsInsideLoop(Exit)) {
       MergeableBBs.push_back(Exit);
     }
   }

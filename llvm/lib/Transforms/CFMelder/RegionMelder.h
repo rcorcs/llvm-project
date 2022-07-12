@@ -30,6 +30,7 @@ public:
 };
 
 // scoring function for instruction alignment based on code size reduction
+// if instrutions match always return a non-zero value
 struct CodeSizeCostModel : public ScoringFunction<Value *> {
   TargetTransformInfo *TTI;
   CodeSizeCostModel(TargetTransformInfo &TTI) : TTI(&TTI) {}
@@ -41,7 +42,7 @@ public:
 
     int SavedSize = 0;
     if (isa<Instruction>(V1)) {
-      SavedSize = TTI->getInstructionCost(
+      SavedSize = 1 + TTI->getInstructionCost(
                          dyn_cast<Instruction>(V1),
                          TargetTransformInfo::TargetCostKind::TCK_CodeSize)
                       .getValue()
@@ -57,7 +58,7 @@ public:
         ->getCFInstrCost(Instruction::Br, TTI::TargetCostKind::TCK_CodeSize)
         .getValue()
         .getValue();
-    return BrCost;
+    return 1 + BrCost;
   }
 };
 
