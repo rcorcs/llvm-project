@@ -1,0 +1,10 @@
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bmhisrch.c -o src/bmhisrch.o   -mllvm -reroll-loops=3
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bmhsrch.c -o src/bmhsrch.o   -mllvm -reroll-loops=3
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/pbmsrch_large.c -o src/pbmsrch_large.o   -mllvm -reroll-loops=3
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bmhasrch.c -o src/bmhasrch.o   -mllvm -reroll-loops=3
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang++ -std=gnu++98 -B /usr/bin src/bmhisrch.o src/bmhsrch.o src/pbmsrch_large.o src/bmhasrch.o -Oz  -mllvm -reroll-loops=3 -o rolled -lm -fno-align-functions -s
+clang-12: warning: argument unused during compilation: '-mllvm -reroll-loops=3' [-Wunused-command-line-argument]
+#du -bc src/bmhisrch.o src/bmhsrch.o src/pbmsrch_large.o src/bmhasrch.o | awk 'END { print  }' > rolled.osize
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/llvm-size -B -d rolled
+   text	   data	    bss	    dec	    hex	filename
+  29423	    928	   5256	  35607	   8b17	rolled

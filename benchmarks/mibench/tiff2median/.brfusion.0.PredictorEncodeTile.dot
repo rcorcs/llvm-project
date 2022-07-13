@@ -1,0 +1,129 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.7, i64 0, i64 0), i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.8, i64 0, i64 0), i32 365, i8* getelementptr inbounds ([62 x i8], [62 x i8]* @__PRETTY_FUNCTION__.PredictorEncodeTile, i64 0, i64 0)) #5</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else3:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.10, i64 0, i64 0), i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.8, i64 0, i64 0), i32 366, i8* getelementptr inbounds ([62 x i8], [62 x i8]* @__PRETTY_FUNCTION__.PredictorEncodeTile, i64 0, i64 0)) #5</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %tif_data = getelementptr inbounds %struct.tiff, %struct.tiff* %tif, i64 0, i32 37</td></tr>
+<tr><td align="left">  %0 = bitcast i8** %tif_data to %struct.TIFFPredictorState**</td></tr>
+<tr><td align="left">  %1 = load %struct.TIFFPredictorState*, %struct.TIFFPredictorState** %0, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq %struct.TIFFPredictorState* %1, null</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp.not, label %if.else, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %pfunc = getelementptr inbounds %struct.TIFFPredictorState, %struct.TIFFPredictorState* %1, i64 0, i32 3</td></tr>
+<tr><td align="left">  %2 = load void (%struct.tiff*, i8*, i32)*, void (%struct.tiff*, i8*, i32)** %pfunc, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %cmp1.not = icmp eq void (%struct.tiff*, i8*, i32)* %2, null</td></tr>
+<tr><td align="left">  br i1 %cmp1.not, label %if.else3, label %if.end4</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end4:</td></tr>
+<tr><td align="left">  %codetile = getelementptr inbounds %struct.TIFFPredictorState, %struct.TIFFPredictorState* %1, i64 0, i32 6</td></tr>
+<tr><td align="left">  %3 = load i32 (%struct.tiff*, i8*, i32, i16)*, i32 (%struct.tiff*, i8*, i32, i16)** %codetile, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  %cmp5.not = icmp eq i32 (%struct.tiff*, i8*, i32, i16)* %3, null</td></tr>
+<tr><td align="left">  br i1 %cmp5.not, label %if.else7, label %if.end8</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else7:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.11, i64 0, i64 0), i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.8, i64 0, i64 0), i32 367, i8* getelementptr inbounds ([62 x i8], [62 x i8]* @__PRETTY_FUNCTION__.PredictorEncodeTile, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end8:</td></tr>
+<tr><td align="left">  %rowsize9 = getelementptr inbounds %struct.TIFFPredictorState, %struct.TIFFPredictorState* %1, i64 0, i32 2</td></tr>
+<tr><td align="left">  %4 = load i32, i32* %rowsize9, align 8, !tbaa !17</td></tr>
+<tr><td align="left">  %cmp10 = icmp sgt i32 %4, 0</td></tr>
+<tr><td align="left">  br i1 %cmp10, label %while.cond.preheader, label %if.else12</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.cond.preheader:</td></tr>
+<tr><td align="left">  %idx.ext36 = zext i32 %4 to i64</td></tr>
+<tr><td align="left">  br label %while.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else12:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.12, i64 0, i64 0), i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.8, i64 0, i64 0), i32 369, i8* getelementptr inbounds ([62 x i8], [62 x i8]* @__PRETTY_FUNCTION__.PredictorEncodeTile, i64 0, i64 0)) #5</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond:</td></tr>
+<tr><td align="left">  %cc.0 = phi i32 [ %sub, %while.body ], [ %cc0, %while.cond.preheader ]</td></tr>
+<tr><td align="left">  %bp.0 = phi i8* [ %add.ptr, %while.body ], [ %bp0, %while.cond.preheader ]</td></tr>
+<tr><td align="left">  %cmp14 = icmp sgt i32 %cc.0, 0</td></tr>
+<tr><td align="left">  br i1 %cmp14, label %while.body, label %while.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  %5 = load void (%struct.tiff*, i8*, i32)*, void (%struct.tiff*, i8*, i32)** %pfunc, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  tail call void %5(%struct.tiff* %tif, i8* %bp.0, i32 %4) #6</td></tr>
+<tr><td align="left">  %sub = sub nsw i32 %cc.0, %4</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds i8, i8* %bp.0, i64 %idx.ext36</td></tr>
+<tr><td align="left">  br label %while.cond, !llvm.loop !18</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.end:</td></tr>
+<tr><td align="left">  %6 = load i32 (%struct.tiff*, i8*, i32, i16)*, i32 (%struct.tiff*, i8*, i32, i16)** %codetile, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  %call = tail call i32 %6(%struct.tiff* %tif, i8* %bp0, i32 %cc0, i16 zeroext %s) #6</td></tr>
+<tr><td align="left">  ret i32 %call</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> m_bb0:f1
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> m_bb0:f2
+f_bb1:fF -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb4:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb6:f
+f_bb5:f -> f_bb7:f
+f_bb7:fT -> f_bb8:f
+f_bb7:fF -> f_bb9:f
+f_bb8:f -> f_bb7:f
+}
+

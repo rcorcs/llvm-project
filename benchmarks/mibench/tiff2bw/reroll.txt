@@ -1,0 +1,124 @@
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_luv.c -o src/tif_luv.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_swab.c -o src/tif_swab.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_zip.c -o src/tif_zip.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_dirwrite.c -o src/tif_dirwrite.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+src/tif_dirwrite.c:987:28: warning: cast to smaller integer type 'toff_t' (aka 'int') from 'uint32 *' (aka 'unsigned int *') [-Wpointer-to-int-cast]
+                (void) TIFFSeekFile(tif, HDROFF(tiff_diroff), SEEK_SET);
+                       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/tif_dirwrite.c:986:20: note: expanded from macro 'HDROFF'
+#define HDROFF(f)       ((toff_t) &(((TIFFHeader*) 0)->f))
+                         ^
+src/tiffiop.h:168:57: note: expanded from macro 'TIFFSeekFile'
+        ((*(tif)->tif_seekproc)((tif)->tif_clientdata,(toff_t)(off),whence))
+                                                               ^~~
+1 warning generated.
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_compress.c -o src/tif_compress.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_fax3sm.c -o src/tif_fax3sm.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/ctuning-rtl.c -o src/ctuning-rtl.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_strip.c -o src/tif_strip.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tiff2bw.c -o src/tiff2bw.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/getopt.c -o src/getopt.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_aux.c -o src/tif_aux.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_pixarlog.c -o src/tif_pixarlog.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_close.c -o src/tif_close.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_dirinfo.c -o src/tif_dirinfo.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_dumpmode.c -o src/tif_dumpmode.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_fax3.c -o src/tif_fax3.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_next.c -o src/tif_next.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_predict.c -o src/tif_predict.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_print.c -o src/tif_print.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_version.c -o src/tif_version.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_packbits.c -o src/tif_packbits.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+src/tif_packbits.c:45:19: warning: cast to 'tidata_t' (aka 'unsigned char *') from smaller integer type 'tsize_t' (aka 'int') [-Wint-to-pointer-cast]
+                tif->tif_data = (tidata_t) TIFFTileRowSize(tif);
+                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/tif_packbits.c:47:19: warning: cast to 'tidata_t' (aka 'unsigned char *') from smaller integer type 'tsize_t' (aka 'int') [-Wint-to-pointer-cast]
+                tif->tif_data = (tidata_t) TIFFScanlineSize(tif);
+                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/tif_packbits.c:191:20: warning: cast to smaller integer type 'tsize_t' (aka 'int') from 'tidata_t' (aka 'unsigned char *') [-Wpointer-to-int-cast]
+        tsize_t rowsize = (tsize_t) tif->tif_data;
+                          ^~~~~~~~~~~~~~~~~~~~~~~
+3 warnings generated.
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_unix.c -o src/tif_unix.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+src/tif_unix.c:40:25: warning: cast to smaller integer type 'int' from 'thandle_t' (aka 'void *') [-Wvoid-pointer-to-int-cast]
+        return ((tsize_t) read((int) fd, buf, (size_t) size));
+                               ^~~~~~~~
+src/tif_unix.c:46:26: warning: cast to smaller integer type 'int' from 'thandle_t' (aka 'void *') [-Wvoid-pointer-to-int-cast]
+        return ((tsize_t) write((int) fd, buf, (size_t) size));
+                                ^~~~~~~~
+src/tif_unix.c:52:25: warning: cast to smaller integer type 'int' from 'thandle_t' (aka 'void *') [-Wvoid-pointer-to-int-cast]
+        return ((toff_t) lseek((int) fd, (off_t) off, whence));
+                               ^~~~~~~~
+src/tif_unix.c:58:16: warning: cast to smaller integer type 'int' from 'thandle_t' (aka 'void *') [-Wvoid-pointer-to-int-cast]
+        return (close((int) fd));
+                      ^~~~~~~~
+src/tif_unix.c:71:25: warning: cast to smaller integer type 'int' from 'thandle_t' (aka 'void *') [-Wvoid-pointer-to-int-cast]
+        return (toff_t) (fstat((int) fd, &sb) < 0 ? 0 : sb.st_size);
+                               ^~~~~~~~
+src/tif_unix.c:123:6: warning: cast to 'thandle_t' (aka 'void *') from smaller integer type 'int' [-Wint-to-void-pointer-cast]
+            (thandle_t) fd,
+            ^~~~~~~~~~~~~~
+6 warnings generated.
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_flush.c -o src/tif_flush.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_getimage.c -o src/tif_getimage.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_read.c -o src/tif_read.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_dir.c -o src/tif_dir.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+src/tif_dir.c:170:8: warning: logical not is only applied to the left hand side of this comparison [-Wlogical-not-parentheses]
+                if ( ! tif->tif_mode == O_RDONLY ) { 
+                     ^               ~~
+src/tif_dir.c:170:8: note: add parentheses after the '!' to evaluate the comparison first
+                if ( ! tif->tif_mode == O_RDONLY ) { 
+                     ^
+                       (                        )
+src/tif_dir.c:170:8: note: add parentheses around left hand side expression to silence this warning
+                if ( ! tif->tif_mode == O_RDONLY ) { 
+                     ^
+                     (              )
+1 warning generated.
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_codec.c -o src/tif_codec.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_jpeg.c -o src/tif_jpeg.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_thunder.c -o src/tif_thunder.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_lzw.c -o src/tif_lzw.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_error.c -o src/tif_error.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_write.c -o src/tif_write.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_dirread.c -o src/tif_dirread.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_warning.c -o src/tif_warning.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_tile.c -o src/tif_tile.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/tif_open.c -o src/tif_open.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang++ -std=gnu++98 -B /usr/bin src/tif_jpeg.o src/tif_thunder.o src/tif_unix.o src/tif_aux.o src/tif_close.o src/tif_luv.o src/tif_fax3sm.o src/tif_version.o src/tif_next.o src/tif_flush.o src/tif_read.o src/tif_dir.o src/tif_dirwrite.o src/tif_dirread.o src/tif_tile.o src/tif_open.o src/tif_write.o src/tif_zip.o src/tif_strip.o src/getopt.o src/tif_codec.o src/tif_pixarlog.o src/tif_swab.o src/tif_dumpmode.o src/tif_fax3.o src/ctuning-rtl.o src/tif_predict.o src/tif_compress.o src/tif_packbits.o src/tif_getimage.o src/tiff2bw.o src/tif_dirinfo.o src/tif_lzw.o src/tif_print.o src/tif_error.o src/tif_warning.o -Oz  -fuse-ld= -o build/main -lm

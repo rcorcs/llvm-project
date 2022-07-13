@@ -1,0 +1,137 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">cond.false65:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.6, i64 0, i64 0), i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.1, i64 0, i64 0), i32 281, i8* getelementptr inbounds ([47 x i8], [47 x i8]* @__PRETTY_FUNCTION__.Transformation_to_Log_Area_Ratios, i64 0, i64 0)) #4</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">cond.false17:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.7, i64 0, i64 0), i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.1, i64 0, i64 0), i32 267, i8* getelementptr inbounds ([47 x i8], [47 x i8]* @__PRETTY_FUNCTION__.Transformation_to_Log_Area_Ratios, i64 0, i64 0)) #4</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %r.addr.0 = phi i16* [ %r, %entry ], [ %incdec.ptr, %for.inc ]</td></tr>
+<tr><td align="left">  %i.0 = phi i32 [ 1, %entry ], [ %inc, %for.inc ]</td></tr>
+<tr><td align="left">  %exitcond.not = icmp eq i32 %i.0, 9</td></tr>
+<tr><td align="left">  br i1 %exitcond.not, label %for.end, label %for.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %0 = load i16, i16* %r.addr.0, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp1 = icmp slt i16 %0, 0</td></tr>
+<tr><td align="left">  %cmp4 = icmp eq i16 %0, -32768</td></tr>
+<tr><td align="left">  %sub = sub i16 0, %0</td></tr>
+<tr><td align="left">  %cond = select i1 %cmp4, i16 32767, i16 %sub</td></tr>
+<tr><td align="left">  %cond11 = select i1 %cmp1, i16 %cond, i16 %0</td></tr>
+<tr><td align="left">  %cmp14 = icmp sgt i16 %cond11, -1</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp14, label %cond.end18, label %cond.false17</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end18:</td></tr>
+<tr><td align="left">  %cmp20 = icmp slt i16 %cond11, 22118</td></tr>
+<tr><td align="left">  br i1 %cmp20, label %if.then, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %1 = lshr i16 %cond11, 1</td></tr>
+<tr><td align="left">  br label %if.end49</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %cmp25 = icmp slt i16 %cond11, 31130</td></tr>
+<tr><td align="left">  br i1 %cmp25, label %cond.end33, label %cond.end43</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end33:</td></tr>
+<tr><td align="left">  %sub35 = add nsw i16 %cond11, -11059</td></tr>
+<tr><td align="left">  br label %if.end49</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end43:</td></tr>
+<tr><td align="left">  %sub45 = shl i16 %cond11, 2</td></tr>
+<tr><td align="left">  %shl = add i16 %sub45, 26624</td></tr>
+<tr><td align="left">  br label %if.end49</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end49:</td></tr>
+<tr><td align="left">  %temp.0 = phi i16 [ %1, %if.then ], [ %sub35, %cond.end33 ], [ %shl, %cond.end43 ]</td></tr>
+<tr><td align="left">  %sub55 = sub i16 0, %temp.0</td></tr>
+<tr><td align="left">  %cond59 = select i1 %cmp1, i16 %sub55, i16 %temp.0</td></tr>
+<tr><td align="left">  store i16 %cond59, i16* %r.addr.0, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp62.not = icmp eq i16 %cond59, -32768</td></tr>
+<tr><td align="left">  br i1 %cmp62.not, label %cond.false65, label %for.inc</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc:</td></tr>
+<tr><td align="left">  %inc = add nuw nsw i32 %i.0, 1</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds i16, i16* %r.addr.0, i64 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !7</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb1:fT -> f_bb10:f
+f_bb1:fF -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> m_bb0:f2
+f_bb3:fT -> f_bb4:f
+f_bb3:fF -> f_bb5:f
+f_bb4:f -> f_bb8:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> f_bb7:f
+f_bb6:f -> f_bb8:f
+f_bb7:f -> f_bb8:f
+f_bb8:fT -> m_bb0:f1
+f_bb8:fF -> f_bb9:f
+f_bb9:f -> f_bb1:f
+}
+

@@ -1,0 +1,106 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then27:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %ofpos30 = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %1, i64 0, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call34 = call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 8, i32 5, i8* getelementptr inbounds ([44 x i8], [44 x i8]* @.str.67, i64 0, i64 0), i32 2, %struct.FILE_POS* nonnull %ofpos30, %union.FOURTH_UNION* nonnull %ostring) #7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end48</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then15:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %ofpos18 = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %1, i64 0, i32 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call22 = call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 8, i32 4, i8* getelementptr inbounds ([41 x i8], [41 x i8]* @.str.66, i64 0, i64 0), i32 2, %struct.FILE_POS* nonnull %ofpos18, %union.FOURTH_UNION* nonnull %ostring) #7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end48</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %scale_factor = alloca float, align 4</td></tr>
+<tr><td align="left">  %0 = bitcast float* %scale_factor to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %0) #7</td></tr>
+<tr><td align="left">  %1 = getelementptr inbounds %union.rec, %union.rec* %x, i64 0, i32 0, i32 1</td></tr>
+<tr><td align="left">  %otype = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %1, i64 0, i32 0, i32 0</td></tr>
+<tr><td align="left">  %2 = load i8, i8* %otype, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %.off = add i8 %2, -11</td></tr>
+<tr><td align="left">  %switch = icmp ult i8 %.off, 2</td></tr>
+<tr><td align="left">  br i1 %switch, label %if.else, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %ofpos = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %1, i64 0, i32 0</td></tr>
+<tr><td align="left">  %call = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 8, i32 3, i8* getelementptr inbounds ([38 x i8], [38 x i8]* @.str.64, i64 0, i64 0), i32 2, %struct.FILE_POS* nonnull %ofpos) #7</td></tr>
+<tr><td align="left">  br label %if.end48</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %ostring = getelementptr inbounds %union.rec, %union.rec* %x, i64 0, i32 0, i32 4</td></tr>
+<tr><td align="left">  %arraydecay = bitcast %union.FOURTH_UNION* %ostring to i8*</td></tr>
+<tr><td align="left">  %call12 = call i32 (i8*, i8*, ...) @sscanf(i8* nonnull %arraydecay, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.65, i64 0, i64 0), float* nonnull %scale_factor) #7</td></tr>
+<tr><td align="left">  %cmp13.not = icmp eq i32 %call12, 1</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp13.not, label %if.else23, label %if.then15</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else23:</td></tr>
+<tr><td align="left">  %3 = load float, float* %scale_factor, align 4, !tbaa !6</td></tr>
+<tr><td align="left">  %conv24 = fpext float %3 to double</td></tr>
+<tr><td align="left">  %cmp25 = fcmp olt double %conv24, 1.000000e-02</td></tr>
+<tr><td align="left">  br i1 %cmp25, label %if.then27, label %if.else35</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else35:</td></tr>
+<tr><td align="left">  %cmp36 = fcmp ogt float %3, 1.000000e+02</td></tr>
+<tr><td align="left">  br i1 %cmp36, label %if.then38, label %if.end48</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then38:</td></tr>
+<tr><td align="left">  %ofpos41 = getelementptr %union.FIRST_UNION, %union.FIRST_UNION* %1, i64 0, i32 0</td></tr>
+<tr><td align="left">  %call45 = call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 8, i32 6, i8* getelementptr inbounds ([43 x i8], [43 x i8]* @.str.68, i64 0, i64 0), i32 2, %struct.FILE_POS* nonnull %ofpos41, %union.FOURTH_UNION* nonnull %ostring) #7</td></tr>
+<tr><td align="left">  br label %if.end48</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end48:</td></tr>
+<tr><td align="left">  %4 = phi float [ 1.000000e+00, %if.then15 ], [ %3, %if.else35 ], [ 1.000000e+00, %if.then38 ], [ 1.000000e+00, %if.then27 ], [ 1.000000e+00, %if.then ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %0) #7</td></tr>
+<tr><td align="left">  ret float %4</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb2:f
+f_bb0:fF -> f_bb1:f
+f_bb1:f -> f_bb6:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> m_bb0:f2
+m_bb0:f2 -> f_bb6:f
+f_bb3:fT -> m_bb0:f1
+f_bb3:fF -> f_bb4:f
+m_bb0:f1 -> f_bb6:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb6:f
+f_bb5:f -> f_bb6:f
+}
+

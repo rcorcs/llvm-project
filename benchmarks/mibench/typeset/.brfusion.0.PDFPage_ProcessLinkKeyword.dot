@@ -1,0 +1,471 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then28:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %11 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call29 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 48, i32 22, i8* getelementptr inbounds ([60 x i8], [60 x i8]* @.str.95, i64 0, i64 0), i32 2, %struct.FILE_POS* %11) #23</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end105</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then86:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %22 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call87 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 48, i32 24, i8* getelementptr inbounds ([44 x i8], [44 x i8]* @.str.96, i64 0, i64 0), i32 1, %struct.FILE_POS* %22) #23</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end105</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %0 = load i32, i32* @g_link_keyword, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %1 = load i8, i8* getelementptr inbounds ([512 x i8], [512 x i8]* @g_link, i64 0, i64 0), align 16, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp.not187 = icmp eq i8 %1, 0</td></tr>
+<tr><td align="left">  br i1 %cmp.not187, label %.loopexit, label %land.rhs.lr.ph</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">land.rhs.lr.ph:</td></tr>
+<tr><td align="left">  %call = tail call i16** @__ctype_b_loc() #22</td></tr>
+<tr><td align="left">  %2 = load i16*, i16** %call, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  br label %land.rhs</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.rhs:</td></tr>
+<tr><td align="left">  %3 = phi i8 [ %1, %land.rhs.lr.ph ], [ %7, %while.body ]</td></tr>
+<tr><td align="left">  %charPtr.0190 = phi i8* [ getelementptr inbounds ([512 x i8], [512 x i8]* @g_link, i64 0, i64 0), %land.rhs.lr.ph ], [ %incdec.ptr, %while.body ]</td></tr>
+<tr><td align="left">  %link_len.0188 = phi i32 [ 0, %land.rhs.lr.ph ], [ %inc, %while.body ]</td></tr>
+<tr><td align="left">  %idxprom = zext i8 %3 to i64</td></tr>
+<tr><td align="left">  %arrayidx3 = getelementptr inbounds i16, i16* %2, i64 %idxprom</td></tr>
+<tr><td align="left">  %4 = load i16, i16* %arrayidx3, align 2, !tbaa !8</td></tr>
+<tr><td align="left">  %5 = and i16 %4, 8192</td></tr>
+<tr><td align="left">  %tobool.not = icmp ne i16 %5, 0</td></tr>
+<tr><td align="left">  %incdec.ptr.phi.trans.insert = getelementptr inbounds i8, i8* %charPtr.0190, i64 1</td></tr>
+<tr><td align="left">  %.pre = load i8, i8* %incdec.ptr.phi.trans.insert, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp7 = icmp eq i8 %.pre, 95</td></tr>
+<tr><td align="left">  %or.cond = select i1 %tobool.not, i1 %cmp7, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %land.rhs9, label %while.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.rhs9:</td></tr>
+<tr><td align="left">  %arrayidx10 = getelementptr inbounds i8, i8* %charPtr.0190, i64 2</td></tr>
+<tr><td align="left">  %6 = load i8, i8* %arrayidx10, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp12 = icmp eq i8 %6, 95</td></tr>
+<tr><td align="left">  br i1 %cmp12, label %while.end, label %while.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  %7 = phi i8 [ 95, %land.rhs9 ], [ %.pre, %land.rhs ]</td></tr>
+<tr><td align="left">  %inc = add i32 %link_len.0188, 1</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds i8, i8* %charPtr.0190, i64 1</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq i8 %7, 0</td></tr>
+<tr><td align="left">  br i1 %cmp.not, label %.loopexit, label %land.rhs, !llvm.loop !10</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.end:</td></tr>
+<tr><td align="left">  %incdec.ptr18 = getelementptr inbounds i8, i8* %charPtr.0190, i64 1</td></tr>
+<tr><td align="left">  br label %8</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">.loopexit:</td></tr>
+<tr><td align="left">  %link_len.0.lcssa.ph = phi i32 [ 0, %entry ], [ %inc, %while.body ]</td></tr>
+<tr><td align="left">  %charPtr.0.lcssa.ph = phi i8* [ getelementptr inbounds ([512 x i8], [512 x i8]* @g_link, i64 0, i64 0), %entry ], [ %incdec.ptr, %while.body ]</td></tr>
+<tr><td align="left">  %incdec.ptr18206 = getelementptr inbounds i8, i8* %charPtr.0.lcssa.ph, i64 1</td></tr>
+<tr><td align="left">  br label %8</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">:</td></tr>
+<tr><td align="left">  %incdec.ptr18212 = phi i8* [ %incdec.ptr18206, %.loopexit ], [ %incdec.ptr18, %while.end ]</td></tr>
+<tr><td align="left">  %cmp.not.lcssa210 = phi i1 [ true, %.loopexit ], [ false, %while.end ]</td></tr>
+<tr><td align="left">  %link_len.0.lcssa207 = phi i32 [ %link_len.0.lcssa.ph, %.loopexit ], [ %link_len.0188, %while.end ]</td></tr>
+<tr><td align="left">  %9 = phi i8* [ %charPtr.0.lcssa.ph, %.loopexit ], [ %incdec.ptr18, %while.end ]</td></tr>
+<tr><td align="left">  br label %while.cond19</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond19:</td></tr>
+<tr><td align="left">  %charPtr.2 = phi i8* [ %9, %8 ], [ %incdec.ptr24, %while.cond19 ]</td></tr>
+<tr><td align="left">  %10 = load i8, i8* %charPtr.2, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp21.not = icmp eq i8 %10, 0</td></tr>
+<tr><td align="left">  %incdec.ptr24 = getelementptr inbounds i8, i8* %charPtr.2, i64 1</td></tr>
+<tr><td align="left">  br i1 %cmp21.not, label %while.end25, label %while.cond19, !llvm.loop !12</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.end25:</td></tr>
+<tr><td align="left">  %spec.select = select i1 %cmp.not.lcssa210, i8* null, i8* %incdec.ptr18212</td></tr>
+<tr><td align="left">  %cmp26 = icmp eq i32 %link_len.0.lcssa207, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp26, label %if.then28, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %12 = load i32, i32* @g_page_h_origin, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  %conv30 = sitofp i32 %12 to float</td></tr>
+<tr><td align="left">  %13 = load float, float* @g_page_h_scale_factor, align 4, !tbaa !15</td></tr>
+<tr><td align="left">  %mul = fmul float %13, %conv30</td></tr>
+<tr><td align="left">  %conv31 = fptosi float %mul to i32</td></tr>
+<tr><td align="left">  %14 = load i32, i32* @g_page_v_origin, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  %conv32 = sitofp i32 %14 to float</td></tr>
+<tr><td align="left">  %15 = load float, float* @g_page_v_scale_factor, align 4, !tbaa !15</td></tr>
+<tr><td align="left">  %mul33 = fmul float %15, %conv32</td></tr>
+<tr><td align="left">  %conv34 = fptosi float %mul33 to i32</td></tr>
+<tr><td align="left">  %16 = load i32, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @g_graphics_vars, i64 0, i64 0), align 16, !tbaa !13</td></tr>
+<tr><td align="left">  %add = add nsw i32 %16, %12</td></tr>
+<tr><td align="left">  %conv35 = sitofp i32 %add to float</td></tr>
+<tr><td align="left">  %mul36 = fmul float %13, %conv35</td></tr>
+<tr><td align="left">  %conv37 = fptosi float %mul36 to i32</td></tr>
+<tr><td align="left">  %17 = load i32, i32* getelementptr inbounds ([4 x i32], [4 x i32]* @g_graphics_vars, i64 0, i64 1), align 4, !tbaa !13</td></tr>
+<tr><td align="left">  %add38 = add nsw i32 %17, %14</td></tr>
+<tr><td align="left">  %conv39 = sitofp i32 %add38 to float</td></tr>
+<tr><td align="left">  %mul40 = fmul float %15, %conv39</td></tr>
+<tr><td align="left">  %conv41 = fptosi float %mul40 to i32</td></tr>
+<tr><td align="left">  switch i32 %0, label %if.end105 [
+    i32 0, label %sw.bb
+    i32 1, label %sw.bb65
+    i32 2, label %sw.bb65
+    i32 3, label %sw.bb102
+    i32 4, label %sw.bb102
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb:</td></tr>
+<tr><td align="left">  br i1 %cmp.not.lcssa210, label %if.end63, label %for.body.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body.i:</td></tr>
+<tr><td align="left">  %indvars.iv.i = phi i64 [ %indvars.iv.next.i, %for.inc.i ], [ 0, %sw.bb ]</td></tr>
+<tr><td align="left">  %arrayidx.i = getelementptr inbounds [8 x i8*], [8 x i8*]* @g_dest_link_options, i64 0, i64 %indvars.iv.i</td></tr>
+<tr><td align="left">  %18 = load i8*, i8** %arrayidx.i, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call.i = tail call i64 @strlen(i8* noundef nonnull dereferenceable(1) %18) #24</td></tr>
+<tr><td align="left">  %conv3.i = and i64 %call.i, 4294967295</td></tr>
+<tr><td align="left">  %bcmp.i = tail call i32 @bcmp(i8* %18, i8* nonnull %charPtr.2, i64 %conv3.i) #23</td></tr>
+<tr><td align="left">  %cmp5.i = icmp eq i32 %bcmp.i, 0</td></tr>
+<tr><td align="left">  br i1 %cmp5.i, label %PDFKeyword_Find.exit, label %for.inc.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.inc.i:</td></tr>
+<tr><td align="left">  %indvars.iv.next.i = add nuw nsw i64 %indvars.iv.i, 1</td></tr>
+<tr><td align="left">  %exitcond.not.i = icmp eq i64 %indvars.iv.next.i, 8</td></tr>
+<tr><td align="left">  br i1 %exitcond.not.i, label %while.end59, label %for.body.i, !llvm.loop !17</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">PDFKeyword_Find.exit:</td></tr>
+<tr><td align="left">  %19 = trunc i64 %indvars.iv.i to i32</td></tr>
+<tr><td align="left">  %cmp46 = icmp sgt i32 %19, -1</td></tr>
+<tr><td align="left">  br i1 %cmp46, label %if.end63, label %while.end59</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.end59:</td></tr>
+<tr><td align="left">  %sub.ptr.lhs.cast = ptrtoint i8* %charPtr.2 to i64</td></tr>
+<tr><td align="left">  %20 = trunc i64 %sub.ptr.lhs.cast to i32</td></tr>
+<tr><td align="left">  %conv60 = sub i32 %20, ptrtoint ([512 x i8]* @g_link to i32)</td></tr>
+<tr><td align="left">  br label %if.end63</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end63:</td></tr>
+<tr><td align="left">  %j.0 = phi i32 [ 0, %while.end59 ], [ %19, %PDFKeyword_Find.exit ], [ 0, %sw.bb ]</td></tr>
+<tr><td align="left">  %link_len.1 = phi i32 [ %conv60, %while.end59 ], [ %link_len.0.lcssa207, %PDFKeyword_Find.exit ], [ %link_len.0.lcssa207, %sw.bb ]</td></tr>
+<tr><td align="left">  %21 = tail call fastcc %struct.t_source_annot_entry* @PDFSourceAnnot_New(i32 0, i32 %link_len.1, i32 %conv31, i32 %conv34, i32 %conv37, i32 %conv41, i32 %j.0)</td></tr>
+<tr><td align="left">  br label %if.end105</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb65:</td></tr>
+<tr><td align="left">  %call66 = tail call fastcc %struct.t_source_annot_entry* @PDFSourceAnnot_New(i32 %0, i32 %link_len.0.lcssa207, i32 %conv31, i32 %conv34, i32 %conv37, i32 %conv41, i32 0)</td></tr>
+<tr><td align="left">  %cmp67 = icmp eq i32 %0, 1</td></tr>
+<tr><td align="left">  br i1 %cmp67, label %if.then69, label %if.end105</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then69:</td></tr>
+<tr><td align="left">  br i1 %cmp.not.lcssa210, label %if.then86, label %for.body.i170</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body.i170:</td></tr>
+<tr><td align="left">  %.pre202 = load i8*, i8** getelementptr inbounds ([1 x i8*], [1 x i8*]* @g_external_file_spec_keyword, i64 0, i64 0), align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call.i166 = tail call i64 @strlen(i8* noundef nonnull dereferenceable(1) %.pre202) #24</td></tr>
+<tr><td align="left">  %conv3.i167 = and i64 %call.i166, 4294967295</td></tr>
+<tr><td align="left">  %bcmp.i168 = tail call i32 @bcmp(i8* %.pre202, i8* %spec.select, i64 %conv3.i167) #23</td></tr>
+<tr><td align="left">  %cmp5.i169 = icmp eq i32 %bcmp.i168, 0</td></tr>
+<tr><td align="left">  br i1 %cmp5.i169, label %if.end83, label %if.then86</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end83:</td></tr>
+<tr><td align="left">  %add.ptr79 = getelementptr inbounds i8, i8* %spec.select, i64 %call.i166</td></tr>
+<tr><td align="left">  %call80 = tail call i64 @strlen(i8* noundef nonnull %add.ptr79) #24</td></tr>
+<tr><td align="left">  %conv81 = trunc i64 %call80 to i32</td></tr>
+<tr><td align="left">  %cmp84 = icmp eq i32 %conv81, 0</td></tr>
+<tr><td align="left">  br i1 %cmp84, label %if.then86, label %if.else88</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb21 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else88:</td></tr>
+<tr><td align="left">  %add89 = add i64 %call80, 1</td></tr>
+<tr><td align="left">  %conv90 = and i64 %add89, 4294967295</td></tr>
+<tr><td align="left">  %call91 = tail call noalias align 16 i8* @malloc(i64 %conv90) #23</td></tr>
+<tr><td align="left">  %m_file_spec = getelementptr inbounds %struct.t_source_annot_entry, %struct.t_source_annot_entry* %call66, i64 0, i32 3</td></tr>
+<tr><td align="left">  store i8* %call91, i8** %m_file_spec, align 8, !tbaa !18</td></tr>
+<tr><td align="left">  %cmp93 = icmp eq i8* %call91, null</td></tr>
+<tr><td align="left">  br i1 %cmp93, label %if.then95, label %if.end97</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb22 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then95:</td></tr>
+<tr><td align="left">  %23 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call96 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 48, i32 25, i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.97, i64 0, i64 0), i32 1, %struct.FILE_POS* %23) #23</td></tr>
+<tr><td align="left">  %.pre200 = load i8*, i8** %m_file_spec, align 8, !tbaa !18</td></tr>
+<tr><td align="left">  br label %if.end97</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb23 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end97:</td></tr>
+<tr><td align="left">  %24 = phi i8* [ %.pre200, %if.then95 ], [ %call91, %if.else88 ]</td></tr>
+<tr><td align="left">  %call99 = tail call i8* @strcpy(i8* noundef nonnull dereferenceable(1) %24, i8* noundef nonnull dereferenceable(1) %add.ptr79) #23</td></tr>
+<tr><td align="left">  br label %if.end105</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb102:</td></tr>
+<tr><td align="left">  %cmp103 = icmp eq i32 %0, 4</td></tr>
+<tr><td align="left">  %conv104 = zext i1 %cmp103 to i32</td></tr>
+<tr><td align="left">  %call.i177 = tail call noalias align 16 dereferenceable_or_null(40) i8* @malloc(i64 40) #23</td></tr>
+<tr><td align="left">  %25 = bitcast i8* %call.i177 to %struct.t_target_annot_entry*</td></tr>
+<tr><td align="left">  %cmp.i = icmp eq i8* %call.i177, null</td></tr>
+<tr><td align="left">  br i1 %cmp.i, label %if.then.i, label %if.end.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb25 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then.i:</td></tr>
+<tr><td align="left">  %26 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call2.i = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 48, i32 16, i8* getelementptr inbounds ([38 x i8], [38 x i8]* @.str.108, i64 0, i64 0), i32 1, %struct.FILE_POS* %26) #23</td></tr>
+<tr><td align="left">  br label %if.end.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end.i:</td></tr>
+<tr><td align="left">  %add.i = add i32 %link_len.0.lcssa207, 1</td></tr>
+<tr><td align="left">  %conv.i = zext i32 %add.i to i64</td></tr>
+<tr><td align="left">  %call3.i = tail call noalias align 16 i8* @malloc(i64 %conv.i) #23</td></tr>
+<tr><td align="left">  %m_name.i = getelementptr inbounds %struct.t_target_annot_entry, %struct.t_target_annot_entry* %25, i64 0, i32 1</td></tr>
+<tr><td align="left">  store i8* %call3.i, i8** %m_name.i, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %cmp5.i178 = icmp eq i8* %call3.i, null</td></tr>
+<tr><td align="left">  br i1 %cmp5.i178, label %if.then7.i, label %if.end9.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb27 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then7.i:</td></tr>
+<tr><td align="left">  %27 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call8.i = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 48, i32 17, i8* getelementptr inbounds ([38 x i8], [38 x i8]* @.str.108, i64 0, i64 0), i32 1, %struct.FILE_POS* %27) #23</td></tr>
+<tr><td align="left">  br label %if.end9.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb28 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end9.i:</td></tr>
+<tr><td align="left">  %conv11.i = zext i32 %link_len.0.lcssa207 to i64</td></tr>
+<tr><td align="left">  tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 16 %call3.i, i8* align 16 getelementptr inbounds ([512 x i8], [512 x i8]* @g_link, i64 0, i64 0), i64 %conv11.i, i1 false) #23</td></tr>
+<tr><td align="left">  %arrayidx.i179 = getelementptr inbounds i8, i8* %call3.i, i64 %conv11.i</td></tr>
+<tr><td align="left">  store i8 0, i8* %arrayidx.i179, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %28 = load i32, i32* @g_page_contents_obj_num, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  %cmp13.not.i = icmp eq i32 %28, 0</td></tr>
+<tr><td align="left">  %29 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  br i1 %cmp13.not.i, label %if.then2.i.i, label %Assert.exit.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb29 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then2.i.i:</td></tr>
+<tr><td align="left">  %call.i.i = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.75, i64 0, i64 0), i32 0, %struct.FILE_POS* %29, %struct.FILE_POS* %29) #23</td></tr>
+<tr><td align="left">  br label %Assert.exit.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">Assert.exit.i:</td></tr>
+<tr><td align="left">  %30 = load i32, i32* @g_page_object_num, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  %m_page_object_num.i = getelementptr inbounds %struct.t_target_annot_entry, %struct.t_target_annot_entry* %25, i64 0, i32 2</td></tr>
+<tr><td align="left">  store i32 %30, i32* %m_page_object_num.i, align 16, !tbaa !22</td></tr>
+<tr><td align="left">  %m_ll_x.i = getelementptr inbounds %struct.t_target_annot_entry, %struct.t_target_annot_entry* %25, i64 0, i32 3</td></tr>
+<tr><td align="left">  store i32 %conv31, i32* %m_ll_x.i, align 4, !tbaa !23</td></tr>
+<tr><td align="left">  %m_ll_y.i = getelementptr inbounds %struct.t_target_annot_entry, %struct.t_target_annot_entry* %25, i64 0, i32 4</td></tr>
+<tr><td align="left">  store i32 %conv34, i32* %m_ll_y.i, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %m_ur_x.i = getelementptr inbounds %struct.t_target_annot_entry, %struct.t_target_annot_entry* %25, i64 0, i32 5</td></tr>
+<tr><td align="left">  store i32 %conv37, i32* %m_ur_x.i, align 4, !tbaa !25</td></tr>
+<tr><td align="left">  %m_ur_y.i = getelementptr inbounds %struct.t_target_annot_entry, %struct.t_target_annot_entry* %25, i64 0, i32 6</td></tr>
+<tr><td align="left">  store i32 %conv41, i32* %m_ur_y.i, align 16, !tbaa !26</td></tr>
+<tr><td align="left">  %m_for_export.i = getelementptr inbounds %struct.t_target_annot_entry, %struct.t_target_annot_entry* %25, i64 0, i32 7</td></tr>
+<tr><td align="left">  store i32 %conv104, i32* %m_for_export.i, align 4, !tbaa !27</td></tr>
+<tr><td align="left">  %31 = load %struct.t_target_annot_entry*, %struct.t_target_annot_entry** @g_target_annot_list, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %m_next_entry.i = getelementptr inbounds %struct.t_target_annot_entry, %struct.t_target_annot_entry* %25, i64 0, i32 0</td></tr>
+<tr><td align="left">  store %struct.t_target_annot_entry* %31, %struct.t_target_annot_entry** %m_next_entry.i, align 16, !tbaa !28</td></tr>
+<tr><td align="left">  store i8* %call.i177, i8** bitcast (%struct.t_target_annot_entry** @g_target_annot_list to i8**), align 8, !tbaa !6</td></tr>
+<tr><td align="left">  br i1 %cmp103, label %if.then15.i, label %if.end105</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb31 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then15.i:</td></tr>
+<tr><td align="left">  store i32 %conv104, i32* @g_has_exported_targets, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  br label %if.end105</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb32 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end105:</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb6:f
+f_bb0:fF -> f_bb1:f
+f_bb1:f -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb4:f
+f_bb3:fT -> f_bb5:f
+f_bb3:fF -> f_bb4:f
+f_bb4:fT -> f_bb6:f
+f_bb4:fF -> f_bb2:f
+f_bb5:f -> f_bb7:f
+f_bb6:f -> f_bb7:f
+f_bb7:f -> f_bb8:f
+f_bb8:fT -> f_bb9:f
+f_bb8:fF -> f_bb8:f
+f_bb9:fT -> m_bb0:f1
+f_bb9:fF -> f_bb10:f
+m_bb0:f1 -> f_bb32:f
+f_bb10:f -> f_bb32:f
+f_bb10:f -> f_bb11:f
+f_bb10:f -> f_bb17:f
+f_bb10:f -> f_bb17:f
+f_bb10:f -> f_bb24:f
+f_bb10:f -> f_bb24:f
+f_bb11:fT -> f_bb16:f
+f_bb11:fF -> f_bb12:f
+f_bb12:fT -> f_bb14:f
+f_bb12:fF -> f_bb13:f
+f_bb13:fT -> f_bb15:f
+f_bb13:fF -> f_bb12:f
+f_bb14:fT -> f_bb16:f
+f_bb14:fF -> f_bb15:f
+f_bb15:f -> f_bb16:f
+f_bb16:f -> f_bb32:f
+f_bb17:fT -> f_bb18:f
+f_bb17:fF -> f_bb32:f
+f_bb18:fT -> m_bb0:f2
+f_bb18:fF -> f_bb19:f
+f_bb19:fT -> f_bb20:f
+f_bb19:fF -> m_bb0:f2
+f_bb20:fT -> m_bb0:f2
+f_bb20:fF -> f_bb21:f
+m_bb0:f2 -> f_bb32:f
+f_bb21:fT -> f_bb22:f
+f_bb21:fF -> f_bb23:f
+f_bb22:f -> f_bb23:f
+f_bb23:f -> f_bb32:f
+f_bb24:fT -> f_bb25:f
+f_bb24:fF -> f_bb26:f
+f_bb25:f -> f_bb26:f
+f_bb26:fT -> f_bb27:f
+f_bb26:fF -> f_bb28:f
+f_bb27:f -> f_bb28:f
+f_bb28:fT -> f_bb29:f
+f_bb28:fF -> f_bb30:f
+f_bb29:f -> f_bb30:f
+f_bb30:fT -> f_bb31:f
+f_bb30:fF -> f_bb32:f
+f_bb31:f -> f_bb32:f
+}
+

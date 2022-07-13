@@ -1,0 +1,724 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then243:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %77 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %78 = tail call i64 @fwrite(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.27, i64 0, i64 0), i64 3, i64 1, %struct._IO_FILE* %77)</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end250.sink.split.sink.split</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %4 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %5 = tail call i64 @fwrite(i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str.106, i64 0, i64 0), i64 5, i64 1, %struct._IO_FILE* %4)</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end250.sink.split.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %0 = getelementptr inbounds %union.rec, %union.rec* %x, i64 0, i32 0, i32 5</td></tr>
+<tr><td align="left">  %1 = load %union.rec*, %union.rec** %0, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %2 = getelementptr inbounds %union.rec, %union.rec* %1, i64 0, i32 0, i32 9</td></tr>
+<tr><td align="left">  %3 = load %union.rec*, %union.rec** %2, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq %union.rec* %3, null</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp.not, label %if.else, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  tail call fastcc void @OptimizeParameterList(%union.rec* nonnull %x, %union.rec* %env)</td></tr>
+<tr><td align="left">  %6 = getelementptr inbounds %union.rec, %union.rec* %1, i64 0, i32 0, i32 2</td></tr>
+<tr><td align="left">  %os26.i330 = bitcast %union.SECOND_UNION* %6 to %struct.anon.5*</td></tr>
+<tr><td align="left">  %ovisible.i331 = getelementptr inbounds %struct.anon.5, %struct.anon.5* %os26.i330, i64 0, i32 1</td></tr>
+<tr><td align="left">  %7 = bitcast [3 x i8]* %ovisible.i331 to i24*</td></tr>
+<tr><td align="left">  %oenclosing.i334 = getelementptr inbounds %union.rec, %union.rec* %1, i64 0, i32 0, i32 3</td></tr>
+<tr><td align="left">  %8 = bitcast %union.THIRD_UNION* %oenclosing.i334 to %union.rec**</td></tr>
+<tr><td align="left">  %9 = getelementptr inbounds %union.rec, %union.rec* %1, i64 0, i32 0, i32 8</td></tr>
+<tr><td align="left">  %oprecedence219 = bitcast %union.SECOND_UNION* %6 to i8*</td></tr>
+<tr><td align="left">  %link.0.in359 = getelementptr inbounds %union.rec, %union.rec* %x, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %link.0360 = load %union.rec*, %union.rec** %link.0.in359, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp4.not361 = icmp eq %union.rec* %link.0360, %x</td></tr>
+<tr><td align="left">  br i1 %cmp4.not361, label %if.then240, label %for.cond8.preheader</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond8.preheader:</td></tr>
+<tr><td align="left">  %link.0364 = phi %union.rec* [ %link.0, %for.inc233 ], [ %link.0360, %if.else ]</td></tr>
+<tr><td align="left">  %name_printed.0363 = phi i32 [ %name_printed.3, %for.inc233 ], [ 0, %if.else ]</td></tr>
+<tr><td align="left">  %npar_written.0362 = phi i32 [ %npar_written.1, %for.inc233 ], [ 0, %if.else ]</td></tr>
+<tr><td align="left">  br label %for.cond8</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond8:</td></tr>
+<tr><td align="left">  %link.0.pn = phi %union.rec* [ %y.0, %for.cond8 ], [ %link.0364, %for.cond8.preheader ]</td></tr>
+<tr><td align="left">  %y.0.in = getelementptr inbounds %union.rec, %union.rec* %link.0.pn, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  %y.0 = load %union.rec*, %union.rec** %y.0.in, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %otype = getelementptr inbounds %union.rec, %union.rec* %y.0, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %10 = load i8, i8* %otype, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  switch i8 %10, label %for.inc233 [
+    i8 0, label %for.cond8
+    i8 10, label %if.then24
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then24:</td></tr>
+<tr><td align="left">  %11 = getelementptr inbounds %union.rec, %union.rec* %y.0, i64 0, i32 0, i32 5</td></tr>
+<tr><td align="left">  %12 = bitcast %union.rec** %11 to %struct.word_type**</td></tr>
+<tr><td align="left">  %13 = load %struct.word_type*, %struct.word_type** %12, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %otype30 = getelementptr inbounds %struct.word_type, %struct.word_type* %13, i64 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %14 = load i8, i8* %otype30, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  switch i8 %14, label %sw.default [
+    i8 -112, label %sw.bb
+    i8 -111, label %sw.bb66
+    i8 -110, label %sw.bb134
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb:</td></tr>
+<tr><td align="left">  %osucc35 = getelementptr inbounds %union.rec, %union.rec* %y.0, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %15 = load %union.rec*, %union.rec** %osucc35, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp36.not = icmp eq %union.rec* %15, %y.0</td></tr>
+<tr><td align="left">  br i1 %cmp36.not, label %if.then38, label %sw.bb.if.end_crit_edge</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb.if.end_crit_edge:</td></tr>
+<tr><td align="left">  %16 = bitcast %union.rec* %15 to %struct.word_type*</td></tr>
+<tr><td align="left">  br label %if.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then38:</td></tr>
+<tr><td align="left">  %17 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call39 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.13, i64 0, i64 0), i32 0, %struct.FILE_POS* %17, i8* getelementptr inbounds ([27 x i8], [27 x i8]* @.str.107, i64 0, i64 0)) #8</td></tr>
+<tr><td align="left">  %.phi.trans.insert368 = bitcast %union.rec** %osucc35 to %struct.word_type**</td></tr>
+<tr><td align="left">  %.pre369 = load %struct.word_type*, %struct.word_type** %.phi.trans.insert368, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br label %if.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %18 = phi %struct.word_type* [ %.pre369, %if.then38 ], [ %16, %sw.bb.if.end_crit_edge ]</td></tr>
+<tr><td align="left">  %opred47 = getelementptr inbounds %struct.word_type, %struct.word_type* %18, i64 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  br label %for.cond48</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond48:</td></tr>
+<tr><td align="left">  %z.0.in = phi %union.rec** [ %opred47, %if.end ], [ %opred61, %for.cond48 ]</td></tr>
+<tr><td align="left">  %z.0 = load %union.rec*, %union.rec** %z.0.in, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %otype52 = getelementptr inbounds %union.rec, %union.rec* %z.0, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %19 = load i8, i8* %otype52, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp54 = icmp eq i8 %19, 0</td></tr>
+<tr><td align="left">  %opred61 = getelementptr inbounds %union.rec, %union.rec* %z.0, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  br i1 %cmp54, label %for.cond48, label %for.end62, !llvm.loop !8</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end62:</td></tr>
+<tr><td align="left">  %20 = load i8, i8* %oprecedence219, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %conv64 = zext i8 %20 to i32</td></tr>
+<tr><td align="left">  tail call fastcc void @WriteObject(%union.rec* nonnull %z.0, i32 %conv64, i32* %linecount, i16 zeroext %fnum)</td></tr>
+<tr><td align="left">  %21 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc328 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %21)</td></tr>
+<tr><td align="left">  br label %for.inc233</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb66:</td></tr>
+<tr><td align="left">  %osucc70 = getelementptr inbounds %union.rec, %union.rec* %y.0, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %22 = load %union.rec*, %union.rec** %osucc70, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp71.not = icmp eq %union.rec* %22, %y.0</td></tr>
+<tr><td align="left">  br i1 %cmp71.not, label %if.then73, label %sw.bb66.if.end75_crit_edge</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb66.if.end75_crit_edge:</td></tr>
+<tr><td align="left">  %23 = bitcast %union.rec* %22 to %struct.word_type*</td></tr>
+<tr><td align="left">  br label %if.end75</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then73:</td></tr>
+<tr><td align="left">  %24 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call74 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.13, i64 0, i64 0), i32 0, %struct.FILE_POS* %24, i8* getelementptr inbounds ([27 x i8], [27 x i8]* @.str.108, i64 0, i64 0)) #8</td></tr>
+<tr><td align="left">  %.phi.trans.insert366 = bitcast %union.rec** %osucc70 to %struct.word_type**</td></tr>
+<tr><td align="left">  %.pre367 = load %struct.word_type*, %struct.word_type** %.phi.trans.insert366, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br label %if.end75</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end75:</td></tr>
+<tr><td align="left">  %25 = phi %struct.word_type* [ %.pre367, %if.then73 ], [ %23, %sw.bb66.if.end75_crit_edge ]</td></tr>
+<tr><td align="left">  %opred83 = getelementptr inbounds %struct.word_type, %struct.word_type* %25, i64 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  br label %for.cond84</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond84:</td></tr>
+<tr><td align="left">  %z.1.in = phi %union.rec** [ %opred83, %if.end75 ], [ %opred97, %for.cond84 ]</td></tr>
+<tr><td align="left">  %z.1 = load %union.rec*, %union.rec** %z.1.in, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %otype88 = getelementptr inbounds %union.rec, %union.rec* %z.1, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %26 = load i8, i8* %otype88, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp90 = icmp eq i8 %26, 0</td></tr>
+<tr><td align="left">  %opred97 = getelementptr inbounds %union.rec, %union.rec* %z.1, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  br i1 %cmp90, label %for.cond84, label %for.end98, !llvm.loop !10</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end98:</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %name_printed.0363, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %if.then99, label %if.end108</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then99:</td></tr>
+<tr><td align="left">  %bf.load.i = load i24, i24* %7, align 1</td></tr>
+<tr><td align="left">  %27 = and i24 %bf.load.i, 65536</td></tr>
+<tr><td align="left">  %tobool.not.i = icmp eq i24 %27, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not.i, label %land.lhs.true.i, label %if.end105</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true.i:</td></tr>
+<tr><td align="left">  %28 = load %union.rec*, %union.rec** %8, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %29 = load %union.rec*, %union.rec** @StartSym, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %cmp.not.i = icmp eq %union.rec* %28, %29</td></tr>
+<tr><td align="left">  br i1 %cmp.not.i, label %if.end105, label %need_lvis.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">need_lvis.exit:</td></tr>
+<tr><td align="left">  %otype.i = getelementptr inbounds %union.rec, %union.rec* %28, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %30 = load i8, i8* %otype.i, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp4.i.not = icmp eq i8 %30, -113</td></tr>
+<tr><td align="left">  br i1 %cmp4.i.not, label %if.then102, label %if.end105</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then102:</td></tr>
+<tr><td align="left">  %31 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %32 = tail call i64 @fwrite(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.27, i64 0, i64 0), i64 3, i64 1, %struct._IO_FILE* %31)</td></tr>
+<tr><td align="left">  %33 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc327 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %33)</td></tr>
+<tr><td align="left">  br label %if.end105</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb21 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end105:</td></tr>
+<tr><td align="left">  %call106 = tail call i8* @SymName(%union.rec* nonnull %1) #8</td></tr>
+<tr><td align="left">  %34 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call107 = tail call i32 @fputs(i8* %call106, %struct._IO_FILE* %34)</td></tr>
+<tr><td align="left">  br label %if.end108</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb22 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end108:</td></tr>
+<tr><td align="left">  %35 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc320 = tail call i32 @fputc(i32 10, %struct._IO_FILE* %35)</td></tr>
+<tr><td align="left">  %36 = load i32, i32* %linecount, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  %add = add nsw i32 %36, 1</td></tr>
+<tr><td align="left">  store i32 %add, i32* %linecount, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  %37 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc321 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %37)</td></tr>
+<tr><td align="left">  %38 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc322 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %38)</td></tr>
+<tr><td align="left">  %39 = load %union.rec*, %union.rec** %11, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %os6114 = bitcast %union.rec* %39 to %struct.symbol_type*</td></tr>
+<tr><td align="left">  %onpar_code = getelementptr inbounds %struct.symbol_type, %struct.symbol_type* %os6114, i64 0, i32 15</td></tr>
+<tr><td align="left">  %40 = load i8, i8* %onpar_code, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp116.not = icmp eq i8 %40, 32</td></tr>
+<tr><td align="left">  br i1 %cmp116.not, label %if.else126, label %if.then118</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then118:</td></tr>
+<tr><td align="left">  %41 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc325 = tail call i32 @fputc(i32 92, %struct._IO_FILE* %41)</td></tr>
+<tr><td align="left">  %42 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %43 = bitcast %union.rec** %11 to %struct.symbol_type**</td></tr>
+<tr><td align="left">  %44 = load %struct.symbol_type*, %struct.symbol_type** %43, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %onpar_code123 = getelementptr inbounds %struct.symbol_type, %struct.symbol_type* %44, i64 0, i32 15</td></tr>
+<tr><td align="left">  %45 = load i8, i8* %onpar_code123, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %conv124 = sext i8 %45 to i32</td></tr>
+<tr><td align="left">  %fputc326 = tail call i32 @fputc(i32 %conv124, %struct._IO_FILE* %42)</td></tr>
+<tr><td align="left">  br label %if.end131</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else126:</td></tr>
+<tr><td align="left">  %call129 = tail call i8* @SymName(%union.rec* nonnull %39) #8</td></tr>
+<tr><td align="left">  %46 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call130 = tail call i32 @fputs(i8* %call129, %struct._IO_FILE* %46)</td></tr>
+<tr><td align="left">  br label %if.end131</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb25 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end131:</td></tr>
+<tr><td align="left">  %47 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc323 = tail call i32 @fputc(i32 123, %struct._IO_FILE* %47)</td></tr>
+<tr><td align="left">  tail call fastcc void @WriteObject(%union.rec* nonnull %z.1, i32 0, i32* nonnull %linecount, i16 zeroext %fnum)</td></tr>
+<tr><td align="left">  %48 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc324 = tail call i32 @fputc(i32 125, %struct._IO_FILE* %48)</td></tr>
+<tr><td align="left">  br label %for.inc233</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb134:</td></tr>
+<tr><td align="left">  %osucc138 = getelementptr inbounds %union.rec, %union.rec* %y.0, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %49 = load %union.rec*, %union.rec** %osucc138, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp139.not = icmp eq %union.rec* %49, %y.0</td></tr>
+<tr><td align="left">  br i1 %cmp139.not, label %if.then141, label %sw.bb134.if.end143_crit_edge</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb27 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb134.if.end143_crit_edge:</td></tr>
+<tr><td align="left">  %50 = bitcast %union.rec* %49 to %struct.word_type*</td></tr>
+<tr><td align="left">  br label %if.end143</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb28 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then141:</td></tr>
+<tr><td align="left">  %51 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call142 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.13, i64 0, i64 0), i32 0, %struct.FILE_POS* %51, i8* getelementptr inbounds ([27 x i8], [27 x i8]* @.str.111, i64 0, i64 0)) #8</td></tr>
+<tr><td align="left">  %.phi.trans.insert = bitcast %union.rec** %osucc138 to %struct.word_type**</td></tr>
+<tr><td align="left">  %.pre = load %struct.word_type*, %struct.word_type** %.phi.trans.insert, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  br label %if.end143</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb29 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end143:</td></tr>
+<tr><td align="left">  %52 = phi %struct.word_type* [ %.pre, %if.then141 ], [ %50, %sw.bb134.if.end143_crit_edge ]</td></tr>
+<tr><td align="left">  %opred151 = getelementptr inbounds %struct.word_type, %struct.word_type* %52, i64 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  br label %for.cond152</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond152:</td></tr>
+<tr><td align="left">  %z.2.in = phi %union.rec** [ %opred151, %if.end143 ], [ %opred165, %for.cond152 ]</td></tr>
+<tr><td align="left">  %z.2 = load %union.rec*, %union.rec** %z.2.in, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %otype156 = getelementptr inbounds %union.rec, %union.rec* %z.2, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %53 = load i8, i8* %otype156, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp158 = icmp eq i8 %53, 0</td></tr>
+<tr><td align="left">  %opred165 = getelementptr inbounds %union.rec, %union.rec* %z.2, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  br i1 %cmp158, label %for.cond152, label %for.end166, !llvm.loop !13</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb31 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end166:</td></tr>
+<tr><td align="left">  %otype156.le = getelementptr inbounds %union.rec, %union.rec* %z.2, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %tobool167.not = icmp eq i32 %name_printed.0363, 0</td></tr>
+<tr><td align="left">  br i1 %tobool167.not, label %if.then168, label %if.end177</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb32 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then168:</td></tr>
+<tr><td align="left">  %bf.load.i332 = load i24, i24* %7, align 1</td></tr>
+<tr><td align="left">  %54 = and i24 %bf.load.i332, 65536</td></tr>
+<tr><td align="left">  %tobool.not.i333 = icmp eq i24 %54, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not.i333, label %land.lhs.true.i336, label %if.end174</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb33 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true.i336:</td></tr>
+<tr><td align="left">  %55 = load %union.rec*, %union.rec** %8, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %56 = load %union.rec*, %union.rec** @StartSym, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %cmp.not.i335 = icmp eq %union.rec* %55, %56</td></tr>
+<tr><td align="left">  br i1 %cmp.not.i335, label %if.end174, label %need_lvis.exit341</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb34 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">need_lvis.exit341:</td></tr>
+<tr><td align="left">  %otype.i337 = getelementptr inbounds %union.rec, %union.rec* %55, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %57 = load i8, i8* %otype.i337, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp4.i338.not = icmp eq i8 %57, -113</td></tr>
+<tr><td align="left">  br i1 %cmp4.i338.not, label %if.then171, label %if.end174</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb35 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then171:</td></tr>
+<tr><td align="left">  %58 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %59 = tail call i64 @fwrite(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str.27, i64 0, i64 0), i64 3, i64 1, %struct._IO_FILE* %58)</td></tr>
+<tr><td align="left">  %60 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc319 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %60)</td></tr>
+<tr><td align="left">  br label %if.end174</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb36 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end174:</td></tr>
+<tr><td align="left">  %call175 = tail call i8* @SymName(%union.rec* nonnull %1) #8</td></tr>
+<tr><td align="left">  %61 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call176 = tail call i32 @fputs(i8* %call175, %struct._IO_FILE* %61)</td></tr>
+<tr><td align="left">  br label %if.end177</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb37 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end177:</td></tr>
+<tr><td align="left">  %tobool178.not = icmp eq i32 %npar_written.0362, 0</td></tr>
+<tr><td align="left">  %62 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  br i1 %tobool178.not, label %if.else182, label %if.then179</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb38 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then179:</td></tr>
+<tr><td align="left">  %fputc318 = tail call i32 @fputc(i32 10, %struct._IO_FILE* %62)</td></tr>
+<tr><td align="left">  %63 = load i32, i32* %linecount, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  %add181 = add nsw i32 %63, 1</td></tr>
+<tr><td align="left">  store i32 %add181, i32* %linecount, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  br label %if.end184</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else182:</td></tr>
+<tr><td align="left">  %fputc313 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %62)</td></tr>
+<tr><td align="left">  br label %if.end184</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb40 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end184:</td></tr>
+<tr><td align="left">  %64 = load %union.rec*, %union.rec** %9, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp186.not = icmp eq %union.rec* %64, null</td></tr>
+<tr><td align="left">  br i1 %cmp186.not, label %if.else206, label %land.lhs.true</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb41 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true:</td></tr>
+<tr><td align="left">  %65 = load i8, i8* %otype156.le, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp193 = icmp eq i8 %65, 57</td></tr>
+<tr><td align="left">  br i1 %cmp193, label %if.end205, label %if.else206</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb42 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end205:</td></tr>
+<tr><td align="left">  tail call fastcc void @WriteObject(%union.rec* nonnull %z.2, i32 0, i32* %linecount, i16 zeroext %fnum)</td></tr>
+<tr><td align="left">  br label %for.inc233</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb43 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else206:</td></tr>
+<tr><td align="left">  %bf.load = load i24, i24* %7, align 1</td></tr>
+<tr><td align="left">  %66 = and i24 %bf.load, 256</td></tr>
+<tr><td align="left">  %tobool209.not = icmp eq i24 %66, 0</td></tr>
+<tr><td align="left">  br i1 %tobool209.not, label %if.else215, label %if.then210</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb44 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then210:</td></tr>
+<tr><td align="left">  %67 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc314 = tail call i32 @fputc(i32 123, %struct._IO_FILE* %67)</td></tr>
+<tr><td align="left">  %68 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc315 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %68)</td></tr>
+<tr><td align="left">  tail call fastcc void @WriteObject(%union.rec* nonnull %z.2, i32 0, i32* %linecount, i16 zeroext %fnum)</td></tr>
+<tr><td align="left">  %69 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc316 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %69)</td></tr>
+<tr><td align="left">  %70 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc317 = tail call i32 @fputc(i32 125, %struct._IO_FILE* %70)</td></tr>
+<tr><td align="left">  br label %for.inc233</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb45 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else215:</td></tr>
+<tr><td align="left">  %71 = load i8, i8* %oprecedence219, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %conv220 = zext i8 %71 to i32</td></tr>
+<tr><td align="left">  tail call fastcc void @WriteObject(%union.rec* nonnull %z.2, i32 %conv220, i32* %linecount, i16 zeroext %fnum)</td></tr>
+<tr><td align="left">  br label %for.inc233</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb46 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.default:</td></tr>
+<tr><td align="left">  %conv31 = zext i8 %14 to i32</td></tr>
+<tr><td align="left">  %72 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call230 = tail call i8* @Image(i32 %conv31) #8</td></tr>
+<tr><td align="left">  %call231 = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 3, i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.104, i64 0, i64 0), i32 0, %struct.FILE_POS* %72, i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.113, i64 0, i64 0), i8* %call230) #8</td></tr>
+<tr><td align="left">  br label %for.inc233</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb47 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.inc233:</td></tr>
+<tr><td align="left">  %npar_written.1 = phi i32 [ %npar_written.0362, %sw.default ], [ %npar_written.0362, %if.end205 ], [ %npar_written.0362, %if.then210 ], [ %npar_written.0362, %if.else215 ], [ 1, %if.end131 ], [ %npar_written.0362, %for.end62 ], [ %npar_written.0362, %for.cond8 ]</td></tr>
+<tr><td align="left">  %name_printed.3 = phi i32 [ %name_printed.0363, %sw.default ], [ 1, %if.end205 ], [ 1, %if.then210 ], [ 1, %if.else215 ], [ 1, %if.end131 ], [ %name_printed.0363, %for.end62 ], [ %name_printed.0363, %for.cond8 ]</td></tr>
+<tr><td align="left">  %link.0.in = getelementptr inbounds %union.rec, %union.rec* %link.0364, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  %link.0 = load %union.rec*, %union.rec** %link.0.in, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp4.not = icmp eq %union.rec* %link.0, %x</td></tr>
+<tr><td align="left">  br i1 %cmp4.not, label %for.end238, label %for.cond8.preheader, !llvm.loop !14</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb48 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end238:</td></tr>
+<tr><td align="left">  %tobool239.not = icmp eq i32 %name_printed.3, 0</td></tr>
+<tr><td align="left">  br i1 %tobool239.not, label %if.then240, label %if.end250</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb49 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then240:</td></tr>
+<tr><td align="left">  %bf.load.i344 = load i24, i24* %7, align 1</td></tr>
+<tr><td align="left">  %73 = and i24 %bf.load.i344, 65536</td></tr>
+<tr><td align="left">  %tobool.not.i345 = icmp eq i24 %73, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not.i345, label %land.lhs.true.i348, label %if.end250.sink.split</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb50 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true.i348:</td></tr>
+<tr><td align="left">  %74 = load %union.rec*, %union.rec** %8, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %75 = load %union.rec*, %union.rec** @StartSym, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %cmp.not.i347 = icmp eq %union.rec* %74, %75</td></tr>
+<tr><td align="left">  br i1 %cmp.not.i347, label %if.end250.sink.split, label %need_lvis.exit353</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb51 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">need_lvis.exit353:</td></tr>
+<tr><td align="left">  %otype.i349 = getelementptr inbounds %union.rec, %union.rec* %74, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  %76 = load i8, i8* %otype.i349, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp4.i350.not = icmp eq i8 %76, -113</td></tr>
+<tr><td align="left">  br i1 %cmp4.i350.not, label %if.then243, label %if.end250.sink.split</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb52 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end250.sink.split.sink.split:</td></tr>
+<tr><td align="left">  %79 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc = tail call i32 @fputc(i32 32, %struct._IO_FILE* %79)</td></tr>
+<tr><td align="left">  br label %if.end250.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb53 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end250.sink.split:</td></tr>
+<tr><td align="left">  %call247 = tail call i8* @SymName(%union.rec* nonnull %1) #8</td></tr>
+<tr><td align="left">  %80 = load %struct._IO_FILE*, %struct._IO_FILE** @last_write_fp, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call248 = tail call i32 @fputs(i8* %call247, %struct._IO_FILE* %80)</td></tr>
+<tr><td align="left">  br label %if.end250</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb54 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end250:</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> m_bb0:f2
+m_bb0:f2 -> f_bb52:f
+f_bb1:fT -> f_bb49:f
+f_bb1:fF -> f_bb2:f
+f_bb2:f -> f_bb3:f
+f_bb3:f -> f_bb47:f
+f_bb3:f -> f_bb3:f
+f_bb3:f -> f_bb4:f
+f_bb4:f -> f_bb46:f
+f_bb4:f -> f_bb5:f
+f_bb4:f -> f_bb11:f
+f_bb4:f -> f_bb26:f
+f_bb5:fT -> f_bb7:f
+f_bb5:fF -> f_bb6:f
+f_bb6:f -> f_bb8:f
+f_bb7:f -> f_bb8:f
+f_bb8:f -> f_bb9:f
+f_bb9:fT -> f_bb9:f
+f_bb9:fF -> f_bb10:f
+f_bb10:f -> f_bb47:f
+f_bb11:fT -> f_bb13:f
+f_bb11:fF -> f_bb12:f
+f_bb12:f -> f_bb14:f
+f_bb13:f -> f_bb14:f
+f_bb14:f -> f_bb15:f
+f_bb15:fT -> f_bb15:f
+f_bb15:fF -> f_bb16:f
+f_bb16:fT -> f_bb17:f
+f_bb16:fF -> f_bb22:f
+f_bb17:fT -> f_bb18:f
+f_bb17:fF -> f_bb21:f
+f_bb18:fT -> f_bb21:f
+f_bb18:fF -> f_bb19:f
+f_bb19:fT -> f_bb20:f
+f_bb19:fF -> f_bb21:f
+f_bb20:f -> f_bb21:f
+f_bb21:f -> f_bb22:f
+f_bb22:fT -> f_bb24:f
+f_bb22:fF -> f_bb23:f
+f_bb23:f -> f_bb25:f
+f_bb24:f -> f_bb25:f
+f_bb25:f -> f_bb47:f
+f_bb26:fT -> f_bb28:f
+f_bb26:fF -> f_bb27:f
+f_bb27:f -> f_bb29:f
+f_bb28:f -> f_bb29:f
+f_bb29:f -> f_bb30:f
+f_bb30:fT -> f_bb30:f
+f_bb30:fF -> f_bb31:f
+f_bb31:fT -> f_bb32:f
+f_bb31:fF -> f_bb37:f
+f_bb32:fT -> f_bb33:f
+f_bb32:fF -> f_bb36:f
+f_bb33:fT -> f_bb36:f
+f_bb33:fF -> f_bb34:f
+f_bb34:fT -> f_bb35:f
+f_bb34:fF -> f_bb36:f
+f_bb35:f -> f_bb36:f
+f_bb36:f -> f_bb37:f
+f_bb37:fT -> f_bb39:f
+f_bb37:fF -> f_bb38:f
+f_bb38:f -> f_bb40:f
+f_bb39:f -> f_bb40:f
+f_bb40:fT -> f_bb43:f
+f_bb40:fF -> f_bb41:f
+f_bb41:fT -> f_bb42:f
+f_bb41:fF -> f_bb43:f
+f_bb42:f -> f_bb47:f
+f_bb43:fT -> f_bb45:f
+f_bb43:fF -> f_bb44:f
+f_bb44:f -> f_bb47:f
+f_bb45:f -> f_bb47:f
+f_bb46:f -> f_bb47:f
+f_bb47:fT -> f_bb48:f
+f_bb47:fF -> f_bb2:f
+f_bb48:fT -> f_bb49:f
+f_bb48:fF -> f_bb54:f
+f_bb49:fT -> f_bb50:f
+f_bb49:fF -> f_bb53:f
+f_bb50:fT -> f_bb53:f
+f_bb50:fF -> f_bb51:f
+f_bb51:fT -> m_bb0:f1
+f_bb51:fF -> f_bb53:f
+m_bb0:f1 -> f_bb52:f
+f_bb52:f -> f_bb53:f
+f_bb53:f -> f_bb54:f
+}
+

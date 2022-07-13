@@ -1,0 +1,1153 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then41:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call42 = call i8* @TIFFFileName(%struct.tiff* %tif) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void (i8*, i8*, ...) @TIFFError(i8* %call42, i8* getelementptr inbounds ([32 x i8], [32 x i8]* @.str.16, i64 0, i64 0)) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup195</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then68:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call69 = call i8* @TIFFFileName(%struct.tiff* %tif) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void (i8*, i8*, ...) @TIFFError(i8* %call69, i8* getelementptr inbounds ([32 x i8], [32 x i8]* @.str.17, i64 0, i64 0)) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %hs.i.i = alloca i16, align 2</td></tr>
+<tr><td align="left">  %vs.i.i = alloca i16, align 2</td></tr>
+<tr><td align="left">  %coeffs.i.i = alloca float*, align 8</td></tr>
+<tr><td align="left">  %compress.i = alloca i16, align 2</td></tr>
+<tr><td align="left">  %sampleinfo = alloca i16*, align 8</td></tr>
+<tr><td align="left">  %extrasamples = alloca i16, align 2</td></tr>
+<tr><td align="left">  %planarconfig = alloca i16, align 2</td></tr>
+<tr><td align="left">  %compress = alloca i16, align 2</td></tr>
+<tr><td align="left">  %red_orig = alloca i16*, align 8</td></tr>
+<tr><td align="left">  %green_orig = alloca i16*, align 8</td></tr>
+<tr><td align="left">  %blue_orig = alloca i16*, align 8</td></tr>
+<tr><td align="left">  %inkset = alloca i16, align 2</td></tr>
+<tr><td align="left">  %0 = bitcast i16** %sampleinfo to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %0) #9</td></tr>
+<tr><td align="left">  %1 = bitcast i16* %extrasamples to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 2, i8* nonnull %1) #9</td></tr>
+<tr><td align="left">  %2 = bitcast i16* %planarconfig to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 2, i8* nonnull %2) #9</td></tr>
+<tr><td align="left">  %3 = bitcast i16* %compress to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 2, i8* nonnull %3) #9</td></tr>
+<tr><td align="left">  %4 = bitcast i16** %red_orig to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %4) #9</td></tr>
+<tr><td align="left">  %5 = bitcast i16** %green_orig to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %5) #9</td></tr>
+<tr><td align="left">  %6 = bitcast i16** %blue_orig to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %6) #9</td></tr>
+<tr><td align="left">  %row_offset = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 19</td></tr>
+<tr><td align="left">  store i32 0, i32* %row_offset, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %col_offset = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 20</td></tr>
+<tr><td align="left">  store i32 0, i32* %col_offset, align 4, !tbaa !10</td></tr>
+<tr><td align="left">  %redcmap = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 10</td></tr>
+<tr><td align="left">  %greencmap = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 11</td></tr>
+<tr><td align="left">  %bluecmap = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 12</td></tr>
+<tr><td align="left">  %tif1 = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 0</td></tr>
+<tr><td align="left">  %7 = bitcast i16** %redcmap to i8*</td></tr>
+<tr><td align="left">  call void @llvm.memset.p0i8.i64(i8* noundef nonnull align 8 dereferenceable(24) %7, i8 0, i64 24, i1 false)</td></tr>
+<tr><td align="left">  store %struct.tiff* %tif, %struct.tiff** %tif1, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  %stoponerr = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 1</td></tr>
+<tr><td align="left">  store i32 %stop, i32* %stoponerr, align 8, !tbaa !12</td></tr>
+<tr><td align="left">  %bitspersample = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 6</td></tr>
+<tr><td align="left">  %call = tail call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %tif, i32 258, i16* nonnull %bitspersample) #10</td></tr>
+<tr><td align="left">  %8 = load i16, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  switch i16 %8, label %sw.default [
+    i16 1, label %sw.epilog
+    i16 2, label %sw.epilog
+    i16 4, label %sw.epilog
+    i16 8, label %sw.epilog
+    i16 16, label %sw.epilog
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.default:</td></tr>
+<tr><td align="left">  %conv = zext i16 %8 to i32</td></tr>
+<tr><td align="left">  %call5 = tail call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([41 x i8], [41 x i8]* @.str.15, i64 0, i64 0), i32 %conv) #10</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.epilog:</td></tr>
+<tr><td align="left">  %alpha = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 3</td></tr>
+<tr><td align="left">  store i32 0, i32* %alpha, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %samplesperpixel = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 7</td></tr>
+<tr><td align="left">  %call6 = tail call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %tif, i32 277, i16* nonnull %samplesperpixel) #10</td></tr>
+<tr><td align="left">  %call7 = call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %tif, i32 338, i16* nonnull %extrasamples, i16** nonnull %sampleinfo) #10</td></tr>
+<tr><td align="left">  %9 = load i16, i16* %extrasamples, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp = icmp eq i16 %9, 1</td></tr>
+<tr><td align="left">  br i1 %cmp, label %if.then, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %10 = load i16*, i16** %sampleinfo, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  %11 = load i16, i16* %10, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %conv10 = zext i16 %11 to i32</td></tr>
+<tr><td align="left">  %conv10.off = add nsw i32 %conv10, -1</td></tr>
+<tr><td align="left">  %switch = icmp ult i32 %conv10.off, 2</td></tr>
+<tr><td align="left">  br i1 %switch, label %sw.bb11, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb11:</td></tr>
+<tr><td align="left">  store i32 %conv10, i32* %alpha, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  br label %if.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %12 = load i16, i16* %samplesperpixel, align 2, !tbaa !17</td></tr>
+<tr><td align="left">  %conv17 = zext i16 %12 to i32</td></tr>
+<tr><td align="left">  %conv18 = zext i16 %9 to i32</td></tr>
+<tr><td align="left">  %sub = sub nsw i32 %conv17, %conv18</td></tr>
+<tr><td align="left">  %call19 = call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %tif, i32 259, i16* nonnull %compress) #10</td></tr>
+<tr><td align="left">  %call20 = call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %tif, i32 284, i16* nonnull %planarconfig) #10</td></tr>
+<tr><td align="left">  %photometric = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 9</td></tr>
+<tr><td align="left">  %call21 = call i32 (%struct.tiff*, i32, ...) @TIFFGetField(%struct.tiff* %tif, i32 262, i16* nonnull %photometric) #10</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %call21, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %if.then22, label %if.end35</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then22:</td></tr>
+<tr><td align="left">  switch i32 %sub, label %sw.default32 [
+    i32 1, label %sw.bb23
+    i32 3, label %sw.bb114.thread
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb23:</td></tr>
+<tr><td align="left">  %13 = bitcast i16* %compress.i to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 2, i8* nonnull %13) #9</td></tr>
+<tr><td align="left">  %call.i = call i32 (%struct.tiff*, i32, ...) @TIFFGetField(%struct.tiff* %tif, i32 259, i16* nonnull %compress.i) #10</td></tr>
+<tr><td align="left">  %14 = load i16, i16* %compress.i, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %13) #9</td></tr>
+<tr><td align="left">  switch i16 %14, label %if.else [
+    i16 -32765, label %if.then26
+    i16 4, label %if.then26
+    i16 3, label %if.then26
+    i16 2, label %if.then26
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then26:</td></tr>
+<tr><td align="left">  store i16 0, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  br label %sw.bb80</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  store i16 1, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  br label %sw.bb80</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb114.thread:</td></tr>
+<tr><td align="left">  store i16 2, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  br label %sw.epilog173</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.default32:</td></tr>
+<tr><td align="left">  %call33 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([22 x i8], [22 x i8]* @.str.1, i64 0, i64 0), i8* getelementptr inbounds ([26 x i8], [26 x i8]* @photoTag, i64 0, i64 0)) #10</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end35:</td></tr>
+<tr><td align="left">  %.pr = load i16, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  switch i16 %.pr, label %sw.default169 [
+    i16 3, label %sw.bb38
+    i16 0, label %sw.bb80
+    i16 1, label %sw.bb80
+    i16 6, label %sw.bb95
+    i16 2, label %sw.bb114
+    i16 5, label %sw.bb120
+    i16 -32692, label %sw.bb138
+    i16 -32691, label %sw.bb148
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb38:</td></tr>
+<tr><td align="left">  %call39 = call i32 (%struct.tiff*, i32, ...) @TIFFGetField(%struct.tiff* %tif, i32 320, i16** nonnull %red_orig, i16** nonnull %green_orig, i16** nonnull %blue_orig) #10</td></tr>
+<tr><td align="left">  %tobool40.not = icmp eq i32 %call39, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool40.not, label %if.then41, label %if.end43</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end43:</td></tr>
+<tr><td align="left">  %15 = load i16, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  %sh_prom = zext i16 %15 to i64</td></tr>
+<tr><td align="left">  %shl = shl nuw i64 1, %sh_prom</td></tr>
+<tr><td align="left">  %conv46 = trunc i64 %shl to i32</td></tr>
+<tr><td align="left">  %conv48 = shl i32 %conv46, 1</td></tr>
+<tr><td align="left">  %call49 = call i8* @_TIFFmalloc(i32 %conv48) #10</td></tr>
+<tr><td align="left">  %16 = bitcast i16** %redcmap to i8**</td></tr>
+<tr><td align="left">  store i8* %call49, i8** %16, align 8, !tbaa !19</td></tr>
+<tr><td align="left">  %call54 = call i8* @_TIFFmalloc(i32 %conv48) #10</td></tr>
+<tr><td align="left">  %17 = bitcast i16** %greencmap to i8**</td></tr>
+<tr><td align="left">  store i8* %call54, i8** %17, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %call59 = call i8* @_TIFFmalloc(i32 %conv48) #10</td></tr>
+<tr><td align="left">  %18 = bitcast i16** %bluecmap to i8**</td></tr>
+<tr><td align="left">  store i8* %call59, i8** %18, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %19 = load i16*, i16** %redcmap, align 8, !tbaa !19</td></tr>
+<tr><td align="left">  %tobool62.not = icmp eq i16* %19, null</td></tr>
+<tr><td align="left">  br i1 %tobool62.not, label %if.then68, label %lor.lhs.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false:</td></tr>
+<tr><td align="left">  %20 = load i16*, i16** %greencmap, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %tobool64.not = icmp eq i16* %20, null</td></tr>
+<tr><td align="left">  %tobool67.not = icmp eq i8* %call59, null</td></tr>
+<tr><td align="left">  %or.cond = select i1 %tobool64.not, i1 true, i1 %tobool67.not</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %if.then68, label %if.end70</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end70:</td></tr>
+<tr><td align="left">  %21 = bitcast i16* %19 to i8*</td></tr>
+<tr><td align="left">  %22 = bitcast i16** %red_orig to i8**</td></tr>
+<tr><td align="left">  %23 = load i8*, i8** %22, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  %conv73 = sext i32 %conv48 to i64</td></tr>
+<tr><td align="left">  call void @llvm.memcpy.p0i8.p0i8.i64(i8* nonnull align 2 %21, i8* align 2 %23, i64 %conv73, i1 false)</td></tr>
+<tr><td align="left">  %24 = load i8*, i8** %17, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %25 = bitcast i16** %green_orig to i8**</td></tr>
+<tr><td align="left">  %26 = load i8*, i8** %25, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 2 %24, i8* align 2 %26, i64 %conv73, i1 false)</td></tr>
+<tr><td align="left">  %27 = load i8*, i8** %18, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %28 = bitcast i16** %blue_orig to i8**</td></tr>
+<tr><td align="left">  %29 = load i8*, i8** %28, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  call void @llvm.memcpy.p0i8.p0i8.i64(i8* align 2 %27, i8* align 2 %29, i64 %conv73, i1 false)</td></tr>
+<tr><td align="left">  br label %sw.bb80</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb80:</td></tr>
+<tr><td align="left">  %30 = load i16, i16* %planarconfig, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp82 = icmp eq i16 %30, 1</td></tr>
+<tr><td align="left">  br i1 %cmp82, label %land.lhs.true, label %sw.epilog173</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true:</td></tr>
+<tr><td align="left">  %31 = load i16, i16* %samplesperpixel, align 2, !tbaa !17</td></tr>
+<tr><td align="left">  %cmp86.not = icmp eq i16 %31, 1</td></tr>
+<tr><td align="left">  br i1 %cmp86.not, label %sw.epilog173, label %if.then88</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then88:</td></tr>
+<tr><td align="left">  %conv85 = zext i16 %31 to i32</td></tr>
+<tr><td align="left">  %32 = load i16, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  %conv90 = zext i16 %32 to i32</td></tr>
+<tr><td align="left">  %call93 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([60 x i8], [60 x i8]* @.str.2, i64 0, i64 0), i8* getelementptr inbounds ([26 x i8], [26 x i8]* @photoTag, i64 0, i64 0), i32 %conv90, i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.3, i64 0, i64 0), i32 %conv85) #10</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb20 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb95:</td></tr>
+<tr><td align="left">  %33 = load i16, i16* %planarconfig, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp97.not = icmp eq i16 %33, 1</td></tr>
+<tr><td align="left">  br i1 %cmp97.not, label %if.end102, label %if.then99</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb21 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then99:</td></tr>
+<tr><td align="left">  %conv96 = zext i16 %33 to i32</td></tr>
+<tr><td align="left">  %call101 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([46 x i8], [46 x i8]* @.str.4, i64 0, i64 0), i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.5, i64 0, i64 0), i32 %conv96) #10</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb22 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end102:</td></tr>
+<tr><td align="left">  %34 = load i16, i16* %compress, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp104 = icmp eq i16 %34, 7</td></tr>
+<tr><td align="left">  br i1 %cmp104, label %if.then110, label %sw.epilog173</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then110:</td></tr>
+<tr><td align="left">  %call111 = call i32 (%struct.tiff*, i32, ...) @TIFFSetField(%struct.tiff* %tif, i32 65538, i32 1) #10</td></tr>
+<tr><td align="left">  store i16 2, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  br label %sw.epilog173</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb24 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb114:</td></tr>
+<tr><td align="left">  %cmp115 = icmp slt i32 %sub, 3</td></tr>
+<tr><td align="left">  br i1 %cmp115, label %if.then117, label %sw.epilog173</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb25 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then117:</td></tr>
+<tr><td align="left">  %call118 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([43 x i8], [43 x i8]* @.str.6, i64 0, i64 0), i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.7, i64 0, i64 0), i32 %sub) #10</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb120:</td></tr>
+<tr><td align="left">  %35 = bitcast i16* %inkset to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 2, i8* nonnull %35) #9</td></tr>
+<tr><td align="left">  %call121 = call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %tif, i32 332, i16* nonnull %inkset) #10</td></tr>
+<tr><td align="left">  %36 = load i16, i16* %inkset, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp123.not = icmp eq i16 %36, 1</td></tr>
+<tr><td align="left">  br i1 %cmp123.not, label %if.end128, label %if.then125</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb27 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then125:</td></tr>
+<tr><td align="left">  %conv122 = zext i16 %36 to i32</td></tr>
+<tr><td align="left">  %call127 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([49 x i8], [49 x i8]* @.str.8, i64 0, i64 0), i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.9, i64 0, i64 0), i32 %conv122) #10</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %35) #9</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb28 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end128:</td></tr>
+<tr><td align="left">  %37 = load i16, i16* %samplesperpixel, align 2, !tbaa !17</td></tr>
+<tr><td align="left">  %cmp131.not = icmp eq i16 %37, 4</td></tr>
+<tr><td align="left">  br i1 %cmp131.not, label %cleanup, label %if.then133</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb29 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then133:</td></tr>
+<tr><td align="left">  %conv130 = zext i16 %37 to i32</td></tr>
+<tr><td align="left">  %call136 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([49 x i8], [49 x i8]* @.str.8, i64 0, i64 0), i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.3, i64 0, i64 0), i32 %conv130) #10</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %35) #9</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb30 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %35) #9</td></tr>
+<tr><td align="left">  br label %sw.epilog173</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb31 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb138:</td></tr>
+<tr><td align="left">  %38 = load i16, i16* %compress, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp140.not = icmp eq i16 %38, -30860</td></tr>
+<tr><td align="left">  br i1 %cmp140.not, label %if.end144, label %if.then142</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb32 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then142:</td></tr>
+<tr><td align="left">  %call143 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([33 x i8], [33 x i8]* @.str.10, i64 0, i64 0), i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.11, i64 0, i64 0), i32 34676) #10</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb33 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end144:</td></tr>
+<tr><td align="left">  %call145 = call i32 (%struct.tiff*, i32, ...) @TIFFSetField(%struct.tiff* %tif, i32 65560, i32 3) #10</td></tr>
+<tr><td align="left">  store i16 1, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  store i16 8, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  br label %sw.epilog173</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb34 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb148:</td></tr>
+<tr><td align="left">  %39 = load i16, i16* %compress, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %40 = and i16 %39, -2</td></tr>
+<tr><td align="left">  %switch297 = icmp eq i16 %40, -30860</td></tr>
+<tr><td align="left">  br i1 %switch297, label %if.end158, label %if.then156</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb35 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then156:</td></tr>
+<tr><td align="left">  %call157 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([41 x i8], [41 x i8]* @.str.12, i64 0, i64 0), i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.11, i64 0, i64 0), i32 34676, i32 34677) #10</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb36 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end158:</td></tr>
+<tr><td align="left">  %41 = load i16, i16* %planarconfig, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp160.not = icmp eq i16 %41, 1</td></tr>
+<tr><td align="left">  br i1 %cmp160.not, label %if.end165, label %if.then162</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb37 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then162:</td></tr>
+<tr><td align="left">  %conv159 = zext i16 %41 to i32</td></tr>
+<tr><td align="left">  %call164 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([47 x i8], [47 x i8]* @.str.13, i64 0, i64 0), i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.5, i64 0, i64 0), i32 %conv159) #10</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb38 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end165:</td></tr>
+<tr><td align="left">  %call166 = call i32 (%struct.tiff*, i32, ...) @TIFFSetField(%struct.tiff* %tif, i32 65560, i32 3) #10</td></tr>
+<tr><td align="left">  store i16 2, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  store i16 8, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  br label %sw.epilog173</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.default169:</td></tr>
+<tr><td align="left">  %conv37 = zext i16 %.pr to i32</td></tr>
+<tr><td align="left">  %call172 = call i32 (i8*, i8*, ...) @sprintf(i8* nonnull dereferenceable(1) %emsg, i8* nonnull dereferenceable(1) getelementptr inbounds ([39 x i8], [39 x i8]* @.str.14, i64 0, i64 0), i8* getelementptr inbounds ([26 x i8], [26 x i8]* @photoTag, i64 0, i64 0), i32 %conv37) #10</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb40 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.epilog173:</td></tr>
+<tr><td align="left">  %Map = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 15</td></tr>
+<tr><td align="left">  %ycbcr = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 18</td></tr>
+<tr><td align="left">  %width = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 4</td></tr>
+<tr><td align="left">  %42 = bitcast i8** %Map to i8*</td></tr>
+<tr><td align="left">  call void @llvm.memset.p0i8.i64(i8* noundef nonnull align 8 dereferenceable(32) %42, i8 0, i64 32, i1 false)</td></tr>
+<tr><td align="left">  %call174 = call i32 (%struct.tiff*, i32, ...) @TIFFGetField(%struct.tiff* %tif, i32 256, i32* nonnull %width) #10</td></tr>
+<tr><td align="left">  %height = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 5</td></tr>
+<tr><td align="left">  %call175 = call i32 (%struct.tiff*, i32, ...) @TIFFGetField(%struct.tiff* %tif, i32 257, i32* nonnull %height) #10</td></tr>
+<tr><td align="left">  %orientation = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 8</td></tr>
+<tr><td align="left">  %call176 = call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %tif, i32 274, i16* nonnull %orientation) #10</td></tr>
+<tr><td align="left">  %43 = load i16, i16* %planarconfig, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp178 = icmp ne i16 %43, 2</td></tr>
+<tr><td align="left">  %cmp180 = icmp slt i32 %sub, 2</td></tr>
+<tr><td align="left">  %44 = select i1 %cmp178, i1 true, i1 %cmp180</td></tr>
+<tr><td align="left">  %lnot.ext = zext i1 %44 to i32</td></tr>
+<tr><td align="left">  %isContig = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 2</td></tr>
+<tr><td align="left">  store i32 %lnot.ext, i32* %isContig, align 4, !tbaa !22</td></tr>
+<tr><td align="left">  %call185 = call i32 @TIFFIsTiled(%struct.tiff* %tif) #10</td></tr>
+<tr><td align="left">  %tobool186.not = icmp eq i32 %call185, 0</td></tr>
+<tr><td align="left">  br i1 %44, label %if.then184, label %if.else188</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb41 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then184:</td></tr>
+<tr><td align="left">  %cond = select i1 %tobool186.not, i32 (%struct._TIFFRGBAImage*, i32*, i32, i32)* @gtStripContig, i32 (%struct._TIFFRGBAImage*, i32*, i32, i32)* @gtTileContig</td></tr>
+<tr><td align="left">  %get = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 13</td></tr>
+<tr><td align="left">  store i32 (%struct._TIFFRGBAImage*, i32*, i32, i32)* %cond, i32 (%struct._TIFFRGBAImage*, i32*, i32, i32)** %get, align 8, !tbaa !23</td></tr>
+<tr><td align="left">  %call.i298 = call fastcc i32 @buildMap(%struct._TIFFRGBAImage* nonnull %img) #10</td></tr>
+<tr><td align="left">  %tobool.not.i = icmp eq i32 %call.i298, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not.i, label %pickTileContigCase.exit, label %if.then.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb42 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then.i:</td></tr>
+<tr><td align="left">  %45 = load i16, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  switch i16 %45, label %pickTileContigCase.exit [
+    i16 2, label %sw.bb.i
+    i16 5, label %sw.bb31.i
+    i16 3, label %sw.bb43.i
+    i16 0, label %sw.bb51.i
+    i16 1, label %sw.bb51.i
+    i16 6, label %sw.bb59.i
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb43 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb.i:</td></tr>
+<tr><td align="left">  %46 = load i16, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  switch i16 %46, label %pickTileContigCase.exit [
+    i16 8, label %sw.bb2.i
+    i16 16, label %sw.bb15.i
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb44 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb2.i:</td></tr>
+<tr><td align="left">  %47 = load i8*, i8** %Map, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %tobool3.not.i = icmp eq i8* %47, null</td></tr>
+<tr><td align="left">  br i1 %tobool3.not.i, label %if.then4.i, label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb45 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then4.i:</td></tr>
+<tr><td align="left">  %48 = load i32, i32* %alpha, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %switch.selectcmp.i = icmp eq i32 %48, 2</td></tr>
+<tr><td align="left">  %switch.select.i = select i1 %switch.selectcmp.i, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* @putRGBUAcontig8bittile, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* @putRGBcontig8bittile</td></tr>
+<tr><td align="left">  %switch.selectcmp1.i = icmp eq i32 %48, 1</td></tr>
+<tr><td align="left">  %switch.select2.i = select i1 %switch.selectcmp1.i, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* @putRGBAAcontig8bittile, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* %switch.select.i</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb46 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb15.i:</td></tr>
+<tr><td align="left">  %49 = load i8*, i8** %Map, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %tobool17.not.i = icmp eq i8* %49, null</td></tr>
+<tr><td align="left">  br i1 %tobool17.not.i, label %if.then18.i, label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb47 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then18.i:</td></tr>
+<tr><td align="left">  %50 = load i32, i32* %alpha, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %switch.selectcmp3.i = icmp eq i32 %50, 2</td></tr>
+<tr><td align="left">  %switch.select4.i = select i1 %switch.selectcmp3.i, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* @putRGBUAcontig16bittile, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* @putRGBcontig16bittile</td></tr>
+<tr><td align="left">  %switch.selectcmp5.i = icmp eq i32 %50, 1</td></tr>
+<tr><td align="left">  %switch.select6.i = select i1 %switch.selectcmp5.i, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* @putRGBAAcontig16bittile, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* %switch.select4.i</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb48 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb31.i:</td></tr>
+<tr><td align="left">  %51 = load i16, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  %cmp34.i = icmp eq i16 %51, 8</td></tr>
+<tr><td align="left">  br i1 %cmp34.i, label %if.then36.i, label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb49 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then36.i:</td></tr>
+<tr><td align="left">  %52 = load i8*, i8** %Map, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %tobool38.not.i = icmp eq i8* %52, null</td></tr>
+<tr><td align="left">  %putRGBcontig8bitCMYKtile.putRGBcontig8bitCMYKMaptile.i = select i1 %tobool38.not.i, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* @putRGBcontig8bitCMYKtile, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* @putRGBcontig8bitCMYKMaptile</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb50 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb43.i:</td></tr>
+<tr><td align="left">  %53 = load i16, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  switch i16 %53, label %pickTileContigCase.exit [
+    i16 8, label %sw.bb46.i
+    i16 4, label %sw.bb47.i
+    i16 2, label %sw.bb48.i
+    i16 1, label %sw.bb49.i
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb51 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb46.i:</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb52 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb47.i:</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb53 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb48.i:</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb54 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb49.i:</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb55 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb51.i:</td></tr>
+<tr><td align="left">  %54 = load i16, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  switch i16 %54, label %pickTileContigCase.exit [
+    i16 8, label %sw.bb54.i
+    i16 4, label %sw.bb55.i
+    i16 2, label %sw.bb56.i
+    i16 1, label %sw.bb57.i
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb56 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb54.i:</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb57 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb55.i:</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb58 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb56.i:</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb59 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb57.i:</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb60 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb59.i:</td></tr>
+<tr><td align="left">  %55 = load i16, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  %cmp62.i = icmp eq i16 %55, 8</td></tr>
+<tr><td align="left">  br i1 %cmp62.i, label %if.then64.i, label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb61 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then64.i:</td></tr>
+<tr><td align="left">  %56 = bitcast i16* %hs.i.i to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 2, i8* nonnull %56) #9</td></tr>
+<tr><td align="left">  %57 = bitcast i16* %vs.i.i to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 2, i8* nonnull %57) #9</td></tr>
+<tr><td align="left">  %58 = load %struct.TIFFYCbCrToRGB*, %struct.TIFFYCbCrToRGB** %ycbcr, align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %cmp.i.i = icmp eq %struct.TIFFYCbCrToRGB* %58, null</td></tr>
+<tr><td align="left">  br i1 %cmp.i.i, label %if.then.i.i, label %if.else.i.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb62 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then.i.i:</td></tr>
+<tr><td align="left">  %call.i.i = call i8* @_TIFFmalloc(i32 5176) #10</td></tr>
+<tr><td align="left">  %59 = bitcast %struct.TIFFYCbCrToRGB** %ycbcr to i8**</td></tr>
+<tr><td align="left">  store i8* %call.i.i, i8** %59, align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %cmp3.i.i = icmp eq i8* %call.i.i, null</td></tr>
+<tr><td align="left">  br i1 %cmp3.i.i, label %if.then4.i.i, label %if.end.i.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb63 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then4.i.i:</td></tr>
+<tr><td align="left">  %60 = load %struct.tiff*, %struct.tiff** %tif1, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  %call5.i.i = call i8* @TIFFFileName(%struct.tiff* %60) #10</td></tr>
+<tr><td align="left">  call void (i8*, i8*, ...) @TIFFError(i8* %call5.i.i, i8* getelementptr inbounds ([41 x i8], [41 x i8]* @.str.32, i64 0, i64 0)) #10</td></tr>
+<tr><td align="left">  br label %initYCbCrConversion.exit.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb64 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end.i.i:</td></tr>
+<tr><td align="left">  %61 = bitcast i8* %call.i.i to %struct.TIFFYCbCrToRGB*</td></tr>
+<tr><td align="left">  %62 = load %struct.tiff*, %struct.tiff** %tif1, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  call fastcc void @TIFFYCbCrToRGBInit(%struct.TIFFYCbCrToRGB* nonnull %61, %struct.tiff* %62) #10</td></tr>
+<tr><td align="left">  br label %if.end18.i.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb65 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else.i.i:</td></tr>
+<tr><td align="left">  %63 = bitcast float** %coeffs.i.i to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %63) #9</td></tr>
+<tr><td align="left">  %64 = load %struct.tiff*, %struct.tiff** %tif1, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  %call9.i.i = call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %64, i32 529, float** nonnull %coeffs.i.i) #10</td></tr>
+<tr><td align="left">  %65 = bitcast float** %coeffs.i.i to i8**</td></tr>
+<tr><td align="left">  %66 = load i8*, i8** %65, align 8, !tbaa !16</td></tr>
+<tr><td align="left">  %67 = load %struct.TIFFYCbCrToRGB*, %struct.TIFFYCbCrToRGB** %ycbcr, align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %arraydecay.i.i = getelementptr inbounds %struct.TIFFYCbCrToRGB, %struct.TIFFYCbCrToRGB* %67, i64 0, i32 5, i64 0</td></tr>
+<tr><td align="left">  %68 = bitcast float* %arraydecay.i.i to i8*</td></tr>
+<tr><td align="left">  %call12.i.i = call i32 @_TIFFmemcmp(i8* %66, i8* nonnull %68, i32 12) #10</td></tr>
+<tr><td align="left">  %cmp13.not.i.i = icmp eq i32 %call12.i.i, 0</td></tr>
+<tr><td align="left">  br i1 %cmp13.not.i.i, label %if.end17.i.i, label %if.then14.i.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb66 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then14.i.i:</td></tr>
+<tr><td align="left">  %69 = load %struct.TIFFYCbCrToRGB*, %struct.TIFFYCbCrToRGB** %ycbcr, align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %70 = load %struct.tiff*, %struct.tiff** %tif1, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  call fastcc void @TIFFYCbCrToRGBInit(%struct.TIFFYCbCrToRGB* %69, %struct.tiff* %70) #10</td></tr>
+<tr><td align="left">  br label %if.end17.i.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb67 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end17.i.i:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %63) #9</td></tr>
+<tr><td align="left">  br label %if.end18.i.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb68 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end18.i.i:</td></tr>
+<tr><td align="left">  %71 = load %struct.tiff*, %struct.tiff** %tif1, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  %call20.i.i = call i32 (%struct.tiff*, i32, ...) @TIFFGetFieldDefaulted(%struct.tiff* %71, i32 530, i16* nonnull %hs.i.i, i16* nonnull %vs.i.i) #10</td></tr>
+<tr><td align="left">  %72 = load i16, i16* %hs.i.i, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %conv.i.i = zext i16 %72 to i32</td></tr>
+<tr><td align="left">  %shl.i.i = shl nuw nsw i32 %conv.i.i, 4</td></tr>
+<tr><td align="left">  %73 = load i16, i16* %vs.i.i, align 2, !tbaa !15</td></tr>
+<tr><td align="left">  %conv21.i.i = zext i16 %73 to i32</td></tr>
+<tr><td align="left">  %or.i.i = or i32 %shl.i.i, %conv21.i.i</td></tr>
+<tr><td align="left">  switch i32 %or.i.i, label %sw.epilog.i.i [
+    i32 68, label %initYCbCrConversion.exit.i
+    i32 66, label %sw.bb22.i.i
+    i32 65, label %sw.bb23.i.i
+    i32 34, label %sw.bb24.i.i
+    i32 33, label %sw.bb25.i.i
+    i32 17, label %sw.bb26.i.i
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb69 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb22.i.i:</td></tr>
+<tr><td align="left">  br label %initYCbCrConversion.exit.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb70 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb23.i.i:</td></tr>
+<tr><td align="left">  br label %initYCbCrConversion.exit.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb71 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb24.i.i:</td></tr>
+<tr><td align="left">  br label %initYCbCrConversion.exit.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb72 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb25.i.i:</td></tr>
+<tr><td align="left">  br label %initYCbCrConversion.exit.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb73 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb26.i.i:</td></tr>
+<tr><td align="left">  br label %initYCbCrConversion.exit.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb74 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.epilog.i.i:</td></tr>
+<tr><td align="left">  br label %initYCbCrConversion.exit.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb75 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">initYCbCrConversion.exit.i:</td></tr>
+<tr><td align="left">  %retval.0.i.i = phi void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* [ null, %if.then4.i.i ], [ null, %sw.epilog.i.i ], [ @putcontig8bitYCbCr11tile, %sw.bb26.i.i ], [ @putcontig8bitYCbCr21tile, %sw.bb25.i.i ], [ @putcontig8bitYCbCr22tile, %sw.bb24.i.i ], [ @putcontig8bitYCbCr41tile, %sw.bb23.i.i ], [ @putcontig8bitYCbCr42tile, %sw.bb22.i.i ], [ @putcontig8bitYCbCr44tile, %if.end18.i.i ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %57) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %56) #9</td></tr>
+<tr><td align="left">  br label %pickTileContigCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb76 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">pickTileContigCase.exit:</td></tr>
+<tr><td align="left">  %put.0.i = phi void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* [ null, %if.then.i ], [ %retval.0.i.i, %initYCbCrConversion.exit.i ], [ null, %sw.bb59.i ], [ null, %sw.bb51.i ], [ @put1bitbwtile, %sw.bb57.i ], [ @put2bitbwtile, %sw.bb56.i ], [ @put4bitbwtile, %sw.bb55.i ], [ @putgreytile, %sw.bb54.i ], [ null, %sw.bb43.i ], [ @put1bitcmaptile, %sw.bb49.i ], [ @put2bitcmaptile, %sw.bb48.i ], [ @put4bitcmaptile, %sw.bb47.i ], [ @put8bitcmaptile, %sw.bb46.i ], [ null, %sw.bb31.i ], [ null, %sw.bb.i ], [ @putRGBcontig16bittile, %sw.bb15.i ], [ null, %if.then184 ], [ @putRGBcontig8bitMaptile, %sw.bb2.i ], [ %putRGBcontig8bitCMYKtile.putRGBcontig8bitCMYKMaptile.i, %if.then36.i ], [ %switch.select2.i, %if.then4.i ], [ %switch.select6.i, %if.then18.i ]</td></tr>
+<tr><td align="left">  %put69.i = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 14</td></tr>
+<tr><td align="left">  %contig.i = bitcast %union.anon* %put69.i to void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)**</td></tr>
+<tr><td align="left">  store void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)* %put.0.i, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*)** %contig.i, align 8, !tbaa !26</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb77 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else188:</td></tr>
+<tr><td align="left">  %cond191 = select i1 %tobool186.not, i32 (%struct._TIFFRGBAImage*, i32*, i32, i32)* @gtStripSeparate, i32 (%struct._TIFFRGBAImage*, i32*, i32, i32)* @gtTileSeparate</td></tr>
+<tr><td align="left">  %get192 = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 13</td></tr>
+<tr><td align="left">  store i32 (%struct._TIFFRGBAImage*, i32*, i32, i32)* %cond191, i32 (%struct._TIFFRGBAImage*, i32*, i32, i32)** %get192, align 8, !tbaa !23</td></tr>
+<tr><td align="left">  %call.i299 = call fastcc i32 @buildMap(%struct._TIFFRGBAImage* nonnull %img) #10</td></tr>
+<tr><td align="left">  %tobool.not.i300 = icmp eq i32 %call.i299, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not.i300, label %pickTileSeparateCase.exit, label %if.then.i302</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb78 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then.i302:</td></tr>
+<tr><td align="left">  %74 = load i16, i16* %photometric, align 2, !tbaa !18</td></tr>
+<tr><td align="left">  %cond.i = icmp eq i16 %74, 2</td></tr>
+<tr><td align="left">  br i1 %cond.i, label %sw.bb.i304, label %pickTileSeparateCase.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb79 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb.i304:</td></tr>
+<tr><td align="left">  %75 = load i16, i16* %bitspersample, align 4, !tbaa !13</td></tr>
+<tr><td align="left">  switch i16 %75, label %pickTileSeparateCase.exit [
+    i16 8, label %sw.bb2.i307
+    i16 16, label %sw.bb15.i316
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb80 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb2.i307:</td></tr>
+<tr><td align="left">  %76 = load i8*, i8** %Map, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %tobool3.not.i306 = icmp eq i8* %76, null</td></tr>
+<tr><td align="left">  br i1 %tobool3.not.i306, label %if.then4.i313, label %pickTileSeparateCase.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb81 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then4.i313:</td></tr>
+<tr><td align="left">  %77 = load i32, i32* %alpha, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %switch.selectcmp.i309 = icmp eq i32 %77, 2</td></tr>
+<tr><td align="left">  %switch.select.i310 = select i1 %switch.selectcmp.i309, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* @putRGBUAseparate8bittile, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* @putRGBseparate8bittile</td></tr>
+<tr><td align="left">  %switch.selectcmp1.i311 = icmp eq i32 %77, 1</td></tr>
+<tr><td align="left">  %switch.select2.i312 = select i1 %switch.selectcmp1.i311, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* @putRGBAAseparate8bittile, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* %switch.select.i310</td></tr>
+<tr><td align="left">  br label %pickTileSeparateCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb82 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb15.i316:</td></tr>
+<tr><td align="left">  %78 = load i8*, i8** %Map, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %tobool17.not.i315 = icmp eq i8* %78, null</td></tr>
+<tr><td align="left">  br i1 %tobool17.not.i315, label %if.then18.i322, label %pickTileSeparateCase.exit</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb83 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then18.i322:</td></tr>
+<tr><td align="left">  %79 = load i32, i32* %alpha, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  %switch.selectcmp3.i318 = icmp eq i32 %79, 2</td></tr>
+<tr><td align="left">  %switch.select4.i319 = select i1 %switch.selectcmp3.i318, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* @putRGBUAseparate16bittile, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* @putRGBseparate16bittile</td></tr>
+<tr><td align="left">  %switch.selectcmp5.i320 = icmp eq i32 %79, 1</td></tr>
+<tr><td align="left">  %switch.select6.i321 = select i1 %switch.selectcmp5.i320, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* @putRGBAAseparate16bittile, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* %switch.select4.i319</td></tr>
+<tr><td align="left">  br label %pickTileSeparateCase.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb84 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">pickTileSeparateCase.exit:</td></tr>
+<tr><td align="left">  %put.0.i323 = phi void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* [ null, %sw.bb.i304 ], [ @putRGBseparate16bittile, %sw.bb15.i316 ], [ null, %if.then.i302 ], [ null, %if.else188 ], [ @putRGBseparate8bitMaptile, %sw.bb2.i307 ], [ %switch.select2.i312, %if.then4.i313 ], [ %switch.select6.i321, %if.then18.i322 ]</td></tr>
+<tr><td align="left">  %put33.i = getelementptr inbounds %struct._TIFFRGBAImage, %struct._TIFFRGBAImage* %img, i64 0, i32 14</td></tr>
+<tr><td align="left">  %separate.i = bitcast %union.anon* %put33.i to void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)**</td></tr>
+<tr><td align="left">  store void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)* %put.0.i323, void (%struct._TIFFRGBAImage*, i32*, i32, i32, i32, i32, i32, i32, i8*, i8*, i8*, i8*)** %separate.i, align 8, !tbaa !26</td></tr>
+<tr><td align="left">  br label %cleanup195</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb85 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup195:</td></tr>
+<tr><td align="left">  %retval.1 = phi i32 [ 0, %sw.default ], [ 0, %sw.default169 ], [ 0, %if.then156 ], [ 0, %if.then162 ], [ 0, %if.then142 ], [ 0, %if.then117 ], [ 0, %if.then99 ], [ 0, %if.then88 ], [ 0, %if.then68 ], [ 0, %if.then41 ], [ 0, %sw.default32 ], [ 0, %if.then133 ], [ 0, %if.then125 ], [ 1, %pickTileSeparateCase.exit ], [ 1, %pickTileContigCase.exit ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %6) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %5) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %4) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %3) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %2) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %1) #9</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %0) #9</td></tr>
+<tr><td align="left">  ret i32 %retval.1</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb0:f -> f_bb2:f
+f_bb0:f -> f_bb2:f
+f_bb0:f -> f_bb2:f
+f_bb0:f -> f_bb2:f
+f_bb0:f -> f_bb2:f
+f_bb1:f -> f_bb85:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb5:f
+f_bb3:fT -> f_bb4:f
+f_bb3:fF -> f_bb5:f
+f_bb4:f -> f_bb5:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> f_bb12:f
+f_bb6:f -> f_bb11:f
+f_bb6:f -> f_bb7:f
+f_bb6:f -> f_bb10:f
+f_bb7:f -> f_bb9:f
+f_bb7:f -> f_bb8:f
+f_bb7:f -> f_bb8:f
+f_bb7:f -> f_bb8:f
+f_bb7:f -> f_bb8:f
+f_bb8:f -> f_bb17:f
+f_bb9:f -> f_bb17:f
+f_bb10:f -> f_bb40:f
+f_bb11:f -> f_bb85:f
+f_bb12:f -> f_bb39:f
+f_bb12:f -> f_bb13:f
+f_bb12:f -> f_bb17:f
+f_bb12:f -> f_bb17:f
+f_bb12:f -> f_bb20:f
+f_bb12:f -> f_bb24:f
+f_bb12:f -> f_bb26:f
+f_bb12:f -> f_bb31:f
+f_bb12:f -> f_bb34:f
+f_bb13:fT -> m_bb0:f1
+f_bb13:fF -> f_bb14:f
+m_bb0:f1 -> f_bb85:f
+f_bb14:fT -> m_bb0:f2
+f_bb14:fF -> f_bb15:f
+f_bb15:fT -> m_bb0:f2
+f_bb15:fF -> f_bb16:f
+m_bb0:f2 -> f_bb85:f
+f_bb16:f -> f_bb17:f
+f_bb17:fT -> f_bb18:f
+f_bb17:fF -> f_bb40:f
+f_bb18:fT -> f_bb40:f
+f_bb18:fF -> f_bb19:f
+f_bb19:f -> f_bb85:f
+f_bb20:fT -> f_bb22:f
+f_bb20:fF -> f_bb21:f
+f_bb21:f -> f_bb85:f
+f_bb22:fT -> f_bb23:f
+f_bb22:fF -> f_bb40:f
+f_bb23:f -> f_bb40:f
+f_bb24:fT -> f_bb25:f
+f_bb24:fF -> f_bb40:f
+f_bb25:f -> f_bb85:f
+f_bb26:fT -> f_bb28:f
+f_bb26:fF -> f_bb27:f
+f_bb27:f -> f_bb85:f
+f_bb28:fT -> f_bb30:f
+f_bb28:fF -> f_bb29:f
+f_bb29:f -> f_bb85:f
+f_bb30:f -> f_bb40:f
+f_bb31:fT -> f_bb33:f
+f_bb31:fF -> f_bb32:f
+f_bb32:f -> f_bb85:f
+f_bb33:f -> f_bb40:f
+f_bb34:fT -> f_bb36:f
+f_bb34:fF -> f_bb35:f
+f_bb35:f -> f_bb85:f
+f_bb36:fT -> f_bb38:f
+f_bb36:fF -> f_bb37:f
+f_bb37:f -> f_bb85:f
+f_bb38:f -> f_bb40:f
+f_bb39:f -> f_bb85:f
+f_bb40:fT -> f_bb41:f
+f_bb40:fF -> f_bb77:f
+f_bb41:fT -> f_bb76:f
+f_bb41:fF -> f_bb42:f
+f_bb42:f -> f_bb76:f
+f_bb42:f -> f_bb43:f
+f_bb42:f -> f_bb48:f
+f_bb42:f -> f_bb50:f
+f_bb42:f -> f_bb55:f
+f_bb42:f -> f_bb55:f
+f_bb42:f -> f_bb60:f
+f_bb43:f -> f_bb76:f
+f_bb43:f -> f_bb44:f
+f_bb43:f -> f_bb46:f
+f_bb44:fT -> f_bb45:f
+f_bb44:fF -> f_bb76:f
+f_bb45:f -> f_bb76:f
+f_bb46:fT -> f_bb47:f
+f_bb46:fF -> f_bb76:f
+f_bb47:f -> f_bb76:f
+f_bb48:fT -> f_bb49:f
+f_bb48:fF -> f_bb76:f
+f_bb49:f -> f_bb76:f
+f_bb50:f -> f_bb76:f
+f_bb50:f -> f_bb51:f
+f_bb50:f -> f_bb52:f
+f_bb50:f -> f_bb53:f
+f_bb50:f -> f_bb54:f
+f_bb51:f -> f_bb76:f
+f_bb52:f -> f_bb76:f
+f_bb53:f -> f_bb76:f
+f_bb54:f -> f_bb76:f
+f_bb55:f -> f_bb76:f
+f_bb55:f -> f_bb56:f
+f_bb55:f -> f_bb57:f
+f_bb55:f -> f_bb58:f
+f_bb55:f -> f_bb59:f
+f_bb56:f -> f_bb76:f
+f_bb57:f -> f_bb76:f
+f_bb58:f -> f_bb76:f
+f_bb59:f -> f_bb76:f
+f_bb60:fT -> f_bb61:f
+f_bb60:fF -> f_bb76:f
+f_bb61:fT -> f_bb62:f
+f_bb61:fF -> f_bb65:f
+f_bb62:fT -> f_bb63:f
+f_bb62:fF -> f_bb64:f
+f_bb63:f -> f_bb75:f
+f_bb64:f -> f_bb68:f
+f_bb65:fT -> f_bb67:f
+f_bb65:fF -> f_bb66:f
+f_bb66:f -> f_bb67:f
+f_bb67:f -> f_bb68:f
+f_bb68:f -> f_bb74:f
+f_bb68:f -> f_bb75:f
+f_bb68:f -> f_bb69:f
+f_bb68:f -> f_bb70:f
+f_bb68:f -> f_bb71:f
+f_bb68:f -> f_bb72:f
+f_bb68:f -> f_bb73:f
+f_bb69:f -> f_bb75:f
+f_bb70:f -> f_bb75:f
+f_bb71:f -> f_bb75:f
+f_bb72:f -> f_bb75:f
+f_bb73:f -> f_bb75:f
+f_bb74:f -> f_bb75:f
+f_bb75:f -> f_bb76:f
+f_bb76:f -> f_bb85:f
+f_bb77:fT -> f_bb84:f
+f_bb77:fF -> f_bb78:f
+f_bb78:fT -> f_bb79:f
+f_bb78:fF -> f_bb84:f
+f_bb79:f -> f_bb84:f
+f_bb79:f -> f_bb80:f
+f_bb79:f -> f_bb82:f
+f_bb80:fT -> f_bb81:f
+f_bb80:fF -> f_bb84:f
+f_bb81:f -> f_bb84:f
+f_bb82:fT -> f_bb83:f
+f_bb82:fF -> f_bb84:f
+f_bb83:f -> f_bb84:f
+f_bb84:f -> f_bb85:f
+}
+

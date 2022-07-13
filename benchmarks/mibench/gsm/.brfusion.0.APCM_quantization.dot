@@ -1,0 +1,237 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">cond.false107:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([25 x i8], [25 x i8]* @.str.6, i64 0, i64 0), i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.1, i64 0, i64 0), i32 331, i8* getelementptr inbounds ([63 x i8], [63 x i8]* @__PRETTY_FUNCTION__.APCM_quantization, i64 0, i64 0)) #6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">cond.false33:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str, i64 0, i64 0), i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.1, i64 0, i64 0), i32 293, i8* getelementptr inbounds ([63 x i8], [63 x i8]* @__PRETTY_FUNCTION__.APCM_quantization, i64 0, i64 0)) #6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %exp = alloca i16, align 2</td></tr>
+<tr><td align="left">  %mant = alloca i16, align 2</td></tr>
+<tr><td align="left">  %0 = bitcast i16* %exp to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 2, i8* nonnull %0) #5</td></tr>
+<tr><td align="left">  %1 = bitcast i16* %mant to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 2, i8* nonnull %1) #5</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ %indvars.iv.next, %for.body ], [ 0, %entry ]</td></tr>
+<tr><td align="left">  %xmax.0 = phi i16 [ %spec.select, %for.body ], [ 0, %entry ]</td></tr>
+<tr><td align="left">  %exitcond.not = icmp eq i64 %indvars.iv, 13</td></tr>
+<tr><td align="left">  br i1 %exitcond.not, label %for.end, label %for.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds i16, i16* %xM, i64 %indvars.iv</td></tr>
+<tr><td align="left">  %2 = load i16, i16* %arrayidx, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp1 = icmp slt i16 %2, 0</td></tr>
+<tr><td align="left">  %cmp4 = icmp eq i16 %2, -32768</td></tr>
+<tr><td align="left">  %sub = sub i16 0, %2</td></tr>
+<tr><td align="left">  %cond = select i1 %cmp4, i16 32767, i16 %sub</td></tr>
+<tr><td align="left">  %cond11 = select i1 %cmp1, i16 %cond, i16 %2</td></tr>
+<tr><td align="left">  %cmp15 = icmp sgt i16 %cond11, %xmax.0</td></tr>
+<tr><td align="left">  %spec.select = select i1 %cmp15, i16 %cond11, i16 %xmax.0</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !7</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  %conv17 = sext i16 %xmax.0 to i32</td></tr>
+<tr><td align="left">  %shr = ashr i16 %xmax.0, 9</td></tr>
+<tr><td align="left">  br label %for.cond19</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond19:</td></tr>
+<tr><td align="left">  %inc38176 = phi i16 [ 0, %for.end ], [ %spec.select178, %cond.end34 ]</td></tr>
+<tr><td align="left">  %temp.0 = phi i16 [ %shr, %for.end ], [ %3, %cond.end34 ]</td></tr>
+<tr><td align="left">  %itest.0 = phi i32 [ 0, %for.end ], [ %or, %cond.end34 ]</td></tr>
+<tr><td align="left">  %i.1 = phi i32 [ 0, %for.end ], [ %inc41, %cond.end34 ]</td></tr>
+<tr><td align="left">  %exitcond180.not = icmp eq i32 %i.1, 6</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %exitcond180.not, label %cond.end51, label %for.body22</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body22:</td></tr>
+<tr><td align="left">  %cmp24 = icmp slt i16 %temp.0, 1</td></tr>
+<tr><td align="left">  %conv25 = zext i1 %cmp24 to i32</td></tr>
+<tr><td align="left">  %or = or i32 %itest.0, %conv25</td></tr>
+<tr><td align="left">  %cmp30 = icmp ult i16 %inc38176, 6</td></tr>
+<tr><td align="left">  br i1 %cmp30, label %cond.end34, label %cond.false33</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end34:</td></tr>
+<tr><td align="left">  %3 = ashr i16 %temp.0, 1</td></tr>
+<tr><td align="left">  %cmp35 = icmp eq i32 %or, 0</td></tr>
+<tr><td align="left">  %inc38 = zext i1 %cmp35 to i16</td></tr>
+<tr><td align="left">  %spec.select178 = add nuw nsw i16 %inc38176, %inc38</td></tr>
+<tr><td align="left">  %inc41 = add nuw nsw i32 %i.1, 1</td></tr>
+<tr><td align="left">  br label %for.cond19, !llvm.loop !9</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end51:</td></tr>
+<tr><td align="left">  store i16 %inc38176, i16* %exp, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %add = add nuw nsw i16 %inc38176, 5</td></tr>
+<tr><td align="left">  %4 = zext i16 %add to i32</td></tr>
+<tr><td align="left">  %shr66 = ashr i32 %conv17, %4</td></tr>
+<tr><td align="left">  %conv67 = trunc i32 %shr66 to i16</td></tr>
+<tr><td align="left">  %shl = shl nuw nsw i16 %inc38176, 3</td></tr>
+<tr><td align="left">  %call = tail call signext i16 @gsm_add(i16 signext %conv67, i16 signext %shl) #7</td></tr>
+<tr><td align="left">  call fastcc void @APCM_quantization_xmaxc_to_exp_mant(i16 signext %call, i16* nonnull %exp, i16* nonnull %mant) #8</td></tr>
+<tr><td align="left">  %5 = load i16, i16* %exp, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %.off = add i16 %5, 4096</td></tr>
+<tr><td align="left">  %6 = icmp ult i16 %.off, 8193</td></tr>
+<tr><td align="left">  br i1 %6, label %cond.end79, label %cond.false78</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false78:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([28 x i8], [28 x i8]* @.str.4, i64 0, i64 0), i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.1, i64 0, i64 0), i32 323, i8* getelementptr inbounds ([63 x i8], [63 x i8]* @__PRETTY_FUNCTION__.APCM_quantization, i64 0, i64 0)) #6</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end79:</td></tr>
+<tr><td align="left">  %7 = load i16, i16* %mant, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %8 = icmp ult i16 %7, 8</td></tr>
+<tr><td align="left">  br i1 %8, label %cond.end89, label %cond.false88</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false88:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.5, i64 0, i64 0), i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.1, i64 0, i64 0), i32 324, i8* getelementptr inbounds ([63 x i8], [63 x i8]* @__PRETTY_FUNCTION__.APCM_quantization, i64 0, i64 0)) #6</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end89:</td></tr>
+<tr><td align="left">  %sub91 = sub nsw i16 6, %5</td></tr>
+<tr><td align="left">  %idxprom93173 = zext i16 %7 to i64</td></tr>
+<tr><td align="left">  %arrayidx94 = getelementptr inbounds [8 x i16], [8 x i16]* @gsm_NRFAC, i64 0, i64 %idxprom93173</td></tr>
+<tr><td align="left">  %9 = load i16, i16* %arrayidx94, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %.off174 = add nsw i16 %5, 9</td></tr>
+<tr><td align="left">  %10 = icmp ult i16 %.off174, 16</td></tr>
+<tr><td align="left">  %conv99165 = zext i16 %sub91 to i32</td></tr>
+<tr><td align="left">  %conv116 = sext i16 %9 to i64</td></tr>
+<tr><td align="left">  br label %for.cond95</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond95:</td></tr>
+<tr><td align="left">  %indvars.iv181 = phi i64 [ %indvars.iv.next182, %cond.end108 ], [ 0, %cond.end89 ]</td></tr>
+<tr><td align="left">  %exitcond183.not = icmp eq i64 %indvars.iv181, 13</td></tr>
+<tr><td align="left">  br i1 %exitcond183.not, label %for.end129, label %for.body98</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body98:</td></tr>
+<tr><td align="left">  br i1 %10, label %cond.end108, label %cond.false107</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end108:</td></tr>
+<tr><td align="left">  %arrayidx110 = getelementptr inbounds i16, i16* %xM, i64 %indvars.iv181</td></tr>
+<tr><td align="left">  %11 = load i16, i16* %arrayidx110, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %conv111166 = zext i16 %11 to i32</td></tr>
+<tr><td align="left">  %shl113 = shl nuw nsw i32 %conv111166, %conv99165</td></tr>
+<tr><td align="left">  %conv114 = zext i32 %shl113 to i64</td></tr>
+<tr><td align="left">  %sext = shl i64 %conv114, 48</td></tr>
+<tr><td align="left">  %conv115 = ashr exact i64 %sext, 48</td></tr>
+<tr><td align="left">  %mul = mul nsw i64 %conv115, %conv116</td></tr>
+<tr><td align="left">  %mul.tr = trunc i64 %mul to i32</td></tr>
+<tr><td align="left">  %12 = shl i32 %mul.tr, 1</td></tr>
+<tr><td align="left">  %shr120 = ashr i32 %12, 28</td></tr>
+<tr><td align="left">  %13 = trunc i32 %shr120 to i16</td></tr>
+<tr><td align="left">  %conv124 = add nsw i16 %13, 4</td></tr>
+<tr><td align="left">  %arrayidx126 = getelementptr inbounds i16, i16* %xMc, i64 %indvars.iv181</td></tr>
+<tr><td align="left">  store i16 %conv124, i16* %arrayidx126, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %indvars.iv.next182 = add nuw nsw i64 %indvars.iv181, 1</td></tr>
+<tr><td align="left">  br label %for.cond95, !llvm.loop !10</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end129:</td></tr>
+<tr><td align="left">  store i16 %7, i16* %mant_out, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  store i16 %5, i16* %exp_out, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  store i16 %call, i16* %xmaxc_out, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %1) #5</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2, i8* nonnull %0) #5</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb1:fT -> f_bb3:f
+f_bb1:fF -> f_bb2:f
+f_bb2:f -> f_bb1:f
+f_bb3:f -> f_bb4:f
+f_bb4:fT -> f_bb7:f
+f_bb4:fF -> f_bb5:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> m_bb0:f2
+f_bb6:f -> f_bb4:f
+f_bb7:fT -> f_bb9:f
+f_bb7:fF -> f_bb8:f
+f_bb9:fT -> f_bb11:f
+f_bb9:fF -> f_bb10:f
+f_bb11:f -> f_bb12:f
+f_bb12:fT -> f_bb15:f
+f_bb12:fF -> f_bb13:f
+f_bb13:fT -> f_bb14:f
+f_bb13:fF -> m_bb0:f1
+f_bb14:f -> f_bb12:f
+}
+

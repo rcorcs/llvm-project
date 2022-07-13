@@ -191,7 +191,7 @@ cl::opt<bool>
                  cl::desc("Enable HyFM with the Needleman-Wunsch alignment"));
 
 static cl::opt<bool> EnableSALSSACoalescing(
-    "func-merging-coalescing", cl::init(true), cl::Hidden,
+    "func-merging-coalescing", cl::init(false), cl::Hidden,
     cl::desc("Enable phi-node coalescing during SSA reconstruction"));
 
 static cl::opt<bool> ReuseMergedFunctions(
@@ -4709,33 +4709,22 @@ bool FunctionMerger::SALSSACodeGen::generate(
 
           BasicBlock *NewPredBB = *It;
 
-          Value *V = nullptr;
 
           if (BlocksReMap.find(NewPredBB) != BlocksReMap.end()) {
-            int Index = PHI->getBasicBlockIndex(BlocksReMap[NewPredBB]);
-            if (Index >= 0) {
-	      //errs() << "Found: " << BlocksReMap[NewPredBB]->getName().str() << " / " << NewPredBB->getName().str() << " ";
-              V = MapValue(PHI->getIncomingValue(Index), VMap);
-              FoundIndices.insert(Index);
-	      //if (V) V->dump();
-	      //else errs() << " nullptr\n";
-            } /*else {
-	      errs() << "Did NOT find block index: " << NewPredBB->getName().str() << " / ";
-	      if (BlocksReMap[NewPredBB]) {
-		      errs() << BlocksReMap[NewPredBB]->getName().str() << "\n";
-	      } else errs() << " nullptr\n";
-	    }*/
-          } /*else {
-	    errs() << "Did NOT find predecessor block: " << NewPredBB->getName().str() << "\n";
-	  }*/
-
-          if (V == nullptr)
-            V = UndefValue::get(NewPHI->getType());
-
-          // IRBuilder<> Builder(NewPredBB->getTerminator());
-          // Value *CastedV = createCastIfNeeded(V, NewPHI->getType(), Builder,
-          // IntPtrTy);
-          NewPHI->addIncoming(V, NewPredBB);
+	    for (unsigned Index = 0; Index < PHI->getNumIncomingValues(); Index++) {
+	      if (FoundIndices.count(Index)) continue;
+	      if (PHI->getIncomingBlock(Index)==BlocksReMap[NewPredBB]) {
+                Value *V = MapValue(PHI->getIncomingValue(Index), VMap);
+                FoundIndices.insert(Index);
+                if (V == nullptr)
+                  V = UndefValue::get(NewPHI->getType());
+                NewPHI->addIncoming(V, NewPredBB);
+	      }
+	    }
+          } else {
+            Value *V = UndefValue::get(NewPHI->getType());
+            NewPHI->addIncoming(V, NewPredBB);
+	  } 
         }
 
 	//errs() << "After:\n";
@@ -4764,6 +4753,8 @@ bool FunctionMerger::SALSSACodeGen::generate(
       //if (Debug)
       errs() << "ERROR: PHI assignment\n";
         // MergedFunc->eraseFromParent();
+	BB1->dump();
+	MergedFunc->dump();
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGen.stopTimer();
 #endif
@@ -4774,6 +4765,8 @@ bool FunctionMerger::SALSSACodeGen::generate(
     if (!AssignPHIOperandsInBlock(BB2, BlocksF2)) {
       //if (Debug)
       errs() << "ERROR: PHI assignment\n";
+	BB2->dump();
+	MergedFunc->dump();
         // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGen.stopTimer();
@@ -4921,11 +4914,15 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
     errs() << "Collecting offending instructions\n";
   }
 
+  //errs() << "Computing DT\n";
   DominatorTree DT(*MergedFunc);
 
+  //errs() << "iterating over all instructions in function\n";
   for (Instruction &I : instructions(MergedFunc)) {
     if (auto *PHI = dyn_cast<PHINode>(&I)) {
+      //errs() << "processing phi node\n";
       for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
+	//errs() << "incoming value " << i << "\n";
         BasicBlock *BB = PHI->getIncomingBlock(i);
         if (BB == nullptr)
           errs() << "Null incoming block\n";
@@ -4951,7 +4948,9 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
         }
       }
     } else {
+      //errs() << "processing other instructions\n";
       for (unsigned i = 0; i < I.getNumOperands(); i++) {
+	//errs() << "operand " << i << "\n";
         if (I.getOperand(i) == nullptr) {
           // MergedFunc->dump();
           // I.getParent()->dump();
@@ -5072,29 +5071,42 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
       if (Visited.find(I) != Visited.end())
         continue;
 
+      //errs() << "Processing: "; I->dump();
+
       std::set<Instruction *> InstSet;
       InstSet.insert(I);
 
       // Create a coalescing group in InstSet
-      if (EnableSALSSACoalescing)
+      if (EnableSALSSACoalescing) {
+	      errs() << "optimizing coalescing\n";
         OptimizeCoalescing(I, InstSet, CoalescingCandidates, Visited);
+	      errs() << "done coalescing\n";
+      }
 
       for (Instruction *OtherI : InstSet)
         Visited.insert(OtherI);
 
+      //errs() << "Computing memfyInst\n";
       AllocaInst *Addr = MemfyInst(InstSet);
+      //errs() << "Addr computed: ";Addr->dump();
       if (Addr)
         Allocas.push_back(Addr);
+
+      //errs() << "next\n";
     }
 
-    //errs() << "Mem2Reg\n";
     //MergedFunc->dump();
 
+    //errs() << "Building DT\n";
     DominatorTree DT(*MergedFunc);
+
+
+    //errs() << "Mem2Reg\n";
     PromoteMemToReg(Allocas, DT, nullptr);
 
     //MergedFunc->dump();
 
+    //errs() << "verifying\n";
     if (verifyFunction(*MergedFunc)) {
       //if (Verbose)
       errs() << "ERROR: Produced Broken Function!\n";

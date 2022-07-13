@@ -1,0 +1,132 @@
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/lookup.c -o src/lookup.o -m32  -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+src/lookup.c:103:2: warning: add explicit braces to avoid dangling else [-Wdangling-else]
+        else
+        ^
+src/lookup.c:101:2: warning: add explicit braces to avoid dangling else [-Wdangling-else]
+        else if (hashsize == 0)
+        ^
+Func: linit
+Mismatch:
+  %mul = mul i32 %18, 12
+  %19 = load i32, i32* getelementptr inbounds (%struct.hashheader, %struct.hashheader* @hashheader, i32 0, i32 6), align 4, !tbaa !16
+Match: ; Function Attrs: nofree nounwind optsize
+declare dso_local noalias noundef i8* @malloc(i32 %0) local_unnamed_addr #3
+
+Match:   %call88 = tail call noalias i8* @malloc(i32 %mul) #8
+Setting Operands
+  %130 = load i32, i32* %129, align 4
+; Function Attrs: nofree nounwind optsize
+declare dso_local noalias noundef i8* @malloc(i32 %0) local_unnamed_addr #3
+
+Garbage
+Extraction
+Extracting:   %131 = tail call noalias i8* @malloc(i32 %130) #8
+Done
+Gains: 4 - 15 = -11
+Unprofitable: deleting generated code
+Reversed
+Match: @chartypes = external dso_local local_unnamed_addr global %struct.strchartype*, align 4
+Match:   %116 = load %struct.strchartype*, %struct.strchartype** @chartypes, align 4, !tbaa !7
+Setting Operands
+@chartypes = external dso_local local_unnamed_addr global %struct.strchartype*, align 4
+Garbage
+Extraction
+Extracting:   %126 = load %struct.strchartype*, %struct.strchartype** @chartypes, align 4, !tbaa !7
+Done
+Mismatch:
+  %i.6549 = phi i32 [ %inc418, %while.end415.for.body388_crit_edge ], [ 0, %for.body388.preheader ]
+  %i.6549 = phi i32 [ %inc418, %while.end415.for.body388_crit_edge ], [ 0, %for.body388.preheader ]
+Mismatch:
+i32 0
+i32 1
+Match:   %name392 = getelementptr inbounds %struct.strchartype, %struct.strchartype* %117, i32 %i.6549, i32 0
+Setting Operands
+  %127 = load %struct.strchartype*, %struct.strchartype** @chartypes, align 4, !tbaa !7
+  %i.6549 = phi i32 [ %inc418, %while.end415.for.body388_crit_edge ], [ 0, %for.body388.preheader ]
+  %129 = trunc i64 %126 to i32
+Garbage
+Extraction
+Done
+Match:   %118 = load i8*, i8** %name392, align 4, !tbaa !40
+Setting Operands
+  %130 = getelementptr inbounds %struct.strchartype, %struct.strchartype* %127, i32 %i.6549, i32 %129
+Garbage
+Extraction
+Done
+Match: ; Function Attrs: argmemonly nofree nounwind optsize readonly
+declare dso_local i32 @strlen(i8* nocapture %0) local_unnamed_addr #6
+
+Match:   %call393 = tail call i32 @strlen(i8* nonnull dereferenceable(1) %118) #11
+Setting Operands
+  %131 = load i8*, i8** %130, align 4, !tbaa !40
+; Function Attrs: argmemonly nofree nounwind optsize readonly
+declare dso_local i32 @strlen(i8* nocapture %0) local_unnamed_addr #6
+
+Garbage
+Extraction
+Extracting:   %132 = tail call i32 @strlen(i8* nonnull dereferenceable(1) %131) #11
+Done
+clang: /home/rodrigo/llvm/loop-rerolling/llvm/include/llvm/Support/Casting.h:269: typename llvm::cast_retty<X, Y*>::ret_type llvm::cast(Y*) [with X = llvm::Constant; Y = const llvm::Value; typename llvm::cast_retty<X, Y*>::ret_type = const llvm::Constant*]: Assertion `isa<X>(Val) && "cast<Ty>() argument of incompatible type!"' failed.
+PLEASE submit a bug report to https://bugs.llvm.org/ and include the crash backtrace, preprocessed source, and associated run script.
+Stack dump:
+0.	Program arguments: /home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/lookup.c -o src/lookup.o -m32 -fuse-ld= 
+1.	<eof> parser at end of file
+2.	Per-module optimization passes
+3.	Running pass 'CallGraph Pass Manager' on module 'src/lookup.c'.
+4.	Running pass 'Loop rolling over straight-line code' on function '@linit'
+Stack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN4llvm3sys15PrintStackTraceERNS_11raw_ostreamEi+0x2c)[0x56142690d4ac]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN4llvm3sys17RunSignalHandlersEv+0x34)[0x56142690b184]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN4llvm3sys15CleanupOnSignalEm+0xb5)[0x56142690b415]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(+0x30f5e28)[0x561426874e28]
+/lib/x86_64-linux-gnu/libpthread.so.0(+0x128a0)[0x7f50063608a0]
+/lib/x86_64-linux-gnu/libc.so.6(gsignal+0xc7)[0x7f5005011f47]
+/lib/x86_64-linux-gnu/libc.so.6(abort+0x141)[0x7f50050138b1]
+/lib/x86_64-linux-gnu/libc.so.6(+0x3042a)[0x7f500500342a]
+/lib/x86_64-linux-gnu/libc.so.6(+0x304a2)[0x7f50050034a2]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZNK4llvm10StructType14getTypeAtIndexEPKNS_5ValueE+0x74)[0x561426211044]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(+0x244f520)[0x561425bce520]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(+0x24537ac)[0x561425bd27ac]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZNK4llvm19TargetTransformInfo11getUserCostEPKNS_4UserENS_8ArrayRefIPKNS_5ValueEEENS0_14TargetCostKindE+0x26)[0x561425bd2d46]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN10LoopRoller14codeGenerationER4TreeRN4llvm10BasicBlockE+0xc10)[0x56142670af40]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN10LoopRoller3runEv+0x60b)[0x56142670d0cb]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN4llvm11LoopRolling7runImplERNS_8FunctionE+0xef)[0x56142670d42f]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN4llvm13FPPassManager13runOnFunctionERNS_8FunctionE+0x3c8)[0x5614261ce1e8]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(+0x2292b84)[0x561425a11b84]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN4llvm6legacy15PassManagerImpl3runERNS_6ModuleE+0x376)[0x5614261cda66]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN5clang17EmitBackendOutputERNS_17DiagnosticsEngineERKNS_19HeaderSearchOptionsERKNS_14CodeGenOptionsERKNS_13TargetOptionsERKNS_11LangOptionsERKN4llvm10DataLayoutEPNSE_6ModuleENS_13BackendActionESt10unique_ptrINSE_17raw_pwrite_streamESt14default_deleteISM_EE+0x762)[0x561426bac152]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(+0x4019dd6)[0x561427798dd6]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN5clang8ParseASTERNS_4SemaEbb+0x439)[0x5614283bdd99]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN5clang13CodeGenAction13ExecuteActionEv+0xa0)[0x5614277979d0]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN5clang14FrontendAction7ExecuteEv+0xd9)[0x5614271529d9]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN5clang16CompilerInstance13ExecuteActionERNS_14FrontendActionE+0x22a)[0x56142710cfea]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN5clang25ExecuteCompilerInvocationEPNS_16CompilerInstanceE+0xa16)[0x56142721c7f6]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_Z8cc1_mainN4llvm8ArrayRefIPKcEES2_Pv+0x12cc)[0x5614247c909c]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(+0x1044e69)[0x5614247c3e69]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(+0x3861505)[0x561426fe0505]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN4llvm20CrashRecoveryContext9RunSafelyENS_12function_refIFvvEEE+0x23)[0x561426874f03]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(+0x386207f)[0x561426fe107f]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZNK5clang6driver11Compilation14ExecuteCommandERKNS0_7CommandERPS3_+0x95)[0x561426fbb7e5]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZNK5clang6driver11Compilation11ExecuteJobsERKNS0_7JobListERN4llvm15SmallVectorImplISt4pairIiPKNS0_7CommandEEEE+0x29f)[0x561426fbc28f]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_ZN5clang6driver6Driver18ExecuteCompilationERNS0_11CompilationERN4llvm15SmallVectorImplISt4pairIiPKNS0_7CommandEEEE+0x99)[0x561426fc4789]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(main+0x1461)[0x561424709851]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xe7)[0x7f5004ff4b97]
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang(_start+0x2a)[0x5614247c39ca]
+clang-12: error: clang frontend command failed with exit code 134 (use -v to see invocation)
+clang version 12.0.0 (https://github.com/rcorcs/llvm-project.git 207ed5a2ab499b9c9678cbd2987e1c7cca2a1a13)
+Target: i386-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /home/rodrigo/llvm/loop-rerolling/build/release/bin
+clang-12: note: diagnostic msg: 
+********************
+
+PLEASE ATTACH THE FOLLOWING FILES TO THE BUG REPORT:
+Preprocessed source(s) and associated run script(s) are located at:
+clang-12: note: diagnostic msg: /tmp/lookup-028cf0.c
+clang-12: note: diagnostic msg: /tmp/lookup-028cf0.sh
+clang-12: note: diagnostic msg: 
+
+********************
+../Makefile.default:15: recipe for target 'src/lookup.o' failed
+make: *** [src/lookup.o] Error 134

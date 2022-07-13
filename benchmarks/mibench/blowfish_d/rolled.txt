@@ -1,0 +1,24 @@
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bf_cbc.c -o src/bf_cbc.o   -mllvm -reroll-loops=3
+Gains: 15 - 27 = -12; Width: 8; Unprofitable;
+Gains: 15 - 41 = -26; Width: 8; Unprofitable;
+Gains: 8 - 39 = -31; Width: 8; Unprofitable;
+Gains: 15 - 27 = -12; Width: 8; Unprofitable;
+Gains: 8 - 43 = -35; Width: 8; Unprofitable;
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bf.c -o src/bf.o   -mllvm -reroll-loops=3
+Gains: 18 - 34 = -16; Width: 6; Unprofitable;
+Gains: 4 - 10 = -6; Width: 2; Unprofitable;
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bf_ecb.c -o src/bf_ecb.o   -mllvm -reroll-loops=3
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bf_skey.c -o src/bf_skey.o   -mllvm -reroll-loops=3
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bf_enc.c -o src/bf_enc.o   -mllvm -reroll-loops=3
+Gains: 4 - 20 = -16; Width: 2; Unprofitable;
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bf_ofb64.c -o src/bf_ofb64.o   -mllvm -reroll-loops=3
+Gains: 6 - 13 = -7; Width: 2; Unprofitable;
+Gains: 8 - 43 = -35; Width: 8; Unprofitable;
+Gains: 6 - 13 = -7; Width: 2; Unprofitable;
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/bf_cfb64.c -o src/bf_cfb64.o   -mllvm -reroll-loops=3
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang++ -std=gnu++98 -B /usr/bin src/bf_cbc.o src/bf.o src/bf_ecb.o src/bf_skey.o src/bf_enc.o src/bf_ofb64.o src/bf_cfb64.o -Oz  -mllvm -reroll-loops=3 -o rolled -lm -fno-align-functions -s
+clang-12: warning: argument unused during compilation: '-mllvm -reroll-loops=3' [-Wunused-command-line-argument]
+#du -bc src/bf_cbc.o src/bf.o src/bf_ecb.o src/bf_skey.o src/bf_enc.o src/bf_ofb64.o src/bf_cfb64.o | awk 'END { print  }' > rolled.osize
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/llvm-size -B -d rolled
+   text	   data	    bss	    dec	    hex	filename
+  15938	    672	     16	  16626	   40f2	rolled

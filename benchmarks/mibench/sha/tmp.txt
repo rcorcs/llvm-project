@@ -1,0 +1,265 @@
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/sha_driver.c -o src/sha_driver.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+Done Loop Roller!
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/sha.c -o src/sha.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %arrayidx = getelementptr inbounds %struct.SHA_INFO, %struct.SHA_INFO* %sha_info, i64 0, i32 0, i64 0
+Here ..
+Here ..
+Here ..
+Here ..
+Here ..
+Here ..
+I:   %count_lo = getelementptr inbounds %struct.SHA_INFO, %struct.SHA_INFO* %sha_info, i64 0, i32 1
+Last:   %count_lo = getelementptr inbounds %struct.SHA_INFO, %struct.SHA_INFO* %sha_info, i64 0, i32 1
+Schedulable: 1
+code gen 0
+Gains: 10 - 27 = -17
+Unprofitable: deleting generated code
+Done!
+code gen 1
+destroying tree
+calls
+Done Loop Roller!
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %4 = load i8, i8* %arrayidx8, align 1, !tbaa !2
+Here ..
+Skipping:   store i8 %3, i8* %arrayidx4, align 1, !tbaa !2
+destroying tree
+calls
+stores
+calls
+Done Loop Roller!
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %add114 = add i64 %add105.lcssa, %9
+Here ..
+Here ..
+Here ..
+Here ..
+Here ..
+Here ..
+I:   call void @llvm.lifetime.end.p0i8(i64 640, i8* nonnull %0) #6
+Last:   call void @llvm.lifetime.end.p0i8(i64 640, i8* nonnull %0) #6
+Schedulable: 1
+code gen 0
+Gains: 10 - 40 = -30
+Unprofitable: deleting generated code
+Done!
+code gen 1
+destroying tree
+calls
+Done Loop Roller!
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %add6 = add i64 %0, %shl
+Here ..
+Skipping:   %shr = lshr i64 %conv, 29
+Skipping:   %count_hi8 = getelementptr inbounds %struct.SHA_INFO, %struct.SHA_INFO* %sha_info, i64 0, i32 2
+Here ..
+Here ..
+I:   %cmp1032 = icmp sgt i32 %count, 63
+Last:   %cmp1032 = icmp sgt i32 %count, 63
+Schedulable: 1
+code gen 0
+Gains: 4 - 22 = -18
+Unprofitable: deleting generated code
+Done!
+code gen 1
+destroying tree
+calls
+stores
+calls
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %8 = load i8, i8* %arrayidx8.i, align 1, !tbaa !8
+Here ..
+Skipping:   store i8 %7, i8* %arrayidx4.i, align 1, !tbaa !8
+destroying tree
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+Done Loop Roller!
+stores
+calls
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %9 = load i8, i8* %arrayidx8.i, align 1, !tbaa !8
+Here ..
+Skipping:   store i8 %8, i8* %arrayidx4.i, align 1, !tbaa !8
+destroying tree
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %14 = load i8, i8* %arrayidx8.i42, align 1, !tbaa !8
+Here ..
+Skipping:   store i8 %13, i8* %arrayidx4.i40, align 1, !tbaa !8
+destroying tree
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %arrayidx15 = getelementptr inbounds %struct.SHA_INFO, %struct.SHA_INFO* %sha_info, i64 0, i32 3, i64 14
+Here ..
+Here ..
+Here ..
+I:   tail call fastcc void @sha_transform(%struct.SHA_INFO* %sha_info) #5
+Last:   tail call fastcc void @sha_transform(%struct.SHA_INFO* %sha_info) #5
+Schedulable: 1
+code gen 0
+Gains: 4 - 11 = -7
+Unprofitable: deleting generated code
+Done!
+code gen 1
+destroying tree
+calls
+Done Loop Roller!
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %arrayidx.i = getelementptr inbounds %struct.SHA_INFO, %struct.SHA_INFO* %sha_info, i64 0, i32 0, i64 0
+Here ..
+Here ..
+Here ..
+Here ..
+Here ..
+Here ..
+I:   %count_lo.i = getelementptr inbounds %struct.SHA_INFO, %struct.SHA_INFO* %sha_info, i64 0, i32 1
+Last:   %count_lo.i = getelementptr inbounds %struct.SHA_INFO, %struct.SHA_INFO* %sha_info, i64 0, i32 1
+Schedulable: 1
+code gen 0
+Gains: 10 - 27 = -17
+Unprofitable: deleting generated code
+Done!
+code gen 1
+destroying tree
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+Done Loop Roller!
+stores
+calls
+Done Loop Roller!
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang++ -std=gnu++98 -B /usr/bin src/sha_driver.o src/sha.o -Oz  -fuse-ld= -o build/main -lm
+du -bc src/sha_driver.o src/sha.o | awk 'END { print  }' > build/main.osize

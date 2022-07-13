@@ -1,0 +1,192 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">for.cond26:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %i.1 = phi i32 [ %inc49, %for.inc48 ], [ 0, %for.cond26.preheader ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %6 = load i32, i32* @Trynum, align 4, !tbaa !6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp27 = icmp slt i32 %i.1, %6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp27, label %for.body29, label %cleanup</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">for.cond3:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %i.0 = phi i32 [ %inc, %for.inc ], [ 0, %for.cond3.preheader ]</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %2 = load i32, i32* @Trynum, align 4, !tbaa !6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp4 = icmp slt i32 %i.0, %2</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp4, label %for.body6, label %for.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+m_bb1 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">for.inc48:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %inc49 = add nuw nsw i32 %i.1, 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %for.cond26, !llvm.loop !11</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">for.inc:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %inc = add nuw nsw i32 %i.0, 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %for.cond3, !llvm.loop !8</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb2 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.end35:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i8 %7, i8* %r.0.ptr, align 1, !tbaa !3</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call38 = call i32 @good(i8* nonnull %0, i32 0, i32 1, i32 0, i32 0) #14</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %tobool39.not = icmp eq i32 %call38, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %tobool39.not, label %for.inc48, label %if.then40</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i8 %3, i8* %r.0.ptr, align 1, !tbaa !3</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call14 = call i32 @good(i8* nonnull %0, i32 0, i32 1, i32 0, i32 0) #14</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %tobool15.not = icmp eq i32 %call14, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %tobool15.not, label %for.inc, label %if.then16</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+m_bb3 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then40:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call42 = call fastcc i32 @ins_cap(i8* nonnull %0, i8* %word) #15</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp43 = icmp slt i32 %call42, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp43, label %cleanup, label %for.inc48</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then16:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call18 = call fastcc i32 @ins_cap(i8* nonnull %0, i8* %word) #15</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %cmp19 = icmp slt i32 %call18, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp19, label %cleanup, label %for.inc</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %newword = alloca [121 x i8], align 1</td></tr>
+<tr><td align="left">  %0 = getelementptr inbounds [121 x i8], [121 x i8]* %newword, i32 0, i32 0</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 121, i8* nonnull %0) #13</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds [121 x i8], [121 x i8]* %newword, i32 0, i32 1</td></tr>
+<tr><td align="left">  %call = call i8* @strcpy(i8* noundef nonnull %add.ptr, i8* noundef nonnull dereferenceable(1) %word) #14</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %p.0 = phi i8* [ %word, %entry ], [ %incdec.ptr, %for.end ]</td></tr>
+<tr><td align="left">  %r.0.idx = phi i32 [ 0, %entry ], [ %r.0.add, %for.end ]</td></tr>
+<tr><td align="left">  %r.0.ptr = getelementptr inbounds [121 x i8], [121 x i8]* %newword, i32 0, i32 %r.0.idx</td></tr>
+<tr><td align="left">  %1 = load i8, i8* %p.0, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq i8 %1, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp.not, label %for.cond26.preheader, label %for.cond3.preheader</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond3.preheader:</td></tr>
+<tr><td align="left">  %cmp10 = icmp eq i32 %r.0.idx, 0</td></tr>
+<tr><td align="left">  br label %for.cond3</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond26.preheader:</td></tr>
+<tr><td align="left">  br label %for.cond26</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body6:</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds [228 x i8], [228 x i8]* @Try, i32 0, i32 %i.0</td></tr>
+<tr><td align="left">  %3 = load i8, i8* %arrayidx, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %idxprom = zext i8 %3 to i32</td></tr>
+<tr><td align="left">  %arrayidx7 = getelementptr inbounds %struct.hashheader, %struct.hashheader* @hashheader, i32 0, i32 26, i32 %idxprom</td></tr>
+<tr><td align="left">  %4 = load i8, i8* %arrayidx7, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %tobool.not = icmp ne i8 %4, 0</td></tr>
+<tr><td align="left">  %or.cond = select i1 %tobool.not, i1 %cmp10, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %for.inc, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds i8, i8* %p.0, i32 1</td></tr>
+<tr><td align="left">  %5 = load i8, i8* %p.0, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %r.0.add = add nuw nsw i32 %r.0.idx, 1</td></tr>
+<tr><td align="left">  store i8 %5, i8* %r.0.ptr, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !10</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body29:</td></tr>
+<tr><td align="left">  %arrayidx30 = getelementptr inbounds [228 x i8], [228 x i8]* @Try, i32 0, i32 %i.1</td></tr>
+<tr><td align="left">  %7 = load i8, i8* %arrayidx30, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %idxprom31 = zext i8 %7 to i32</td></tr>
+<tr><td align="left">  %arrayidx32 = getelementptr inbounds %struct.hashheader, %struct.hashheader* @hashheader, i32 0, i32 26, i32 %idxprom31</td></tr>
+<tr><td align="left">  %8 = load i8, i8* %arrayidx32, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %tobool33.not = icmp eq i8 %8, 0</td></tr>
+<tr><td align="left">  br i1 %tobool33.not, label %if.end35, label %for.inc48</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 121, i8* nonnull %0) #13</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb1:fT -> f_bb3:f
+f_bb1:fF -> f_bb2:f
+f_bb2:f -> m_bb0:f2
+f_bb3:f -> m_bb0:f1
+m_bb0:f2T -> f_bb4:f
+m_bb0:f2F -> f_bb5:f
+f_bb4:fT -> m_bb1:f2
+f_bb4:fF -> m_bb2:f2
+m_bb2:f2T -> m_bb1:f2
+m_bb2:f2F -> m_bb3:f2
+m_bb3:f2T -> f_bb7:f
+m_bb3:f2F -> m_bb1:f2
+m_bb1:f2 -> m_bb0:f2
+f_bb5:f -> f_bb1:f
+m_bb0:f1T -> f_bb6:f
+m_bb0:f1F -> f_bb7:f
+f_bb6:fT -> m_bb2:f1
+f_bb6:fF -> m_bb1:f1
+m_bb2:f1T -> m_bb1:f1
+m_bb2:f1F -> m_bb3:f1
+m_bb3:f1T -> f_bb7:f
+m_bb3:f1F -> m_bb1:f1
+m_bb1:f1 -> m_bb0:f1
+}
+

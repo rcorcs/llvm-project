@@ -1,0 +1,587 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %3 = tail call i64 @fwrite(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.52, i64 0, i64 0), i64 15, i64 1, %struct._IO_FILE* %1)</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %2 = tail call i64 @fwrite(i8* getelementptr inbounds ([25 x i8], [25 x i8]* @.str.51, i64 0, i64 0), i64 24, i64 1, %struct._IO_FILE* %1)</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %buff = alloca [512 x i8], align 16</td></tr>
+<tr><td align="left">  %0 = load i32, i32* @Encapsulated, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %0, 0</td></tr>
+<tr><td align="left">  %1 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool.not, label %if.else, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %4 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call2 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %4, i8* getelementptr inbounds ([17 x i8], [17 x i8]* @.str.53, i64 0, i64 0), i8* getelementptr inbounds ([40 x i8], [40 x i8]* @.str.54, i64 0, i64 0))</td></tr>
+<tr><td align="left">  %5 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call3 = tail call i8* @TimeString() #12</td></tr>
+<tr><td align="left">  %call4 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %5, i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.55, i64 0, i64 0), i8* %call3)</td></tr>
+<tr><td align="left">  %6 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %7 = tail call i64 @fwrite(i8* getelementptr inbounds ([24 x i8], [24 x i8]* @.str.56, i64 0, i64 0), i64 23, i64 1, %struct._IO_FILE* %6)</td></tr>
+<tr><td align="left">  %8 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %9 = tail call i64 @fwrite(i8* getelementptr inbounds ([36 x i8], [36 x i8]* @.str.57, i64 0, i64 0), i64 35, i64 1, %struct._IO_FILE* %8)</td></tr>
+<tr><td align="left">  %10 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %11 = tail call i64 @fwrite(i8* getelementptr inbounds ([38 x i8], [38 x i8]* @.str.58, i64 0, i64 0), i64 37, i64 1, %struct._IO_FILE* %10)</td></tr>
+<tr><td align="left">  %12 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  br label %for.body.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body.i:</td></tr>
+<tr><td align="left">  %13 = phi i8* [ getelementptr inbounds ([7 x i8], [7 x i8]* @.str.147, i64 0, i64 0), %if.end ], [ %16, %for.inc.i ]</td></tr>
+<tr><td align="left">  %p.08.i = phi %struct.paper* [ getelementptr inbounds ([15 x %struct.paper], [15 x %struct.paper]* @MediaName.paper_map, i64 0, i64 0), %if.end ], [ %incdec.ptr.i, %for.inc.i ]</td></tr>
+<tr><td align="left">  %width.i = getelementptr inbounds %struct.paper, %struct.paper* %p.08.i, i64 0, i32 1</td></tr>
+<tr><td align="left">  %14 = load i32, i32* %width.i, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %cmp.i = icmp eq i32 %14, %h</td></tr>
+<tr><td align="left">  br i1 %cmp.i, label %land.lhs.true.i, label %for.inc.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true.i:</td></tr>
+<tr><td align="left">  %height.i = getelementptr inbounds %struct.paper, %struct.paper* %p.08.i, i64 0, i32 2</td></tr>
+<tr><td align="left">  %15 = load i32, i32* %height.i, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  %cmp1.i = icmp eq i32 %15, %v</td></tr>
+<tr><td align="left">  br i1 %cmp1.i, label %MediaName.exit, label %for.inc.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.inc.i:</td></tr>
+<tr><td align="left">  %incdec.ptr.i = getelementptr inbounds %struct.paper, %struct.paper* %p.08.i, i64 1</td></tr>
+<tr><td align="left">  %name.i = getelementptr inbounds %struct.paper, %struct.paper* %incdec.ptr.i, i64 0, i32 0</td></tr>
+<tr><td align="left">  %16 = load i8*, i8** %name.i, align 8, !tbaa !12</td></tr>
+<tr><td align="left">  %tobool.not.i = icmp eq i8* %16, null</td></tr>
+<tr><td align="left">  br i1 %tobool.not.i, label %MediaName.exit, label %for.body.i, !llvm.loop !13</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">MediaName.exit:</td></tr>
+<tr><td align="left">  %retval.0.i = phi i8* [ %13, %land.lhs.true.i ], [ getelementptr inbounds ([6 x i8], [6 x i8]* @.str.161, i64 0, i64 0), %for.inc.i ]</td></tr>
+<tr><td align="left">  %div = sdiv i32 %h, 20</td></tr>
+<tr><td align="left">  %div9 = sdiv i32 %v, 20</td></tr>
+<tr><td align="left">  %call10 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %12, i8* getelementptr inbounds ([40 x i8], [40 x i8]* @.str.59, i64 0, i64 0), i8* %retval.0.i, i32 %div, i32 %div9)</td></tr>
+<tr><td align="left">  %17 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %18 = tail call i64 @fwrite(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.60, i64 0, i64 0), i64 20, i64 1, %struct._IO_FILE* %17)</td></tr>
+<tr><td align="left">  %19 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %20 = tail call i64 @fwrite(i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.61, i64 0, i64 0), i64 17, i64 1, %struct._IO_FILE* %19)</td></tr>
+<tr><td align="left">  %21 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call15 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %21, i8* getelementptr inbounds ([28 x i8], [28 x i8]* @.str.62, i64 0, i64 0), i32 %div, i32 %div9)</td></tr>
+<tr><td align="left">  %22 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %23 = tail call i64 @fwrite(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.63, i64 0, i64 0), i64 15, i64 1, %struct._IO_FILE* %22)</td></tr>
+<tr><td align="left">  %24 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %25 = tail call i64 @fwrite(i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.64, i64 0, i64 0), i64 14, i64 1, %struct._IO_FILE* %24)</td></tr>
+<tr><td align="left">  %26 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call18 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %26, i8* getelementptr inbounds ([31 x i8], [31 x i8]* @.str.65, i64 0, i64 0), i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.66, i64 0, i64 0))</td></tr>
+<tr><td align="left">  %27 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %28 = tail call i64 @fwrite(i8* getelementptr inbounds ([61 x i8], [61 x i8]* @.str.67, i64 0, i64 0), i64 60, i64 1, %struct._IO_FILE* %27)</td></tr>
+<tr><td align="left">  %29 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %30 = tail call i64 @fwrite(i8* getelementptr inbounds ([38 x i8], [38 x i8]* @.str.68, i64 0, i64 0), i64 37, i64 1, %struct._IO_FILE* %29)</td></tr>
+<tr><td align="left">  %31 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %32 = tail call i64 @fwrite(i8* getelementptr inbounds ([53 x i8], [53 x i8]* @.str.69, i64 0, i64 0), i64 52, i64 1, %struct._IO_FILE* %31)</td></tr>
+<tr><td align="left">  %33 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %34 = tail call i64 @fwrite(i8* getelementptr inbounds ([55 x i8], [55 x i8]* @.str.70, i64 0, i64 0), i64 54, i64 1, %struct._IO_FILE* %33)</td></tr>
+<tr><td align="left">  %35 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %36 = tail call i64 @fwrite(i8* getelementptr inbounds ([39 x i8], [39 x i8]* @.str.71, i64 0, i64 0), i64 38, i64 1, %struct._IO_FILE* %35)</td></tr>
+<tr><td align="left">  %37 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %38 = tail call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.72, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %37)</td></tr>
+<tr><td align="left">  %39 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %40 = tail call i64 @fwrite(i8* getelementptr inbounds ([57 x i8], [57 x i8]* @.str.73, i64 0, i64 0), i64 56, i64 1, %struct._IO_FILE* %39)</td></tr>
+<tr><td align="left">  %41 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %42 = tail call i64 @fwrite(i8* getelementptr inbounds ([60 x i8], [60 x i8]* @.str.74, i64 0, i64 0), i64 59, i64 1, %struct._IO_FILE* %41)</td></tr>
+<tr><td align="left">  %43 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %44 = tail call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.75, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %43)</td></tr>
+<tr><td align="left">  %45 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %46 = tail call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str.76, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %45)</td></tr>
+<tr><td align="left">  %47 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %48 = tail call i64 @fwrite(i8* getelementptr inbounds ([38 x i8], [38 x i8]* @.str.77, i64 0, i64 0), i64 37, i64 1, %struct._IO_FILE* %47)</td></tr>
+<tr><td align="left">  %49 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %50 = tail call i64 @fwrite(i8* getelementptr inbounds ([41 x i8], [41 x i8]* @.str.78, i64 0, i64 0), i64 40, i64 1, %struct._IO_FILE* %49)</td></tr>
+<tr><td align="left">  %51 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %52 = tail call i64 @fwrite(i8* getelementptr inbounds ([55 x i8], [55 x i8]* @.str.79, i64 0, i64 0), i64 54, i64 1, %struct._IO_FILE* %51)</td></tr>
+<tr><td align="left">  %53 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %54 = tail call i64 @fwrite(i8* getelementptr inbounds ([58 x i8], [58 x i8]* @.str.80, i64 0, i64 0), i64 57, i64 1, %struct._IO_FILE* %53)</td></tr>
+<tr><td align="left">  %55 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %56 = tail call i64 @fwrite(i8* getelementptr inbounds ([39 x i8], [39 x i8]* @.str.81, i64 0, i64 0), i64 38, i64 1, %struct._IO_FILE* %55)</td></tr>
+<tr><td align="left">  %57 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %58 = tail call i64 @fwrite(i8* getelementptr inbounds ([48 x i8], [48 x i8]* @.str.82, i64 0, i64 0), i64 47, i64 1, %struct._IO_FILE* %57)</td></tr>
+<tr><td align="left">  %59 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call35 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %59, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.83, i64 0, i64 0), i32 1440)</td></tr>
+<tr><td align="left">  %60 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call36 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %60, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.84, i64 0, i64 0), i32 567)</td></tr>
+<tr><td align="left">  %61 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call37 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %61, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.85, i64 0, i64 0), i32 20)</td></tr>
+<tr><td align="left">  %62 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call38 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %62, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.86, i64 0, i64 0), i32 120)</td></tr>
+<tr><td align="left">  %63 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %64 = tail call i64 @fwrite(i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.87, i64 0, i64 0), i64 22, i64 1, %struct._IO_FILE* %63)</td></tr>
+<tr><td align="left">  %65 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %66 = tail call i64 @fwrite(i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.88, i64 0, i64 0), i64 22, i64 1, %struct._IO_FILE* %65)</td></tr>
+<tr><td align="left">  %67 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %68 = tail call i64 @fwrite(i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.89, i64 0, i64 0), i64 22, i64 1, %struct._IO_FILE* %67)</td></tr>
+<tr><td align="left">  %69 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %70 = tail call i64 @fwrite(i8* getelementptr inbounds ([24 x i8], [24 x i8]* @.str.90, i64 0, i64 0), i64 23, i64 1, %struct._IO_FILE* %69)</td></tr>
+<tr><td align="left">  %71 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %72 = tail call i64 @fwrite(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.91, i64 0, i64 0), i64 15, i64 1, %struct._IO_FILE* %71)</td></tr>
+<tr><td align="left">  %73 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %74 = tail call i64 @fwrite(i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.92, i64 0, i64 0), i64 18, i64 1, %struct._IO_FILE* %73)</td></tr>
+<tr><td align="left">  %75 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %76 = tail call i64 @fwrite(i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.93, i64 0, i64 0), i64 18, i64 1, %struct._IO_FILE* %75)</td></tr>
+<tr><td align="left">  %77 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %78 = tail call i64 @fwrite(i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.94, i64 0, i64 0), i64 18, i64 1, %struct._IO_FILE* %77)</td></tr>
+<tr><td align="left">  %79 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %80 = tail call i64 @fwrite(i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.95, i64 0, i64 0), i64 18, i64 1, %struct._IO_FILE* %79)</td></tr>
+<tr><td align="left">  %81 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %82 = tail call i64 @fwrite(i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.96, i64 0, i64 0), i64 18, i64 1, %struct._IO_FILE* %81)</td></tr>
+<tr><td align="left">  %83 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %84 = tail call i64 @fwrite(i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.97, i64 0, i64 0), i64 18, i64 1, %struct._IO_FILE* %83)</td></tr>
+<tr><td align="left">  %85 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %86 = tail call i64 @fwrite(i8* getelementptr inbounds ([26 x i8], [26 x i8]* @.str.98, i64 0, i64 0), i64 25, i64 1, %struct._IO_FILE* %85)</td></tr>
+<tr><td align="left">  %87 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %88 = tail call i64 @fwrite(i8* getelementptr inbounds ([53 x i8], [53 x i8]* @.str.99, i64 0, i64 0), i64 52, i64 1, %struct._IO_FILE* %87)</td></tr>
+<tr><td align="left">  %89 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %90 = tail call i64 @fwrite(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.100, i64 0, i64 0), i64 10, i64 1, %struct._IO_FILE* %89)</td></tr>
+<tr><td align="left">  %91 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %92 = tail call i64 @fwrite(i8* getelementptr inbounds ([35 x i8], [35 x i8]* @.str.101, i64 0, i64 0), i64 34, i64 1, %struct._IO_FILE* %91)</td></tr>
+<tr><td align="left">  %93 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %94 = tail call i64 @fwrite(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @.str.102, i64 0, i64 0), i64 12, i64 1, %struct._IO_FILE* %93)</td></tr>
+<tr><td align="left">  %95 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %96 = tail call i64 @fwrite(i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.103, i64 0, i64 0), i64 14, i64 1, %struct._IO_FILE* %95)</td></tr>
+<tr><td align="left">  %97 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %98 = tail call i64 @fwrite(i8* getelementptr inbounds ([36 x i8], [36 x i8]* @.str.104, i64 0, i64 0), i64 35, i64 1, %struct._IO_FILE* %97)</td></tr>
+<tr><td align="left">  %99 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %100 = tail call i64 @fwrite(i8* getelementptr inbounds ([53 x i8], [53 x i8]* @.str.105, i64 0, i64 0), i64 52, i64 1, %struct._IO_FILE* %99)</td></tr>
+<tr><td align="left">  %101 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %102 = tail call i64 @fwrite(i8* getelementptr inbounds ([24 x i8], [24 x i8]* @.str.106, i64 0, i64 0), i64 23, i64 1, %struct._IO_FILE* %101)</td></tr>
+<tr><td align="left">  %103 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %104 = tail call i64 @fwrite(i8* getelementptr inbounds ([36 x i8], [36 x i8]* @.str.107, i64 0, i64 0), i64 35, i64 1, %struct._IO_FILE* %103)</td></tr>
+<tr><td align="left">  %105 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %106 = tail call i64 @fwrite(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.108, i64 0, i64 0), i64 4, i64 1, %struct._IO_FILE* %105)</td></tr>
+<tr><td align="left">  %107 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %108 = tail call i64 @fwrite(i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.109, i64 0, i64 0), i64 14, i64 1, %struct._IO_FILE* %107)</td></tr>
+<tr><td align="left">  %109 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %110 = tail call i64 @fwrite(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @.str.102, i64 0, i64 0), i64 12, i64 1, %struct._IO_FILE* %109)</td></tr>
+<tr><td align="left">  %111 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %112 = tail call i64 @fwrite(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.110, i64 0, i64 0), i64 13, i64 1, %struct._IO_FILE* %111)</td></tr>
+<tr><td align="left">  %113 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %114 = tail call i64 @fwrite(i8* getelementptr inbounds ([27 x i8], [27 x i8]* @.str.111, i64 0, i64 0), i64 26, i64 1, %struct._IO_FILE* %113)</td></tr>
+<tr><td align="left">  %115 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %116 = tail call i64 @fwrite(i8* getelementptr inbounds ([34 x i8], [34 x i8]* @.str.112, i64 0, i64 0), i64 33, i64 1, %struct._IO_FILE* %115)</td></tr>
+<tr><td align="left">  %117 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %118 = tail call i64 @fwrite(i8* getelementptr inbounds ([29 x i8], [29 x i8]* @.str.113, i64 0, i64 0), i64 28, i64 1, %struct._IO_FILE* %117)</td></tr>
+<tr><td align="left">  %119 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %120 = tail call i64 @fwrite(i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.114, i64 0, i64 0), i64 17, i64 1, %struct._IO_FILE* %119)</td></tr>
+<tr><td align="left">  %121 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %122 = tail call i64 @fwrite(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.115, i64 0, i64 0), i64 20, i64 1, %struct._IO_FILE* %121)</td></tr>
+<tr><td align="left">  %123 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %124 = tail call i64 @fwrite(i8* getelementptr inbounds ([26 x i8], [26 x i8]* @.str.116, i64 0, i64 0), i64 25, i64 1, %struct._IO_FILE* %123)</td></tr>
+<tr><td align="left">  %125 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %126 = tail call i64 @fwrite(i8* getelementptr inbounds ([32 x i8], [32 x i8]* @.str.117, i64 0, i64 0), i64 31, i64 1, %struct._IO_FILE* %125)</td></tr>
+<tr><td align="left">  %127 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %128 = tail call i64 @fwrite(i8* getelementptr inbounds ([41 x i8], [41 x i8]* @.str.118, i64 0, i64 0), i64 40, i64 1, %struct._IO_FILE* %127)</td></tr>
+<tr><td align="left">  %129 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %130 = tail call i64 @fwrite(i8* getelementptr inbounds ([24 x i8], [24 x i8]* @.str.119, i64 0, i64 0), i64 23, i64 1, %struct._IO_FILE* %129)</td></tr>
+<tr><td align="left">  %131 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %132 = tail call i64 @fwrite(i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.120, i64 0, i64 0), i64 22, i64 1, %struct._IO_FILE* %131)</td></tr>
+<tr><td align="left">  %133 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %134 = tail call i64 @fwrite(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.121, i64 0, i64 0), i64 9, i64 1, %struct._IO_FILE* %133)</td></tr>
+<tr><td align="left">  %135 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %136 = tail call i64 @fwrite(i8* getelementptr inbounds ([48 x i8], [48 x i8]* @.str.122, i64 0, i64 0), i64 47, i64 1, %struct._IO_FILE* %135)</td></tr>
+<tr><td align="left">  %137 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %138 = tail call i64 @fwrite(i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.123, i64 0, i64 0), i64 9, i64 1, %struct._IO_FILE* %137)</td></tr>
+<tr><td align="left">  %139 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %140 = tail call i64 @fwrite(i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str.124, i64 0, i64 0), i64 7, i64 1, %struct._IO_FILE* %139)</td></tr>
+<tr><td align="left">  %141 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %142 = tail call i64 @fwrite(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @.str.102, i64 0, i64 0), i64 12, i64 1, %struct._IO_FILE* %141)</td></tr>
+<tr><td align="left">  %143 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %144 = tail call i64 @fwrite(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.125, i64 0, i64 0), i64 11, i64 1, %struct._IO_FILE* %143)</td></tr>
+<tr><td align="left">  %145 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %146 = tail call i64 @fwrite(i8* getelementptr inbounds ([37 x i8], [37 x i8]* @.str.126, i64 0, i64 0), i64 36, i64 1, %struct._IO_FILE* %145)</td></tr>
+<tr><td align="left">  %147 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %148 = tail call i64 @fwrite(i8* getelementptr inbounds ([48 x i8], [48 x i8]* @.str.127, i64 0, i64 0), i64 47, i64 1, %struct._IO_FILE* %147)</td></tr>
+<tr><td align="left">  %149 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %150 = tail call i64 @fwrite(i8* getelementptr inbounds ([25 x i8], [25 x i8]* @.str.128, i64 0, i64 0), i64 24, i64 1, %struct._IO_FILE* %149)</td></tr>
+<tr><td align="left">  %151 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %152 = tail call i64 @fwrite(i8* getelementptr inbounds ([12 x i8], [12 x i8]* @.str.129, i64 0, i64 0), i64 11, i64 1, %struct._IO_FILE* %151)</td></tr>
+<tr><td align="left">  %153 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %154 = tail call i64 @fwrite(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.130, i64 0, i64 0), i64 15, i64 1, %struct._IO_FILE* %153)</td></tr>
+<tr><td align="left">  %call85 = tail call zeroext i16 @FirstFile(i32 6) #12</td></tr>
+<tr><td align="left">  %155 = getelementptr inbounds [512 x i8], [512 x i8]* %buff, i64 0, i64 0</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds [512 x i8], [512 x i8]* %buff, i64 0, i64 16</td></tr>
+<tr><td align="left">  %cmp.not287 = icmp eq i16 %call85, 0</td></tr>
+<tr><td align="left">  br i1 %cmp.not287, label %for.end, label %for.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %fnum.0288 = phi i16 [ %call239, %if.end238 ], [ %call85, %MediaName.exit ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 512, i8* nonnull %155) #12</td></tr>
+<tr><td align="left">  %call87 = call %struct._IO_FILE* @OpenFile(i16 zeroext %fnum.0288, i32 0, i32 0) #12</td></tr>
+<tr><td align="left">  %cmp88 = icmp eq %struct._IO_FILE* %call87, null</td></tr>
+<tr><td align="left">  br i1 %cmp88, label %if.then90, label %if.else94</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then90:</td></tr>
+<tr><td align="left">  %call91 = call %struct.FILE_POS* @PosOfFile(i16 zeroext %fnum.0288) #12</td></tr>
+<tr><td align="left">  %call92 = call i8* @FileName(i16 zeroext %fnum.0288) #12</td></tr>
+<tr><td align="left">  %call93 = call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 49, i32 3, i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.131, i64 0, i64 0), i32 2, %struct.FILE_POS* %call91, i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.132, i64 0, i64 0), i8* %call92) #12</td></tr>
+<tr><td align="left">  br label %if.end238</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else94:</td></tr>
+<tr><td align="left">  %call95 = call i8* @fgets(i8* nonnull %155, i32 512, %struct._IO_FILE* nonnull %call87)</td></tr>
+<tr><td align="left">  %cmp96 = icmp eq i8* %call95, null</td></tr>
+<tr><td align="left">  br i1 %cmp96, label %if.then98, label %if.else102</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then98:</td></tr>
+<tr><td align="left">  %call99 = call %struct.FILE_POS* @PosOfFile(i16 zeroext %fnum.0288) #12</td></tr>
+<tr><td align="left">  %call100 = call i8* @FileName(i16 zeroext %fnum.0288) #12</td></tr>
+<tr><td align="left">  %call101 = call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 49, i32 4, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.133, i64 0, i64 0), i32 2, %struct.FILE_POS* %call99, i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.132, i64 0, i64 0), i8* %call100) #12</td></tr>
+<tr><td align="left">  br label %if.end238</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else102:</td></tr>
+<tr><td align="left">  %call104 = call i32 @StringBeginsWith(i8* nonnull %155, i8* getelementptr inbounds ([17 x i8], [17 x i8]* @.str.134, i64 0, i64 0)) #12</td></tr>
+<tr><td align="left">  %tobool105.not = icmp eq i32 %call104, 0</td></tr>
+<tr><td align="left">  br i1 %tobool105.not, label %if.else220, label %if.then106</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then106:</td></tr>
+<tr><td align="left">  %156 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call107 = call %union.rec* @MakeWord(i32 11, i8* nonnull %arrayidx, %struct.FILE_POS* %156) #12</td></tr>
+<tr><td align="left">  %157 = load i8, i8* getelementptr inbounds ([0 x i8], [0 x i8]* @zz_lengths, i64 0, i64 0), align 1, !tbaa !15</td></tr>
+<tr><td align="left">  %conv108 = zext i8 %157 to i32</td></tr>
+<tr><td align="left">  store i32 %conv108, i32* @zz_size, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv109 = zext i8 %157 to i64</td></tr>
+<tr><td align="left">  %arrayidx115 = getelementptr inbounds [0 x %union.rec*], [0 x %union.rec*]* @zz_free, i64 0, i64 %conv109</td></tr>
+<tr><td align="left">  %158 = load %union.rec*, %union.rec** %arrayidx115, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp116 = icmp eq %union.rec* %158, null</td></tr>
+<tr><td align="left">  br i1 %cmp116, label %if.then118, label %if.else120</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then118:</td></tr>
+<tr><td align="left">  %159 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call119 = call %union.rec* @GetMemory(i32 %conv108, %struct.FILE_POS* %159) #12</td></tr>
+<tr><td align="left">  br label %if.end127</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else120:</td></tr>
+<tr><td align="left">  store %union.rec* %158, %union.rec** @zz_hold, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %opred = getelementptr inbounds %union.rec, %union.rec* %158, i64 0, i32 0, i32 0, i64 0, i32 0</td></tr>
+<tr><td align="left">  %160 = load %union.rec*, %union.rec** %opred, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  store %union.rec* %160, %union.rec** %arrayidx115, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  br label %if.end127</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end127:</td></tr>
+<tr><td align="left">  %.in = phi %union.rec* [ %call119, %if.then118 ], [ %158, %if.else120 ]</td></tr>
+<tr><td align="left">  %161 = getelementptr inbounds %union.rec, %union.rec* %.in, i64 0, i32 0, i32 1, i32 0, i32 0</td></tr>
+<tr><td align="left">  store i8 0, i8* %161, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %162 = getelementptr inbounds %union.rec, %union.rec* %.in, i64 0, i32 0, i32 0, i64 1, i32 1</td></tr>
+<tr><td align="left">  store %union.rec* %.in, %union.rec** %162, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %163 = getelementptr inbounds %union.rec, %union.rec* %.in, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  store %union.rec* %.in, %union.rec** %163, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %164 = getelementptr inbounds %union.rec, %union.rec* %.in, i64 0, i32 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  store %union.rec* %.in, %union.rec** %164, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %165 = getelementptr %union.rec, %union.rec* %.in, i64 0, i32 0, i32 0, i64 0, i32 0</td></tr>
+<tr><td align="left">  store %union.rec* %.in, %union.rec** %165, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  store %union.rec* %.in, %union.rec** @xx_link, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  store %union.rec* %.in, %union.rec** @zz_res, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %166 = load %union.rec*, %union.rec** @supplied, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  store %union.rec* %166, %union.rec** @zz_hold, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp144 = icmp eq %union.rec* %166, null</td></tr>
+<tr><td align="left">  %cmp146 = icmp eq %union.rec* %.in, null</td></tr>
+<tr><td align="left">  %or.cond = select i1 %cmp144, i1 true, i1 %cmp146</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %cond.end178, label %cond.false149</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false149:</td></tr>
+<tr><td align="left">  %opred153 = getelementptr inbounds %union.rec, %union.rec* %166, i64 0, i32 0, i32 0, i64 0, i32 0</td></tr>
+<tr><td align="left">  %167 = load %union.rec*, %union.rec** %opred153, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  store %union.rec* %167, %union.rec** @zz_tmp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %opred157 = getelementptr %union.rec, %union.rec* %.in, i64 0, i32 0, i32 0, i64 0, i32 0</td></tr>
+<tr><td align="left">  %168 = load %union.rec*, %union.rec** %opred157, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %opred161 = getelementptr %union.rec, %union.rec* %166, i64 0, i32 0, i32 0, i64 0, i32 0</td></tr>
+<tr><td align="left">  store %union.rec* %168, %union.rec** %opred161, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %169 = load %union.rec*, %union.rec** @zz_hold, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %170 = load %struct.word_type**, %struct.word_type*** bitcast (%union.rec** @zz_res to %struct.word_type***), align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %171 = load %struct.word_type*, %struct.word_type** %170, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %osucc169 = getelementptr inbounds %struct.word_type, %struct.word_type* %171, i64 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  store %union.rec* %169, %union.rec** %osucc169, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %172 = load %union.rec*, %union.rec** @zz_tmp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %opred173 = bitcast %struct.word_type** %170 to %union.rec**</td></tr>
+<tr><td align="left">  store %union.rec* %172, %union.rec** %opred173, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %173 = load %union.rec*, %union.rec** @zz_res, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %174 = load %struct.word_type*, %struct.word_type** bitcast (%union.rec** @zz_tmp to %struct.word_type**), align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %osucc177 = getelementptr inbounds %struct.word_type, %struct.word_type* %174, i64 0, i32 0, i64 0, i32 1</td></tr>
+<tr><td align="left">  store %union.rec* %173, %union.rec** %osucc177, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %.pre = load %union.rec*, %union.rec** @xx_link, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  br label %cond.end178</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cond.end178:</td></tr>
+<tr><td align="left">  %175 = phi %union.rec* [ %.in, %if.end127 ], [ %.pre, %cond.false149 ]</td></tr>
+<tr><td align="left">  store %union.rec* %175, %union.rec** @zz_res, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  store %union.rec* %call107, %union.rec** @zz_hold, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp180 = icmp eq %union.rec* %call107, null</td></tr>
+<tr><td align="left">  %cmp184 = icmp eq %union.rec* %175, null</td></tr>
+<tr><td align="left">  %or.cond283 = select i1 %cmp180, i1 true, i1 %cmp184</td></tr>
+<tr><td align="left">  br i1 %or.cond283, label %if.end224, label %cond.false187</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.false187:</td></tr>
+<tr><td align="left">  %opred191 = getelementptr inbounds %union.rec, %union.rec* %call107, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  %176 = load %union.rec*, %union.rec** %opred191, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  store %union.rec* %176, %union.rec** @zz_tmp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %177 = getelementptr inbounds %union.rec, %union.rec* %175, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  %178 = load %union.rec*, %union.rec** %177, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %179 = getelementptr inbounds %union.rec, %union.rec* %call107, i64 0, i32 0, i32 0, i64 1, i32 0</td></tr>
+<tr><td align="left">  store %union.rec* %178, %union.rec** %179, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %180 = bitcast %union.rec** %177 to %struct.word_type**</td></tr>
+<tr><td align="left">  %181 = load %struct.word_type*, %struct.word_type** %180, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %osucc207 = getelementptr inbounds %struct.word_type, %struct.word_type* %181, i64 0, i32 0, i64 1, i32 1</td></tr>
+<tr><td align="left">  store %union.rec* %call107, %union.rec** %osucc207, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  store %union.rec* %176, %union.rec** %177, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  %osucc215 = getelementptr inbounds %union.rec, %union.rec* %176, i64 0, i32 0, i32 0, i64 1, i32 1</td></tr>
+<tr><td align="left">  store %union.rec* %175, %union.rec** %osucc215, align 8, !tbaa !15</td></tr>
+<tr><td align="left">  br label %if.end224</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else220:</td></tr>
+<tr><td align="left">  %call221 = call %struct.FILE_POS* @PosOfFile(i16 zeroext %fnum.0288) #12</td></tr>
+<tr><td align="left">  %call222 = call i8* @FileName(i16 zeroext %fnum.0288) #12</td></tr>
+<tr><td align="left">  %call223 = call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 49, i32 5, i8* getelementptr inbounds ([50 x i8], [50 x i8]* @.str.135, i64 0, i64 0), i32 2, %struct.FILE_POS* %call221, i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.132, i64 0, i64 0), i8* %call222) #12</td></tr>
+<tr><td align="left">  br label %if.end224</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb19 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end224:</td></tr>
+<tr><td align="left">  %182 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call226 = call i32 @fputs(i8* nonnull %155, %struct._IO_FILE* %182)</td></tr>
+<tr><td align="left">  %183 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call227 = call i8* @FileName(i16 zeroext %fnum.0288) #12</td></tr>
+<tr><td align="left">  %call228 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %183, i8* getelementptr inbounds ([15 x i8], [15 x i8]* @.str.136, i64 0, i64 0), i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.132, i64 0, i64 0), i8* %call227)</td></tr>
+<tr><td align="left">  %call230285 = call i8* @fgets(i8* nonnull %155, i32 512, %struct._IO_FILE* nonnull %call87)</td></tr>
+<tr><td align="left">  %cmp231.not286 = icmp eq i8* %call230285, null</td></tr>
+<tr><td align="left">  br i1 %cmp231.not286, label %while.end, label %while.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  %184 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call234 = call i32 @fputs(i8* nonnull %155, %struct._IO_FILE* %184)</td></tr>
+<tr><td align="left">  %call230 = call i8* @fgets(i8* nonnull %155, i32 512, %struct._IO_FILE* nonnull %call87)</td></tr>
+<tr><td align="left">  %cmp231.not = icmp eq i8* %call230, null</td></tr>
+<tr><td align="left">  br i1 %cmp231.not, label %while.end, label %while.body, !llvm.loop !16</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb21 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.end:</td></tr>
+<tr><td align="left">  %185 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %fputc = call i32 @fputc(i32 10, %struct._IO_FILE* %185)</td></tr>
+<tr><td align="left">  %call236 = call i32 @fclose(%struct._IO_FILE* nonnull %call87)</td></tr>
+<tr><td align="left">  br label %if.end238</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb22 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end238:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 512, i8* nonnull %155) #12</td></tr>
+<tr><td align="left">  %call239 = call zeroext i16 @NextFile(i16 zeroext %fnum.0288) #12</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq i16 %call239, 0</td></tr>
+<tr><td align="left">  br i1 %cmp.not, label %for.end, label %for.body, !llvm.loop !17</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  %186 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %187 = call i64 @fwrite(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.137, i64 0, i64 0), i64 13, i64 1, %struct._IO_FILE* %186)</td></tr>
+<tr><td align="left">  %188 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %189 = call i64 @fwrite(i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.138, i64 0, i64 0), i64 13, i64 1, %struct._IO_FILE* %188)</td></tr>
+<tr><td align="left">  call void (...) @MapPrintEncodings() #12</td></tr>
+<tr><td align="left">  %190 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %191 = call i64 @fwrite(i8* getelementptr inbounds ([71 x i8], [71 x i8]* @.str.139, i64 0, i64 0), i64 70, i64 1, %struct._IO_FILE* %190)</td></tr>
+<tr><td align="left">  %192 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %193 = call i64 @fwrite(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @.str.140, i64 0, i64 0), i64 12, i64 1, %struct._IO_FILE* %192)</td></tr>
+<tr><td align="left">  %194 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call244 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %194, i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str.141, i64 0, i64 0))</td></tr>
+<tr><td align="left">  %195 = load i8, i8* %label, align 1, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp247.not291 = icmp eq i8 %195, 0</td></tr>
+<tr><td align="left">  br i1 %cmp247.not291, label %for.end254, label %for.body249</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb24 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body249:</td></tr>
+<tr><td align="left">  %196 = phi i8 [ %199, %for.body249 ], [ %195, %for.end ]</td></tr>
+<tr><td align="left">  %p.0292 = phi i8* [ %incdec.ptr, %for.body249 ], [ %label, %for.end ]</td></tr>
+<tr><td align="left">  %idxprom250 = zext i8 %196 to i64</td></tr>
+<tr><td align="left">  %arrayidx251 = getelementptr inbounds [0 x i8*], [0 x i8*]* @EightBitToPrintForm, i64 0, i64 %idxprom250</td></tr>
+<tr><td align="left">  %197 = load i8*, i8** %arrayidx251, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %198 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call252 = call i32 @fputs(i8* %197, %struct._IO_FILE* %198)</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds i8, i8* %p.0292, i64 1</td></tr>
+<tr><td align="left">  %199 = load i8, i8* %incdec.ptr, align 1, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp247.not = icmp eq i8 %199, 0</td></tr>
+<tr><td align="left">  br i1 %cmp247.not, label %for.end254, label %for.body249, !llvm.loop !18</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb25 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end254:</td></tr>
+<tr><td align="left">  %200 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %201 = load i32, i32* @pagecount, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %inc = add nsw i32 %201, 1</td></tr>
+<tr><td align="left">  store i32 %inc, i32* @pagecount, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %call255 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %200, i8* getelementptr inbounds ([5 x i8], [5 x i8]* @.str.142, i64 0, i64 0), i32 %inc)</td></tr>
+<tr><td align="left">  %202 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call256 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %202, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.143, i64 0, i64 0))</td></tr>
+<tr><td align="left">  %203 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  call void @FontPrintPageResources(%struct._IO_FILE* %203) #12</td></tr>
+<tr><td align="left">  %204 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %205 = call i64 @fwrite(i8* getelementptr inbounds ([18 x i8], [18 x i8]* @.str.144, i64 0, i64 0), i64 17, i64 1, %struct._IO_FILE* %204)</td></tr>
+<tr><td align="left">  %206 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  call void @FontPrintPageSetup(%struct._IO_FILE* %206) #12</td></tr>
+<tr><td align="left">  call void @FontAdvanceCurrentPage() #12</td></tr>
+<tr><td align="left">  %207 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call258 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %207, i8* getelementptr inbounds ([32 x i8], [32 x i8]* @.str.145, i64 0, i64 0), double 5.000000e-02, i32 10)</td></tr>
+<tr><td align="left">  %208 = load %struct._IO_FILE*, %struct._IO_FILE** @out_fp, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call259 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %208, i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.146, i64 0, i64 0))</td></tr>
+<tr><td align="left">  store i1 true, i1* @prologue_done, align 4</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> m_bb0:f1
+f_bb0:fF -> m_bb0:f2
+m_bb0:f2 -> f_bb1:f
+m_bb0:f1 -> f_bb1:f
+f_bb1:f -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb4:f
+f_bb3:fT -> f_bb5:f
+f_bb3:fF -> f_bb4:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb2:f
+f_bb5:fT -> f_bb23:f
+f_bb5:fF -> f_bb6:f
+f_bb6:fT -> f_bb7:f
+f_bb6:fF -> f_bb8:f
+f_bb7:f -> f_bb22:f
+f_bb8:fT -> f_bb9:f
+f_bb8:fF -> f_bb10:f
+f_bb9:f -> f_bb22:f
+f_bb10:fT -> f_bb18:f
+f_bb10:fF -> f_bb11:f
+f_bb11:fT -> f_bb12:f
+f_bb11:fF -> f_bb13:f
+f_bb12:f -> f_bb14:f
+f_bb13:f -> f_bb14:f
+f_bb14:fT -> f_bb16:f
+f_bb14:fF -> f_bb15:f
+f_bb15:f -> f_bb16:f
+f_bb16:fT -> f_bb19:f
+f_bb16:fF -> f_bb17:f
+f_bb17:f -> f_bb19:f
+f_bb18:f -> f_bb19:f
+f_bb19:fT -> f_bb21:f
+f_bb19:fF -> f_bb20:f
+f_bb20:fT -> f_bb21:f
+f_bb20:fF -> f_bb20:f
+f_bb21:f -> f_bb22:f
+f_bb22:fT -> f_bb23:f
+f_bb22:fF -> f_bb6:f
+f_bb23:fT -> f_bb25:f
+f_bb23:fF -> f_bb24:f
+f_bb24:fT -> f_bb25:f
+f_bb24:fF -> f_bb24:f
+}
+

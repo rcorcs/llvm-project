@@ -1,0 +1,148 @@
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang -std=gnu89 -B /usr/bin -Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -c src/dijkstra_large.c -o src/dijkstra_large.o   -fuse-ld=
+clang-12: warning: argument unused during compilation: '-fuse-ld=' [-Wunused-command-line-argument]
+src/dijkstra_large.c:49:27: warning: implicitly declaring library function 'malloc' with type 'void *(unsigned long)' [-Wimplicit-function-declaration]
+  QITEM *qNew = (QITEM *) malloc(sizeof(QITEM));
+                          ^
+src/dijkstra_large.c:49:27: note: include the header <stdlib.h> or explicitly provide a declaration for 'malloc'
+src/dijkstra_large.c:55:7: warning: implicitly declaring library function 'exit' with type 'void (int) __attribute__((noreturn))' [-Wimplicit-function-declaration]
+      exit(1);
+      ^
+src/dijkstra_large.c:55:7: note: include the header <stdlib.h> or explicitly provide a declaration for 'exit'
+src/dijkstra_large.c:143:1: warning: non-void function does not return a value [-Wreturn-type]
+}
+^
+stores
+calls
+stores
+calls
+stores
+calls
+Done Loop Roller!
+stores
+calls
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+destroying tree
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+Done Loop Roller!
+stores
+calls
+stores
+calls
+stores
+calls
+Done Loop Roller!
+stores
+calls
+Done Loop Roller!
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+destroying tree
+calls
+stores
+calls
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+destroying tree
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+destroying tree
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+Done Loop Roller!
+stores
+calls
+stores
+calls
+Grow Tree 0
+Grow Tree 1
+Scheduling order
+Attempting scheduling...
+Here 1
+Here 2
+Here 3
+Start:   %1 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !2
+Here ..
+Here ..
+Here ..
+I:   br label %if.end
+Last:   br label %if.end
+Schedulable: 1
+code gen 0
+Gains: 12 - 25 = -13
+Unprofitable: deleting generated code
+Done!
+code gen 1
+destroying tree
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+stores
+calls
+Done Loop Roller!
+3 warnings generated.
+/home/rodrigo/llvm/loop-rerolling/build/release/bin/clang++ -std=gnu++98 -B /usr/bin src/dijkstra_large.o -Oz  -fuse-ld= -o build/main -lm
+du -bc src/dijkstra_large.o | awk 'END { print  }' > build/main.osize

@@ -1,0 +1,105 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">cond.false16:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.7, i64 0, i64 0), i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.1, i64 0, i64 0), i32 372, i8* getelementptr inbounds ([59 x i8], [59 x i8]* @__PRETTY_FUNCTION__.APCM_inverse_quantization, i64 0, i64 0)) #5</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">cond.false:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.5, i64 0, i64 0), i8* getelementptr inbounds ([10 x i8], [10 x i8]* @.str.1, i64 0, i64 0), i32 364, i8* getelementptr inbounds ([59 x i8], [59 x i8]* @__PRETTY_FUNCTION__.APCM_inverse_quantization, i64 0, i64 0)) #5</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %0 = icmp ult i16 %mant, 8</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %0, label %cond.end, label %cond.false</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end:</td></tr>
+<tr><td align="left">  %idxprom71 = zext i16 %mant to i64</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds [8 x i16], [8 x i16]* @gsm_FAC, i64 0, i64 %idxprom71</td></tr>
+<tr><td align="left">  %1 = load i16, i16* %arrayidx, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %call = tail call signext i16 @gsm_sub(i16 signext 6, i16 signext %exp) #6</td></tr>
+<tr><td align="left">  %call5 = tail call signext i16 @gsm_sub(i16 signext %call, i16 signext 1) #6</td></tr>
+<tr><td align="left">  %conv6 = sext i16 %call5 to i32</td></tr>
+<tr><td align="left">  %call7 = tail call signext i16 @gsm_asl(i16 signext 1, i32 %conv6) #6</td></tr>
+<tr><td align="left">  %conv33 = sext i16 %1 to i64</td></tr>
+<tr><td align="left">  %mul = shl nsw i64 %conv33, 33</td></tr>
+<tr><td align="left">  %conv37 = sext i16 %call7 to i64</td></tr>
+<tr><td align="left">  %conv50 = sext i16 %call to i32</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %i.0 = phi i32 [ 13, %cond.end ], [ %dec, %cond.end17 ]</td></tr>
+<tr><td align="left">  %xMp.addr.0 = phi i16* [ %xMp, %cond.end ], [ %incdec.ptr52, %cond.end17 ]</td></tr>
+<tr><td align="left">  %xMc.addr.0 = phi i16* [ %xMc, %cond.end ], [ %incdec.ptr, %cond.end17 ]</td></tr>
+<tr><td align="left">  %dec = add nsw i32 %i.0, -1</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %i.0, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %for.end, label %for.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %2 = load i16, i16* %xMc.addr.0, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  %3 = icmp ult i16 %2, 8</td></tr>
+<tr><td align="left">  br i1 %3, label %cond.end17, label %cond.false16</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end17:</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds i16, i16* %xMc.addr.0, i64 1</td></tr>
+<tr><td align="left">  %shl = shl nuw i16 %2, 13</td></tr>
+<tr><td align="left">  %shl31 = add i16 %shl, -28672</td></tr>
+<tr><td align="left">  %conv34 = sext i16 %shl31 to i64</td></tr>
+<tr><td align="left">  %add = mul i64 %mul, %conv34</td></tr>
+<tr><td align="left">  %4 = add i64 %add, 140737488355328</td></tr>
+<tr><td align="left">  %conv36 = ashr i64 %4, 48</td></tr>
+<tr><td align="left">  %add38 = add nsw i64 %conv36, %conv37</td></tr>
+<tr><td align="left">  %5 = icmp sgt i64 %add38, -32768</td></tr>
+<tr><td align="left">  %6 = select i1 %5, i64 %add38, i64 -32768</td></tr>
+<tr><td align="left">  %7 = icmp slt i64 %6, 32767</td></tr>
+<tr><td align="left">  %cond48 = select i1 %7, i64 %6, i64 32767</td></tr>
+<tr><td align="left">  %conv49 = trunc i64 %cond48 to i16</td></tr>
+<tr><td align="left">  %call51 = tail call signext i16 @gsm_asr(i16 signext %conv49, i32 %conv50) #6</td></tr>
+<tr><td align="left">  %incdec.ptr52 = getelementptr inbounds i16, i16* %xMp.addr.0, i64 1</td></tr>
+<tr><td align="left">  store i16 %call51, i16* %xMp.addr.0, align 2, !tbaa !3</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !7</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> m_bb0:f2
+f_bb1:f -> f_bb2:f
+f_bb2:fT -> f_bb5:f
+f_bb2:fF -> f_bb3:f
+f_bb3:fT -> f_bb4:f
+f_bb3:fF -> m_bb0:f1
+f_bb4:f -> f_bb2:f
+}
+

@@ -1,0 +1,466 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then96:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call97 = call i32 @jpeg_fill_bit_buffer(%struct.bitread_working_state* nonnull %br_state, i64 %get_buffer.4.ph, i32 %bits_left.4.ph, i32 %shr52241) #7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %tobool98.not = icmp eq i32 %call97, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %tobool98.not, label %cleanup133, label %if.end100</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then58:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call59 = call i32 @jpeg_fill_bit_buffer(%struct.bitread_working_state* nonnull %br_state, i64 %get_buffer.4.ph, i32 %bits_left.4.ph, i32 %and53) #7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %tobool60.not = icmp eq i32 %call59, 0</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %tobool60.not, label %cleanup133, label %if.end62</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+m_bb1 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.end100:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %28 = load i64, i64* %get_buffer28, align 8, !tbaa !37</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %29 = load i32, i32* %bits_left29, align 8, !tbaa !38</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end103</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.end62:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %23 = load i64, i64* %get_buffer28, align 8, !tbaa !37</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %24 = load i32, i32* %bits_left29, align 8, !tbaa !38</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end65</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %br_state = alloca %struct.bitread_working_state, align 8</td></tr>
+<tr><td align="left">  %entropy1 = getelementptr inbounds %struct.jpeg_decompress_struct, %struct.jpeg_decompress_struct* %cinfo, i64 0, i32 79</td></tr>
+<tr><td align="left">  %0 = bitcast %struct.jpeg_entropy_decoder** %entropy1 to %struct.phuff_entropy_decoder**</td></tr>
+<tr><td align="left">  %1 = load %struct.phuff_entropy_decoder*, %struct.phuff_entropy_decoder** %0, align 8, !tbaa !3</td></tr>
+<tr><td align="left">  %Se2 = getelementptr inbounds %struct.jpeg_decompress_struct, %struct.jpeg_decompress_struct* %cinfo, i64 0, i32 69</td></tr>
+<tr><td align="left">  %2 = load i32, i32* %Se2, align 8, !tbaa !11</td></tr>
+<tr><td align="left">  %Al3 = getelementptr inbounds %struct.jpeg_decompress_struct, %struct.jpeg_decompress_struct* %cinfo, i64 0, i32 71</td></tr>
+<tr><td align="left">  %3 = load i32, i32* %Al3, align 8, !tbaa !12</td></tr>
+<tr><td align="left">  %4 = bitcast %struct.bitread_working_state* %br_state to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 56, i8* nonnull %4) #5</td></tr>
+<tr><td align="left">  %restart_interval = getelementptr inbounds %struct.jpeg_decompress_struct, %struct.jpeg_decompress_struct* %cinfo, i64 0, i32 49</td></tr>
+<tr><td align="left">  %5 = load i32, i32* %restart_interval, align 8, !tbaa !13</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %5, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %if.end8, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %restarts_to_go = getelementptr inbounds %struct.phuff_entropy_decoder, %struct.phuff_entropy_decoder* %1, i64 0, i32 3</td></tr>
+<tr><td align="left">  %6 = load i32, i32* %restarts_to_go, align 4, !tbaa !14</td></tr>
+<tr><td align="left">  %cmp = icmp eq i32 %6, 0</td></tr>
+<tr><td align="left">  br i1 %cmp, label %if.then4, label %if.end8</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then4:</td></tr>
+<tr><td align="left">  %call = tail call fastcc i32 @process_restart(%struct.jpeg_decompress_struct* nonnull %cinfo) #6</td></tr>
+<tr><td align="left">  %tobool5.not = icmp eq i32 %call, 0</td></tr>
+<tr><td align="left">  br i1 %tobool5.not, label %cleanup133, label %if.end8</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end8:</td></tr>
+<tr><td align="left">  %EOBRUN9 = getelementptr inbounds %struct.phuff_entropy_decoder, %struct.phuff_entropy_decoder* %1, i64 0, i32 2, i32 0</td></tr>
+<tr><td align="left">  %7 = load i32, i32* %EOBRUN9, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %cmp10.not = icmp eq i32 %7, 0</td></tr>
+<tr><td align="left">  br i1 %cmp10.not, label %if.else, label %if.then11</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then11:</td></tr>
+<tr><td align="left">  %dec = add i32 %7, -1</td></tr>
+<tr><td align="left">  br label %if.end128</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %cinfo12 = getelementptr inbounds %struct.bitread_working_state, %struct.bitread_working_state* %br_state, i64 0, i32 5</td></tr>
+<tr><td align="left">  store %struct.jpeg_decompress_struct* %cinfo, %struct.jpeg_decompress_struct** %cinfo12, align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %src = getelementptr inbounds %struct.jpeg_decompress_struct, %struct.jpeg_decompress_struct* %cinfo, i64 0, i32 5</td></tr>
+<tr><td align="left">  %8 = load %struct.jpeg_source_mgr*, %struct.jpeg_source_mgr** %src, align 8, !tbaa !23</td></tr>
+<tr><td align="left">  %next_input_byte = getelementptr inbounds %struct.jpeg_source_mgr, %struct.jpeg_source_mgr* %8, i64 0, i32 0</td></tr>
+<tr><td align="left">  %9 = load i8*, i8** %next_input_byte, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %next_input_byte13 = getelementptr inbounds %struct.bitread_working_state, %struct.bitread_working_state* %br_state, i64 0, i32 0</td></tr>
+<tr><td align="left">  store i8* %9, i8** %next_input_byte13, align 8, !tbaa !26</td></tr>
+<tr><td align="left">  %bytes_in_buffer = getelementptr inbounds %struct.jpeg_source_mgr, %struct.jpeg_source_mgr* %8, i64 0, i32 1</td></tr>
+<tr><td align="left">  %10 = load i64, i64* %bytes_in_buffer, align 8, !tbaa !27</td></tr>
+<tr><td align="left">  %bytes_in_buffer15 = getelementptr inbounds %struct.bitread_working_state, %struct.bitread_working_state* %br_state, i64 0, i32 1</td></tr>
+<tr><td align="left">  store i64 %10, i64* %bytes_in_buffer15, align 8, !tbaa !28</td></tr>
+<tr><td align="left">  %unread_marker = getelementptr inbounds %struct.jpeg_decompress_struct, %struct.jpeg_decompress_struct* %cinfo, i64 0, i32 72</td></tr>
+<tr><td align="left">  %11 = load i32, i32* %unread_marker, align 4, !tbaa !29</td></tr>
+<tr><td align="left">  %unread_marker16 = getelementptr inbounds %struct.bitread_working_state, %struct.bitread_working_state* %br_state, i64 0, i32 2</td></tr>
+<tr><td align="left">  store i32 %11, i32* %unread_marker16, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  %get_buffer17 = getelementptr inbounds %struct.phuff_entropy_decoder, %struct.phuff_entropy_decoder* %1, i64 0, i32 1, i32 0</td></tr>
+<tr><td align="left">  %12 = load i64, i64* %get_buffer17, align 8, !tbaa !31</td></tr>
+<tr><td align="left">  %bits_left19 = getelementptr inbounds %struct.phuff_entropy_decoder, %struct.phuff_entropy_decoder* %1, i64 0, i32 1, i32 1</td></tr>
+<tr><td align="left">  %13 = load i32, i32* %bits_left19, align 8, !tbaa !32</td></tr>
+<tr><td align="left">  %printed_eod = getelementptr inbounds %struct.phuff_entropy_decoder, %struct.phuff_entropy_decoder* %1, i64 0, i32 1, i32 2</td></tr>
+<tr><td align="left">  %printed_eod_ptr = getelementptr inbounds %struct.bitread_working_state, %struct.bitread_working_state* %br_state, i64 0, i32 6</td></tr>
+<tr><td align="left">  store i32* %printed_eod, i32** %printed_eod_ptr, align 8, !tbaa !33</td></tr>
+<tr><td align="left">  %14 = load [64 x i16]*, [64 x i16]** %MCU_data, align 8, !tbaa !34</td></tr>
+<tr><td align="left">  %ac_derived_tbl = getelementptr inbounds %struct.phuff_entropy_decoder, %struct.phuff_entropy_decoder* %1, i64 0, i32 5</td></tr>
+<tr><td align="left">  %15 = load %struct.d_derived_tbl*, %struct.d_derived_tbl** %ac_derived_tbl, align 8, !tbaa !35</td></tr>
+<tr><td align="left">  %Ss = getelementptr inbounds %struct.jpeg_decompress_struct, %struct.jpeg_decompress_struct* %cinfo, i64 0, i32 68</td></tr>
+<tr><td align="left">  %16 = load i32, i32* %Ss, align 4, !tbaa !36</td></tr>
+<tr><td align="left">  %get_buffer28 = getelementptr inbounds %struct.bitread_working_state, %struct.bitread_working_state* %br_state, i64 0, i32 3</td></tr>
+<tr><td align="left">  %bits_left29 = getelementptr inbounds %struct.bitread_working_state, %struct.bitread_working_state* %br_state, i64 0, i32 4</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %k.0 = phi i32 [ %16, %if.else ], [ %inc, %for.inc ]</td></tr>
+<tr><td align="left">  %get_buffer.0 = phi i64 [ %12, %if.else ], [ %get_buffer.8, %for.inc ]</td></tr>
+<tr><td align="left">  %bits_left.0 = phi i32 [ %13, %if.else ], [ %bits_left.8, %for.inc ]</td></tr>
+<tr><td align="left">  %cmp21.not = icmp sgt i32 %k.0, %2</td></tr>
+<tr><td align="left">  br i1 %cmp21.not, label %for.end, label %for.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %cmp22 = icmp slt i32 %bits_left.0, 8</td></tr>
+<tr><td align="left">  br i1 %cmp22, label %if.then23, label %if.end33</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then23:</td></tr>
+<tr><td align="left">  %call24 = call i32 @jpeg_fill_bit_buffer(%struct.bitread_working_state* nonnull %br_state, i64 %get_buffer.0, i32 %bits_left.0, i32 0) #7</td></tr>
+<tr><td align="left">  %tobool25.not = icmp eq i32 %call24, 0</td></tr>
+<tr><td align="left">  br i1 %tobool25.not, label %cleanup133, label %if.end27</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end27:</td></tr>
+<tr><td align="left">  %17 = load i64, i64* %get_buffer28, align 8, !tbaa !37</td></tr>
+<tr><td align="left">  %18 = load i32, i32* %bits_left29, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  %cmp30 = icmp slt i32 %18, 8</td></tr>
+<tr><td align="left">  br i1 %cmp30, label %label2, label %if.end33</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end33:</td></tr>
+<tr><td align="left">  %get_buffer.1 = phi i64 [ %17, %if.end27 ], [ %get_buffer.0, %for.body ]</td></tr>
+<tr><td align="left">  %bits_left.1 = phi i32 [ %18, %if.end27 ], [ %bits_left.0, %for.body ]</td></tr>
+<tr><td align="left">  %sub = add nsw i32 %bits_left.1, -8</td></tr>
+<tr><td align="left">  %sh_prom = zext i32 %sub to i64</td></tr>
+<tr><td align="left">  %shr = ashr i64 %get_buffer.1, %sh_prom</td></tr>
+<tr><td align="left">  %and = and i64 %shr, 255</td></tr>
+<tr><td align="left">  %arrayidx34 = getelementptr inbounds %struct.d_derived_tbl, %struct.d_derived_tbl* %15, i64 0, i32 4, i64 %and</td></tr>
+<tr><td align="left">  %19 = load i32, i32* %arrayidx34, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %cmp35.not = icmp eq i32 %19, 0</td></tr>
+<tr><td align="left">  br i1 %cmp35.not, label %label2, label %if.then37</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then37:</td></tr>
+<tr><td align="left">  %sub38 = sub nsw i32 %bits_left.1, %19</td></tr>
+<tr><td align="left">  %arrayidx40 = getelementptr inbounds %struct.d_derived_tbl, %struct.d_derived_tbl* %15, i64 0, i32 5, i64 %and</td></tr>
+<tr><td align="left">  %20 = load i8, i8* %arrayidx40, align 1, !tbaa !40</td></tr>
+<tr><td align="left">  %conv41 = zext i8 %20 to i32</td></tr>
+<tr><td align="left">  br label %cleanup.cont</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">label2:</td></tr>
+<tr><td align="left">  %get_buffer.2 = phi i64 [ %17, %if.end27 ], [ %get_buffer.1, %if.end33 ]</td></tr>
+<tr><td align="left">  %bits_left.2 = phi i32 [ %18, %if.end27 ], [ %bits_left.1, %if.end33 ]</td></tr>
+<tr><td align="left">  %nb.0 = phi i32 [ 1, %if.end27 ], [ 9, %if.end33 ]</td></tr>
+<tr><td align="left">  %call43 = call i32 @jpeg_huff_decode(%struct.bitread_working_state* nonnull %br_state, i64 %get_buffer.2, i32 %bits_left.2, %struct.d_derived_tbl* %15, i32 %nb.0) #7</td></tr>
+<tr><td align="left">  %cmp44 = icmp slt i32 %call43, 0</td></tr>
+<tr><td align="left">  br i1 %cmp44, label %cleanup133, label %if.end47</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end47:</td></tr>
+<tr><td align="left">  %21 = load i64, i64* %get_buffer28, align 8, !tbaa !37</td></tr>
+<tr><td align="left">  %22 = load i32, i32* %bits_left29, align 8, !tbaa !38</td></tr>
+<tr><td align="left">  br label %cleanup.cont</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup.cont:</td></tr>
+<tr><td align="left">  %get_buffer.4.ph = phi i64 [ %get_buffer.1, %if.then37 ], [ %21, %if.end47 ]</td></tr>
+<tr><td align="left">  %bits_left.4.ph = phi i32 [ %sub38, %if.then37 ], [ %22, %if.end47 ]</td></tr>
+<tr><td align="left">  %s.2.ph = phi i32 [ %conv41, %if.then37 ], [ %call43, %if.end47 ]</td></tr>
+<tr><td align="left">  %shr52241 = lshr i32 %s.2.ph, 4</td></tr>
+<tr><td align="left">  %and53 = and i32 %s.2.ph, 15</td></tr>
+<tr><td align="left">  %tobool54.not = icmp eq i32 %and53, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool54.not, label %if.else85, label %if.then55</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then55:</td></tr>
+<tr><td align="left">  %add = add nsw i32 %shr52241, %k.0</td></tr>
+<tr><td align="left">  %cmp56 = icmp slt i32 %bits_left.4.ph, %and53</td></tr>
+<tr><td align="left">  br i1 %cmp56, label %if.then58, label %if.end65</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end65:</td></tr>
+<tr><td align="left">  %get_buffer.5 = phi i64 [ %23, %if.end62 ], [ %get_buffer.4.ph, %if.then55 ]</td></tr>
+<tr><td align="left">  %bits_left.5 = phi i32 [ %24, %if.end62 ], [ %bits_left.4.ph, %if.then55 ]</td></tr>
+<tr><td align="left">  %sub66 = sub nsw i32 %bits_left.5, %and53</td></tr>
+<tr><td align="left">  %sh_prom67 = zext i32 %sub66 to i64</td></tr>
+<tr><td align="left">  %shr68 = ashr i64 %get_buffer.5, %sh_prom67</td></tr>
+<tr><td align="left">  %conv69 = trunc i64 %shr68 to i32</td></tr>
+<tr><td align="left">  %notmask = shl nsw i32 -1, %and53</td></tr>
+<tr><td align="left">  %sub70 = xor i32 %notmask, -1</td></tr>
+<tr><td align="left">  %and71 = and i32 %conv69, %sub70</td></tr>
+<tr><td align="left">  %idxprom72 = zext i32 %and53 to i64</td></tr>
+<tr><td align="left">  %arrayidx73 = getelementptr inbounds [16 x i32], [16 x i32]* @extend_test, i64 0, i64 %idxprom72</td></tr>
+<tr><td align="left">  %25 = load i32, i32* %arrayidx73, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %cmp74 = icmp slt i32 %and71, %25</td></tr>
+<tr><td align="left">  br i1 %cmp74, label %cond.true, label %cond.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.true:</td></tr>
+<tr><td align="left">  %arrayidx77 = getelementptr inbounds [16 x i32], [16 x i32]* @extend_offset, i64 0, i64 %idxprom72</td></tr>
+<tr><td align="left">  %26 = load i32, i32* %arrayidx77, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %add78 = add nsw i32 %26, %and71</td></tr>
+<tr><td align="left">  br label %cond.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cond.end:</td></tr>
+<tr><td align="left">  %cond = phi i32 [ %add78, %cond.true ], [ %and71, %if.end65 ]</td></tr>
+<tr><td align="left">  %shl79 = shl i32 %cond, %3</td></tr>
+<tr><td align="left">  %conv80 = trunc i32 %shl79 to i16</td></tr>
+<tr><td align="left">  %idxprom81 = sext i32 %add to i64</td></tr>
+<tr><td align="left">  %arrayidx82 = getelementptr inbounds [0 x i32], [0 x i32]* @jpeg_natural_order, i64 0, i64 %idxprom81</td></tr>
+<tr><td align="left">  %27 = load i32, i32* %arrayidx82, align 4, !tbaa !39</td></tr>
+<tr><td align="left">  %idxprom83 = sext i32 %27 to i64</td></tr>
+<tr><td align="left">  %arrayidx84 = getelementptr inbounds [64 x i16], [64 x i16]* %14, i64 0, i64 %idxprom83</td></tr>
+<tr><td align="left">  store i16 %conv80, i16* %arrayidx84, align 2, !tbaa !41</td></tr>
+<tr><td align="left">  br label %for.inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else85:</td></tr>
+<tr><td align="left">  %cmp86 = icmp eq i32 %shr52241, 15</td></tr>
+<tr><td align="left">  br i1 %cmp86, label %if.then88, label %if.else90</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then88:</td></tr>
+<tr><td align="left">  %add89 = add nsw i32 %k.0, 15</td></tr>
+<tr><td align="left">  br label %for.inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb21 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else90:</td></tr>
+<tr><td align="left">  %shl91 = shl nuw i32 1, %shr52241</td></tr>
+<tr><td align="left">  %tobool92.not = icmp ult i32 %s.2.ph, 16</td></tr>
+<tr><td align="left">  br i1 %tobool92.not, label %if.end112, label %if.then93</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb22 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then93:</td></tr>
+<tr><td align="left">  %cmp94 = icmp slt i32 %bits_left.4.ph, %shr52241</td></tr>
+<tr><td align="left">  br i1 %cmp94, label %if.then96, label %if.end103</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end103:</td></tr>
+<tr><td align="left">  %get_buffer.6 = phi i64 [ %28, %if.end100 ], [ %get_buffer.4.ph, %if.then93 ]</td></tr>
+<tr><td align="left">  %bits_left.6 = phi i32 [ %29, %if.end100 ], [ %bits_left.4.ph, %if.then93 ]</td></tr>
+<tr><td align="left">  %sub104 = sub nsw i32 %bits_left.6, %shr52241</td></tr>
+<tr><td align="left">  %sh_prom105 = zext i32 %sub104 to i64</td></tr>
+<tr><td align="left">  %shr106 = ashr i64 %get_buffer.6, %sh_prom105</td></tr>
+<tr><td align="left">  %conv107 = trunc i64 %shr106 to i32</td></tr>
+<tr><td align="left">  %sub109 = add nsw i32 %shl91, -1</td></tr>
+<tr><td align="left">  %and110 = and i32 %sub109, %conv107</td></tr>
+<tr><td align="left">  %add111 = add i32 %and110, %shl91</td></tr>
+<tr><td align="left">  br label %if.end112</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end112:</td></tr>
+<tr><td align="left">  %EOBRUN.0 = phi i32 [ %add111, %if.end103 ], [ %shl91, %if.else90 ]</td></tr>
+<tr><td align="left">  %get_buffer.7 = phi i64 [ %get_buffer.6, %if.end103 ], [ %get_buffer.4.ph, %if.else90 ]</td></tr>
+<tr><td align="left">  %bits_left.7 = phi i32 [ %sub104, %if.end103 ], [ %bits_left.4.ph, %if.else90 ]</td></tr>
+<tr><td align="left">  %dec113 = add i32 %EOBRUN.0, -1</td></tr>
+<tr><td align="left">  br label %for.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb25 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc:</td></tr>
+<tr><td align="left">  %k.1 = phi i32 [ %add, %cond.end ], [ %add89, %if.then88 ]</td></tr>
+<tr><td align="left">  %get_buffer.8 = phi i64 [ %get_buffer.5, %cond.end ], [ %get_buffer.4.ph, %if.then88 ]</td></tr>
+<tr><td align="left">  %bits_left.8 = phi i32 [ %sub66, %cond.end ], [ %bits_left.4.ph, %if.then88 ]</td></tr>
+<tr><td align="left">  %inc = add nsw i32 %k.1, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !42</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end:</td></tr>
+<tr><td align="left">  %EOBRUN.1 = phi i32 [ %dec113, %if.end112 ], [ 0, %for.cond ]</td></tr>
+<tr><td align="left">  %get_buffer.9 = phi i64 [ %get_buffer.7, %if.end112 ], [ %get_buffer.0, %for.cond ]</td></tr>
+<tr><td align="left">  %bits_left.9 = phi i32 [ %bits_left.7, %if.end112 ], [ %bits_left.0, %for.cond ]</td></tr>
+<tr><td align="left">  %30 = load i8*, i8** %next_input_byte13, align 8, !tbaa !26</td></tr>
+<tr><td align="left">  %31 = load %struct.jpeg_source_mgr*, %struct.jpeg_source_mgr** %src, align 8, !tbaa !23</td></tr>
+<tr><td align="left">  %next_input_byte118 = getelementptr inbounds %struct.jpeg_source_mgr, %struct.jpeg_source_mgr* %31, i64 0, i32 0</td></tr>
+<tr><td align="left">  store i8* %30, i8** %next_input_byte118, align 8, !tbaa !24</td></tr>
+<tr><td align="left">  %32 = load i64, i64* %bytes_in_buffer15, align 8, !tbaa !28</td></tr>
+<tr><td align="left">  %bytes_in_buffer121 = getelementptr inbounds %struct.jpeg_source_mgr, %struct.jpeg_source_mgr* %31, i64 0, i32 1</td></tr>
+<tr><td align="left">  store i64 %32, i64* %bytes_in_buffer121, align 8, !tbaa !27</td></tr>
+<tr><td align="left">  %33 = load i32, i32* %unread_marker16, align 8, !tbaa !30</td></tr>
+<tr><td align="left">  store i32 %33, i32* %unread_marker, align 4, !tbaa !29</td></tr>
+<tr><td align="left">  store i64 %get_buffer.9, i64* %get_buffer17, align 8, !tbaa !31</td></tr>
+<tr><td align="left">  store i32 %bits_left.9, i32* %bits_left19, align 8, !tbaa !32</td></tr>
+<tr><td align="left">  br label %if.end128</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb27 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end128:</td></tr>
+<tr><td align="left">  %EOBRUN.2 = phi i32 [ %dec, %if.then11 ], [ %EOBRUN.1, %for.end ]</td></tr>
+<tr><td align="left">  store i32 %EOBRUN.2, i32* %EOBRUN9, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %restarts_to_go131 = getelementptr inbounds %struct.phuff_entropy_decoder, %struct.phuff_entropy_decoder* %1, i64 0, i32 3</td></tr>
+<tr><td align="left">  %34 = load i32, i32* %restarts_to_go131, align 4, !tbaa !14</td></tr>
+<tr><td align="left">  %dec132 = add i32 %34, -1</td></tr>
+<tr><td align="left">  store i32 %dec132, i32* %restarts_to_go131, align 4, !tbaa !14</td></tr>
+<tr><td align="left">  br label %cleanup133</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb28 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup133:</td></tr>
+<tr><td align="left">  %retval.2 = phi i32 [ 1, %if.end128 ], [ 0, %if.then4 ], [ 0, %if.then96 ], [ 0, %if.then58 ], [ 0, %label2 ], [ 0, %if.then23 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 56, i8* nonnull %4) #5</td></tr>
+<tr><td align="left">  ret i32 %retval.2</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb3:f
+f_bb0:fF -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> f_bb3:f
+f_bb2:fT -> f_bb28:f
+f_bb2:fF -> f_bb3:f
+f_bb3:fT -> f_bb5:f
+f_bb3:fF -> f_bb4:f
+f_bb4:f -> f_bb27:f
+f_bb5:f -> f_bb6:f
+f_bb6:fT -> f_bb26:f
+f_bb6:fF -> f_bb7:f
+f_bb7:fT -> f_bb8:f
+f_bb7:fF -> f_bb10:f
+f_bb8:fT -> f_bb28:f
+f_bb8:fF -> f_bb9:f
+f_bb9:fT -> f_bb12:f
+f_bb9:fF -> f_bb10:f
+f_bb10:fT -> f_bb12:f
+f_bb10:fF -> f_bb11:f
+f_bb11:f -> f_bb14:f
+f_bb12:fT -> f_bb28:f
+f_bb12:fF -> f_bb13:f
+f_bb13:f -> f_bb14:f
+f_bb14:fT -> f_bb19:f
+f_bb14:fF -> f_bb15:f
+f_bb15:fT -> m_bb0:f2
+f_bb15:fF -> f_bb16:f
+m_bb0:f2T -> f_bb28:f
+m_bb0:f2F -> m_bb1:f2
+m_bb1:f2 -> f_bb16:f
+f_bb16:fT -> f_bb17:f
+f_bb16:fF -> f_bb18:f
+f_bb17:f -> f_bb18:f
+f_bb18:f -> f_bb25:f
+f_bb19:fT -> f_bb20:f
+f_bb19:fF -> f_bb21:f
+f_bb20:f -> f_bb25:f
+f_bb21:fT -> f_bb24:f
+f_bb21:fF -> f_bb22:f
+f_bb22:fT -> m_bb0:f1
+f_bb22:fF -> f_bb23:f
+m_bb0:f1T -> f_bb28:f
+m_bb0:f1F -> m_bb1:f1
+m_bb1:f1 -> f_bb23:f
+f_bb23:f -> f_bb24:f
+f_bb24:f -> f_bb26:f
+f_bb25:f -> f_bb6:f
+f_bb26:f -> f_bb27:f
+f_bb27:f -> f_bb28:f
+}
+
