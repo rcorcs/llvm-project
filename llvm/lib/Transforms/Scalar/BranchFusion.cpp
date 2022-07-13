@@ -585,6 +585,15 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
     return false;
   }
 
+  //TODO: handle landingpad on exit blocks. This might break the link between the invoke and the landingpad.
+  for (BasicBlock &BB : LeftR.exits()) {
+    if (BB.isLandingPad()) return false;
+  }
+  for (BasicBlock &BB : RightR.exits()) {
+    if (BB.isLandingPad()) return false;
+  }
+
+
   bool IsSingleExit = LeftR.getNumExitBlocks() == 1 &&
                       RightR.getNumExitBlocks() == 1 &&
                       LeftR.getUniqueExitBlock() == RightR.getUniqueExitBlock();
@@ -863,6 +872,37 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
   std::set<BasicBlock *> VisitedBB;
   Error = Error || !ProcessPHIs(LeftR.exits(), VisitedBB);
   Error = Error || !ProcessPHIs(RightR.exits(), VisitedBB);
+
+  /*
+  VisitedBB.clear();
+  auto ProcessLPs = [&](auto ExitSet,
+                         std::set<BasicBlock *> &VisitedBB) -> bool {
+    
+    for (BasicBlock &BB : ExitSet) {
+      if (VisitedBB.count(&BB))
+        continue;
+      VisitedBB.insert(&BB);
+      if (BB.isLandingPad()) {
+	errs() << "Candidate for fix up\n";
+	BB.dump();
+        for (auto It = pred_begin(&BB), E = pred_end(&BB); It != E; It++) {
+          BasicBlock *PredBB = *It;
+	  errs() << "predecessor: " << PredBB->getName().str() << "\n";
+	  PredBB->dump();
+	  if (!isa<InvokeInst>(PredBB->getTerminator()) && PredBB->isLandingPad()) {
+	    //BB.getLandingPadInst()->replaceAllUsesWith(PredBB->getLandingPadInst());
+	    //BB.getLandingPadInst()->eraseFromParent();
+	    errs() << "add phi node edge\n";
+	  }
+	}
+      }
+    }
+    return false;
+  };
+
+  Error = Error || !ProcessLPs(LeftR.exits(), VisitedBB);
+  Error = Error || !ProcessLPs(RightR.exits(), VisitedBB);
+  */
 
   if (Debug) {
     errs() << "Modified function\n";
