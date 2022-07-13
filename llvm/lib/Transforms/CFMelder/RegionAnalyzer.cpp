@@ -420,11 +420,11 @@ void RegionAnalyzer::findMergeableBBsInRegions(
         }
       }
     }
-    // check region exit
-    BasicBlock* Exit = R->getExit();
-    if (!IsInsideLoop(Exit)){
-      MergeableBBs.push_back(Exit);
-    }
+    // // check region exit
+    // BasicBlock* Exit = R->getExit();
+    // if (!IsInsideLoop(Exit)){
+    //   MergeableBBs.push_back(Exit);
+    // }
   }
 }
 

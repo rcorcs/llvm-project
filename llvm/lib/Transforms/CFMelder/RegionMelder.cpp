@@ -646,13 +646,13 @@ void RegionMelder::merge(unsigned Index) {
       RegionAlreadySimplified = true;
     }
 
-    errs() << "replicate the region\n";
+    // errs() << "replicate the region\n";
     // replicate the region
     RegionReplicator RR(MA, ExpandingLeft, EnableFullPredication);
     Region *ReplicatedR =
         RR.replicate(ExpandedBlock, MatchedBlock, RToReplicate);
 
-    errs() << "prepare for melding\n";
+    // errs() << "prepare for melding\n";
     // prepare for melding
     if (ExpandingLeft) {
       EntryBlockL = ReplicatedR->getEntry();
@@ -998,6 +998,9 @@ void RegionMelder::mergeOutsideDefsAtEntry() {
   // create a unifiying basic block
   BasicBlock *UnifyingBB = CreateUnifyingBB();
 
+  // add to mergedBBS
+  MergedBBs.push_back(UnifyingBB);
+
   // recompute control-flow analyses
   MA.getCFGInfo().recompute();
   DominatorTree &DT = MA.getCFGInfo().getDomTree();
@@ -1122,8 +1125,8 @@ void RegionMelder::runPostOptimizations() {
 
   // check for phi nodes with identical incoming value, block pairs
   // and fold them
-  for (auto &BB : *MA.getParentFunction()) {
-    for (PHINode &Phi : BB.phis()) {
+  for (auto *BB : MergedBBs) {
+    for (PHINode &Phi : BB->phis()) {
       bool Changed = false;
       do {
         Changed = false;
