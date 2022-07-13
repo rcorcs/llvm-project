@@ -72,9 +72,10 @@ static cl::opt<bool> RunMeldingOnce("run-cfmelding-once", cl::init(false),
                                     cl::Hidden,
                                     cl::desc("Perform one melding and exit"));
 
-static cl::opt<unsigned> MaxIterations("cfmelding-max-iteration", cl::init(10),
-                                    cl::Hidden,
-                                    cl::desc("Maximum number of iterations performed by CFMelder on the whole function"));
+static cl::opt<unsigned>
+    MaxIterations("cfmelding-max-iteration", cl::init(10), cl::Hidden,
+                  cl::desc("Maximum number of iterations performed by CFMelder "
+                           "on the whole function"));
 namespace {
 
 class CFMelderLegacyPass : public FunctionPass {
@@ -211,7 +212,8 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
           Function *ClonedFunc = CloneFunction(Func, VMap);
           DominatorTree ClonedDT(*ClonedFunc);
           PostDominatorTree ClonedPDT(*ClonedFunc);
-          ControlFlowGraphInfo ClonedCFGInfo(*ClonedFunc, ClonedDT, ClonedPDT, TTI);
+          ControlFlowGraphInfo ClonedCFGInfo(*ClonedFunc, ClonedDT, ClonedPDT,
+                                             TTI);
 
           RegionAnalyzer ClonedRA(dyn_cast<BasicBlock>(VMap[BB]),
                                   ClonedCFGInfo);
@@ -254,18 +256,22 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
     }
 
     Changed |= LocalChange;
-  } while (LocalChange && CountIter<MaxIterations);
+    
+    if (RunMeldingOnce)
+      break;
+  } while (LocalChange && CountIter < MaxIterations);
 
   if (Changed) {
-    simplifyFunction(
-                *Func, TTI,
-                SimplifyCFGOptionsObj.setSimplifyCondBranch(false));
+    // simplifyFunction(
+    //             *Func, TTI,
+    //             SimplifyCFGOptionsObj.setSimplifyCondBranch(false));
 
     int FinalCodeSize = computeCodeSize(&F, TTI);
     double PercentReduction =
         (OrigCodeSize - FinalCodeSize) * 100 / (double)OrigCodeSize;
-    INFO << "Size reduction for function " << F.getName() << ": " << OrigCodeSize
-         << " to  " << FinalCodeSize << " (" << PercentReduction << "%)"
+    INFO << "Size reduction for function " << F.getName() << ": "
+         << OrigCodeSize << " to  " << FinalCodeSize << " (" << PercentReduction
+         << "%)"
          << "\n";
   }
 
@@ -364,7 +370,7 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
     if (RunMeldingOnce) {
       break;
     }
-  } while (LocalChange && CountIter<MaxIterations);
+  } while (LocalChange && CountIter < MaxIterations);
 
   return Changed;
 }

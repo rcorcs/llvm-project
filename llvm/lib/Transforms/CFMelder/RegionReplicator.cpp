@@ -12,29 +12,29 @@ Region *RegionReplicator::replicate(BasicBlock *ExpandedBlock,
 
   BasicBlock *EntryToReplicate = RegionToReplicate->getEntry();
   BasicBlock *ExitToReplicate = RegionToReplicate->getExit();
-  errs() << "replicate CFG\n";
+  // errs() << "replicate CFG\n";
   // replicate the CFG of region and place the ExpandedBlock in right place
   auto RepEntryExitPair =
       replicateCFG(ExpandedBlock, MatchedBlock, RegionToReplicate);
 
-  errs() << "recompute CF analysis\n";
+  // errs() << "recompute CF analysis\n";
   // recompute CF analysis
   MA.getCFGInfo().recompute();
   auto RI = MA.getCFGInfo().getRegionInfo();
 
   Region *ReplicatedR = Utils::getRegionWithEntryExit(
       *RI, RepEntryExitPair.first, RepEntryExitPair.second);
-  errs() << "place PHI nodes in the replicated region for correct def-use\n";
+  // errs() << "place PHI nodes in the replicated region for correct def-use\n";
   // place PHI nodes in the replicated region for correct def-use
   addPhiNodes(ExpandedBlock, ReplicatedR);
 
-  errs() << "concretize the branch conditions within the replicated region\n";
+  // errs() << "concretize the branch conditions within the replicated region\n";
   // concretize the branch conditions within the replicated region
   concretizeBranchConditions(ExpandedBlock, ReplicatedR);
 
-  errs() << "finalizing replication\n";
+  // errs() << "finalizing replication\n";
   if (EnableFullPredication) {
-    errs() << "Full predication enabled\n";
+    // errs() << "Full predication enabled\n";
     Region *OrigRegion =
         Utils::getRegionWithEntryExit(*RI, EntryToReplicate, ExitToReplicate);
     assert(OrigRegion && "Can not find the replicated region!");
@@ -247,13 +247,13 @@ void RegionReplicator::fullPredicateStores(Region *RToReplicate,
 
 void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
                                    Region *ReplicatedRegion) {
-  errs() << "computing DF\n";
+  // errs() << "computing DF\n";
   // compute DF
   DominatorTree &DT = MA.getCFGInfo().getDomTree();
   DominanceFrontier DF;
   DF.analyze(DT);
 
-  errs() << "get uses outside the expanded block\n";
+  // errs() << "get uses outside the expanded block\n";
   // get uses outside the expanded block
   SmallSet<Instruction *, 32> InstrsWithOutsideUses;
 
@@ -269,16 +269,16 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
 
   SmallSet<Instruction *, 32> WorkList(InstrsWithOutsideUses);
 
-  errs() << "processing the work list\n";
+  // errs() << "processing the work list\n";
   DenseSet<Instruction *> Visited;
   while (!WorkList.empty()) {
     Instruction *I = *WorkList.begin();
     WorkList.erase(I);
 
 
-    if (Visited.count(I)) {
-	    errs() << "repeting:"; I->dump();
-    }
+    // if (Visited.count(I)) {
+	  //   errs() << "repeting:"; I->dump();
+    // }
     Visited.insert(I);
 
     // add phi nodes in DF for this instruction
@@ -305,8 +305,8 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
           }
         }
         // replace users
-	errs() << "updating users to use the phi-node\n";
-	BB->dump();
+	// errs() << "updating users to use the phi-node\n";
+	// BB->dump();
         SmallVector<Instruction *> UsersToModify;
         for (Use &Use : I->uses()) {
           Instruction *User = cast<Instruction>(Use.getUser());
@@ -324,7 +324,7 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
     }
   }
 
-  errs() << "finally change the phi nodes in the successors of exit\n";
+  // errs() << "finally change the phi nodes in the successors of exit\n";
   // finally change the phi nodes in the successors of exit
   BasicBlock *Exit = ReplicatedRegion->getExit();
   for (auto SuccIt = succ_begin(Exit); SuccIt != succ_end(Exit); ++SuccIt) {
