@@ -44,6 +44,7 @@ STATISTIC(RegionToRegionMeldings,
 STATISTIC(InstrAlignTime,
           "Time spent in instruction alignment in microseconds");
 
+
 AlignedSeq<Value *>
 RegionMelder::getAlignmentOfBlocks(BasicBlock *LeftBb, BasicBlock *RightBb,
                                    ScoringFunction<Value *> &ScoringFunc) {
@@ -69,7 +70,7 @@ void RegionMelder::computeRegionSeqAlignment(
   shared_ptr<ScoringFunction<Value *>> ScoringFuncLat =
       make_shared<GPULatencyCostModel>();
 
-  auto ScoringFunc = UseLatencyCostModel? ScoringFuncLat : ScoringFuncSize;
+  auto ScoringFunc = UseLatencyCostModel ? ScoringFuncLat : ScoringFuncSize;
 
   for (auto It = BbMap.begin(); It != BbMap.end(); It++) {
     BasicBlock *LBB = It->first;
@@ -666,7 +667,7 @@ void RegionMelder::merge(unsigned Index) {
       ExitBlockL = ExitToReplicate;
     }
 
-    errs() << "here\n";
+    // errs() << "here\n";
     RR.getBasicBlockMapping(CurrMapping, ExpandingLeft);
 
     BBToRegionMeldings++;
@@ -1018,41 +1019,38 @@ void RegionMelder::mergeOutsideDefsAtEntry() {
           Instruction *User = dyn_cast<Instruction>(Use.getUser());
           // User->print(errs()); errs() << "\n";
           if (!DT.dominates(&Def, Use)) {
+            // errs() << "broken user found\n";
+            // errs() << "def : ";
+            // Def.print(errs());
+            // errs() << "\n";
+            // errs() << "user : ";
+            // User->print(errs());
+            // errs() << "\n";
 
             BrokenUsers.push_back(User);
           }
         }
         PHINode *NewUnifyingPHI = nullptr;
         for (Instruction *BrokenUser : BrokenUsers) {
-          // errs() << "borken user\n";
           // add a new phi node in the unifying block
           if (!NewUnifyingPHI) {
             NewUnifyingPHI = PHINode::Create(Def.getType(), 0, "unify.phi",
                                              &*UnifyingBB->begin());
 
-            BasicBlock *TopLeftSucc =
-                MA.getDivergentBlock()->getTerminator()->getSuccessor(0);
-            // which path the def is in?
-            bool DefInLeft = DT.dominates(TopLeftSucc, Def.getParent());
-
-            // add incoming values for phi
-            if (DefInLeft) {
-              for (auto &LeftPred : LeftEntryPreds) {
+            for (auto &LeftPred : LeftEntryPreds) {
+              if (DT.dominates(Def.getParent(), LeftPred))
                 NewUnifyingPHI->addIncoming(&Def, LeftPred);
-              }
-              for (auto &RightPred : RightEntryPreds) {
+              else
+                NewUnifyingPHI->addIncoming(
+                    llvm::UndefValue::get(NewUnifyingPHI->getType()), LeftPred);
+            }
+            for (auto &RightPred : RightEntryPreds) {
+              if (DT.dominates(Def.getParent(), RightPred))
+                NewUnifyingPHI->addIncoming(&Def, RightPred);
+              else
                 NewUnifyingPHI->addIncoming(
                     llvm::UndefValue::get(NewUnifyingPHI->getType()),
                     RightPred);
-              }
-            } else {
-              for (auto &LeftPred : LeftEntryPreds) {
-                NewUnifyingPHI->addIncoming(
-                    llvm::UndefValue::get(NewUnifyingPHI->getType()), LeftPred);
-              }
-              for (auto &RightPred : RightEntryPreds) {
-                NewUnifyingPHI->addIncoming(&Def, RightPred);
-              }
             }
           }
           BrokenUser->replaceUsesOfWith(&Def, NewUnifyingPHI);

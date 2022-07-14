@@ -88,6 +88,9 @@ public:
 
   /// get name as operand for basic block
   static std::string getNameStr(Value *V);
+
+  /// write a function CFG into a .dot file
+  void writeCFGToDotFile(Function &F, std::string Prefix);
 };
 
 } // namespace llvm

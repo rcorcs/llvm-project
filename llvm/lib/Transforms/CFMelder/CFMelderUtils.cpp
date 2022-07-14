@@ -2,11 +2,13 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Analysis/CFG.h"
+#include "llvm/Analysis/CFGPrinter.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 #include <sstream>
 using namespace llvm;
@@ -249,4 +251,20 @@ std::string Utils::getNameStr(Value *V) {
   llvm::raw_string_ostream SS(Out);
   V->printAsOperand(SS, false);
   return SS.str();
+}
+
+void Utils::writeCFGToDotFile(Function &F, std::string Prefix = "") {
+  std::string Filename = (Prefix + F.getName() + ".dot").str();
+  errs() << "Writing '" << Filename << "'...";
+
+  std::error_code EC;
+  raw_fd_ostream File(Filename, EC, sys::fs::OF_Text);
+
+  DOTFuncInfo CFGInfo(&F);
+
+  if (!EC)
+    WriteGraph(File, &CFGInfo);
+  else
+    errs() << "  error opening file for writing!";
+  errs() << "\n";
 }

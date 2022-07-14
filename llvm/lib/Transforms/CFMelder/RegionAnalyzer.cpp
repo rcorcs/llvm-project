@@ -353,8 +353,8 @@ void RegionAnalyzer::computeRegionMatch() {
         };
         DEBUG << "Melding requires region replication\n";
         BestBbMatchSimilarityScore = Utils::computeBlockSimilarity(
-            // BestBbMatch.first, BestBbMatch.second, ReplicatedRegion, GetBrCost);
-            BestBbMatch.first, BestBbMatch.second);
+            BestBbMatch.first, BestBbMatch.second, ReplicatedRegion, GetBrCost);
+            // BestBbMatch.first, BestBbMatch.second);
 
       } else {
         BestBbMatchSimilarityScore = Utils::computeBlockSimilarity(
