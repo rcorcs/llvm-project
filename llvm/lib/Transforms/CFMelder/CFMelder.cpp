@@ -259,7 +259,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
     
     if (RunMeldingOnce)
       break;
-  } while (LocalChange && CountIter < MaxIterations);
+  } while (LocalChange); // && CountIter < MaxIterations);
 
   if (Changed) {
     // simplifyFunction(
@@ -370,7 +370,7 @@ static bool runImpl(Function &F, DominatorTree &DT, PostDominatorTree &PDT,
     if (RunMeldingOnce) {
       break;
     }
-  } while (LocalChange && CountIter < MaxIterations);
+  } while (LocalChange); // && CountIter < MaxIterations);
 
   return Changed;
 }
