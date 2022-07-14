@@ -36,15 +36,16 @@ namespace llvm {
 class Utils {
 public:
   static bool containsUnhandledInstructions(const BasicBlock *BB);
-  
+
   /// Check if block BB is valid location to apply the melding transformation.
   /// follwing condtions are checked here.
   /// - BB must have two successors
   /// - BB must dominate both successors
   /// - Successors of BB can not have a path between them
   /// - Successors of BB can not post-dominate each other
-  /// - BB must have post dominator 
-  /// - Region encapsulated by BB and its post-dominator can not contain unhandled instructions
+  /// - BB must have post dominator
+  /// - Region encapsulated by BB and its post-dominator can not contain
+  /// unhandled instructions
   ///   (currently switch instructions)  : FIXME
   static bool isValidMergeLocation(BasicBlock &BB, DominatorTree &DT,
                                    PostDominatorTree &PDT);
@@ -56,14 +57,18 @@ public:
   /// Checks if value 'V1' can be merged with value 'V2'
   static bool match(Value *V1, Value *V2);
 
-  /// Computes maximum possible latency reduction achieved by merging 
+  /// Computes maximum possible latency reduction achieved by merging
   /// two blocks in the best case scenario (i.e. everything aligns)
   static std::pair<unsigned, unsigned>
   computeLatReductionAtBest(BasicBlock *BB1, BasicBlock *BB2);
 
   /// Compute the similarity score for two blocks
-  static double computeBBSimilarty(BasicBlock *BB1, BasicBlock *BB2);
-  
+  static double computeBlockSimilarity(BasicBlock *BB1, BasicBlock *BB2);
+
+  /// Compute block similarity with region replication
+  static double computeBlockSimilarity(BasicBlock *BB1, BasicBlock *BB2,
+                                       Region *Replicated, function_ref<int()> GetBrCost);
+
   /// Computes the similarity score for two regions given by 'Mapping'
   static double
   computeRegionSimilarity(const DenseMap<BasicBlock *, BasicBlock *> &Mapping,
@@ -73,13 +78,19 @@ public:
   static Region *getRegionWithEntryExit(RegionInfo &RI, BasicBlock *Entry,
                                         BasicBlock *Exit);
 
-  /// checks if a region need to be simplified. Region R is not simple if it's exit 
-  /// has predecessors from outside R
+  /// checks if a region need to be simplified. Region R is not simple if it's
+  /// exit has predecessors from outside R
   static bool requireRegionSimplification(Region *R);
 
-  /// cutomized instruction latency cost (only used for GPU control-flow melding)
+  /// cutomized instruction latency cost (only used for GPU control-flow
+  /// melding)
   static int getInstructionCost(Instruction *I);
 
+  /// get name as operand for basic block
+  static std::string getNameStr(Value *V);
+
+  /// write a function CFG into a .dot file
+  void writeCFGToDotFile(Function &F, std::string Prefix);
 };
 
 } // namespace llvm

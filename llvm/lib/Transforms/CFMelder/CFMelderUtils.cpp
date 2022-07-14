@@ -1,11 +1,16 @@
 #include "CFMelderUtils.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Analysis/CFG.h"
+#include "llvm/Analysis/CFGPrinter.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/raw_ostream.h"
+#include <sstream>
 using namespace llvm;
 
 bool Utils::requireRegionSimplification(Region *R) {
@@ -130,8 +135,7 @@ Utils::computeLatReductionAtBest(BasicBlock *BB1, BasicBlock *BB2) {
     if (FreqMap.find(It->getOpcode()) == FreqMap.end())
       FreqMap[It->getOpcode()] = std::make_pair(0, 0);
 
-    FreqMap[It->getOpcode()].first +=
-        Utils::getInstructionCost(&(*It));
+    FreqMap[It->getOpcode()].first += Utils::getInstructionCost(&(*It));
     TotalLatency += Utils::getInstructionCost(&(*It));
   }
 
@@ -139,8 +143,7 @@ Utils::computeLatReductionAtBest(BasicBlock *BB1, BasicBlock *BB2) {
     if (FreqMap.find(It->getOpcode()) == FreqMap.end())
       FreqMap[It->getOpcode()] = std::make_pair(0, 0);
 
-    FreqMap[It->getOpcode()].second +=
-        Utils::getInstructionCost(&(*It));
+    FreqMap[It->getOpcode()].second += Utils::getInstructionCost(&(*It));
     TotalLatency += Utils::getInstructionCost(&(*It));
   }
 
@@ -157,7 +160,7 @@ Utils::computeLatReductionAtBest(BasicBlock *BB1, BasicBlock *BB2) {
   return std::pair<unsigned, unsigned>(LatReducedAtBest, TotalLatency);
 }
 
-double Utils::computeBBSimilarty(BasicBlock *BB1, BasicBlock *BB2) {
+double Utils::computeBlockSimilarity(BasicBlock *BB1, BasicBlock *BB2) {
   // double NMergeableAtBest = (double)computeMaxNumMergeableInsts(BB1, BB2);
   // double TotalInsts = (double)(BB1->size() + BB2->size());
   // return NMergeableAtBest / TotalInsts;
@@ -167,6 +170,30 @@ double Utils::computeBBSimilarty(BasicBlock *BB1, BasicBlock *BB2) {
   // errs() << "latency reduction at best in bb : " << LatReductionAtBest <<
   // "\n"; errs() << "total latency in bb: " << TotalLat << "\n";
   return LatReductionAtBest / TotalLat;
+}
+
+double Utils::computeBlockSimilarity(BasicBlock *BB1, BasicBlock *BB2,
+                                     Region *Replicated,
+                                     function_ref<int()> GetBrCost) {
+  int LatReductionAtBest = 0, TotalLatency = 0;
+  // iterate over all blocks in replicated region
+  for (auto *BB : Replicated->blocks()) {
+    // for the matched blocks compute the instructions that can merged in best case
+    if (BB == BB1 || BB == BB2) {
+      auto LatInfo = computeLatReductionAtBest(BB1, BB2);
+      LatReductionAtBest += LatInfo.first;
+      TotalLatency += LatInfo.second;
+    } 
+    // else you have to pay one more branch to execute the block conditionally
+    else {
+      for (Instruction &I : *BB) {
+        TotalLatency += Utils::getInstructionCost(&I);
+      }
+      LatReductionAtBest -= GetBrCost();
+    }
+  }
+
+  return (double)LatReductionAtBest / (double)TotalLatency;
 }
 
 double Utils::computeRegionSimilarity(
@@ -217,4 +244,27 @@ int Utils::getInstructionCost(Instruction *I) {
     break;
   }
   return SavedCycles;
+}
+
+std::string Utils::getNameStr(Value *V) {
+  std::string Out;
+  llvm::raw_string_ostream SS(Out);
+  V->printAsOperand(SS, false);
+  return SS.str();
+}
+
+void Utils::writeCFGToDotFile(Function &F, std::string Prefix = "") {
+  std::string Filename = (Prefix + F.getName() + ".dot").str();
+  errs() << "Writing '" << Filename << "'...";
+
+  std::error_code EC;
+  raw_fd_ostream File(Filename, EC, sys::fs::OF_Text);
+
+  DOTFuncInfo CFGInfo(&F);
+
+  if (!EC)
+    WriteGraph(File, &CFGInfo);
+  else
+    errs() << "  error opening file for writing!";
+  errs() << "\n";
 }
