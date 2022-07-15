@@ -253,7 +253,7 @@ std::string Utils::getNameStr(Value *V) {
   return SS.str();
 }
 
-void Utils::writeCFGToDotFile(Function &F, std::string Prefix = "") {
+void Utils::writeCFGToDotFile(Function &F, std::string Prefix) {
   std::string Filename = (Prefix + F.getName() + ".dot").str();
   errs() << "Writing '" << Filename << "'...";
 

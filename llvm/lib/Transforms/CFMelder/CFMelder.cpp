@@ -183,8 +183,6 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
   Function *Func = &F;
   bool LocalChange = false, Changed = false;
 
-  SimplifyCFGOptions SimplifyCFGOptionsObj;
-
   int OrigCodeSize = computeCodeSize(&F, TTI);
   unsigned CountIter = 0;
 
@@ -201,8 +199,6 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
         RA.computeRegionMatch();
 
         if (RA.hasAnyProfitableMatch()) {
-
-          int OrigSize = computeCodeSize(Func, TTI);
 
           // Store the indexes of profitable merges
           SmallVector<int, 8> Profitable;
