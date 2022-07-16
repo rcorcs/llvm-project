@@ -7,11 +7,13 @@
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/Value.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include <chrono>
+#include <string>
 
 using namespace llvm;
 #define ENABLE_TIMING 1
@@ -43,7 +45,6 @@ STATISTIC(RegionToRegionMeldings,
           "Number of profitable region to region meldings");
 STATISTIC(InstrAlignTime,
           "Time spent in instruction alignment in microseconds");
-
 
 AlignedSeq<Value *>
 RegionMelder::getAlignmentOfBlocks(BasicBlock *LeftBb, BasicBlock *RightBb,
@@ -366,6 +367,9 @@ void RegionMelder::setOperendsForBr(BranchInst *LeftBr, BranchInst *RightBr,
   BasicBlock *NewBbRightBr =
       BasicBlock::Create(MA.getParentFunction()->getContext(),
                          "merged.branch.split", MA.getParentFunction());
+
+  MergedBBs.push_back(NewBbLeftBr);
+  MergedBBs.push_back(NewBbRightBr);
 
   // clone the original branches and add them to new BBs
   IRBuilder<> Builder(NewBbLeftBr);
@@ -791,6 +795,9 @@ void RegionMelder::runUnpredicationPass() {
     SplitBb->setName("predication.split"); // FIX : for ambigous overloading
     BasicBlock *TailBlock = SplitBlock(SplitBb, Range.getEnd()->getNextNode());
     TailBlock->setName("predication.tail"); //  FIX : for ambigous overloading
+
+    MergedBBs.push_back(SplitBb);
+
     // now only execute the splitBlock conditionally
     Instruction *OldBr = BB->getTerminator();
     BasicBlock *TrueTarget = nullptr;
@@ -1115,31 +1122,113 @@ void RegionMelder::runPreMergePasses(bool RegionAlreadySimplified) {
   mergeOutsideDefsAtEntry();
 }
 
-void RegionMelder::runPostOptimizations() {
+static void simplifyConditionalBranches(Function *F) {
+  // check for conditional branches with same target and fold them
+  for (auto &BB : *F) {
+    if (BranchInst *BI = dyn_cast<BranchInst>(BB.getTerminator())) {
+      if (BI->getNumSuccessors() == 2 &&
+          BI->getSuccessor(0) == BI->getSuccessor(1)) {
+        DEBUG << "Converting conditional branch to unconditional\n";
+        IRBuilder<> Builder(BI);
+        Builder.CreateBr(BI->getSuccessor(0));
+        BI->eraseFromParent();
+      }
+    }
+  }
+}
 
+void RegionMelder::runPostOptimizations() {
+  Function *F = MA.getParentFunction();
+  static int Count = 0;
+  // Utils::writeCFGToDotFile(*MA.getParentFunction(), std::to_string(Count++) + ".cfmelder.");
   INFO << "Running post-merge optimizations\n";
+
+  // first, simplify conditional branches
+  simplifyConditionalBranches(F);
+
+  // remove empty basic blocks with single incoming edge and single outgoing
+  // edge
+  for (BasicBlock *BB : MergedBBs) {
+
+    if (pred_size(BB) == 1 && succ_size(BB) == 1 && BB->size() == 1) {
+      // errs() << "processing block " << BB->getNameOrAsOperand() << "\n";
+      BasicBlock *SinglePred = *pred_begin(BB);
+      BasicBlock *SingleSucc = *succ_begin(BB);
+
+      // check if SinglePred is also a predecessor of SingleSucc
+      // SinglePred
+      //  /   \
+      // BB    |
+      //  \   /
+      // SingleSucc
+      if (isa<BranchInst>(SinglePred->getTerminator())) {
+        BranchInst *BI = dyn_cast<BranchInst>(SinglePred->getTerminator());
+        if (BI->isConditional() && (BI->getSuccessor(0) == SingleSucc ||
+                                    BI->getSuccessor(1) == SingleSucc)) {
+          Value *Cond = BI->getCondition();
+          // move the incoming values from phi nodes nodes to SinglePred
+          // as select instructions
+          for (auto &PHI : SingleSucc->phis()) {
+            Value *TrueIncoming =
+                BI->getSuccessor(0) == BB
+                    ? PHI.getIncomingValueForBlock(BB)
+                    : PHI.getIncomingValueForBlock(SinglePred);
+            Value *FalseIncoming =
+                BI->getSuccessor(1) == BB
+                    ? PHI.getIncomingValueForBlock(BB)
+                    : PHI.getIncomingValueForBlock(SinglePred);
+
+            // create a select
+            SelectInst *Sel = SelectInst::Create(
+                Cond, TrueIncoming, FalseIncoming, "moved.sel", BI);
+            // update the incoming value
+            PHI.setIncomingValueForBlock(BB, Sel);
+            PHI.setIncomingValueForBlock(SinglePred, Sel);
+          }
+        }
+      }
+
+      // connect SinglePred to SingleSucc
+      SinglePred->getTerminator()->replaceSuccessorWith(BB, SingleSucc);
+      // replace all uses in PHI nodes
+      BB->replaceAllUsesWith(SinglePred);
+      // unlink
+      BB->eraseFromParent();
+    }
+  }
+
+  // previous step can create conditional branches with same successors
+  simplifyConditionalBranches(F);
 
   // check for phi nodes with identical incoming value, block pairs
   // and fold them
-  for (auto *BB : MergedBBs) {
-    for (PHINode &Phi : BB->phis()) {
-      bool Changed = false;
-      do {
-        Changed = false;
-        for (unsigned I = 0; I < Phi.getNumIncomingValues(); I++) {
-          for (unsigned J = I + 1; J < Phi.getNumIncomingValues(); J++) {
-            if (Phi.getIncomingBlock(I) == Phi.getIncomingBlock(J) &&
-                Phi.getIncomingValue(I) == Phi.getIncomingValue(J)) {
-              Phi.removeIncomingValue(J);
-              Changed = true;
+
+  for (auto &BB : *F) {
+    for (PHINode &Phi : BB.phis()) {
+      if (Phi.getNumIncomingValues() > pred_size(&BB)) {
+        bool Changed = false;
+        do {
+          Changed = false;
+          for (unsigned I = 0; I < Phi.getNumIncomingValues(); I++) {
+            BasicBlock *IncomingBlk = Phi.getIncomingBlock(I);
+            // only process incoming values from merged blocks
+            if (std::find(MergedBBs.begin(), MergedBBs.end(), IncomingBlk) ==
+                MergedBBs.end())
+              continue;
+            for (unsigned J = I + 1; J < Phi.getNumIncomingValues(); J++) {
+              if (Phi.getIncomingBlock(I) == Phi.getIncomingBlock(J) &&
+                  Phi.getIncomingValue(I) == Phi.getIncomingValue(J)) {
+                Phi.removeIncomingValue(J);
+                Changed = true;
+                break;
+              }
+            }
+            if (Changed) {
               break;
             }
           }
-          if (Changed) {
-            break;
-          }
-        }
-      } while (Changed);
+        } while (Changed);
+      }
     }
   }
 
@@ -1160,18 +1249,6 @@ void RegionMelder::runPostOptimizations() {
     PN->eraseFromParent();
   }
 
-  // check for conditional branches with same target and fold them
-  for (auto &BB : *MA.getParentFunction()) {
-    if (BranchInst *BI = dyn_cast<BranchInst>(BB.getTerminator())) {
-      if (BI->getNumSuccessors() == 2 &&
-          BI->getSuccessor(0) == BI->getSuccessor(1)) {
-        DEBUG << "Converting conditional branch to unconditional\n";
-        IRBuilder<> Builder(BI);
-        // BasicBlock *singleDest = BI->getSuccessor(0);
-        // singleDest->removePredecessor(BI->getParent());
-        Builder.CreateBr(BI->getSuccessor(0));
-        BI->eraseFromParent();
-      }
-    }
-  }
+  // Utils::writeCFGToDotFile(*F, std::to_string(Count++) + ".cfmelder.");
+  // verifyFunction(*F);
 }
