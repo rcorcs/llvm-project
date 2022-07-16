@@ -254,6 +254,7 @@ static cl::opt<unsigned> BucketSizeCap(
     "bucket-size-cap", cl::init(1000000000), cl::Hidden,
     cl::desc("Define a threshold to be used"));
 
+
 static std::string GetValueName(const Value *V);
 
 #ifdef __unix__ /* __unix__ is usually defined by compilers targeting Unix     \
@@ -1591,9 +1592,9 @@ void FunctionMerger::CodeGenerator::destroyGeneratedCode() {
     }
   }
   auto Purge = [&](BasicBlock *BB) {
-    if (Debug) {
-      errs() << "Deleting " << BB->getName() << "\n";
-    }
+    //if (Debug) {
+    //  errs() << "Deleting " << BB->getName().str() << "\n";
+    //}
     for (auto It = BB->rbegin(), E = BB->rend(); It!=E;) {
       Instruction *I = &*It;
       It++;
@@ -2449,7 +2450,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
   PtrToRefContainer<BasicBlock, SmallVector<BasicBlock *, 8> > F2RefBlocks(F2Blocks);
 
   AlignmentStats TotalAlignmentStats;
-  AlignedSequence<Value *> AlignedSeq = alignBlocks(F1RefBlocks, F2RefBlocks, TotalAlignmentStats, Options);
+  AlignedSequence<Value *> AlignedSeq = alignBlocks(F1RefBlocks, F2RefBlocks, TotalAlignmentStats, nullptr, Options);
 
   ProfitableFn = TotalAlignmentStats.isProfitable();
 
@@ -4711,6 +4712,7 @@ bool FunctionMerger::SALSSACodeGen::generate(
 
 
           if (BlocksReMap.find(NewPredBB) != BlocksReMap.end()) {
+	    bool Handled = false;
 	    for (unsigned Index = 0; Index < PHI->getNumIncomingValues(); Index++) {
 	      if (FoundIndices.count(Index)) continue;
 	      if (PHI->getIncomingBlock(Index)==BlocksReMap[NewPredBB]) {
@@ -4719,7 +4721,18 @@ bool FunctionMerger::SALSSACodeGen::generate(
                 if (V == nullptr)
                   V = UndefValue::get(NewPHI->getType());
                 NewPHI->addIncoming(V, NewPredBB);
+	        Handled = true;
 	      }
+	    }
+	    if (!Handled) {
+		    errs() << "ERROR: Could not handle this case\n";
+		    errs() << "PHI:"; PHI->dump();
+		    errs() << "NewPHI:"; NewPHI->dump();
+		    //errs() << "New Block:\n"; NewPHI->getParent()->dump();
+		    //errs() << "New Pred Block:\n"; NewPredBB->dump();
+                    //Value *V = UndefValue::get(NewPHI->getType());
+                    //NewPHI->addIncoming(V, NewPredBB);
+		    return false;
 	    }
           } else {
             Value *V = UndefValue::get(NewPHI->getType());
@@ -4752,9 +4765,9 @@ bool FunctionMerger::SALSSACodeGen::generate(
     if (!AssignPHIOperandsInBlock(BB1, BlocksF1)) {
       //if (Debug)
       errs() << "ERROR: PHI assignment\n";
-        // MergedFunc->eraseFromParent();
-	BB1->dump();
-	MergedFunc->dump();
+      // MergedFunc->eraseFromParent();
+      //BB1->dump();
+      //MergedFunc->dump();
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGen.stopTimer();
 #endif
@@ -4765,9 +4778,9 @@ bool FunctionMerger::SALSSACodeGen::generate(
     if (!AssignPHIOperandsInBlock(BB2, BlocksF2)) {
       //if (Debug)
       errs() << "ERROR: PHI assignment\n";
-	BB2->dump();
-	MergedFunc->dump();
-        // MergedFunc->eraseFromParent();
+      //BB2->dump();
+      //MergedFunc->dump();
+      // MergedFunc->eraseFromParent();
 #ifdef TIME_STEPS_DEBUG
       TimeCodeGen.stopTimer();
 #endif
@@ -4855,12 +4868,16 @@ AllocaInst *  FunctionMerger::SALSSACodeGen::MemfyInst(std::set<Instruction *> &
     IRBuilder<> Builder(&*PreBB->getFirstInsertionPt());
     AllocaInst *Addr = Builder.CreateAlloca((*InstSet.begin())->getType());
 
+    errs() << "Storing in address:"; Addr->dump();
     for (Instruction *I : InstSet) {
+      errs() << "Instr:";I->dump();
       for (auto UIt = I->use_begin(), E = I->use_end(); UIt != E;) {
         Use &UI = *UIt;
         UIt++;
 
         auto *User = cast<Instruction>(UI.getUser());
+
+	errs() << "User:"; User->dump();
 
 	Value *NewV = nullptr;
         if (auto *PHI = dyn_cast<PHINode>(User)) {
@@ -4881,6 +4898,7 @@ AllocaInst *  FunctionMerger::SALSSACodeGen::MemfyInst(std::set<Instruction *> &
           //UI.set(Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr));
           NewV = Builder.CreateLoad(Addr->getType()->getPointerElementType(), Addr);
         }
+	errs() << "Load:";NewV->dump();
         UI.set(NewV);
 
 	//errs() << "Memfying:\n";
@@ -5071,7 +5089,7 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
       if (Visited.find(I) != Visited.end())
         continue;
 
-      //errs() << "Processing: "; I->dump();
+      errs() << "Processing: "; I->dump();
 
       std::set<Instruction *> InstSet;
       InstSet.insert(I);
@@ -5086,27 +5104,37 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
       for (Instruction *OtherI : InstSet)
         Visited.insert(OtherI);
 
-      //errs() << "Computing memfyInst\n";
+      errs() << "Computing memfyInst\n";
       AllocaInst *Addr = MemfyInst(InstSet);
-      //errs() << "Addr computed: ";Addr->dump();
+      errs() << "Addr computed: ";Addr->dump();
       if (Addr)
         Allocas.push_back(Addr);
 
-      //errs() << "next\n";
+      errs() << "next\n";
     }
 
     //MergedFunc->dump();
 
-    //errs() << "Building DT\n";
+    errs() << "verifying\n";
+    if (verifyFunction(*MergedFunc)) {
+      //if (Verbose)
+      errs() << "ERROR: Produced Broken Function!\n";
+#ifdef TIME_STEPS_DEBUG
+      TimeCodeGenFix.stopTimer();
+#endif
+      return false;
+    }
+
+    errs() << "Building DT\n";
     DominatorTree DT(*MergedFunc);
 
 
-    //errs() << "Mem2Reg\n";
+    errs() << "Mem2Reg\n";
     PromoteMemToReg(Allocas, DT, nullptr);
 
     //MergedFunc->dump();
 
-    //errs() << "verifying\n";
+    errs() << "verifying\n";
     if (verifyFunction(*MergedFunc)) {
       //if (Verbose)
       errs() << "ERROR: Produced Broken Function!\n";

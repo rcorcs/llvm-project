@@ -1,0 +1,186 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %4 = load %struct._IO_FILE*, %struct._IO_FILE** @pgpout, align 8, !tbaa !6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call19 = tail call i8* @LANG(i8* getelementptr inbounds ([36 x i8], [36 x i8]* @.str.30, i64 0, i64 0)) #21</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call20 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %4, i8* %call19, i8* %newname.addr.0) #20</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %5 = load i8, i8* @force_flag, align 1, !tbaa !3</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %tobool21.not = icmp eq i8 %5, 0</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br i1 %tobool21.not, label %if.then26, label %cleanup</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %2 = load %struct._IO_FILE*, %struct._IO_FILE** @pgpout, align 8, !tbaa !6</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call3 = tail call i8* @LANG(i8* getelementptr inbounds ([36 x i8], [36 x i8]* @.str.30, i64 0, i64 0)) #21</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call4 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %2, i8* %call3, i8* %newname.addr.0) #20</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="0" colspan="2"> </td>
+</tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %tobool37.not = icmp eq i8 %delete_dup, 0</td></tr>
+<tr><td align="left">  %tobool43.not = icmp eq i8 %notest, 0</td></tr>
+<tr><td align="left">  br label %while.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond:</td></tr>
+<tr><td align="left">  %newname.addr.0 = phi i8* [ %newname, %entry ], [ %newname.addr.1, %if.end42 ]</td></tr>
+<tr><td align="left">  %call = tail call zeroext i8 @file_exists(i8* %newname.addr.0) #20</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i8 %call, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %cleanup, label %while.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  %0 = load i8, i8* @batchmode, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %tobool1 = icmp eq i8 %0, 0</td></tr>
+<tr><td align="left">  %1 = load i8, i8* @force_flag, align 1</td></tr>
+<tr><td align="left">  %tobool2 = icmp ne i8 %1, 0</td></tr>
+<tr><td align="left">  %or.cond = select i1 %tobool1, i1 true, i1 %tobool2</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %or.cond, label %if.end, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %call5 = tail call fastcc zeroext i8 @is_regular_file(i8* %newname.addr.0) #20</td></tr>
+<tr><td align="left">  %tobool6.not = icmp eq i8 %call5, 0</td></tr>
+<tr><td align="left">  br i1 %tobool6.not, label %if.else, label %if.then7</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then7:</td></tr>
+<tr><td align="left">  %3 = load i8, i8* @force_flag, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %tobool8.not = icmp eq i8 %3, 0</td></tr>
+<tr><td align="left">  br i1 %tobool8.not, label %if.end24, label %if.then9</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then9:</td></tr>
+<tr><td align="left">  br i1 %tobool37.not, label %cleanup, label %if.then11</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then11:</td></tr>
+<tr><td align="left">  %call12 = tail call i32 @remove(i8* %newname.addr.0) #21</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end24:</td></tr>
+<tr><td align="left">  %6 = load %struct._IO_FILE*, %struct._IO_FILE** @pgpout, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call15 = tail call i8* @LANG(i8* getelementptr inbounds ([54 x i8], [54 x i8]* @.str.31, i64 0, i64 0)) #21</td></tr>
+<tr><td align="left">  %call16 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %6, i8* %call15, i8* %newname.addr.0) #20</td></tr>
+<tr><td align="left">  %call17 = tail call zeroext i8 @getyesno(i8 signext 110) #20</td></tr>
+<tr><td align="left">  %tobool25.not = icmp eq i8 %call17, 0</td></tr>
+<tr><td align="left">  br i1 %tobool25.not, label %if.then26, label %if.else36</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then26:</td></tr>
+<tr><td align="left">  %7 = load %struct._IO_FILE*, %struct._IO_FILE** @pgpout, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc = tail call i32 @fputc(i32 10, %struct._IO_FILE* %7)</td></tr>
+<tr><td align="left">  %8 = load %struct._IO_FILE*, %struct._IO_FILE** @pgpout, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %call28 = tail call i8* @LANG(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.33, i64 0, i64 0)) #21</td></tr>
+<tr><td align="left">  %call29 = tail call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %8, i8* %call28) #20</td></tr>
+<tr><td align="left">  %9 = load %struct._IO_FILE*, %struct._IO_FILE** @pgpout, align 8, !tbaa !6</td></tr>
+<tr><td align="left">  %fputc55 = tail call i32 @fputc(i32 32, %struct._IO_FILE* %9)</td></tr>
+<tr><td align="left">  %call31 = tail call i32 @getstring(i8* getelementptr inbounds ([256 x i8], [256 x i8]* @ck_dup_output.buf, i64 0, i64 0), i32 255, i32 1) #21</td></tr>
+<tr><td align="left">  %10 = load i8, i8* getelementptr inbounds ([256 x i8], [256 x i8]* @ck_dup_output.buf, i64 0, i64 0), align 16, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp = icmp eq i8 %10, 0</td></tr>
+<tr><td align="left">  br i1 %cmp, label %cleanup, label %if.end42</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else36:</td></tr>
+<tr><td align="left">  br i1 %tobool37.not, label %cleanup, label %if.then38</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then38:</td></tr>
+<tr><td align="left">  %call39 = tail call i32 @remove(i8* %newname.addr.0) #21</td></tr>
+<tr><td align="left">  br label %if.end42</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end42:</td></tr>
+<tr><td align="left">  %newname.addr.1 = phi i8* [ %newname.addr.0, %if.then38 ], [ getelementptr inbounds ([256 x i8], [256 x i8]* @ck_dup_output.buf, i64 0, i64 0), %if.then26 ]</td></tr>
+<tr><td align="left">  br i1 %tobool43.not, label %while.cond, label %cleanup, !llvm.loop !8</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %retval.0 = phi i8* [ null, %if.then ], [ %newname.addr.0, %if.then11 ], [ %newname.addr.0, %if.then9 ], [ %newname.addr.0, %while.cond ], [ %newname.addr.0, %if.else36 ], [ %newname.addr.1, %if.end42 ], [ null, %if.then26 ], [ null, %if.else ]</td></tr>
+<tr><td align="left">  ret i8* %retval.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb1:fT -> f_bb12:f
+f_bb1:fF -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> m_bb0:f2
+m_bb0:f2 -> f_bb12:f
+f_bb3:fT -> m_bb0:f1
+f_bb3:fF -> f_bb4:f
+f_bb4:fT -> f_bb7:f
+f_bb4:fF -> f_bb5:f
+f_bb5:fT -> f_bb12:f
+f_bb5:fF -> f_bb6:f
+f_bb6:f -> f_bb12:f
+m_bb0:f1T -> f_bb8:f
+m_bb0:f1F -> f_bb12:f
+f_bb7:fT -> f_bb8:f
+f_bb7:fF -> f_bb9:f
+f_bb8:fT -> f_bb12:f
+f_bb8:fF -> f_bb11:f
+f_bb9:fT -> f_bb12:f
+f_bb9:fF -> f_bb10:f
+f_bb10:f -> f_bb11:f
+f_bb11:fT -> f_bb1:f
+f_bb11:fF -> f_bb12:f
+}
+

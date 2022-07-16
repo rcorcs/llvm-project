@@ -228,7 +228,9 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
             ClonedRM.merge(I);
             int SizeAfter = computeCodeSize(ClonedFunc, TTI);
             DEBUG << "Size changed from " << SizeBefore << " to " << SizeAfter
-                  << "\n";
+		  << " : " << (SizeBefore - SizeAfter) << " : " << ((SizeBefore > SizeAfter)?"Profitable":"Unprofitable")
+                  << " Branch Fusion! [" << F.getName().str()  << "] ";
+	    BB->getTerminator()->dump();
             if (SizeBefore > SizeAfter) {
               Profitable.push_back(I);
             }

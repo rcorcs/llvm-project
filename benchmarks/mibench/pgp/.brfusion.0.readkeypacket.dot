@@ -48,25 +48,26 @@ m_bb3 [shape = none, label  = <<table border="0" cellspacing="0">
 <tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
 <tr><td align="left">if.then63:</td></tr>
 <tr><td bgcolor="lightgreen" align="left">  %call64 = call i64 @fread(i8* nonnull %version, i64 1, i64 1, %struct._IO_FILE* %f) #13</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %7 = load i8, i8* %version, align 1, !tbaa !3</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %conv65 = zext i8 %7 to i32</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %call66 = tail call i32 @version_byte_error(i32 %conv65) #14</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %tobool67.not = icmp eq i32 %call66, 0</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  br i1 %tobool67.not, label %if.end70, label %if.then68</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %7 = load i8, i8* %version, align 1, !tbaa !3</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %conv65 = zext i8 %7 to i32</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call66 = tail call i32 @version_byte_error(i32 %conv65) #14</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %tobool67.not = icmp eq i32 %call66, 0</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br i1 %tobool67.not, label %if.end70, label %if.then68</td></tr>
 </table>
 </td>
 <td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
-<tr><td align="left">if.end107:</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %call108 = call i64 @fread(i8* nonnull %version, i64 1, i64 1, %struct._IO_FILE* %f) #13</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %9 = load i8, i8* %version, align 1, !tbaa !3</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %conv109 = zext i8 %9 to i32</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %call110 = tail call i32 @version_byte_error(i32 %conv109) #14</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %tobool111.not = icmp eq i32 %call110, 0</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  br i1 %tobool111.not, label %if.end114, label %if.then112</td></tr>
+<tr><td align="left">if.then88:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call90 = tail call i64 @fread(i8* nonnull %keyctrl, i64 1, i64 %conv39, %struct._IO_FILE* %f) #13</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %cleanup</td></tr>
 </table>
 </td></tr>
 <tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
-<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+<td border="0" colspan="2"> </td>
 </tr>
 </table>> ]
 m_bb4 [shape = none, label  = <<table border="0" cellspacing="0">
@@ -81,14 +82,14 @@ m_bb4 [shape = none, label  = <<table border="0" cellspacing="0">
 </table>
 </td>
 <td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
-<tr><td align="left">if.then178:</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %call179 = call i64 @fread(i8* nonnull %alg, i64 1, i64 1, %struct._IO_FILE* %f) #13</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %14 = load i8, i8* %alg, align 1, !tbaa !3</td></tr>
+<tr><td align="left">if.end107:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %call108 = call i64 @fread(i8* nonnull %version, i64 1, i64 1, %struct._IO_FILE* %f) #13</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %9 = load i8, i8* %version, align 1, !tbaa !3</td></tr>
 <tr><td bgcolor="#e8765c70" align="left"> </td></tr>
 <tr><td bgcolor="#e8765c70" align="left"> </td></tr>
 <tr><td bgcolor="#e8765c70" align="left"> </td></tr>
 <tr><td bgcolor="#e8765c70" align="left"> </td></tr>
-<tr><td bgcolor="#e8765c70" align="left">  %tobool181.not = icmp eq i8 %14, 0</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %conv109 = zext i8 %9 to i32</td></tr>
 </table>
 </td></tr>
 <tr><td border="0" colspan="2"> </td>
@@ -250,14 +251,6 @@ f_bb12 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
 f_bb13 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
-<tr><td port="f" border="1"><table border="0">
-<tr><td align="left">if.then88:</td></tr>
-<tr><td align="left">  %call90 = tail call i64 @fread(i8* nonnull %keyctrl, i64 1, i64 %conv39, %struct._IO_FILE* %f) #13</td></tr>
-<tr><td align="left">  br label %cleanup</td></tr>
-</table>
-</td></tr>
-</table>> ]
-f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end103:</td></tr>
 <tr><td align="left">  %cmp104.not = icmp eq i16* %n, null</td></tr>
@@ -266,7 +259,7 @@ f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then106:</td></tr>
 <tr><td align="left">  store i16 130, i16* @global_precision, align 2, !tbaa !6</td></tr>
@@ -274,7 +267,7 @@ f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then112:</td></tr>
 <tr><td align="left">  %call113 = tail call i32 @fseek(%struct._IO_FILE* %f, i64 %add, i32 0) #13</td></tr>
@@ -282,7 +275,7 @@ f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end114:</td></tr>
 <tr><td align="left">  %tobool115.not = icmp eq i8* %timestamp, null</td></tr>
@@ -291,7 +284,7 @@ f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then116:</td></tr>
 <tr><td align="left">  %call117 = tail call i64 @fread(i8* nonnull %timestamp, i64 1, i64 4, %struct._IO_FILE* %f) #13</td></tr>
@@ -300,7 +293,7 @@ f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb19 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.else118:</td></tr>
 <tr><td align="left">  %call119 = tail call i32 @fseek(%struct._IO_FILE* %f, i64 4, i32 1) #13</td></tr>
@@ -308,7 +301,7 @@ f_bb19 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb20 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb19 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end120:</td></tr>
 <tr><td align="left">  %call121 = call i64 @fread(i8* nonnull %0, i64 1, i64 2, %struct._IO_FILE* %f) #13</td></tr>
@@ -323,7 +316,7 @@ f_bb20 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb21 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb20 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then126:</td></tr>
 <tr><td align="left">  %call127 = call i32 @fseek(%struct._IO_FILE* %f, i64 %add, i32 0) #13</td></tr>
@@ -331,7 +324,7 @@ f_bb21 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb22 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb21 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end128:</td></tr>
 <tr><td align="left">  br i1 %cmp104.not, label %if.then133, label %if.end135</td></tr>
@@ -339,7 +332,7 @@ f_bb22 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb23 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb22 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then133:</td></tr>
 <tr><td align="left">  %call134 = call i32 @fseek(%struct._IO_FILE* %f, i64 %add, i32 0) #13</td></tr>
@@ -347,7 +340,7 @@ f_bb23 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb24 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb23 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end135:</td></tr>
 <tr><td align="left">  %call136 = call i32 @read_mpi(i16* nonnull %n, %struct._IO_FILE* %f, i8 zeroext 1, %struct.IdeaCfbContext* null) #14</td></tr>
@@ -357,7 +350,7 @@ f_bb24 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb25 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb24 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then139:</td></tr>
 <tr><td align="left">  %call140 = call i32 @fseek(%struct._IO_FILE* %f, i64 %add, i32 0) #13</td></tr>
@@ -365,7 +358,7 @@ f_bb25 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb26 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb25 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end141:</td></tr>
 <tr><td align="left">  %call142 = call i32 @read_mpi(i16* %e, %struct._IO_FILE* %f, i8 zeroext 0, %struct.IdeaCfbContext* null) #14</td></tr>
@@ -375,7 +368,7 @@ f_bb26 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb27 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb26 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then145:</td></tr>
 <tr><td align="left">  %call146 = call i32 @fseek(%struct._IO_FILE* %f, i64 %add, i32 0) #13</td></tr>
@@ -383,7 +376,7 @@ f_bb27 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb28 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb27 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end147:</td></tr>
 <tr><td align="left">  %call148 = call i32 @countbits(i16* nonnull %n) #14</td></tr>
@@ -401,7 +394,7 @@ f_bb28 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb29 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb28 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then161:</td></tr>
 <tr><td align="left">  %conv162 = and i32 %sub157, 65535</td></tr>
@@ -414,11 +407,22 @@ f_bb29 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb30 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb29 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end173:</td></tr>
 <tr><td align="left">  %cmp176 = icmp eq i8 %6, 20</td></tr>
 <tr><td align="left">  br i1 %cmp176, label %if.then178, label %if.else268</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then178:</td></tr>
+<tr><td align="left">  %call179 = call i64 @fread(i8* nonnull %alg, i64 1, i64 1, %struct._IO_FILE* %f) #13</td></tr>
+<tr><td align="left">  %14 = load i8, i8* %alg, align 1, !tbaa !3</td></tr>
+<tr><td align="left">  %tobool181.not = icmp eq i8 %14, 0</td></tr>
+<tr><td align="left">  br i1 %tobool181.not, label %if.end209, label %land.lhs.true182</td></tr>
 </table>
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
@@ -650,44 +654,44 @@ m_bb4:f1 -> m_bb0:f1
 m_bb0:f1 -> f_bb47:f
 f_bb11:f -> m_bb0:f2
 f_bb11:f -> f_bb12:f
-f_bb11:f -> f_bb14:f
-f_bb11:f -> f_bb14:f
+f_bb11:f -> f_bb13:f
+f_bb11:f -> f_bb13:f
 f_bb12:fT -> m_bb1:f2
 f_bb12:fF -> f_bb47:f
 m_bb1:f2T -> m_bb2:f2
-m_bb1:f2F -> f_bb13:f
-f_bb13:f -> f_bb47:f
+m_bb1:f2F -> m_bb3:f2
+m_bb3:f2 -> f_bb47:f
 m_bb2:f2 -> f_bb47:f
 m_bb0:f2 -> f_bb47:f
-f_bb14:fT -> m_bb3:f2
-f_bb14:fF -> f_bb15:f
-f_bb15:f -> m_bb3:f2
-m_bb3:f2T -> f_bb17:f
-m_bb3:f2F -> f_bb16:f
-f_bb16:f -> f_bb47:f
-f_bb17:fT -> f_bb19:f
-f_bb17:fF -> f_bb18:f
-f_bb18:f -> f_bb20:f
-f_bb19:f -> f_bb20:f
-f_bb20:fT -> f_bb22:f
-f_bb20:fF -> f_bb21:f
-f_bb21:f -> f_bb47:f
-f_bb22:fT -> f_bb23:f
-f_bb22:fF -> f_bb24:f
-f_bb23:f -> f_bb47:f
-f_bb24:fT -> f_bb25:f
-f_bb24:fF -> f_bb26:f
-f_bb25:f -> f_bb47:f
-f_bb26:fT -> f_bb27:f
-f_bb26:fF -> f_bb28:f
-f_bb27:f -> f_bb47:f
-f_bb28:fT -> f_bb29:f
-f_bb28:fF -> f_bb30:f
-f_bb29:f -> f_bb47:f
-f_bb30:fT -> m_bb4:f2
-f_bb30:fF -> f_bb44:f
-m_bb4:f2T -> f_bb37:f
-m_bb4:f2F -> f_bb31:f
+f_bb13:fT -> m_bb4:f2
+f_bb13:fF -> f_bb14:f
+f_bb14:f -> m_bb4:f2
+m_bb4:f2T -> f_bb16:f
+m_bb4:f2F -> f_bb15:f
+f_bb15:f -> f_bb47:f
+f_bb16:fT -> f_bb18:f
+f_bb16:fF -> f_bb17:f
+f_bb17:f -> f_bb19:f
+f_bb18:f -> f_bb19:f
+f_bb19:fT -> f_bb21:f
+f_bb19:fF -> f_bb20:f
+f_bb20:f -> f_bb47:f
+f_bb21:fT -> f_bb22:f
+f_bb21:fF -> f_bb23:f
+f_bb22:f -> f_bb47:f
+f_bb23:fT -> f_bb24:f
+f_bb23:fF -> f_bb25:f
+f_bb24:f -> f_bb47:f
+f_bb25:fT -> f_bb26:f
+f_bb25:fF -> f_bb27:f
+f_bb26:f -> f_bb47:f
+f_bb27:fT -> f_bb28:f
+f_bb27:fF -> f_bb29:f
+f_bb28:f -> f_bb47:f
+f_bb29:fT -> f_bb30:f
+f_bb29:fF -> f_bb44:f
+f_bb30:fT -> f_bb37:f
+f_bb30:fF -> f_bb31:f
 f_bb31:fT -> f_bb33:f
 f_bb31:fF -> f_bb32:f
 f_bb32:f -> f_bb47:f

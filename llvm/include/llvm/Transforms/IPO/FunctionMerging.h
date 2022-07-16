@@ -249,7 +249,7 @@ public:
   static bool match(Value *V1, Value *V2);
 
   template<typename RegionT>
-  static AlignedSequence<Value *> alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, const FunctionMergingOptions &Options = {});
+  static AlignedSequence<Value *> alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, TargetTransformInfo *TTI=nullptr, const FunctionMergingOptions &Options = {});
 
   void updateCallGraph(FunctionMergeResult &Result,
                        StringSet<> &AlwaysPreserved,
@@ -447,15 +447,16 @@ public:
 
   Fingerprint() = default;
 
-  Fingerprint(T owner) {
+  Fingerprint(T owner, TargetTransformInfo *TTI=nullptr) {
     // memset(OpcodeFreq, 0, sizeof(int) * MaxOpcode);
     for (size_t i = 0; i < MaxOpcode; i++)
       OpcodeFreq[i] = 0;
 
     for (Instruction &I : getInstructions(owner)) {
-      OpcodeFreq[I.getOpcode()]++;
-      if (I.isTerminator())
-        OpcodeFreq[0] += I.getNumSuccessors();
+      auto cost = (TTI!=nullptr)?TTI->getInstructionCost(&I, TargetTransformInfo::TargetCostKind::TCK_CodeSize).getValue().getValue():1;
+      OpcodeFreq[I.getOpcode()] += cost;
+      //if (I.isTerminator())
+      //  OpcodeFreq[0] += I.getNumSuccessors();
     }
     for (size_t i = 0; i < MaxOpcode; i++) {
       uint64_t val = OpcodeFreq[i];
@@ -481,7 +482,7 @@ public:
   BasicBlock *BB{nullptr};
   size_t Size{0};
 
-  BlockFingerprint(BasicBlock *BB) : Fingerprint(BB), BB(BB) {
+  BlockFingerprint(BasicBlock *BB, TargetTransformInfo *TTI=nullptr) : Fingerprint(BB,TTI), BB(BB) {
     for (Instruction &I : *BB) {
       if (!isa<LandingPadInst>(&I) && !isa<PHINode>(&I)) {
         Size++;
@@ -491,7 +492,7 @@ public:
 };
 
 template<typename RegionT>
-AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, const FunctionMergingOptions &Options) {
+AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, AlignmentStats &TotalAlignmentStats, TargetTransformInfo *TTI, const FunctionMergingOptions &Options) {
 
   AlignedSequence<Value *> AlignedSeq;
   if (EnableHyFMNW) { // HyFM [NW]
@@ -506,7 +507,7 @@ AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, A
 
     std::vector<BlockFingerprint> Blocks;
     for (BasicBlock &BB1 : F1) {
-      BlockFingerprint BD1(&BB1);
+      BlockFingerprint BD1(&BB1,TTI);
       MemSize += BD1.footprint();
       NumBB1++;
       Blocks.push_back(std::move(BD1));
@@ -515,7 +516,7 @@ AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, A
     for (BasicBlock &BIt : F2) {
       NumBB2++;
       BasicBlock *BB2 = &BIt;
-      BlockFingerprint BD2(BB2);
+      BlockFingerprint BD2(BB2,TTI);
 
       auto BestIt = Blocks.end();
       float BestDist = std::numeric_limits<float>::max();
@@ -580,7 +581,7 @@ AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, A
 
     std::map<size_t, std::vector<BlockFingerprint>> BlocksF1;
     for (BasicBlock &BB1 : F1) {
-      BlockFingerprint BD1(&BB1);
+      BlockFingerprint BD1(&BB1,TTI);
       NumBB1++;
       MemSize += BD1.footprint();
       BlocksF1[BD1.Size].push_back(std::move(BD1));
@@ -589,7 +590,7 @@ AlignedSequence<Value *> FunctionMerger::alignBlocks(RegionT &F1, RegionT &F2, A
     for (BasicBlock &BIt : F2) {
       NumBB2++;
       BasicBlock *BB2 = &BIt;
-      BlockFingerprint BD2(BB2);
+      BlockFingerprint BD2(BB2,TTI);
 
       auto &SetRef = BlocksF1[BD2.Size];
 

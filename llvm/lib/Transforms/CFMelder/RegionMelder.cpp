@@ -716,9 +716,7 @@ void RegionMelder::merge(unsigned Index) {
   runPreMergePasses(RegionAlreadySimplified);
 
   if (!DisableMelding) {
-
     // parentFunc->print(errs());
-
     // compute alignment
 #if ENABLE_TIMING == 1
     auto T1 = std::chrono::high_resolution_clock::now();

@@ -2626,7 +2626,16 @@ void Verifier::visitBasicBlock(BasicBlock &BB) {
     llvm::sort(Preds);
     for (const PHINode &PN : BB.phis()) {
       RCORPrint( errs() << "Visit BB:2.1: " << Broken << "\n" );
-      RCORPrint( if (PN.getNumIncomingValues() != Preds.size()){BB.dump();PN.dump();} );
+      RCORPrint(
+		      if (PN.getNumIncomingValues() != Preds.size()){
+		      BB.dump();
+		      PN.dump();
+		      errs() << "predecessors:\n";
+		      for (auto It = pred_begin(&BB), E = pred_end(&BB); It!=E; It++) {
+			      (*It)->dump();
+		      }
+		      }
+      );
       Assert(PN.getNumIncomingValues() == Preds.size(),
              "PHINode should have one entry for each predecessor of its "
              "parent basic block!",

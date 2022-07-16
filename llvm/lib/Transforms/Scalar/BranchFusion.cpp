@@ -98,6 +98,10 @@ static cl::opt<bool>
     WriteDotFile("brfusion-dot", cl::init(false), cl::Hidden,
              cl::desc("Write .dot files of the successful branch fusion"));
 
+static cl::opt<bool> UseCostInFingerprint(
+    "brfusion-fingerprint-cost", cl::init(true), cl::Hidden,
+    cl::desc("Use instruction cost as part of the fingerprint"));
+
 
 static std::string GetValueName(const Value *V) {
   if (V) {
@@ -524,6 +528,12 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
     BI->dump();
   }
 
+
+  std::set<std::string> PreviousBlocks;
+  for (BasicBlock &BB : F) {
+    PreviousBlocks.insert(BB.getName().str());
+  }
+
   BasicBlock *BBT = BI->getSuccessor(0);
   BasicBlock *BBF = BI->getSuccessor(1);
   Value *BrCond = BI->getCondition();
@@ -587,9 +597,11 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
 
   //TODO: handle landingpad on exit blocks. This might break the link between the invoke and the landingpad.
   for (BasicBlock &BB : LeftR.exits()) {
+    //errs() << "Left Exit: " << BB.getName().str() << "\n";
     if (BB.isLandingPad()) return false;
   }
   for (BasicBlock &BB : RightR.exits()) {
+    //errs() << "Right Exit: " << BB.getName().str() << "\n";
     if (BB.isLandingPad()) return false;
   }
 
@@ -621,7 +633,7 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
 
   AlignmentStats TotalAlignmentStats;
   AlignedSequence<Value *> AlignedInsts =
-      FunctionMerger::alignBlocks(LeftR, RightR, TotalAlignmentStats);
+      FunctionMerger::alignBlocks(LeftR, RightR, TotalAlignmentStats, (UseCostInFingerprint?(&TTI):nullptr) );
 
   int CountMatchUsefullInsts = 0;
   for (auto &Entry : AlignedInsts) {
@@ -705,12 +717,24 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
     if (Debug) {
       errs() << "Destroying generated code\n";
       F.dump();
-      CG.destroyGeneratedCode();
+    }
+    CG.destroyGeneratedCode();
+    if (Debug) {
       errs() << "Generated code destroyed\n";
-      EntryBB->eraseFromParent();
+    }
+    EntryBB->eraseFromParent();
+    if (Debug) {
       errs() << "Branch fusion reversed\n";
       F.dump();
     }
+
+    for (BasicBlock &BB : F) {
+      if (!PreviousBlocks.count(BB.getName().str())) {
+        errs() << "ERROR: Basic Block kept hanging by rollback: " << BB.getName().str() << "\n";
+      }
+    }
+
+
     return false;
   }
 
@@ -742,6 +766,7 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
         CG.insert(NewPHI);
         VMap[PHI] = NewPHI;
         ReplacedPHIs[PHI] = NewPHI;
+
 
         std::map<BasicBlock *, std::map<BasicBlock *, Value *>> NewEntries;
         std::set<BasicBlock *> OldEntries;
@@ -780,7 +805,7 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
 
         if (Debug) {
 	  errs() << "Creating New PHI\n";
-          // PHI->dump();
+          PHI->dump();
 	}
         for (auto &Pair : NewEntries) {
           if (Debug) {
@@ -858,6 +883,24 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       */
           }
         }
+
+	/*
+	unsigned CountPreds = 0;
+        for (auto It = pred_begin(&BB), E = pred_end(&BB); It != E; It++) {
+          BasicBlock *PredBB = *It;
+
+	  if (!LeftR.contains(PredBB) && !RightR.contains(PredBB)) {
+		  CountPreds++;
+		  errs() << "+PredBB: " << PredBB->getName().str() << "\n";
+	  } else {
+		  errs() << "-PredBB: " << PredBB->getName().str() << "\n";
+	  }
+        }
+	if (CountPreds!=NewPHI->getNumIncomingValues()) {
+		errs() << "ERROR: unexpected number of predecessor\n";
+	}
+	*/
+
         if (Debug) {
 	  errs() << "Resulting PHI node:";
           NewPHI->dump();
@@ -933,7 +976,8 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
   bool Profitable = MergedSize < SizeLeft + SizeRight;
 
   if (Error || (!Profitable && !ForceAll)) {
-    errs() << "Unprofitable Branch Fusion!\n";
+    errs() << "Unprofitable Branch Fusion! " << F.getName().str() << " ";
+    BI->dump();
     if (Debug) {
       errs() << "Destroying generated code\n";
     }
@@ -948,9 +992,18 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       errs() << "Branch fusion reversed\n";
       F.dump();
     }
+
+    for (BasicBlock &BB : F) {
+      if (!PreviousBlocks.count(BB.getName().str())) {
+        errs() << "ERROR: Basic Block kept hanging by rollback: " << BB.getName().str() << "\n";
+      }
+    }
+
+
     return false;
   } else {
-    errs() << "Profitable Branch Fusion!\n";
+    errs() << "Profitable Branch Fusion! " << F.getName().str() << " ";
+    BI->dump();
     float Profit = ((float)(SizeLeft + SizeRight) - MergedSize) /
                    ((float)SizeLeft + SizeRight);
     errs() << "Destroying original code: " << (SizeLeft + SizeRight) << " X "

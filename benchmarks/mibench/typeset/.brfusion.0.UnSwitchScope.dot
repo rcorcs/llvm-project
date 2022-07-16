@@ -34,6 +34,28 @@ m_bb1 [shape = none, label  = <<table border="0" cellspacing="0">
 </table>> ]
 m_bb2 [shape = none, label  = <<table border="0" cellspacing="0">
 <tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">PopScope.exit:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %4 = load i32, i32* @scope_top, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %dec.i = add nsw i32 %4, -1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 %dec.i, i32* @scope_top, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %if.end</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">PopScope.exit12:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %8 = load i32, i32* @scope_top, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %dec.i11 = add nsw i32 %8, -1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 %dec.i11, i32* @scope_top, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %oenclosing = getelementptr inbounds %union.rec, %union.rec* %sym.addr.014, i64 0, i32 0, i32 3</td></tr>
+</table>
+</td></tr>
+<tr><td border="0" colspan="2"> </td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+m_bb3 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
 <tr><td align="left">if.then.i:</td></tr>
 <tr><td bgcolor="lightgreen" align="left">  %2 = load %struct.FILE_POS*, %struct.FILE_POS** @no_fpos, align 8, !tbaa !3</td></tr>
 <tr><td bgcolor="lightgreen" align="left">  %call.i = tail call i8* (i32, i32, i8*, i32, %struct.FILE_POS*, ...) @Error(i32 1, i32 2, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str, i64 0, i64 0), i32 0, %struct.FILE_POS* %2, i8* getelementptr inbounds ([41 x i8], [41 x i8]* @.str.3, i64 0, i64 0)) #8</td></tr>
@@ -85,17 +107,7 @@ f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  borde
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
-<tr><td port="f" border="1"><table border="0">
-<tr><td align="left">PopScope.exit:</td></tr>
-<tr><td align="left">  %4 = load i32, i32* @scope_top, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %dec.i = add nsw i32 %4, -1</td></tr>
-<tr><td align="left">  store i32 %dec.i, i32* @scope_top, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  br label %if.end</td></tr>
-</table>
-</td></tr>
-</table>> ]
-f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">while.body:</td></tr>
 <tr><td align="left">  %5 = phi i32 [ %dec.i11, %PopScope.exit12 ], [ %.pre, %while.body.preheader ]</td></tr>
@@ -106,23 +118,7 @@ f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
-<tr><td port="f" border="1" colspan="2"><table border="0">
-<tr><td align="left">PopScope.exit12:</td></tr>
-<tr><td align="left">  %8 = load i32, i32* @scope_top, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %dec.i11 = add nsw i32 %8, -1</td></tr>
-<tr><td align="left">  store i32 %dec.i11, i32* @scope_top, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %oenclosing = getelementptr inbounds %union.rec, %union.rec* %sym.addr.014, i64 0, i32 0, i32 3</td></tr>
-<tr><td align="left">  %9 = bitcast %union.THIRD_UNION* %oenclosing to %union.rec**</td></tr>
-<tr><td align="left">  %10 = load %union.rec*, %union.rec** %9, align 8, !tbaa !9</td></tr>
-<tr><td align="left">  %11 = load %union.rec*, %union.rec** @StartSym, align 8, !tbaa !3</td></tr>
-<tr><td align="left">  %cmp1.not = icmp eq %union.rec* %10, %11</td></tr>
-<tr><td align="left">  br i1 %cmp1.not, label %if.end, label %while.body, !llvm.loop !10</td></tr>
-</table>
-</td></tr>
-<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
-</table>> ]
-f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.end:</td></tr>
 <tr><td align="left">  ret void</td></tr>
@@ -131,23 +127,23 @@ f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
 </table>> ]
 f_bb0:fT -> f_bb3:f
 f_bb0:fF -> f_bb1:f
-f_bb1:fT -> f_bb7:f
+f_bb1:fT -> f_bb5:f
 f_bb1:fF -> f_bb2:f
-f_bb2:f -> f_bb5:f
+f_bb2:f -> f_bb4:f
 f_bb3:fT -> m_bb0:f1
-f_bb3:fF -> m_bb2:f1
-m_bb2:f1 -> m_bb0:f1
+f_bb3:fF -> m_bb3:f1
+m_bb3:f1 -> m_bb0:f1
 m_bb0:f1T -> m_bb1:f1
-m_bb0:f1F -> f_bb4:f
-m_bb1:f1 -> f_bb4:f
-f_bb4:f -> f_bb7:f
-f_bb5:fT -> m_bb0:f2
-f_bb5:fF -> m_bb2:f2
-m_bb2:f2 -> m_bb0:f2
+m_bb0:f1F -> m_bb2:f1
+m_bb1:f1 -> m_bb2:f1
+m_bb2:f1 -> f_bb5:f
+f_bb4:fT -> m_bb0:f2
+f_bb4:fF -> m_bb3:f2
+m_bb3:f2 -> m_bb0:f2
 m_bb0:f2T -> m_bb1:f2
-m_bb0:f2F -> f_bb6:f
-m_bb1:f2 -> f_bb6:f
-f_bb6:fT -> f_bb7:f
-f_bb6:fF -> f_bb5:f
+m_bb0:f2F -> m_bb2:f2
+m_bb1:f2 -> m_bb2:f2
+m_bb2:f2T -> f_bb5:f
+m_bb2:f2F -> f_bb4:f
 }
 

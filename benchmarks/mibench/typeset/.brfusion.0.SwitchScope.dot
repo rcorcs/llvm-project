@@ -52,6 +52,48 @@ m_bb2 [shape = none, label  = <<table border="0" cellspacing="0">
 </table>
 </td></tr>
 </table>> ]
+m_bb3 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">PushScope.exit:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %4 = phi i32 [ %.pre.i, %if.then2.i ], [ %3, %if.end.i ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %idxprom.i = sext i32 %4 to i64</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arrayidx.i = getelementptr inbounds [300 x %union.rec*], [300 x %union.rec*]* @scope, i64 0, i64 %idxprom.i</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store %union.rec* %1, %union.rec** %arrayidx.i, align 8, !tbaa !3</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arrayidx6.i = getelementptr inbounds [300 x i32], [300 x i32]* @npars_only, i64 0, i64 %idxprom.i</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 0, i32* %arrayidx6.i, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arrayidx8.i = getelementptr inbounds [300 x i32], [300 x i32]* @vis_only, i64 0, i64 %idxprom.i</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 0, i32* %arrayidx8.i, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arrayidx10.i = getelementptr inbounds [300 x i32], [300 x i32]* @body_ok, i64 0, i64 %idxprom.i</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 0, i32* %arrayidx10.i, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %inc.i = add nsw i32 %4, 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 %inc.i, i32* @scope_top, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %if.end</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">PushScope.exit31:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %13 = phi i32 [ %.pre.i23, %if.then2.i24 ], [ %12, %if.end.i20 ]</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %idxprom.i25 = sext i32 %13 to i64</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arrayidx.i26 = getelementptr inbounds [300 x %union.rec*], [300 x %union.rec*]* @scope, i64 0, i64 %idxprom.i25</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store %union.rec* %10, %union.rec** %arrayidx.i26, align 8, !tbaa !3</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arrayidx6.i27 = getelementptr inbounds [300 x i32], [300 x i32]* @npars_only, i64 0, i64 %idxprom.i25</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 0, i32* %arrayidx6.i27, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arrayidx8.i28 = getelementptr inbounds [300 x i32], [300 x i32]* @vis_only, i64 0, i64 %idxprom.i25</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 0, i32* %arrayidx8.i28, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %arrayidx10.i29 = getelementptr inbounds [300 x i32], [300 x i32]* @body_ok, i64 0, i64 %idxprom.i25</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 0, i32* %arrayidx10.i29, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %inc.i30 = add nsw i32 %13, 1</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 %inc.i30, i32* @scope_top, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %cmp5 = icmp sgt i64 %indvars.iv37, 1</td></tr>
+</table>
+</td></tr>
+<tr><td border="0" colspan="2"> </td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
 f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">entry:</td></tr>
@@ -83,26 +125,7 @@ f_bb2 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  borde
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
-<tr><td port="f" border="1"><table border="0">
-<tr><td align="left">PushScope.exit:</td></tr>
-<tr><td align="left">  %4 = phi i32 [ %.pre.i, %if.then2.i ], [ %3, %if.end.i ]</td></tr>
-<tr><td align="left">  %idxprom.i = sext i32 %4 to i64</td></tr>
-<tr><td align="left">  %arrayidx.i = getelementptr inbounds [300 x %union.rec*], [300 x %union.rec*]* @scope, i64 0, i64 %idxprom.i</td></tr>
-<tr><td align="left">  store %union.rec* %1, %union.rec** %arrayidx.i, align 8, !tbaa !3</td></tr>
-<tr><td align="left">  %arrayidx6.i = getelementptr inbounds [300 x i32], [300 x i32]* @npars_only, i64 0, i64 %idxprom.i</td></tr>
-<tr><td align="left">  store i32 0, i32* %arrayidx6.i, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %arrayidx8.i = getelementptr inbounds [300 x i32], [300 x i32]* @vis_only, i64 0, i64 %idxprom.i</td></tr>
-<tr><td align="left">  store i32 0, i32* %arrayidx8.i, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %arrayidx10.i = getelementptr inbounds [300 x i32], [300 x i32]* @body_ok, i64 0, i64 %idxprom.i</td></tr>
-<tr><td align="left">  store i32 0, i32* %arrayidx10.i, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %inc.i = add nsw i32 %4, 1</td></tr>
-<tr><td align="left">  store i32 %inc.i, i32* @scope_top, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  br label %if.end</td></tr>
-</table>
-</td></tr>
-</table>> ]
-f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb3 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">while.cond4.preheader:</td></tr>
 <tr><td align="left">  %5 = trunc i64 %indvars.iv.next to i32</td></tr>
@@ -112,7 +135,7 @@ f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">while.body6.preheader:</td></tr>
 <tr><td align="left">  %6 = and i64 %indvars.iv.next, 4294967295</td></tr>
@@ -120,7 +143,7 @@ f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </table>
 </td></tr>
 </table>> ]
-f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">while.body:</td></tr>
 <tr><td align="left">  %indvars.iv = phi i64 [ %indvars.iv.next, %while.body ], [ 0, %while.cond.preheader ]</td></tr>
@@ -137,7 +160,7 @@ f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">while.body6:</td></tr>
 <tr><td align="left">  %indvars.iv37 = phi i64 [ %6, %while.body6.preheader ], [ %indvars.iv.next38, %PushScope.exit31 ]</td></tr>
@@ -152,29 +175,7 @@ f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
-<tr><td port="f" border="1" colspan="2"><table border="0">
-<tr><td align="left">PushScope.exit31:</td></tr>
-<tr><td align="left">  %13 = phi i32 [ %.pre.i23, %if.then2.i24 ], [ %12, %if.end.i20 ]</td></tr>
-<tr><td align="left">  %idxprom.i25 = sext i32 %13 to i64</td></tr>
-<tr><td align="left">  %arrayidx.i26 = getelementptr inbounds [300 x %union.rec*], [300 x %union.rec*]* @scope, i64 0, i64 %idxprom.i25</td></tr>
-<tr><td align="left">  store %union.rec* %10, %union.rec** %arrayidx.i26, align 8, !tbaa !3</td></tr>
-<tr><td align="left">  %arrayidx6.i27 = getelementptr inbounds [300 x i32], [300 x i32]* @npars_only, i64 0, i64 %idxprom.i25</td></tr>
-<tr><td align="left">  store i32 0, i32* %arrayidx6.i27, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %arrayidx8.i28 = getelementptr inbounds [300 x i32], [300 x i32]* @vis_only, i64 0, i64 %idxprom.i25</td></tr>
-<tr><td align="left">  store i32 0, i32* %arrayidx8.i28, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %arrayidx10.i29 = getelementptr inbounds [300 x i32], [300 x i32]* @body_ok, i64 0, i64 %idxprom.i25</td></tr>
-<tr><td align="left">  store i32 0, i32* %arrayidx10.i29, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %inc.i30 = add nsw i32 %13, 1</td></tr>
-<tr><td align="left">  store i32 %inc.i30, i32* @scope_top, align 4, !tbaa !7</td></tr>
-<tr><td align="left">  %cmp5 = icmp sgt i64 %indvars.iv37, 1</td></tr>
-<tr><td align="left">  %indvars.iv.next38 = add nsw i64 %indvars.iv37, -1</td></tr>
-<tr><td align="left">  br i1 %cmp5, label %while.body6, label %if.end, !llvm.loop !12</td></tr>
-</table>
-</td></tr>
-<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
-</table>> ]
-f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.end:</td></tr>
 <tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 2400, i8* nonnull %0) #8</td></tr>
@@ -184,27 +185,27 @@ f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
 </table>> ]
 f_bb0:fT -> f_bb2:f
 f_bb0:fF -> f_bb1:f
-f_bb1:fT -> f_bb9:f
-f_bb1:fF -> f_bb6:f
+f_bb1:fT -> f_bb7:f
+f_bb1:fF -> f_bb5:f
 f_bb2:fT -> m_bb0:f1
 f_bb2:fF -> m_bb1:f1
 m_bb0:f1 -> m_bb1:f1
 m_bb1:f1T -> m_bb2:f1
-m_bb1:f1F -> f_bb3:f
-m_bb2:f1 -> f_bb3:f
-f_bb3:f -> f_bb9:f
-f_bb4:fT -> f_bb5:f
-f_bb4:fF -> f_bb9:f
-f_bb5:f -> f_bb7:f
-f_bb6:fT -> f_bb4:f
-f_bb6:fF -> f_bb6:f
-f_bb7:fT -> m_bb0:f2
-f_bb7:fF -> m_bb1:f2
+m_bb1:f1F -> m_bb3:f1
+m_bb2:f1 -> m_bb3:f1
+m_bb3:f1 -> f_bb7:f
+f_bb3:fT -> f_bb4:f
+f_bb3:fF -> f_bb7:f
+f_bb4:f -> f_bb6:f
+f_bb5:fT -> f_bb3:f
+f_bb5:fF -> f_bb5:f
+f_bb6:fT -> m_bb0:f2
+f_bb6:fF -> m_bb1:f2
 m_bb0:f2 -> m_bb1:f2
 m_bb1:f2T -> m_bb2:f2
-m_bb1:f2F -> f_bb8:f
-m_bb2:f2 -> f_bb8:f
-f_bb8:fT -> f_bb7:f
-f_bb8:fF -> f_bb9:f
+m_bb1:f2F -> m_bb3:f2
+m_bb2:f2 -> m_bb3:f2
+m_bb3:f2T -> f_bb6:f
+m_bb3:f2F -> f_bb7:f
 }
 

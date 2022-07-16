@@ -1,18 +1,18 @@
 digraph {
 m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
 <tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
-<tr><td align="left">if.then:</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %6 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %7 = tail call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %6) #11</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  tail call void @exit(i32 1) #12</td></tr>
+<tr><td align="left">if.then72:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %20 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %21 = call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %20) #11</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #12</td></tr>
 <tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
 </table>
 </td>
 <td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
-<tr><td align="left">if.else18:</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %10 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  %11 = tail call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %10) #11</td></tr>
-<tr><td bgcolor="lightgreen" align="left">  tail call void @exit(i32 1) #12</td></tr>
+<tr><td align="left">if.then79:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %23 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %24 = call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %23) #11</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #12</td></tr>
 <tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
 </table>
 </td></tr>
@@ -41,12 +41,22 @@ f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %5) #10</td></tr>
 <tr><td align="left">  store i32 0, i32* %num, align 4, !tbaa !3</td></tr>
 <tr><td align="left">  %cmp = icmp slt i32 %argc, 3</td></tr>
-<tr><td bgcolor="yellow" align="left">  br i1 %cmp, label %if.then, label %if.end</td></tr>
+<tr><td align="left">  br i1 %cmp, label %if.then, label %if.end</td></tr>
 </table>
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb1 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %6 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %7 = tail call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %6) #11</td></tr>
+<tr><td align="left">  tail call void @exit(i32 1) #12</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.end:</td></tr>
 <tr><td align="left">  %arrayidx = getelementptr inbounds i8*, i8** %argv, i64 1</td></tr>
@@ -61,14 +71,24 @@ f_bb1 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </table>
 </td></tr>
 </table>> ]
-f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then17:</td></tr>
 <tr><td align="left">  br label %if.end21</td></tr>
 </table>
 </td></tr>
 </table>> ]
-f_bb3 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else18:</td></tr>
+<tr><td align="left">  %10 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %11 = tail call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %10) #11</td></tr>
+<tr><td align="left">  tail call void @exit(i32 1) #12</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.end21:</td></tr>
 <tr><td align="left">  %encordec.0 = phi i32 [ 0, %if.then17 ], [ 1, %if.end ], [ 1, %if.end ]</td></tr>
@@ -78,7 +98,7 @@ f_bb3 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </table>
 </td></tr>
 </table>> ]
-f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">while.cond:</td></tr>
 <tr><td align="left">  %cp.0 = phi i8* [ %12, %if.end21 ], [ %incdec.ptr, %if.end63 ]</td></tr>
@@ -90,7 +110,7 @@ f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">land.rhs:</td></tr>
 <tr><td align="left">  %13 = load i8, i8* %cp.0, align 1, !tbaa !9</td></tr>
@@ -100,7 +120,7 @@ f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">while.body:</td></tr>
 <tr><td align="left">  %call26 = tail call i32** @__ctype_toupper_loc() #13</td></tr>
@@ -118,7 +138,7 @@ f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.else38:</td></tr>
 <tr><td align="left">  %sext.off161 = add i32 %sext, -1073741825</td></tr>
@@ -128,7 +148,7 @@ f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.else52:</td></tr>
 <tr><td align="left">  %puts158 = tail call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([36 x i8], [36 x i8]* @str.5, i64 0, i64 0))</td></tr>
@@ -137,7 +157,7 @@ f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </table>
 </td></tr>
 </table>> ]
-f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end55:</td></tr>
 <tr><td align="left">  %.sink = phi i32 [ -48, %while.body ], [ -55, %if.else38 ]</td></tr>
@@ -152,7 +172,7 @@ f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border=
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb10 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then57:</td></tr>
 <tr><td align="left">  %conv59 = trunc i32 %by.1 to i8</td></tr>
@@ -165,14 +185,14 @@ f_bb10 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb11 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.end63:</td></tr>
 <tr><td align="left">  br label %while.cond, !llvm.loop !10</td></tr>
 </table>
 </td></tr>
 </table>> ]
-f_bb12 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">while.end:</td></tr>
 <tr><td align="left">  call void @BF_set_key(%struct.bf_key_st* nonnull %key, i32 8, i8* nonnull %1) #14</td></tr>
@@ -183,7 +203,7 @@ f_bb12 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb13 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb15 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">if.then65:</td></tr>
 <tr><td align="left">  %puts = call i32 @puts(i8* nonnull dereferenceable(1) getelementptr inbounds ([15 x i8], [15 x i8]* @str, i64 0, i64 0))</td></tr>
@@ -192,29 +212,19 @@ f_bb13 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb16 [shape = none, label  = <<table  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end67:</td></tr>
 <tr><td align="left">  %arrayidx68 = getelementptr inbounds i8*, i8** %argv, i64 2</td></tr>
 <tr><td align="left">  %19 = load i8*, i8** %arrayidx68, align 8, !tbaa !7</td></tr>
 <tr><td align="left">  %call69 = call %struct._IO_FILE* @fopen(i8* %19, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.3, i64 0, i64 0)) #15</td></tr>
 <tr><td align="left">  %cmp70 = icmp eq %struct._IO_FILE* %call69, null</td></tr>
-<tr><td align="left">  br i1 %cmp70, label %if.then72, label %if.end74</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp70, label %if.then72, label %if.end74</td></tr>
 </table>
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
-<tr><td port="f" border="1"><table border="0">
-<tr><td align="left">if.then72:</td></tr>
-<tr><td align="left">  %20 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
-<tr><td align="left">  %21 = call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %20) #11</td></tr>
-<tr><td align="left">  call void @exit(i32 1) #12</td></tr>
-<tr><td align="left">  unreachable</td></tr>
-</table>
-</td></tr>
-</table>> ]
-f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1" colspan="2"><table border="0">
 <tr><td align="left">if.end74:</td></tr>
 <tr><td align="left">  %arrayidx75 = getelementptr inbounds i8*, i8** %argv, i64 3</td></tr>
@@ -226,20 +236,10 @@ f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </td></tr>
 <tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
 </table>> ]
-f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
 <tr><td port="f" border="1"><table border="0">
 <tr><td align="left">while.cond82.preheader:</td></tr>
 <tr><td align="left">  br label %while.cond82</td></tr>
-</table>
-</td></tr>
-</table>> ]
-f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
-<tr><td port="f" border="1"><table border="0">
-<tr><td align="left">if.then79:</td></tr>
-<tr><td align="left">  %23 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
-<tr><td align="left">  %24 = call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %23) #11</td></tr>
-<tr><td align="left">  call void @exit(i32 1) #12</td></tr>
-<tr><td align="left">  unreachable</td></tr>
 </table>
 </td></tr>
 </table>> ]
@@ -338,34 +338,34 @@ f_bb27 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border
 </table>
 </td></tr>
 </table>> ]
-f_bb0:fT -> m_bb0:f1
-f_bb0:fF -> f_bb1:f
-f_bb1:f -> m_bb0:f2
-f_bb1:f -> f_bb3:f
-f_bb1:f -> f_bb3:f
-f_bb1:f -> f_bb2:f
-f_bb1:f -> f_bb2:f
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> f_bb2:f
+f_bb2:f -> f_bb4:f
+f_bb2:f -> f_bb5:f
+f_bb2:f -> f_bb5:f
 f_bb2:f -> f_bb3:f
-f_bb3:f -> f_bb4:f
-f_bb4:fT -> f_bb12:f
-f_bb4:fF -> f_bb5:f
-f_bb5:fT -> f_bb12:f
-f_bb5:fF -> f_bb6:f
-f_bb6:fT -> f_bb9:f
+f_bb2:f -> f_bb3:f
+f_bb3:f -> f_bb5:f
+f_bb5:f -> f_bb6:f
+f_bb6:fT -> f_bb14:f
 f_bb6:fF -> f_bb7:f
-f_bb7:fT -> f_bb9:f
+f_bb7:fT -> f_bb14:f
 f_bb7:fF -> f_bb8:f
+f_bb8:fT -> f_bb11:f
+f_bb8:fF -> f_bb9:f
 f_bb9:fT -> f_bb11:f
 f_bb9:fF -> f_bb10:f
-f_bb10:f -> f_bb11:f
-f_bb11:f -> f_bb4:f
-f_bb12:fT -> f_bb14:f
-f_bb12:fF -> f_bb13:f
-f_bb14:fT -> f_bb15:f
-f_bb14:fF -> f_bb16:f
-f_bb16:fT -> f_bb18:f
+f_bb11:fT -> f_bb13:f
+f_bb11:fF -> f_bb12:f
+f_bb12:f -> f_bb13:f
+f_bb13:f -> f_bb6:f
+f_bb14:fT -> f_bb16:f
+f_bb14:fF -> f_bb15:f
+f_bb16:fT -> m_bb0:f1
 f_bb16:fF -> f_bb17:f
-f_bb17:f -> f_bb19:f
+f_bb17:fT -> m_bb0:f2
+f_bb17:fF -> f_bb18:f
+f_bb18:f -> f_bb19:f
 f_bb19:fT -> f_bb20:f
 f_bb19:fF -> f_bb27:f
 f_bb20:f -> f_bb21:f
