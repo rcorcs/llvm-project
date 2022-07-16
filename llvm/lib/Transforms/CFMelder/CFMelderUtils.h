@@ -90,7 +90,7 @@ public:
   static std::string getNameStr(Value *V);
 
   /// write a function CFG into a .dot file
-  void writeCFGToDotFile(Function &F, std::string Prefix);
+  static void writeCFGToDotFile(Function &F, std::string Prefix = "");
 };
 
 } // namespace llvm
