@@ -763,8 +763,8 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
         It++;
 
         if (Debug) {
-	  errs() << "Solving PHI node:";
-	  PHI->dump();
+          errs() << "Solving PHI node:";
+          PHI->dump();
         }
 
         IRBuilder<> Builder(PHI);
@@ -774,7 +774,11 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
         ReplacedPHIs[PHI] = NewPHI;
 
 
-        std::map<BasicBlock *, std::map<BasicBlock *, Value *>> NewEntries;
+        // Same block can be a predecessor multiple times and can have multiple incoming edges into BB
+        // To keep BB's predecessor information consistent with the phi incoming values,
+        // we need to keep track of the number of incoming edges from each predecessor block
+        //std::map<BasicBlock *, std::map<BasicBlock *, Value *>> NewEntries;
+        std::map<BasicBlock *, std::map<BasicBlock *, std::pair<Value *, int>>> NewEntries;
         std::set<BasicBlock *> OldEntries;
         for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
           BasicBlock *InBB = PHI->getIncomingBlock(i);
@@ -791,35 +795,41 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
                 return false;
               }
             }
-            NewEntries[NewBB][InBB] = NewV;
+            auto result_pair = NewEntries[NewBB].insert({InBB, {NewV, 1}});
+            if (!result_pair.second)
+              result_pair.first->second.second++;
+            //NewEntries[NewBB][InBB] = NewV;
             OldEntries.insert(InBB);
           } else {
-	    //simply copy incoming values from outside the two regions being merged
-	    NewPHI->addIncoming(PHI->getIncomingValue(i),PHI->getIncomingBlock(i));
-	  }
+            //simply copy incoming values from outside the two regions being merged
+            NewPHI->addIncoming(PHI->getIncomingValue(i),PHI->getIncomingBlock(i));
+          }
         }
 
         if (Debug) {
-	  errs() << "Num entries: " << NewEntries.size() << "\n";
+          errs() << "Num entries: " << NewEntries.size() << "\n";
           for (auto &Pair : NewEntries) {
-	    errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
-	    for (auto &Pair2 : Pair.second) {
-	      errs() << "Block: " << Pair2.first->getName().str() << " -> "; Pair2.second->dump();
-	    }
-	  }
-	}
+            errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
+            for (auto &Pair2 : Pair.second) {
+              errs() << "Block: " << Pair2.first->getName().str() << " -> "; Pair2.second.first->dump();
+            }
+          }
+        }
 
         if (Debug) {
-	  errs() << "Creating New PHI\n";
+          errs() << "Creating New PHI\n";
           PHI->dump();
-	}
+        }
         for (auto &Pair : NewEntries) {
           if (Debug) {
-	    errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
+            errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
           }
           if (Pair.second.size() == 1) {
-            Value *V = (*Pair.second.begin()).second;
-            NewPHI->addIncoming(V, Pair.first);
+            auto &InnerPair = *(Pair.second.begin());
+            Value *V = InnerPair.second.first;
+            int repeats = InnerPair.second.second;
+            for (int i = 0; i < repeats; ++i)
+              NewPHI->addIncoming(V, Pair.first);
           } else if (Pair.second.size() == 2) {
             /*
             Values that were originally coming from different basic blocks that
@@ -829,26 +839,28 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
             */
             if (Debug) {
               errs() << "Found  PHI incoming from two different blocks\n";
-	    }
+            }
             Value *LeftV = nullptr;
             Value *RightV = nullptr;
+            int repeats = 0;
             for (auto &InnerPair : Pair.second) {
               if (LeftR.contains(InnerPair.first)) {
-		if (Debug) {
+                if (Debug) {
                   errs() << "Value coming from the Left block: "
                        << GetValueName(InnerPair.first) << " : ";
-                  InnerPair.second->dump();
-		}
-                LeftV = InnerPair.second;
+                  InnerPair.second.first->dump();
+                }
+                LeftV = InnerPair.second.first;
               }
               if (RightR.contains(InnerPair.first)) {
-		if (Debug) {
+                if (Debug) {
                   errs() << "Value coming from the Right block: "
                        << GetValueName(InnerPair.first) << " : ";
-                  InnerPair.second->dump();
-		}
-                RightV = InnerPair.second;
+                  InnerPair.second.first->dump();
+                }
+                RightV = InnerPair.second.first;
               }
+              repeats = repeats > InnerPair.second.second ? repeats : InnerPair.second.second;
             }
 
             if (LeftV && RightV) {
@@ -860,7 +872,8 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
                 if (SelectInst *SelI = dyn_cast<SelectInst>(MergedV))
                   CG.insert(SelI);
               }
-              NewPHI->addIncoming(MergedV, Pair.first);
+              for (int i = 0; i < repeats; ++i)
+                NewPHI->addIncoming(MergedV, Pair.first);
             } else {
               errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
               return false;
@@ -908,9 +921,9 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
 	*/
 
         if (Debug) {
-	  errs() << "Resulting PHI node:";
+          errs() << "Resulting PHI node:";
           NewPHI->dump();
-	}
+        }
       }
     }
     return true;

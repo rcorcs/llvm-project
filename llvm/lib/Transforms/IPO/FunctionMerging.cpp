@@ -4741,26 +4741,26 @@ bool FunctionMerger::SALSSACodeGen::generate(
 	  } 
         }
 
-	//errs() << "After:\n";
-	//NewPHI->dump();
+          //errs() << "After:\n";
+          //NewPHI->dump();
 
-        if (FoundIndices.size() != PHI->getNumIncomingValues()) {
-          /*for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
-	    if (!FoundIndices.count(i)) {
-              auto *BBV = MapValue(PHI->getIncomingBlock(i), VMap);
-              auto *V = MapValue(PHI->getIncomingValue(i), VMap);
-	      if (BBV && V) {
-	        errs() << "Fix PHI: " << BBV->getName().str() << " "; V->dump();
-		//NewPHI->addIncoming(V,dyn_cast<BasicBlock>(BBV));
-	      }
-	    }
-	  }*/
-          return false;
-	}
+          if (FoundIndices.size() != PHI->getNumIncomingValues()) {
+            /*for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
+              if (!FoundIndices.count(i)) {
+                auto *BBV = MapValue(PHI->getIncomingBlock(i), VMap);
+                auto *V = MapValue(PHI->getIncomingValue(i), VMap);
+                if (BBV && V) {
+                  errs() << "Fix PHI: " << BBV->getName().str() << " "; V->dump();
+                  //NewPHI->addIncoming(V,dyn_cast<BasicBlock>(BBV));
+                }
+              }
+            }*/
+            return false;
+          }
+        }
       }
-    }
-    return true;
-  };
+      return true;
+    };
 
   for (BasicBlock *BB1 : Blocks1) {
     if (!AssignPHIOperandsInBlock(BB1, BlocksF1)) {
