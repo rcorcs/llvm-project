@@ -77,6 +77,7 @@ namespace {
       (void) llvm::createAlignmentFromAssumptionsPass();
       (void) llvm::createBasicAAWrapperPass();
       (void) llvm::createBranchFusionPass();
+      (void) llvm::createBranchFusionModulePass();
       (void) llvm::createSCEVAAWrapperPass();
       (void) llvm::createTypeBasedAAWrapperPass();
       (void) llvm::createScopedNoAliasAAWrapperPass();

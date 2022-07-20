@@ -15,8 +15,8 @@
 #define LLVM_TRANSFORMS_SCALAR_BRANCHFUSION_H
 
 #include "llvm/IR/Function.h"
-#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/PassManager.h"
 
 
@@ -29,6 +29,16 @@ class BranchFusionPass : public PassInfoMixin<BranchFusionPass> {
 public:
   PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 };
+
+
+// Module pass to drive control-flow melding
+class BranchFusionModulePass : public PassInfoMixin<BranchFusionModulePass> {
+public:
+  PreservedAnalyses run(Module &M, ModuleAnalysisManager &MAM);
+};
+
+//ModulePass *createBranchFusionModulePass();
+
 
 } // namespace llvm
 #endif

@@ -94,6 +94,10 @@ static cl::opt<int> TraversalStrategy(
     "brfusion-traversal", cl::init(0), cl::Hidden,
     cl::desc("Select which traversal strategy: 0:rpo 1:po 2:dominated-first"));
 
+static cl::opt<int> ReductionThreshold(
+    "brfusion-threshold", cl::init(2), cl::Hidden,
+    cl::desc("Select which traversal strategy: 0:rpo 1:po 2:dominated-first"));
+
 static cl::opt<bool>
     WriteDotFile("brfusion-dot", cl::init(false), cl::Hidden,
              cl::desc("Write .dot files of the successful branch fusion"));
@@ -1180,3 +1184,66 @@ INITIALIZE_PASS(BranchFusionLegacyPass, "brfusion",
 FunctionPass *llvm::createBranchFusionPass() {
   return new BranchFusionLegacyPass();
 }
+
+
+
+// MODULE VERSION
+
+PreservedAnalyses BranchFusionModulePass::run(Module &M,
+                                            ModuleAnalysisManager &MAM) {
+  bool Changed = false;
+  SmallVector<Function *, 64> Funcs;
+
+  for (auto &F : M) {
+    if (F.isDeclaration())
+      continue;
+    Funcs.push_back(&F);
+  }
+
+  for (Function *F : Funcs) {
+    BranchFusion BF;
+    Changed |= BF.runImpl(*F);
+  }
+  if (!Changed)
+    return PreservedAnalyses::all();
+  PreservedAnalyses PA;
+  return PA;
+}
+
+class BranchFusionLegacyModulePass : public ModulePass {
+public:
+  static char ID;
+  BranchFusionLegacyModulePass() : ModulePass(ID) {
+    initializeBranchFusionLegacyModulePassPass(*PassRegistry::getPassRegistry());
+  }
+  bool runOnModule(Module &M) override {
+    bool Changed = false;
+    SmallVector<Function *, 64> Funcs;
+
+    for (auto &F : M) {
+      if (F.isDeclaration())
+        continue;
+      Funcs.push_back(&F);
+    }
+
+    for (Function *F : Funcs) {
+      BranchFusion BF;
+      Changed |= BF.runImpl(*F);
+    }
+    return Changed;
+  }
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    // AU.addRequired<TargetTransformInfoWrapperPass>();
+    //  ModulePass::getAnalysisUsage(AU);
+  }
+};
+
+char BranchFusionLegacyModulePass::ID = 0;
+INITIALIZE_PASS(BranchFusionLegacyModulePass, "brfusion-module",
+                "Fuse branches to reduce code size", false, false)
+
+ModulePass *llvm::createBranchFusionModulePass() {
+  return new BranchFusionLegacyModulePass();
+}
+

@@ -3837,8 +3837,8 @@ static void postProcessFunction(Function &F) {
 
   // FPM.add(createPromoteMemoryToRegisterPass());
   FPM.add(createCFGSimplificationPass());
-  // FPM.add(createInstructionCombiningPass(2));
-  // FPM.add(createCFGSimplificationPass());
+  //FPM.add(createInstructionCombiningPass(2));
+  //FPM.add(createCFGSimplificationPass());
 
   FPM.doInitialization();
   FPM.run(F);
@@ -4722,6 +4722,7 @@ bool FunctionMerger::SALSSACodeGen::generate(
                   V = UndefValue::get(NewPHI->getType());
                 NewPHI->addIncoming(V, NewPredBB);
 	        Handled = true;
+		break;
 	      }
 	    }
 	    if (!Handled) {
@@ -4730,9 +4731,9 @@ bool FunctionMerger::SALSSACodeGen::generate(
 		    errs() << "NewPHI:"; NewPHI->dump();
 		    //errs() << "New Block:\n"; NewPHI->getParent()->dump();
 		    //errs() << "New Pred Block:\n"; NewPredBB->dump();
-                    //Value *V = UndefValue::get(NewPHI->getType());
-                    //NewPHI->addIncoming(V, NewPredBB);
-		    return false;
+                    Value *V = UndefValue::get(NewPHI->getType());
+                    NewPHI->addIncoming(V, NewPredBB);
+		    //return false;
 	    }
           } else {
             Value *V = UndefValue::get(NewPHI->getType());

@@ -1,0 +1,88 @@
+rm: cannot remove 'adpcm_c/build/*': Is a directory
+adpcm_c
+rm: cannot remove 'adpcm_d/build/*': Is a directory
+adpcm_d
+rm: cannot remove 'basicmath/build/*': Is a directory
+basicmath
+rm: cannot remove 'bitcount/build/*': Is a directory
+bitcount
+rm: cannot remove 'blowfish_d/build/*': Is a directory
+blowfish_d
+rm: cannot remove 'blowfish_e/build/*': Is a directory
+blowfish_e
+rm: cannot remove 'CRC32/build/*': Is a directory
+CRC32
+rm: cannot remove 'dijkstra/build/*': Is a directory
+dijkstra
+rm: cannot remove 'FFT/build/*': Is a directory
+FFT
+rm: cannot remove 'ghostscript/build/*': Is a directory
+ghostscript
+../../build/release/bin/llvm-size: error: 'ghostscript/build/soa': No such file or directory
+
+Traceback (most recent call last):
+  File "results.py", line 45, in <module>
+    data = stream.read().strip().split('\n')[1]
+IndexError: list index out of range
+../../build/release/bin/llvm-size: error: 'ghostscript/build/brfusion-nw': No such file or directory
+
+Traceback (most recent call last):
+  File "results.py", line 45, in <module>
+    data = stream.read().strip().split('\n')[1]
+IndexError: list index out of range
+rm: cannot remove 'gsm/build/*': Is a directory
+gsm
+rm: cannot remove 'ispell/build/*': Is a directory
+ispell
+rm: cannot remove 'jpeg_c/build/*': Is a directory
+jpeg_c
+rm: cannot remove 'jpeg_d/build/*': Is a directory
+jpeg_d
+rm: cannot remove 'patricia/build/*': Is a directory
+patricia
+rm: cannot remove 'pgp/build/*': Is a directory
+pgp
+rm: cannot remove 'qsort/build/*': Is a directory
+qsort
+rm: cannot remove 'rijndael/build/*': Is a directory
+rijndael
+rm: cannot remove 'rsynth/build/*': Is a directory
+rsynth
+rm: cannot remove 'sha/build/*': Is a directory
+sha
+rm: cannot remove 'stringsearch/build/*': Is a directory
+stringsearch
+rm: cannot remove 'susan_c/build/*': Is a directory
+susan_c
+rm: cannot remove 'susan_e/build/*': Is a directory
+susan_e
+rm: cannot remove 'susan_s/build/*': Is a directory
+susan_s
+rm: cannot remove 'tiff2bw/build/*': Is a directory
+tiff2bw
+rm: cannot remove 'tiff2dither/build/*': Is a directory
+tiff2dither
+rm: cannot remove 'tiff2median/build/*': Is a directory
+tiff2median
+rm: cannot remove 'tiff2rgba/build/*': Is a directory
+tiff2rgba
+rm: cannot remove 'typeset/build/*': Is a directory
+typeset
+../../build/release/bin/llvm-size: error: 'typeset/build/soa': No such file or directory
+
+Traceback (most recent call last):
+  File "results.py", line 45, in <module>
+    data = stream.read().strip().split('\n')[1]
+IndexError: list index out of range
+../../build/release/bin/llvm-size: error: 'typeset/build/brfusion-pa': No such file or directory
+
+Traceback (most recent call last):
+  File "results.py", line 45, in <module>
+    data = stream.read().strip().split('\n')[1]
+IndexError: list index out of range
+../../build/release/bin/llvm-size: error: 'typeset/build/brfusion-nw': No such file or directory
+
+Traceback (most recent call last):
+  File "results.py", line 45, in <module>
+    data = stream.read().strip().split('\n')[1]
+IndexError: list index out of range

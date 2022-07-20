@@ -26,7 +26,7 @@ ifneq ($(ENABLE_CFMELDER),)
 CFMELDER=$(ENABLE_CFMELDER)
 endif
 
-EXTRA_OPT := -mllvm -enable-brfusion=$(BRFUSION) -mllvm -brfusion-dot=true -mllvm -brfusion-soa=$(SOA)  -mllvm -func-merging-hyfm-nw=$(HYFMNW)  -mllvm -func-merging-hyfm-pa=$(HYFMPA) -mllvm -func-merging-debug=true -mllvm -func-merging-verbose=true -mllvm -enable-cfmelder=$(CFMELDER)
+EXTRA_OPT := -mllvm -enable-brfusion=$(BRFUSION) -mllvm -brfusion-dot=false -mllvm -brfusion-soa=$(SOA)  -mllvm -func-merging-hyfm-nw=$(HYFMNW)  -mllvm -func-merging-hyfm-pa=$(HYFMPA) -mllvm -func-merging-debug=true -mllvm -func-merging-verbose=false -mllvm -enable-cfmelder=$(CFMELDER)
 
 %.o: %.cpp
 	$(CXX) $(OPT) -c $< -o $@ $(CFLAGS) $(PROFILING) $(EXTRA_OPT)

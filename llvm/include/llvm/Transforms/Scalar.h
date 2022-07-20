@@ -82,6 +82,7 @@ FunctionPass *createCallSiteSplittingPass();
 FunctionPass *createAggressiveDCEPass();
 
 FunctionPass *createBranchFusionPass();
+ModulePass *createBranchFusionModulePass();
 
 //===----------------------------------------------------------------------===//
 //

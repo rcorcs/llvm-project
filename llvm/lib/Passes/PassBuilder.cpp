@@ -888,9 +888,9 @@ PassBuilder::buildFunctionSimplificationPipeline(OptimizationLevel Level,
     FPM.addPass(CFMelderPass());
   }
   */
-  if (EnableBranchFusion) {
-    FPM.addPass(BranchFusionPass());
-  }
+  //if (EnableBranchFusion) {
+  //  FPM.addPass(BranchFusionPass());
+  //}
 
   if (EnableCHR && Level == OptimizationLevel::O3 && PGOOpt &&
       (PGOOpt->Action == PGOOptions::IRUse ||
@@ -1223,6 +1223,9 @@ PassBuilder::buildModuleSimplificationPipeline(OptimizationLevel Level,
   MPM.addPass(buildInlinerPipeline(Level, Phase));
   if (EnableCFMelder) {
     MPM.addPass(CFMelderCodeSizePass());
+  }
+  if (EnableBranchFusion) {
+    MPM.addPass(BranchFusionModulePass());
   }
   
   if (EnableMemProfiler && Phase != ThinOrFullLTOPhase::ThinLTOPreLink) {

@@ -96,6 +96,7 @@ void initializeBlockFrequencyInfoWrapperPassPass(PassRegistry&);
 void initializeBoundsCheckingLegacyPassPass(PassRegistry&);
 void initializeBranchFolderPassPass(PassRegistry&);
 void initializeBranchFusionLegacyPassPass(PassRegistry&);
+void initializeBranchFusionLegacyModulePassPass(PassRegistry&);
 void initializeBranchProbabilityInfoWrapperPassPass(PassRegistry&);
 void initializeBranchRelaxationPass(PassRegistry&);
 void initializeBreakCriticalEdgesPass(PassRegistry&);
