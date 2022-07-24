@@ -1,0 +1,807 @@
+hmmsearch - search a sequence database with a profile HMM
+HMMER 2.3 (May 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                   new.hmm [Prox1]
+Sequence database:          /spec/cpu2006/benchspec/CPU2006/456.hmmer/data/ref/input/sprot41.dat
+per-sequence score cutoff:  [none]
+per-domain score cutoff:    [none]
+per-sequence Eval cutoff:   <= 10        
+per-domain Eval cutoff:     [none]
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query HMM:   Prox1
+Accession:   PF05044
+Description: Homeobox prospero-like protein (PROX1)
+  [HMM has been calibrated; E-values are empirical estimates]
+
+Alignments of top-scoring domains:
+PROS_DROVI: domain 1 of 1, from 25 to 1556: score 3802.6, E = 0
+                   *->mpdhdstlllsrqtkrrrvdigvkrtvgtaaalfakakatflsamnp
+                      +++++s++++s++t++++++++++++++taaa++a+a+++++s++++
+  PROS_DROVI    25    NNNNNSNNNNSNITSSSNLSPTAATIATTAAATTATALSGSISPGSR 71   
+
+                   esaeslleaavvnladGeksnvlrkllkransyedavmpfpgaslisalL
+                   esa+sll+aa++nl++G+++++++++++++n++++++++++++sl++a+L
+  PROS_DROVI    72 ESASSLLSAAFGNLFGGSSGENVKRAVRATNEAGPGCHQWAAQSLDNAML 121  
+
+                   AAAmEtAtSAeLLiaallvsSkllskllNNvsianaNstPlSNknNankn
+                   AAAmEtAtSA+LL+aa+lvsS+++skllNNv+++n+N+tPlSN+nN+n+n
+  PROS_DROVI   122 AAAMETATSADLLNAAGLVSSLNTSKLLNNVNNNNNNNTPLSNGNNNNNN 171  
+
+                   ggsepsfsasglsstGsesrrvdaCsdRSLegnlaaaaaaAAdvAaGssP
+                   ++s++++sa++++++G++srrv++CsdRSL+gnlaaaa++AA++AaG+sP
+  PROS_DROVI   172 NASISPGSAHSSTTKGGSSRRVSNCSDRSLDGNLAAAATTAATDAAGGSP 221  
+
+                   raAavvSllnGaaStetkqsqLqHDLvAHHmLRNiLqGKKELmqLDqELR
+                   ++Aa+vS+lnG+aSt+tkq+qLqHDL+AHHmLRNiLqGKKELmqLDqELR
+  PROS_DROVI   222 PRAASVSSLNGGASTQTKQQQLQHDLMAHHMLRNILQGKKELMQLDQELR 271  
+
+                   tAmqqqqqqlqekeqlekklqe.nsklNiaataNNNNNvvsESiNLieDS
+                   tAmqqqqqq+q+++++ek++qe +sklN+++t+NNNNNvvsESiNLieDS
+  PROS_DROVI   272 TAMQQQQQQQQQQQNHEKHQQElHSKLNNNTTTNNNNNVVSESINLIEDS 321  
+
+                   EmaeiKiKSEPelaasatqaPHsphgGSSnSSrSgSgssSnsSiASdGSL
+                   Em+eiKiKSEPel+asatqaPHsphgGSSnSS+S+S++sSn+SiAS+GSL
+  PROS_DROVI   322 EMPEIKIKSEPELMASATQAPHSPHGGSSNSSSSHSHNSSNNSIASNGSL 371  
+
+                   RRKSSDSLDShgaqddaqdeeeeaatgarsveraleeevLPtKKEavDDm
+                   RRKSSDSLDS        +++ee+at+a++ve++l++evLPtKKEavDDm
+  PROS_DROVI   372 RRKSSDSLDS--------MQREERATPATTVEPQLQNEVLPTKKEAVDDM 413  
+
+                   LDEvELLGLsghgsSRgSdlesLasfsrsdMlllDkdkdrllDeDDiivd
+                   LDEvELLGLsghg+SR+SdlesLas+s+sdMlllD++kd++lD+DDii+d
+  PROS_DROVI   414 LDEVELLGLSGHGHSRNSDLESLASPSHSDMLLLDNSKDEVLDNDDIIED 463  
+
+                   deddddddddcietkrEsktSGSnCLKKPglrlKRARVEnIvrgMrcSPs
+                   deddddddddcietkrEs+tSGSnCLKKPg++lKRARVE+Iv++MrcSPs
+  PROS_DROVI   464 DEDDDDDDDDCIETKRESNTSGSNCLKKPGMELKRARVEHIVSSMRCSPS 513  
+
+                   vtLAragqlqvngakkrkLYsPreHAmERYvAAAAGLnyrlNkrkqkLdQ
+                   +t A+agqlqvng+kkrkLY+P++HAmERYvAAAAGLn++lN+++++LdQ
+  PROS_DROVI   514 AT-AQAGQLQVNGCKKRKLYQPQQHAMERYVAAAAGLNFGLNLQSMMLDQ 562  
+
+                   edseSFneLvSarkeQKrvEkraLKsQLrdMQkQLaelQeKyvQlydrte
+                   edseS neL+S++++QKrvEk+aLKsQLr+MQ+QLae+Q+KyvQl++r+e
+  PROS_DROVI   563 EDSES-NELESPQIQQKRVEKNALKSQLRSMQEQLAEMQQKYVQLCSRME 611  
+
+                   sEseCqELDqeheeDgdlsEdsmrseildereqesePdrsdndmieLdps
+                   +EseCqELD+ehe+D+d++E+++++e+++e+eqe+eP++++nd+ieL++s
+  PROS_DROVI   612 QESECQELDNEHEQDMDSMEQEQEQELEQEQEQEPEPLQQHNDDIELSHS 661  
+
+                   ptldrardkessekeessserieaseqsqlllkaktsLlesrdigalqls
+                   ptl+++++kesse+++sss++iea+eq+qll++a+t+Ll++r+i++lq++
+  PROS_DROVI   662 PTLSKSTPKESSERAGSSSPYIEATEQQQLLRAAATMLLPPRPICSLQMM 711  
+
+                   skmsksklqklHNPLvGvaHPALPqGFPPLLqHmGDmSHAAAmYqqFFFE
+                   skm++sklq++HNPLvGvaHPALPqGFPPLLqHmGDmSHAAAmYqqFFFE
+  PROS_DROVI   712 SKMMSSKLQHQHNPLVGVAHPALPQGFPPLLQHMGDMSHAAAMYQQFFFE 761  
+
+                   qEARmAKEAAEqqqqqqqqqqqqqqqqqqqqqqqEqqRReeeeqEqqRRk
+                   qEARmAKEAAEqqqqqqqqqqqqqqqqqqqqqqqEqqRR+e+eqEqqRR+
+  PROS_DROVI   762 QEARMAKEAAEQQQQQQQQQQQQQQQQQQQQQQQEQQRRYEQEQEQQRRM 811  
+
+                   EEqqqqlqRqqqHLqqLqqqqqeq.qHvAaAvPRvqlHhpaPARLPtRmG
+                   EEqqqql+RqqqHLqqLqqqqq++++HvAaAvPRvqlH  +PARLPtRmG
+  PROS_DROVI   812 EEQQQQLHRQQQHLQQLQQQQQQMeHHVAAAVPRVQLH--PPARLPTRMG 859  
+
+                   GAAaaaaaaaHsvLKSELSEKFallRehemasenkpkrdsnnknknnnss
+                   GAAaaaaaaaHsvLKSELSEKF++lR+h+++s n+++++snn+n+nnnss
+  PROS_DROVI   860 GAAAAAAAAAHSVLKSELSEKFQMLRQHNSSS-NSNNSSSNNNNSNNNSS 908  
+
+                   mmrmSGtdlkgLAdvLKsEltTalSalVDTvVkvFvhqrrLFSKqADSvt
+                   mmrmSGtdl+gLAdvLKsE+tT+lSalVDT+V++FvhqrrLFSKqADSvt
+  PROS_DROVI   909 MMRMSGTDLEGLADVLKSEITTSLSALVDTIVTRFVHQRRLFSKQADSVT 958  
+
+                   AAAEqLNKDlllasvildlksprtKvvddrglsgnsgdrfavNGetpatq
+                   AAAEqLNKDl+las+ild+ksprtKvv+drglsgnsg+++a+NG+tpatq
+  PROS_DROVI   959 AAAEQLNKDLMLASQILDRKSPRTKVVADRGLSGNSGHPGAQNGPTPATQ 1008 
+
+                   sAaarlQafkdviimNPldaaALYNSmasPFCLPPDqqqqqqqqqqaata
+                   sAaa++Qa+k++++mNP++aaALYNSmasPFCLPPDqqqqqqqqqqaa++
+  PROS_DROVI  1009 SAAAMFQAPKTPQGMNPVAAAALYNSMASPFCLPPDQQQQQQQQQQAAQQ 1058 
+
+                   qqqqavqqqqqssqqtqqsleQtEALsLVVrPKKKRHKvtDtRitPRtvS
+                   qqqqavqqq+qs+qqtqq+leQ+EALsLVV+PKKKRHKvtDtRitPRtvS
+  PROS_DROVI  1059 QQQQAVQQQHQSAQQTQQQLEQNEALSLVVTPKKKRHKVTDTRITPRTVS 1108 
+
+                   RiLAsgwrcaaqwtgscrsdgvvtttttttsaaaaaatttknsseQqasq
+                   RiLAsgwrcaaqwtgscrs++++ttttttt+aaaaaattt++++eQq++q
+  PROS_DROVI  1109 RILASGWRCAAQWTGSCRSSCCRTTTTTTTTAAAAAATTTAAATEQQWQQ 1158 
+
+                   qqqgshhansepslhqsPlrstagfattsfrhpfPlplmaypfqsslaap
+                   qqq++++a++ep+++++++r+++++att+++h+++++++++++++s+aa+
+  PROS_DROVI  1159 QQQQQCNAGTEPNGSRPGRRHILSTATTTTTHDAGVFAHLSGHTKSIAAR 1208 
+
+                   igSlsgkdssspesldltrettagqslrtklsshHlsHHpcsqamqLSSS
+                   i+Sl++++s+++++++++++++++++++t++++hH++HH    +mqLSSS
+  PROS_DROVI  1209 IQSLFAVQSILQSACGAGPHGPPHGGQPTAAQLHHQHHH----QMQLSSS 1254 
+
+                   PPGSLGALmDSRDSPPLPHPPsmLHPALLAAAHHGGSPDYKtCLRAvmDA
+                   PPGSLGALmDSRDSPPLPHPP+mLHPALLAAAHHGGSPDYKtCLRAvmDA
+  PROS_DROVI  1255 PPGSLGALMDSRDSPPLPHPPTMLHPALLAAAHHGGSPDYKTCLRAVMDA 1304 
+
+                   qDRqSECNSADmtFDGmaPtiSFlKqqqlkqsqlsgahsvpmvhlpslae
+                   qDRqSECNSADmtFDGm+PtiSFlKqqq++qsqlsgahsvpmv+l+sla+
+  PROS_DROVI  1305 QDRQSECNSADMTFDGMQPTISFLKQQQQQQSQLSGAHSVPMVNLWSLAP 1354 
+
+                   glsLstnvetswvetaltlIksectdlqdmsdishyesltplhsetLsPn
+                   +++L+tnvetswvetalt+I++++t+++++++++h+esltplhs+tL+P+
+  PROS_DROVI  1355 THTLGTNVETSWVETALTIITIYHTIYDIYTFSNHCESLTPLHSSTLTPM 1404 
+
+                   HLkKAKLMFFyvRYPSSavLKmYFsDvKFNkniTaQLvKWFSNFREFYYI
+                   HL+KAKLMFF+vRYPSSavLKmYF+D+KFNkn+TaQLvKWFSNFREFYYI
+  PROS_DROVI  1405 HLRKAKLMFFWVRYPSSAVLKMYFPDIKFNKNNTAQLVKWFSNFREFYYI 1454 
+
+                   QMEKYARQAvteGiktpddLlIarDsELYRvLNlHYNkaNdiEVPerFle
+                   QMEKYARQAvteGiktpddLlIa+DsELYRvLNlHYN++N+iEVP++F++
+  PROS_DROVI  1455 QMEKYARQAVTEGIKTPDDLLIAGDSELYRVLNLHYNRNNHIEVPQNFRF 1504 
+
+                   VveiTLREFFrAIqaGKDveqSWKkaIYKvIsklDdeVPEiFKSPNfLee
+                   Vve+TLREFFrAIq+GKD+eqSWKk+IYK+Is++Dd+VPE+FKSPNfLe+
+  PROS_DROVI  1505 VVEQTLREFFRAIQGGKDTEQSWKKSIYKIISRMDDPVPEYFKSPNFLEQ 1554 
+
+                   Ll<-*
+                   L+   
+  PROS_DROVI  1555 LE    1556 
+
+PROS_DROME: domain 1 of 1, from 10 to 1403: score 3351.2, E = 0
+                   *->mpdhdstlllsrqtkrrrvdigvkrtvgtaaalfakakatflsamnp
+                      +++++++l++++++++++++++++++++t+aal++++++++++++++
+  PROS_DROME    10    GAAGGGALFQPQSVSTANSSSSNNNNSSTPAALATHSPTSNSPVSGA 56   
+
+                   esaeslleaavvnladGeksnvlrkllkransyedavmpfpgaslisalL
+                   +sa+sll+aa++nl++G+++++l++l++r++++++++++++++sl++a+L
+  PROS_DROME    57 SSASSLLTAAFGNLFGGSSAKMLNELFGRQMKQAQDATSGLPQSLDNAML 106  
+
+                   AAAmEtAtSAeLLiaallvsSkllskllNNvsianaNstPlSNknNankn
+                   AAAmEtAtSAeLLi++l+++Skll++++NN+sia+aNstP+SN++Na+++
+  PROS_DROME   107 AAAMETATSAELLIGSLNSTSKLLQQQHNNNSIAPANSTPMSNGTNASIS 156  
+
+                   ggsepsfsasglsstGsesrrvdaCsdRSLegnlaaaaaaAAdvAaGssP
+                   +gs++s+s+s++++++++srrv+aCsdRSLe       aaAAdvA+Gs+P
+  PROS_DROME   157 PGSAHSSSHSHQGVSPKGSRRVSACSDRSLE-------AAAADVAGGSPP 199  
+
+                   raAavvSllnGaaStetkqsqLqHDLvAHHmLRNiLqGKKELmqLDqELR
+                   raA+v+Sl++Ga+S+e++qsqLqHDLvAHHmLRNiLqGKKELmqLDqELR
+  PROS_DROME   200 RAASVSSLNGGASSGEQHQSQLQHDLVAHHMLRNILQGKKELMQLDQELR 249  
+
+                   tAmqqqqqqlqekeqlekklqensklNiaataNNNNNvvsESiNLieDSE
+                   tAmqqqqqqlqekeql++kl++n+++NiaataNNNNN+++ESiNLi+DSE
+  PROS_DROME   250 TAMQQQQQQLQEKEQLHSKLNNNNNNNIAATANNNNNTTMESINLIDDSE 299  
+
+                   maeiKiKSEPelaasatqaPHsphgGSSnSSrSgSgssSnsSiASdGSLR
+                   ma+iKiKSEP++a++++q+PH    GSS+SSrSgSgs+S+sS+ASdGSLR
+  PROS_DROME   300 MADIKIKSEPQTAPQPQQSPH----GSSHSSRSGSGSGSHSSMASDGSLR 345  
+
+                   RKSSDSLDShgaqddaqdeeeeaatgarsveraleeevLPtKKEavDDmL
+                   RKSSDSLDShgaqddaqdee++a+tg+rs++ra+ee++LPtKKE+vDDmL
+  PROS_DROME   346 RKSSDSLDSHGAQDDAQDEEDAAPTGQRSESRAPEEPQLPTKKESVDDML 395  
+
+                   DEvELLGLsghgsSRgSdlesLasfsrsdMlllDkdkdrllDeDDiivdd
+                   DEvELLGL    +SRgSd++sLas+s+sdM+llDkd+++++D+DD++v  
+  PROS_DROME   396 DEVELLGL----HSRGSDMDSLASPSHSDMMLLDKDDVLDEDDDDDCV-- 439  
+
+                   eddddddddcietkrEsktSGSnCLKKPglrlKRARVEnIvrgMrcSPsv
+                                  E+ktSGS+CLKKPg++lKRARVEnIv+gMrcSPs+
+  PROS_DROME   440 ---------------EQKTSGSGCLKKPGMDLKRARVENIVSGMRCSPSS 474  
+
+                   tLAragqlqvngakkrkLYsPreHAmERYvAAAAGLnyrlNkrkqkLdQe
+                   +LA+agqlqvng+kkrkLY+P++HAmERYvAAAAGLn++lN+++++LdQe
+  PROS_DROME   475 GLAQAGQLQVNGCKKRKLYQPQQHAMERYVAAAAGLNFGLNLQSMMLDQE 524  
+
+                   dseSFneLvSarkeQKrvEkraLKsQLrdMQkQLaelQeKyvQlydrtes
+                   dseS neL+S++++QKrvEk+aLKsQLr+MQ+QLae+Q+KyvQl++r+e+
+  PROS_DROME   525 DSES-NELESPQIQQKRVEKNALKSQLRSMQEQLAEMQQKYVQLCSRMEQ 573  
+
+                   EseCqELDqeheeDgdlsEdsmrseildereqesePdrsdndmieLdpsp
+                   EseCqELDq+                 +++eqe+ePd++++d+ieL+psp
+  PROS_DROME   574 ESECQELDQD-----------------QDVEQEQEPDNGSSDHIELSPSP 606  
+
+                   tldrardkessekeessserieaseqsqlllkaktsLlesrdigalqlss
+                   tl++++d+++++kee+++er+++s++s+++lk+ktsL+es+d+ga++ls+
+  PROS_DROME   607 TLTGDGDVSPNHKEETGQERPGSSSPSPSPLKPKTSLGESSDSGANMLSQ 656  
+
+                   kmsksklqklHNPLvGvaHPALPqGFPPLLqHmGDmSHAAAmYqqFFFEq
+                   +msk++++klHNPLvGv+HPALPqGFPPLLqHmGDmSHAAAmYqqFFFEq
+  PROS_DROME   657 MMSKMMSGKLHNPLVGVGHPALPQGFPPLLQHMGDMSHAAAMYQQFFFEQ 706  
+
+                   EARmAKEAAEqqqqqqqqqqqqqqqqqqqqqqqEqqRR.eeeeqEqqRRk
+                   EARmAKEAAEqqqqqqqqqqqqqqqqqq     EqqRR e+e+qEqqRRk
+  PROS_DROME   707 EARMAKEAAEQQQQQQQQQQQQQQQQQQ-----EQQRRfEQEQQEQQRRK 751  
+
+                   EEqqqqlqRqqqHLqqLqqqqqeqqHvAaAvPRvqlHhpaPARLPtRmGG
+                   EEqqqq+qRqqqHLqqLqqqq+eqqHvA+A+PR+q+HhpaPARLPtRmGG
+  PROS_DROME   752 EEQQQQIQRQQQHLQQLQQQQMEQQHVATAAPRPQMHHPAPARLPTRMGG 801  
+
+                   AAaaaaaaaHsvLKSELSEKFallRehemasenkpkrdsnnknknnnssm
+                   AA      +H++LKSELSEKF++lR                  +nnnssm
+  PROS_DROME   802 AA------GHTALKSELSEKFQMLR------------------ANNNSSM 827  
+
+                   mrmSGtdlkgLAdvLKsEltTalSalVDTvVkvFvhqrrLFSKqADSvtA
+                   mrmSGtdl+gLAdvLKsE+tT+lSalVDT+V++FvhqrrLFSKqADSvtA
+  PROS_DROME   828 MRMSGTDLEGLADVLKSEITTSLSALVDTIVTRFVHQRRLFSKQADSVTA 877  
+
+                   AAEqLNKDlllasvildlksprtKvvddrglsgnsgdrfavNGetpatqs
+                   AAEqLNKDlllas+ild+ksprtKv+d+           ++NG+tpatqs
+  PROS_DROME   878 AAEQLNKDLLLASQILDRKSPRTKVADR-----------PQNGPTPATQS 916  
+
+                   AaarlQafkdviimNPldaaALYNSmasPFCLPPDqqqqqqqqqqaataq
+                   Aaa++Qa+k++++mNP++aaALYNSm++PFCLPPDqqqqqq      taq
+  PROS_DROME   917 AAAMFQAPKTPQGMNPVAAAALYNSMTGPFCLPPDQQQQQQ------TAQ 960  
+
+                   qqqavqqqqqssqqtqqsleQtEALsLVVrPKKKRHKvtDtRitPRtvSR
+                   qqq++qqqqqssqqtqq+leQ+EALsLVV+PKKKRHKvtDtRitPRtvSR
+  PROS_DROME   961 QQQSAQQQQQSSQQTQQQLEQNEALSLVVTPKKKRHKVTDTRITPRTVSR 1010 
+
+                   iLAsgwrcaaqwtgscrsdgvvtttttttsaaaaaatttknsseQqasqq
+                   iLA              +dgvv++t++++s++++++++++++++Qq++qq
+  PROS_DROME  1011 ILA--------------QDGVVPPTGGPPSTPQQQQQQQQQQQQQQQQQQ 1046 
+
+                   qqgshhansepslhqsPlrstagfattsfrhpfPlplmaypfqsslaapi
+                   qq+s+++ns+++++qsP+rs++g+a++++++p+P+p+m++++++s+a+p+
+  PROS_DROME  1047 QQASNGGNSNATPAQSPTRSSGGAAYHPQPPPPPPPMMPVSLPTSVAIPN 1096 
+
+                   gSlsgkdssspesldltrettagqslrtklsshHlsHHpcsqamqLSSSP
+                   +Sl++++++sp+s++++++++agq+++++l++hH++HHp++q+mqLSSSP
+  PROS_DROME  1097 PSLHESKVFSPYSPFFNPHAAAGQATAAQLHQHHQQHHPHHQSMQLSSSP 1146 
+
+                   PGSLGALmDSRDSPPLPHPPsmLHPALLAAAHHGGSPDYKtCLRAvmDAq
+                   PGSLGALmDSRDSPPLPHPPsmLHPALLAAAHHGGSPDYKtCLRAvmDAq
+  PROS_DROME  1147 PGSLGALMDSRDSPPLPHPPSMLHPALLAAAHHGGSPDYKTCLRAVMDAQ 1196 
+
+                   DRqSECNSADmtFDGmaPtiSFlKqqqlkqsqlsgahsvpmvhlpslaeg
+                   DRqSECNSADm+FDGmaPtiSF+Kq+qlk                     
+  PROS_DROME  1197 DRQSECNSADMQFDGMAPTISFYKQMQLK--------------------- 1225 
+
+                   lsLstnvetswvetaltlIksectdlqdmsdishyesltplhsetLsPnH
+                                          t++q++++++h+esltplhs+tL+P+H
+  PROS_DROME  1226 -----------------------TEHQESLMAKHCESLTPLHSSTLTPMH 1252 
+
+                   LkKAKLMFFyvRYPSSavLKmYFsDvKFNkniTaQLvKWFSNFREFYYIQ
+                   L+KAKLMFF+vRYPSSavLKmYF+D+KFNkn+TaQLvKWFSNFREFYYIQ
+  PROS_DROME  1253 LRKAKLMFFWVRYPSSAVLKMYFPDIKFNKNNTAQLVKWFSNFREFYYIQ 1302 
+
+                   MEKYARQAvteGiktpddLlIarDsELYRvLNlHYNkaNdiEVPerFleV
+                   MEKYARQAvteGiktpddLlIa+DsELYRvLNlHYN++N+iEVP++F++V
+  PROS_DROME  1303 MEKYARQAVTEGIKTPDDLLIAGDSELYRVLNLHYNRNNHIEVPQNFRFV 1352 
+
+                   veiTLREFFrAIqaGKDveqSWKkaIYKvIsklDdeVPEiFKSPNfLeeL
+                   ve+TLREFFrAIq+GKD+eqSWKk+IYK+Is++Dd+VPE+FKSPNfLe+L
+  PROS_DROME  1353 VESTLREFFRAIQGGKDTEQSWKKSIYKIISRMDDPVPEYFKSPNFLEQL 1402 
+
+                   l<-*
+                   +   
+  PROS_DROME  1403 E    1403 
+
+PRX1_MOUSE: domain 1 of 1, from 1 to 735: score 1282.8, E = 0
+                   *->mpdhdstlllsrqtkrrrvdigvkrtvgtaaalfakakatflsamnp
+                      mpdhdst+llsrqtkrrrvdigvkrtvgta+a+faka+atf+samnp
+  PRX1_MOUSE     1    MPDHDSTALLSRQTKRRRVDIGVKRTVGTASAFFAKARATFFSAMNP 47   
+
+                   esaeslleaavvnladGeksnvlrkllkransyedavmpfpgaslisalL
+                   +++e+++e++vv++adGeksnvlrkllkransyeda+mpfpga++is+lL
+  PRX1_MOUSE    48 QGSEQDVEYSVVQHADGEKSNVLRKLLKRANSYEDAMMPFPGATIISQLL 97   
+
+                   AAAmEtAtSAeLLiaallvsSkllskllNNvsianaNstPlSNknNankn
+                                                              knN+nkn
+  PRX1_MOUSE    98 -------------------------------------------KNNMNKN 104  
+
+                   ggsepsfsasglsstGsesrrvdaCsdRSLegnlaaaaaaAAdvAaGssP
+                   gg+epsf+asglsstGse++++d+Cs+                       
+  PRX1_MOUSE   105 GGTEPSFQASGLSSTGSEVHQEDICSN----------------------- 131  
+
+                   raAavvSllnGaaStetkqsqLqHDLvAHHmLRNiLqGKKELmqLDqELR
+                                                                     
+  PRX1_MOUSE     - -------------------------------------------------- -    
+
+                   tAmqqqqqqlqekeqlekklqensklNiaataNNNNNvvsESiNLieDSE
+                                                                     
+  PRX1_MOUSE     - -------------------------------------------------- -    
+
+                   maeiKiKSEPelaasatqaPHsphgGSSnSSrSgSgssSnsSiASdGSLR
+                                                                     
+  PRX1_MOUSE     - -------------------------------------------------- -    
+
+                   RKSSDSLDShgaqddaqdeeeeaatgarsveraleeevLPtKKEavDDmL
+                                                                     
+  PRX1_MOUSE     - -------------------------------------------------- -    
+
+                   DEvELLGLsghgsSRgSdlesLasfsrsdMlllDkdkdrllDeDDiivdd
+                               sSR+S++e+L++f+r++M+++D  +drl+De       
+  PRX1_MOUSE   132 ------------SSRDSPPECLSPFGRPTMSQFD--VDRLCDE------- 160  
+
+                   eddddddddcietkrEsktSGSnCLKKPglrlKRARVEnIvrgMrcSPsv
+                                               +lr+KRARVEnI+rgM++SPsv
+  PRX1_MOUSE   161 ----------------------------HLRAKRARVENIIRGMSHSPSV 182  
+
+                   tLAragqlqvngakkrkLYsPreHAmERYvAAAAGLnyrlNkrkqkLdQe
+                   +L r++++++++a++++  sPre             +yr+NkrkqkL+Q+
+  PRX1_MOUSE   183 AL-RGNENEREMAPQSV--SPRE-------------SYRENKRKQKLPQQ 216  
+
+                   dseSFneLvSarkeQKrvEkraLKsQLrdMQkQLaelQeKyvQlydrtes
+                   +++SF++LvSarkeQKr+E+r+LK+QL+dMQkQL++lQeK++Q+yd+t+s
+  PRX1_MOUSE   217 QQQSFQQLVSARKEQKREERRQLKQQLEDMQKQLRQLQEKFYQVYDSTDS 266  
+
+                   EseCqELDqeheeDgdlsEdsmrseildereqesePdrsdndmieLdpsp
+                   E++         eDgdlsEdsmrseild+r+q+s+ +rsdn+m+eLdp++
+  PRX1_MOUSE   267 END---------EDGDLSEDSMRSEILDARAQDSV-GRSDNEMCELDPGQ 306  
+
+                   tldrardkessekeessserieaseqsqlllkaktsLlesrdigalqlss
+                   ++drar                                            
+  PRX1_MOUSE   307 FIDRAR-------------------------------------------- 312  
+
+                   kmsksklqklHNPLvGvaHPALPqGFPPLLqHmGDmSHAAAmYqqFFFEq
+                                                                     
+  PRX1_MOUSE     - -------------------------------------------------- -    
+
+                   EARmAKEAAEqqqqqqqqqqqqqqqqqqqqqqqEqqRReeeeqEqqRRkE
+                                                                     
+  PRX1_MOUSE     - -------------------------------------------------- -    
+
+                   EqqqqlqRqqqHLqqLqqqqqeqqHvAaAvPRvqlHhpaPARLPtRmGGA
+                                                                     
+  PRX1_MOUSE     - -------------------------------------------------- -    
+
+                   AaaaaaaaHsvLKSELSEKFallRehemasenkpkrdsnnknknnnssmm
+                                       al+Re+ema+ nkpkr+++nk+++++++++
+  PRX1_MOUSE   313 --------------------ALIREQEMAE-NKPKREGSNKERDHGPNSL 341  
+
+                   rmSGtdlkgLAdvLKsEltTalSalVDTvVkvFvhqrrLFSKqADSvtAA
+                   +   +++k+LA++LK+El+Ta+S++VDTvVkvF+++++            
+  PRX1_MOUSE   342 Q---PEGKHLAETLKQELNTAMSQVVDTVVKVFSAKPS------------ 376  
+
+                   AEqLNKDlllasvildlksprtKvvddrglsgnsgdrfavNGetpatqsA
+                          +++++v+++l++p++              rfavNGe++++++A
+  PRX1_MOUSE   377 -------RQVPQVFPPLQIPQA--------------RFAVNGENHNFHTA 405  
+
+                   aarlQafkdviimNPldaaALYNSmasPFCLPPDqqqqqqqqqqaataqq
+                   ++rlQ+f+dvii+NPld++                               
+  PRX1_MOUSE   406 NQRLQCFGDVIIPNPLDTF------------------------------- 424  
+
+                   qqavqqqqqssqqtqqsleQtEALsLVVrPKKKRHKvtDtRitPRtvSRi
+                            +s+q+++s++QtEAL+LVVr                     
+  PRX1_MOUSE   425 ---------GSVQMPSSTDQTEALPLVVR--------------------- 444  
+
+                   LAsgwrcaaqwtgscrsdgvvtttttttsaaaaaatttknsseQqasqqq
+                                                         knsseQ+as+++
+  PRX1_MOUSE   445 --------------------------------------KNSSEQSASGPA 456  
+
+                   qgshhansepslhqsPlrstagfattsfrhpfPlplmaypfqsslaapig
+                   +g+hh    ++lhqsPl++tagf+t+sfrhpfPlplmaypfqs+l+ap+g
+  PRX1_MOUSE   457 TGGHH----QPLHQSPLSATAGFTTPSFRHPFPLPLMAYPFQSPLGAPSG 502  
+
+                   SlsgkdssspesldltrettagqslrtklsshHlsHHpcsqamqLSSSPP
+                   S+sgkd++spesldltr+tt   slrtk+sshHlsHHpcs+a        
+  PRX1_MOUSE   503 SFSGKDRASPESLDLTRDTT---SLRTKMSSHHLSHHPCSPA-------- 541  
+
+                   GSLGALmDSRDSPPLPHPPsmLHPALLAAAHHGGSPDYKtCLRAvmDAqD
+                                                                     
+  PRX1_MOUSE     - -------------------------------------------------- -    
+
+                   RqSECNSADmtFDGmaPtiSFlKqqqlkqsqlsgahsvpmvhlpslaegl
+                                                            h+ps+aegl
+  PRX1_MOUSE   542 -----------------------------------------HPPSTAEGL 550  
+
+                   sLstnvetswvetaltlIksectdlqdmsdishyesltplhsetLsPnHL
+                   sLs             lIksec+dlqdmsdis+y++++  ++e+LsPnHL
+  PRX1_MOUSE   551 SLS-------------LIKSECGDLQDMSDISPYSGSA--MQEGLSPNHL 585  
+
+                   kKAKLMFFyvRYPSSavLKmYFsDvKFNkniTaQLvKWFSNFREFYYIQM
+                   kKAKLMFFy+RYPSS++LK+YFsDvKFN++iT+QL+KWFSNFREFYYIQM
+  PRX1_MOUSE   586 KKAKLMFFYTRYPSSNMLKTYFSDVKFNRCITSQLIKWFSNFREFYYIQM 635  
+
+                   EKYARQAvteGiktpddLlIarDsELYRvLNlHYNkaNdiEVPerFleVv
+                   EKYARQA+++G++++++L+I+rD+ELYR+LN+HYNkaNd+EVPerFleV+
+  PRX1_MOUSE   636 EKYARQAINDGVTSTEELSITRDCELYRALNMHYNKANDFEVPERFLEVA 685  
+
+                   eiTLREFFrAIqaGKDveqSWKkaIYKvIsklDdeVPEiFKSPNfLeeLl
+                   +iTLREFF+AI+aGKDv++SWKkaIYKvI+klD+eVPEiFKSPN+L+eLl
+  PRX1_MOUSE   686 QITLREFFNAIIAGKDVDPSWKKAIYKVICKLDSEVPEIFKSPNCLQELL 735  
+
+                   <-*
+                      
+  PRX1_MOUSE     -     -    
+
+PRX1_HUMAN: domain 1 of 1, from 1 to 734: score 1252.0, E = 0
+                   *->mpdhdstlllsrqtkrrrvdigvkrtvgtaaalfakakatflsamnp
+                      mpdhdst+llsrqtkrrrvdigvkrtvgta+a+faka+atf+samnp
+  PRX1_HUMAN     1    MPDHDSTALLSRQTKRRRVDIGVKRTVGTASAFFAKARATFFSAMNP 47   
+
+                   esaeslleaavvnladGeksnvlrkllkransyedavmpfpgaslisalL
+                   +++e+++e++vv++adGeksnvlrkllkransyeda+mpfpga++is+lL
+  PRX1_HUMAN    48 QGSEQDVEYSVVQHADGEKSNVLRKLLKRANSYEDAMMPFPGATIISQLL 97   
+
+                   AAAmEtAtSAeLLiaallvsSkllskllNNvsianaNstPlSNknNankn
+                                                              knN+nkn
+  PRX1_HUMAN    98 -------------------------------------------KNNMNKN 104  
+
+                   ggsepsfsasglsstGsesrrvdaCsdRSLegnlaaaaaaAAdvAaGssP
+                   gg+epsf+asglsstGse++++d+Cs+                       
+  PRX1_HUMAN   105 GGTEPSFQASGLSSTGSEVHQEDICSN----------------------- 131  
+
+                   raAavvSllnGaaStetkqsqLqHDLvAHHmLRNiLqGKKELmqLDqELR
+                                                                     
+  PRX1_HUMAN     - -------------------------------------------------- -    
+
+                   tAmqqqqqqlqekeqlekklqensklNiaataNNNNNvvsESiNLieDSE
+                                                                     
+  PRX1_HUMAN     - -------------------------------------------------- -    
+
+                   maeiKiKSEPelaasatqaPHsphgGSSnSSrSgSgssSnsSiASdGSLR
+                                                                     
+  PRX1_HUMAN     - -------------------------------------------------- -    
+
+                   RKSSDSLDShgaqddaqdeeeeaatgarsveraleeevLPtKKEavDDmL
+                                                                     
+  PRX1_HUMAN     - -------------------------------------------------- -    
+
+                   DEvELLGLsghgsSRgSdlesLasfsrsdMlllDkdkdrllDeDDiivdd
+                               sSR+S++e+L++f+r++M+++D  +drl+De       
+  PRX1_HUMAN   132 ------------SSRDSPPECLSPFGRPTMSQFD--MDRLCDE------- 160  
+
+                   eddddddddcietkrEsktSGSnCLKKPglrlKRARVEnIvrgMrcSPsv
+                                               +lr+KRARVEnI+rgM++SPsv
+  PRX1_HUMAN   161 ----------------------------HLRAKRARVENIIRGMSHSPSV 182  
+
+                   tLAragqlqvngakkrkLYsPreHAmERYvAAAAGLnyrlNkrkqkLdQe
+                   +L r++++++++a++++  sPre             +yr+NkrkqkL+Q+
+  PRX1_HUMAN   183 AL-RGNENEREMAPQSV--SPRE-------------SYRENKRKQKLPQQ 216  
+
+                   dseSFneLvSarkeQKrvEkraLKsQLrdMQkQLaelQeKyvQlydrtes
+                   +++SF++LvSarkeQKr+E+r+LK+QL+dMQkQL   QeK++Q+yd+t+s
+  PRX1_HUMAN   217 QQQSFQQLVSARKEQKREERRQLKQQLEDMQKQLLHVQEKFYQIYDSTDS 266  
+
+                   EseCqELDqeheeDgdlsEdsmrseildereqesePdrsdndmieLdpsp
+                   E++         eDg+lsEdsmrseild+r+q+s+ +rsdn+m+eLdp++
+  PRX1_HUMAN   267 END---------EDGNLSEDSMRSEILDARAQDSV-GRSDNEMCELDPGQ 306  
+
+                   tldrardkessekeessserieaseqsqlllkaktsLlesrdigalqlss
+                   ++drar                                            
+  PRX1_HUMAN   307 FIDRAR-------------------------------------------- 312  
+
+                   kmsksklqklHNPLvGvaHPALPqGFPPLLqHmGDmSHAAAmYqqFFFEq
+                                                                     
+  PRX1_HUMAN     - -------------------------------------------------- -    
+
+                   EARmAKEAAEqqqqqqqqqqqqqqqqqqqqqqqEqqRReeeeqEqqRRkE
+                                                                     
+  PRX1_HUMAN     - -------------------------------------------------- -    
+
+                   EqqqqlqRqqqHLqqLqqqqqeqqHvAaAvPRvqlHhpaPARLPtRmGGA
+                                                                     
+  PRX1_HUMAN     - -------------------------------------------------- -    
+
+                   AaaaaaaaHsvLKSELSEKFallRehemasenkpkrdsnnknknnnssmm
+                                       al+Re+ema+ nkpkr++nnk+++++++++
+  PRX1_HUMAN   313 --------------------ALIREQEMAE-NKPKREGNNKERDHGPNSL 341  
+
+                   rmSGtdlkgLAdvLKsEltTalSalVDTvVkvFvhqrrLFSKqADSvtAA
+                   +   +++k+LA++LK+El+Ta+S++VDTvVkvF+++++            
+  PRX1_HUMAN   342 Q---PEGKHLAETLKQELNTAMSQVVDTVVKVFSAKPS------------ 376  
+
+                   AEqLNKDlllasvildlksprtKvvddrglsgnsgdrfavNGetpatqsA
+                          +++++v+++l++p++              rfavNGe++++++A
+  PRX1_HUMAN   377 -------RQVPQVFPPLQIPQA--------------RFAVNGENHNFHTA 405  
+
+                   aarlQafkdviimNPldaaALYNSmasPFCLPPDqqqqqqqqqqaataqq
+                   ++rlQ+f+dvii+NPld++                               
+  PRX1_HUMAN   406 NQRLQCFGDVIIPNPLDTF------------------------------- 424  
+
+                   qqavqqqqqssqqtqqsleQtEALsLVVrPKKKRHKvtDtRitPRtvSRi
+                            +++q+ +s++QtEAL+LVVr                     
+  PRX1_HUMAN   425 ---------GNVQMASSTDQTEALPLVVR--------------------- 444  
+
+                   LAsgwrcaaqwtgscrsdgvvtttttttsaaaaaatttknsseQqasqqq
+                                                         knss+Q+as+  
+  PRX1_HUMAN   445 --------------------------------------KNSSDQSASG-L 455  
+
+                   qgshhansepslhqsPlrstagfattsfrhpfPlplmaypfqsslaapig
+                    g+hh    ++lhqsPl++t gf+t++frhpfPlplmaypfqs+l+ap+g
+  PRX1_HUMAN   456 VGGHH----QPLHQSPLSATTGFTTSTFRHPFPLPLMAYPFQSPLGAPSG 501  
+
+                   SlsgkdssspesldltrettagqslrtklsshHlsHHpcsqamqLSSSPP
+                   S+sgkd++spesldltr+tt   slrtk+sshHlsHHpcs+a        
+  PRX1_HUMAN   502 SFSGKDRASPESLDLTRDTT---SLRTKMSSHHLSHHPCSPA-------- 540  
+
+                   GSLGALmDSRDSPPLPHPPsmLHPALLAAAHHGGSPDYKtCLRAvmDAqD
+                                                                     
+  PRX1_HUMAN     - -------------------------------------------------- -    
+
+                   RqSECNSADmtFDGmaPtiSFlKqqqlkqsqlsgahsvpmvhlpslaegl
+                                                            h+ps+aegl
+  PRX1_HUMAN   541 -----------------------------------------HPPSTAEGL 549  
+
+                   sLstnvetswvetaltlIksectdlqdmsdishyesltplhsetLsPnHL
+                   sLs             lIksec+dlqdms is+y++++  ++e+LsPnHL
+  PRX1_HUMAN   550 SLS-------------LIKSECGDLQDMSEISPYSGSA--MQEGLSPNHL 584  
+
+                   kKAKLMFFyvRYPSSavLKmYFsDvKFNkniTaQLvKWFSNFREFYYIQM
+                   kKAKLMFFy+RYPSS++LK+YFsDvKFN++iT+QL+KWFSNFREFYYIQM
+  PRX1_HUMAN   585 KKAKLMFFYTRYPSSNMLKTYFSDVKFNRCITSQLIKWFSNFREFYYIQM 634  
+
+                   EKYARQAvteGiktpddLlIarDsELYRvLNlHYNkaNdiEVPerFleVv
+                   EKYARQA+++G++++++L+I+rD+ELYR+LN+HYNkaNd+EVPerFleV+
+  PRX1_HUMAN   635 EKYARQAINDGVTSTEELSITRDCELYRALNMHYNKANDFEVPERFLEVA 684  
+
+                   eiTLREFFrAIqaGKDveqSWKkaIYKvIsklDdeVPEiFKSPNfLeeLl
+                   +iTLREFF+AI+aGKDv++SWKkaIYKvI+klD+eVPE+FKSPN+L+eLl
+  PRX1_HUMAN   685 QITLREFFNAIIAGKDVDPSWKKAIYKVICKLDSEVPEFFKSPNCLQELL 734  
+
+                   <-*
+                      
+  PRX1_HUMAN     -     -    
+
+PRX1_CHICK: domain 1 of 1, from 1 to 734: score 1217.2, E = 0
+                   *->mpdhdstlllsrqtkrrrvdigvkrtvgtaaalfakakatflsamnp
+                      mpdhdst+llsrqtkrrrvdigvkrtvgta+a+faka+atf+samnp
+  PRX1_CHICK     1    MPDHDSTALLSRQTKRRRVDIGVKRTVGTASAFFAKARATFFSAMNP 47   
+
+                   esaeslleaavvnladGeksnvlrkllkransyedavmpfpgaslisalL
+                   +++e+++e++vv++adGek nvlrkllkransyeda+mpfpga++is+lL
+  PRX1_CHICK    48 QGSEQDVEYSVVQHADGEKPNVLRKLLKRANSYEDAMMPFPGATIISQLL 97   
+
+                   AAAmEtAtSAeLLiaallvsSkllskllNNvsianaNstPlSNknNankn
+                                                              knN+nkn
+  PRX1_CHICK    98 -------------------------------------------KNNMNKN 104  
+
+                   ggsepsfsasglsstGsesrrvdaCsdRSLegnlaaaaaaAAdvAaGssP
+                   gg+epsf+asglsstGse++++d Cs+                       
+  PRX1_CHICK   105 GGTEPSFQASGLSSTGSEVHQEDVCSN----------------------- 131  
+
+                   raAavvSllnGaaStetkqsqLqHDLvAHHmLRNiLqGKKELmqLDqELR
+                                                                     
+  PRX1_CHICK     - -------------------------------------------------- -    
+
+                   tAmqqqqqqlqekeqlekklqensklNiaataNNNNNvvsESiNLieDSE
+                                                                     
+  PRX1_CHICK     - -------------------------------------------------- -    
+
+                   maeiKiKSEPelaasatqaPHsphgGSSnSSrSgSgssSnsSiASdGSLR
+                                                                     
+  PRX1_CHICK     - -------------------------------------------------- -    
+
+                   RKSSDSLDShgaqddaqdeeeeaatgarsveraleeevLPtKKEavDDmL
+                                                                     
+  PRX1_CHICK     - -------------------------------------------------- -    
+
+                   DEvELLGLsghgsSRgSdlesLasfsrsdMlllDkdkdrllDeDDiivdd
+                               sSR+S++e+L++f+r++M+++D  +drl+De       
+  PRX1_CHICK   132 ------------SSRDSPQECLSPFGRPTMSQFD--VDRLCDE------- 160  
+
+                   eddddddddcietkrEsktSGSnCLKKPglrlKRARVEnIvrgMrcSPsv
+                                               +lr+KRARVEnI+rgM++SP v
+  PRX1_CHICK   161 ----------------------------HLRAKRARVENIIRGMSHSPRV 182  
+
+                   tLAragqlqvngakkrkLYsPreHAmERYvAAAAGLnyrlNkrkqkLdQe
+                   +L r+++++++  ++++  sPre             +yr+Nkrkq  +Q+
+  PRX1_CHICK   183 AL-RGNENEREIRPQSV--SPRE-------------SYRENKRKQNWPQQ 216  
+
+                   dseSFneLvSarkeQKrvEkraLKsQLrdMQkQLaelQeKyvQlydrtes
+                   +++SF++LvSarkeQKr+E+r+LK+QL+dMQkQL++lQe ++Q+yd+t+s
+  PRX1_CHICK   217 QQQSFQQLVSARKEQKREERRQLKQQLEDMQKQLRQLQEEFYQIYDSTDS 266  
+
+                   EseCqELDqeheeDgdlsEdsmrseildereqesePdrsdndmieLdpsp
+                   E++         eDg+lsEd mrse +d+++ +s+ +rsdn+m+eLdp++
+  PRX1_CHICK   267 END---------EDGNLSEDRMRSETVDAQAGDSV-GRSDNEMCELDPGQ 306  
+
+                   tldrardkessekeessserieaseqsqlllkaktsLlesrdigalqlss
+                   ++drar                                            
+  PRX1_CHICK   307 FIDRAR-------------------------------------------- 312  
+
+                   kmsksklqklHNPLvGvaHPALPqGFPPLLqHmGDmSHAAAmYqqFFFEq
+                                                                     
+  PRX1_CHICK     - -------------------------------------------------- -    
+
+                   EARmAKEAAEqqqqqqqqqqqqqqqqqqqqqqqEqqRReeeeqEqqRRkE
+                                                                     
+  PRX1_CHICK     - -------------------------------------------------- -    
+
+                   EqqqqlqRqqqHLqqLqqqqqeqqHvAaAvPRvqlHhpaPARLPtRmGGA
+                                                                     
+  PRX1_CHICK     - -------------------------------------------------- -    
+
+                   AaaaaaaaHsvLKSELSEKFallRehemasenkpkrdsnnknknnnssmm
+                                       al+Re+e+ + nkpkr+ ++k+k+++++++
+  PRX1_CHICK   313 --------------------ALIREQEIGE-NKPKRE-GPKEKDQGPNSF 340  
+
+                   rmSGtdlkgLAdvLKsEltTalSalVDTvVkvFvhqrrLFSKqADSvtAA
+                   +   +++k+LA++LK+El+Ta+S++VDTvVkvF+ +++            
+  PRX1_CHICK   341 H---PEGKHLAETLKQELNTAMSQVVDTVVKVFSSKPS------------ 375  
+
+                   AEqLNKDlllasvildlksprtKvvddrglsgnsgdrfavNGetpatqsA
+                          ++l++v+++l++p++              rfavNGe++++++A
+  PRX1_CHICK   376 -------RQLPQVFPPLQIPQA--------------RFAVNGENHNFHTA 404  
+
+                   aarlQafkdviimNPldaaALYNSmasPFCLPPDqqqqqqqqqqaataqq
+                   ++rlQ+f+dvii+NPld++                               
+  PRX1_CHICK   405 NQRLQCFGDVIIPNPLDTF------------------------------- 423  
+
+                   qqavqqqqqssqqtqqsleQtEALsLVVrPKKKRHKvtDtRitPRtvSRi
+                            ss++++  ++Qt AL+LVVr                     
+  PRX1_CHICK   424 ---------SSVPMPGATDQTDALPLVVR--------------------- 443  
+
+                   LAsgwrcaaqwtgscrsdgvvtttttttsaaaaaatttknsseQqasqqq
+                                                         knss+Q as ++
+  PRX1_CHICK   444 --------------------------------------KNSSDQPASAPP 455  
+
+                   qgshhansepslhqsPlrstagfattsfrhpfPlplmaypfqsslaapig
+                    g+hh    +slhqsPl++tagf+t+sfrhpfPlplmaypfqs+l+ap+ 
+  PRX1_CHICK   456 AGGHH----ASLHQSPLSATAGFSTSSFRHPFPLPLMAYPFQSPLGAPSA 501  
+
+                   SlsgkdssspesldltrettagqslrtklsshHlsHHpcsqamqLSSSPP
+                   S++gk+++spesldltrett   slrtk+sshH++HHpcs+a        
+  PRX1_CHICK   502 SFPGKERASPESLDLTRETT---SLRTKMSSHHMNHHPCSPA-------- 540  
+
+                   GSLGALmDSRDSPPLPHPPsmLHPALLAAAHHGGSPDYKtCLRAvmDAqD
+                                                                     
+  PRX1_CHICK     - -------------------------------------------------- -    
+
+                   RqSECNSADmtFDGmaPtiSFlKqqqlkqsqlsgahsvpmvhlpslaegl
+                                                            h+ps aegl
+  PRX1_CHICK   541 -----------------------------------------HPPSAAEGL 549  
+
+                   sLstnvetswvetaltlIksectdlqdmsdishyesltplhsetLsPnHL
+                   sLs             lIksec+dlqdms is+y++++  ++e+LsPnHL
+  PRX1_CHICK   550 SLS-------------LIKSECGDLQDMSEISPYSGSA--MQEGLSPNHL 584  
+
+                   kKAKLMFFyvRYPSSavLKmYFsDvKFNkniTaQLvKWFSNFREFYYIQM
+                   kKAKLMFFy+RYPSS++LK+YFsDvKFN++iT+QL+KWFSNFREFYYIQM
+  PRX1_CHICK   585 KKAKLMFFYTRYPSSNMLKTYFSDVKFNRCITSQLIKWFSNFREFYYIQM 634  
+
+                   EKYARQAvteGiktpddLlIarDsELYRvLNlHYNkaNdiEVPerFleVv
+                   EKYARQA+++G++++++L+I+rD+ELYR+LN+HYNkaNd+EVPerFleV+
+  PRX1_CHICK   635 EKYARQAINDGVTSTEELSITRDCELYRALNMHYNKANDFEVPERFLEVA 684  
+
+                   eiTLREFFrAIqaGKDveqSWKkaIYKvIsklDdeVPEiFKSPNfLeeLl
+                   +iTLREFF+AI+aGKDv++SWKkaIYKvI+klD+eVPEiFKSPN+L+eLl
+  PRX1_CHICK   685 QITLREFFNAIIAGKDVDPSWKKAIYKVICKLDSEVPEIFKSPNCLQELL 734  
+
+                   <-*
+                      
+  PRX1_CHICK     -     -    
+
+HM26_CAEEL: domain 1 of 1, from 2 to 585: score -397.8, E = 9.8
+                   *->mpdhdstlllsrqtkrrrvdigvkrtvgtaaalfakakatflsamnp
+                           s +l s       +  g   + g +      ++   l++ n 
+  HM26_CAEEL     2    -----SSGLPSIAATAQPSANGFSFNNGFPPFGIYYSQ---LPPVNS 40   
+
+                   esaeslleaavvnladGeksnvlrkllkransyedavmpfpgaslisalL
+                   +++               +sn  +  +kr  +  da  p       +   
+  HM26_CAEEL    41 NGSTP------------NSSNRFK--VKRHRQRVDAGEP------RNTYQ 70   
+
+                   AAAmEtAtSAeLLiaallvsSkllskllNNvsianaNstPlSNknNankn
+                                                              +   + +
+  HM26_CAEEL    71 -------------------------------------------GASTSVS 77   
+
+                   ggsepsfsasglsstGsesrrvdaCsdRSLegnlaaaaaaAAdvAaGssP
+                     s +s+s s   st+s+s   +  s    e                   
+  HM26_CAEEL    78 SNSSSSSSTSNTNSTPSSSSTSSKKST---E------------------- 105  
+
+                   raAavvSllnGaaStetkqsqLqHDLvAHHmLRNiLqGKKELmqLDqELR
+                                                                     
+  HM26_CAEEL     - -------------------------------------------------- -    
+
+                   tAmqqqqqqlqekeqlekklqensklNiaataNNNNNvvsESiNLieDSE
+                                                                     
+  HM26_CAEEL     - -------------------------------------------------- -    
+
+                   maeiKiKSEPelaasatqaPHsphgGSSnSSrSgSgssSnsSiASdGSLR
+                                                                     
+  HM26_CAEEL     - -------------------------------------------------- -    
+
+                   RKSSDSLDShgaqddaqdeeeeaatgarsveraleeevLPtKKEavDDmL
+                                    + e e  t    +e+ +++e             
+  HM26_CAEEL   106 ----------------GMTETETMTASIEQEKVIQNEE------------ 127  
+
+                   DEvELLGLsghgsSRgSdlesLasfsrsdMlllDkdkdrllDeDDiivdd
+                                         +  ++  M   D   d + D        
+  HM26_CAEEL   128 ----------------------SEAGKDGMEEHD---DGMNDF------- 145  
+
+                   eddddddddcietkrEsktSGSnCLKKPglrlKRARVEnIvrgMrcSPsv
+                                                         +I+         
+  HM26_CAEEL   146 --------------------------------------EII-------DD 150  
+
+                   tLAragqlqvngakkrkLYsPreHAmERYvAAAAGLnyrlNkrkqkLdQe
+                   t     + +v+  + r   sP                      +  L  +
+  HM26_CAEEL   151 T-----NDEVEESEERE--SPES-------------------NSTLL--Q 172  
+
+                   dseSFneLvSarkeQKrvEkraLKsQLrdMQkQLaelQeKyvQlydrtes
+                     + Fn                            ++l  K  Q+      
+  HM26_CAEEL   173 KGKAFNH---------------------------RKLERKTEQINVTVGG 195  
+
+                   EseCqELDqeheeDgdlsEdsmrseildereqesePdrsdndmieLdpsp
+                     e                           + e      + +  eL+  +
+  HM26_CAEEL   196 TEE---------------------------AEETT---DEAEGRELSALQ 215  
+
+                   tldrardkessekeessserieaseqsqlllkaktsLlesrdigalqlss
+                      + +                                            
+  HM26_CAEEL   216 AQLQNG-------------------------------------------- 221  
+
+                   kmsksklqklHNPLvGvaHPALPqGFPPLLqHmGDmSHAAAmYqqFFFEq
+                                                        H A          
+  HM26_CAEEL   222 -------------------------------------HIA---------- 224  
+
+                   EARmAKEAAEqqqqqqqqqqqqqqqqqqqqqqqEqqRR.eeeeqEqqRRk
+                                                    EqqRR +    +qqR+ 
+  HM26_CAEEL   225 ---------------------------------EQQRRfYAAFLDQQRK- 240  
+
+                   EEqqqqlqRqqqHLqqLqqqqqeqqHvAaAvPRvqlHhpaPARLPtRmGG
+                                                     q+              
+  HM26_CAEEL   241 ----------------------------------QVA------------- 243  
+
+                   AAaaaaaaaHsvLKSELSEKFallRehemasenkpkrdsnnknknnnssm
+                   AA                   ++l                     n+   
+  HM26_CAEEL   244 AA-------------------QILH--------------------NGKIN 254  
+
+                   mrmSGtdlkgLAdvLKsEltTalSalVDTvVkvFvhqrrLFSKqADSvtA
+                   +         L    K  l T        v++  ++              
+  HM26_CAEEL   255 IE-------RLVSSVKGDLVTNFMKDLEKVIRDWAADEV----------- 286  
+
+                   AAEqLNKDlllasvildlksprtKvvddrglsgnsgdrfavNGetpatqs
+                       L ++   + +i+    p +             +  ++   +p ++ 
+  HM26_CAEEL   287 ----LKQEAAAPPQIPQ---PPP-------------QFHPIFPANPLFHM 316  
+
+                   AaarlQafkdviimNPldaaALYNSmasPFCLPPDqqqqqqqqqqaataq
+                   A       +  i +    a+                              
+  HM26_CAEEL   317 APPHHPVAGGGIFPPNFNAF------------------------------ 336  
+
+                   qqqavqqqqqssqqtqqsleQtEALsLVVrPKKKRHKvtDtRitPRtvSR
+                      a    +   q +  s e           KKKR Kv            
+  HM26_CAEEL   337 --NAFNALRRNLQDVDTSSE----------MKKKRTKV------------ 362  
+
+                   iLAsgwrcaaqwtgscrsdgvvtttttttsaaaaaatttknsseQqasqq
+                                                                +  ++
+  HM26_CAEEL   363 ---------------------------------------------EIKKE 367  
+
+                   qqgshhansepslhqsPlrstagfattsfrhpfPlplmaypfqsslaapi
+                      s           sPl+++a+   ++    fP p m           +
+  HM26_CAEEL   368 DAMSSR--------ASPLSASAS---PPLSRFFPAPTM-----------V 395  
+
+                   gSlsgkdssspesldltrettagqslrtklsshHlsHHpcsqamqLSSSP
+                   g + g +       +  re                   p  +        
+  HM26_CAEEL   396 GHYGGMN-------FGDREDS-----------------PTNSD------- 414  
+
+                   PGSLGALmDSRDSPPLPHPPsmLHPALLAAAHHGGSPDYKtCLRAvmDAq
+                                                                     
+  HM26_CAEEL     - -------------------------------------------------- -    
+
+                   DRqSECNSADmtFDGmaPtiSFlKqqqlkqsqlsgahsvpmvhlpslaeg
+                                                                     
+  HM26_CAEEL     - -------------------------------------------------- -    
+
+                   lsLstnvetswvetaltlIksectdlqdmsdishyesltplhsetLsPnH
+                     Ls                 ec+          ye+     s+ L+P+H
+  HM26_CAEEL   415 -ELS-----------------ECG----------YEGGG--SSSMLTPMH 434  
+
+                   LkKAKLMFFyvRYPSSavLKmYFsDvKFNkniTaQLvKWFSNFREFYYIQ
+                   L+KAKLMFFy+RYP S++LK YF+D++FNkn+TaQLvKWFSNFREFYY Q
+  HM26_CAEEL   435 LRKAKLMFFYTRYPNSNLLKSYFPDIRFNKNNTAQLVKWFSNFREFYYNQ 484  
+
+                   MEKYARQAvteGiktpddLlIarDsELYRvLNlHYNkaNdiEVPerFleV
+                   MEK+ARQA  eGi+  +d  ++ DsEL+ vLN HYN++N+i  P+r  +V
+  HM26_CAEEL   485 MEKFARQALAEGITDRNDIFVSKDSELFKVLNTHYNRNNHIKAPDRLVFV 534  
+
+                   veiTLREFFrAIqaGKDveqSWKkaIYKvIsklDdeVPEiFKSPNfLeeL
+                   v+ TLREF  AI  GKD+e+SWKk IYKvI +l d +P++FK PNfLe L
+  HM26_CAEEL   535 VQETLREFHDAIKQGKDIEPSWKKTIYKVINRLEDQIPDFFKEPNFLERL 584  
+
+                   l<-*
+                   +   
+  HM26_CAEEL   585 E    585  
+
+
+Total sequences searched: 122564
+
+Whole sequence top hits:
+tophits_s report:
+     Total hits:           91
+     Satisfying E cutoff:  6
+     Total memory:         25K
+
+Domain top hits:
+tophits_s report:
+     Total hits:           91
+     Satisfying E cutoff:  91
+     Total memory:         461K

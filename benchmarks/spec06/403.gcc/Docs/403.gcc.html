@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>403.gcc: SPEC CPU2006 Benchmark Description</title>
+<meta name="generator" content="Cloyce+VIM 6.2" />
+<meta name="revision" content="$Id: 403.gcc.html 4534 2006-06-29 17:34:49Z john $" />
+</head>
+<body>
+<div style="text-align: center">
+<h1>403.gcc<br />
+SPEC CPU2006 Benchmark Description</h1>
+</div>
+
+<h2>Benchmark Name</h2>
+
+<p>403.gcc</p>
+
+<hr />
+
+<h2>Benchmark Author</h2>
+
+<p>Richard Stallman and a large cast of helpers. For a full list,
+see <a href=
+	"http://gcc.gnu.org/onlinedocs/gcc/Contributors.html">http://gcc.gnu.org/onlinedocs/gcc/Contributors.html
+</a>.</p>
+
+<hr />
+
+<h2>Benchmark Program General Category</h2>
+
+<p>C Language optimizing compiler</p>
+
+<hr />
+
+<h2>Benchmark Description</h2>
+
+<p>403.gcc is based on gcc Version 3.2. It generates code for an
+AMD Opteron processor. The benchmark runs as a compiler with many
+of its optimization flags enabled. </p>
+
+<p>403.gcc has had its inlining
+heuristics altered slightly, so as to inline more code than would
+be typical on a Unix system in 2002. It is expected that this
+effect will be more typical of compiler usage in 2006.  This was 
+done so that 403.gcc would spend more time analyzing its source
+code inputs, and use more memory. Without this effect, 403.gcc
+would have done less analysis, and needed more input workloads to
+achieve the run times required for CPU2006.</p>
+
+<hr />
+
+<h2>Input Description</h2>
+
+<p>There are 9 input workloads in 403.gcc. These files are
+preprocessed C code (.i files):</p>
+<ul>
+<li>cp-decl.i and expr.i come from the source files of 176.gcc from 
+CPU2000. </li>
+
+<li>166.i is made by concatenating the Fortran source files of a 
+SPECint2000 candidate benchmark, then using the f2c translator to produce 
+C code, and then pre-processing. </li>
+
+<li>200.i comes via the same method from a previous version of the 
+SPECfp2000 benchmark 200.sixtrack.</li>
+
+<li>scilab.i comes via the same method from a version of the Scilab 
+program.</li>
+
+<li>Expr2.i comes from the source of 403.gcc, as does c-typeck.i.</li>
+
+<li>g23.i comes from fold-const.c from 403.gcc, and s04.i comes from
+sched-deps.c of 403.gcc</li>
+
+</ul>
+
+<hr />
+
+<h2>Output Description</h2>
+
+<p>All output files are x86-64 assembly code files.</p>
+
+<hr />
+
+<h2>Programming Language</h2>
+
+<p>C</p>
+
+<hr />
+
+<h2>Known portability issues</h2>
+
+<ol>
+<li>Some of the optimizations 403.gcc performs require constant
+propagation of floating point constants. These form an
+insignificant amount of computation time, yet may depend on IEEE
+floating point format to produce a correct result.</li>
+
+<li>403.gcc is not an ANSI C program. It uses GNU extensions.</li>
+
+<li>The initial port of 403.gcc was to a 64 bit system. It has
+been successfully ported by SPEC to many 32-bit UNIX
+implementations.</li>
+</ol>
+
+<hr />
+
+<h2>References</h2>
+
+<ul>
+<li>See the GCC home page at <a href=
+"http://gcc.gnu.org">http://gcc.gnu.org</a></li>
+</ul>
+
+<hr />
+
+<p>Last updated: 29 June 2006</p>
+</body>
+</html>

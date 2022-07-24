@@ -1,0 +1,1883 @@
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta name="generator" content="SPEC CPU2006 Tools  (flags v4553)" />
+<style type="text/css" id="internalScreen" media="screen">
+<!--
+body {
+  margin:  1em;
+  border:  0;
+  padding: 0;
+  background: white;
+  color:      black;
+  font-family: "Times Roman", times, serif;
+}
+
+.tt {
+  font-family: monospace;
+}
+
+div.flagClass > h2 {
+  border-bottom: 1px dotted black;
+  width: 80%;
+  font-family: sans-serif;
+}
+
+div.flagDesc {
+  clear: both;
+  background-color: rgb(255, 245, 220);
+  border: 1px solid blue; /* XXX This is for debugging */ 
+  margin: 0 auto;
+  width: 90%;
+}
+
+li.flagName {
+  font-weight: bold;
+  width: 100%;
+  border-bottom: 1px solid black;
+  display: block;
+  margin: 0.5em 0 0.5em 0;
+  font-size: 125%;
+}
+
+/* (presumably short) informationals all get grouped together near the top
+ * of the flag description block.
+ */
+.flagOrigin, .flagDescClass, .flagDescCompiler, .flagDescRE, .flagVar {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  float: left;
+  padding: 0.25em;
+  margin: 0 0 0.25em 0;
+}
+
+.flagDescClass::before {
+  content: "Flag Class: ";
+}
+.flagDescCompiler::before {
+  content: "Compilers that recognize this flag: ";
+}
+.flagDescRE::before {
+  content: "Regular Expression: ";
+}
+.flagVar::before {
+  content: "Found In: ";
+}
+
+span.flagDescInc {
+  border-bottom: 1px solid black;
+}
+
+/* The description text stands alone. */
+.descText {
+  clear: both;
+  padding: 0.5em 1em 0.5em 1em;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin: 0.5em 0 0.5em 0;
+}
+
+/* This is a separate class so that in the print style sheet it can
+ * be ignored.
+ * Also, 'style="clear:both;"' is longer than 'class="clear"'
+ */
+.clear {
+  clear: both;
+}
+
+/* This is really for the link _to_ the flag report */
+li.unknown > a:link, a:visited { text-decoration: none; }
+
+.monospace {
+  font-family: Courier, "Courier New", monospace;
+}
+
+ul.flagDescList {
+  clear: both;
+  list-style-type: none;
+}
+
+/* Arrange for each flag description to have some headroom. */
+ul.flagDescList > li {
+  margin: 2em 0 0 0;
+}
+
+ul.flagDesc {
+  list-style-type: none;
+}
+
+div.flagTOC {
+  border: 1px solid white;
+  padding: 0.5em 1em;
+  margin: 0 auto;
+  width: 80%;
+}
+
+ul.flagTOC {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.flagTOC > li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+  margin: 0;
+  padding: 0.25em 0 0.25em 0;
+  float: left;
+  display: inline-block; /* Fix IE bug; compliant browsers will ignore this */
+  width: 24.3%;
+  min-height: 1.5em;
+  overflow: hidden; /* If the table gets squeezed too much, don't let the
+                     * text overlap
+                     */
+}
+
+ul.SubMenu li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+}
+
+ul.SubMenu {
+  display: none;
+  position: absolute;
+  list-style-type: none;
+  border: 1px solid black;
+  background-color: white;
+  margin: 0 0 0 2em;
+  padding: 0.25em 5em 0.25em 0.5em;
+  white-space: nowrap;
+}
+
+li:hover > ul.SubMenu, ul.SubMenu:hover {
+  display: block;
+}
+
+ul.SubMenu > li:hover, ul.flagTOC > li:hover {
+  background-color: rgb(176, 196, 238); /* lightsteelgray... almost */
+  border: 1px solid rgb(128, 128, 128);
+}
+
+
+.resultpage a:link, .resultpage a:visited {
+  text-decoration: none;
+  border-bottom: 1px dashed black;
+  color: inherit;
+}
+
+.resultpage {
+  margin: auto;
+  padding: 0;
+  width: 800px;
+}
+
+.logo {
+  float: left;
+}
+
+.titlebarcontainer, .resultstable {
+  border: solid 1px;
+  width: 100%;
+  float: left;
+}
+
+div.logo > img {
+  vertical-align: 50%;
+  margin: auto;
+}
+
+.titlebar {
+  float: left;
+  padding: 0em 1em 0em 1em;
+  text-align: center;
+  width: 92%;
+}
+
+div.titlebar > h1, div.titlebar > p {
+  margin: 0 1em 0 1em;
+}
+
+.systembar {
+  float: left;
+  width: 65%;
+  font-size: 150%;
+  margin: 0;
+  padding: 0.1em;
+  border-right: solid 1px black;
+}
+
+.metricbar {
+  padding: 0.1em;
+  margin: 0;
+  float: right;
+  width: 33%;
+  height: 50%;
+  font-size: 120%;
+}
+
+.metricbar#base {
+  background-color: #c8c8c8;
+  color: black;
+}
+
+.metricbar#peak {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+}
+
+.metricbar p {
+  margin: 0;
+  padding: 0.2em;
+}
+
+.datebar p, .systembar p {
+  margin: 0;
+  padding: 0;
+}
+
+.datebar p {
+  float: left;
+  border-left: solid 1px black;
+}
+
+span.item {
+  float: left;
+  margin: 0;
+  padding: 0 0 0 0.1em;
+}
+
+span.value {
+  float: right;
+  padding: 0 0.1em 0 0;
+}
+
+.datebar {
+  width: 100%;
+  float: left;
+  font-size: 50%;
+  min-height: 100%;
+  border: solid 1px black;
+}
+
+p#test_sponsor {
+  width: 31%;
+}
+
+p#license_num {
+  width: 16%;
+}
+
+p#test_date {
+  width: 15%;
+}
+
+p#hw_avail, p#sw_avail {
+  width: 18%;
+}
+
+div.graph {
+  margin: auto;
+}
+
+div.infobox {
+  float: left;
+  width: 100%;
+  padding: 0;
+  border: solid 1px black;
+}
+
+div.infobox table {
+  width: 49%;
+  float: left;
+}
+
+div.infobox table tr {
+  vertical-align: top;
+}
+
+div.infobox table#Hardware {
+  width: 50%;
+  border-right: 1px solid black;
+}
+
+div.infobox thead th {
+  font-size: 200%;
+}
+
+div.infobox tbody th {
+  text-align: left;
+}
+
+.resultstable h2, div.notes h2 {
+  text-align: center;
+  margin: 0.1em;
+}
+
+div.notes h3 {
+  margin: 0.1em;
+}
+
+div.notes dd {
+  margin-bottom: 1em;
+}
+
+.resultstable table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.resultstable th.basecol, .resultstable th.peakcol {
+  padding: 0.1em;
+  font-size: 90%;
+}
+
+.resultstable th {
+  border: solid 2px black;
+}
+
+.resultstable td {
+  border: solid 1px #b8b8b8;
+}
+
+td.bm, th.bm { 
+  border-right: solid 2px black;
+  border-left: solid 2px black;
+}
+
+td.secs { 
+  border-left: solid 2px black;
+}
+
+td.ratio { 
+  border-right: solid 2px black;
+}
+
+.resultstable tfoot td {
+  text-align: center;
+  border: solid 2px black;
+}
+
+th.basecol {
+  background-color: #c8c8c8;
+  color: black;
+}
+td.basecol {
+  text-align: right;
+  background-color: transparent;
+  color: black;
+}
+
+th.peakcol {
+  text-align: center;
+}
+
+.peakcol {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+  text-align: right;
+}
+
+td.bm {
+  /* Basically, the benchmark name and copies columns */
+  background-color: #c8c8c8;
+  color: black;
+}
+
+span.selected {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+div.notes {
+  width: 100%;
+  float: left;
+  border: solid 1px black;
+}
+
+div.flagfooter {
+  text-align: center;
+}
+
+div.errors {
+  border: solid 2px red;
+}
+div.errors h2 {
+  background-color: transparent;
+  color: red;
+}
+
+div.footer {
+  border: none;
+}
+
+/* People find the "double underline" confusing.  And Safari 1.3 doesn't deal
+ * well with attempting to disable the border for userflag links.  So just
+ * give up and don't decorate user flags specially.
+********************
+span.userflag {
+  text-decoration: underline;
+}
+
+.userflag a:link {
+  border-bottom: 0;
+}
+********************
+*/
+/* Most of the screen-specific CSS is also the common CSS */
+
+/* Style for the non-image W3C marking at the bottom of the page, courtesy of
+ * Marek Prokop (http://www.sovavsiti.cz/css/w3c_buttons.html)
+ */
+.w3cbutton3 {
+  margin: 1em 1em 0 0;
+  width: 9em;
+  border: 1px solid #ccc;
+  font-family: helvetica,arial,sans-serif;
+  font-size: 70%;
+  font-weight: bold;
+  float: left;
+}
+.w3cbutton3 a {
+  display: block;
+  width: 100%;
+}
+.w3cbutton3 a:link,
+.w3cbutton3 a:visited,
+.w3cbutton3 a:hover {
+  background-color: #fc6;
+  color: #000;
+  text-decoration: none;
+  border-bottom: none;
+}
+.w3cbutton3 span.w3c {
+  padding: 0 0.4em;
+  background-color: #fff;
+  color: #0c479d;
+}
+
+-->
+</style>
+<style type="text/css" id="internalPrint" media="print">
+<!--
+body {
+  margin:  1em;
+  border:  0;
+  padding: 0;
+  background: white;
+  color:      black;
+  font-family: "Times Roman", times, serif;
+}
+
+.tt {
+  font-family: monospace;
+}
+
+div.flagClass > h2 {
+  border-bottom: 1px dotted black;
+  width: 80%;
+  font-family: sans-serif;
+}
+
+div.flagDesc {
+  clear: both;
+  background-color: rgb(255, 245, 220);
+  border: 1px solid blue; /* XXX This is for debugging */ 
+  margin: 0 auto;
+  width: 90%;
+}
+
+li.flagName {
+  font-weight: bold;
+  width: 100%;
+  border-bottom: 1px solid black;
+  display: block;
+  margin: 0.5em 0 0.5em 0;
+  font-size: 125%;
+}
+
+/* (presumably short) informationals all get grouped together near the top
+ * of the flag description block.
+ */
+.flagOrigin, .flagDescClass, .flagDescCompiler, .flagDescRE, .flagVar {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  float: left;
+  padding: 0.25em;
+  margin: 0 0 0.25em 0;
+}
+
+.flagDescClass::before {
+  content: "Flag Class: ";
+}
+.flagDescCompiler::before {
+  content: "Compilers that recognize this flag: ";
+}
+.flagDescRE::before {
+  content: "Regular Expression: ";
+}
+.flagVar::before {
+  content: "Found In: ";
+}
+
+span.flagDescInc {
+  border-bottom: 1px solid black;
+}
+
+/* The description text stands alone. */
+.descText {
+  clear: both;
+  padding: 0.5em 1em 0.5em 1em;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin: 0.5em 0 0.5em 0;
+}
+
+/* This is a separate class so that in the print style sheet it can
+ * be ignored.
+ * Also, 'style="clear:both;"' is longer than 'class="clear"'
+ */
+.clear {
+  clear: both;
+}
+
+/* This is really for the link _to_ the flag report */
+li.unknown > a:link, a:visited { text-decoration: none; }
+
+.monospace {
+  font-family: Courier, "Courier New", monospace;
+}
+
+ul.flagDescList {
+  clear: both;
+  list-style-type: none;
+}
+
+/* Arrange for each flag description to have some headroom. */
+ul.flagDescList > li {
+  margin: 2em 0 0 0;
+}
+
+ul.flagDesc {
+  list-style-type: none;
+}
+
+div.flagTOC {
+  border: 1px solid white;
+  padding: 0.5em 1em;
+  margin: 0 auto;
+  width: 80%;
+}
+
+ul.flagTOC {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.flagTOC > li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+  margin: 0;
+  padding: 0.25em 0 0.25em 0;
+  float: left;
+  display: inline-block; /* Fix IE bug; compliant browsers will ignore this */
+  width: 24.3%;
+  min-height: 1.5em;
+  overflow: hidden; /* If the table gets squeezed too much, don't let the
+                     * text overlap
+                     */
+}
+
+ul.SubMenu li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+}
+
+ul.SubMenu {
+  display: none;
+  position: absolute;
+  list-style-type: none;
+  border: 1px solid black;
+  background-color: white;
+  margin: 0 0 0 2em;
+  padding: 0.25em 5em 0.25em 0.5em;
+  white-space: nowrap;
+}
+
+li:hover > ul.SubMenu, ul.SubMenu:hover {
+  display: block;
+}
+
+ul.SubMenu > li:hover, ul.flagTOC > li:hover {
+  background-color: rgb(176, 196, 238); /* lightsteelgray... almost */
+  border: 1px solid rgb(128, 128, 128);
+}
+
+
+.resultpage a:link, .resultpage a:visited {
+  text-decoration: none;
+  border-bottom: 1px dashed black;
+  color: inherit;
+}
+
+.resultpage {
+  margin: auto;
+  padding: 0;
+  width: 800px;
+}
+
+.logo {
+  float: left;
+}
+
+.titlebarcontainer, .resultstable {
+  border: solid 1px;
+  width: 100%;
+  float: left;
+}
+
+div.logo > img {
+  vertical-align: 50%;
+  margin: auto;
+}
+
+.titlebar {
+  float: left;
+  padding: 0em 1em 0em 1em;
+  text-align: center;
+  width: 92%;
+}
+
+div.titlebar > h1, div.titlebar > p {
+  margin: 0 1em 0 1em;
+}
+
+.systembar {
+  float: left;
+  width: 65%;
+  font-size: 150%;
+  margin: 0;
+  padding: 0.1em;
+  border-right: solid 1px black;
+}
+
+.metricbar {
+  padding: 0.1em;
+  margin: 0;
+  float: right;
+  width: 33%;
+  height: 50%;
+  font-size: 120%;
+}
+
+.metricbar#base {
+  background-color: #c8c8c8;
+  color: black;
+}
+
+.metricbar#peak {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+}
+
+.metricbar p {
+  margin: 0;
+  padding: 0.2em;
+}
+
+.datebar p, .systembar p {
+  margin: 0;
+  padding: 0;
+}
+
+.datebar p {
+  float: left;
+  border-left: solid 1px black;
+}
+
+span.item {
+  float: left;
+  margin: 0;
+  padding: 0 0 0 0.1em;
+}
+
+span.value {
+  float: right;
+  padding: 0 0.1em 0 0;
+}
+
+.datebar {
+  width: 100%;
+  float: left;
+  font-size: 50%;
+  min-height: 100%;
+  border: solid 1px black;
+}
+
+p#test_sponsor {
+  width: 31%;
+}
+
+p#license_num {
+  width: 16%;
+}
+
+p#test_date {
+  width: 15%;
+}
+
+p#hw_avail, p#sw_avail {
+  width: 18%;
+}
+
+div.graph {
+  margin: auto;
+}
+
+div.infobox {
+  float: left;
+  width: 100%;
+  padding: 0;
+  border: solid 1px black;
+}
+
+div.infobox table {
+  width: 49%;
+  float: left;
+}
+
+div.infobox table tr {
+  vertical-align: top;
+}
+
+div.infobox table#Hardware {
+  width: 50%;
+  border-right: 1px solid black;
+}
+
+div.infobox thead th {
+  font-size: 200%;
+}
+
+div.infobox tbody th {
+  text-align: left;
+}
+
+.resultstable h2, div.notes h2 {
+  text-align: center;
+  margin: 0.1em;
+}
+
+div.notes h3 {
+  margin: 0.1em;
+}
+
+div.notes dd {
+  margin-bottom: 1em;
+}
+
+.resultstable table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.resultstable th.basecol, .resultstable th.peakcol {
+  padding: 0.1em;
+  font-size: 90%;
+}
+
+.resultstable th {
+  border: solid 2px black;
+}
+
+.resultstable td {
+  border: solid 1px #b8b8b8;
+}
+
+td.bm, th.bm { 
+  border-right: solid 2px black;
+  border-left: solid 2px black;
+}
+
+td.secs { 
+  border-left: solid 2px black;
+}
+
+td.ratio { 
+  border-right: solid 2px black;
+}
+
+.resultstable tfoot td {
+  text-align: center;
+  border: solid 2px black;
+}
+
+th.basecol {
+  background-color: #c8c8c8;
+  color: black;
+}
+td.basecol {
+  text-align: right;
+  background-color: transparent;
+  color: black;
+}
+
+th.peakcol {
+  text-align: center;
+}
+
+.peakcol {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+  text-align: right;
+}
+
+td.bm {
+  /* Basically, the benchmark name and copies columns */
+  background-color: #c8c8c8;
+  color: black;
+}
+
+span.selected {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+div.notes {
+  width: 100%;
+  float: left;
+  border: solid 1px black;
+}
+
+div.flagfooter {
+  text-align: center;
+}
+
+div.errors {
+  border: solid 2px red;
+}
+div.errors h2 {
+  background-color: transparent;
+  color: red;
+}
+
+div.footer {
+  border: none;
+}
+
+/* People find the "double underline" confusing.  And Safari 1.3 doesn't deal
+ * well with attempting to disable the border for userflag links.  So just
+ * give up and don't decorate user flags specially.
+********************
+span.userflag {
+  text-decoration: underline;
+}
+
+.userflag a:link {
+  border-bottom: 0;
+}
+********************
+*/
+/* Classes that contain links - useless on paper */
+.flagTOC, .SubMenu, .NoPrint {
+  display: none;
+}
+
+/* Don't decorate links - they're not clickable */
+a {
+  text-decoration: none;
+  background: inherit;
+  color: inherit;
+}
+
+.resultpage {
+  width: 100%;
+}
+
+.w3cbutton3 {
+  display: none;
+}
+-->
+</style>
+<title>456.hmmer Flags</title>
+</head><body>
+<h1>456.hmmer Flags</h1>
+
+
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+
+<div class="NoPrint">
+<h3>Sections</h3>
+<p>Selecting one of the following will take you directly to that section:</p>
+<ul>
+<li><a href="#Section_portability">Portability Flags</a></li>
+<li><a href="#Section_compiler">Compiler Flags</a></li>
+<li><a href="#Section_forbidden">Forbidden Flags</a></li>
+</ul>
+</div>
+
+<hr />
+
+<div class="flagClass" id="portability">
+<h2><a name="Section_portability" id="Section_portability">Portability Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b456.hmmer_DNOSTR">-DNOSTR</a></li>
+ <li><a href="#b456.hmmer_DSEEK_SET">-DSEEK_SET</a></li>
+ <li><a href="#b456.hmmer_DSRE_STRICT_ANSI">-DSRE_STRICT_ANSI</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DNOSTR" id="b456.hmmer_DNOSTR">-DNOSTR</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNOSTR(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+sets : extern char *strstr(char *s, char *subs);
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSEEK_SET" id="b456.hmmer_DSEEK_SET">-DSEEK_SET</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSEEK_SET(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+If not already defined by other includes, include unistd.h to get definition.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSRE_STRICT_ANSI" id="b456.hmmer_DSRE_STRICT_ANSI">-DSRE_STRICT_ANSI</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSRE_STRICT_ANSI(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Set by SPEC_CPU to use ANSI code.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+<div class="flagClass" id="compiler">
+<h2><a name="Section_compiler" id="Section_compiler">Compiler Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b456.hmmer_D__sgi">-D__sgi</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_D__sgi" id="b456.hmmer_D__sgi">-D__sgi</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__sgi(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Helps choose IRIX-friendly code for pthreads. Not used in SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+<div class="flagClass" id="forbidden">
+<h2><a name="Section_forbidden" id="Section_forbidden">Forbidden Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b456.hmmer_DALL_SEQUENCE_SPACE">-DALL_SEQUENCE_SPACE</a></li>
+ <li><a href="#b456.hmmer_DALTIVEC">-DALTIVEC</a></li>
+ <li><a href="#b456.hmmer_DA_QUIET_DAY">-DA_QUIET_DAY</a></li>
+ <li><a href="#b456.hmmer_DCONFIGH_INCLUDED">-DCONFIGH_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DCUBS_WIN">-DCUBS_WIN</a></li>
+ <li><a href="#b456.hmmer_DDEBUG">-DDEBUG</a></li>
+ <li><a href="#b456.hmmer_DDIRSLASH">-DDIRSLASH</a></li>
+ <li><a href="#b456.hmmer_DDEBUGLEVEL">-DDEBUGLEVEL</a></li>
+ <li><a href="#b456.hmmer_DEXIT_FAILURE">-DEXIT_FAILURE</a></li>
+ <li><a href="#b456.hmmer_DEXIT_SUCCESS">-DEXIT_SUCCESS</a></li>
+ <li><a href="#b456.hmmer_DFALSE">-DFALSE</a></li>
+ <li><a href="#b456.hmmer_DFUNCSH_INCLUDED">-DFUNCSH_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DGETOPT_TESTDRIVER">-DGETOPT_TESTDRIVER</a></li>
+ <li><a href="#b456.hmmer_DGSIH_INCLUDED">-DGSIH_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DHAS_64BIT_FILE_OFFSETS">-DHAS_64BIT_FILE_OFFSETS</a></li>
+ <li><a href="#b456.hmmer_DHAVE_FSEEKO">-DHAVE_FSEEKO</a></li>
+ <li><a href="#b456.hmmer_DHAVE_FSEEKO64">-DHAVE_FSEEKO64</a></li>
+ <li><a href="#b456.hmmer_DHAVE_FTELLO">-DHAVE_FTELLO</a></li>
+ <li><a href="#b456.hmmer_DHAVE_FTELLO64">-DHAVE_FTELLO64</a></li>
+ <li><a href="#b456.hmmer_DHAVE_HTONL">-DHAVE_HTONL</a></li>
+ <li><a href="#b456.hmmer_DHAVE_HTONS">-DHAVE_HTONS</a></li>
+ <li><a href="#b456.hmmer_DHAVE_NTOHL">-DHAVE_NTOHL</a></li>
+ <li><a href="#b456.hmmer_DHAVE_NTOHS">-DHAVE_NTOHS</a></li>
+ <li><a href="#b456.hmmer_DHAVE_PTHREAD_ATTR_SETSCOPE">-DHAVE_PTHREAD_ATTR_SETSCOPE</a></li>
+ <li><a href="#b456.hmmer_DHAVE_PTHREAD_SETCONCURRENCY">-DHAVE_PTHREAD_SETCONCURRENCY</a></li>
+ <li><a href="#b456.hmmer_DHAVE_STAT64">-DHAVE_STAT64</a></li>
+ <li><a href="#b456.hmmer_DHAVE_STRTOUL">-DHAVE_STRTOUL</a></li>
+ <li><a href="#b456.hmmer_DHAVE_STRTOULL">-DHAVE_STRTOULL</a></li>
+ <li><a href="#b456.hmmer_DHMMER_PVM">-DHMMER_PVM</a></li>
+ <li><a href="#b456.hmmer_DHMMER_THREADS">-DHMMER_THREADS</a></li>
+ <li><a href="#b456.hmmer_DMAX">-DMAX</a></li>
+ <li><a href="#b456.hmmer_DMICHAEL_JORDAN_BUYS_THE_PACERS">-DMICHAEL_JORDAN_BUYS_THE_PACERS</a></li>
+ <li><a href="#b456.hmmer_DMIN">-DMIN</a></li>
+ <li><a href="#b456.hmmer_DMUGGINS_LETS_ME_SLEEP">-DMUGGINS_LETS_ME_SLEEP</a></li>
+ <li><a href="#b456.hmmer_DNBA_TEAM_IN_STL">-DNBA_TEAM_IN_STL</a></li>
+ <li><a href="#b456.hmmer_DPTHREAD_TIMES_HACK">-DPTHREAD_TIMES_HACK</a></li>
+ <li><a href="#b456.hmmer_DRAMLIMIT">-DRAMLIMIT</a></li>
+ <li><a href="#b456.hmmer_DREVCOMP_TESTDRIVER">-DREVCOMP_TESTDRIVER</a></li>
+ <li><a href="#b456.hmmer_DSIZEOF_OFF_T">-DSIZEOF_OFF_T</a></li>
+ <li><a href="#b456.hmmer_DSIZEOF_UNSIGNED_INT">-DSIZEOF_UNSIGNED_INT</a></li>
+ <li><a href="#b456.hmmer_DSIZEOF_UNSIGNED_LONG">-DSIZEOF_UNSIGNED_LONG</a></li>
+ <li><a href="#b456.hmmer_DSIZEOF_UNSIGNED_LONG_LONG">-DSIZEOF_UNSIGNED_LONG_LONG</a></li>
+ <li><a href="#b456.hmmer_DSIZEOF_UNSIGNED_SHORT">-DSIZEOF_UNSIGNED_SHORT</a></li>
+ <li><a href="#b456.hmmer_DSLOW">-DSLOW</a></li>
+ <li><a href="#b456.hmmer_DSQFUNCSH_INCLUDED">-DSQFUNCSH_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DSQRKH_INCLUDED">-DSQRKH_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DSQUIDCONFH_INCLUDED">-DSQUIDCONFH_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DSQUIDH_INCLUDED">-DSQUIDH_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DSQUID_GKI_INCLUDED">-DSQUID_GKI_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DSQUID_MSA_INCLUDED">-DSQUID_MSA_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DSRE_REMOVED">-DSRE_REMOVED</a></li>
+ <li><a href="#b456.hmmer_DSSIH_INCLUDED">-DSSIH_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DSTOPWATCH_H_INCLUDED">-DSTOPWATCH_H_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DSTRUCTSH_INCLUDED">-DSTRUCTSH_INCLUDED</a></li>
+ <li><a href="#b456.hmmer_DTESTDRIVER">-DTESTDRIVER</a></li>
+ <li><a href="#b456.hmmer_DTESTDRIVE_CLUSTAL">-DTESTDRIVE_CLUSTAL</a></li>
+ <li><a href="#b456.hmmer_DTESTDRIVE_MSF">-DTESTDRIVE_MSF</a></li>
+ <li><a href="#b456.hmmer_DTESTDRIVE_PHYLIP">-DTESTDRIVE_PHYLIP</a></li>
+ <li><a href="#b456.hmmer_DTESTDRIVE_STOCKHOLM">-DTESTDRIVE_STOCKHOLM</a></li>
+ <li><a href="#b456.hmmer_DTRUE">-DTRUE</a></li>
+ <li><a href="#b456.hmmer_DUSE_HOST_BYTESWAP_FUNCTIONS">-DUSE_HOST_BYTESWAP_FUNCTIONS</a></li>
+ <li><a href="#b456.hmmer_DWORDS_BIGENDIAN">-DWORDS_BIGENDIAN</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DALL_SEQUENCE_SPACE" id="b456.hmmer_DALL_SEQUENCE_SPACE">-DALL_SEQUENCE_SPACE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DALL_SEQUENCE_SPACE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Count gaps in sequences as a symbol and not a space.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DALTIVEC" id="b456.hmmer_DALTIVEC">-DALTIVEC</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DALTIVEC(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+The benchmark uses ALTIVEC-specific code.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DA_QUIET_DAY" id="b456.hmmer_DA_QUIET_DAY">-DA_QUIET_DAY</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DA_QUIET_DAY(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Adds a main function for SQIO testing.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DCONFIGH_INCLUDED" id="b456.hmmer_DCONFIGH_INCLUDED">-DCONFIGH_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DCONFIGH_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the config.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DCUBS_WIN" id="b456.hmmer_DCUBS_WIN">-DCUBS_WIN</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DCUBS_WIN(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Adds a main function for sre_strcat timing.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DDEBUG" id="b456.hmmer_DDEBUG">-DDEBUG</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DDEBUG(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Enables debugging features.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DDIRSLASH" id="b456.hmmer_DDIRSLASH">-DDIRSLASH</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DDIRSLASH(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Defines the directory path seperator character. Not needed for SPEC CPU2006 because no paths are specified in the test pararmeters.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DDEBUGLEVEL" id="b456.hmmer_DDEBUGLEVEL">-DDEBUGLEVEL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DDEBUGLEVEL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Used to determine how much debug information to provide.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DEXIT_FAILURE" id="b456.hmmer_DEXIT_FAILURE">-DEXIT_FAILURE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DEXIT_FAILURE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Value to print on a Failure exit.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DEXIT_SUCCESS" id="b456.hmmer_DEXIT_SUCCESS">-DEXIT_SUCCESS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DEXIT_SUCCESS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Value to print on a Success exit.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DFALSE" id="b456.hmmer_DFALSE">-DFALSE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DFALSE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Used as a boolean value, set to 0 if not already set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DFUNCSH_INCLUDED" id="b456.hmmer_DFUNCSH_INCLUDED">-DFUNCSH_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DFUNCSH_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the funcs.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DGETOPT_TESTDRIVER" id="b456.hmmer_DGETOPT_TESTDRIVER">-DGETOPT_TESTDRIVER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DGETOPT_TESTDRIVER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Provides testing of getopt functions.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DGSIH_INCLUDED" id="b456.hmmer_DGSIH_INCLUDED">-DGSIH_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DGSIH_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the gsi.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAS_64BIT_FILE_OFFSETS" id="b456.hmmer_DHAS_64BIT_FILE_OFFSETS">-DHAS_64BIT_FILE_OFFSETS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAS_64BIT_FILE_OFFSETS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that 64 bit files offsets need to be used. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_FSEEKO" id="b456.hmmer_DHAVE_FSEEKO">-DHAVE_FSEEKO</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_FSEEKO(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if fseek function is present. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_FSEEKO64" id="b456.hmmer_DHAVE_FSEEKO64">-DHAVE_FSEEKO64</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_FSEEKO64(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if fseek function is present. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_FTELLO" id="b456.hmmer_DHAVE_FTELLO">-DHAVE_FTELLO</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_FTELLO(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if ftell function is present. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_FTELLO64" id="b456.hmmer_DHAVE_FTELLO64">-DHAVE_FTELLO64</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_FTELLO64(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if ftell function is present. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_HTONL" id="b456.hmmer_DHAVE_HTONL">-DHAVE_HTONL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_HTONL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if htonl function is present for doing byte swaps. Used only to set USE_HOST_BYTESWAP_FUNCTIONS.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_HTONS" id="b456.hmmer_DHAVE_HTONS">-DHAVE_HTONS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_HTONS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if htons function is present for doing byte swaps. Used only to set USE_HOST_BYTESWAP_FUNCTIONS.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_NTOHL" id="b456.hmmer_DHAVE_NTOHL">-DHAVE_NTOHL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_NTOHL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if ntohl function is present for doing byte swaps. Used only to set USE_HOST_BYTESWAP_FUNCTIONS.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_NTOHS" id="b456.hmmer_DHAVE_NTOHS">-DHAVE_NTOHS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_NTOHS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if ntohs function is present for doing byte swaps. Used only to set USE_HOST_BYTESWAP_FUNCTIONS.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_PTHREAD_ATTR_SETSCOPE" id="b456.hmmer_DHAVE_PTHREAD_ATTR_SETSCOPE">-DHAVE_PTHREAD_ATTR_SETSCOPE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_PTHREAD_ATTR_SETSCOPE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Set pthreaded (not allowed) options.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_PTHREAD_SETCONCURRENCY" id="b456.hmmer_DHAVE_PTHREAD_SETCONCURRENCY">-DHAVE_PTHREAD_SETCONCURRENCY</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_PTHREAD_SETCONCURRENCY(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Set pthreaded (not allowed) options.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_STAT64" id="b456.hmmer_DHAVE_STAT64">-DHAVE_STAT64</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_STAT64(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if stat64 function is present. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_STRTOUL" id="b456.hmmer_DHAVE_STRTOUL">-DHAVE_STRTOUL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_STRTOUL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if strtoul function is present. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHAVE_STRTOULL" id="b456.hmmer_DHAVE_STRTOULL">-DHAVE_STRTOULL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_STRTOULL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates if strtoull function is present. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHMMER_PVM" id="b456.hmmer_DHMMER_PVM">-DHMMER_PVM</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHMMER_PVM(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Compiles the application as a parallel virtual machine.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DHMMER_THREADS" id="b456.hmmer_DHMMER_THREADS">-DHMMER_THREADS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHMMER_THREADS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Compiles the application as a pthreads - multi-threaded application.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DMAX" id="b456.hmmer_DMAX">-DMAX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DMAX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets up the max() function. if not defined.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DMICHAEL_JORDAN_BUYS_THE_PACERS" id="b456.hmmer_DMICHAEL_JORDAN_BUYS_THE_PACERS">-DMICHAEL_JORDAN_BUYS_THE_PACERS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DMICHAEL_JORDAN_BUYS_THE_PACERS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+If set, uses a new function NewTraceScoreCorrection().
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DMIN" id="b456.hmmer_DMIN">-DMIN</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DMIN(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets up the min() function. if not defined.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DMUGGINS_LETS_ME_SLEEP" id="b456.hmmer_DMUGGINS_LETS_ME_SLEEP">-DMUGGINS_LETS_ME_SLEEP</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DMUGGINS_LETS_ME_SLEEP(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Enables a main() for testing.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DNBA_TEAM_IN_STL" id="b456.hmmer_DNBA_TEAM_IN_STL">-DNBA_TEAM_IN_STL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNBA_TEAM_IN_STL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Enables a main() for a test driver.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DPTHREAD_TIMES_HACK" id="b456.hmmer_DPTHREAD_TIMES_HACK">-DPTHREAD_TIMES_HACK</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPTHREAD_TIMES_HACK(?:=\S*)?\b</span></li>
+<li class="descText">
+Used to print timings when running with >0 threads.
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DRAMLIMIT" id="b456.hmmer_DRAMLIMIT">-DRAMLIMIT</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DRAMLIMIT(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+RAMLIMIT determines the point at which we switch from fast,full dynamic programming to slow, linear-memory divide and conquer dynamic programming algorithms. It is the minimum amount of available RAM on the systems the package will run on.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DREVCOMP_TESTDRIVER" id="b456.hmmer_DREVCOMP_TESTDRIVER">-DREVCOMP_TESTDRIVER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DREVCOMP_TESTDRIVER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Enables a main() for a test driver.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSIZEOF_OFF_T" id="b456.hmmer_DSIZEOF_OFF_T">-DSIZEOF_OFF_T</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSIZEOF_OFF_T(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Used in determining how to set HAS_64BIT_FILE_OFFSETS. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSIZEOF_UNSIGNED_INT" id="b456.hmmer_DSIZEOF_UNSIGNED_INT">-DSIZEOF_UNSIGNED_INT</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSIZEOF_UNSIGNED_INT(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+The number bytes in a long. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSIZEOF_UNSIGNED_LONG" id="b456.hmmer_DSIZEOF_UNSIGNED_LONG">-DSIZEOF_UNSIGNED_LONG</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSIZEOF_UNSIGNED_LONG(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+The number bytes in a long. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSIZEOF_UNSIGNED_LONG_LONG" id="b456.hmmer_DSIZEOF_UNSIGNED_LONG_LONG">-DSIZEOF_UNSIGNED_LONG_LONG</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSIZEOF_UNSIGNED_LONG_LONG(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+The number bytes in a long. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSIZEOF_UNSIGNED_SHORT" id="b456.hmmer_DSIZEOF_UNSIGNED_SHORT">-DSIZEOF_UNSIGNED_SHORT</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSIZEOF_UNSIGNED_SHORT(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+The number bytes in a long. Not used for SPEC CPU2006.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSLOW" id="b456.hmmer_DSLOW">-DSLOW</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSLOW(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Causes the code to execute using a different algorithm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSQFUNCSH_INCLUDED" id="b456.hmmer_DSQFUNCSH_INCLUDED">-DSQFUNCSH_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSQFUNCSH_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the sqfuncs.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSQRKH_INCLUDED" id="b456.hmmer_DSQRKH_INCLUDED">-DSQRKH_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSQRKH_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the sqrk.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSQUIDCONFH_INCLUDED" id="b456.hmmer_DSQUIDCONFH_INCLUDED">-DSQUIDCONFH_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSQUIDCONFH_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the squidconf.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSQUIDH_INCLUDED" id="b456.hmmer_DSQUIDH_INCLUDED">-DSQUIDH_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSQUIDH_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the squid.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSQUID_GKI_INCLUDED" id="b456.hmmer_DSQUID_GKI_INCLUDED">-DSQUID_GKI_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSQUID_GKI_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the squid_gki.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSQUID_MSA_INCLUDED" id="b456.hmmer_DSQUID_MSA_INCLUDED">-DSQUID_MSA_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSQUID_MSA_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the squid_msa.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSRE_REMOVED" id="b456.hmmer_DSRE_REMOVED">-DSRE_REMOVED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSRE_REMOVED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+SRE_REMOVED removes the compilation of the EmitBestSequence routine
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSSIH_INCLUDED" id="b456.hmmer_DSSIH_INCLUDED">-DSSIH_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSSIH_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the ssi.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSTOPWATCH_H_INCLUDED" id="b456.hmmer_DSTOPWATCH_H_INCLUDED">-DSTOPWATCH_H_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSTOPWATCH_H_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the stopwatch.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DSTRUCTSH_INCLUDED" id="b456.hmmer_DSTRUCTSH_INCLUDED">-DSTRUCTSH_INCLUDED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSTRUCTSH_INCLUDED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates that the structs.h has already been included.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DTESTDRIVER" id="b456.hmmer_DTESTDRIVER">-DTESTDRIVER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTESTDRIVER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Enables a main() for a test driver.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DTESTDRIVE_CLUSTAL" id="b456.hmmer_DTESTDRIVE_CLUSTAL">-DTESTDRIVE_CLUSTAL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTESTDRIVE_CLUSTAL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Enables a main() for a test driver.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DTESTDRIVE_MSF" id="b456.hmmer_DTESTDRIVE_MSF">-DTESTDRIVE_MSF</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTESTDRIVE_MSF(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Enables a main() for a test driver.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DTESTDRIVE_PHYLIP" id="b456.hmmer_DTESTDRIVE_PHYLIP">-DTESTDRIVE_PHYLIP</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTESTDRIVE_PHYLIP(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Enables a main() for a test driver.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DTESTDRIVE_STOCKHOLM" id="b456.hmmer_DTESTDRIVE_STOCKHOLM">-DTESTDRIVE_STOCKHOLM</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTESTDRIVE_STOCKHOLM(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Enables a main() for a test driver.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DTRUE" id="b456.hmmer_DTRUE">-DTRUE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTRUE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Used as a boolean value, set to 1 if not already set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DUSE_HOST_BYTESWAP_FUNCTIONS" id="b456.hmmer_DUSE_HOST_BYTESWAP_FUNCTIONS">-DUSE_HOST_BYTESWAP_FUNCTIONS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DUSE_HOST_BYTESWAP_FUNCTIONS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Indicates the sys/types.h and netinet/in.h are to be included to define ntoh[ls] and hton[ls].
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b456.hmmer_DWORDS_BIGENDIAN" id="b456.hmmer_DWORDS_BIGENDIAN">-DWORDS_BIGENDIAN</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DWORDS_BIGENDIAN(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+WORDS_BIGENDIAN set to 1 by default, indicates that the words are big endian style.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+</body>
+</html>

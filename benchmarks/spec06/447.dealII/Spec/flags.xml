@@ -1,0 +1,2517 @@
+<?xml version="1.0" ?> 
+  <!DOCTYPE flagsdescription SYSTEM
+       "http://www.spec.org/dtd/cpuflags1.dtd"> 
+
+<!-- This file defines flags that appear in the sources for 447.dealII.
+
+  Copyright (C) 2005-2006 Standard Performance Evaluation Corporation
+
+ 
+  $Revision: 3979 $
+  $Date: 2006-03-15 12:10:27 -0500 (Wed, 15 Mar 2006) $
+
+  --> 
+<flagsdescription>
+
+<!-- Normal flags file should suggest a name for themselves -->
+<filename>447.dealII.flags</filename>
+
+<title>447.dealII Flags</title> 
+
+<header>
+<![CDATA[ 
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+]]> 
+</header>
+
+<flag name="currdir_inc" class="mandatory" regexp="-Iinclude\b">
+<example>-Iinclude</example>
+This flag is included automatically by Spec/object.pm.
+</flag>
+
+<flag name="Ddeal_II_dimension" class="mandatory">
+<example>-Ddeal_II_dimension=&lt;1|2|3&gt;</example>
+The value of this macro is set automatically by Spec/object.pm.
+</flag>
+
+<flag name="DAUX_WRAPPER_INST" class="forbidden">
+Prevents source definition of AUX_WRAPPER_INST macro.
+</flag> 
+
+<flag name="DAUX_WRAPPER_NAME" class="forbidden">
+Prevents source definition of AUX_WRAPPER_NAME macro.
+</flag> 
+  
+<flag name="DAUX_WRAPPER_PARAMS" class="forbidden">
+Prevents source definition of AUX_WRAPPER_PARAMS macro.
+</flag> 
+
+<flag name="DBOOST_ASSERT_CONFIG" class="forbidden">
+Aborts compilation if unknown compiler version or compiler/platform/library is encountered.
+</flag> 
+  
+<flag name="DBOOST_BCB_PARTIAL_SPECIALIZATION_BUG" class="portability">
+Portability for versions 7.0 and below of Borland C compiler.
+</flag> 
+  
+<flag name="DBOOST_BROKEN_DEFAULT_TEMPLATE_PARAMETERS_IN_NESTED_TEMPLATES" class="portability">
+Define template parameters within nested templates explicitly.
+</flag> 
+  
+<flag name="DBOOST_BUGGY_INTEGRAL_CONSTANT_EXPRESSIONS" class="portability">
+Invoke fix for Borland C in order to define BOOST_STATIC_ASSERT constant.
+</flag> 
+  
+<flag name="DBOOST_CHECKED_DELETE_HPP_INCLUDED" class="forbidden">
+Bypass definition of function and class templates used to prevent deletion of pointers to incomplete class types.
+</flag> 
+  
+<flag name="DBOOST_COMPILER" class="portability">
+Defines compiler used.
+</flag> 
+  
+<flag name="DBOOST_COMPILER_CONFIG" class="portability">
+Defines which compiler header file to use.
+</flag> 
+  
+<flag name="DBOOST_CONFIG_HPP" class="forbidden">
+Bypass inclusion of compiler- and platform-specific header files.
+</flag> 
+  
+<flag name="DBOOST_CONFIG_SUFFIX_HPP" class="forbidden">
+Bypass inclusion or definitions of macros from limits.h.
+</flag> 
+  
+<flag name="DBOOST_CPPUNWIND" class="portability">
+Indicate Linux version of Borland C compiler performs C++ exception handling.
+</flag> 
+  
+<flag name="DBOOST_DETAIL_LIGHTWEIGHT_MUTEX_HPP_INCLUDED" class="forbidden">
+Bypass selection of lightweight Mutex definitions.
+</flag> 
+  
+<flag name="DBOOST_DETAIL_LWM_NOP_HPP_INCLUDED" class="forbidden">
+Bypass definition of lightweight_mutex class on systems with no threading API.
+</flag> 
+  
+<flag name="DBOOST_DETAIL_LWM_PTHREADS_HPP_INCLUDED" class="forbidden">
+Bypass definition of lightweight_mutex class on systems with pthread support.
+</flag> 
+  
+<flag name="DBOOST_DETAIL_LWM_WIN32_HPP_INCLUDED" class="forbidden">
+Bypass definition of lightweight_mutex class on Windows systems.
+</flag> 
+  
+<flag name="DBOOST_DETAIL_SHARED_COUNT_HPP_INCLUDED" class="forbidden">
+Bypass definition of shared pointer classes.
+</flag> 
+  
+<flag name="DBOOST_DETECT_OUTDATED_WORKAROUNDS" class="forbidden">
+Enables detection of outdated compiler workarounds.
+</flag> 
+  
+<flag name="DBOOST_DISABLE_ASSERTS" class="forbidden">
+Disables BOOST library asserts.
+</flag> 
+  
+<flag name="DBOOST_DISABLE_THREADS" class="mandatory">
+Turns off threading for certain platforms.
+</flag> 
+  
+<flag name="DBOOST_DISABLE_WIN32" class="portability">
+Disables certain Win32 options, including Win32 thread supports
+</flag> 
+  
+<flag name="DBOOST_EXTENDED_TEMPLATE_PARAMETERS_MATCHING" class="portability">
+Defines extned template paramater matching for certain versions of the GNU C Compiler
+</flag> 
+  
+<flag name="DBOOST_HAS_BETHREADS" class="portability">
+Defines existence of BeOS threads
+</flag> 
+  
+<flag name="DBOOST_HAS_CLOCK_GETTIME" class="portability">
+Asserts the availability of clock_gettime.
+</flag> 
+  
+<flag name="DBOOST_HAS_DIRENT_H" class="portability">
+Asserts the availability of dirent.h.
+</flag> 
+  
+<flag name="DBOOST_HAS_GETTIMEOFDAY" class="portability">
+Asserts the availability of gettimeofday.
+</flag> 
+  
+<flag name="DBOOST_HAS_HASH" class="portability">
+Asserts that hash tables and similar structures are available on the platform.
+</flag> 
+  
+<flag name="DBOOST_HAS_LONG_LONG" class="portability">
+Asserts the availability of Long Long types.
+</flag> 
+  
+<flag name="DBOOST_HAS_MPTASKS" class="portability">
+Asserts availability of MP Tasks.
+</flag> 
+  
+<flag name="DBOOST_HAS_MS_INT64" class="portability">
+Asserts the availability of __int64.
+</flag> 
+  
+<flag name="DBOOST_HAS_NANOSLEEP" class="portability">
+Asserts the availability of nanosleep.
+</flag> 
+  
+<flag name="DBOOST_HAS_NL_TYPES_H" class="portability">
+Asserts the availability of nl_types.h.
+</flag> 
+  
+<flag name="DBOOST_HAS_PTHREADS" class="portability">
+Asserts availability of the Pthreads support on a platform.
+</flag> 
+  
+<flag name="DBOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE" class="portability">
+Asserts the availability of pthread mutex options.
+</flag> 
+  
+<flag name="DBOOST_HAS_SCHED_YIELD" class="portability">
+This is predicated on POSIX_PRIORITY_SCHEDULING or on POSIX_THREAD_PRIORITY_SCHEDULING or on XOPEN_REALTIME.
+</flag> 
+  
+<flag name="DBOOST_HAS_SGI_TYPE_TRAITS" class="portability">
+The SGI STL has its own __type traits class, which has intrinsic compiler supoprt for SGIs compilers.
+</flag> 
+  
+<flag name="DBOOST_HAS_SIGACTION" class="portability">
+Asserts the sigaction function is available.
+</flag> 
+  
+<flag name="DBOOST_HAS_SLIST" class="portability">
+Asserts the availability of slists.
+</flag> 
+  
+<flag name="DBOOST_HAS_STDINT_H" class="portability">
+POSIX version 6 requires stdint.h
+</flag> 
+  
+<flag name="DBOOST_HAS_THREADS" class="portability">
+Asserts platform has threading capability.
+</flag> 
+  
+<flag name="DBOOST_HAS_TRIVIAL_ASSIGN" class="portability">
+Defines trivial assignment macro based on platform.
+</flag> 
+  
+<flag name="DBOOST_HAS_TRIVIAL_CONSTRUCTOR" class="portability">
+Defines trivial constructor macro based on platform.
+</flag> 
+  
+<flag name="DBOOST_HAS_TRIVIAL_COPY" class="portability">
+Defines trivial copy macro based on platform.
+</flag> 
+  
+<flag name="DBOOST_HAS_TRIVIAL_DESTRUCTOR" class="portability">
+Defines trivial destructor macro based on platform.
+</flag> 
+  
+<flag name="DBOOST_HAS_TWO_ARG_USE_FACET" class="portability">
+Asserts that std::use_facet should be used on the platform.
+</flag> 
+  
+<flag name="DBOOST_HAS_UNISTD_H" class="portability">
+POSIX feature test used on a generic UNIX platform
+</flag> 
+  
+<flag name="DBOOST_HAS_WINTHREADS" class="portability">
+Makes use of the native Win32 threads on a system if the pthread library is not available.
+</flag> 
+  
+<flag name="DBOOST_INTEL_CXX_VERSION" class="portability">
+Used on an intel C++ compiler. Versions prior to 5.0 are not supported.
+</flag> 
+  
+<flag name="DBOOST_IS_EMPTY" class="forbidden">
+Helper macro for builtin compiler support. BOOST_IS_EMPTY(T) should evaluate to true if T is an empty struct or union.
+</flag> 
+  
+<flag name="DBOOST_IS_POD" class="portability">
+Defines is_pod macro based on platform.
+</flag> 
+  
+<flag name="DBOOST_IS_UNION" class="portability">
+Defines the is_union macro based on the platform.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_ALGORITHM_NAMESPACE_HPP_INCLUDED" class="forbidden">
+Defines the scope of the algorithm namespace header.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_ARITY_HPP_INCLUDED" class="forbidden">
+Prevents the header file arity.hpp from being loaded more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_DTP_HPP_INCLUDED" class="forbidden">
+Prevents check for Borland C portability macros for template parameters in nested templates.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_ETI_HPP_INCLUDED" class="forbidden">
+Prevents the header file eti.hpp from being loaded more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_LAMBDA_HPP_INCLUDED" class="forbidden">
+Prevents the header file lambda.hpp from being loaded more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_MSVC_HPP_INCLUDED" class="forbidden">
+Prevents the header file config.hpp from being loaded more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_NTTP_HPP_INCLUDED" class="forbidden">
+Scoping flag for inclusion of msvc.hpp in nttp.hpp.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_OVERLOAD_RESOLUTION_HPP_INCLUDED" class="forbidden">
+Scoping flag for inclusion of config.hpp in overload_resolution.hpp.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_PREPROCESSOR_HPP_INCLUDED" class="forbidden">
+Prevents the header file preprocessor.hpp from being loaded more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_STATIC_CONSTANT_HPP_INCLUDED" class="forbidden">
+Defines the scope of the static_constant.hpp header file.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_TTP_HPP_INCLUDED" class="forbidden">
+Prevents the header file Scoping for ttp.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_CONFIG_WORKAROUND_HPP_INCLUDED" class="forbidden">
+Defines the scope of the workaround.hpp header file.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_ICE_CAST_HPP_INCLUDED" class="forbidden">
+Prevents the header file ice_cast.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_LAMBDA_ARITY_PARAM_HPP_INCLUDED" class="forbidden">
+Defines the scope of the lambda_arity_param.hpp header file.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_LAMBDA_SUPPORT_HPP_INCLUDED" class="forbidden">
+Defines the scope of the lambda_support.hpp header file.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_PREPROCESSOR_DEF_PARAMS_TAIL_HPP_INCLUDED" class="forbidden">
+Prevents the header file def_params_tail.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_PREPROCESSOR_ENUM_HPP_INCLUDED" class="forbidden">
+Prevents the header file enum.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_PREPROCESSOR_FILTER_PARAMS_HPP_INCLUDED" class="forbidden">
+Defines the scope of the filter_params.hpp header file.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_PREPROCESSOR_PARAMS_HPP_INCLUDED" class="forbidden">
+Prevents the header file params.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_PREPROCESSOR_SUB_HPP_INCLUDED" class="forbidden">
+Prevents the header file sub.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_PREPROCESSOR_TUPLE_HPP_INCLUDED" class="forbidden">
+Prevents the header file tuple.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_TEMPLATE_ARITY_FWD_HPP_INCLUDED" class="forbidden">
+Prevents the header file template_arity_fwd.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_VALUE_WKND_HPP_INCLUDED" class="forbidden">
+Prevents the header file value_wknd.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_AUX_VOID_SPEC_HPP_INCLUDED" class="forbidden">
+Prevents the header file void_spec.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_BOOL_FWD_HPP_INCLUDED" class="forbidden">
+Prevents the header file bool_fwd.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_BOOL_HPP_INCLUDED" class="forbidden">
+Prevents the header file bool.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_BROKEN_OVERLOAD_RESOLUTION" class="forbidden">
+Used primarily with boreland C but also when running in strict configuration mode.
+</flag> 
+  
+<flag name="DBOOST_MPL_BROKEN_PP_MACRO_EXPANSION" class="portability">
+Uses extra preprocesser macros with Borland, MWerks, or IBM.
+</flag> 
+  
+<flag name="DBOOST_MPL_IF_HPP_INCLUDED" class="forbidden">
+Prevents the header file Scoping for if.hpp. from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_INT_FWD_HPP_INCLUDED" class="forbidden">
+Prevents the header file int_fwd.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_LAMBDA_FWD_HPP_INCLUDED" class="forbidden">
+Prevents the header file lambda_fwd.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_LIMITS_ARITY_HPP_INCLUDED" class="forbidden">
+Prevents the header file arity.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_METAFUNCTION_MAX_ARITY" class="forbidden">
+Integer Variable set to 5 which is used in functions BOOST_MPL_PP_SUB() and BOOST_PP_SUB_D() and BOOST_STATIC_CONSTANT().
+</flag> 
+  
+<flag name="DBOOST_MPL_MSVC_60_ETI_BUG" class="portability">
+Flag for MSVC 6.5s so-called early template instantiation bug.
+</flag> 
+  
+<flag name="DBOOST_MPL_NO_FULL_LAMBDA_SUPPORT" class="forbidden">
+Stores whether or not the system has Lamba Support.
+</flag> 
+  
+<flag name="DBOOST_MPL_NO_OWN_PP_PRIMITIVES" class="forbidden">
+Its definition is currently commented out of the code.
+</flag> 
+  
+<flag name="DBOOST_MPL_PREPROCESSING_MODE" class="forbidden">
+This is never defined...it simply is used in #IF !DEF Statments.
+</flag> 
+  
+<flag name="DBOOST_MPL_SIZE_T_FWD_HPP_INCLUDED" class="forbidden">
+Prevents the header file size_t_fwd.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_SIZE_T_HPP_INCLUDED" class="forbidden">
+Prevents the header file size_t.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MPL_VOID_HPP_INCLUDED" class="forbidden">
+Prevents the header file void.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_MSVC" class="portability">
+Defined as the version of the MS Visual C Compiler.
+</flag> 
+  
+<flag name="DBOOST_MSVC6_MEMBER_TEMPLATES" class="forbidden">
+For VC++ Experts wishing to attempt workarounds. Uses inline member templates.
+</flag> 
+  
+<flag name="DBOOST_NO_ARGUMENT_DEPENDENT_LOOKUP" class="portability">
+Used in microsoft Visual C++ compiler setup.
+</flag> 
+  
+<flag name="DBOOST_NO_AUTO_PTR" class="portability">
+Aids egcs 1.1 in parsing shared_ptr.hpp.
+</flag> 
+  
+<flag name="DBOOST_NO_COMPILER_CONFIG" class="forbidden">
+Used (when defined) to disable controller config. Currently it is commented out of the code.
+</flag> 
+  
+<flag name="DBOOST_NO_CONFIG" class="forbidden">
+Disables all config options. Currently it is commented out of the code in user.hpp.
+</flag> 
+  
+<flag name="DBOOST_NO_CTYPE_FUNCTIONS" class="portability">
+Stops using ctype functions when compiling on a Mac.
+</flag> 
+  
+<flag name="DBOOST_NO_CV_SPECIALIZATIONS" class="forbidden">
+Used for portability with MPW 8.90 and with using Strict config.
+</flag> 
+  
+<flag name="DBOOST_NO_CV_VOID_SPECIALIZATIONS" class="portability">
+When "BOOST_NO_CV_SPECIALIAZATIONS" is defined, then BOOST_NO_CV_VOID_SPECIALIZATIONS is also defined. BOOST_NO_CV_VOID_SPECIALIZATIONS is used to deny the definition of special void data structures which are incompatable with some compilers (Boreland C and GC++).
+</flag> 
+  
+<flag name="DBOOST_NO_CWCHAR" class="portability">
+Asserts that there is no wide character support for the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_CWCTYPE" class="portability">
+Asserts that there the cwctype header is not available.
+</flag> 
+  
+<flag name="DBOOST_NO_DEDUCED_TYPENAME" class="portability">
+Asserts that the compiler does not support typename for dependent types in deduced contexts.
+</flag> 
+  
+<flag name="DBOOST_NO_DEFAULT_TEMPLATE_PARAMETERS_IN_NESTED_TEMPLATES" class="portability">
+Asserts the compiler does not correctly track (forgets) default parameters of nested templates.
+</flag> 
+  
+<flag name="DBOOST_NO_DEPENDENT_TYPES_IN_TEMPLATE_VALUE_PARAMETERS" class="portability">
+Asserts the compilter does not support dependent types in template value parameters.
+</flag> 
+  
+<flag name="DBOOST_NO_EXCEPTIONS" class="portability">
+Determines if exception header must be explicitly included for the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_EXPLICIT_FUNCTION_TEMPLATE_ARGUMENTS" class="portability">
+Asserts that no explicit function template arguments available for the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_INCLASS_MEMBER_INITIALIZATION" class="portability">
+Asserts that enums must be used as a workaround for compilers that do not support in-class initialization of static integral constant members.
+</flag> 
+  
+<flag name="DBOOST_NO_INTEGRAL_INT64_T" class="portability">
+Asserts the platform does not support explicit declaration of 64 bit ints.
+</flag> 
+  
+<flag name="DBOOST_NO_INTRINSIC_WCHAR_T" class="portability">
+BOOST_NO_INTRINSIC_WCHAR_T indicates to the Boost code that on the particular compiler/configuration wchar_t is simply an alias for some other built-in integral type.
+</flag> 
+  
+<flag name="DBOOST_NO_LIMITS" class="portability">
+If using GNU libstdc++2 then do not include &lt;limits&gt;
+</flag> 
+  
+<flag name="DBOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS" class="portability">
+Used if GNU libstdc++2 is used. If there is no numeric_limits template then no compile time constants can be present.
+</flag> 
+  
+<flag name="DBOOST_NO_LONG_LONG_NUMERIC_LIMITS" class="portability">
+Used if there is no long long then there is no specialization for numeric_limits&lt;long long&gt;
+</flag> 
+  
+<flag name="DBOOST_NO_MEMBER_TEMPLATES" class="portability">
+Asserts member templates are not supported on the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_MEMBER_TEMPLATE_FRIENDS" class="portability">
+When BOOST_NO_MEMBER_TEMPLATE_FRIENDS is defined, the code will compile without using member template friends. This is used for portability with Borland C++ Builder 5.5 and older, GNU C++ version 2, Metrowerks 3 and older, Visual Age (IBM) version 5.01 and MS VC++ 7.1 and below.
+</flag> 
+  
+<flag name="DBOOST_NO_MEMBER_TEMPLATE_KEYWORD" class="portability">
+Visual Age C++ compiler setup; compiler requires a definition for the class member and it does not recognize it as an integral constant expression when used as a template argument
+</flag> 
+  
+<flag name="DBOOST_NO_MS_INT64_NUMERIC_LIMITS" class="portability">
+Used if compilers/operating systems lack int64 specialization
+</flag> 
+  
+<flag name="DBOOST_NO_PLATFORM_CONFIG" class="forbidden">
+BOOST_NO_PLATFORM_CONFIG is set in user.hpp when wanting to disable platform config detection. 
+</flag> 
+  
+<flag name="DBOOST_NO_STDC_NAMESPACE" class="portability">
+Include &lt;cstddef&gt; so that std namespace is defined fully. This is necessary for some platforms.
+</flag> 
+  
+<flag name="DBOOST_NO_STDLIB_CONFIG" class="forbidden">
+Asserts that no standard library configuration is set.
+</flag> 
+  
+<flag name="DBOOST_NO_STD_ALLOCATOR" class="portability">
+Asserts that no standard allocator is available on the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_STD_ITERATOR_TRAITS" class="portability">
+If STLport thinks that there is no partial specialization, then there is no std::iterator traits
+</flag> 
+  
+<flag name="DBOOST_NO_STD_LOCALE" class="portability">
+Asserts that standard locale is not available on the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_STD_MESSAGES" class="portability">
+Set to disable standard messaging, which can be incompatable with some older compilers; however, though the flag can be set, it is never used by the code base to disable standard messaging.
+</flag> 
+  
+<flag name="DBOOST_NO_STD_MIN_MAX" class="portability">
+Used within the Dinkumware standard library config because Dinkum provides its own min an dmax definitions.
+</flag> 
+  
+<flag name="DBOOST_NO_STD_USE_FACET" class="portability">
+Asserts that the std::use_facet functionality is not available on the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_STD_WSTREAMBUF" class="portability">
+Asserts whether wide stream buffers are allowed for the compiler.
+</flag> 
+  
+<flag name="DBOOST_NO_SWPRINTF" class="portability">
+Asserts that swprintf is not available on the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_TEMPLATED_ITERATOR_CONSTRUCTORS" class="portability">
+Asserts that template constructors are not available in the standard library for the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION" class="portability">
+Asserts that partial specialization of templates is not available on the platform.
+</flag> 
+  
+<flag name="DBOOST_NO_TEMPLATE_TEMPLATES" class="portability">
+Asserts that template templates are not available on the system.
+</flag> 
+  
+<flag name="DBOOST_NO_TEMPLATE_TEMPLATE_PARAMETERS" class="forbidden">
+Asserts that template template parameters are not available on the system.
+</flag> 
+  
+<flag name="DBOOST_NO_UNREACHABLE_RETURN_DETECTION" class="forbidden">
+BOOST_UNREACHABLE_RETURN(x) normally evaluates to nothing, unless BOOST_NO_UNREACHABLE_RETURN_DETECTION is defined, in which case it evaluates to return x; i.e. use it when you have a return statement that can never be reached.
+</flag> 
+  
+<flag name="DBOOST_NO_USER_CONFIG" class="forbidden">
+Used to asert default user file location when there is no user config file.
+</flag> 
+  
+<flag name="DBOOST_NO_USING_TEMPLATE" class="portability">
+When defined, prevents the compiler from using templates, as certain compilers may have problems with templates.
+</flag> 
+  
+<flag name="DBOOST_PLATFORM" class="portability">
+Once the platform is defined, BOOST_PLATFORM is set as needed.
+</flag> 
+  
+<flag name="DBOOST_PLATFORM_CONFIG" class="portability">
+Defined to locate a specific platform config file.
+</flag> 
+  
+<flag name="DBOOST_PP_CONFIG_BCC" class="forbidden">
+Used as a bitwise flag option for compiler configuration options.
+</flag> 
+  
+<flag name="DBOOST_PP_CONFIG_EDG" class="forbidden">
+Used as a bitwise flag option for configuring compiler options.
+</flag> 
+  
+<flag name="DBOOST_PP_CONFIG_ERRORS" class="forbidden">
+When defined as 1 allows further extensions to error handling within error.hpp.
+</flag> 
+  
+<flag name="DBOOST_PP_CONFIG_EXTENDED_LINE_INFO" class="forbidden">
+Defines extended line info as 0.
+</flag> 
+  
+<flag name="DBOOST_PP_CONFIG_FLAGS" class="portability">
+Contains specific configuration flags for a compiler.
+</flag> 
+  
+<flag name="DBOOST_PP_CONFIG_MSVC" class="forbidden">
+Defines the control bit for MS Visual C for the preprocessor.
+</flag> 
+  
+<flag name="DBOOST_PP_CONFIG_MWCC" class="forbidden">
+When defined allows configurations to be made pertaining to the Metroworks compiler.
+</flag> 
+  
+<flag name="DBOOST_PP_CONFIG_STRICT" class="forbidden">
+Defined to asert the use of strict preprocessor configurations for certain compilers.
+</flag> 
+  
+<flag name="DBOOST_PP_IS_ITERATING" class="forbidden">
+When defined, prevents the is_function_ptr_helper.hpp and is_mem_fun_pointer_impl.hpp headers from being included.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_ARITHMETIC_INC_HPP" class="forbidden">
+Defines the scope of the preprocessor arithmetic header.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_CAT_HPP" class="forbidden">
+Defines the scope of the cat header.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_COMMA_IF_HPP" class="forbidden">
+Defines the scope of the comma_if header.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_CONFIG_CONFIG_HPP" class="forbidden">
+Prevents the header file preprocessor\config\config.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_CONTROL_EXPR_IIF_HPP" class="forbidden">
+Prevents the header file \preprocessor\control\expr_iff.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_CONTROL_IF_HPP" class="forbidden">
+Prevents the header file \preprocessor\control\if.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_CONTROL_IIF_HPP" class="forbidden">
+Prevents the header file \preprocessor\control\iff.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_DEBUG_ERROR_HPP" class="forbidden">
+Prevents the header file \preprocessor\debug\error.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_DETAIL_AUTO_REC_HPP" class="forbidden">
+Prevents the header file \preprocessor\detail\auto_rec.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_DETAIL_CHECK_HPP" class="forbidden">
+Prevents the header file \preprocessor\detail\check.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_DETAIL_IS_BINARY_HPP" class="forbidden">
+Prevents the header file \prepprocessor\detail\is_binary.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_EMPTY_HPP" class="forbidden">
+Prevents the header file \preprocessor\empty.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_FACILITIES_EMPTY_HPP" class="forbidden">
+Prevents the header file \preprocessor\facilities\empty.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_FACILITIES_IDENTITY_HPP" class="forbidden">
+Prevents the header file \preprocessor\facilities\identiy.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_IDENTITY_HPP" class="forbidden">
+Prevents the header file \preprocessor\identity.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_INC_HPP" class="forbidden">
+Prevents the header file \preprocessor\inc.hpp from being included more than once.
+</flag>
+ 
+<flag name="DBOOST_PREPROCESSOR_LIST_ADT_HPP" class="forbidden">
+Prevents the header file \preprocessor\list\adt.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_LIST_LIST_FOR_EACH_I_HPP" class="forbidden">
+Prevents the header file Scoping for \preprocessor\list\for_each_i.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_LOGICAL_AND_HPP" class="forbidden">
+Prevents the header file Scoping for \preprocessor\logical\and.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_LOGICAL_BITAND_HPP" class="forbidden">
+Prevents the header file \preprocessor\logical\bitand.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_LOGICAL_BOOL_HPP" class="forbidden">
+Prevents the header file \preprocessor\logical\bool.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_LOGICAL_COMPL_HPP" class="forbidden">
+Prevents the header file \preprocessor\logical\compl.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_PUNCTUATION_COMMA_HPP" class="forbidden">
+Prevents the header file \preprocessor\punctuation\comma.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_PUNCTUATION_COMMA_IF_HPP" class="forbidden">
+Prevents the header file \preprocessor\punctuation\comma_if.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_REPETITION_DETAIL_EDG_FOR_HPP" class="forbidden">
+Prevents the header file \preprocessor\repetition\detail\edg\for.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_REPETITION_DETAIL_FOR_HPP" class="forbidden">
+Prevents the header file \preprocessor\repetition\detail\for.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_REPETITION_DETAIL_MSVC_FOR_HPP" class="forbidden">
+Prevents the header file \preprocessor\repetition\detail\msvc\for.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_REPETITION_FOR_HPP" class="forbidden">
+Prevents the header file \preprocessor\repetition\for.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_TUPLE_EAT_HPP" class="forbidden">
+Prevents the header file \preprocessor\tuple\eat.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_TUPLE_ELEM_HPP" class="forbidden">
+Prevents the header file \preprocessor\tuple\elem.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_TUPLE_REM_HPP" class="forbidden">
+Prevents the header file \preprocessor\tuple\rem.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_PREPROCESSOR_TUPLE_TO_LIST_HPP" class="forbidden">
+Prevents the header file \preprocessor\tuple\rem.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_REF_HPP_INCLUDED" class="forbidden">
+Prevents the header file \boost\ref.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_RWSTD_VER" class="forbidden">
+Defined to the consistent version number for the Roguewave version.
+</flag> 
+  
+<flag name="DBOOST_SHARED_PTR_HPP_INCLUDED" class="forbidden">
+Prevents the header file \boost\shared_ptr.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_SP_ENABLE_DEBUG_HOOKS" class="forbidden">
+Implements debug hooks when defined.
+</flag> 
+  
+<flag name="DBOOST_SP_USE_QUICK_ALLOCATOR" class="forbidden">
+When defined, Boost uses the quick allocator rather than the standard allocator.
+</flag> 
+  
+<flag name="DBOOST_SP_USE_STD_ALLOCATOR" class="forbidden">
+When defined, Boost uses the standard allocator.
+</flag> 
+  
+<flag name="DBOOST_STATIC_ASSERT_HPP" class="forbidden">
+Prevents the header file \boost\static_assert.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_STDLIB" class="portability">
+Defined as the long name of the standard library used for the platform.
+</flag> 
+  
+<flag name="DBOOST_STDLIB_CONFIG" class="portability">
+Defined to include the correct stdlib header.
+</flag> 
+  
+<flag name="DBOOST_STD_EXTENSION_NAMESPACE" class="portability">
+Defined as the standard extension namespace of the platform (usually "std").
+</flag> 
+  
+<flag name="DBOOST_STRICT_CONFIG" class="forbidden">
+Defined to cause the config to assume that unknown compiler versions are fully conformant with the standard.
+</flag> 
+  
+<flag name="DBOOST_TESTED_AT" class="forbidden">
+Defines a macro which is used at compile time to detect outdated workarounds.
+</flag> 
+  
+<flag name="DBOOST_THROW_EXCEPTION_HPP_INCLUDED" class="forbidden">
+Prevents the header file \boost\throw_exception.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_ADD_CONST_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\add_const.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_ADD_CV_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\add_cv.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_ADD_POINTER_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\add_pointer.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_ADD_REFERENCE_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\add_reference.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_ADD_VOLATILE_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\add_volatile.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_ALIGNMENT_OF_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\alignment_of.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_AUX_BOOL_C_BASE" class="portability">
+Defines a trait template header for certain platforms.
+</flag> 
+  
+<flag name="DBOOST_TT_AUX_BOOL_TRAIT_VALUE_DECL" class="portability">
+Provides a workaround for trait templates for certain platforms.
+</flag> 
+  
+<flag name="DBOOST_TT_BROKEN_COMPILER_SPEC_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\broken_compiler_spec.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_CONFIG_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\config.hpp from being included more than once.
+</flag> 
+
+<flag name="DBOOST_TT_CV_TRAITS_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\cv_traits.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_DETAIL_CV_TRAITS_IMPL_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\detail\cv_traits_impl.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_DETAIL_FALSE_RESULT_HPP_INCLUDED" class="forbidden">
+Prevents the header file \detail\false_results.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_DETAIL_ICE_AND_HPP_INCLUDED" class="forbidden">
+Prevents the header file \detail\ice_and.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_DETAIL_ICE_EQ_HPP_INCLUDED" class="forbidden">
+Prevents the header file \detail\ice_eq.hpp from being included more than once.
+</flag>   
+
+<flag name="DBOOST_TT_DETAIL_ICE_NOT_HPP_INCLUDED" class="forbidden">
+Prevents the header file \detail\ice_not.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_DETAIL_ICE_OR_HPP_INCLUDED" class="forbidden">
+Prevents the header file \detail\ice_or.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_DETAIL_IS_FUNCTION_PTR_HELPER_HPP_INCLUDED" class="forbidden">
+Prevents the header file \deatil\is_function_ptr_helper.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_DETAIL_IS_MEM_FUN_POINTER_IMPL_HPP_INCLUDED" class="forbidden">
+Prevents the header file \detail\is_mem_fun_pointer_impl.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_DETAIL_YES_NO_TYPE_HPP_INCLUDED" class="forbidden">
+Prevents the header file \detail\yes_no_type.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_FUNCTION_TRAITS_HPP_INCLUDED" class="forbidden">
+Prevents the header file \detail\yes_no_type.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_HAS_CONFORMING_IS_CLASS_IMPLEMENTATION" class="portability">
+Conforming implementation which works with abstract classes. Used with Metrowerks compilers versions greater than 0x3000 and MicrosoftVC compilers with versions greater than 1301.
+</flag> 
+  
+<flag name="DBOOST_TT_HAS_NOTHROW_ASSIGN_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\has_nothrow_assign.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_HAS_NOTHROW_CONSTRUCTOR_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\has_nothrow_constructor.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_HAS_NOTHROW_COPY_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\has_nothrow_copy.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_HAS_NOTHROW_DESTRUCTOR_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\has_nothrow_destructor.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_HAS_TRIVIAL_ASSIGN_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\has_trivial_assign.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_HAS_TRIVIAL_CONSTRUCTOR_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\has_trivial_constructor.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_HAS_TRIVIAL_COPY_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\has_trivial_copy.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_HAS_TRIVIAL_DESTRUCTOR_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\has_trivial_destructor.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_ICE_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\ice.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_INTRINSICS_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\intrinsics.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_ARITHMETIC_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_arithmetic.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_ARRAY_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_array.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_BASE_AND_DERIVED_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_base_and_derived.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_CLASS_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_class.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_COMPOUND_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_compound.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_CONST_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_const.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_CONVERTIBLE_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_convertible.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_EMPTY_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_empty.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_ENUM_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_enum.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_FUNCTION_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_function.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_FUNDAMENTAL_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_fundamental.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_INTEGRAL_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_integral.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_MEMBER_FUNCTION_POINTER_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_member_function_pointer.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_MEMBER_POINTER_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_member_pointer.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_OBJECT_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_object.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_POD_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_pod.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_POINTER_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_pointer.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_POLYMORPHIC_HPP" class="forbidden">
+Defines the scope of the polymorphic implementation header.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_REFERENCE_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_reference.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_SAME_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_same.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_SCALAR_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_scalar.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_STATELESS_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_stateless.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_UNION_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_union.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_VOID_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_void.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_IS_VOLATILE_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_volatile.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_PREPROCESSING_MODE" class="forbidden">
+When defined, specific Boost preprocessing macros are set.
+</flag> 
+  
+<flag name="DBOOST_TT_REMOVE_BOUNDS_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\remove_bounds.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_REMOVE_CONST_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\remove_const.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_REMOVE_CV_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\remove_cv.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_REMOVE_POINTER_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\remove_pointer.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_REMOVE_REFERENCE_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\remove_reference.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_REMOVE_VOLATILE_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\remove_volatile.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TT_TYPE_WITH_ALIGNMENT_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\type_with_alignment.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TUPLE_BASIC_HPP" class="forbidden">
+Prevents the header file \tuple\detail\tuple_basic.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TUPLE_HPP" class="forbidden">
+Prevents the header file \tuple.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TYPE_TRAITS_HPP" class="forbidden">
+Prevents the header file type_traits.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_TYPE_TRAITS_IS_FLOAT_HPP_INCLUDED" class="forbidden">
+Prevents the header file \type_traits\is_float.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_USER_CONFIG" class="forbidden">
+Sets the default location for a user config.
+</flag> 
+  
+<flag name="DBOOST_USE_WINDOWS_H" class="forbidden">
+Decides whether to include the windows header or not.
+</flag> 
+  
+<flag name="DBOOST_UTILITY_ADDRESSOF_HPP" class="forbidden">
+Prevents the header file \utility\addressof.hpp from being included more than once.
+</flag> 
+  
+<flag name="DBOOST_VERSION_HPP" class="forbidden">
+Defines the Boost version being used.
+</flag> 
+  
+<flag name="DBOOST_WORKAROUND" class="portability">
+Compiler/library version workaround macro.
+</flag> 
+  
+<flag name="DBSD" class="forbidden">
+Used to determine the canonical system name.
+</flag> 
+  
+<flag name="DCMU" class="forbidden">
+Helps to define the platform configuration.
+</flag> 
+  
+<flag name="DDEAL_II_ANON_NAMESPACE_BOGUS_WARNING" class="portability">
+Flag indicating whether there is a bug in the compiler that leads to bogus warnings for inline class members in anonymous namespaces.
+</flag> 
+  
+<flag name="DDEAL_II_ANON_NAMESPACE_BUG" class="portability">
+Defined if the compiler needs to see the static keyword even for functions in anonymous namespaces, to avoid duplicate symbol errors when linking.
+</flag> 
+  
+<flag name="DDEAL_II_ANON_NAMESPACE_LINKAGE_BUG" class="portability">
+Another test if the compiler needs to see the static keyword even for functions in anonymous namespaces, to avoid duplicate symbol errors when linking.
+</flag> 
+
+<flag name="DDEAL_II_HAVE_TECPLOT" class="portability">
+Determines if Tecplot API data macros should be defined for the platform.
+</flag> 
+  
+<flag name="DDEAL_II_LOCAL_TYPEDEF_COMP_WORKAROUND" class="portability">
+Define if we have to work around a bug in Suns Forte compiler.
+</flag> 
+  
+<flag name="DDEAL_II_MEMBER_VAR_SPECIALIZATION_BUG" class="portability">
+Defined if the compiler refuses to allow the explicit specialization of static member variables.
+</flag> 
+  
+<flag name="DDEAL_II_NAMESP_TEMPL_FRIEND_BUG" class="portability">
+Define if we have to work around a bug in gcc with marking all instances of a template class as friends to this class if the class is inside a namespace.
+</flag> 
+  
+<flag name="DDEAL_II_NAMESP_TEMPL_FRIEND_BUG2" class="portability">
+Define if we have to work around another bug in gcc with marking all instaces of a template class as friends to this class if the class is inside a namespace.
+</flag> 
+  
+<flag name="DDEAL_II_NESTED_CLASS_FRIEND_BUG" class="portability">
+Defined if the compiler does not properly implement the resolution of defect report #45 to the C++ standard, which makes nested types implicit friends of the enclosing class.
+</flag> 
+  
+<flag name="DDEAL_II_NESTED_CLASS_TEMPL_FRIEND_BUG" class="portability">
+Defined if the compiler does not understand friend declarations for nested member classes when giving a full class specification.
+</flag> 
+  
+<flag name="DDEAL_II_TEMPLATE_TEMPLATE_TYPEDEF_BUG" class="portability">
+Defined if the compiler refuses to allow a typedef to a template template class template parameter.
+</flag> 
+  
+<flag name="DDEAL_II_TEMPL_SPEC_FRIEND_BUG" class="portability">
+Define if we have to work around a bug with some compilers that will nto allow us to specify a fully specialized class of a template as a friend.
+</flag> 
+  
+<flag name="DDEAL_II_USE_METIS" class="portability">
+Defined if a Metis installation was found and is going to be used.
+</flag> 
+  
+<flag name="DDEAL_II_USE_MT" class="portability">
+Flag indicating whether the library shall be compiled for multithreaded applications. If so, then it is set to one, else zero.
+</flag> 
+  
+<flag name="DDEAL_II_USE_MT_POSIX" class="portability">
+Defined if multi-threading is to be achieved by using the POSIX functions.
+</flag> 
+  
+<flag name="DDEAL_II_USE_MT_POSIX_NO_BARRIERS" class="portability">
+Defined if POSIX is supported but not the newer POSIX barrier functions. Barriers will then not work in the library, but the other threading functionality is available.
+</flag> 
+  
+<flag name="DDEAL_II_USE_PETSC" class="forbidden">
+Defined if a PETSc installation was found and is going to be used.
+</flag> 
+  
+<flag name="DDEAL_PREFER_MATRIX_EZ" class="forbidden">
+Used to reset the dimension of the structure.
+</flag> 
+  
+<flag name="DDEBUG" class="forbidden">
+When asserted, turns on debugging code paths.
+</flag> 
+  
+<flag name="DENABLE_MULTIGRID" class="portability">
+Enables multigrid components.
+</flag> 
+  
+<flag name="DHAVE_LIBLAPACK" class="forbidden">
+Asserts the availability of the lapack library.
+</flag> 
+  
+<flag name="DHAVE_STD_ITERATOR_CLASS" class="portability">
+Defined if the compiler's library in use provides a std::iterator class (early gcc versions did not).
+</flag> 
+  
+<flag name="DHAVE_STD_NUMERIC_LIMITS" class="portability">
+Define if the compiler's library in use provides std::numeric_limits classes in the appropriate header file.
+</flag> 
+  
+<flag name="DHAVE_STD_OSTREAM_HEADER" class="portability">
+Defined if the compiler provides an &lt;ostream&gt; header file.
+</flag> 
+  
+<flag name="DHAVE_STD_STRINGSTREAM" class="portability">
+Defined if the compiler's library in use provides std::i/ostringstream classes (early gcc versions did not).
+</flag> 
+  
+<flag name="DMG_DEBUG" class="forbidden">
+When defined, declares additional debug code for multigrid code base.
+</flag> 
+  
+<flag name="DMIPSEB" class="forbidden">
+When defined, is used to guess platform and processor type for code configuration.
+</flag> 
+  
+<flag name="DMIPSEL" class="forbidden">
+When defined, is used to guess platform and processor type for code configuration.
+</flag> 
+  
+<flag name="DMPW_CPLUS" class="portability">
+When asserted, defines the version of the MPW C++ compiler in use.
+</flag> 
+  
+<flag name="DMSIPL_COMPILE_H" class="portability">
+Determines if the utility library should be included.
+</flag> 
+  
+<flag name="DMSIPL_NL_TYPES" class="portability">
+When undefined, asserts Modena C++ standard library does not use std messages.
+</flag> 
+  
+<flag name="DMSIPL_WCHART" class="portability">
+When undefined, asserts Modena C++ standard library does not use std wide strings.
+</flag> 
+  
+<flag name="DMULTIMAX" class="forbidden">
+When defined, is used to guess platform and processor type for code configuration.
+</flag> 
+  
+<flag name="DNEWSOS4" class="forbidden">
+When defined, is used to guess platform and processor type for code configuration.
+</flag> 
+  
+<flag name="DNOMINMAX" class="portability">
+When defined, disables min/max macros on certain platforms.
+</flag> 
+  
+<flag name="DNeXT" class="forbidden">
+When defined, is used to guess platform and processor type for code configuration.
+</flag> 
+  
+<flag name="DRWSTD_NO_CLASS_PARTIAL_SPEC" class="forbidden">
+Disables iterator traits if asserted.
+</flag> 
+  
+<flag name="DRWSTD_NO_MEMBER_TEMPLATES" class="forbidden">
+If defined, then the platform does not support iterator constructors because it does not support member templates.
+</flag> 
+  
+<flag name="DRWSTD_NO_SIMPLE_DEFAULT_TEMPLATES" class="forbidden">
+When defined, the platform does not support std::iterator because it cannot resolve default template arguments.
+</flag> 
+  
+<flag name="DSPEC_CPU_TABLE_WORKAROUND" class="portability">
+Implements an optional code declaration for the Table template for certain platforms.
+</flag> 
+  
+<flag name="DSPEC_CPU_WINDOWS_ICL" class="portability">
+Definition of this flag determines code variations for some platforms.
+</flag> 
+  
+<flag name="DSPEC_CPU_WINDOWS_MSVC" class="portability">
+If defined, this flag determines code variations for some platforms.
+</flag> 
+  
+<flag name="DTARGET_CARBON" class="portability">
+When defined, asserts specialized thread control for Mac OS, and does not include posix_features.hpp.
+</flag> 
+  
+<flag name="DULLONG_MAX" class="portability">
+When defined, helps to determine if long long is available on the platform.
+</flag> 
+  
+<flag name="DULONGLONG_MAX" class="portability">
+When defined, helps to determine if long long is available on the platform.
+</flag> 
+  
+<flag name="DULONG_LONG_MAX" class="portability">
+When defined, helps to determine if long long is available on the platform.
+</flag> 
+  
+<flag name="DWORKAROUND_DWA2002126_HPP" class="forbidden">
+Prevents the header file include/boost/detail/workaround.hpp from being included more than once.
+</flag> 
+  
+<flag name="D_COMPILER_VERSION" class="portability">
+Defined to the compiler version for certain platforms.
+</flag> 
+
+<flag name="D_CPPLIB_VER" class="portability">
+Defined as the C++ library version for certain platforms.
+</flag> 
+  
+<flag name="D_CPPUNWIND" class="portability">
+If undefined, then exception handling is not supported on certain platforms.
+</flag> 
+  
+<flag name="D_DECTHREADS_" class="portability">
+When defined, helps to determine if a non-standard pthread_mutex_init should be used.
+</flag> 
+  
+<flag name="D_EXCEPTIONS" class="portability">
+When not defined, asserts that no exceptions are available on the platform.
+</flag> 
+  
+<flag name="D_GLIBCPP_USE_LONG_LONG" class="portability">
+Allows the use of "long long" by supported compilers.
+</flag> 
+  
+<flag name="D_GLIBCPP_USE_WCHAR_T" class="portability">
+Asserts the availabilty of WCHAR type for GNU lbistdc++.
+</flag> 
+  
+<flag name="D_GLOBAL_USING" class="portability">
+Used to define BOOST_NO_STDC_NAMESPACE for Dinkumware when set to greater than 0.
+</flag> 
+  
+<flag name="D_HAS_MEMBER_TEMPLATES_REBIND" class="portability">
+Used to set BOOST_NO_STD_ALLOCATOR for Dinkumware when set to greater than zero.
+</flag> 
+  
+<flag name="D_LONGLONG" class="portability">
+Enables numeric_limits&lt;long long&gt; support unless _LONGLONG is defined.
+</flag> 
+  
+<flag name="D_MSC_EXTENSIONS" class="portability">
+Definition determines certain workaround flags for the platform.
+</flag> 
+  
+<flag name="D_MSC_VER" class="portability">
+Defined to the version of the compiler for some platforms.
+</flag> 
+  
+<flag name="D_MSL_NO_LOCALE" class="portability">
+If defined, disables locale support when linking with the dynamic runtime.
+</flag> 
+  
+<flag name="D_MSL_USING_MSL_C" class="portability">
+When defined, prevents the use of the Mac OS X system BSD-style C library.
+</flag> 
+  
+<flag name="D_MWMT" class="portability">
+Metroworks flag for use in asserting boost threads.
+</flag> 
+  
+<flag name="D_NAMESPACE_STD" class="portability">
+If not defined, asserts that the standard locale and stringstream are not available for the platform.
+</flag> 
+  
+<flag name="D_NATIVE_WCHAR_T_DEFINED" class="portability">
+If not defined, asserts that no intrinsic wchar type is available on the platform.
+</flag> 
+  
+<flag name="D_POSIX_PRIORITY_SCHEDULING" class="portability">
+POSIX feature test which predicates BOOST_HAS_YIELD.
+</flag> 
+  
+<flag name="D_POSIX_SOURCE" class="portability">
+If defined, asserts that the platform is a generic unix platform.
+</flag> 
+  
+<flag name="D_POSIX_THREADS" class="portability">
+Asserts the use of posix threads.
+</flag> 
+  
+<flag name="D_POSIX_THREAD_PRIORITY_SCHEDULING" class="portability">
+When defined, is used to determine if schedule yielding is available.
+</flag> 
+  
+<flag name="D_POSIX_TIMERS" class="portability">
+Asserts the use of posix timers.
+</flag> 
+  
+<flag name="D_POSIX_VERSION" class="portability">
+Used to determine which version of posix is on the system.
+</flag> 
+  
+<flag name="D_PTHREADS" class="portability">
+Used to turn on/off threading support for multithreaded compilers.
+</flag> 
+  
+<flag name="D_REENTRANT" class="portability">
+Used in multi-threading.
+</flag> 
+  
+<flag name="D_RWSTD_ALLOCATOR" class="portability">
+Defined by Roguewave if the allocator is conformant and in use.
+</flag> 
+  
+<flag name="D_RWSTD_NO_CLASS_PARTIAL_SPEC" class="portability">
+Defined when there is no partial specailization for classes in Roguewave.
+</flag> 
+  
+<flag name="D_RWSTD_NO_MEMBER_TEMPLATES" class="portability">
+Defined to assert the use of templated iterator constructors in Roguewave.
+</flag> 
+  
+<flag name="D_RWSTD_NO_SIMPLE_DEFAULT_TEMPLATES" class="portability">
+Asserts the availablity of simple default templates which is used by std::iterator in Roguewave.
+</flag> 
+  
+<flag name="D_RWSTD_NO_TEMPLATE_ON_RETURN_TYPE" class="portability">
+Asserts the availability of std::use_facet for Roguewave.
+</flag> 
+  
+<flag name="D_RWSTD_VER" class="portability">
+Contains the vesion number of Roguewave.
+</flag> 
+  
+<flag name="D_STLPORT_VERSION" class="portability">
+Defined to contain which version of the STLPort library is in use.
+</flag> 
+  
+<flag name="D_STLP_CLASS_PARTIAL_SPECIALIZATION" class="portability">
+Used to determine if std::iterator traits are available.
+</flag> 
+  
+<flag name="D_STLP_IMPORT_VENDOR_CSTD" class="forbidden">
+Defined when STLport is not using its own namespace.
+</flag> 
+  
+<flag name="D_STLP_MEMBER_TEMPLATES" class="portability">
+Used to determine if template iterate constructors or std:allocator is available on the platform.
+</flag> 
+  
+<flag name="D_STLP_MEMBER_TEMPLATE_CLASSES" class="portability">
+Defined when STLport is using member template support.
+</flag> 
+  
+<flag name="D_STLP_NO_EXPLICIT_FUNCTION_TMPL_ARGS" class="portability">
+Defined when STLport has no explicit function template arguements.
+</flag> 
+  
+<flag name="D_STLP_NO_IOSTREAMS" class="portability">
+Asserts the availabilty of IOStreams in STLport.
+</flag> 
+  
+<flag name="D_STLP_NO_NATIVE_WIDE_FUNCTIONS" class="portability">
+Defined if wide functions are not supported.
+</flag> 
+  
+<flag name="D_STLP_NO_NEW_IOSTREAMS" class="portability">
+Asserts the support of new IOStreams in the STLport.
+</flag> 
+  
+<flag name="D_STLP_OWN_IOSTREAMS" class="portability">
+Defined if native IO streams are not being used in STLport.
+</flag> 
+  
+<flag name="D_STLP_STATIC_CONST_INIT_" class="forbidden">
+Implies BOOST_NO_LIMITS_COMPILE_TIME_CONSTANTS for versions prior to 4.1(beta).
+</flag> 
+
+<flag name="D_STLP_USE_NAMESPACES" class="portability">
+Defined to allow STLport to use non-native namespaces.
+</flag> 
+  
+<flag name="D_STLP_USE_OWN_NAMESPACE" class="portability">
+Defined when STLport is using its own namespace.
+</flag> 
+  
+<flag name="D_STLP_VENDOR_CSTD" class="portability">
+Defined when a 3rd party or vendor CSTD is being used.
+</flag> 
+  
+<flag name="D_STLP_VENDOR_GLOBAL_CSTD" class="forbidden">
+Defined when STLport is using its own namespace.
+</flag> 
+  
+<flag name="D_THREAD_SAFE" class="portability">
+Asserts thread support for AIX in the IBM Compiler config.
+</flag> 
+  
+<flag name="D_USE_OLD_RW_STL" class="portability">
+Defined when roguewave stl is being used. Asserts the correction of std::DBL_MAX compatiblity bug.
+</flag> 
+  
+<flag name="D_WCHAR_T" class="portability">
+Used to determine the availability of wchar types on the platform.
+</flag> 
+  
+<flag name="D_WCHAR_T_DEFINED" class="portability">
+Helps to determine if the wchar type is available on the platform.
+</flag> 
+  
+<flag name="D_WIN32" class="portability">
+Helps to determine the platform configuration header to include.
+</flag> 
+  
+<flag name="D_WIN64" class="portability">
+When defined code base uses an optional declaration of the InterlockedExchange function.
+</flag> 
+  
+<flag name="D_XOPEN_REALTIME" class="portability">
+Used to determine if nanosleep, clock_gettime, and scheduled yield are available on the platform.
+</flag> 
+  
+<flag name="D_XOPEN_SOURCE" class="portability">
+Defined as the version number of XOPEN and used to configure the code base.
+</flag> 
+  
+<flag name="D_XOPEN_VERSION" class="portability">
+Used to determine if the correct version of XOpen has been included for nl_types.h, and is used to determine if certain pthread options are available on the platform.
+</flag> 
+  
+<flag name="D_YVALS" class="portability">
+Helps to determine which std library header should be included and if the header should be included, or an error has ocurred in compilation.
+</flag> 
+  
+<flag name="D__APPLE_CC__" class="portability">
+Used to determine configuration settings for the platform.
+</flag> 
+  
+<flag name="D__BASTRING__" class="portability">
+Used to determine if boost/limits.hpp should be included, undefines no limits compile time constants, and asserts that no std wide character string is available.
+</flag> 
+  
+<flag name="D__BORLANDC__" class="portability">
+Defined as the version of the Borland C compiler, and helps to configure the code base.
+</flag> 
+  
+<flag name="D__CODEGUARD__" class="portability">
+Configures certain compiler options that fix issues with Codegaurd.
+</flag> 
+  
+<flag name="D__COMO_VERSION__" class="portability">
+Defined as the version of the Comeau compiler.
+</flag> 
+  
+<flag name="D__COMO__" class="portability">
+Used to determine the compiler version during code base configuration.
+</flag> 
+  
+<flag name="D__CYGWIN__" class="portability">
+Used to determine platform configuration.
+</flag> 
+  
+<flag name="D__EDG_VERSION__" class="portability">
+Defined as the version of the EDG front-end.
+</flag> 
+  
+<flag name="D__EXCEPTIONS" class="portability">
+Used to determine if the platform supports exceptions.
+</flag> 
+  
+<flag name="D__FreeBSD__" class="portability">
+Defined as the Free BSD platform version.
+</flag> 
+  
+<flag name="D__GLIBC_MINOR__" class="portability">
+Defined as the minor version number of the glibc library.
+</flag> 
+  
+<flag name="D__GLIBC_PREREQ" class="portability">
+Asserts the availability of glibc_prereq for the platform.
+</flag> 
+  
+<flag name="D__GLIBC__" class="portability">
+Defined as the major version number of the glibc library.
+</flag> 
+  
+<flag name="D__GNUC_MINOR__" class="portability">
+Defined as the minor version number of GNU C.
+</flag> 
+  
+<flag name="D__GNUC__" class="portability">
+Defined as the major version number of GNU C.
+</flag> 
+  
+<flag name="D__HP_aCC" class="portability">
+Defined as the version number of the HP aCC compiler.
+</flag> 
+  
+<flag name="D__IBMCPP__" class="portability">
+Defined as the version number of the IBM C++ Compiler.
+</flag> 
+  
+<flag name="D__ICL" class="portability">
+Defined as the Intel C Version, and used to configure the compiler.
+</flag> 
+  
+<flag name="D__INTEL_COMPILER" class="portability">
+Used to define the Intel C Version, and configure the compiler.
+</flag> 
+  
+<flag name="D__KCC" class="portability">
+Defined as the version of the Kai C Compiler, and used to configure the compiler.
+</flag> 
+  
+<flag name="D__KCC_VERSION" class="portability">
+The Kai C Compiler version.
+</flag> 
+  
+<flag name="D__LIBCOMO_VERSION__" class="portability">
+Defined as the version of the Comeau standard library, and used to configure certain platforms.
+</flag> 
+  
+<flag name="D__LIBCOMO__" class="portability">
+Used to configure the standard library and platform.
+</flag> 
+  
+<flag name="D__MACH__" class="portability">
+Used to determine if the platform is using the Mac OS X system BSD-style C library.
+</flag> 
+  
+<flag name="D__MINGW32__" class="portability">
+When defined, helps to determine threading support for the platform.
+</flag> 
+  
+<flag name="D__MSIPL_COMPILE_H" class="portability">
+Used for error handling on the Modena platform.
+</flag> 
+  
+<flag name="D__MSL_CPP__" class="portability">
+Defined as the MSL version, and used to configure the standard library for the platform.
+</flag> 
+  
+<flag name="D__MSL__" class="portability">
+Defined as the MSL Version and used to configure the standard library for the platform.
+</flag> 
+  
+<flag name="D__MT__" class="portability">
+Helps to determine if threading support should be asserted.
+</flag> 
+  
+<flag name="D__MWERKS__" class="portability">
+Defined as the version number of the Metrowerks compiler.
+</flag> 
+  
+<flag name="D__NO_LONG_LONG" class="portability">
+Used to determine if long long type availability should be asserted.
+</flag> 
+  
+<flag name="D__NetBSD__" class="portability">
+Defined as the Net BSD Version, and used to configure the platform and perform error checking.
+</flag> 
+  
+<flag name="D__OpenBSD__" class="portability">
+Defined as the Open BSD Version, and used to configure the platform and perform error checking.
+</flag> 
+  
+<flag name="D__SC__" class="portability">
+Defined as the MPW SCpp version, and used to configure the compiler.
+</flag> 
+  
+<flag name="D__SGI_STL_OWN_IOSTREAMS" class="portability">
+Helps to determine if std::locale is available on the system.
+</flag> 
+  
+<flag name="D__SGI_STL_PORT" class="portability">
+Contains the version number for the STLport.
+</flag> 
+  
+<flag name="D__SPIRIT_PP__" class="portability">
+Asserts a strict configuration for PP Config.
+</flag> 
+  
+<flag name="D__STDC_VERSION__" class="portability">
+Defined as the version number of Standard C, and determines if stdint.h support should be asserted.
+</flag> 
+  
+<flag name="D__STDC__" class="portability">
+Asserts the inclusion of &lt;limits.h&gt; and &lt;assert.h&gt;.
+</flag> 
+  
+<flag name="D__STD_RWCOMPILER_H__" class="portability">
+Asserts the use of the Rogue Wave library and configures the stdlib.
+</flag> 
+  
+<flag name="D__STL_CLASS_PARTIAL_SPECIALIZATION" class="portability">
+Asserts the existance of class partial specialization in the STLport library.
+</flag> 
+  
+<flag name="D__STL_CONFIG_H" class="portability">
+Asserts the use of the generic SGI STIL.
+</flag> 
+  
+<flag name="D__STL_IMPORT_VENDOR_CSTD" class="portability">
+Defined if STL is using a 3rd party namespace.
+</flag> 
+  
+<flag name="D__STL_MEMBER_TEMPLATES" class="portability">
+Defined if the STLport has member template support.
+</flag> 
+  
+<flag name="D__STL_NO_EXPLICIT_FUNCTION_TMPL_ARGS" class="portability">
+Defined when STLPort has no explicit function templates.
+</flag> 
+  
+<flag name="D__STL_NO_IOSTREAMS" class="forbidden">
+Disallows the use of I/O streams in the STL port.
+</flag> 
+  
+<flag name="D__STL_NO_NEW_IOSTREAMS" class="portability">
+Is used to determine if std::locale or std::stringstream is available on the system.
+</flag> 
+  
+<flag name="D__STL_STATIC_CONST_INIT_BUG" class="portability">
+Implies BOOST_NO_LMITS_COMPILE_TIME_CONSTANTS for versions of the STLPort prior to 4.1 (beta).
+</flag> 
+  
+<flag name="D__STL_USE_NAMESPACES" class="portability">
+Asserts the use of the standard iterator in the generic SGI STL.
+</flag> 
+  
+<flag name="D__STL_USE_NEW_IOSTREAMS" class="portability">
+Asserts the use of SGI STL new I/O streams.
+</flag> 
+  
+<flag name="D__STL_USE_OWN_NAMESPACE" class="portability">
+Defined when STLPort is using the standard namespace.
+</flag> 
+  
+<flag name="D__STL_VENDOR_GLOBAL_CSTD" class="portability">
+Defined when STLPort uses a vendor or 3rd party namespace.
+</flag> 
+  
+<flag name="D__SUNPRO_CC" class="portability">
+Contains the version number of the sunpro compiler being used.
+</flag> 
+  
+<flag name="D__USE_ISOC99" class="portability">
+Asserts the use of swprintf.
+</flag> 
+  
+<flag name="D__USE_POSIX199309" class="portability">
+Asserts the use of a particular POSIX implementation.
+</flag> 
+  
+<flag name="D__USE_UNIX98" class="portability">
+Asserts the use of swprintf.
+</flag> 
+ 
+<flag name="D__const__" class="portability">
+Defind to the GNU specific extension const.
+</flag> 
+  
+<flag name="D__cplusplus" class="portability">
+Defined if a C++ Compiler is being used.
+</flag> 
+  
+<flag name="D__deal2__auto_derivative_function_h" class="forbidden">
+Prevents the header file \base\auto_derivative_function.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__block_indices_h" class="forbidden">
+Prevents the header file \lac\block_indices.h from being included more than once.  
+</flag> 
+  
+<flag name="D__deal2__block_matrix_array_h" class="forbidden">
+Prevents the header file \lac\block_matrix_array.h from being included more than once. 
+</flag> 
+  
+<flag name="D__deal2__block_matrix_h" class="forbidden">
+Prevents the header file \lac\block_matrix.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__block_sparse_matrix_ez_h" class="forbidden">
+Prevents the header file \lac\block_sparse_matrix_ez.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__block_sparse_matrix_ez_templates_h" class="forbidden">
+Prevents the header file \lac\block_sparse_matrix_ez_templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__block_sparse_matrix_h" class="forbidden">
+Prevents the header file \lac\block_sparse_matrix.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__block_sparse_matrix_templates_h" class="forbidden">
+Prevents the header file \lac\block_sparse_matrix_templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__block_sparsity_pattern_h" class="forbidden">
+Prevents the header file \lac\block_sparsity_pattern.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__block_vector_h" class="forbidden">
+Prevents the header file \lac\block_vector.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__block_vector_templates_h" class="forbidden">
+Prevents the header file \lac\block_vector_templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__compressed_sparsity_pattern_h" class="forbidden">
+Prevents the header file \lac\compressed_sparsity_pattern.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__config_h" class="forbidden">
+Prevents the configuration file include/base/config.h.XXX from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__convergence_table_h" class="forbidden">
+Prevents the configuration file include/base/convergence_table.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__data_out_base_h" class="forbidden">
+Prevents the configuration file include/numerics/data_out_base.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__data_out_faces_h" class="forbidden">
+Prevents the header file \numerics\data_out_faces.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__data_out_h" class="forbidden">
+Prevents the header file \numberics\data_out.h from being included more than once.
+</flag> 
+ 
+<flag name="D__deal2__data_out_rotation_h" class="forbidden">
+Prevents the header file \numerics\data_out_rotation.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__data_out_stack_h" class="forbidden">
+Prevents the header file \numerics\data_out_stack.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__dof_accessor_h" class="forbidden">
+Prevents the header file \dofs\dof_accessor.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__dof_accessor_templates_h" class="forbidden">
+Prevents the header file \dofs\dof_accessor.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__dof_constraints_h" class="forbidden">
+Prevents the header file \dofs\dof_constraints.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__dof_constraints_templates_h" class="forbidden">
+Prevents the header file \dofs\dof_constraints.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__dof_handler_h" class="forbidden">
+Prevents the header file \dofs\dof_handler.h header file from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__dof_levels_h" class="forbidden">
+Prevents the header file \dofs\dof_levels.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__dof_print_solver_step_h" class="forbidden">
+Prevents the header file \numerics\dof_print_solver_step.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__dof_renumbering_h" class="forbidden">
+Prevents the header file \dofs\dof_renumbering.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__dof_tools_h" class="forbidden">
+Prevents the header file \dofs\dof_tools.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__eigen_h" class="forbidden">
+Prevents the header file \lac\eigen.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__error_estimator_h" class="forbidden">
+Prevents the header file \numerics\error_estimator.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__exceptions_h" class="forbidden">
+Prevents the header file \base\exceptions.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_base_h" class="forbidden">
+Prevents the header file \fe\fe_base.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_dgp_h" class="forbidden">
+Prevents the header file \fe\fe_dgp.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_dgp_monomial_h" class="forbidden">
+Prevents the header file \fe\fe_dgp_monomial.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_dgp_nonparametric_h" class="forbidden">
+Prevents the header file \fe\fe_dgp_nonparametric.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_dgq_h" class="forbidden">
+Prevents the header file \fe\fe_dgq.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_h" class="forbidden">
+Prevents the header file \fe\fe.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_nedelec_h" class="forbidden">
+Prevents the header file \fe\fe_nedlec.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_poly_h" class="forbidden">
+Prevents the header file \fe\fe_poly.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_q_h" class="forbidden">
+Prevents the header file \fe\fe_q.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_q_hierarchical_h" class="forbidden">
+Prevents the header file \fe\fe_q_hierarchical.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_raviart_thomas_h" class="forbidden">
+Prevents the header file \fe\fe_raviart_thomas.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_system_h" class="forbidden">
+Prevents the header file \fe\fe_system.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_tools_H" class="forbidden">
+Prevents the header file \fe\fe_tools.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__fe_update_flags_h" class="forbidden">
+Defines the scope for the fe update flags header.
+</flag> 
+  
+<flag name="D__deal2__fe_values_h" class="forbidden">
+Prevents the header fe_values.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__filtered_iterator_h" class="forbidden">
+Prevents the header file \grid\filtered_iterator.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__filtered_matrix_h" class="forbidden">
+Prevents the header file \lac\filtered_matrix.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__filtered_matrix_templates_h" class="forbidden">
+Prevents the header file \lac\filtered_matrix.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__full_matrix_h" class="forbidden">
+Prevents the header file \lac\full_matrix.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__full_matrix_templates_h" class="forbidden">
+Prevents the header file \lac\full_matrix.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__function_derivative_h" class="forbidden">
+Prevents the header file \base\function_derivative.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__function_h" class="forbidden">
+Prevents the header file \base\function.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__function_lib_h" class="forbidden">
+Prevents the header file \base\function_lib.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__function_map_h" class="forbidden">
+Prevents the header file \dofs\function_map.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__function_time_h" class="forbidden">
+Prevents the header file \base\function_time.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__geometry_info_h" class="forbidden">
+Prevents the header file \grid\geometry_info.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__gradient_estimator_h" class="forbidden">
+Prevents the header file \numerics\derivative_approximation.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__grid_generator_h" class="forbidden">
+Prevents the header file \grid\grid_generator.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__grid_in_h" class="forbidden">
+Prevents the header file \grid\grid_in.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__grid_out_h" class="forbidden">
+Prevents the header file \grid\grid_out.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__grid_refinement_h" class="forbidden">
+Prevents the header file \grid\grid_refinement.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__grid_reordering_h" class="forbidden">
+Prevents the header file \grid\grid_reordering.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__grid_reordering_internal_h" class="forbidden">
+Prevents the header file \grid\grid_reordering_internal.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__grid_tools_H" class="forbidden">
+Prevents the header file \grid\grid_tools.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__histogram_h" class="forbidden">
+Prevents the header file \numerics\histogram.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__intergrid_map_h" class="forbidden">
+Prevents the header file \grid\intergrid_map.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__job_identifier_h" class="forbidden">
+Prevents the header file \base\job_identifier.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__logstream_h" class="forbidden">
+Prevents the header file \base\logstream.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__magic_numbers_h" class="forbidden">
+Prevents the header file \grid\magic_numbers.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mapping_c1_h" class="forbidden">
+Prevents the header file \fe\mapping_c1.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mapping_cartesian_h" class="forbidden">
+Prevents the header file \fe\mapping_cartesian.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mapping_h" class="forbidden">
+Prevents the header file \fe\mapping.h . from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mapping_q1_eulerian_h" class="forbidden">
+Prevents the header file \fe\mapping_q1_eulerian.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mapping_q1_h" class="forbidden">
+Prevents the header file \fe\mapping_q1.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mapping_q_h" class="forbidden">
+Prevents the header file \fe\mapping_q.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__matrices_h" class="forbidden">
+Prevents the header file \numerics\matrices.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__matrix_lib_h" class="forbidden">
+Prevents the header file \lac\matrix_lib.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__matrix_lib_templates_h" class="forbidden">
+Prevents the header file \lac\matrix_lib.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__matrix_out_h" class="forbidden">
+Prevents the header file \lac\matrix_out.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__memory_consumption_h" class="forbidden">
+Prevents the header file \base\memory_consumption.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mg_base_h" class="forbidden">
+Prevents the header file \multigrid\mg_base.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mg_coarse_h" class="forbidden">
+Prevents the header file \multigrid\mg_coarse.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mg_dof_accessor_h" class="forbidden">
+Prevents the header file \multigrid\mg_dof_accessor.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mg_dof_handler_h" class="forbidden">
+Prevents the header file \multigrid\mg_dof_handler.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mg_dof_handler_templates_h" class="forbidden">
+Prevents the header file \multigrid\mg_smoother.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mg_dof_tools_h" class="forbidden">
+Prevents the header file \multigrid\mg_dof_tools.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mg_level_object_h" class="forbidden">
+Prevents the header file \multigrid\mg_level_object.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mg_matrix_h" class="forbidden">
+Prevents the header file \multigrid\mg_matrix.h from being included more than once.
+</flag> 
+ 
+<flag name="D__deal2__mg_smoother_h" class="forbidden">
+Prevents the header file \multigrid\mg_smoother.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__mg_transfer_h" class="forbidden">
+Prevents the header file \multigrid\mg_transfer.h from being included more than once.
+</flag> 
+ 
+<flag name="D__deal2__mg_transfer_templates_h" class="forbidden">
+Prevents the header file Scoping for \multigrid\mg_transfer.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__multigrid_h" class="forbidden">
+Prevents the header file \multigrid\multigrid.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__multigrid_templates_h" class="forbidden">
+Prevents the header file \multigrid\multigrid.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__multithread_info_h" class="forbidden">
+Prevents the header file \base\multithread_info.h from being included more than once.
+</flag> 
+ 
+<flag name="D__deal2__parameter_handler_h" class="forbidden">
+Prevents the header file \base\parameter_handler.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__persistent_tria_h" class="forbidden">
+Prevents the header file \grid\persistent_tria.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__petsc_full_matrix_h" class="forbidden">
+Prevents the header file \lac\petsc_full_matrix.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__petsc_matrix_base_h" class="forbidden">
+Prevents the header file \lac\petsc_matrix_base.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__petsc_parallel_sparse_matrix_h" class="forbidden">
+Prevents the header file \lac\petsc_parallel_sparse_matrix.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__petsc_parallel_vector_h" class="forbidden">
+Prevents the header file \lac\petsc_parallel_vector.h from being included more than once.
+</flag> 
+ 
+<flag name="D__deal2__petsc_precondition_h" class="forbidden">
+Prevents the header file \lac\petsc_precondition.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__petsc_solver_h" class="forbidden">
+Prevents the header file \lac\petsc_solver.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__petsc_sparse_matrix_h" class="forbidden">
+Prevents the header file \lac\petsc_sparse_matrix.h from being included more than once.
+</flag> 
+ 
+<flag name="D__deal2__petsc_vector_base_h" class="forbidden">
+Prevents the header file \lac\petsc_vector_base.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__petsc_vector_h" class="forbidden">
+Prevents the header file \lac\petsc_vector.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__point_h" class="forbidden">
+Prevents the header file \base\point.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__pointer_matrix_h" class="forbidden">
+Prevents the header file \lac\pointer_matrix.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__polynomial_h" class="forbidden">
+Prevents the header file \base\polynomial.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__polynomial_space_h" class="forbidden">
+Prevents the header file \base\polynomial_space.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__polynomials_BDM_h" class="forbidden">
+Prevents the header file \base\polynomials_bdm.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__polynomials_P_h" class="forbidden">
+Prevents the header file \base\polynomials_p.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__precondition_block_h" class="forbidden">
+Prevents the header file \lac\precondition_block.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__precondition_block_templates_h" class="forbidden">
+Prevents the header file \lac\precondition_block.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__precondition_h" class="forbidden">
+Prevents the header file \lac\precodition.h from being included more than once.
+</flag> 
+  <flag name="D__deal2__precondition_selector_h" class="forbidden">
+Prevents the header file \lac\precondition_selector.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__quadrature_h" class="forbidden">
+Prevents the header file \base\quadrature.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__quadrature_lib_h" class="forbidden">
+Prevents the header file \base\quadrature_lib.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__quadrature_selector_h" class="forbidden">
+Prevents the header file \base\quadrature_selector.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__schur_matrix_h" class="forbidden">
+Prevents the header file \lac\schur_matrix.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__shifted_matrix_h" class="forbidden">
+Prevents the header file \lac\shifted_matrix.h . from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__smartpointer_h" class="forbidden">
+Prevents the header file \base\smartpointer.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solution_transfer_h" class="forbidden">
+Prevents the header file \numerics\solution_transfer.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solver_bicgstab_h" class="forbidden">
+Prevents the header file \lac\solver_bicgstab.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solver_cg_h" class="forbidden">
+Prevents the header file \lac\solver_cg.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solver_control_h" class="forbidden">
+Prevents the header file \lac\solver.control.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solver_gmres_h" class="forbidden">
+Prevents the header file \lac\solver_gmres.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solver_h" class="forbidden">
+Prevents the header file \lac\solver.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solver_minres_h" class="forbidden">
+Prevents the header file \lac\solver_minres.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solver_qmrs_h" class="forbidden">
+Prevents the header file \lac\solver_qmrs.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solver_richardson_h" class="forbidden">
+Prevents the header file \lac\solver_richardson.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__solver_selector_h" class="forbidden">
+Prevents the header file \lac\solver_selector.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_decomposition_h" class="forbidden">
+Prevents the header file \lac\sparse_decomposition.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_direct_h" class="forbidden">
+Prevents the header file \lac\sparse_direct.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_ilu_h" class="forbidden">
+Prevents the header file \lac\sparse_ilu.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_ilu_templates_h" class="forbidden">
+Prevents the header file \lac\sparse_ilu.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_matrix_ez_h" class="forbidden">
+Prevents the header file \lac\sparse_matrix_ez.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_matrix_ez_templates_h" class="forbidden">
+Prevents the header file \lac\sparse_matrix_ez.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_matrix_h" class="forbidden">
+Prevents the header file \lac\sparse_matrix.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_matrix_templates_h" class="forbidden">
+Prevents the header file \lac\sparse_matrix.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_mic_h" class="forbidden">
+Prevents the header file \lac\sparse_mic.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_mic_templates_h" class="forbidden">
+Prevents the header file \lac\sparse_mic.template.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_vanka_h" class="forbidden">
+Prevents the header file \lac\sparse_vanka.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparse_vanka_templates_h" class="forbidden">
+Prevents the header file \lac\sparse_vanka.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__sparsity_pattern_h" class="forbidden">
+Prevents the header file \lac\sparsity_pattern.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__subscriptor_h" class="forbidden">
+Prevents the header file \base\subscriptor.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__swappable_vector_h" class="forbidden">
+Prevents the header file \lac\swappable_vector.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__swappable_vector_templates_h" class="forbidden">
+Prevents the header file \lac\swappable_vector.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__table_h" class="forbidden">
+Prevents the header file \base\table.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__table_handler_h" class="forbidden">
+Prevents the header file table_handler.h from being loaded more than once.
+</flag> 
+  
+<flag name="D__deal2__template_constr" class="forbidden">
+Prevents the header file include/base/template_constraints.h from being included more than once.
+</flag>
+
+<flag name="D__deal2__tensor_base_h" class="forbidden">
+Prevents the header file \base\tensor_base.h from being included more than once.
+</flag> 
+
+<flag name="D__deal2__tensor_function" class="forbidden">
+Prevents the header file include/base/tensor_function.h from being included more than once.
+</flag> 
+
+<flag name="D__deal2__tensor_h" class="forbidden">
+Prevents the header file include/base/tensor.h from being included more than once.
+</flag> 
+
+<flag name="D__deal2__tensor_product_" class="forbidden">
+Prevents the header file include/base/tensor_product_polynomials.h from being included more than once.
+</flag> 
+
+<flag name="D__deal2__time_dependent_" class="forbidden">
+Prevents the header file include/numerics/time_dependent.h from being included more than once.
+</flag> 
+
+<flag name="D__deal2__thread_management_h" class="forbidden">
+Prevents the header file \base\thread_management.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__timer_h" class="forbidden">
+Prevents the header file \base\timer.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__tria_accessor_h" class="forbidden">
+Prevents the header file /include/grid/tria_accessor.h from being included more than once.
+</flag>
+
+<flag name="D__deal2__tria_accessor_templates_h" class="forbidden">
+Prevents the header file \grid\tria_accessor.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__tria_boundary_h" class="forbidden">
+Prevents the header file \grid\tria_boundary.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__tria_boundary_lib_h" class="forbidden">
+Prevents the header file \grid\tria_boundary_lib.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__tria_h" class="forbidden">
+Prevents the header file include/grid/tria.h from being included more than once.
+</flag>
+
+<flag name="D__deal2__tria_hex_h" class="forbidden">
+Prevents the header file include/base/tria_hex.h from being included more than once.
+</flag>
+
+<flag name="D__deal2__tria_iterator_b" class="forbidden">
+Prevents the header file include/base/tria_iterator_base.h from being included more than once.
+</flag> 
+
+<flag name="D__deal2__tria_iterator_h" class="forbidden">
+Prevents the header file \grid\tria_iterator.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__tria_iterator_templates_h" class="forbidden">
+Prevents the header file \grid\tria_iterator.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__tria_levels_h" class="forbidden">
+Prevents the header file \grid\tria_levels.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__tria_line_h" class="forbidden">
+Prevents the header file tria_line.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__tria_quad_h" class="forbidden">
+Prevents the header file \grid\tria_quad.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__vector_h" class="forbidden">
+Prevents the header file \lac\vector.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__vector_memory_h" class="forbidden">
+Prevents the header file \lac\vector_memory.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__vector_templates_h" class="forbidden">
+Prevents the header file \lac\vector.templates.h from being included more than once.
+</flag> 
+  
+<flag name="D__deal2__vectors_h" class="forbidden">
+Prevents the header file \numerics\vectors.h from being included more than once.
+</flag> 
+  
+<flag name="D__extension__" class="portability">
+Defined as the GNU system header-specific definition of the __extension__ macro for parsing some headers (mainly &lt;stdint.h&gt;).
+</flag> 
+  
+<flag name="D__ghs" class="portability">
+Contains the version of Greenhills C++ Compiler being used.
+</flag> 
+  
+<flag name="D__hpux" class="portability">
+Asserts hp unix as the platform.
+</flag> 
+  
+<flag name="D__inline__" class="portability">
+Defind to the GNU specific extension inline.
+</flag> 
+  
+<flag name="D__linux" class="portability">
+Asserts the platform in use is Linux.
+</flag> 
+  <flag name="D__linux__" class="portability">
+Asserts the platform in use is linux.
+</flag> 
+  
+<flag name="D__option" class="portability">
+Contains options used for setting compatability flags for Metroworks.
+</flag> 
+  
+<flag name="D__sgi" class="portability">
+Defined when the SGI STL is used.
+</flag> 
+  
+<flag name="D__signed__" class="portability">
+Defind to the GNU specific extension signed.
+</flag> 
+  
+<flag name="D__typeof__" class="portability">
+Defind to the GNU specific extension typeof.
+</flag> 
+  
+<flag name="D__unix" class="portability">
+Asserts the use of unix as the platform.
+</flag> 
+  
+<flag name="D__volatile__" class="portability">
+Defind to the GNU specific extension volatile.
+</flag> 
+  
+<flag name="Dc_plusplus" class="portability">
+Defined when a c_plusplus compiler is being used in common_edg.hpp.
+</flag> 
+  
+<flag name="Ddebug" class="forbidden">
+Set to enable sections of code used in debug.
+</flag> 
+  
+<flag name="Dlinux" class="portability">
+Determines if the the platform does not support the standard namespace.
+</flag> 
+  
+<flag name="Dunix" class="portability">
+Helps to determine if the platform has standard unix headers, and to configure the codebase as generic unix.
+</flag> 
+  
+<flag name="Dwchar_type" class="portability">
+Asserts the availability of wchar types for Metrowerks.
+</flag> 
+
+</flagsdescription>

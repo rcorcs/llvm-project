@@ -1,0 +1,237 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else27:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([17 x i8], [17 x i8]* @.str.8, i64 0, i64 0), i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.4, i64 0, i64 0), i32 242, i8* getelementptr inbounds ([46 x i8], [46 x i8]* @__PRETTY_FUNCTION__.rotate, i64 0, i64 0)) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.3, i64 0, i64 0), i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.4, i64 0, i64 0), i32 231, i8* getelementptr inbounds ([46 x i8], [46 x i8]* @__PRETTY_FUNCTION__.rotate, i64 0, i64 0)) #10</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %cmp = icmp sgt i32 %bs, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp, label %if.end, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %cmp1 = icmp ne i32* %ri, null</td></tr>
+<tr><td align="left">  %cmp2 = icmp ne i32* %rj, null</td></tr>
+<tr><td align="left">  %or.cond = select i1 %cmp1, i1 %cmp2, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %if.end5, label %if.else4</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else4:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([25 x i8], [25 x i8]* @.str.5, i64 0, i64 0), i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.4, i64 0, i64 0), i32 232, i8* getelementptr inbounds ([46 x i8], [46 x i8]* @__PRETTY_FUNCTION__.rotate, i64 0, i64 0)) #10</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end5:</td></tr>
+<tr><td align="left">  %0 = icmp ult i32 %rot, 8</td></tr>
+<tr><td align="left">  br i1 %0, label %if.end11, label %if.else10</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else10:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.6, i64 0, i64 0), i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.4, i64 0, i64 0), i32 233, i8* getelementptr inbounds ([46 x i8], [46 x i8]* @__PRETTY_FUNCTION__.rotate, i64 0, i64 0)) #10</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end11:</td></tr>
+<tr><td align="left">  %cmp12 = icmp eq i32 %i, -1</td></tr>
+<tr><td align="left">  %cmp14 = icmp eq i32 %j, -1</td></tr>
+<tr><td align="left">  %or.cond69 = select i1 %cmp12, i1 %cmp14, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond69, label %if.then15, label %if.end16</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then15:</td></tr>
+<tr><td align="left">  store i32 -1, i32* %ri, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end16:</td></tr>
+<tr><td align="left">  %cmp17 = icmp sgt i32 %i, -1</td></tr>
+<tr><td align="left">  %cmp19 = icmp slt i32 %i, %bs</td></tr>
+<tr><td align="left">  %or.cond130 = select i1 %cmp17, i1 %cmp19, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond130, label %if.end22, label %if.else21</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else21:</td></tr>
+<tr><td align="left">  tail call void @__assert_fail(i8* getelementptr inbounds ([17 x i8], [17 x i8]* @.str.7, i64 0, i64 0), i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.4, i64 0, i64 0), i32 241, i8* getelementptr inbounds ([46 x i8], [46 x i8]* @__PRETTY_FUNCTION__.rotate, i64 0, i64 0)) #10</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end22:</td></tr>
+<tr><td align="left">  %cmp23 = icmp sgt i32 %j, -1</td></tr>
+<tr><td align="left">  %cmp25 = icmp slt i32 %j, %bs</td></tr>
+<tr><td align="left">  %or.cond131 = select i1 %cmp23, i1 %cmp25, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond131, label %if.end28, label %if.else27</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end28:</td></tr>
+<tr><td align="left">  %sub = add nsw i32 %bs, -1</td></tr>
+<tr><td align="left">  switch i32 %rot, label %if.then58 [
+    i32 0, label %if.then30
+    i32 1, label %if.then33
+    i32 2, label %if.then37
+    i32 3, label %if.then42
+    i32 4, label %if.then46
+    i32 5, label %if.then49
+    i32 6, label %if.then53
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then30:</td></tr>
+<tr><td align="left">  store i32 %i, i32* %ri, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then33:</td></tr>
+<tr><td align="left">  %sub34 = sub nsw i32 %sub, %j</td></tr>
+<tr><td align="left">  store i32 %sub34, i32* %ri, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then37:</td></tr>
+<tr><td align="left">  %sub38 = sub nsw i32 %sub, %i</td></tr>
+<tr><td align="left">  store i32 %sub38, i32* %ri, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  %sub39 = sub nsw i32 %sub, %j</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then42:</td></tr>
+<tr><td align="left">  store i32 %j, i32* %ri, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  %sub43 = sub nsw i32 %sub, %i</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then46:</td></tr>
+<tr><td align="left">  store i32 %j, i32* %ri, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then49:</td></tr>
+<tr><td align="left">  %sub50 = sub nsw i32 %sub, %i</td></tr>
+<tr><td align="left">  store i32 %sub50, i32* %ri, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then53:</td></tr>
+<tr><td align="left">  %sub54 = sub nsw i32 %sub, %j</td></tr>
+<tr><td align="left">  store i32 %sub54, i32* %ri, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  %sub55 = sub nsw i32 %sub, %i</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then58:</td></tr>
+<tr><td align="left">  store i32 %i, i32* %ri, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  %sub59 = sub nsw i32 %sub, %j</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %j.sink = phi i32 [ %j, %if.then30 ], [ %sub39, %if.then37 ], [ %i, %if.then46 ], [ %sub55, %if.then53 ], [ %sub59, %if.then58 ], [ %j, %if.then49 ], [ %sub43, %if.then42 ], [ %i, %if.then33 ], [ -1, %if.then15 ]</td></tr>
+<tr><td align="left">  store i32 %j.sink, i32* %rj, align 4, !tbaa !20</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> m_bb0:f2
+f_bb1:fT -> f_bb3:f
+f_bb1:fF -> f_bb2:f
+f_bb3:fT -> f_bb5:f
+f_bb3:fF -> f_bb4:f
+f_bb5:fT -> f_bb6:f
+f_bb5:fF -> f_bb7:f
+f_bb6:f -> f_bb19:f
+f_bb7:fT -> f_bb9:f
+f_bb7:fF -> f_bb8:f
+f_bb9:fT -> f_bb10:f
+f_bb9:fF -> m_bb0:f1
+f_bb10:f -> f_bb18:f
+f_bb10:f -> f_bb11:f
+f_bb10:f -> f_bb12:f
+f_bb10:f -> f_bb13:f
+f_bb10:f -> f_bb14:f
+f_bb10:f -> f_bb15:f
+f_bb10:f -> f_bb16:f
+f_bb10:f -> f_bb17:f
+f_bb11:f -> f_bb19:f
+f_bb12:f -> f_bb19:f
+f_bb13:f -> f_bb19:f
+f_bb14:f -> f_bb19:f
+f_bb15:f -> f_bb19:f
+f_bb16:f -> f_bb19:f
+f_bb17:f -> f_bb19:f
+f_bb18:f -> f_bb19:f
+}
+

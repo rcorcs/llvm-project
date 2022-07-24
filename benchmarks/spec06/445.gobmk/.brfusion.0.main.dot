@@ -1,0 +1,2964 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then369:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %139 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %140 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.29, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %139) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">sw.default:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %124 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %125 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.2, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %124) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb1 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">sw.epilog637:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup638</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">sw.epilog319:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %replay_color.1 = phi i32 [ %replay_color.0, %sw.bb293 ], [ %replay_color.0, %sw.bb292 ], [ %replay_color.0, %sw.bb275 ], [ %replay_color.0, %if.end246 ], [ %replay_color.0, %sw.bb238 ], [ %replay_color.0, %sw.bb237 ], [ %replay_color.0, %sw.bb236 ], [ %replay_color.0, %sw.bb235 ], [ %replay_color.0, %sw.bb233 ], [ %replay_color.0, %sw.bb231 ], [ %replay_color.0, %sw.bb229 ], [ %replay_color.0, %sw.bb227 ], [ %replay_color.0, %sw.bb223 ], [ %replay_color.0, %sw.bb221 ], [ %replay_color.0, %sw.bb219 ], [ %replay_color.0, %if.end216 ], [ %replay_color.0, %sw.bb209 ], [ %replay_color.0, %if.end206 ], [ %replay_color.0, %if.end164 ], [ %replay_color.0, %if.end155 ], [ %replay_color.0, %if.end131 ], [ %replay_color.0, %sw.bb104 ], [ %replay_color.0, %sw.bb103 ], [ %replay_color.0, %sw.bb102 ], [ %replay_color.0, %sw.bb101 ], [ %replay_color.0, %sw.bb100 ], [ %replay_color.0, %sw.bb99 ], [ %replay_color.0, %sw.bb97 ], [ %replay_color.0, %sw.bb96 ], [ %replay_color.0, %sw.bb95 ], [ %replay_color.0, %sw.bb94 ], [ %replay_color.0, %sw.bb93 ], [ %replay_color.0, %sw.bb92 ], [ %replay_color.0, %sw.bb91 ], [ %replay_color.0, %sw.bb83 ], [ %replay_color.0, %if.end82 ], [ %replay_color.0, %if.end70 ], [ %replay_color.0, %sw.bb59 ], [ %replay_color.0, %sw.bb58 ], [ %replay_color.0, %sw.bb52 ], [ %replay_color.0, %sw.bb42 ], [ %replay_color.0, %sw.bb41 ], [ %replay_color.0, %sw.bb40 ], [ %replay_color.0, %sw.bb32 ], [ %replay_color.0, %sw.bb30 ], [ %replay_color.0, %sw.bb29 ], [ %replay_color.0, %sw.bb27 ], [ %replay_color.0, %sw.bb25 ], [ %replay_color.0, %sw.bb23 ], [ %replay_color.0, %sw.bb22 ], [ %replay_color.0, %sw.bb19 ], [ %replay_color.0, %sw.bb17 ], [ %replay_color.0, %sw.bb13 ], [ %replay_color.0, %sw.bb11 ], [ %replay_color.0, %sw.bb10 ], [ %replay_color.0, %sw.bb9 ], [ %replay_color.0, %sw.bb7 ], [ %replay_color.0, %sw.bb5 ], [ %replay_color.0, %sw.bb4 ], [ %replay_color.0, %sw.bb3 ], [ %replay_color.0, %sw.bb1 ], [ %replay_color.0, %sw.bb ], [ %replay_color.0, %sw.bb105 ], [ %replay_color.0, %if.else ], [ %replay_color.0, %if.else114 ], [ %replay_color.0, %if.end139 ], [ %replay_color.0, %if.end173 ], [ %replay_color.0, %if.end189 ], [ %replay_color.0, %while.body ], [ 1, %sw.bb249 ], [ 2, %if.else254 ], [ 3, %if.else259 ], [ %replay_color.0, %sw.bb270 ], [ %replay_color.0, %sw.bb276 ], [ %replay_color.0, %if.else281 ], [ %replay_color.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %infilename.1 = phi i8* [ %infilename.0, %sw.bb293 ], [ %infilename.0, %sw.bb292 ], [ %infilename.0, %sw.bb275 ], [ %infilename.0, %if.end246 ], [ %infilename.0, %sw.bb238 ], [ %infilename.0, %sw.bb237 ], [ %infilename.0, %sw.bb236 ], [ %infilename.0, %sw.bb235 ], [ %infilename.0, %sw.bb233 ], [ %infilename.0, %sw.bb231 ], [ %infilename.0, %sw.bb229 ], [ %infilename.0, %sw.bb227 ], [ %infilename.0, %sw.bb223 ], [ %infilename.0, %sw.bb221 ], [ %infilename.0, %sw.bb219 ], [ %infilename.0, %if.end216 ], [ %infilename.0, %sw.bb209 ], [ %infilename.0, %if.end206 ], [ %infilename.0, %if.end164 ], [ %infilename.0, %if.end155 ], [ %infilename.0, %if.end131 ], [ %infilename.0, %sw.bb104 ], [ %infilename.0, %sw.bb103 ], [ %infilename.0, %sw.bb102 ], [ %infilename.0, %sw.bb101 ], [ %infilename.0, %sw.bb100 ], [ %infilename.0, %sw.bb99 ], [ %infilename.0, %sw.bb97 ], [ %infilename.0, %sw.bb96 ], [ %infilename.0, %sw.bb95 ], [ %infilename.0, %sw.bb94 ], [ %infilename.0, %sw.bb93 ], [ %infilename.0, %sw.bb92 ], [ %infilename.0, %sw.bb91 ], [ %infilename.0, %sw.bb83 ], [ %infilename.0, %if.end82 ], [ %infilename.0, %if.end70 ], [ %infilename.0, %sw.bb59 ], [ %infilename.0, %sw.bb58 ], [ %infilename.0, %sw.bb52 ], [ %infilename.0, %sw.bb42 ], [ %infilename.0, %sw.bb41 ], [ %infilename.0, %sw.bb40 ], [ %infilename.0, %sw.bb32 ], [ %infilename.0, %sw.bb30 ], [ %infilename.0, %sw.bb29 ], [ %infilename.0, %sw.bb27 ], [ %infilename.0, %sw.bb25 ], [ %infilename.0, %sw.bb23 ], [ %infilename.0, %sw.bb22 ], [ %infilename.0, %sw.bb19 ], [ %infilename.0, %sw.bb17 ], [ %infilename.0, %sw.bb13 ], [ %infilename.0, %sw.bb11 ], [ %infilename.0, %sw.bb10 ], [ %infilename.0, %sw.bb9 ], [ %infilename.0, %sw.bb7 ], [ %infilename.0, %sw.bb5 ], [ %8, %sw.bb4 ], [ %infilename.0, %sw.bb3 ], [ %infilename.0, %sw.bb1 ], [ %infilename.0, %sw.bb ], [ %infilename.0, %sw.bb105 ], [ %infilename.0, %if.else ], [ %infilename.0, %if.else114 ], [ %infilename.0, %if.end139 ], [ %infilename.0, %if.end173 ], [ %infilename.0, %if.end189 ], [ %infilename.0, %while.body ], [ %infilename.0, %sw.bb249 ], [ %infilename.0, %if.else254 ], [ %infilename.0, %if.else259 ], [ %infilename.0, %sw.bb270 ], [ %infilename.0, %sw.bb276 ], [ %infilename.0, %if.else281 ], [ %infilename.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %untilstring.1 = phi i8* [ %untilstring.0, %sw.bb293 ], [ %untilstring.0, %sw.bb292 ], [ %untilstring.0, %sw.bb275 ], [ %untilstring.0, %if.end246 ], [ %untilstring.0, %sw.bb238 ], [ %untilstring.0, %sw.bb237 ], [ %untilstring.0, %sw.bb236 ], [ %untilstring.0, %sw.bb235 ], [ %untilstring.0, %sw.bb233 ], [ %untilstring.0, %sw.bb231 ], [ %untilstring.0, %sw.bb229 ], [ %untilstring.0, %sw.bb227 ], [ %untilstring.0, %sw.bb223 ], [ %untilstring.0, %sw.bb221 ], [ %untilstring.0, %sw.bb219 ], [ %untilstring.0, %if.end216 ], [ %untilstring.0, %sw.bb209 ], [ %untilstring.0, %if.end206 ], [ %untilstring.0, %if.end164 ], [ %untilstring.0, %if.end155 ], [ %untilstring.0, %if.end131 ], [ %untilstring.0, %sw.bb104 ], [ %untilstring.0, %sw.bb103 ], [ %untilstring.0, %sw.bb102 ], [ %untilstring.0, %sw.bb101 ], [ %untilstring.0, %sw.bb100 ], [ %untilstring.0, %sw.bb99 ], [ %untilstring.0, %sw.bb97 ], [ %untilstring.0, %sw.bb96 ], [ %untilstring.0, %sw.bb95 ], [ %untilstring.0, %sw.bb94 ], [ %untilstring.0, %sw.bb93 ], [ %untilstring.0, %sw.bb92 ], [ %untilstring.0, %sw.bb91 ], [ %untilstring.0, %sw.bb83 ], [ %untilstring.0, %if.end82 ], [ %untilstring.0, %if.end70 ], [ %untilstring.0, %sw.bb59 ], [ %untilstring.0, %sw.bb58 ], [ %untilstring.0, %sw.bb52 ], [ %untilstring.0, %sw.bb42 ], [ %untilstring.0, %sw.bb41 ], [ %untilstring.0, %sw.bb40 ], [ %untilstring.0, %sw.bb32 ], [ %untilstring.0, %sw.bb30 ], [ %20, %sw.bb29 ], [ %untilstring.0, %sw.bb27 ], [ %untilstring.0, %sw.bb25 ], [ %untilstring.0, %sw.bb23 ], [ %untilstring.0, %sw.bb22 ], [ %untilstring.0, %sw.bb19 ], [ %untilstring.0, %sw.bb17 ], [ %untilstring.0, %sw.bb13 ], [ %untilstring.0, %sw.bb11 ], [ %untilstring.0, %sw.bb10 ], [ %untilstring.0, %sw.bb9 ], [ %untilstring.0, %sw.bb7 ], [ %untilstring.0, %sw.bb5 ], [ %untilstring.0, %sw.bb4 ], [ %untilstring.0, %sw.bb3 ], [ %untilstring.0, %sw.bb1 ], [ %untilstring.0, %sw.bb ], [ %untilstring.0, %sw.bb105 ], [ %untilstring.0, %if.else ], [ %untilstring.0, %if.else114 ], [ %untilstring.0, %if.end139 ], [ %untilstring.0, %if.end173 ], [ %untilstring.0, %if.end189 ], [ %untilstring.0, %while.body ], [ %untilstring.0, %sw.bb249 ], [ %untilstring.0, %if.else254 ], [ %untilstring.0, %if.else259 ], [ %untilstring.0, %sw.bb270 ], [ %untilstring.0, %sw.bb276 ], [ %untilstring.0, %if.else281 ], [ %untilstring.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %scoringmode.1 = phi i8* [ %scoringmode.0, %sw.bb293 ], [ %scoringmode.0, %sw.bb292 ], [ %scoringmode.0, %sw.bb275 ], [ %scoringmode.0, %if.end246 ], [ %scoringmode.0, %sw.bb238 ], [ %scoringmode.0, %sw.bb237 ], [ %scoringmode.0, %sw.bb236 ], [ %scoringmode.0, %sw.bb235 ], [ %scoringmode.0, %sw.bb233 ], [ %scoringmode.0, %sw.bb231 ], [ %scoringmode.0, %sw.bb229 ], [ %scoringmode.0, %sw.bb227 ], [ %scoringmode.0, %sw.bb223 ], [ %scoringmode.0, %sw.bb221 ], [ %scoringmode.0, %sw.bb219 ], [ %scoringmode.0, %if.end216 ], [ %scoringmode.0, %sw.bb209 ], [ %scoringmode.0, %if.end206 ], [ %scoringmode.0, %if.end164 ], [ %scoringmode.0, %if.end155 ], [ %scoringmode.0, %if.end131 ], [ %scoringmode.0, %sw.bb104 ], [ %scoringmode.0, %sw.bb103 ], [ %scoringmode.0, %sw.bb102 ], [ %scoringmode.0, %sw.bb101 ], [ %scoringmode.0, %sw.bb100 ], [ %scoringmode.0, %sw.bb99 ], [ %scoringmode.0, %sw.bb97 ], [ %scoringmode.0, %sw.bb96 ], [ %scoringmode.0, %sw.bb95 ], [ %scoringmode.0, %sw.bb94 ], [ %scoringmode.0, %sw.bb93 ], [ %scoringmode.0, %sw.bb92 ], [ %scoringmode.0, %sw.bb91 ], [ %scoringmode.0, %sw.bb83 ], [ %scoringmode.0, %if.end82 ], [ %scoringmode.0, %if.end70 ], [ %scoringmode.0, %sw.bb59 ], [ %scoringmode.0, %sw.bb58 ], [ %scoringmode.0, %sw.bb52 ], [ %scoringmode.0, %sw.bb42 ], [ %scoringmode.0, %sw.bb41 ], [ %scoringmode.0, %sw.bb40 ], [ %scoringmode.0, %sw.bb32 ], [ %scoringmode.0, %sw.bb30 ], [ %scoringmode.0, %sw.bb29 ], [ %scoringmode.0, %sw.bb27 ], [ %scoringmode.0, %sw.bb25 ], [ %scoringmode.0, %sw.bb23 ], [ %scoringmode.0, %sw.bb22 ], [ %scoringmode.0, %sw.bb19 ], [ %scoringmode.0, %sw.bb17 ], [ %scoringmode.0, %sw.bb13 ], [ %scoringmode.0, %sw.bb11 ], [ %scoringmode.0, %sw.bb10 ], [ %scoringmode.0, %sw.bb9 ], [ %scoringmode.0, %sw.bb7 ], [ %scoringmode.0, %sw.bb5 ], [ %scoringmode.0, %sw.bb4 ], [ %scoringmode.0, %sw.bb3 ], [ %scoringmode.0, %sw.bb1 ], [ %scoringmode.0, %sw.bb ], [ %scoringmode.0, %sw.bb105 ], [ %scoringmode.0, %if.else ], [ %scoringmode.0, %if.else114 ], [ %scoringmode.0, %if.end139 ], [ %scoringmode.0, %if.end173 ], [ %scoringmode.0, %if.end189 ], [ %scoringmode.0, %while.body ], [ %scoringmode.0, %sw.bb249 ], [ %scoringmode.0, %if.else254 ], [ %scoringmode.0, %if.else259 ], [ %98, %sw.bb270 ], [ %scoringmode.0, %sw.bb276 ], [ %scoringmode.0, %if.else281 ], [ %scoringmode.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %outfile.1 = phi i8* [ %outfile.0, %sw.bb293 ], [ %outfile.0, %sw.bb292 ], [ %outfile.0, %sw.bb275 ], [ %outfile.0, %if.end246 ], [ %outfile.0, %sw.bb238 ], [ %outfile.0, %sw.bb237 ], [ %outfile.0, %sw.bb236 ], [ %outfile.0, %sw.bb235 ], [ %outfile.0, %sw.bb233 ], [ %outfile.0, %sw.bb231 ], [ %outfile.0, %sw.bb229 ], [ %outfile.0, %sw.bb227 ], [ %outfile.0, %sw.bb223 ], [ %outfile.0, %sw.bb221 ], [ %outfile.0, %sw.bb219 ], [ %outfile.0, %if.end216 ], [ %outfile.0, %sw.bb209 ], [ %outfile.0, %if.end206 ], [ %outfile.0, %if.end164 ], [ %outfile.0, %if.end155 ], [ %outfile.0, %if.end131 ], [ %outfile.0, %sw.bb104 ], [ %outfile.0, %sw.bb103 ], [ %outfile.0, %sw.bb102 ], [ %outfile.0, %sw.bb101 ], [ %outfile.0, %sw.bb100 ], [ %outfile.0, %sw.bb99 ], [ %outfile.0, %sw.bb97 ], [ %outfile.0, %sw.bb96 ], [ %outfile.0, %sw.bb95 ], [ %outfile.0, %sw.bb94 ], [ %outfile.0, %sw.bb93 ], [ %outfile.0, %sw.bb92 ], [ %outfile.0, %sw.bb91 ], [ %outfile.0, %sw.bb83 ], [ %outfile.0, %if.end82 ], [ %outfile.0, %if.end70 ], [ %outfile.0, %sw.bb59 ], [ %outfile.0, %sw.bb58 ], [ %outfile.0, %sw.bb52 ], [ %outfile.0, %sw.bb42 ], [ %outfile.0, %sw.bb41 ], [ %outfile.0, %sw.bb40 ], [ %outfile.0, %sw.bb32 ], [ %21, %sw.bb30 ], [ %outfile.0, %sw.bb29 ], [ %outfile.0, %sw.bb27 ], [ %outfile.0, %sw.bb25 ], [ %outfile.0, %sw.bb23 ], [ %outfile.0, %sw.bb22 ], [ %outfile.0, %sw.bb19 ], [ %outfile.0, %sw.bb17 ], [ %outfile.0, %sw.bb13 ], [ %outfile.0, %sw.bb11 ], [ %outfile.0, %sw.bb10 ], [ %outfile.0, %sw.bb9 ], [ %outfile.0, %sw.bb7 ], [ %outfile.0, %sw.bb5 ], [ %outfile.0, %sw.bb4 ], [ %outfile.0, %sw.bb3 ], [ %outfile.0, %sw.bb1 ], [ %outfile.0, %sw.bb ], [ %outfile.0, %sw.bb105 ], [ %outfile.0, %if.else ], [ %outfile.0, %if.else114 ], [ %outfile.0, %if.end139 ], [ %outfile.0, %if.end173 ], [ %outfile.0, %if.end189 ], [ %outfile.0, %while.body ], [ %outfile.0, %sw.bb249 ], [ %outfile.0, %if.else254 ], [ %outfile.0, %if.else259 ], [ %outfile.0, %sw.bb270 ], [ %outfile.0, %sw.bb276 ], [ %outfile.0, %if.else281 ], [ %outfile.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %gtpfile.1 = phi i8* [ %gtpfile.0, %sw.bb293 ], [ %gtpfile.0, %sw.bb292 ], [ %gtpfile.0, %sw.bb275 ], [ %gtpfile.0, %if.end246 ], [ %gtpfile.0, %sw.bb238 ], [ %gtpfile.0, %sw.bb237 ], [ %gtpfile.0, %sw.bb236 ], [ %gtpfile.0, %sw.bb235 ], [ %gtpfile.0, %sw.bb233 ], [ %gtpfile.0, %sw.bb231 ], [ %gtpfile.0, %sw.bb229 ], [ %gtpfile.0, %sw.bb227 ], [ %gtpfile.0, %sw.bb223 ], [ %gtpfile.0, %sw.bb221 ], [ %gtpfile.0, %sw.bb219 ], [ %gtpfile.0, %if.end216 ], [ %gtpfile.0, %sw.bb209 ], [ %gtpfile.0, %if.end206 ], [ %gtpfile.0, %if.end164 ], [ %gtpfile.0, %if.end155 ], [ %gtpfile.0, %if.end131 ], [ %gtpfile.0, %sw.bb104 ], [ %gtpfile.0, %sw.bb103 ], [ %gtpfile.0, %sw.bb102 ], [ %gtpfile.0, %sw.bb101 ], [ %gtpfile.0, %sw.bb100 ], [ %gtpfile.0, %sw.bb99 ], [ %gtpfile.0, %sw.bb97 ], [ %gtpfile.0, %sw.bb96 ], [ %gtpfile.0, %sw.bb95 ], [ %gtpfile.0, %sw.bb94 ], [ %gtpfile.0, %sw.bb93 ], [ %gtpfile.0, %sw.bb92 ], [ %gtpfile.0, %sw.bb91 ], [ %gtpfile.0, %sw.bb83 ], [ %gtpfile.0, %if.end82 ], [ %gtpfile.0, %if.end70 ], [ %gtpfile.0, %sw.bb59 ], [ %gtpfile.0, %sw.bb58 ], [ %gtpfile.0, %sw.bb52 ], [ %gtpfile.0, %sw.bb42 ], [ %26, %sw.bb41 ], [ %gtpfile.0, %sw.bb40 ], [ %gtpfile.0, %sw.bb32 ], [ %gtpfile.0, %sw.bb30 ], [ %gtpfile.0, %sw.bb29 ], [ %gtpfile.0, %sw.bb27 ], [ %gtpfile.0, %sw.bb25 ], [ %gtpfile.0, %sw.bb23 ], [ %gtpfile.0, %sw.bb22 ], [ %gtpfile.0, %sw.bb19 ], [ %gtpfile.0, %sw.bb17 ], [ %gtpfile.0, %sw.bb13 ], [ %gtpfile.0, %sw.bb11 ], [ %gtpfile.0, %sw.bb10 ], [ %gtpfile.0, %sw.bb9 ], [ %gtpfile.0, %sw.bb7 ], [ %gtpfile.0, %sw.bb5 ], [ %gtpfile.0, %sw.bb4 ], [ %gtpfile.0, %sw.bb3 ], [ %gtpfile.0, %sw.bb1 ], [ %gtpfile.0, %sw.bb ], [ %gtpfile.0, %sw.bb105 ], [ %gtpfile.0, %if.else ], [ %gtpfile.0, %if.else114 ], [ %gtpfile.0, %if.end139 ], [ %gtpfile.0, %if.end173 ], [ %gtpfile.0, %if.end189 ], [ %gtpfile.0, %while.body ], [ %gtpfile.0, %sw.bb249 ], [ %gtpfile.0, %if.else254 ], [ %gtpfile.0, %if.else259 ], [ %gtpfile.0, %sw.bb270 ], [ %gtpfile.0, %sw.bb276 ], [ %gtpfile.0, %if.else281 ], [ %gtpfile.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %printsgffile.1 = phi i8* [ %printsgffile.0, %sw.bb293 ], [ %printsgffile.0, %sw.bb292 ], [ %99, %sw.bb275 ], [ %printsgffile.0, %if.end246 ], [ %printsgffile.0, %sw.bb238 ], [ %printsgffile.0, %sw.bb237 ], [ %printsgffile.0, %sw.bb236 ], [ %printsgffile.0, %sw.bb235 ], [ %printsgffile.0, %sw.bb233 ], [ %printsgffile.0, %sw.bb231 ], [ %printsgffile.0, %sw.bb229 ], [ %printsgffile.0, %sw.bb227 ], [ %printsgffile.0, %sw.bb223 ], [ %printsgffile.0, %sw.bb221 ], [ %printsgffile.0, %sw.bb219 ], [ %printsgffile.0, %if.end216 ], [ %printsgffile.0, %sw.bb209 ], [ %printsgffile.0, %if.end206 ], [ %printsgffile.0, %if.end164 ], [ %printsgffile.0, %if.end155 ], [ %printsgffile.0, %if.end131 ], [ %printsgffile.0, %sw.bb104 ], [ %printsgffile.0, %sw.bb103 ], [ %printsgffile.0, %sw.bb102 ], [ %printsgffile.0, %sw.bb101 ], [ %printsgffile.0, %sw.bb100 ], [ %printsgffile.0, %sw.bb99 ], [ %printsgffile.0, %sw.bb97 ], [ %printsgffile.0, %sw.bb96 ], [ %printsgffile.0, %sw.bb95 ], [ %printsgffile.0, %sw.bb94 ], [ %printsgffile.0, %sw.bb93 ], [ %printsgffile.0, %sw.bb92 ], [ %printsgffile.0, %sw.bb91 ], [ %printsgffile.0, %sw.bb83 ], [ %printsgffile.0, %if.end82 ], [ %printsgffile.0, %if.end70 ], [ %printsgffile.0, %sw.bb59 ], [ %printsgffile.0, %sw.bb58 ], [ %printsgffile.0, %sw.bb52 ], [ %printsgffile.0, %sw.bb42 ], [ %printsgffile.0, %sw.bb41 ], [ %printsgffile.0, %sw.bb40 ], [ %printsgffile.0, %sw.bb32 ], [ %printsgffile.0, %sw.bb30 ], [ %printsgffile.0, %sw.bb29 ], [ %printsgffile.0, %sw.bb27 ], [ %printsgffile.0, %sw.bb25 ], [ %printsgffile.0, %sw.bb23 ], [ %printsgffile.0, %sw.bb22 ], [ %printsgffile.0, %sw.bb19 ], [ %printsgffile.0, %sw.bb17 ], [ %printsgffile.0, %sw.bb13 ], [ %printsgffile.0, %sw.bb11 ], [ %printsgffile.0, %sw.bb10 ], [ %printsgffile.0, %sw.bb9 ], [ %printsgffile.0, %sw.bb7 ], [ %printsgffile.0, %sw.bb5 ], [ %printsgffile.0, %sw.bb4 ], [ %printsgffile.0, %sw.bb3 ], [ %printsgffile.0, %sw.bb1 ], [ %printsgffile.0, %sw.bb ], [ %printsgffile.0, %sw.bb105 ], [ %printsgffile.0, %if.else ], [ %printsgffile.0, %if.else114 ], [ %printsgffile.0, %if.end139 ], [ %printsgffile.0, %if.end173 ], [ %printsgffile.0, %if.end189 ], [ %printsgffile.0, %while.body ], [ %printsgffile.0, %sw.bb249 ], [ %printsgffile.0, %if.else254 ], [ %printsgffile.0, %if.else259 ], [ %printsgffile.0, %sw.bb270 ], [ %printsgffile.0, %sw.bb276 ], [ %printsgffile.0, %if.else281 ], [ %printsgffile.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %decide_that.1 = phi i8* [ %decide_that.0, %sw.bb293 ], [ %decide_that.0, %sw.bb292 ], [ %decide_that.0, %sw.bb275 ], [ %decide_that.0, %if.end246 ], [ %decide_that.0, %sw.bb238 ], [ %decide_that.0, %sw.bb237 ], [ %decide_that.0, %sw.bb236 ], [ %decide_that.0, %sw.bb235 ], [ %decide_that.0, %sw.bb233 ], [ %decide_that.0, %sw.bb231 ], [ %decide_that.0, %sw.bb229 ], [ %decide_that.0, %sw.bb227 ], [ %decide_that.0, %sw.bb223 ], [ %decide_that.0, %sw.bb221 ], [ %decide_that.0, %sw.bb219 ], [ %decide_that.0, %if.end216 ], [ %decide_that.0, %sw.bb209 ], [ %decide_that.0, %if.end206 ], [ %decide_that.0, %if.end164 ], [ %decide_that.0, %if.end155 ], [ %decide_that.0, %if.end131 ], [ %decide_that.0, %sw.bb104 ], [ %decide_that.0, %sw.bb103 ], [ %decide_that.0, %sw.bb102 ], [ %decide_that.0, %sw.bb101 ], [ %decide_that.0, %sw.bb100 ], [ %decide_that.0, %sw.bb99 ], [ %decide_that.0, %sw.bb97 ], [ %decide_that.0, %sw.bb96 ], [ %decide_that.0, %sw.bb95 ], [ %decide_that.0, %sw.bb94 ], [ %decide_that.0, %sw.bb93 ], [ %decide_that.0, %sw.bb92 ], [ %decide_that.0, %sw.bb91 ], [ %decide_that.0, %sw.bb83 ], [ %decide_that.0, %if.end82 ], [ %decide_that.0, %if.end70 ], [ %decide_that.0, %sw.bb59 ], [ %decide_that.0, %sw.bb58 ], [ %decide_that.0, %sw.bb52 ], [ %decide_that.0, %sw.bb42 ], [ %decide_that.0, %sw.bb41 ], [ %decide_that.0, %sw.bb40 ], [ %decide_that.0, %sw.bb32 ], [ %decide_that.0, %sw.bb30 ], [ %decide_that.0, %sw.bb29 ], [ %decide_that.0, %sw.bb27 ], [ %decide_that.0, %sw.bb25 ], [ %decide_that.0, %sw.bb23 ], [ %decide_that.0, %sw.bb22 ], [ %decide_that.0, %sw.bb19 ], [ %decide_that.0, %sw.bb17 ], [ %decide_that.0, %sw.bb13 ], [ %decide_that.0, %sw.bb11 ], [ %decide_that.0, %sw.bb10 ], [ %decide_that.0, %sw.bb9 ], [ %decide_that.0, %sw.bb7 ], [ %decide_that.0, %sw.bb5 ], [ %decide_that.0, %sw.bb4 ], [ %decide_that.0, %sw.bb3 ], [ %decide_that.0, %sw.bb1 ], [ %decide_that.0, %sw.bb ], [ %decide_that.0, %sw.bb105 ], [ %decide_that.0, %if.else ], [ %decide_that.0, %if.else114 ], [ %call144, %if.end139 ], [ %call178, %if.end173 ], [ %call194, %if.end189 ], [ %decide_that.0, %while.body ], [ %decide_that.0, %sw.bb249 ], [ %decide_that.0, %if.else254 ], [ %decide_that.0, %if.else259 ], [ %decide_that.0, %sw.bb270 ], [ %decide_that.0, %sw.bb276 ], [ %decide_that.0, %if.else281 ], [ %decide_that.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %benchmark.1 = phi i32 [ %benchmark.0, %sw.bb293 ], [ %benchmark.0, %sw.bb292 ], [ %benchmark.0, %sw.bb275 ], [ %benchmark.0, %if.end246 ], [ %benchmark.0, %sw.bb238 ], [ %benchmark.0, %sw.bb237 ], [ %benchmark.0, %sw.bb236 ], [ %benchmark.0, %sw.bb235 ], [ %benchmark.0, %sw.bb233 ], [ %benchmark.0, %sw.bb231 ], [ %benchmark.0, %sw.bb229 ], [ %benchmark.0, %sw.bb227 ], [ %benchmark.0, %sw.bb223 ], [ %benchmark.0, %sw.bb221 ], [ %benchmark.0, %sw.bb219 ], [ %benchmark.0, %if.end216 ], [ %benchmark.0, %sw.bb209 ], [ %benchmark.0, %if.end206 ], [ %benchmark.0, %if.end164 ], [ %benchmark.0, %if.end155 ], [ %benchmark.0, %if.end131 ], [ %benchmark.0, %sw.bb104 ], [ %benchmark.0, %sw.bb103 ], [ %benchmark.0, %sw.bb102 ], [ %benchmark.0, %sw.bb101 ], [ %benchmark.0, %sw.bb100 ], [ %benchmark.0, %sw.bb99 ], [ %benchmark.0, %sw.bb97 ], [ %benchmark.0, %sw.bb96 ], [ %benchmark.0, %sw.bb95 ], [ %benchmark.0, %sw.bb94 ], [ %benchmark.0, %sw.bb93 ], [ %benchmark.0, %sw.bb92 ], [ %benchmark.0, %sw.bb91 ], [ %benchmark.0, %sw.bb83 ], [ %benchmark.0, %if.end82 ], [ %benchmark.0, %if.end70 ], [ %benchmark.0, %sw.bb59 ], [ %benchmark.0, %sw.bb58 ], [ %benchmark.0, %sw.bb52 ], [ %benchmark.0, %sw.bb42 ], [ %benchmark.0, %sw.bb41 ], [ %benchmark.0, %sw.bb40 ], [ %benchmark.0, %sw.bb32 ], [ %benchmark.0, %sw.bb30 ], [ %benchmark.0, %sw.bb29 ], [ %benchmark.0, %sw.bb27 ], [ %benchmark.0, %sw.bb25 ], [ %benchmark.0, %sw.bb23 ], [ %benchmark.0, %sw.bb22 ], [ %benchmark.0, %sw.bb19 ], [ %benchmark.0, %sw.bb17 ], [ %benchmark.0, %sw.bb13 ], [ %benchmark.0, %sw.bb11 ], [ %benchmark.0, %sw.bb10 ], [ %benchmark.0, %sw.bb9 ], [ %benchmark.0, %sw.bb7 ], [ %call6, %sw.bb5 ], [ %benchmark.0, %sw.bb4 ], [ %benchmark.0, %sw.bb3 ], [ %benchmark.0, %sw.bb1 ], [ %benchmark.0, %sw.bb ], [ %benchmark.0, %sw.bb105 ], [ %benchmark.0, %if.else ], [ %benchmark.0, %if.else114 ], [ %benchmark.0, %if.end139 ], [ %benchmark.0, %if.end173 ], [ %benchmark.0, %if.end189 ], [ %benchmark.0, %while.body ], [ %benchmark.0, %sw.bb249 ], [ %benchmark.0, %if.else254 ], [ %benchmark.0, %if.else259 ], [ %benchmark.0, %sw.bb270 ], [ %benchmark.0, %sw.bb276 ], [ %benchmark.0, %if.else281 ], [ %benchmark.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %playmode.1 = phi i32 [ %playmode.0, %sw.bb293 ], [ %playmode.0, %sw.bb292 ], [ 7, %sw.bb275 ], [ %playmode.0, %if.end246 ], [ %playmode.0, %sw.bb238 ], [ %playmode.0, %sw.bb237 ], [ %playmode.0, %sw.bb236 ], [ %playmode.0, %sw.bb235 ], [ %playmode.0, %sw.bb233 ], [ %playmode.0, %sw.bb231 ], [ %playmode.0, %sw.bb229 ], [ %playmode.0, %sw.bb227 ], [ %playmode.0, %sw.bb223 ], [ %playmode.0, %sw.bb221 ], [ %playmode.0, %sw.bb219 ], [ 19, %if.end216 ], [ 18, %sw.bb209 ], [ 17, %if.end206 ], [ 13, %if.end164 ], [ 12, %if.end155 ], [ 10, %if.end131 ], [ %playmode.0, %sw.bb104 ], [ %playmode.0, %sw.bb103 ], [ %playmode.0, %sw.bb102 ], [ %playmode.0, %sw.bb101 ], [ %playmode.0, %sw.bb100 ], [ %playmode.0, %sw.bb99 ], [ %playmode.0, %sw.bb97 ], [ %playmode.0, %sw.bb96 ], [ %playmode.0, %sw.bb95 ], [ %playmode.0, %sw.bb94 ], [ %playmode.0, %sw.bb93 ], [ %playmode.0, %sw.bb92 ], [ %playmode.0, %sw.bb91 ], [ %playmode.0, %sw.bb83 ], [ %playmode.0, %if.end82 ], [ %playmode.0, %if.end70 ], [ %playmode.0, %sw.bb59 ], [ %playmode.0, %sw.bb58 ], [ %playmode.0, %sw.bb52 ], [ %playmode.0, %sw.bb42 ], [ %playmode.0, %sw.bb41 ], [ %playmode.0, %sw.bb40 ], [ %playmode.0, %sw.bb32 ], [ %playmode.0, %sw.bb30 ], [ %playmode.0, %sw.bb29 ], [ %playmode.0, %sw.bb27 ], [ %playmode.0, %sw.bb25 ], [ %playmode.0, %sw.bb23 ], [ %playmode.0, %sw.bb22 ], [ %playmode.0, %sw.bb19 ], [ %playmode.0, %sw.bb17 ], [ %playmode.0, %sw.bb13 ], [ %playmode.0, %sw.bb11 ], [ %playmode.0, %sw.bb10 ], [ %playmode.0, %sw.bb9 ], [ %playmode.0, %sw.bb7 ], [ 8, %sw.bb5 ], [ %playmode.0, %sw.bb4 ], [ %playmode.0, %sw.bb3 ], [ %playmode.0, %sw.bb1 ], [ %playmode.0, %sw.bb ], [ 1, %sw.bb105 ], [ 2, %if.else ], [ 3, %if.else114 ], [ 11, %if.end139 ], [ 14, %if.end173 ], [ 15, %if.end189 ], [ 16, %while.body ], [ 9, %sw.bb249 ], [ 9, %if.else254 ], [ 9, %if.else259 ], [ %spec.select, %sw.bb270 ], [ %playmode.0, %sw.bb276 ], [ %playmode.0, %if.else281 ], [ %playmode.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %orientation.1 = phi i32 [ %orientation.0, %sw.bb293 ], [ %orientation.0, %sw.bb292 ], [ %orientation.0, %sw.bb275 ], [ %orientation.0, %if.end246 ], [ %orientation.0, %sw.bb238 ], [ %orientation.0, %sw.bb237 ], [ %orientation.0, %sw.bb236 ], [ %orientation.0, %sw.bb235 ], [ %orientation.0, %sw.bb233 ], [ %orientation.0, %sw.bb231 ], [ %orientation.0, %sw.bb229 ], [ %orientation.0, %sw.bb227 ], [ %orientation.0, %sw.bb223 ], [ %orientation.0, %sw.bb221 ], [ %orientation.0, %sw.bb219 ], [ %orientation.0, %if.end216 ], [ %orientation.0, %sw.bb209 ], [ %orientation.0, %if.end206 ], [ %orientation.0, %if.end164 ], [ %orientation.0, %if.end155 ], [ %orientation.0, %if.end131 ], [ %orientation.0, %sw.bb104 ], [ %orientation.0, %sw.bb103 ], [ %orientation.0, %sw.bb102 ], [ %orientation.0, %sw.bb101 ], [ %orientation.0, %sw.bb100 ], [ %orientation.0, %sw.bb99 ], [ %orientation.0, %sw.bb97 ], [ %orientation.0, %sw.bb96 ], [ %orientation.0, %sw.bb95 ], [ %orientation.0, %sw.bb94 ], [ %orientation.0, %sw.bb93 ], [ %orientation.0, %sw.bb92 ], [ %orientation.0, %sw.bb91 ], [ %orientation.0, %sw.bb83 ], [ %orientation.0, %if.end82 ], [ %orientation.0, %if.end70 ], [ %orientation.0, %sw.bb59 ], [ %orientation.0, %sw.bb58 ], [ %orientation.0, %sw.bb52 ], [ %call43, %sw.bb42 ], [ %orientation.0, %sw.bb41 ], [ %orientation.0, %sw.bb40 ], [ %orientation.0, %sw.bb32 ], [ %orientation.0, %sw.bb30 ], [ %orientation.0, %sw.bb29 ], [ %orientation.0, %sw.bb27 ], [ %orientation.0, %sw.bb25 ], [ %orientation.0, %sw.bb23 ], [ %orientation.0, %sw.bb22 ], [ %orientation.0, %sw.bb19 ], [ %orientation.0, %sw.bb17 ], [ %orientation.0, %sw.bb13 ], [ %orientation.0, %sw.bb11 ], [ %orientation.0, %sw.bb10 ], [ %orientation.0, %sw.bb9 ], [ %orientation.0, %sw.bb7 ], [ %orientation.0, %sw.bb5 ], [ %orientation.0, %sw.bb4 ], [ %orientation.0, %sw.bb3 ], [ %orientation.0, %sw.bb1 ], [ %orientation.0, %sw.bb ], [ %orientation.0, %sw.bb105 ], [ %orientation.0, %if.else ], [ %orientation.0, %if.else114 ], [ %orientation.0, %if.end139 ], [ %orientation.0, %if.end173 ], [ %orientation.0, %if.end189 ], [ %orientation.0, %while.body ], [ %orientation.0, %sw.bb249 ], [ %orientation.0, %if.else254 ], [ %orientation.0, %if.else259 ], [ %orientation.0, %sw.bb270 ], [ %orientation.0, %sw.bb276 ], [ %orientation.0, %if.else281 ], [ %orientation.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %seed.1 = phi i32 [ %seed.0, %sw.bb293 ], [ %seed.0, %sw.bb292 ], [ %seed.0, %sw.bb275 ], [ %seed.0, %if.end246 ], [ %seed.0, %sw.bb238 ], [ %seed.0, %sw.bb237 ], [ %seed.0, %sw.bb236 ], [ %seed.0, %sw.bb235 ], [ %seed.0, %sw.bb233 ], [ %seed.0, %sw.bb231 ], [ %seed.0, %sw.bb229 ], [ %seed.0, %sw.bb227 ], [ %seed.0, %sw.bb223 ], [ %seed.0, %sw.bb221 ], [ %seed.0, %sw.bb219 ], [ %seed.0, %if.end216 ], [ %seed.0, %sw.bb209 ], [ %seed.0, %if.end206 ], [ %seed.0, %if.end164 ], [ %seed.0, %if.end155 ], [ %seed.0, %if.end131 ], [ %seed.0, %sw.bb104 ], [ %seed.0, %sw.bb103 ], [ %seed.0, %sw.bb102 ], [ %seed.0, %sw.bb101 ], [ %seed.0, %sw.bb100 ], [ %seed.0, %sw.bb99 ], [ %seed.0, %sw.bb97 ], [ %seed.0, %sw.bb96 ], [ %seed.0, %sw.bb95 ], [ %seed.0, %sw.bb94 ], [ %seed.0, %sw.bb93 ], [ %seed.0, %sw.bb92 ], [ %seed.0, %sw.bb91 ], [ %seed.0, %sw.bb83 ], [ %seed.0, %if.end82 ], [ %seed.0, %if.end70 ], [ %seed.0, %sw.bb59 ], [ %seed.0, %sw.bb58 ], [ %seed.0, %sw.bb52 ], [ %seed.0, %sw.bb42 ], [ %seed.0, %sw.bb41 ], [ %seed.0, %sw.bb40 ], [ %seed.0, %sw.bb32 ], [ %seed.0, %sw.bb30 ], [ %seed.0, %sw.bb29 ], [ %seed.0, %sw.bb27 ], [ %seed.0, %sw.bb25 ], [ %seed.0, %sw.bb23 ], [ %seed.0, %sw.bb22 ], [ %seed.0, %sw.bb19 ], [ %seed.0, %sw.bb17 ], [ %seed.0, %sw.bb13 ], [ %seed.0, %sw.bb11 ], [ %seed.0, %sw.bb10 ], [ %seed.0, %sw.bb9 ], [ %call8, %sw.bb7 ], [ %seed.0, %sw.bb5 ], [ %seed.0, %sw.bb4 ], [ %seed.0, %sw.bb3 ], [ %seed.0, %sw.bb1 ], [ %seed.0, %sw.bb ], [ %seed.0, %sw.bb105 ], [ %seed.0, %if.else ], [ %seed.0, %if.else114 ], [ %seed.0, %if.end139 ], [ %seed.0, %if.end173 ], [ %seed.0, %if.end189 ], [ %seed.0, %while.body ], [ %seed.0, %sw.bb249 ], [ %seed.0, %if.else254 ], [ %seed.0, %if.else259 ], [ %seed.0, %sw.bb270 ], [ %seed.0, %sw.bb276 ], [ %seed.0, %if.else281 ], [ %seed.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %mandated_color.1 = phi i32 [ %mandated_color.0, %sw.bb293 ], [ %mandated_color.0, %sw.bb292 ], [ %mandated_color.0, %sw.bb275 ], [ %mandated_color.0, %if.end246 ], [ %mandated_color.0, %sw.bb238 ], [ %mandated_color.0, %sw.bb237 ], [ %mandated_color.0, %sw.bb236 ], [ %mandated_color.0, %sw.bb235 ], [ %mandated_color.0, %sw.bb233 ], [ %mandated_color.0, %sw.bb231 ], [ %mandated_color.0, %sw.bb229 ], [ %mandated_color.0, %sw.bb227 ], [ %mandated_color.0, %sw.bb223 ], [ %mandated_color.0, %sw.bb221 ], [ %mandated_color.0, %sw.bb219 ], [ %mandated_color.0, %if.end216 ], [ %mandated_color.0, %sw.bb209 ], [ %mandated_color.0, %if.end206 ], [ %mandated_color.0, %if.end164 ], [ %mandated_color.0, %if.end155 ], [ %mandated_color.0, %if.end131 ], [ %mandated_color.0, %sw.bb104 ], [ %mandated_color.0, %sw.bb103 ], [ %mandated_color.0, %sw.bb102 ], [ %mandated_color.0, %sw.bb101 ], [ %mandated_color.0, %sw.bb100 ], [ %mandated_color.0, %sw.bb99 ], [ %mandated_color.0, %sw.bb97 ], [ %mandated_color.0, %sw.bb96 ], [ %mandated_color.0, %sw.bb95 ], [ %mandated_color.0, %sw.bb94 ], [ %mandated_color.0, %sw.bb93 ], [ %mandated_color.0, %sw.bb92 ], [ %mandated_color.0, %sw.bb91 ], [ %mandated_color.0, %sw.bb83 ], [ %mandated_color.0, %if.end82 ], [ %mandated_color.0, %if.end70 ], [ %mandated_color.0, %sw.bb59 ], [ %mandated_color.0, %sw.bb58 ], [ %mandated_color.0, %sw.bb52 ], [ %mandated_color.0, %sw.bb42 ], [ %mandated_color.0, %sw.bb41 ], [ %mandated_color.0, %sw.bb40 ], [ %mandated_color.0, %sw.bb32 ], [ %mandated_color.0, %sw.bb30 ], [ %mandated_color.0, %sw.bb29 ], [ %mandated_color.0, %sw.bb27 ], [ %mandated_color.0, %sw.bb25 ], [ %mandated_color.0, %sw.bb23 ], [ %mandated_color.0, %sw.bb22 ], [ %mandated_color.0, %sw.bb19 ], [ %mandated_color.0, %sw.bb17 ], [ %mandated_color.0, %sw.bb13 ], [ %mandated_color.0, %sw.bb11 ], [ %mandated_color.0, %sw.bb10 ], [ %mandated_color.0, %sw.bb9 ], [ %mandated_color.0, %sw.bb7 ], [ %mandated_color.0, %sw.bb5 ], [ %mandated_color.0, %sw.bb4 ], [ %mandated_color.0, %sw.bb3 ], [ %mandated_color.0, %sw.bb1 ], [ %mandated_color.0, %sw.bb ], [ %mandated_color.0, %sw.bb105 ], [ %mandated_color.0, %if.else ], [ %mandated_color.0, %if.else114 ], [ %mandated_color.0, %if.end139 ], [ %mandated_color.0, %if.end173 ], [ %mandated_color.0, %if.end189 ], [ %mandated_color.0, %while.body ], [ %mandated_color.0, %sw.bb249 ], [ %mandated_color.0, %if.else254 ], [ %mandated_color.0, %if.else259 ], [ %mandated_color.0, %sw.bb270 ], [ 1, %sw.bb276 ], [ 2, %if.else281 ], [ %mandated_color.0, %while.cond33 ]</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %while.cond, !llvm.loop !17</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb2 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then398:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 %mandated_color.0, i32* %to_move401.phi.trans.insert, align 4, !tbaa !19</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end400</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">sw.bb3:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  store i32 1, i32* @allpats, align 4, !tbaa !7</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb3 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then378:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %141 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %142 = call i64 @fwrite(i8* getelementptr inbounds ([52 x i8], [52 x i8]* @.str.30, i64 0, i64 0), i64 51, i64 1, %struct._IO_FILE* %141) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then48:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %29 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call49 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %29, i8* getelementptr inbounds ([26 x i8], [26 x i8]* @.str.1, i64 0, i64 0), i32 %call43) #16</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %30 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %31 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.2, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %30) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb4 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then388:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %143 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %144 = call i64 @fwrite(i8* getelementptr inbounds ([37 x i8], [37 x i8]* @.str.31, i64 0, i64 0), i64 36, i64 1, %struct._IO_FILE* %143) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then67:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %40 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call68 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %40, i8* getelementptr inbounds ([23 x i8], [23 x i8]* @.str.6, i64 0, i64 0), i32 %call61) #16</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %41 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %42 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.2, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %41) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb5 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then393:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %145 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %146 = call i64 @fwrite(i8* getelementptr inbounds ([40 x i8], [40 x i8]* @.str.32, i64 0, i64 0), i64 39, i64 1, %struct._IO_FILE* %145) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then79:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %45 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call80 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %45, i8* getelementptr inbounds ([25 x i8], [25 x i8]* @.str.7, i64 0, i64 0), i32 %call73) #16</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %46 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %47 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.2, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %46) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb6 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then361:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %138 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call362 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %138, i8* getelementptr inbounds ([40 x i8], [40 x i8]* @.str.28, i64 0, i64 0), i8* nonnull %outfile.0) #16</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then129:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %59 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call130 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %59, i8* getelementptr inbounds ([30 x i8], [30 x i8]* @.str.14, i64 0, i64 0), i8* %58) #16</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb7 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then342:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %128 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call343 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %128, i8* getelementptr inbounds ([27 x i8], [27 x i8]* @.str.26, i64 0, i64 0), i8* nonnull %infilename.0) #16</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then153:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %66 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call154 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %66, i8* getelementptr inbounds ([30 x i8], [30 x i8]* @.str.14, i64 0, i64 0), i8* %65) #16</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb8 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then332:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %127 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %fputc = call i32 @fputc(i32 10, %struct._IO_FILE* %127)</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  call fastcc void @show_version() #19</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  call fastcc void @show_copyright() #19</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %if.end334</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then162:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %68 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call163 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %68, i8* getelementptr inbounds ([30 x i8], [30 x i8]* @.str.14, i64 0, i64 0), i8* %67) #16</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb9 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then407:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %150 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %151 = call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str.33, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %150) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then171:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %70 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %71 = call i64 @fwrite(i8* getelementptr inbounds ([55 x i8], [55 x i8]* @.str.17, i64 0, i64 0), i64 54, i64 1, %struct._IO_FILE* %70) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb10 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then413:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %153 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %154 = call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str.34, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %153) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then180:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %72 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %73 = call i64 @fwrite(i8* getelementptr inbounds ([55 x i8], [55 x i8]* @.str.17, i64 0, i64 0), i64 54, i64 1, %struct._IO_FILE* %72) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb11 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then420:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %164 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %165 = call i64 @fwrite(i8* getelementptr inbounds ([49 x i8], [49 x i8]* @.str.35, i64 0, i64 0), i64 48, i64 1, %struct._IO_FILE* %164) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup440</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then187:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %75 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %76 = call i64 @fwrite(i8* getelementptr inbounds ([64 x i8], [64 x i8]* @.str.18, i64 0, i64 0), i64 63, i64 1, %struct._IO_FILE* %75) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb12 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then426:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %167 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %168 = call i64 @fwrite(i8* getelementptr inbounds ([59 x i8], [59 x i8]* @.str.15, i64 0, i64 0), i64 58, i64 1, %struct._IO_FILE* %167) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup440</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then196:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %77 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %78 = call i64 @fwrite(i8* getelementptr inbounds ([64 x i8], [64 x i8]* @.str.18, i64 0, i64 0), i64 63, i64 1, %struct._IO_FILE* %77) #17</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb13 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then431:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %170 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %171 = call i64 @fwrite(i8* getelementptr inbounds ([59 x i8], [59 x i8]* @.str.15, i64 0, i64 0), i64 58, i64 1, %struct._IO_FILE* %170) #17</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %cleanup440</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then204:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %80 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call205 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %80, i8* getelementptr inbounds ([30 x i8], [30 x i8]* @.str.14, i64 0, i64 0), i8* %79) #16</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb14 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then450:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %184 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %185 = call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str.36, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %184) #17</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %cleanup462</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then214:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %82 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call215 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %82, i8* getelementptr inbounds ([30 x i8], [30 x i8]* @.str.14, i64 0, i64 0), i8* %81) #16</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb15 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then456:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %187 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %188 = call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str.37, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %187) #17</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %cleanup462</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then244:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %93 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  %call245 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %93, i8* getelementptr inbounds ([30 x i8], [30 x i8]* @.str.14, i64 0, i64 0), i8* %92) #16</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %gameinfo = alloca %struct.Gameinfo, align 8</td></tr>
+<tr><td align="left">  %sgftree = alloca %struct.SGFTree_t, align 8</td></tr>
+<tr><td align="left">  %decide_this = alloca [8 x i8], align 1</td></tr>
+<tr><td align="left">  %debuginfluence_move = alloca i32, align 4</td></tr>
+<tr><td align="left">  %m = alloca i32, align 4</td></tr>
+<tr><td align="left">  %n = alloca i32, align 4</td></tr>
+<tr><td align="left">  %m404 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %n405 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %ai = alloca i32, align 4</td></tr>
+<tr><td align="left">  %aj = alloca i32, align 4</td></tr>
+<tr><td align="left">  %bi = alloca i32, align 4</td></tr>
+<tr><td align="left">  %bj = alloca i32, align 4</td></tr>
+<tr><td align="left">  %m447 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %n448 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %m467 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %n468 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %ai487 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %aj488 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %bi489 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %bj490 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %ai519 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %aj520 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %bi521 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %bj522 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %m564 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %n565 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %m598 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %n599 = alloca i32, align 4</td></tr>
+<tr><td align="left">  %0 = bitcast %struct.Gameinfo* %gameinfo to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 32, i8* nonnull %0) #13</td></tr>
+<tr><td align="left">  %1 = bitcast %struct.SGFTree_t* %sgftree to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %1) #13</td></tr>
+<tr><td align="left">  %2 = getelementptr inbounds [8 x i8], [8 x i8]* %decide_this, i64 0, i64 0</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 8, i8* nonnull %2) #13</td></tr>
+<tr><td align="left">  %3 = bitcast i32* %debuginfluence_move to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %3) #13</td></tr>
+<tr><td align="left">  store i32 0, i32* %debuginfluence_move, align 4</td></tr>
+<tr><td align="left">  store float 0.000000e+00, float* @komi, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  store i32 10, i32* @level, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 250, i32* @semeai_variations, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_backfill_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_backfill2_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_superstring_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_fourlib_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_ko_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_branch_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_owl_distrust_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_owl_branch_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_owl_reading_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_owl_node_limit, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 -1, i32* @mandated_aa_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 0, i32* @debug, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 1, i32* @fusekidb, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 0, i32* @disable_fuseki, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 1, i32* @josekidb, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 0, i32* @chinese_rules, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 0, i32* @owl_threats, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 0, i32* @experimental_owl_ext, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 1, i32* @experimental_semeai, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 1, i32* @experimental_connections, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 0, i32* @allow_suicide, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 0, i32* @capture_all_dead, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  store i32 0, i32* @play_out_aftermath, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @sgftree_clear(%struct.SGFTree_t* nonnull %sgftree) #14</td></tr>
+<tr><td align="left">  %4 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %5 = load float, float* @komi, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  call void @gameinfo_clear(%struct.Gameinfo* nonnull %gameinfo, i32 %4, float %5) #14</td></tr>
+<tr><td align="left">  %handicap71 = getelementptr inbounds %struct.Gameinfo, %struct.Gameinfo* %gameinfo, i64 0, i32 0</td></tr>
+<tr><td align="left">  br label %while.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond:</td></tr>
+<tr><td align="left">  %replay_color.0 = phi i32 [ 0, %entry ], [ %replay_color.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %infilename.0 = phi i8* [ null, %entry ], [ %infilename.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %untilstring.0 = phi i8* [ null, %entry ], [ %untilstring.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %scoringmode.0 = phi i8* [ null, %entry ], [ %scoringmode.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %outfile.0 = phi i8* [ null, %entry ], [ %outfile.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %gtpfile.0 = phi i8* [ null, %entry ], [ %gtpfile.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %printsgffile.0 = phi i8* [ null, %entry ], [ %printsgffile.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %decide_that.0 = phi i8* [ null, %entry ], [ %decide_that.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %benchmark.0 = phi i32 [ 0, %entry ], [ %benchmark.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %playmode.0 = phi i32 [ 0, %entry ], [ %playmode.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %orientation.0 = phi i32 [ 0, %entry ], [ %orientation.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %seed.0 = phi i32 [ 0, %entry ], [ %seed.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %mandated_color.0 = phi i32 [ 0, %entry ], [ %mandated_color.1, %sw.epilog319 ]</td></tr>
+<tr><td align="left">  %call = call i32 @gg_getopt_long(i32 %argc, i8** %argv, i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str, i64 0, i64 0), %struct.gg_option* getelementptr inbounds ([83 x %struct.gg_option], [83 x %struct.gg_option]* @long_options, i64 0, i64 0), i32* null) #14</td></tr>
+<tr><td align="left">  %cmp.not = icmp eq i32 %call, -1</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp.not, label %while.end320, label %while.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.body:</td></tr>
+<tr><td align="left">  switch i32 %call, label %sw.default [
+    i32 84, label %sw.bb
+    i32 116, label %sw.bb1
+    i32 97, label %sw.bb3
+    i32 1, label %sw.bb4
+    i32 108, label %sw.bb4
+    i32 98, label %sw.bb5
+    i32 114, label %sw.bb7
+    i32 83, label %sw.bb9
+    i32 119, label %sw.bb10
+    i32 109, label %sw.bb11
+    i32 100, label %sw.bb13
+    i32 68, label %sw.bb17
+    i32 72, label %sw.bb19
+    i32 69, label %sw.bb22
+    i32 66, label %sw.bb23
+    i32 70, label %sw.bb25
+    i32 75, label %sw.bb27
+    i32 76, label %sw.bb29
+    i32 111, label %sw.bb30
+    i32 79, label %sw.bb32
+    i32 138, label %sw.bb40
+    i32 139, label %sw.bb41
+    i32 140, label %sw.bb42
+    i32 141, label %sw.bb52
+    i32 156, label %sw.bb54
+    i32 176, label %sw.bb58
+    i32 177, label %sw.bb59
+    i32 128, label %sw.bb60
+    i32 127, label %sw.bb72
+    i32 130, label %sw.bb83
+    i32 181, label %sw.bb91
+    i32 182, label %sw.bb92
+    i32 183, label %sw.bb93
+    i32 184, label %sw.bb94
+    i32 152, label %sw.bb95
+    i32 151, label %sw.bb96
+    i32 153, label %sw.bb97
+    i32 157, label %sw.bb99
+    i32 154, label %sw.bb100
+    i32 158, label %sw.bb101
+    i32 185, label %sw.bb102
+    i32 186, label %sw.bb103
+    i32 187, label %sw.bb104
+    i32 135, label %sw.bb105
+    i32 144, label %sw.bb125
+    i32 145, label %sw.bb133
+    i32 146, label %sw.bb149
+    i32 147, label %sw.bb158
+    i32 148, label %sw.bb167
+    i32 150, label %sw.bb183
+    i32 160, label %sw.epilog319
+    i32 161, label %sw.bb200
+    i32 162, label %sw.bb209
+    i32 149, label %sw.bb210
+    i32 163, label %sw.bb219
+    i32 164, label %sw.bb221
+    i32 165, label %sw.bb223
+    i32 166, label %sw.bb225
+    i32 168, label %while.body.sw.bb227_crit_edge
+    i32 169, label %sw.bb229
+    i32 170, label %sw.bb231
+    i32 171, label %sw.bb233
+    i32 172, label %sw.bb235
+    i32 173, label %sw.bb236
+    i32 174, label %sw.bb237
+    i32 175, label %sw.bb238
+    i32 178, label %sw.bb240
+    i32 143, label %sw.bb249
+    i32 179, label %sw.bb270
+    i32 180, label %sw.bb275
+    i32 129, label %sw.bb276
+    i32 142, label %sw.bb291
+    i32 188, label %sw.bb292
+    i32 189, label %sw.bb293
+    i32 118, label %sw.bb295
+    i32 104, label %sw.bb296
+    i32 167, label %sw.bb316
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.body.sw.bb227_crit_edge:</td></tr>
+<tr><td align="left">  %.pre = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  br label %sw.bb227</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb:</td></tr>
+<tr><td align="left">  %6 = load i32, i32* @printboard, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %inc = add nsw i32 %6, 1</td></tr>
+<tr><td align="left">  store i32 %inc, i32* @printboard, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb1:</td></tr>
+<tr><td align="left">  %7 = load i32, i32* @verbose, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %inc2 = add nsw i32 %7, 1</td></tr>
+<tr><td align="left">  store i32 %inc2, i32* @verbose, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb4:</td></tr>
+<tr><td align="left">  %8 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb5:</td></tr>
+<tr><td align="left">  %9 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call6 = call i32 @atoi(i8* %9) #15</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb7:</td></tr>
+<tr><td align="left">  %10 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call8 = call i32 @atoi(i8* %10) #15</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb9:</td></tr>
+<tr><td align="left">  store i32 1, i32* @showstatistics, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb10:</td></tr>
+<tr><td align="left">  store i32 1, i32* @printworms, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb11:</td></tr>
+<tr><td align="left">  %11 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call12 = call i64 @strtol(i8* nocapture %11, i8** null, i32 0) #14</td></tr>
+<tr><td align="left">  %conv = trunc i64 %call12 to i32</td></tr>
+<tr><td align="left">  store i32 %conv, i32* @printmoyo, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb13:</td></tr>
+<tr><td align="left">  %12 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call14 = call i64 @strtol(i8* nocapture %12, i8** null, i32 0) #14</td></tr>
+<tr><td align="left">  %13 = load i32, i32* @debug, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %14 = trunc i64 %call14 to i32</td></tr>
+<tr><td align="left">  %conv16 = xor i32 %13, %14</td></tr>
+<tr><td align="left">  store i32 %conv16, i32* @debug, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb13 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb17:</td></tr>
+<tr><td align="left">  %15 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call18 = call i32 @atoi(i8* %15) #15</td></tr>
+<tr><td align="left">  store i32 %call18, i32* @mandated_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb14 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb19:</td></tr>
+<tr><td align="left">  %16 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call20 = call i64 @strtol(i8* nocapture %16, i8** null, i32 0) #14</td></tr>
+<tr><td align="left">  %conv21 = trunc i64 %call20 to i32</td></tr>
+<tr><td align="left">  store i32 %conv21, i32* @hashflags, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb15 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb22:</td></tr>
+<tr><td align="left">  store i32 2, i32* @printboard, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb23:</td></tr>
+<tr><td align="left">  %17 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call24 = call i32 @atoi(i8* %17) #15</td></tr>
+<tr><td align="left">  store i32 %call24, i32* @mandated_backfill_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb25:</td></tr>
+<tr><td align="left">  %18 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call26 = call i32 @atoi(i8* %18) #15</td></tr>
+<tr><td align="left">  store i32 %call26, i32* @mandated_fourlib_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb27:</td></tr>
+<tr><td align="left">  %19 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call28 = call i32 @atoi(i8* %19) #15</td></tr>
+<tr><td align="left">  store i32 %call28, i32* @mandated_ko_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb19 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb29:</td></tr>
+<tr><td align="left">  %20 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb20 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb30:</td></tr>
+<tr><td align="left">  %21 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call31 = call i8* @strcpy(i8* noundef nonnull dereferenceable(1) getelementptr inbounds ([128 x i8], [128 x i8]* @outfilename, i64 0, i64 0), i8* noundef nonnull dereferenceable(1) %21) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb21 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb32:</td></tr>
+<tr><td align="left">  %22 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  store i32 0, i32* @output_flags, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i8* %22, null</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %sw.epilog319, label %while.cond33</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb22 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond33:</td></tr>
+<tr><td align="left">  %23 = phi i32 [ %25, %sw.epilog ], [ 0, %sw.bb32 ]</td></tr>
+<tr><td align="left">  %outflags.0 = phi i8* [ %incdec.ptr, %sw.epilog ], [ %22, %sw.bb32 ]</td></tr>
+<tr><td align="left">  %24 = load i8, i8* %outflags.0, align 1, !tbaa !11</td></tr>
+<tr><td align="left">  %tobool34.not = icmp eq i8 %24, 0</td></tr>
+<tr><td align="left">  br i1 %tobool34.not, label %sw.epilog319, label %while.body35</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.body35:</td></tr>
+<tr><td align="left">  %conv36 = sext i8 %24 to i32</td></tr>
+<tr><td align="left">  switch i32 %conv36, label %sw.epilog [
+    i32 100, label %sw.bb37
+    i32 118, label %sw.bb38
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb24 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb37:</td></tr>
+<tr><td align="left">  %or = or i32 %23, 1</td></tr>
+<tr><td align="left">  br label %sw.epilog.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb25 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb38:</td></tr>
+<tr><td align="left">  %or39 = or i32 %23, 2</td></tr>
+<tr><td align="left">  br label %sw.epilog.sink.split</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.epilog.sink.split:</td></tr>
+<tr><td align="left">  %or39.sink = phi i32 [ %or39, %sw.bb38 ], [ %or, %sw.bb37 ]</td></tr>
+<tr><td align="left">  store i32 %or39.sink, i32* @output_flags, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb27 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.epilog:</td></tr>
+<tr><td align="left">  %25 = phi i32 [ %23, %while.body35 ], [ %or39.sink, %sw.epilog.sink.split ]</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds i8, i8* %outflags.0, i64 1</td></tr>
+<tr><td align="left">  br label %while.cond33, !llvm.loop !12</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb28 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb40:</td></tr>
+<tr><td align="left">  store i32 1, i32* @quiet, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb29 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb41:</td></tr>
+<tr><td align="left">  %26 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb30 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb42:</td></tr>
+<tr><td align="left">  %27 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call43 = call i32 @atoi(i8* %27) #15</td></tr>
+<tr><td align="left">  %28 = icmp ugt i32 %call43, 7</td></tr>
+<tr><td align="left">  br i1 %28, label %if.then48, label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb31 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb52:</td></tr>
+<tr><td align="left">  %32 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call53 = call i32 @atoi(i8* %32) #15</td></tr>
+<tr><td align="left">  store i32 %call53, i32* @gtp_version, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb32 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb54:</td></tr>
+<tr><td align="left">  %33 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %34 = call i64 @fwrite(i8* getelementptr inbounds ([52 x i8], [52 x i8]* @.str.3, i64 0, i64 0), i64 51, i64 1, %struct._IO_FILE* %33) #17</td></tr>
+<tr><td align="left">  %35 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %36 = call i64 @fwrite(i8* getelementptr inbounds ([47 x i8], [47 x i8]* @.str.4, i64 0, i64 0), i64 46, i64 1, %struct._IO_FILE* %35) #17</td></tr>
+<tr><td align="left">  %37 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call57 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %37, i8* getelementptr inbounds ([20 x i8], [20 x i8]* @.str.5, i64 0, i64 0), i32 1000) #16</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb33 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb58:</td></tr>
+<tr><td align="left">  store i32 1, i32* @showtime, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb34 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb59:</td></tr>
+<tr><td align="left">  store i32 1, i32* @showscore, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb35 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb60:</td></tr>
+<tr><td align="left">  %38 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call61 = call i32 @atoi(i8* %38) #15</td></tr>
+<tr><td align="left">  %39 = icmp ugt i32 %call61, 9</td></tr>
+<tr><td align="left">  br i1 %39, label %if.then67, label %if.end70</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb36 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end70:</td></tr>
+<tr><td align="left">  store i32 %call61, i32* %handicap71, align 8, !tbaa !14</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb37 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb72:</td></tr>
+<tr><td align="left">  %43 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call73 = call i32 @atoi(i8* %43) #15</td></tr>
+<tr><td align="left">  %call73.off = add i32 %call73, -5</td></tr>
+<tr><td align="left">  %44 = icmp ugt i32 %call73.off, 14</td></tr>
+<tr><td align="left">  br i1 %44, label %if.then79, label %if.end82</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb38 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end82:</td></tr>
+<tr><td align="left">  call void @gnugo_clear_board(i32 %call73) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb83:</td></tr>
+<tr><td align="left">  %48 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call84 = call i32 (i8*, i8*, ...) @__isoc99_sscanf(i8* %48, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.8, i64 0, i64 0), float* nonnull @komi) #14</td></tr>
+<tr><td align="left">  %cmp85.not = icmp eq i32 %call84, 1</td></tr>
+<tr><td align="left">  br i1 %cmp85.not, label %sw.epilog319, label %if.then87</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb40 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then87:</td></tr>
+<tr><td align="left">  %49 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %50 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call88 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %49, i8* getelementptr inbounds ([28 x i8], [28 x i8]* @.str.9, i64 0, i64 0), i8* %50) #16</td></tr>
+<tr><td align="left">  %51 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %52 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.2, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %51) #17</td></tr>
+<tr><td align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb41 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb91:</td></tr>
+<tr><td align="left">  store i32 1, i32* @chinese_rules, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb42 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb92:</td></tr>
+<tr><td align="left">  store i32 1, i32* @owl_threats, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb43 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb93:</td></tr>
+<tr><td align="left">  store i32 0, i32* @owl_threats, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb44 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb94:</td></tr>
+<tr><td align="left">  store i32 0, i32* @chinese_rules, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb45 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb95:</td></tr>
+<tr><td align="left">  store i32 1, i32* @experimental_owl_ext, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb46 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb96:</td></tr>
+<tr><td align="left">  store i32 1, i32* @experimental_semeai, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb47 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb97:</td></tr>
+<tr><td align="left">  %53 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call98 = call i32 @atoi(i8* %53) #15</td></tr>
+<tr><td align="left">  store i32 %call98, i32* @semeai_variations, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb48 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb99:</td></tr>
+<tr><td align="left">  store i32 0, i32* @experimental_semeai, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb49 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb100:</td></tr>
+<tr><td align="left">  store i32 1, i32* @experimental_connections, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb50 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb101:</td></tr>
+<tr><td align="left">  store i32 0, i32* @experimental_connections, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb51 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb102:</td></tr>
+<tr><td align="left">  store i32 1, i32* @allow_suicide, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb52 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb103:</td></tr>
+<tr><td align="left">  store i32 1, i32* @capture_all_dead, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb53 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb104:</td></tr>
+<tr><td align="left">  store i32 1, i32* @play_out_aftermath, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb54 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb105:</td></tr>
+<tr><td align="left">  %54 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call106 = call i32 @strcmp(i8* noundef nonnull dereferenceable(1) %54, i8* noundef nonnull dereferenceable(6) getelementptr inbounds ([6 x i8], [6 x i8]* @.str.10, i64 0, i64 0)) #15</td></tr>
+<tr><td align="left">  %cmp107 = icmp eq i32 %call106, 0</td></tr>
+<tr><td align="left">  br i1 %cmp107, label %sw.epilog319, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb55 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %call110 = call i32 @strcmp(i8* noundef nonnull dereferenceable(1) %54, i8* noundef nonnull dereferenceable(6) getelementptr inbounds ([6 x i8], [6 x i8]* @.str.11, i64 0, i64 0)) #15</td></tr>
+<tr><td align="left">  %cmp111 = icmp eq i32 %call110, 0</td></tr>
+<tr><td align="left">  br i1 %cmp111, label %sw.epilog319, label %if.else114</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb56 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else114:</td></tr>
+<tr><td align="left">  %call115 = call i32 @strcmp(i8* noundef nonnull dereferenceable(1) %54, i8* noundef nonnull dereferenceable(4) getelementptr inbounds ([4 x i8], [4 x i8]* @.str.12, i64 0, i64 0)) #15</td></tr>
+<tr><td align="left">  %cmp116 = icmp eq i32 %call115, 0</td></tr>
+<tr><td align="left">  br i1 %cmp116, label %sw.epilog319, label %if.else119</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb57 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else119:</td></tr>
+<tr><td align="left">  %55 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call120 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %55, i8* getelementptr inbounds ([28 x i8], [28 x i8]* @.str.13, i64 0, i64 0), i8* %54) #16</td></tr>
+<tr><td align="left">  %56 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %57 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.2, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %56) #17</td></tr>
+<tr><td align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb58 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb125:</td></tr>
+<tr><td align="left">  %58 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call126 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %58) #15</td></tr>
+<tr><td align="left">  %cmp127 = icmp ugt i64 %call126, 3</td></tr>
+<tr><td align="left">  br i1 %cmp127, label %if.then129, label %if.end131</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb59 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end131:</td></tr>
+<tr><td align="left">  %call132 = call i8* @strcpy(i8* noundef nonnull %2, i8* noundef nonnull dereferenceable(1) %58) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb60 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb133:</td></tr>
+<tr><td align="left">  %60 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call134 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %60) #15</td></tr>
+<tr><td align="left">  %cmp135 = icmp ugt i64 %call134, 7</td></tr>
+<tr><td align="left">  br i1 %cmp135, label %if.then137, label %if.end139</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb61 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then137:</td></tr>
+<tr><td align="left">  %61 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %62 = call i64 @fwrite(i8* getelementptr inbounds ([59 x i8], [59 x i8]* @.str.15, i64 0, i64 0), i64 58, i64 1, %struct._IO_FILE* %61) #17</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb62 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end139:</td></tr>
+<tr><td align="left">  %call141 = call i8* @strcpy(i8* noundef nonnull %2, i8* noundef nonnull dereferenceable(1) %60) #14</td></tr>
+<tr><td align="left">  %call143 = call i8* @strtok(i8* nonnull %2, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.16, i64 0, i64 0)) #14</td></tr>
+<tr><td align="left">  %call144 = call i8* @strtok(i8* null, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.16, i64 0, i64 0)) #14</td></tr>
+<tr><td align="left">  %tobool145.not = icmp eq i8* %call144, null</td></tr>
+<tr><td align="left">  br i1 %tobool145.not, label %if.then146, label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb63 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then146:</td></tr>
+<tr><td align="left">  %63 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %64 = call i64 @fwrite(i8* getelementptr inbounds ([59 x i8], [59 x i8]* @.str.15, i64 0, i64 0), i64 58, i64 1, %struct._IO_FILE* %63) #17</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb64 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb149:</td></tr>
+<tr><td align="left">  %65 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call150 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %65) #15</td></tr>
+<tr><td align="left">  %cmp151 = icmp ugt i64 %call150, 3</td></tr>
+<tr><td align="left">  br i1 %cmp151, label %if.then153, label %if.end155</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb65 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end155:</td></tr>
+<tr><td align="left">  %call157 = call i8* @strcpy(i8* noundef nonnull %2, i8* noundef nonnull dereferenceable(1) %65) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb66 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb158:</td></tr>
+<tr><td align="left">  %67 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call159 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %67) #15</td></tr>
+<tr><td align="left">  %cmp160 = icmp ugt i64 %call159, 3</td></tr>
+<tr><td align="left">  br i1 %cmp160, label %if.then162, label %if.end164</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb67 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end164:</td></tr>
+<tr><td align="left">  %call166 = call i8* @strcpy(i8* noundef nonnull %2, i8* noundef nonnull dereferenceable(1) %67) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb68 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb167:</td></tr>
+<tr><td align="left">  %69 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call168 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %69) #15</td></tr>
+<tr><td align="left">  %cmp169 = icmp ugt i64 %call168, 7</td></tr>
+<tr><td align="left">  br i1 %cmp169, label %if.then171, label %if.end173</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb69 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end173:</td></tr>
+<tr><td align="left">  %call175 = call i8* @strcpy(i8* noundef nonnull %2, i8* noundef nonnull dereferenceable(1) %69) #14</td></tr>
+<tr><td align="left">  %call177 = call i8* @strtok(i8* nonnull %2, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.16, i64 0, i64 0)) #14</td></tr>
+<tr><td align="left">  %call178 = call i8* @strtok(i8* null, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.16, i64 0, i64 0)) #14</td></tr>
+<tr><td align="left">  %tobool179.not = icmp eq i8* %call178, null</td></tr>
+<tr><td align="left">  br i1 %tobool179.not, label %if.then180, label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb70 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb183:</td></tr>
+<tr><td align="left">  %74 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call184 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %74) #15</td></tr>
+<tr><td align="left">  %cmp185 = icmp ugt i64 %call184, 7</td></tr>
+<tr><td align="left">  br i1 %cmp185, label %if.then187, label %if.end189</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb71 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end189:</td></tr>
+<tr><td align="left">  %call191 = call i8* @strcpy(i8* noundef nonnull %2, i8* noundef nonnull dereferenceable(1) %74) #14</td></tr>
+<tr><td align="left">  %call193 = call i8* @strtok(i8* nonnull %2, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.16, i64 0, i64 0)) #14</td></tr>
+<tr><td align="left">  %call194 = call i8* @strtok(i8* null, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.16, i64 0, i64 0)) #14</td></tr>
+<tr><td align="left">  %tobool195.not = icmp eq i8* %call194, null</td></tr>
+<tr><td align="left">  br i1 %tobool195.not, label %if.then196, label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb72 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb200:</td></tr>
+<tr><td align="left">  %79 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call201 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %79) #15</td></tr>
+<tr><td align="left">  %cmp202 = icmp ugt i64 %call201, 3</td></tr>
+<tr><td align="left">  br i1 %cmp202, label %if.then204, label %if.end206</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb73 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end206:</td></tr>
+<tr><td align="left">  %call208 = call i8* @strcpy(i8* noundef nonnull %2, i8* noundef nonnull dereferenceable(1) %79) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb74 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb209:</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb75 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb210:</td></tr>
+<tr><td align="left">  %81 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call211 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %81) #15</td></tr>
+<tr><td align="left">  %cmp212 = icmp ugt i64 %call211, 3</td></tr>
+<tr><td align="left">  br i1 %cmp212, label %if.then214, label %if.end216</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb76 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end216:</td></tr>
+<tr><td align="left">  %call218 = call i8* @strcpy(i8* noundef nonnull %2, i8* noundef nonnull dereferenceable(1) %81) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb77 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb219:</td></tr>
+<tr><td align="left">  %83 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call220 = call i32 @atoi(i8* %83) #15</td></tr>
+<tr><td align="left">  store i32 %call220, i32* @mandated_branch_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb78 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb221:</td></tr>
+<tr><td align="left">  %84 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call222 = call i32 @atoi(i8* %84) #15</td></tr>
+<tr><td align="left">  store i32 %call222, i32* @mandated_backfill2_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb79 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb223:</td></tr>
+<tr><td align="left">  %85 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call224 = call i32 @atoi(i8* %85) #15</td></tr>
+<tr><td align="left">  store i32 %call224, i32* @mandated_superstring_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb80 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb225:</td></tr>
+<tr><td align="left">  %86 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call226 = call i32 @atoi(i8* %86) #15</td></tr>
+<tr><td align="left">  store i32 %call226, i32* @mandated_aa_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.bb227</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb81 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb227:</td></tr>
+<tr><td align="left">  %87 = phi i8* [ %.pre, %while.body.sw.bb227_crit_edge ], [ %86, %sw.bb225 ]</td></tr>
+<tr><td align="left">  %call228 = call i32 @atoi(i8* %87) #15</td></tr>
+<tr><td align="left">  store i32 %call228, i32* @mandated_owl_distrust_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb82 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb229:</td></tr>
+<tr><td align="left">  %88 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call230 = call i32 @atoi(i8* %88) #15</td></tr>
+<tr><td align="left">  store i32 %call230, i32* @mandated_owl_branch_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb83 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb231:</td></tr>
+<tr><td align="left">  %89 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call232 = call i32 @atoi(i8* %89) #15</td></tr>
+<tr><td align="left">  store i32 %call232, i32* @mandated_owl_reading_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb84 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb233:</td></tr>
+<tr><td align="left">  %90 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call234 = call i32 @atoi(i8* %90) #15</td></tr>
+<tr><td align="left">  store i32 %call234, i32* @mandated_owl_node_limit, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb85 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb235:</td></tr>
+<tr><td align="left">  store i32 0, i32* @fusekidb, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb86 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb236:</td></tr>
+<tr><td align="left">  store i32 1, i32* @disable_fuseki, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb87 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb237:</td></tr>
+<tr><td align="left">  store i32 0, i32* @josekidb, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb88 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb238:</td></tr>
+<tr><td align="left">  %91 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call239 = call i32 @atoi(i8* %91) #15</td></tr>
+<tr><td align="left">  store i32 %call239, i32* @level, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb89 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb240:</td></tr>
+<tr><td align="left">  %92 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call241 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %92) #15</td></tr>
+<tr><td align="left">  %cmp242 = icmp ugt i64 %call241, 3</td></tr>
+<tr><td align="left">  br i1 %cmp242, label %if.then244, label %if.end246</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb90 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end246:</td></tr>
+<tr><td align="left">  %call248 = call i8* @strcpy(i8* noundef nonnull %3, i8* noundef nonnull dereferenceable(1) %92) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb91 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb249:</td></tr>
+<tr><td align="left">  %94 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call250 = call i32 @strcmp(i8* noundef nonnull dereferenceable(1) %94, i8* noundef nonnull dereferenceable(6) getelementptr inbounds ([6 x i8], [6 x i8]* @.str.19, i64 0, i64 0)) #15</td></tr>
+<tr><td align="left">  %cmp251 = icmp eq i32 %call250, 0</td></tr>
+<tr><td align="left">  br i1 %cmp251, label %sw.epilog319, label %if.else254</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb92 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else254:</td></tr>
+<tr><td align="left">  %call255 = call i32 @strcmp(i8* noundef nonnull dereferenceable(1) %94, i8* noundef nonnull dereferenceable(6) getelementptr inbounds ([6 x i8], [6 x i8]* @.str.20, i64 0, i64 0)) #15</td></tr>
+<tr><td align="left">  %cmp256 = icmp eq i32 %call255, 0</td></tr>
+<tr><td align="left">  br i1 %cmp256, label %sw.epilog319, label %if.else259</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb93 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else259:</td></tr>
+<tr><td align="left">  %call260 = call i32 @strcmp(i8* noundef nonnull dereferenceable(1) %94, i8* noundef nonnull dereferenceable(5) getelementptr inbounds ([5 x i8], [5 x i8]* @.str.21, i64 0, i64 0)) #15</td></tr>
+<tr><td align="left">  %cmp261 = icmp eq i32 %call260, 0</td></tr>
+<tr><td align="left">  br i1 %cmp261, label %sw.epilog319, label %if.else264</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb94 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else264:</td></tr>
+<tr><td align="left">  %95 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call265 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %95, i8* getelementptr inbounds ([26 x i8], [26 x i8]* @.str.22, i64 0, i64 0), i8* %94) #16</td></tr>
+<tr><td align="left">  %96 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %97 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.2, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %96) #17</td></tr>
+<tr><td align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb95 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb270:</td></tr>
+<tr><td align="left">  %98 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %cmp271 = icmp eq i32 %playmode.0, 0</td></tr>
+<tr><td align="left">  %spec.select = select i1 %cmp271, i32 6, i32 %playmode.0</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb96 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb275:</td></tr>
+<tr><td align="left">  %99 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb97 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb276:</td></tr>
+<tr><td align="left">  %100 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call277 = call i32 @strcmp(i8* noundef nonnull dereferenceable(1) %100, i8* noundef nonnull dereferenceable(6) getelementptr inbounds ([6 x i8], [6 x i8]* @.str.19, i64 0, i64 0)) #15</td></tr>
+<tr><td align="left">  %cmp278 = icmp eq i32 %call277, 0</td></tr>
+<tr><td align="left">  br i1 %cmp278, label %sw.epilog319, label %if.else281</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb98 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else281:</td></tr>
+<tr><td align="left">  %call282 = call i32 @strcmp(i8* noundef nonnull dereferenceable(1) %100, i8* noundef nonnull dereferenceable(6) getelementptr inbounds ([6 x i8], [6 x i8]* @.str.20, i64 0, i64 0)) #15</td></tr>
+<tr><td align="left">  %cmp283 = icmp eq i32 %call282, 0</td></tr>
+<tr><td align="left">  br i1 %cmp283, label %sw.epilog319, label %if.else286</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb99 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else286:</td></tr>
+<tr><td align="left">  %101 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call287 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %101, i8* getelementptr inbounds ([29 x i8], [29 x i8]* @.str.23, i64 0, i64 0), i8* %100) #16</td></tr>
+<tr><td align="left">  %102 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %103 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.2, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %102) #17</td></tr>
+<tr><td align="left">  call void @exit(i32 1) #18</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb100 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb291:</td></tr>
+<tr><td align="left">  call fastcc void @show_copyright() #19</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb101 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb292:</td></tr>
+<tr><td align="left">  store i32 1, i32* @play_mirror_go, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb102 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb293:</td></tr>
+<tr><td align="left">  %104 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call294 = call i32 @atoi(i8* %104) #15</td></tr>
+<tr><td align="left">  store i32 %call294, i32* @mirror_stones_limit, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  br label %sw.epilog319</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb103 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb295:</td></tr>
+<tr><td align="left">  call fastcc void @show_version() #19</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb104 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb296:</td></tr>
+<tr><td align="left">  call fastcc void @show_version() #19</td></tr>
+<tr><td align="left">  %105 = load i8*, i8** @gg_optarg, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %tobool297.not = icmp eq i8* %105, null</td></tr>
+<tr><td align="left">  br i1 %tobool297.not, label %if.else304, label %if.then298</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb105 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then298:</td></tr>
+<tr><td align="left">  %call299 = call i32 @strncmp(i8* noundef nonnull %105, i8* noundef nonnull dereferenceable(6) getelementptr inbounds ([6 x i8], [6 x i8]* @.str.24, i64 0, i64 0), i64 5) #15</td></tr>
+<tr><td align="left">  %cmp300 = icmp eq i32 %call299, 0</td></tr>
+<tr><td align="left">  br i1 %cmp300, label %if.then302, label %cleanup638</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb106 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then302:</td></tr>
+<tr><td align="left">  call fastcc void @show_debug_help() #19</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb107 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else304:</td></tr>
+<tr><td align="left">  %106 = load i32, i32* @gg_optind, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp305 = icmp slt i32 %106, %argc</td></tr>
+<tr><td align="left">  br i1 %cmp305, label %if.then307, label %if.else313</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb108 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then307:</td></tr>
+<tr><td align="left">  %idxprom = sext i32 %106 to i64</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds i8*, i8** %argv, i64 %idxprom</td></tr>
+<tr><td align="left">  %107 = load i8*, i8** %arrayidx, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call308 = call i32 @strncmp(i8* noundef nonnull dereferenceable(1) %107, i8* noundef nonnull dereferenceable(6) getelementptr inbounds ([6 x i8], [6 x i8]* @.str.24, i64 0, i64 0), i64 5) #15</td></tr>
+<tr><td align="left">  %cmp309 = icmp eq i32 %call308, 0</td></tr>
+<tr><td align="left">  br i1 %cmp309, label %if.then311, label %cleanup638</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb109 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then311:</td></tr>
+<tr><td align="left">  call fastcc void @show_debug_help() #19</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb110 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else313:</td></tr>
+<tr><td align="left">  call void @set_depth_values(i32 10) #14</td></tr>
+<tr><td align="left">  %108 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %109 = load i32, i32* @depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %110 = load i32, i32* @backfill_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %111 = load i32, i32* @fourlib_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %112 = load i32, i32* @ko_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %113 = load i32, i32* @branch_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %114 = load i32, i32* @backfill2_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %115 = load i32, i32* @superstring_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %116 = load i32, i32* @aa_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %117 = load i32, i32* @owl_distrust_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %118 = load i32, i32* @owl_branch_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %119 = load i32, i32* @owl_reading_depth, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %120 = load i32, i32* @owl_node_limit, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call.i = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %108, i8* getelementptr inbounds ([1519 x i8], [1519 x i8]* @.str.132, i64 0, i64 0), i32 %109, i32 %110, i32 %111, i32 %112, i32 %113, i32 %114, i32 %115, i32 %116, i32 %117, i32 %118, i32 %119, i32 %120, i32 10) #20</td></tr>
+<tr><td align="left">  %121 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call1.i = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %121, i8* getelementptr inbounds ([1138 x i8], [1138 x i8]* @.str.133, i64 0, i64 0), i32 5, i32 19, i32 9) #20</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb111 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb316:</td></tr>
+<tr><td align="left">  %122 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %123 = call i64 @fwrite(i8* getelementptr inbounds ([857 x i8], [857 x i8]* @.str.135, i64 0, i64 0), i64 856, i64 1, %struct._IO_FILE* %122) #21</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb112 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.end320:</td></tr>
+<tr><td align="left">  %cmp321 = icmp eq i32 %playmode.0, 0</td></tr>
+<tr><td align="left">  %tobool324.not = icmp eq i8* %infilename.0, null</td></tr>
+<tr><td align="left">  %. = select i1 %tobool324.not, i32 3, i32 5</td></tr>
+<tr><td align="left">  %playmode.2 = select i1 %cmp321, i32 %., i32 %playmode.0</td></tr>
+<tr><td align="left">  %126 = load i32, i32* @quiet, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %tobool329 = icmp eq i32 %126, 0</td></tr>
+<tr><td align="left">  %cmp330 = icmp ne i32 %playmode.2, 3</td></tr>
+<tr><td align="left">  %or.cond670 = select i1 %tobool329, i1 %cmp330, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond670, label %if.then332, label %if.end334</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb113 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end334:</td></tr>
+<tr><td align="left">  %tobool335.not = icmp eq i32 %seed.0, 0</td></tr>
+<tr><td align="left">  %spec.store.select = select i1 %tobool335.not, i32 1, i32 %seed.0</td></tr>
+<tr><td align="left">  call void @gg_srand(i32 %spec.store.select) #14</td></tr>
+<tr><td align="left">  store i32 %spec.store.select, i32* @random_seed, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @init_gnugo() #14</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.else346, label %if.then339</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb114 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then339:</td></tr>
+<tr><td align="left">  %call340 = call i32 @sgftree_readfile(%struct.SGFTree_t* nonnull %sgftree, i8* nonnull %infilename.0) #14</td></tr>
+<tr><td align="left">  %tobool341.not = icmp eq i32 %call340, 0</td></tr>
+<tr><td align="left">  br i1 %tobool341.not, label %if.then342, label %if.end344</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb115 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end344:</td></tr>
+<tr><td align="left">  %call345 = call i32 @gameinfo_play_sgftree_rot(%struct.Gameinfo* nonnull %gameinfo, %struct.SGFTree_t* nonnull %sgftree, i8* %untilstring.0, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  br label %if.end347</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb116 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else346:</td></tr>
+<tr><td align="left">  %129 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %130 = load float, float* @komi, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  call void @sgftreeCreateHeaderNode(%struct.SGFTree_t* nonnull %sgftree, i32 %129, float %130) #14</td></tr>
+<tr><td align="left">  br label %if.end347</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb117 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end347:</td></tr>
+<tr><td align="left">  %game_record = getelementptr inbounds %struct.Gameinfo, %struct.Gameinfo* %gameinfo, i64 0, i32 2</td></tr>
+<tr><td align="left">  %131 = bitcast %struct.SGFTree_t* %game_record to i8*</td></tr>
+<tr><td align="left">  call void @llvm.memcpy.p0i8.p0i8.i64(i8* noundef nonnull align 8 dereferenceable(16) %131, i8* noundef nonnull align 8 dereferenceable(16) %1, i64 16, i1 false), !tbaa.struct !18</td></tr>
+<tr><td align="left">  %132 = load i8, i8* %3, align 4, !tbaa !11</td></tr>
+<tr><td align="left">  %tobool349.not = icmp eq i8 %132, 0</td></tr>
+<tr><td align="left">  br i1 %tobool349.not, label %if.end353, label %if.then350</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb118 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then350:</td></tr>
+<tr><td align="left">  %133 = bitcast i32* %m to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %133) #13</td></tr>
+<tr><td align="left">  %134 = bitcast i32* %n to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %134) #13</td></tr>
+<tr><td align="left">  %135 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call352 = call i32 @string_to_location(i32 %135, i8* nonnull %3, i32* nonnull %m, i32* nonnull %n) #14</td></tr>
+<tr><td align="left">  %136 = load i32, i32* %m, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %137 = load i32, i32* %n, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @debug_influence_move(i32 %136, i32 %137) #14</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %134) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %133) #13</td></tr>
+<tr><td align="left">  br label %if.end353</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb119 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end353:</td></tr>
+<tr><td align="left">  %tobool354 = icmp ne i8* %outfile.0, null</td></tr>
+<tr><td align="left">  %cmp356 = icmp ne i32 %playmode.2, 7</td></tr>
+<tr><td align="left">  %or.cond671 = select i1 %tobool354, i1 %cmp356, i1 false</td></tr>
+<tr><td align="left">  br i1 %or.cond671, label %if.then358, label %if.end365</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb120 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then358:</td></tr>
+<tr><td align="left">  %call359 = call %struct._IO_FILE* @fopen(i8* nonnull %outfile.0, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.27, i64 0, i64 0)) #19</td></tr>
+<tr><td align="left">  %tobool360.not = icmp eq %struct._IO_FILE* %call359, null</td></tr>
+<tr><td align="left">  br i1 %tobool360.not, label %if.then361, label %if.end363</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb121 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end363:</td></tr>
+<tr><td align="left">  %call364 = call i32 @fclose(%struct._IO_FILE* nonnull %call359) #19</td></tr>
+<tr><td align="left">  br label %if.end365</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb122 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end365:</td></tr>
+<tr><td align="left">  switch i32 %playmode.2, label %sw.default630 [
+    i32 8, label %sw.bb366
+    i32 9, label %sw.bb367
+    i32 5, label %sw.bb372
+    i32 6, label %sw.bb381
+    i32 7, label %sw.bb391
+    i32 10, label %sw.bb403
+    i32 11, label %sw.bb418
+    i32 12, label %sw.bb446
+    i32 13, label %sw.bb466
+    i32 14, label %sw.bb486
+    i32 15, label %sw.bb518
+    i32 16, label %sw.bb550
+    i32 17, label %sw.bb563
+    i32 18, label %sw.bb583
+    i32 19, label %sw.bb597
+    i32 3, label %sw.bb612
+    i32 2, label %sw.bb624
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb123 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">sw.bb366:</td></tr>
+<tr><td align="left">  call void @play_solo(%struct.Gameinfo* nonnull %gameinfo, i32 %benchmark.0) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb124 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb367:</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then369, label %if.end371</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb125 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end371:</td></tr>
+<tr><td align="left">  call void @play_replay(%struct.Gameinfo* nonnull %gameinfo, i32 %replay_color.0) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb126 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb372:</td></tr>
+<tr><td align="left">  %cmp373.not = icmp eq i32 %mandated_color.0, 0</td></tr>
+<tr><td align="left">  br i1 %cmp373.not, label %if.end376, label %if.then375</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb127 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then375:</td></tr>
+<tr><td align="left">  %to_move = getelementptr inbounds %struct.Gameinfo, %struct.Gameinfo* %gameinfo, i64 0, i32 1</td></tr>
+<tr><td align="left">  store i32 %mandated_color.0, i32* %to_move, align 4, !tbaa !19</td></tr>
+<tr><td align="left">  br label %if.end376</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb128 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end376:</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then378, label %if.end380</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb129 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end380:</td></tr>
+<tr><td align="left">  call void @load_and_analyze_sgf_file(%struct.Gameinfo* nonnull %gameinfo) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb130 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb381:</td></tr>
+<tr><td align="left">  %cmp382.not = icmp eq i32 %mandated_color.0, 0</td></tr>
+<tr><td align="left">  br i1 %cmp382.not, label %if.end386, label %if.then384</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb131 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then384:</td></tr>
+<tr><td align="left">  %to_move385 = getelementptr inbounds %struct.Gameinfo, %struct.Gameinfo* %gameinfo, i64 0, i32 1</td></tr>
+<tr><td align="left">  store i32 %mandated_color.0, i32* %to_move385, align 4, !tbaa !19</td></tr>
+<tr><td align="left">  br label %if.end386</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb132 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end386:</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then388, label %if.end390</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb133 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end390:</td></tr>
+<tr><td align="left">  call void @load_and_score_sgf_file(%struct.SGFTree_t* nonnull %sgftree, %struct.Gameinfo* nonnull %gameinfo, i8* %scoringmode.0) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb134 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb391:</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then393, label %if.else395</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb135 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else395:</td></tr>
+<tr><td align="left">  %cmp396.not = icmp eq i32 %mandated_color.0, 0</td></tr>
+<tr><td align="left">  %to_move401.phi.trans.insert = getelementptr inbounds %struct.Gameinfo, %struct.Gameinfo* %gameinfo, i64 0, i32 1</td></tr>
+<tr><td align="left">  br i1 %cmp396.not, label %if.else395.if.end400_crit_edge, label %if.then398</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb136 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else395.if.end400_crit_edge:</td></tr>
+<tr><td align="left">  %.pre1453 = load i32, i32* %to_move401.phi.trans.insert, align 4, !tbaa !19</td></tr>
+<tr><td align="left">  br label %if.end400</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb137 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end400:</td></tr>
+<tr><td align="left">  %147 = phi i32 [ %.pre1453, %if.else395.if.end400_crit_edge ], [ %mandated_color.0, %if.then398 ]</td></tr>
+<tr><td align="left">  call void @sgffile_printsgf(i32 %147, i8* %printsgffile.0) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb138 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb403:</td></tr>
+<tr><td align="left">  %148 = bitcast i32* %m404 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %148) #13</td></tr>
+<tr><td align="left">  %149 = bitcast i32* %n405 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %149) #13</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then407, label %if.end409</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb139 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end409:</td></tr>
+<tr><td align="left">  %152 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call411 = call i32 @string_to_location(i32 %152, i8* nonnull %2, i32* nonnull %m404, i32* nonnull %n405) #14</td></tr>
+<tr><td align="left">  %tobool412.not = icmp eq i32 %call411, 0</td></tr>
+<tr><td align="left">  br i1 %tobool412.not, label %if.then413, label %if.end415</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb140 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end415:</td></tr>
+<tr><td align="left">  %155 = load i32, i32* %m404, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %156 = load i32, i32* %n405, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %157 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %155, i32 %156, i32* nonnull %m404, i32* nonnull %n405, i32 %157, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %158 = load i32, i32* %m404, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul = mul nsw i32 %158, 20</td></tr>
+<tr><td align="left">  %add = add nsw i32 %mul, 21</td></tr>
+<tr><td align="left">  %159 = load i32, i32* %n405, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add416 = add nsw i32 %add, %159</td></tr>
+<tr><td align="left">  call void @decide_string(i32 %add416) #14</td></tr>
+<tr><td align="left">  br label %cleanup</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb141 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup:</td></tr>
+<tr><td align="left">  %cond667 = phi i1 [ true, %if.end415 ], [ false, %if.then413 ], [ false, %if.then407 ]</td></tr>
+<tr><td align="left">  %retval.0 = phi i32 [ 0, %if.end415 ], [ 1, %if.then413 ], [ 1, %if.then407 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %149) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %148) #13</td></tr>
+<tr><td align="left">  br i1 %cond667, label %sw.epilog637, label %cleanup638</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb142 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb418:</td></tr>
+<tr><td align="left">  %160 = bitcast i32* %ai to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %160) #13</td></tr>
+<tr><td align="left">  %161 = bitcast i32* %aj to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %161) #13</td></tr>
+<tr><td align="left">  %162 = bitcast i32* %bi to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %162) #13</td></tr>
+<tr><td align="left">  %163 = bitcast i32* %bj to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %163) #13</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then420, label %if.end422</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb143 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end422:</td></tr>
+<tr><td align="left">  %166 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call424 = call i32 @string_to_location(i32 %166, i8* nonnull %2, i32* nonnull %ai, i32* nonnull %aj) #14</td></tr>
+<tr><td align="left">  %tobool425.not = icmp eq i32 %call424, 0</td></tr>
+<tr><td align="left">  br i1 %tobool425.not, label %if.then426, label %if.end428</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb144 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end428:</td></tr>
+<tr><td align="left">  %169 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call429 = call i32 @string_to_location(i32 %169, i8* %decide_that.0, i32* nonnull %bi, i32* nonnull %bj) #14</td></tr>
+<tr><td align="left">  %tobool430.not = icmp eq i32 %call429, 0</td></tr>
+<tr><td align="left">  br i1 %tobool430.not, label %if.then431, label %if.end433</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb145 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end433:</td></tr>
+<tr><td align="left">  %172 = load i32, i32* %ai, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %173 = load i32, i32* %aj, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %174 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %172, i32 %173, i32* nonnull %ai, i32* nonnull %aj, i32 %174, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %175 = load i32, i32* %bi, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %176 = load i32, i32* %bj, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %177 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %175, i32 %176, i32* nonnull %bi, i32* nonnull %bj, i32 %177, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %178 = load i32, i32* %ai, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul434 = mul nsw i32 %178, 20</td></tr>
+<tr><td align="left">  %add435 = add nsw i32 %mul434, 21</td></tr>
+<tr><td align="left">  %179 = load i32, i32* %aj, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add436 = add nsw i32 %add435, %179</td></tr>
+<tr><td align="left">  %180 = load i32, i32* %bi, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul437 = mul nsw i32 %180, 20</td></tr>
+<tr><td align="left">  %add438 = add nsw i32 %mul437, 21</td></tr>
+<tr><td align="left">  %181 = load i32, i32* %bj, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add439 = add nsw i32 %add438, %181</td></tr>
+<tr><td align="left">  call void @decide_connection(i32 %add436, i32 %add439) #14</td></tr>
+<tr><td align="left">  br label %cleanup440</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb146 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup440:</td></tr>
+<tr><td align="left">  %cond666 = phi i1 [ true, %if.end433 ], [ false, %if.then431 ], [ false, %if.then426 ], [ false, %if.then420 ]</td></tr>
+<tr><td align="left">  %retval.1 = phi i32 [ 0, %if.end433 ], [ 1, %if.then431 ], [ 1, %if.then426 ], [ 1, %if.then420 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %163) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %162) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %161) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %160) #13</td></tr>
+<tr><td align="left">  br i1 %cond666, label %sw.epilog637, label %cleanup638</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb147 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb446:</td></tr>
+<tr><td align="left">  %182 = bitcast i32* %m447 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %182) #13</td></tr>
+<tr><td align="left">  %183 = bitcast i32* %n448 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %183) #13</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then450, label %if.end452</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb148 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end452:</td></tr>
+<tr><td align="left">  %186 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call454 = call i32 @string_to_location(i32 %186, i8* nonnull %2, i32* nonnull %m447, i32* nonnull %n448) #14</td></tr>
+<tr><td align="left">  %tobool455.not = icmp eq i32 %call454, 0</td></tr>
+<tr><td align="left">  br i1 %tobool455.not, label %if.then456, label %if.end458</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb149 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end458:</td></tr>
+<tr><td align="left">  %189 = load i32, i32* %m447, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %190 = load i32, i32* %n448, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %191 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %189, i32 %190, i32* nonnull %m447, i32* nonnull %n448, i32 %191, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %192 = load i32, i32* %m447, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul459 = mul nsw i32 %192, 20</td></tr>
+<tr><td align="left">  %add460 = add nsw i32 %mul459, 21</td></tr>
+<tr><td align="left">  %193 = load i32, i32* %n448, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add461 = add nsw i32 %add460, %193</td></tr>
+<tr><td align="left">  call void @decide_owl(i32 %add461) #14</td></tr>
+<tr><td align="left">  br label %cleanup462</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb150 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup462:</td></tr>
+<tr><td align="left">  %cond665 = phi i1 [ true, %if.end458 ], [ false, %if.then456 ], [ false, %if.then450 ]</td></tr>
+<tr><td align="left">  %retval.2 = phi i32 [ 0, %if.end458 ], [ 1, %if.then456 ], [ 1, %if.then450 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %183) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %182) #13</td></tr>
+<tr><td align="left">  br i1 %cond665, label %sw.epilog637, label %cleanup638</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb151 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb466:</td></tr>
+<tr><td align="left">  %194 = bitcast i32* %m467 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %194) #13</td></tr>
+<tr><td align="left">  %195 = bitcast i32* %n468 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %195) #13</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then470, label %if.end472</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb152 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then470:</td></tr>
+<tr><td align="left">  %196 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %197 = call i64 @fwrite(i8* getelementptr inbounds ([50 x i8], [50 x i8]* @.str.38, i64 0, i64 0), i64 49, i64 1, %struct._IO_FILE* %196) #17</td></tr>
+<tr><td align="left">  br label %cleanup482</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb153 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end472:</td></tr>
+<tr><td align="left">  %198 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call474 = call i32 @string_to_location(i32 %198, i8* nonnull %2, i32* nonnull %m467, i32* nonnull %n468) #14</td></tr>
+<tr><td align="left">  %tobool475.not = icmp eq i32 %call474, 0</td></tr>
+<tr><td align="left">  br i1 %tobool475.not, label %if.then476, label %if.end478</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb154 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then476:</td></tr>
+<tr><td align="left">  %199 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %200 = call i64 @fwrite(i8* getelementptr inbounds ([50 x i8], [50 x i8]* @.str.39, i64 0, i64 0), i64 49, i64 1, %struct._IO_FILE* %199) #17</td></tr>
+<tr><td align="left">  br label %cleanup482</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb155 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end478:</td></tr>
+<tr><td align="left">  %201 = load i32, i32* %m467, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %202 = load i32, i32* %n468, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %203 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %201, i32 %202, i32* nonnull %m467, i32* nonnull %n468, i32 %203, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %204 = load i32, i32* %m467, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul479 = mul nsw i32 %204, 20</td></tr>
+<tr><td align="left">  %add480 = add nsw i32 %mul479, 21</td></tr>
+<tr><td align="left">  %205 = load i32, i32* %n468, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add481 = add nsw i32 %add480, %205</td></tr>
+<tr><td align="left">  call void @decide_dragon_data(i32 %add481) #14</td></tr>
+<tr><td align="left">  br label %cleanup482</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb156 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup482:</td></tr>
+<tr><td align="left">  %cond664 = phi i1 [ true, %if.end478 ], [ false, %if.then476 ], [ false, %if.then470 ]</td></tr>
+<tr><td align="left">  %retval.3 = phi i32 [ 0, %if.end478 ], [ 1, %if.then476 ], [ 1, %if.then470 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %195) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %194) #13</td></tr>
+<tr><td align="left">  br i1 %cond664, label %sw.epilog637, label %cleanup638</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb157 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb486:</td></tr>
+<tr><td align="left">  %206 = bitcast i32* %ai487 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %206) #13</td></tr>
+<tr><td align="left">  %207 = bitcast i32* %aj488 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %207) #13</td></tr>
+<tr><td align="left">  %208 = bitcast i32* %bi489 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %208) #13</td></tr>
+<tr><td align="left">  %209 = bitcast i32* %bj490 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %209) #13</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then492, label %if.end494</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb158 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then492:</td></tr>
+<tr><td align="left">  %210 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %211 = call i64 @fwrite(i8* getelementptr inbounds ([45 x i8], [45 x i8]* @.str.40, i64 0, i64 0), i64 44, i64 1, %struct._IO_FILE* %210) #17</td></tr>
+<tr><td align="left">  br label %cleanup512</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb159 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end494:</td></tr>
+<tr><td align="left">  %212 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call496 = call i32 @string_to_location(i32 %212, i8* nonnull %2, i32* nonnull %ai487, i32* nonnull %aj488) #14</td></tr>
+<tr><td align="left">  %tobool497.not = icmp eq i32 %call496, 0</td></tr>
+<tr><td align="left">  br i1 %tobool497.not, label %if.then498, label %if.end500</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb160 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then498:</td></tr>
+<tr><td align="left">  %213 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %214 = call i64 @fwrite(i8* getelementptr inbounds ([55 x i8], [55 x i8]* @.str.17, i64 0, i64 0), i64 54, i64 1, %struct._IO_FILE* %213) #17</td></tr>
+<tr><td align="left">  br label %cleanup512</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb161 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end500:</td></tr>
+<tr><td align="left">  %215 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call501 = call i32 @string_to_location(i32 %215, i8* %decide_that.0, i32* nonnull %bi489, i32* nonnull %bj490) #14</td></tr>
+<tr><td align="left">  %tobool502.not = icmp eq i32 %call501, 0</td></tr>
+<tr><td align="left">  br i1 %tobool502.not, label %if.then503, label %if.end505</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb162 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then503:</td></tr>
+<tr><td align="left">  %216 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %217 = call i64 @fwrite(i8* getelementptr inbounds ([55 x i8], [55 x i8]* @.str.17, i64 0, i64 0), i64 54, i64 1, %struct._IO_FILE* %216) #17</td></tr>
+<tr><td align="left">  br label %cleanup512</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb163 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end505:</td></tr>
+<tr><td align="left">  %218 = load i32, i32* %ai487, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %219 = load i32, i32* %aj488, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %220 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %218, i32 %219, i32* nonnull %ai487, i32* nonnull %aj488, i32 %220, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %221 = load i32, i32* %bi489, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %222 = load i32, i32* %bj490, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %223 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %221, i32 %222, i32* nonnull %bi489, i32* nonnull %bj490, i32 %223, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %224 = load i32, i32* %ai487, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul506 = mul nsw i32 %224, 20</td></tr>
+<tr><td align="left">  %add507 = add nsw i32 %mul506, 21</td></tr>
+<tr><td align="left">  %225 = load i32, i32* %aj488, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add508 = add nsw i32 %add507, %225</td></tr>
+<tr><td align="left">  %226 = load i32, i32* %bi489, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul509 = mul nsw i32 %226, 20</td></tr>
+<tr><td align="left">  %add510 = add nsw i32 %mul509, 21</td></tr>
+<tr><td align="left">  %227 = load i32, i32* %bj490, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add511 = add nsw i32 %add510, %227</td></tr>
+<tr><td align="left">  call void @decide_semeai(i32 %add508, i32 %add511) #14</td></tr>
+<tr><td align="left">  br label %cleanup512</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb164 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup512:</td></tr>
+<tr><td align="left">  %cond663 = phi i1 [ true, %if.end505 ], [ false, %if.then503 ], [ false, %if.then498 ], [ false, %if.then492 ]</td></tr>
+<tr><td align="left">  %retval.4 = phi i32 [ 0, %if.end505 ], [ 1, %if.then503 ], [ 1, %if.then498 ], [ 1, %if.then492 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %209) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %208) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %207) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %206) #13</td></tr>
+<tr><td align="left">  br i1 %cond663, label %sw.epilog637, label %cleanup638</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb165 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb518:</td></tr>
+<tr><td align="left">  %228 = bitcast i32* %ai519 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %228) #13</td></tr>
+<tr><td align="left">  %229 = bitcast i32* %aj520 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %229) #13</td></tr>
+<tr><td align="left">  %230 = bitcast i32* %bi521 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %230) #13</td></tr>
+<tr><td align="left">  %231 = bitcast i32* %bj522 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %231) #13</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then524, label %if.end526</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb166 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then524:</td></tr>
+<tr><td align="left">  %232 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %233 = call i64 @fwrite(i8* getelementptr inbounds ([54 x i8], [54 x i8]* @.str.41, i64 0, i64 0), i64 53, i64 1, %struct._IO_FILE* %232) #17</td></tr>
+<tr><td align="left">  br label %cleanup544</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb167 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end526:</td></tr>
+<tr><td align="left">  %234 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call528 = call i32 @string_to_location(i32 %234, i8* nonnull %2, i32* nonnull %ai519, i32* nonnull %aj520) #14</td></tr>
+<tr><td align="left">  %tobool529.not = icmp eq i32 %call528, 0</td></tr>
+<tr><td align="left">  br i1 %tobool529.not, label %if.then530, label %if.end532</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb168 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then530:</td></tr>
+<tr><td align="left">  %235 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %236 = call i64 @fwrite(i8* getelementptr inbounds ([64 x i8], [64 x i8]* @.str.18, i64 0, i64 0), i64 63, i64 1, %struct._IO_FILE* %235) #17</td></tr>
+<tr><td align="left">  br label %cleanup544</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb169 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end532:</td></tr>
+<tr><td align="left">  %237 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call533 = call i32 @string_to_location(i32 %237, i8* %decide_that.0, i32* nonnull %bi521, i32* nonnull %bj522) #14</td></tr>
+<tr><td align="left">  %tobool534.not = icmp eq i32 %call533, 0</td></tr>
+<tr><td align="left">  br i1 %tobool534.not, label %if.then535, label %if.end537</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb170 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then535:</td></tr>
+<tr><td align="left">  %238 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %239 = call i64 @fwrite(i8* getelementptr inbounds ([64 x i8], [64 x i8]* @.str.18, i64 0, i64 0), i64 63, i64 1, %struct._IO_FILE* %238) #17</td></tr>
+<tr><td align="left">  br label %cleanup544</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb171 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end537:</td></tr>
+<tr><td align="left">  %240 = load i32, i32* %ai519, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %241 = load i32, i32* %aj520, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %242 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %240, i32 %241, i32* nonnull %ai519, i32* nonnull %aj520, i32 %242, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %243 = load i32, i32* %bi521, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %244 = load i32, i32* %bj522, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %245 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %243, i32 %244, i32* nonnull %bi521, i32* nonnull %bj522, i32 %245, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %246 = load i32, i32* %ai519, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul538 = mul nsw i32 %246, 20</td></tr>
+<tr><td align="left">  %add539 = add nsw i32 %mul538, 21</td></tr>
+<tr><td align="left">  %247 = load i32, i32* %aj520, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add540 = add nsw i32 %add539, %247</td></tr>
+<tr><td align="left">  %248 = load i32, i32* %bi521, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul541 = mul nsw i32 %248, 20</td></tr>
+<tr><td align="left">  %add542 = add nsw i32 %mul541, 21</td></tr>
+<tr><td align="left">  %249 = load i32, i32* %bj522, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add543 = add nsw i32 %add542, %249</td></tr>
+<tr><td align="left">  call void @decide_tactical_semeai(i32 %add540, i32 %add543) #14</td></tr>
+<tr><td align="left">  br label %cleanup544</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb172 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup544:</td></tr>
+<tr><td align="left">  %cond662 = phi i1 [ true, %if.end537 ], [ false, %if.then535 ], [ false, %if.then530 ], [ false, %if.then524 ]</td></tr>
+<tr><td align="left">  %retval.5 = phi i32 [ 0, %if.end537 ], [ 1, %if.then535 ], [ 1, %if.then530 ], [ 1, %if.then524 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %231) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %230) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %229) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %228) #13</td></tr>
+<tr><td align="left">  br i1 %cond662, label %sw.epilog637, label %cleanup638</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb173 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb550:</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %cleanup560.thread, label %cleanup560</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb174 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup560.thread:</td></tr>
+<tr><td align="left">  %250 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %251 = call i64 @fwrite(i8* getelementptr inbounds ([47 x i8], [47 x i8]* @.str.42, i64 0, i64 0), i64 46, i64 1, %struct._IO_FILE* %250) #17</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb175 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup560:</td></tr>
+<tr><td align="left">  %to_move555 = getelementptr inbounds %struct.Gameinfo, %struct.Gameinfo* %gameinfo, i64 0, i32 1</td></tr>
+<tr><td align="left">  %252 = load i32, i32* %to_move555, align 4, !tbaa !19</td></tr>
+<tr><td align="left">  %cmp556.not = icmp eq i32 %mandated_color.0, 0</td></tr>
+<tr><td align="left">  %spec.select782 = select i1 %cmp556.not, i32 %252, i32 %mandated_color.0</td></tr>
+<tr><td align="left">  call void @decide_position(i32 %spec.select782) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb176 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb563:</td></tr>
+<tr><td align="left">  %253 = bitcast i32* %m564 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %253) #13</td></tr>
+<tr><td align="left">  %254 = bitcast i32* %n565 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %254) #13</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %if.then567, label %if.end569</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb177 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then567:</td></tr>
+<tr><td align="left">  %255 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %256 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.43, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %255) #17</td></tr>
+<tr><td align="left">  br label %cleanup579</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb178 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end569:</td></tr>
+<tr><td align="left">  %257 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call571 = call i32 @string_to_location(i32 %257, i8* nonnull %2, i32* nonnull %m564, i32* nonnull %n565) #14</td></tr>
+<tr><td align="left">  %tobool572.not = icmp eq i32 %call571, 0</td></tr>
+<tr><td align="left">  br i1 %tobool572.not, label %if.then573, label %if.end575</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb179 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then573:</td></tr>
+<tr><td align="left">  %258 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %259 = call i64 @fwrite(i8* getelementptr inbounds ([42 x i8], [42 x i8]* @.str.44, i64 0, i64 0), i64 41, i64 1, %struct._IO_FILE* %258) #17</td></tr>
+<tr><td align="left">  br label %cleanup579</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb180 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end575:</td></tr>
+<tr><td align="left">  %260 = load i32, i32* %m564, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %261 = load i32, i32* %n565, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %262 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %260, i32 %261, i32* nonnull %m564, i32* nonnull %n565, i32 %262, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %263 = load i32, i32* %m564, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul576 = mul nsw i32 %263, 20</td></tr>
+<tr><td align="left">  %add577 = add nsw i32 %mul576, 21</td></tr>
+<tr><td align="left">  %264 = load i32, i32* %n565, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add578 = add nsw i32 %add577, %264</td></tr>
+<tr><td align="left">  call void @decide_eye(i32 %add578) #14</td></tr>
+<tr><td align="left">  br label %cleanup579</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb181 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup579:</td></tr>
+<tr><td align="left">  %cond660 = phi i1 [ true, %if.end575 ], [ false, %if.then573 ], [ false, %if.then567 ]</td></tr>
+<tr><td align="left">  %retval.7 = phi i32 [ 0, %if.end575 ], [ 1, %if.then573 ], [ 1, %if.then567 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %254) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %253) #13</td></tr>
+<tr><td align="left">  br i1 %cond660, label %sw.epilog637, label %cleanup638</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb182 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb583:</td></tr>
+<tr><td align="left">  br i1 %tobool324.not, label %cleanup594.thread, label %cleanup594</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb183 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup594.thread:</td></tr>
+<tr><td align="left">  %265 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %266 = call i64 @fwrite(i8* getelementptr inbounds ([50 x i8], [50 x i8]* @.str.45, i64 0, i64 0), i64 49, i64 1, %struct._IO_FILE* %265) #17</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb184 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup594:</td></tr>
+<tr><td align="left">  %to_move589 = getelementptr inbounds %struct.Gameinfo, %struct.Gameinfo* %gameinfo, i64 0, i32 1</td></tr>
+<tr><td align="left">  %267 = load i32, i32* %to_move589, align 4, !tbaa !19</td></tr>
+<tr><td align="left">  %cmp590.not = icmp eq i32 %mandated_color.0, 0</td></tr>
+<tr><td align="left">  %spec.select783 = select i1 %cmp590.not, i32 %267, i32 %mandated_color.0</td></tr>
+<tr><td align="left">  call void @decide_combination(i32 %spec.select783) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb185 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb597:</td></tr>
+<tr><td align="left">  %268 = bitcast i32* %m598 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %268) #13</td></tr>
+<tr><td align="left">  %269 = bitcast i32* %n599 to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %269) #13</td></tr>
+<tr><td align="left">  %270 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %call601 = call i32 @string_to_location(i32 %270, i8* nonnull %2, i32* nonnull %m598, i32* nonnull %n599) #14</td></tr>
+<tr><td align="left">  %tobool602.not = icmp eq i32 %call601, 0</td></tr>
+<tr><td align="left">  br i1 %tobool602.not, label %if.then603, label %if.end605</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb186 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then603:</td></tr>
+<tr><td align="left">  %271 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %272 = call i64 @fwrite(i8* getelementptr inbounds ([34 x i8], [34 x i8]* @.str.46, i64 0, i64 0), i64 33, i64 1, %struct._IO_FILE* %271) #17</td></tr>
+<tr><td align="left">  br label %cleanup609</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb187 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end605:</td></tr>
+<tr><td align="left">  %273 = load i32, i32* %m598, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %274 = load i32, i32* %n599, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %275 = load i32, i32* @board_size, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  call void @rotate(i32 %273, i32 %274, i32* nonnull %m598, i32* nonnull %n599, i32 %275, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  %276 = load i32, i32* %m598, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %mul606 = mul nsw i32 %276, 20</td></tr>
+<tr><td align="left">  %add607 = add nsw i32 %mul606, 21</td></tr>
+<tr><td align="left">  %277 = load i32, i32* %n599, align 4, !tbaa !7</td></tr>
+<tr><td align="left">  %add608 = add nsw i32 %add607, %277</td></tr>
+<tr><td align="left">  call void @decide_surrounded(i32 %add608) #14</td></tr>
+<tr><td align="left">  br label %cleanup609</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb188 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">cleanup609:</td></tr>
+<tr><td align="left">  %retval.9 = phi i32 [ 0, %if.end605 ], [ 1, %if.then603 ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %269) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %268) #13</td></tr>
+<tr><td align="left">  br i1 %tobool602.not, label %cleanup638, label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb189 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb612:</td></tr>
+<tr><td align="left">  %cmp613.not = icmp eq i8* %gtpfile.0, null</td></tr>
+<tr><td align="left">  br i1 %cmp613.not, label %if.else622, label %if.then615</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb190 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then615:</td></tr>
+<tr><td align="left">  %call616 = call %struct._IO_FILE* @fopen(i8* nonnull %gtpfile.0, i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.47, i64 0, i64 0)) #19</td></tr>
+<tr><td align="left">  %cmp617 = icmp eq %struct._IO_FILE* %call616, null</td></tr>
+<tr><td align="left">  br i1 %cmp617, label %if.then619, label %if.end623</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb191 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then619:</td></tr>
+<tr><td align="left">  %278 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  %call620 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %278, i8* getelementptr inbounds ([28 x i8], [28 x i8]* @.str.48, i64 0, i64 0), i8* nonnull %gtpfile.0) #16</td></tr>
+<tr><td align="left">  br label %cleanup638</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb192 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else622:</td></tr>
+<tr><td align="left">  %279 = load %struct._IO_FILE*, %struct._IO_FILE** @stdin, align 8, !tbaa !9</td></tr>
+<tr><td align="left">  br label %if.end623</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb193 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end623:</td></tr>
+<tr><td align="left">  %gtp_input_FILE.0 = phi %struct._IO_FILE* [ %call616, %if.then615 ], [ %279, %if.else622 ]</td></tr>
+<tr><td align="left">  call void @play_gtp(%struct._IO_FILE* %gtp_input_FILE.0, i32 %orientation.0) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb194 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb624:</td></tr>
+<tr><td align="left">  %cmp625.not = icmp eq i32 %mandated_color.0, 0</td></tr>
+<tr><td align="left">  br i1 %cmp625.not, label %if.end628, label %if.then627</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb195 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then627:</td></tr>
+<tr><td align="left">  %sub = sub nsw i32 3, %mandated_color.0</td></tr>
+<tr><td align="left">  %computer_player = getelementptr inbounds %struct.Gameinfo, %struct.Gameinfo* %gameinfo, i64 0, i32 3</td></tr>
+<tr><td align="left">  store i32 %sub, i32* %computer_player, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  br label %if.end628</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb196 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end628:</td></tr>
+<tr><td align="left">  call void @play_ascii_emacs(%struct.SGFTree_t* nonnull %sgftree, %struct.Gameinfo* nonnull %gameinfo, i8* %infilename.0, i8* %untilstring.0) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb197 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.default630:</td></tr>
+<tr><td align="left">  %cmp631.not = icmp eq i32 %mandated_color.0, 0</td></tr>
+<tr><td align="left">  br i1 %cmp631.not, label %if.end636, label %if.then633</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb198 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then633:</td></tr>
+<tr><td align="left">  %sub634 = sub nsw i32 3, %mandated_color.0</td></tr>
+<tr><td align="left">  %computer_player635 = getelementptr inbounds %struct.Gameinfo, %struct.Gameinfo* %gameinfo, i64 0, i32 3</td></tr>
+<tr><td align="left">  store i32 %sub634, i32* %computer_player635, align 8, !tbaa !20</td></tr>
+<tr><td align="left">  br label %if.end636</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb199 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end636:</td></tr>
+<tr><td align="left">  call void @play_ascii(%struct.SGFTree_t* nonnull %sgftree, %struct.Gameinfo* nonnull %gameinfo, i8* %infilename.0, i8* %untilstring.0) #14</td></tr>
+<tr><td align="left">  br label %sw.epilog637</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb200 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">cleanup638:</td></tr>
+<tr><td align="left">  %retval.10 = phi i32 [ 0, %sw.bb316 ], [ 0, %sw.bb295 ], [ 0, %sw.bb291 ], [ 1, %if.then187 ], [ 1, %if.then196 ], [ 1, %if.then171 ], [ 1, %if.then180 ], [ 1, %if.then137 ], [ 1, %if.then146 ], [ 0, %sw.bb54 ], [ 0, %sw.epilog637 ], [ 1, %if.then619 ], [ %retval.9, %cleanup609 ], [ %retval.7, %cleanup579 ], [ %retval.5, %cleanup544 ], [ %retval.4, %cleanup512 ], [ %retval.3, %cleanup482 ], [ %retval.2, %cleanup462 ], [ %retval.1, %cleanup440 ], [ %retval.0, %cleanup ], [ 0, %if.else313 ], [ 0, %if.then311 ], [ 0, %if.then307 ], [ 0, %if.then298 ], [ 0, %if.then302 ], [ 1, %cleanup560.thread ], [ 1, %cleanup594.thread ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %3) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 8, i8* nonnull %2) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %1) #13</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 32, i8* nonnull %0) #13</td></tr>
+<tr><td align="left">  ret i32 %retval.10</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb1:fT -> f_bb112:f
+f_bb1:fF -> f_bb2:f
+f_bb2:f -> m_bb0:f2
+f_bb2:f -> f_bb4:f
+f_bb2:f -> f_bb5:f
+f_bb2:f -> m_bb2:f2
+f_bb2:f -> f_bb6:f
+f_bb2:f -> f_bb6:f
+f_bb2:f -> f_bb7:f
+f_bb2:f -> f_bb8:f
+f_bb2:f -> f_bb9:f
+f_bb2:f -> f_bb10:f
+f_bb2:f -> f_bb11:f
+f_bb2:f -> f_bb12:f
+f_bb2:f -> f_bb13:f
+f_bb2:f -> f_bb14:f
+f_bb2:f -> f_bb15:f
+f_bb2:f -> f_bb16:f
+f_bb2:f -> f_bb17:f
+f_bb2:f -> f_bb18:f
+f_bb2:f -> f_bb19:f
+f_bb2:f -> f_bb20:f
+f_bb2:f -> f_bb21:f
+f_bb2:f -> f_bb28:f
+f_bb2:f -> f_bb29:f
+f_bb2:f -> f_bb30:f
+f_bb2:f -> f_bb31:f
+f_bb2:f -> f_bb32:f
+f_bb2:f -> f_bb33:f
+f_bb2:f -> f_bb34:f
+f_bb2:f -> f_bb35:f
+f_bb2:f -> f_bb37:f
+f_bb2:f -> f_bb39:f
+f_bb2:f -> f_bb41:f
+f_bb2:f -> f_bb42:f
+f_bb2:f -> f_bb43:f
+f_bb2:f -> f_bb44:f
+f_bb2:f -> f_bb45:f
+f_bb2:f -> f_bb46:f
+f_bb2:f -> f_bb47:f
+f_bb2:f -> f_bb48:f
+f_bb2:f -> f_bb49:f
+f_bb2:f -> f_bb50:f
+f_bb2:f -> f_bb51:f
+f_bb2:f -> f_bb52:f
+f_bb2:f -> f_bb53:f
+f_bb2:f -> f_bb54:f
+f_bb2:f -> f_bb58:f
+f_bb2:f -> f_bb60:f
+f_bb2:f -> f_bb64:f
+f_bb2:f -> f_bb66:f
+f_bb2:f -> f_bb68:f
+f_bb2:f -> f_bb70:f
+f_bb2:f -> m_bb1:f2
+f_bb2:f -> f_bb72:f
+f_bb2:f -> f_bb74:f
+f_bb2:f -> f_bb75:f
+f_bb2:f -> f_bb77:f
+f_bb2:f -> f_bb78:f
+f_bb2:f -> f_bb79:f
+f_bb2:f -> f_bb80:f
+f_bb2:f -> f_bb3:f
+f_bb2:f -> f_bb82:f
+f_bb2:f -> f_bb83:f
+f_bb2:f -> f_bb84:f
+f_bb2:f -> f_bb85:f
+f_bb2:f -> f_bb86:f
+f_bb2:f -> f_bb87:f
+f_bb2:f -> f_bb88:f
+f_bb2:f -> f_bb89:f
+f_bb2:f -> f_bb91:f
+f_bb2:f -> f_bb95:f
+f_bb2:f -> f_bb96:f
+f_bb2:f -> f_bb97:f
+f_bb2:f -> f_bb100:f
+f_bb2:f -> f_bb101:f
+f_bb2:f -> f_bb102:f
+f_bb2:f -> f_bb103:f
+f_bb2:f -> f_bb104:f
+f_bb2:f -> f_bb111:f
+f_bb3:f -> f_bb81:f
+f_bb4:f -> m_bb1:f2
+f_bb5:f -> m_bb1:f2
+m_bb2:f2 -> m_bb1:f2
+f_bb6:f -> m_bb1:f2
+f_bb7:f -> m_bb1:f2
+f_bb8:f -> m_bb1:f2
+f_bb9:f -> m_bb1:f2
+f_bb10:f -> m_bb1:f2
+f_bb11:f -> m_bb1:f2
+f_bb12:f -> m_bb1:f2
+f_bb13:f -> m_bb1:f2
+f_bb14:f -> m_bb1:f2
+f_bb15:f -> m_bb1:f2
+f_bb16:f -> m_bb1:f2
+f_bb17:f -> m_bb1:f2
+f_bb18:f -> m_bb1:f2
+f_bb19:f -> m_bb1:f2
+f_bb20:f -> m_bb1:f2
+f_bb21:fT -> m_bb1:f2
+f_bb21:fF -> f_bb22:f
+f_bb22:fT -> m_bb1:f2
+f_bb22:fF -> f_bb23:f
+f_bb23:f -> f_bb27:f
+f_bb23:f -> f_bb24:f
+f_bb23:f -> f_bb25:f
+f_bb24:f -> f_bb26:f
+f_bb25:f -> f_bb26:f
+f_bb26:f -> f_bb27:f
+f_bb27:f -> f_bb22:f
+f_bb28:f -> m_bb1:f2
+f_bb29:f -> m_bb1:f2
+f_bb30:fT -> m_bb3:f2
+f_bb30:fF -> m_bb1:f2
+f_bb31:f -> m_bb1:f2
+f_bb32:f -> f_bb200:f
+f_bb33:f -> m_bb1:f2
+f_bb34:f -> m_bb1:f2
+f_bb35:fT -> m_bb4:f2
+f_bb35:fF -> f_bb36:f
+f_bb36:f -> m_bb1:f2
+f_bb37:fT -> m_bb5:f2
+f_bb37:fF -> f_bb38:f
+f_bb38:f -> m_bb1:f2
+f_bb39:fT -> m_bb1:f2
+f_bb39:fF -> f_bb40:f
+f_bb41:f -> m_bb1:f2
+f_bb42:f -> m_bb1:f2
+f_bb43:f -> m_bb1:f2
+f_bb44:f -> m_bb1:f2
+f_bb45:f -> m_bb1:f2
+f_bb46:f -> m_bb1:f2
+f_bb47:f -> m_bb1:f2
+f_bb48:f -> m_bb1:f2
+f_bb49:f -> m_bb1:f2
+f_bb50:f -> m_bb1:f2
+f_bb51:f -> m_bb1:f2
+f_bb52:f -> m_bb1:f2
+f_bb53:f -> m_bb1:f2
+f_bb54:fT -> m_bb1:f2
+f_bb54:fF -> f_bb55:f
+f_bb55:fT -> m_bb1:f2
+f_bb55:fF -> f_bb56:f
+f_bb56:fT -> m_bb1:f2
+f_bb56:fF -> f_bb57:f
+f_bb58:fT -> m_bb6:f2
+f_bb58:fF -> f_bb59:f
+f_bb59:f -> m_bb1:f2
+f_bb60:fT -> f_bb61:f
+f_bb60:fF -> f_bb62:f
+f_bb61:f -> f_bb200:f
+f_bb62:fT -> f_bb63:f
+f_bb62:fF -> m_bb1:f2
+f_bb63:f -> f_bb200:f
+f_bb64:fT -> m_bb7:f2
+f_bb64:fF -> f_bb65:f
+f_bb65:f -> m_bb1:f2
+f_bb66:fT -> m_bb8:f2
+f_bb66:fF -> f_bb67:f
+f_bb67:f -> m_bb1:f2
+f_bb68:fT -> m_bb9:f2
+f_bb68:fF -> f_bb69:f
+m_bb9:f2 -> f_bb200:f
+f_bb69:fT -> m_bb10:f2
+f_bb69:fF -> m_bb1:f2
+m_bb10:f2 -> f_bb200:f
+f_bb70:fT -> m_bb11:f2
+f_bb70:fF -> f_bb71:f
+m_bb11:f2 -> f_bb200:f
+f_bb71:fT -> m_bb12:f2
+f_bb71:fF -> m_bb1:f2
+m_bb12:f2 -> f_bb200:f
+f_bb72:fT -> m_bb13:f2
+f_bb72:fF -> f_bb73:f
+f_bb73:f -> m_bb1:f2
+f_bb74:f -> m_bb1:f2
+f_bb75:fT -> m_bb14:f2
+f_bb75:fF -> f_bb76:f
+f_bb76:f -> m_bb1:f2
+f_bb77:f -> m_bb1:f2
+f_bb78:f -> m_bb1:f2
+f_bb79:f -> m_bb1:f2
+f_bb80:f -> f_bb81:f
+f_bb81:f -> m_bb1:f2
+f_bb82:f -> m_bb1:f2
+f_bb83:f -> m_bb1:f2
+f_bb84:f -> m_bb1:f2
+f_bb85:f -> m_bb1:f2
+f_bb86:f -> m_bb1:f2
+f_bb87:f -> m_bb1:f2
+f_bb88:f -> m_bb1:f2
+f_bb89:fT -> m_bb15:f2
+f_bb89:fF -> f_bb90:f
+f_bb90:f -> m_bb1:f2
+f_bb91:fT -> m_bb1:f2
+f_bb91:fF -> f_bb92:f
+f_bb92:fT -> m_bb1:f2
+f_bb92:fF -> f_bb93:f
+f_bb93:fT -> m_bb1:f2
+f_bb93:fF -> f_bb94:f
+f_bb95:f -> m_bb1:f2
+f_bb96:f -> m_bb1:f2
+f_bb97:fT -> m_bb1:f2
+f_bb97:fF -> f_bb98:f
+f_bb98:fT -> m_bb1:f2
+f_bb98:fF -> f_bb99:f
+f_bb100:f -> f_bb200:f
+f_bb101:f -> m_bb1:f2
+f_bb102:f -> m_bb1:f2
+f_bb103:f -> f_bb200:f
+f_bb104:fT -> f_bb107:f
+f_bb104:fF -> f_bb105:f
+f_bb105:fT -> f_bb106:f
+f_bb105:fF -> f_bb200:f
+f_bb106:f -> f_bb200:f
+f_bb107:fT -> f_bb108:f
+f_bb107:fF -> f_bb110:f
+f_bb108:fT -> f_bb109:f
+f_bb108:fF -> f_bb200:f
+f_bb109:f -> f_bb200:f
+f_bb110:f -> f_bb200:f
+f_bb111:f -> f_bb200:f
+m_bb1:f2 -> f_bb1:f
+f_bb112:fT -> m_bb8:f1
+f_bb112:fF -> f_bb113:f
+m_bb8:f1 -> f_bb113:f
+f_bb113:fT -> f_bb116:f
+f_bb113:fF -> f_bb114:f
+f_bb114:fT -> m_bb7:f1
+f_bb114:fF -> f_bb115:f
+f_bb115:f -> f_bb117:f
+f_bb116:f -> f_bb117:f
+f_bb117:fT -> f_bb119:f
+f_bb117:fF -> f_bb118:f
+f_bb118:f -> f_bb119:f
+f_bb119:fT -> f_bb120:f
+f_bb119:fF -> f_bb122:f
+f_bb120:fT -> m_bb6:f1
+f_bb120:fF -> f_bb121:f
+f_bb121:f -> f_bb122:f
+f_bb122:f -> f_bb197:f
+f_bb122:f -> f_bb123:f
+f_bb122:f -> f_bb124:f
+f_bb122:f -> f_bb126:f
+f_bb122:f -> f_bb130:f
+f_bb122:f -> f_bb134:f
+f_bb122:f -> f_bb138:f
+f_bb122:f -> f_bb142:f
+f_bb122:f -> f_bb147:f
+f_bb122:f -> f_bb151:f
+f_bb122:f -> f_bb157:f
+f_bb122:f -> f_bb165:f
+f_bb122:f -> f_bb173:f
+f_bb122:f -> f_bb176:f
+f_bb122:f -> f_bb182:f
+f_bb122:f -> f_bb185:f
+f_bb122:f -> f_bb189:f
+f_bb122:f -> f_bb194:f
+f_bb123:f -> m_bb1:f1
+f_bb124:fT -> m_bb0:f1
+f_bb124:fF -> f_bb125:f
+f_bb125:f -> m_bb1:f1
+f_bb126:fT -> f_bb128:f
+f_bb126:fF -> f_bb127:f
+f_bb127:f -> f_bb128:f
+f_bb128:fT -> m_bb3:f1
+f_bb128:fF -> f_bb129:f
+f_bb129:f -> m_bb1:f1
+f_bb130:fT -> f_bb132:f
+f_bb130:fF -> f_bb131:f
+f_bb131:f -> f_bb132:f
+f_bb132:fT -> m_bb4:f1
+f_bb132:fF -> f_bb133:f
+f_bb133:f -> m_bb1:f1
+f_bb134:fT -> m_bb5:f1
+f_bb134:fF -> f_bb135:f
+f_bb135:fT -> f_bb136:f
+f_bb135:fF -> m_bb2:f1
+f_bb136:f -> f_bb137:f
+m_bb2:f1 -> f_bb137:f
+f_bb137:f -> m_bb1:f1
+f_bb138:fT -> m_bb9:f1
+f_bb138:fF -> f_bb139:f
+m_bb9:f1 -> f_bb141:f
+f_bb139:fT -> m_bb10:f1
+f_bb139:fF -> f_bb140:f
+m_bb10:f1 -> f_bb141:f
+f_bb140:f -> f_bb141:f
+f_bb141:fT -> m_bb1:f1
+f_bb141:fF -> f_bb200:f
+f_bb142:fT -> m_bb11:f1
+f_bb142:fF -> f_bb143:f
+m_bb11:f1 -> f_bb146:f
+f_bb143:fT -> m_bb12:f1
+f_bb143:fF -> f_bb144:f
+m_bb12:f1 -> f_bb146:f
+f_bb144:fT -> m_bb13:f1
+f_bb144:fF -> f_bb145:f
+m_bb13:f1 -> f_bb146:f
+f_bb145:f -> f_bb146:f
+f_bb146:fT -> m_bb1:f1
+f_bb146:fF -> f_bb200:f
+f_bb147:fT -> m_bb14:f1
+f_bb147:fF -> f_bb148:f
+m_bb14:f1 -> f_bb150:f
+f_bb148:fT -> m_bb15:f1
+f_bb148:fF -> f_bb149:f
+m_bb15:f1 -> f_bb150:f
+f_bb149:f -> f_bb150:f
+f_bb150:fT -> m_bb1:f1
+f_bb150:fF -> f_bb200:f
+f_bb151:fT -> f_bb152:f
+f_bb151:fF -> f_bb153:f
+f_bb152:f -> f_bb156:f
+f_bb153:fT -> f_bb154:f
+f_bb153:fF -> f_bb155:f
+f_bb154:f -> f_bb156:f
+f_bb155:f -> f_bb156:f
+f_bb156:fT -> m_bb1:f1
+f_bb156:fF -> f_bb200:f
+f_bb157:fT -> f_bb158:f
+f_bb157:fF -> f_bb159:f
+f_bb158:f -> f_bb164:f
+f_bb159:fT -> f_bb160:f
+f_bb159:fF -> f_bb161:f
+f_bb160:f -> f_bb164:f
+f_bb161:fT -> f_bb162:f
+f_bb161:fF -> f_bb163:f
+f_bb162:f -> f_bb164:f
+f_bb163:f -> f_bb164:f
+f_bb164:fT -> m_bb1:f1
+f_bb164:fF -> f_bb200:f
+f_bb165:fT -> f_bb166:f
+f_bb165:fF -> f_bb167:f
+f_bb166:f -> f_bb172:f
+f_bb167:fT -> f_bb168:f
+f_bb167:fF -> f_bb169:f
+f_bb168:f -> f_bb172:f
+f_bb169:fT -> f_bb170:f
+f_bb169:fF -> f_bb171:f
+f_bb170:f -> f_bb172:f
+f_bb171:f -> f_bb172:f
+f_bb172:fT -> m_bb1:f1
+f_bb172:fF -> f_bb200:f
+f_bb173:fT -> f_bb174:f
+f_bb173:fF -> f_bb175:f
+f_bb174:f -> f_bb200:f
+f_bb175:f -> m_bb1:f1
+f_bb176:fT -> f_bb177:f
+f_bb176:fF -> f_bb178:f
+f_bb177:f -> f_bb181:f
+f_bb178:fT -> f_bb179:f
+f_bb178:fF -> f_bb180:f
+f_bb179:f -> f_bb181:f
+f_bb180:f -> f_bb181:f
+f_bb181:fT -> m_bb1:f1
+f_bb181:fF -> f_bb200:f
+f_bb182:fT -> f_bb183:f
+f_bb182:fF -> f_bb184:f
+f_bb183:f -> f_bb200:f
+f_bb184:f -> m_bb1:f1
+f_bb185:fT -> f_bb186:f
+f_bb185:fF -> f_bb187:f
+f_bb186:f -> f_bb188:f
+f_bb187:f -> f_bb188:f
+f_bb188:fT -> f_bb200:f
+f_bb188:fF -> m_bb1:f1
+f_bb189:fT -> f_bb192:f
+f_bb189:fF -> f_bb190:f
+f_bb190:fT -> f_bb191:f
+f_bb190:fF -> f_bb193:f
+f_bb191:f -> f_bb200:f
+f_bb192:f -> f_bb193:f
+f_bb193:f -> m_bb1:f1
+f_bb194:fT -> f_bb196:f
+f_bb194:fF -> f_bb195:f
+f_bb195:f -> f_bb196:f
+f_bb196:f -> m_bb1:f1
+f_bb197:fT -> f_bb199:f
+f_bb197:fF -> f_bb198:f
+f_bb198:f -> f_bb199:f
+f_bb199:f -> m_bb1:f1
+m_bb1:f1 -> f_bb200:f
+}
+

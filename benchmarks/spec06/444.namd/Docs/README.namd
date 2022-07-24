@@ -1,0 +1,40 @@
+
+The spec_namd benchmark is derived from the data layout and inner loop
+of NAMD (http://www.ks.uiuc.edu/Research/namd/), a parallel program for
+the simulation large biomolecular systems.  The benchmark is written in
+conservative C++, is quite portable, and the inner loop code (module
+ComputeNonbondedUtil.C) contains no aliasing.
+
+The erfc() function is required for startup.  If this is not available,
+defining WIN32ERFC during compilation will build a version of erfc()
+for little-endian, 32-bit platforms.  This is only needed for startup,
+and should not affect overall performance.
+
+Building:
+
+    unix:  CC -O *.C -o spec_namd -lm
+
+   win32:  CL /TP /O2 /G6 /DWIN32ERFC *.C /Fespec_namd.exe
+
+Running:
+
+  For profile-guided optimization:
+
+    spec_namd --input apoa1.input --iterations 1
+
+  To test the error-checking code (should produce an error):
+
+    spec_namd --input apoa1.input --iterations 1 --standard apoa1.error
+
+  To test the code (should complete without errors and return 0):
+
+    spec_namd --input apoa1.input --iterations 1 --standard apoa1.output
+
+  To run the longer, official benchmark (19 iterations):
+
+    spec_namd --input apoa1.input
+
+  To measure startup time:
+
+    spec_namd --input apoa1.input --iterations 0
+

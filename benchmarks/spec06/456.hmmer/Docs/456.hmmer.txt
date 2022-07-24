@@ -1,0 +1,82 @@
+                                   456.hmmer
+                       SPEC CPU2006 Benchmark Description
+
+Benchmark Name
+
+   456.hmmer
+
+     ----------------------------------------------------------------------
+
+Benchmark Author
+
+ Sean Eddy
+ HHMI/Dept. of Genetics
+ Washington Univ. School of Medicine
+ 4566 Scott Ave.
+ St Louis, MO 63110 USA
+ www.genetics.wustl.edu/eddy
+
+ Project Leader - Kaivalya M. Dixit (IBM)
+                - Alan MacKay (IBM)
+
+     ----------------------------------------------------------------------
+
+Benchmark Program General Category
+
+   Search a gene sequence database
+
+     ----------------------------------------------------------------------
+
+Benchmark Description
+
+   Profile Hidden Markov Models (profile HMMs) are statistical models of
+   multiple sequence alignments, which are used in computational biology to
+   search for patterns in DNA sequences.
+
+   The technique is used to do sensitive database searching, using
+   statistical descriptions of a sequence family's consensus. It is used for
+   protein sequence analysis.
+
+     ----------------------------------------------------------------------
+
+Input Description
+
+   A database (sprot41.dat) is used in the reference workloads. An input
+   workload (nph3.hmm) is used to find a ranked list of best sorting
+   sequences from the sprot41.dat file using the hmmsearch function.
+
+   For test, train, and 1 of the 2 reference workloads, 3 different hmm files
+   are used to with the hmmcalibrate function to calibrate HMM search
+   statistics. This function scores a large number of synthesized random
+   sequences from the input file and fits an extreme value distribution (EVD)
+   to the histogram of those scores.
+
+     ----------------------------------------------------------------------
+
+Output Description
+
+   Four output files contains a ranked list of matches.
+
+     ----------------------------------------------------------------------
+
+Programming Language
+
+   C Language
+
+     ----------------------------------------------------------------------
+
+Known portability issues
+
+   All resolved during porting it for SPEC.
+
+     ----------------------------------------------------------------------
+
+References
+
+     * hmmer.wustl.edu
+
+     ----------------------------------------------------------------------
+
+   Version - 2.3
+
+   Last updated: 9 May 2006

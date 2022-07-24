@@ -1,0 +1,231 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then32:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @draw_color_char(i32 %2, i32 %12, i32 88, i32 1) #8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %for.inc</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else33:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @draw_color_char(i32 %2, i32 %12, i32 88, i32 0) #8</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %for.inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  tail call void @start_draw_board() #8</td></tr>
+<tr><td align="left">  %.pre = load i32, i32* @board_size, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %0 = phi i32 [ %4, %for.inc44 ], [ %.pre, %entry ]</td></tr>
+<tr><td align="left">  %indvars.iv78 = phi i64 [ %indvars.iv.next79, %for.inc44 ], [ 0, %entry ]</td></tr>
+<tr><td align="left">  %1 = sext i32 %0 to i64</td></tr>
+<tr><td align="left">  %cmp = icmp slt i64 %indvars.iv78, %1</td></tr>
+<tr><td align="left">  br i1 %cmp, label %for.cond1.preheader, label %for.end46</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond1.preheader:</td></tr>
+<tr><td align="left">  %2 = trunc i64 %indvars.iv78 to i32</td></tr>
+<tr><td align="left">  %mul = mul i64 %indvars.iv78, 20</td></tr>
+<tr><td align="left">  %add = add i64 %mul, 21</td></tr>
+<tr><td align="left">  %3 = and i64 %add, 4294967293</td></tr>
+<tr><td align="left">  br label %for.cond1</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond1:</td></tr>
+<tr><td align="left">  %4 = phi i32 [ %0, %for.cond1.preheader ], [ %.pre80, %for.inc ]</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ 0, %for.cond1.preheader ], [ %indvars.iv.next, %for.inc ]</td></tr>
+<tr><td align="left">  %5 = sext i32 %4 to i64</td></tr>
+<tr><td align="left">  %cmp2 = icmp slt i64 %indvars.iv, %5</td></tr>
+<tr><td align="left">  br i1 %cmp2, label %for.body3, label %for.inc44</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body3:</td></tr>
+<tr><td align="left">  %6 = add nuw nsw i64 %3, %indvars.iv</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds [421 x i8], [421 x i8]* @board, i64 0, i64 %6</td></tr>
+<tr><td align="left">  %7 = load i8, i8* %arrayidx, align 1, !tbaa !7</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i8 %7, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %sw.bb, label %land.lhs.true</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.lhs.true:</td></tr>
+<tr><td align="left">  %status = getelementptr inbounds [400 x %struct.dragon_data], [400 x %struct.dragon_data]* @dragon, i64 0, i64 %6, i32 16</td></tr>
+<tr><td align="left">  %8 = load i32, i32* %status, align 4, !tbaa !15</td></tr>
+<tr><td align="left">  %cmp7.not = icmp eq i32 %8, 0</td></tr>
+<tr><td align="left">  br i1 %cmp7.not, label %sw.bb, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  switch i8 %7, label %for.inc [
+    i8 1, label %sw.bb35
+    i8 2, label %sw.bb26
+  ]</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb:</td></tr>
+<tr><td align="left">  %arrayidx13 = getelementptr inbounds i32, i32* %gb, i64 %6</td></tr>
+<tr><td align="left">  %9 = load i32, i32* %arrayidx13, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp14 = icmp sgt i32 %9, 0</td></tr>
+<tr><td align="left">  br i1 %cmp14, label %if.then16, label %if.else17</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then16:</td></tr>
+<tr><td align="left">  %10 = trunc i64 %indvars.iv to i32</td></tr>
+<tr><td align="left">  tail call void @draw_color_char(i32 %2, i32 %10, i32 119, i32 2) #8</td></tr>
+<tr><td align="left">  br label %for.inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.else17:</td></tr>
+<tr><td align="left">  %cmp20 = icmp slt i32 %9, 0</td></tr>
+<tr><td align="left">  %11 = trunc i64 %indvars.iv to i32</td></tr>
+<tr><td align="left">  br i1 %cmp20, label %if.then22, label %if.else23</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then22:</td></tr>
+<tr><td align="left">  tail call void @draw_color_char(i32 %2, i32 %11, i32 98, i32 5) #8</td></tr>
+<tr><td align="left">  br label %for.inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else23:</td></tr>
+<tr><td align="left">  tail call void @draw_color_char(i32 %2, i32 %11, i32 46, i32 0) #8</td></tr>
+<tr><td align="left">  br label %for.inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb26:</td></tr>
+<tr><td align="left">  %cmp30 = icmp eq i32 %8, 2</td></tr>
+<tr><td align="left">  %12 = trunc i64 %indvars.iv to i32</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp30, label %if.then32, label %if.else33</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">sw.bb35:</td></tr>
+<tr><td align="left">  %cmp39 = icmp eq i32 %8, 2</td></tr>
+<tr><td align="left">  %13 = trunc i64 %indvars.iv to i32</td></tr>
+<tr><td align="left">  br i1 %cmp39, label %if.then41, label %if.else42</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then41:</td></tr>
+<tr><td align="left">  tail call void @draw_color_char(i32 %2, i32 %13, i32 79, i32 1) #8</td></tr>
+<tr><td align="left">  br label %for.inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb15 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else42:</td></tr>
+<tr><td align="left">  tail call void @draw_color_char(i32 %2, i32 %13, i32 79, i32 0) #8</td></tr>
+<tr><td align="left">  br label %for.inc</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc:</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  %.pre80 = load i32, i32* @board_size, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  br label %for.cond1, !llvm.loop !25</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc44:</td></tr>
+<tr><td align="left">  %indvars.iv.next79 = add nuw nsw i64 %indvars.iv78, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !26</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end46:</td></tr>
+<tr><td align="left">  tail call void @end_draw_board() #8</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> f_bb18:f
+f_bb2:f -> f_bb3:f
+f_bb3:fT -> f_bb4:f
+f_bb3:fF -> f_bb17:f
+f_bb4:fT -> f_bb7:f
+f_bb4:fF -> f_bb5:f
+f_bb5:fT -> f_bb7:f
+f_bb5:fF -> f_bb6:f
+f_bb6:f -> f_bb16:f
+f_bb6:f -> f_bb13:f
+f_bb6:f -> f_bb12:f
+f_bb7:fT -> f_bb8:f
+f_bb7:fF -> f_bb9:f
+f_bb8:f -> f_bb16:f
+f_bb9:fT -> f_bb10:f
+f_bb9:fF -> f_bb11:f
+f_bb10:f -> f_bb16:f
+f_bb11:f -> f_bb16:f
+f_bb12:fT -> m_bb0:f1
+f_bb12:fF -> m_bb0:f2
+m_bb0:f1 -> f_bb16:f
+m_bb0:f2 -> f_bb16:f
+f_bb13:fT -> f_bb14:f
+f_bb13:fF -> f_bb15:f
+f_bb14:f -> f_bb16:f
+f_bb15:f -> f_bb16:f
+f_bb16:f -> f_bb3:f
+f_bb17:f -> f_bb1:f
+}
+

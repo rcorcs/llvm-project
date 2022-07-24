@@ -1,0 +1,80 @@
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>999.specrand: SPEC CPU2006 Benchmark Description</title>
+<meta name="generator" content="Cloyce+VIM 6.2" />
+<meta name="revision"
+      content="$Id: 999.specrand.html 4362 2006-06-06 20:54:23Z cloyce $" />
+</head>
+
+<body>
+<div style="text-align: center">
+<h1>999.specrand<br />
+SPEC CPU2006 Benchmark Description</h1>
+</div>
+ 
+<h2>Benchmark Name</h2>
+<p>999.specrand</p>
+<hr />
+
+<h2>Benchmark Author</h2>
+<p>Cloyce D. Spradling &lt;cloyce+specrand &#x5b;at&#x5d; headgear.org&gt;</p>
+<hr />
+
+<h2>Benchmark Program General Category</h2>
+<p>Mine Canary</p>
+<hr />
+ 
+<h2>Benchmark Description</h2>
+<p>999.specrand is a small harness for the algorithm presented in
+<a href="http://doi.acm.org/10.1145/63039.63042">"Random Number Generators:
+Good Ones Are Hard To Find"</a> by Park and Miller.  The datatypes used have
+been modified so that the algorithm will work properly on systems with
+64-bit longs.</p>
+
+<p>The benchmark simply generates a sequence of pseudorandom numbers starting
+with a known seed.  This benchmark is not a timed component of CPU2006; rather,
+it's there as an indicator of larger problems.  Several of the other benchmarks
+use the specrand code as their PRNG.  Thus, a failure in 999.specrand would
+point out a source of error in those codes as well.  This is cheap (in both
+time and space) insurance.</p>
+
+<hr />
+
+<h2>Input Description</h2>
+<p>999.specrand's input consists of two numbers: a seed value for the PRNG,
+and a count of the numbers to generate.</p>
+
+<hr />
+
+<h2>Output Description</h2>
+<p>The specified number of random numbers are generated and output twice.
+The first set is unscaled output from the PRNG output as a standard floating
+point number with no size or precision modifiers (printf '%f' format).  The
+second set is scaled to between 1 and 2048000, and is output as a standard
+integer with no size modifiers (printf '%d' format).  The PRNG is not re-seeded
+between sequences, so actually count*2 numbers are generated.</p>
+
+<hr />
+
+<h2>Programming Language</h2>
+<p>ANSI C</p>
+<hr />
+
+<h2>Known portability issues</h2>
+<p>This code probably will not work on a system where the standard 'int' type
+is 64-bits wide.</p>
+<hr />
+
+<h2>References</h2>
+<ul>
+<li>S. K. Park and K. W. Miller: "Random number generators: good ones are hard to find" October 1988.  Communications of the ACM vol. 31 #10.<br />
+    <a href="http://doi.acm.org/10.1145/63039.63042">http://doi.acm.org/10.1145/63039.63042</a></li>
+</ul>
+
+<hr />
+<p>Last updated: 6 February 2006</p>
+</body>
+</html>

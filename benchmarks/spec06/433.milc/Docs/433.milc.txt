@@ -1,0 +1,151 @@
+                                    433.milc
+                       SPEC CPU2006 Benchmark Description
+
+Benchmark Name
+
+   433.milc (su3imp)
+
+     ----------------------------------------------------------------------
+
+Benchmark Author
+
+   Submitted by Steven Gottlieb for the MILC collaboration
+
+   Steven Gottlieb <sg [at] fuji.physics.indiana.edu>
+   Department of Physics SW117
+   Indiana University
+   Bloomington IN 47405
+
+     ----------------------------------------------------------------------
+
+Benchmark Program General Category
+
+   Physics / Quantum Chromodynamics (QCD)
+
+     ----------------------------------------------------------------------
+
+Benchmark Description
+
+   The MILC Code is a set of codes written in C developed by the MIMD Lattice
+   Computation (MILC) collaboration for doing simulations of four dimensional
+   SU(3) lattice gauge theory on MIMD parallel machines. The code is used for
+   millions of node hours at DOE and NSF supercomputer centers.
+
+   433.milc in SPEC CPU2006 uses the serial version of the su3imp program.
+   The single processor version of this application is important and
+   relevant, because parallel performance depends on good single processor
+   performance.
+
+   The program generates a gauge field, and is used in lattice gauge theory
+   applications involving dynamical quarks. Lattice gauge theory involves the
+   study of some of the fundamental constituents of matter, namely quarks and
+   gluons. In this area of quantum field theory, traditional perturbative
+   expansions are not useful. Introducing a discrete lattice of space-time
+   points is the method of choice.
+
+     ----------------------------------------------------------------------
+
+Input Description
+
+   A SPEC CPU2006 sample input file with comments explaining the different
+   parameters is included below. The only difference between the three data
+   sets, test, train and ref, is in the grid size.
+
+    prompt 0             [set to 1 for interactive running and you will be prompted for input]
+     nflavors 2          [defines number of quarks]
+     nx 28               [size of X dimension of grid]
+     ny 28               [size of Y dimension of grid]
+     nz 28               [size of Z dimension of grid]
+     nt 96               [size of T dimension of grid]
+     iseed 277939        [random number seed, if you change all the output will too!]
+
+     warms 0             [warmup "trajectories" before measurements start]
+     trajecs 1           ["trajectories" to run with measurements]
+     traj_between_meas 1 [how often to measure]
+     beta 7.11           [strength of strong coupling]
+     mass 0.0124         [mass of quark]
+     u0  0.8788          [no need to worry about this unless you are a physicist]
+     microcanonical_time_step 0.008      [how big each simulation step is]
+     steps_per_trajectory 125            [how many steps in each trajectory]
+     max_cg_iterations 350               [number of iterations before restarting conjugate gradient routine]
+     error_per_site .00005               [desired accuracy during updating]
+     error_for_propagator .00001         [desired accuracy during measurements]
+     reload_serial ./l2896f21b711m0124m031.918   [can reload a configuration.  For SPEC we set this to fresh so no large input file is needed]
+     save_serial ./l2896f21b711m0124m031.919     [can save a configuration.  For SPEC we set this to forget so no large output file is produced]
+
+     ----------------------------------------------------------------------
+
+Output Description
+
+   Non-timing sections of output have been left untouched and is used to
+   verify correctness. Here is an example:
+
+ PLAQ:   2.477443        2.477986
+ P_LOOP: 5.615858e-01    3.192017e-02
+ G_LOOP:  0  0  4        2.477691e+00    ( 0 1 7 6  )
+ G_LOOP:  0  1  4        2.479743e+00    ( 0 2 7 5  )
+ G_LOOP:  0  2  4        2.477553e+00    ( 0 3 7 4  )
+ G_LOOP:  0  3  4        2.474894e+00    ( 1 2 6 5  )
+ G_LOOP:  0  4  4        2.478931e+00    ( 1 3 6 4  )
+ G_LOOP:  0  5  4        2.477475e+00    ( 2 3 5 4  )
+ G_LOOP:  1  0  6        2.068559e+00    ( 0 0 1 7 7 6  )
+ G_LOOP:  1  1  6        2.072486e+00    ( 0 0 2 7 7 5  )
+ G_LOOP:  1  2  6        2.066408e+00    ( 0 0 3 7 7 4  )
+ G_LOOP:  1  3  6        2.067003e+00    ( 1 1 0 6 6 7  )
+ G_LOOP:  1  4  6        2.055259e+00    ( 1 1 2 6 6 5  )
+ G_LOOP:  1  5  6        2.067791e+00    ( 1 1 3 6 6 4  )
+ G_LOOP:  1  6  6        2.067664e+00    ( 2 2 0 5 5 7  )
+ G_LOOP:  1  7  6        2.064363e+00    ( 2 2 1 5 5 6  )
+ G_LOOP:  1  8  6        2.066399e+00    ( 2 2 3 5 5 4  )
+ G_LOOP:  1  9  6        2.065020e+00    ( 3 3 0 4 4 7  )
+ G_LOOP:  1  10  6       2.069841e+00    ( 3 3 1 4 4 6  )
+ G_LOOP:  1  11  6       2.070748e+00    ( 3 3 2 4 4 5  )
+ G_LOOP:  2  0  6        2.090930e+00    ( 0 1 2 7 6 5  )
+ G_LOOP:  2  1  6        2.088985e+00    ( 0 1 5 7 6 2  )
+ G_LOOP:  2  2  6        2.101090e+00    ( 0 6 2 7 1 5  )
+ G_LOOP:  2  3  6        2.090005e+00    ( 0 6 5 7 1 2  )
+ G_LOOP:  2  4  6        2.088674e+00    ( 0 1 3 7 6 4  )
+ G_LOOP:  2  5  6        2.091178e+00    ( 0 1 4 7 6 3  )
+ G_LOOP:  2  6  6        2.096150e+00    ( 0 6 3 7 1 4  )
+ G_LOOP:  2  7  6        2.090982e+00    ( 0 6 4 7 1 3  )
+ G_LOOP:  2  8  6        2.094639e+00    ( 0 2 3 7 5 4  )
+ G_LOOP:  2  9  6        2.089583e+00    ( 0 2 4 7 5 3  )
+ G_LOOP:  2  10  6       2.098991e+00    ( 0 5 3 7 2 4  )
+ G_LOOP:  2  11  6       2.101321e+00    ( 0 5 4 7 2 3  )
+ G_LOOP:  2  12  6       2.102502e+00    ( 1 2 3 6 5 4  )
+ G_LOOP:  2  13  6       2.090858e+00    ( 1 2 4 6 5 3  )
+ G_LOOP:  2  14  6       2.095932e+00    ( 1 5 3 6 2 4  )
+ G_LOOP:  2  15  6       2.098338e+00    ( 1 5 4 6 2 3  )
+ GACTION: 2.573790e+00
+
+   In addition, the original code can be compiled to put out some useful
+   timing information about several phases of its work, by using the
+   portability flags -DCGTIME -DGFTIME -DFFTIME, to focus attention on the
+   time consuming aspects. These have been turned off in SPEC CPU2006 for
+   validation reasons.
+
+ CONGRADwall time = 7.670021e+00 iters = 4 mflops = 6.190335e+00
+ CONGRAD5: time = 5.900000e-01 iters = 4 mflops = 8.047458e+01
+ GFTIME:  2.026000e+01
+ FFTIME:  4.017000e+01
+
+     ----------------------------------------------------------------------
+
+Programming Language
+
+   C
+
+     ----------------------------------------------------------------------
+
+Known portability issues
+
+     ----------------------------------------------------------------------
+
+References
+
+     * http://physics.indiana.edu/~sg
+     * http://physics.indiana.edu/~sg/milc.html
+
+     ----------------------------------------------------------------------
+
+   Last updated: 27 March 2006

@@ -1,0 +1,127 @@
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>400.perlbench: SPEC CPU2006 Benchmark Description</title>
+<meta name="generator" content="Cloyce+VIM 6.2" />
+<meta name="revision"
+      content="$Id: 400.perlbench.html 4687 2006-07-27 22:08:43Z cloyce $" />
+</head>
+
+<body>
+<div style="text-align: center">
+
+<h1>400.perlbench<br />
+SPEC CPU2006 Benchmark Description</h1>
+</div>
+
+<h2>Benchmark Name</h2>
+<p>400.perlbench</p>
+
+<hr />
+
+<h2>Benchmark Authors</h2>
+
+<p>Larry Wall, et. al.</p>
+
+<hr />
+
+<h2>Benchmark Program General Category</h2>
+
+<p>Programming language</p>
+
+<hr />
+
+<h2>Benchmark Description</h2>
+
+  <p>400.perlbench is a cut-down version of Perl v5.8.7, the popular scripting
+  language.  SPEC's version of Perl has had most of OS-specific features
+  removed.  In addition to the core Perl interpreter, several third-party
+  modules are used:</p>
+  <ul>
+          <li>SpamAssassin v2.61</li>
+          <li>Digest-MD5 v2.33</li>
+          <li>HTML-Parser v3.35</li>
+	  <li>MHonArc v2.6.8</li>
+	  <li>IO-stringy v1.205</li>
+	  <li>MailTools v1.60</li>
+	  <li>TimeDate v1.16</li>
+  </ul>
+
+  <p>Sources for all of the freely-available components used in 400.perlbench can
+  be found in $SPEC/original.src/400.perlbench.</p>
+
+<hr />
+
+<h2>Input Description</h2>
+
+  <p>The reference workload for 400.perlbench consists of three scripts:</p>
+  <ul>
+
+   <li>The primary component of the workload is the Open Source spam checking
+   software SpamAssassin.  SpamAssassin is used to score a couple of known
+   corpora of both spam and ham (non-spam), as well as a sampling of mail
+   generated from a set of random components.  SpamAssassin has been
+   heavily patched to avoid doing file I/O, and currently (8/31/2004) does
+   not use the Bayesian filtering.</li>
+
+   <li>Another component is the popular freeware email-to-HTML converter
+   MHonArc.  Email messages are generated randomly and converted to HTML.
+   In addition to MHonArc, which was lightly patched to avoid file I/O,
+   this component also uses several standard modules from the CPAN
+   (Comprehensive Perl Archive Network).</li>
+
+   <li>The third script (which also uses the mail generator for convienience)
+   excercises a slightly-modified version of the 'specdiff' script, which
+   is a part of the CPU2006 tool suite.</li>
+  </ul>
+
+  <p>The training workload is similar, but not identical, to the reference
+  workload from CPU2000.  The test workload consists of the non-system-
+  specific parts of the actual Perl 5.8.7 test harness.</p>
+
+<hr />
+
+<h2>Output Description</h2>
+
+  <p>In the case of the mail-based benchmarks, a line with salient
+  characteristics (number of header lines, number of body lines, etc) is
+  output for each message generated.  During processing, MD5 hashes of the
+  contents of output "files" (in memory) are computed and output.  For
+  SpamAssassin, the message's score and the rules that it triggered are
+  also output.</p>
+
+<hr />
+
+<h2>Programming Language</h2>
+
+<p>ANSI C</p>
+
+<hr />
+
+<h2>Known portability issues</h2>
+
+  <p>There are some known aliasing issues.  The internal data
+  structures that represent Perl's variables are accessed in such as a way
+  as to violate ANSI aliasing rules.  Compilation with optimizations that
+  rely on strict compliance to ANSI C aliasing rules will most likely
+  produce binaries that will not validate.</p>
+
+<hr />
+
+<h2>References</h2>
+<ul>
+  <li>Perl Mongers: <a href="http://www.perl.org/">http://www.perl.org/</a></li>
+  <li>O'Reilly's Perl Pages: <a href="http://www.perl.com/">http://www.perl.com/</a></li>
+  <li>The Comprehensive Perl Archive Network: <a href="http://www.cpan.org/">http://www.cpan.org/</a></li>
+  <li>SpamAssassin: <a href="http://spamassassin.apache.org/">http://spamassassin.apache.org/</a></li>
+  <li>MHonArc: <a href="http://www.mhonarc.org/">http://www.mhonarc.org/</a></li>
+</ul>
+
+<hr />
+<p>Last updated: 27 July 2006</p>
+
+</body>
+</html>
+

@@ -1,0 +1,89 @@
+                                    444.namd
+                       SPEC CPU2006 Benchmark Description
+
+Benchmark Name
+
+   444.namd
+
+     ----------------------------------------------------------------------
+
+Benchmark Author
+
+   Jim Phillips <jim [at] ks.uiuc.edu>
+   Theoretical and Computational Biophysics Group
+   University of Illinois
+   Urbana-Champaign
+
+     ----------------------------------------------------------------------
+
+Benchmark Program General Category
+
+   Scientific, Structural Biology, Classical Molecular Dynamics Simulation
+
+     ----------------------------------------------------------------------
+
+Benchmark Description
+
+   The 444.namd benchmark is derived from the data layout and inner loop of
+   NAMD, a parallel program for the simulation of large biomolecular systems.
+
+   Although NAMD was a winner of a 2002 Gordon Bell award for parallel
+   scalability, serial performance is equally important to the over 10,000
+   users who have downloaded the program over the past several years. Almost
+   all of the runtime is spent calculating inter-atomic interactions in a
+   small set of functions. This set was separated from the bulk of the code
+   to form a compact benchmark for CPU2006. This computational core achieves
+   good performance on a wide range of machines, but contains no
+   platform-specific optimizations.
+
+     ----------------------------------------------------------------------
+
+Input Description
+
+   The file namd.input is a 92224 atom simulation of apolipoprotein A-I and
+   is used as a standard NAMD benchmark. This particular file format is
+   created by NAMD 2.5 using the "dumpbench" command, and eliminates the need
+   for file readers and other setup code from the benchmark. Test, train and
+   ref read from the same input file, but run the code for different number
+   of iterations. For ref the code is run for 38 iterations.
+
+     ----------------------------------------------------------------------
+
+Output Description
+
+   CPU2006 uses the "--output namd.out" command-line option to produce an
+   output file, namd.out, containing various checksums on the force
+   calculations. These should be consistent across platforms, within roundoff
+   error, and it is used for validation.
+
+     ----------------------------------------------------------------------
+
+Programming Language
+
+   C++
+
+     ----------------------------------------------------------------------
+
+Known portability issues
+
+   The benchmark is written in conservative C++, is quite portable, and the
+   inner loop code (module ComputeNonbondedUtil.C) contains no aliasing. The
+   erfc() function is required for startup. On Windows, -DWIN32ERFC is
+   defined during compilation to build a version of erfc() for little-endian,
+   32-bit and 64-bit platforms. This is only needed for startup, and should
+   not affect overall performance.
+
+     ----------------------------------------------------------------------
+
+References
+
+     * http://www.ks.uiuc.edu/Research/namd/
+     * Laxmikant Kale, Robert Skeel, Milind Bhandarkar, Robert Brunner,
+       Attila Gursoy, Neal Krawetz, James Phillips, Aritomo Shinozaki,
+       Krishnan Varadarajan, and Klaus Schulten. NAMD2: Greater scalability
+       for parallel molecular dynamics. Journal of Computational Physics,
+       151:283-312, 1999.
+
+     ----------------------------------------------------------------------
+
+   Last updated: 27 June 2006

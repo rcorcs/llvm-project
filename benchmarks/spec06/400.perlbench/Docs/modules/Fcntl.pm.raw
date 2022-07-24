@@ -1,0 +1,274 @@
+package Fcntl;
+
+# Faked-up fcntl.h defines for 400.perlbench
+
+our($VERSION, @ISA, @EXPORT, @EXPORT_OK, %EXPORT_TAGS);
+
+require Exporter;
+@ISA = qw(Exporter);
+$VERSION = "1.00";
+@EXPORT =
+  qw(
+	FD_CLOEXEC
+	F_ALLOCSP
+	F_ALLOCSP64
+	F_COMPAT
+	F_DUP2FD
+	F_DUPFD
+	F_EXLCK
+	F_FREESP
+	F_FREESP64
+	F_FSYNC
+	F_FSYNC64
+	F_GETFD
+	F_GETFL
+	F_GETLK
+	F_GETLK64
+	F_GETOWN
+	F_NODNY
+	F_POSIX
+	F_RDACC
+	F_RDDNY
+	F_RDLCK
+	F_RWACC
+	F_RWDNY
+	F_SETFD
+	F_SETFL
+	F_SETLK
+	F_SETLK64
+	F_SETLKW
+	F_SETLKW64
+	F_SETOWN
+	F_SHARE
+	F_SHLCK
+	F_UNLCK
+	F_UNSHARE
+	F_WRACC
+	F_WRDNY
+	F_WRLCK
+	O_ACCMODE
+	O_ALIAS
+	O_APPEND
+	O_ASYNC
+	O_BINARY
+	O_CREAT
+	O_DEFER
+	O_DIRECT
+	O_DIRECTORY
+	O_DSYNC
+	O_EXCL
+	O_EXLOCK
+	O_LARGEFILE
+	O_NDELAY
+	O_NOCTTY
+	O_NOFOLLOW
+	O_NOINHERIT
+	O_NONBLOCK
+	O_RANDOM
+	O_RAW
+	O_RDONLY
+	O_RDWR
+	O_RSRC
+	O_RSYNC
+	O_SEQUENTIAL
+	O_SHLOCK
+	O_SYNC
+	O_TEMPORARY
+	O_TEXT
+	O_TRUNC
+	O_WRONLY
+     );
+
+# Other items we are prepared to export if requested
+@EXPORT_OK = qw(
+	FAPPEND
+	FASYNC
+	FCREAT
+	FDEFER
+	FDSYNC
+	FEXCL
+	FLARGEFILE
+	FNDELAY
+	FNONBLOCK
+	FRSYNC
+	FSYNC
+	FTRUNC
+	LOCK_EX
+	LOCK_NB
+	LOCK_SH
+	LOCK_UN
+	S_ISUID S_ISGID S_ISVTX S_ISTXT
+	_S_IFMT S_IFREG S_IFDIR S_IFLNK
+	S_IFSOCK S_IFBLK S_IFCHR S_IFIFO S_IFWHT S_ENFMT
+	S_IRUSR S_IWUSR S_IXUSR S_IRWXU
+	S_IRGRP S_IWGRP S_IXGRP S_IRWXG
+	S_IROTH S_IWOTH S_IXOTH S_IRWXO
+	S_IREAD S_IWRITE S_IEXEC
+	&S_ISREG &S_ISDIR &S_ISLNK &S_ISSOCK &S_ISBLK &S_ISCHR &S_ISFIFO
+	&S_ISWHT &S_ISENFMT &S_IFMT &S_IMODE
+	SEEK_SET
+	SEEK_CUR
+	SEEK_END
+);
+# Named groups of exports
+%EXPORT_TAGS = (
+    'flock'   => [qw(LOCK_SH LOCK_EX LOCK_NB LOCK_UN)],
+    'Fcompat' => [qw(FAPPEND FASYNC FCREAT FDEFER FDSYNC FEXCL FLARGEFILE
+		     FNDELAY FNONBLOCK FRSYNC FSYNC FTRUNC)],
+    'seek'    => [qw(SEEK_SET SEEK_CUR SEEK_END)],
+    'mode'    => [qw(S_ISUID S_ISGID S_ISVTX S_ISTXT
+		     _S_IFMT S_IFREG S_IFDIR S_IFLNK
+		     S_IFSOCK S_IFBLK S_IFCHR S_IFIFO S_IFWHT S_ENFMT
+		     S_IRUSR S_IWUSR S_IXUSR S_IRWXU
+		     S_IRGRP S_IWGRP S_IXGRP S_IRWXG
+		     S_IROTH S_IWOTH S_IXOTH S_IRWXO
+		     S_IREAD S_IWRITE S_IEXEC
+		     S_ISREG S_ISDIR S_ISLNK S_ISSOCK
+		     S_ISBLK S_ISCHR S_ISFIFO
+		     S_ISWHT S_ISENFMT		
+		     S_IFMT S_IMODE
+                  )],
+);
+
+sub S_IFMT  { @_ ? ( $_[0] & _S_IFMT() ) : _S_IFMT()  }
+sub S_IMODE { $_[0] & 07777 }
+
+sub S_ISREG    { ( $_[0] & _S_IFMT() ) == S_IFREG()   }
+sub S_ISDIR    { ( $_[0] & _S_IFMT() ) == S_IFDIR()   }
+sub S_ISLNK    { ( $_[0] & _S_IFMT() ) == S_IFLNK()   }
+sub S_ISSOCK   { ( $_[0] & _S_IFMT() ) == S_IFSOCK()  }
+sub S_ISBLK    { ( $_[0] & _S_IFMT() ) == S_IFBLK()   }
+sub S_ISCHR    { ( $_[0] & _S_IFMT() ) == S_IFCHR()   }
+sub S_ISFIFO   { ( $_[0] & _S_IFMT() ) == S_IFIFO()   }
+sub S_ISWHT    { ( $_[0] & _S_IFMT() ) == S_IFWHT()   }
+sub S_ISENFMT  { ( $_[0] & _S_IFMT() ) == S_IFENFMT() }
+
+# These are just garbage values
+*SEEK_SET = sub { 0 };
+*SEEK_CUR = sub { __XXX__ };
+*SEEK_END = sub { __XXX__ };
+
+*O_APPEND = sub { __XXX__ }; # Reset x here
+*O_BINARY = sub { __XXX__ };
+*O_CREAT = sub { __XXX__ };
+*O_EXCL = sub { __XXX__ };
+*O_EXLOCK = sub { __XXX__ };
+*O_LARGEFILE = sub { __XXX__ };
+*O_NDELAY = sub { __XXX__ };
+*O_NONBLOCK = sub { __XXX__ };
+*O_RDONLY = sub { __XXX__ };
+*O_RDWR = sub { __XXX__ };
+*O_SEQUENTIAL = sub { __XXX__ };
+*O_SHLOCK = sub { __XXX__ };
+*O_SYNC = sub { __XXX__ };
+*O_TEMPORARY = sub { __XXX__ };
+*O_TEXT = sub { __XXX__ };
+*O_TRUNC = sub { __XXX__ };
+*O_WRONLY = sub { __XXX__ };
+*O_RANDOM = sub { __XXX__ };
+*O_RAW = sub { __XXX__ };
+*O_RSRC = sub { __XXX__ };
+*O_RSYNC = sub { __XXX__ };
+*O_ACCMODE = sub { __XXX__ };
+*O_ALIAS = sub { __XXX__ };
+*O_ASYNC = sub { __XXX__ };
+*O_DEFER = sub { __XXX__ };
+*O_DIRECT = sub { __XXX__ };
+*O_DIRECTORY = sub { __XXX__ };
+*O_DSYNC = sub { __XXX__ };
+*O_NOCTTY = sub { __XXX__ };
+*O_NOFOLLOW = sub { __XXX__ };
+*O_NOINHERIT = sub { __XXX__ };
+
+*S_ISUID = sub { __XXX__ }; # Reset x here
+*S_ISGID = sub { __XXX__ };
+*S_ISVTX = sub { __XXX__ };
+*S_ISTXT = sub { __XXX__ };
+*_S_IFMT = sub { __XXX__ };
+*S_IFREG = sub { __XXX__ };
+*S_IFDIR = sub { __XXX__ };
+*S_IFLNK = sub { __XXX__ };
+*S_IFSOCK = sub { __XXX__ };
+*S_IFBLK = sub { __XXX__ };
+*S_IFCHR = sub { __XXX__ };
+*S_IFIFO = sub { __XXX__ };
+*S_IFWHT = sub { __XXX__ };
+*S_ENFMT = sub { __XXX__ };
+*S_IRUSR = sub { __XXX__ };
+*S_IWUSR = sub { __XXX__ };
+*S_IXUSR = sub { __XXX__ };
+*S_IRWXU = sub { __XXX__ };
+*S_IRGRP = sub { __XXX__ };
+*S_IWGRP = sub { __XXX__ };
+*S_IXGRP = sub { __XXX__ };
+*S_IRWXG = sub { __XXX__ };
+*S_IROTH = sub { __XXX__ };
+*S_IWOTH = sub { __XXX__ };
+*S_IXOTH = sub { __XXX__ };
+*S_IRWXO = sub { __XXX__ };
+*S_IREAD = sub { __XXX__ };
+*S_IWRITE = sub { __XXX__ };
+*S_IEXEC = sub { __XXX__ };
+
+*LOCK_EX = sub { __XXX__ }; # Reset x here
+*LOCK_NB = sub { __XXX__ };
+*LOCK_SH = sub { __XXX__ };
+*LOCK_UN = sub { __XXX__ };
+
+*F_EXLCK = sub { __XXX__ }; # Reset x here
+*F_FSYNC = sub { __XXX__ };
+*F_GETFD = sub { __XXX__ };
+*F_GETFL = sub { __XXX__ };
+*F_GETLK = sub { __XXX__ };
+*F_POSIX = sub { __XXX__ };
+*F_SETFL = sub { __XXX__ };
+*F_SETLK = sub { __XXX__ };
+*F_SETLKW = sub { __XXX__ };
+*F_SETOWN = sub { __XXX__ };
+*F_SHLCK = sub { __XXX__ };
+*F_UNLCK = sub { __XXX__ };
+*FD_CLOEXEC = sub { __XXX__ };
+*F_ALLOCSP = sub { __XXX__ };
+*F_ALLOCSP64 = sub { __XXX__ };
+*F_COMPAT = sub { __XXX__ };
+*F_DUP2FD = sub { __XXX__ };
+*F_DUPFD = sub { __XXX__ };
+*F_FREESP = sub { __XXX__ };
+*F_FREESP64 = sub { __XXX__ };
+*F_FSYNC64 = sub { __XXX__ };
+*F_GETLK64 = sub { __XXX__ };
+*F_GETOWN = sub { __XXX__ };
+*F_NODNY = sub { __XXX__ };
+*F_RDACC = sub { __XXX__ };
+*F_RDDNY = sub { __XXX__ };
+*F_RDLCK = sub { __XXX__ };
+*F_RWACC = sub { __XXX__ };
+*F_RWDNY = sub { __XXX__ };
+*F_SETFD = sub { __XXX__ };
+*F_SETLK64 = sub { __XXX__ };
+*F_SETLKW64 = sub { __XXX__ };
+*F_SHARE = sub { __XXX__ };
+*F_UNSHARE = sub { __XXX__ };
+*F_WRACC = sub { __XXX__ };
+*F_WRDNY = sub { __XXX__ };
+*F_WRLCK = sub { __XXX__ };
+
+*FAPPEND = sub { __XXX__ }; # Reset x here
+*FASYNC = sub { __XXX__ };
+*FCREAT = sub { __XXX__ };
+*FDEFER = sub { __XXX__ };
+*FDSYNC = sub { __XXX__ };
+*FEXCL = sub { __XXX__ };
+*FLARGEFILE = sub { __XXX__ };
+*FNDELAY = sub { __XXX__ };
+*FNONBLOCK = sub { __XXX__ };
+*FRSYNC = sub { __XXX__ };
+*FSYNC = sub { __XXX__ };
+*FTRUNC = sub { __XXX__ };
+
+1;
+
+__END__
+cat Fcntl.pm.raw | perl -pe 'BEGIN { $x = 1 } if (s/ # Reset x here//) { $x = 1 }; if (s/__XXX__/$x/g) { $x <<= 1 }; exit if /__END__/;' > Fcntl.pm
+
+

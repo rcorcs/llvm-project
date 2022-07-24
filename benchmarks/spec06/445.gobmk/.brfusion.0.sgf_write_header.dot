@@ -1,0 +1,106 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @sgfOverwriteProperty(%struct.SGFNode_t* %root, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.28, i64 0, i64 0), i8* nonnull %0) #22</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %lor.lhs.false4</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.end8.critedge:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @sgfOverwriteProperty(%struct.SGFNode_t* %root, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.28, i64 0, i64 0), i8* nonnull %0) #22</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end8</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %str = alloca [128 x i8], align 16</td></tr>
+<tr><td align="left">  %dummy = alloca i32, align 4</td></tr>
+<tr><td align="left">  %0 = getelementptr inbounds [128 x i8], [128 x i8]* %str, i64 0, i64 0</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 128, i8* nonnull %0) #20</td></tr>
+<tr><td align="left">  %1 = bitcast i32* %dummy to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 4, i8* nonnull %1) #20</td></tr>
+<tr><td align="left">  call void (i8*, i64, i8*, ...) @gg_snprintf(i8* nonnull %0, i64 128, i8* getelementptr inbounds ([34 x i8], [34 x i8]* @.str.26, i64 0, i64 0), i8* getelementptr inbounds ([7 x i8], [7 x i8]* @.str.27, i64 0, i64 0), i32 %seed, i32 %level) #21</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %overwrite, 0</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %tobool.not, label %lor.lhs.false, label %if.end8.critedge</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false:</td></tr>
+<tr><td align="left">  %call = call i32 @sgfGetIntProperty(%struct.SGFNode_t* %root, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.28, i64 0, i64 0), i32* nonnull %dummy) #22</td></tr>
+<tr><td align="left">  %tobool1.not = icmp eq i32 %call, 0</td></tr>
+<tr><td align="left">  br i1 %tobool1.not, label %if.end, label %lor.lhs.false4</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none,  xlabel="L", label  = <<table  bgcolor="LightYellow"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false4:</td></tr>
+<tr><td align="left">  %call5 = call i32 @sgfGetIntProperty(%struct.SGFNode_t* %root, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.29, i64 0, i64 0), i32* nonnull %dummy) #22</td></tr>
+<tr><td align="left">  %tobool6.not = icmp eq i32 %call5, 0</td></tr>
+<tr><td align="left">  br i1 %tobool6.not, label %if.end8, label %lor.lhs.false10</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end8:</td></tr>
+<tr><td align="left">  call void @sgfOverwriteProperty(%struct.SGFNode_t* %root, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.29, i64 0, i64 0), i8* getelementptr inbounds ([14 x i8], [14 x i8]* @.str.30, i64 0, i64 0)) #22</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %lor.lhs.false10, label %if.then13</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">lor.lhs.false10:</td></tr>
+<tr><td align="left">  %call11 = call i32 @sgfGetIntProperty(%struct.SGFNode_t* %root, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.31, i64 0, i64 0), i32* nonnull %dummy) #22</td></tr>
+<tr><td align="left">  %tobool12.not = icmp eq i32 %call11, 0</td></tr>
+<tr><td align="left">  br i1 %tobool12.not, label %if.then13, label %if.end15</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then13:</td></tr>
+<tr><td align="left">  %tobool14.not = icmp eq i32 %rules, 0</td></tr>
+<tr><td align="left">  %cond = select i1 %tobool14.not, i8* getelementptr inbounds ([9 x i8], [9 x i8]* @.str.33, i64 0, i64 0), i8* getelementptr inbounds ([8 x i8], [8 x i8]* @.str.32, i64 0, i64 0)</td></tr>
+<tr><td align="left">  call void @sgfOverwriteProperty(%struct.SGFNode_t* %root, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.31, i64 0, i64 0), i8* %cond) #22</td></tr>
+<tr><td align="left">  br label %if.end15</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end15:</td></tr>
+<tr><td align="left">  call void @sgfOverwriteProperty(%struct.SGFNode_t* %root, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.34, i64 0, i64 0), i8* getelementptr inbounds ([2 x i8], [2 x i8]* @.str.35, i64 0, i64 0)) #22</td></tr>
+<tr><td align="left">  call void @sgfOverwritePropertyFloat(%struct.SGFNode_t* %root, i8* getelementptr inbounds ([3 x i8], [3 x i8]* @.str.11, i64 0, i64 0), float %komi) #22</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 4, i8* nonnull %1) #20</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 128, i8* nonnull %0) #20</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> m_bb0:f2
+f_bb1:fT -> m_bb0:f1
+f_bb1:fF -> f_bb2:f
+m_bb0:f1 -> f_bb2:f
+f_bb2:fT -> f_bb3:f
+f_bb2:fF -> f_bb4:f
+m_bb0:f2 -> f_bb3:f
+f_bb3:fT -> f_bb4:f
+f_bb3:fF -> f_bb5:f
+f_bb4:fT -> f_bb5:f
+f_bb4:fF -> f_bb6:f
+f_bb5:f -> f_bb6:f
+}
+

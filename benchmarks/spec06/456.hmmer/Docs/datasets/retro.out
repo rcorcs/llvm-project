@@ -1,0 +1,60 @@
+hmmsearch - search a sequence database with a profile HMM
+HMMER 2.3 (May 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                   retro.hmm [Retrotrans_gag]
+Sequence database:          /spec/cpu2006/benchspec/CPU2006/456.hmmer/data/ref/input/sprot41.dat
+per-sequence score cutoff:  [none]
+per-domain score cutoff:    [none]
+per-sequence Eval cutoff:   <= 10        
+per-domain Eval cutoff:     [none]
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query HMM:   Retrotrans_gag
+Accession:   PF03732
+Description: Retrotransposon gag protein
+  [HMM has been calibrated; E-values are empirical estimates]
+
+Alignments of top-scoring domains:
+APA1_CANFA: domain 1 of 1, from 165 to 243: score 4.7, E = 0.77
+                   *->klastfLeGrArtWwqslvarsidaiesWeelkdaFrkrFvppavkd
+                      +  ++ L++rArt  + l+a                   + + + ++
+  APA1_CANFA   165    SPLAEELRDRARTHVDALRAQLAP---------------YSD-DLRE 195  
+
+                   qleneLrqlrQkgtesvreYvqrFkrLarqaphegdvrdeealisaFlrG
+                   +l+++L  l+++g+ s++eY++r  + ++ ++     +    +++ +++G
+  APA1_CANFA   196 RLAARLEALKEGGGASLAEYHARASEQLSALG-----EKARPALEDLRQG 240  
+
+                   Lre<-*
+                   L +   
+  APA1_CANFA   241 LLP    243  
+
+APA1_RABIT: domain 1 of 1, from 165 to 243: score -2.1, E = 3.2
+                   *->klastfLeGrArtWwqslvarsidaiesWeelkdaFrkrFvppavkd
+                      +  ++ L++ Art  ++l+ +                  + + + ++
+  APA1_RABIT   165    SPLAEELRDSARTHVDTLRTKLAP---------------YSN-ELQQ 195  
+
+                   qleneLrqlrQkgtesvreYvqrFkrLarqaphegdvrdeea..lisaFl
+                   +l+++L +++++g+ s++eY       +++a++++ v++e+a+++++ ++
+  APA1_RABIT   196 RLAARLESIKEGGGASLAEY-------QAKAREHLSVLSEKArpALEDLR 238  
+
+                   rGLre<-*
+                   +GL +   
+  APA1_RABIT   239 QGLLP    243  
+
+APA1_BOVIN: domain 1 of 1, from 165 to 242: score -2.8, E = 3.6
+                   *->klastfLeGrArtWwqslvarsidaiesWeelkdaFrkrFvppavkd
+                      +  +  L++rAr   ++l++                   + + + ++
+  APA1_BOVIN   165    SPLAQELRDRARAHVETLRQQLAP---------------YSD-DLRQ 195  
+
+                   qleneLrqlrQkgtesvreYvqrFkrLarqaphegdvrdeealisaFlrG
+                   +l ++L  l++ g++s++eY+++  + +  ++     +  + +++ +++G
+  APA1_BOVIN   196 RLTARLEALKE-GGGSLAEYHAKASEQLKALG-----EKAKPVLEDLRQG 239  
+
+                   Lre<-*
+                   L +   
+  APA1_BOVIN   240 LLP    242  
+
+
+Total sequences searched: 122564

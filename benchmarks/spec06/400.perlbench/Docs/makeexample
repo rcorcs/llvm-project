@@ -1,0 +1,47 @@
+#!/usr/bin/perl -n
+
+# This is the script that was used to generate some of the example flag
+# text in the flags description file.  It's the reason that some flags are
+# listed which don't actually do anything (except match the regexp in the
+# flags file)
+
+BEGIN {
+  $re = '';
+  $ex_seen = 0;
+}
+
+if (/<flag name=.*regexp="([^"]+)"/) {
+  $ex_seen = 0;
+  print;
+  $re = $1;
+  $re =~ s/^\[-\/\]/-/;
+  $re =~ s/\\b$//;
+  $re =~ s/\(\?i?:=\[-?0-9\D+?\].?\)\??/=12345/;
+  $re =~ s/\(\?i?:=\\[dsDS.].?\)\??/=XXX/;
+  $re =~ s/\)\?/,}/g;
+  $re =~ s/\(\?i?:=\\[dsDS.].?/{=XXX/;
+  $re =~ s/=\\[dsDS.][\*+]$/=XXX/;
+  $re =~ s/\)/}/g;
+  $re =~ s/\((\?i?:)?/{/g;
+  $re =~ s/\|/,/g;
+  $re =~ s|\[([^]]+)\]|sprintf "{%s}", join(',', split(//, $1))|eg;
+  $re =~ s/(.)\?/{$1,}/g;
+  $re =~ s/{([^,]*)}/$1/g;
+} elsif (/<example>/) {
+  $ex_seen = 1;
+  print;
+} elsif (/<\/flag>/) {
+  if ($re ne ''  && !$ex_seen) {
+    my $ex = qx/zsh -c "echo $re" 2>&1/;
+    chomp($ex);
+    $ex = join(",\n", split(/ /, $ex));
+    print "<!-- WARNING! -->\n" if ($ex =~ /[\*{}]/);
+    #print "<!-- re=\"$re\" -->\n<example>\n$ex\n</example>\n";
+    print "<example>\n$ex\n</example>\n";
+  }
+  $re = '';
+  $ex_seen = 0;
+  print;
+} else {
+  print;
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>483.xalancbmk: SPEC CPU2006 Benchmark Description</title>
+</head>
+<body>
+<div style="text-align: center">
+<h1>483.xalancbmk<br />
+SPEC CPU2006 Benchmark Description</h1>
+</div>
+
+<h2>Benchmark Name</h2>
+
+<p>483.xalancbmk</p>
+
+<hr />
+
+<h2>Benchmark Author</h2>
+
+<p>IBM Corporation, Apache Inc, plus modifications for SPEC
+purposes by Christopher Cambly, Andrew Godbout, Neil Graham, Sasha
+Kasapinovic, Jim McInnes, June Ng, Michael Wong<br />
+<br />
+&nbsp;&nbsp; Primary contact: michaelw &#x5b;at&#x5d; ca.ibm.com</p>
+
+<hr />
+
+<h2>Benchmark Program General Category</h2>
+
+<p>XSLT processor for transforming XML documents into HTML, text,
+or other XML document types</p>
+
+<hr />
+
+<h2>Benchmark Description</h2>
+
+<p>This program is a modified version of Xalan-C++, an XSLT
+processor written in a portable subset of C++ .</p>
+
+<p>Xalan-C++ version 1.8 is a robust implementation of the W3C
+Recommendations for XSL Transformations (XSLT) and the XML Path
+Language (XPath). It works with a compatible release of the
+Xerces-C++ XML parser: Xerces-C++ version 2.5.0. Xalan-C++ (named
+after a rare musical instrument) implements the W3C Recommendation
+16 November 1999 XSL Transformations (XSLT) Version 1.0 and the XML
+Path Language (XPath) Version 1.0. XSLT is the first part of the
+XSL stylesheet language for XML. It includes the XSL Transformation
+vocabulary and XPath, a language for addressing parts of XML
+documents.</p>
+
+<p>You use the XSLT language to compose XSL stylesheets. An XSL
+stylesheet contains instructions for transforming XML documents
+from one document type to another document type (XML, HTML, or
+other). In structural terms, an XSL stylesheet specifies the
+transformation of one tree of nodes (the XML input) into another
+tree of nodes (the output or transformation result).<br /></p>
+
+<p>Modifications for SPEC benchmarking purposes include:<br />
+&nbsp;&nbsp; 1. combining code in a way that makes it a standalone
+executable<br />
+&nbsp;&nbsp; 2. removing compiler incompatibilities and improving
+standard conformance<br />
+&nbsp;&nbsp; 3. change the output to display intermediate
+values<br />
+&nbsp;&nbsp; 4. removing large part of unexecuted code that causes
+differences between platforms<br />
+&nbsp;&nbsp; 5. finding the test data and contributing fixes to the
+code to read the large 100 MB test data<br />
+&nbsp;&nbsp; 6. Moving all the include locations to fit better into
+the SPEC harness.</p>
+
+<hr />
+
+<h2>Input Description</h2>
+
+<p>An XML document and an XSL Stylesheet.</p>
+
+<hr />
+
+<h2>Output Description</h2>
+
+<p>An HTML document</p>
+
+<hr />
+
+<h2>Programming Language</h2>
+
+<p>C++</p>
+
+<hr />
+
+<h2>Known portability issues</h2>
+
+<p>None</p>
+
+<hr />
+
+<h2>References</h2>
+
+<ul>
+  <li><a href="http://xml.apache.org/xalan-c/">http://xml.apache.org/xalan-c/</a></li>
+  <li>Xalan-C++ fully implements the <a href="http://www.w3.org/TR/xslt">W3C Recommendation 
+    16 November 1999 XSL Transformations (XSLT) Version 1.0.</a></li>
+  <li>Xalan-C++ incorporates the <a href="http://www.w3.org/TR/xpath">XML Path 
+    Language (XPath) Version 1.0.</a></li>
+  <li>Xalan-C++ uses <a href="http://xml.apache.org/xerces-c/index.html">Xerces-C++</a> 
+    to parse XML documents and XSL stylesheets.</li>
+  <li>Along with a complete API for performing transformations in your C++ applications, 
+    Xalan-C++ provides a <a href="http://xml.apache.org/xalan-c/commandline.html">command 
+    line utility</a> for convenient file-to-file transformations.</li>
+  <li>Xalan-C++ supports C++ <a href="http://xml.apache.org/xalan-c/extensions.html">extension 
+    functions</a>.</li>
+</ul>
+
+<hr />
+
+<p>Last updated: 9 May 2006</p>
+</body>
+</html>

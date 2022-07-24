@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>456.hmmer: SPEC CPU2006 Benchmark Description</title>
+</head>
+<body>
+<div style="text-align: center">
+<h1>456.hmmer<br />
+SPEC CPU2006 Benchmark Description</h1>
+</div>
+
+<h2>Benchmark Name</h2>
+
+<p>456.hmmer</p>
+
+<hr />
+
+<h2>Benchmark Author</h2>
+
+<pre>
+Sean Eddy
+HHMI/Dept. of Genetics
+Washington Univ. School of Medicine
+4566 Scott Ave.
+St Louis, MO 63110 USA
+<a href="http://www.genetics.wustl.edu/eddy/">www.genetics.wustl.edu/eddy</a>
+
+Project Leader - Kaivalya M. Dixit (IBM)
+               - Alan MacKay (IBM)
+</pre>
+
+<hr />
+
+<h2>Benchmark Program General Category</h2>
+
+<p>Search a gene sequence database</p>
+
+<hr />
+
+<h2>Benchmark Description</h2>
+
+<p>Profile Hidden Markov Models (profile HMMs) are statistical models of
+multiple sequence alignments, which are used in computational biology to 
+search for patterns in DNA sequences.  </p>
+
+<p>The technique is used to do
+sensitive database searching, using statistical descriptions of a
+sequence family's consensus. It is used for protein sequence
+analysis.</p>
+
+<hr />
+
+<h2>Input Description</h2>
+
+<p>A database (sprot41.dat) is used in the reference workloads. An input workload 
+  (nph3.hmm) is used to find a ranked list of best sorting sequences from the 
+  sprot41.dat file using the hmmsearch function.</p>
+<p>For test, train, and 1 of the 2 reference workloads, 3 different hmm files 
+  are used to with the hmmcalibrate function to calibrate HMM search statistics. 
+  This function scores a large number of synthesized random sequences from the 
+  input file and fits an extreme value distribution (EVD) to the histogram of 
+  those scores.</p>
+
+<hr />
+
+<h2>Output Description</h2>
+
+<p>Four output files contains a ranked list of matches.</p>
+
+<hr />
+
+<h2>Programming Language</h2>
+
+<p>C Language</p>
+
+<hr />
+
+<h2>Known portability issues</h2>
+
+<p>All resolved during porting it for SPEC.</p>
+
+<hr />
+
+<h2>References</h2>
+
+<ul>
+  <li><a href="http://hmmer.wustl.edu/">hmmer.wustl.edu</a></li>
+</ul>
+
+<hr />
+
+<p>Version - 2.3</p>
+
+<p>Last updated: 9 May 2006</p>
+
+</body>
+</html>

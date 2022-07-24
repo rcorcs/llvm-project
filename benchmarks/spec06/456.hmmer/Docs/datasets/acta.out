@@ -1,0 +1,122 @@
+hmmsearch - search a sequence database with a profile HMM
+HMMER 2.3 (May 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                   acta.hmm [ActA]
+Sequence database:          /spec/cpu2006/benchspec/CPU2006/456.hmmer/data/ref/input/sprot41.dat
+per-sequence score cutoff:  [none]
+per-domain score cutoff:    [none]
+per-sequence Eval cutoff:   <= 10        
+per-domain Eval cutoff:     [none]
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query HMM:   ActA
+Accession:   PF05058
+Description: ActA Protein
+  [HMM has been calibrated; E-values are empirical estimates]
+
+Alignments of top-scoring domains:
+ACTA_LISMO: domain 1 of 1, from 7 to 639: score 1270.4, E = 0
+                   *->lRAMMvVciTAnCIlvNPdvIFAanstvsttdsEdSsLetDEweEGE
+                      +RAMMvV+iTAnCI++NPd+IFAa      tdsEdSsL+tDEweE E
+  ACTA_LISMO     7    MRAMMVVFITANCITINPDIIFAA------TDSEDSSLNTDEWEE-E 46   
+
+                   kaEekveEvrtgPryetarevssRDIqELeKsnkvknaNkaDliamlksk
+                   k+Ee+++Ev+tgPryetarevssRDI+ELeKsnkv+n+NkaDliamlk+k
+  ACTA_LISMO    47 KTEEQPSEVNTGPRYETAREVSSRDIKELEKSNKVRNTNKADLIAMLKEK 96   
+
+                   leKePniNiGEtvtkskPPsvRkRFkRCvEkvLkGkRnksskEEtkttkk
+                   +eK+PniN                                          
+  ACTA_LISMO    97 AEKGPNIN------------------------------------------ 104  
+
+                   kqEsskLqPkELvPHPsiAnqsFWRRLsDkikPvvtsnDDnDsRiDsDEW
+                                                                     
+  ACTA_LISMO     - -------------------------------------------------- -    
+
+                   DDGEEAkEkveegkaEEGkAEEEknnLGqEEisEAReRDLqELEkmGkvk
+                                                                     
+  ACTA_LISMO     - -------------------------------------------------- -    
+
+                   nAnvtALLAmLDsRAGkvARqDikeseqdevpAvleeakgsdrpaiqver
+                                         +++seq+e++A++eea+g+drpaiqver
+  ACTA_LISMO   105 ----------------------NNNSEQTENAAINEEASGADRPAIQVER 132  
+
+                   rhpglpsdsaaeIKkRRKAiEGsDmEDsDmEDADtEEkPLAHGAtGPLRt
+                   rhpglpsdsaaeIKkRRKA                               
+  ACTA_LISMO   133 RHPGLPSDSAAEIKKRRKA------------------------------- 151  
+
+                   mnPstsEEtsEkiqsnEnnEEssnqsqFDLLssstEEGLRiALPEPPGLL
+                                                                     
+  ACTA_LISMO     - -------------------------------------------------- -    
+
+                   GFnmqnnElaSSdSEleSltlsdkPTkeekkkvaKisvsdtsevdldSSl
+                           +aSSdSEleSlt++dkPTk++kkkvaK+sv+d+se+dldSS+
+  ACTA_LISMO   152 --------IASSDSELESLTYPDKPTKVNKKKVAKESVADASESDLDSSM 193  
+
+                   qsadEdaPQsLkANqqlfFPkvfkkikdAakdvrdkIdenvEvkkalvdk
+                   qsadE++PQ+LkANqq+fFPkvfkkikdA+k+vrdkIden+Evkka+vdk
+  ACTA_LISMO   194 QSADESSPQPLKANQQPFFPKVFKKIKDAGKWVRDKIDENPEVKKAIVDK 243  
+
+                   sadLidQlLtkkkseEVNAsdFPsPPTdEELrAlalketiAPmllGfssL
+                   sa+LidQlLtkkkseEVNAsdFP+PPTdEELr lal+et  PmllGf   
+  ACTA_LISMO   244 SAGLIDQLLTKKKSEEVNASDFPPPPTDEELR-LALPET--PMLLGF--- 287  
+
+                   RPsREdAPatLsepsSlEFPsPPTeEELaAmDmkqsiAPtvEeEssLRPs
+                        +APat sepsS+EFP+PPT+EEL+                     
+  ACTA_LISMO   288 -----NAPAT-SEPSSFEFPPPPTDEELR--------------------- 310  
+
+                   REDAPqsLtAnPsLEFPsPPtEEELAamgikqsmaLsvgeesslePsred
+                                             +++++++m+L++++++++ePs   
+  ACTA_LISMO   311 --------------------------LALPETPMLLGFNAPATSEPS--- 331  
+
+                   apqsltanpslelPsPPtEdELeimrekassldssftegdLaslREdain
+                            s+e+P+PPtEdELei+re+assldssft+gdLaslR +ain
+  ACTA_LISMO   332 ---------SFEFPPPPTEDELEIIRETASSLDSSFTRGDLASLR-NAIN 371  
+
+                   rlsaNfSLdfPsiPTEEELaarggkptseefsslnessLrPsREDvPqsL
+                   r+s+NfS dfP+iPTEEEL++rgg+ptseefssln+              
+  ACTA_LISMO   372 RHSQNFS-DFPPIPTEEELNGRGGRPTSEEFSSLNS-------------- 406  
+
+                   tAnPsLEFPsPPtRAELAAmGiFmFnDGLLRGDLGsAGnAiERqsssCLD
+                                                                     
+  ACTA_LISMO     - -------------------------------------------------- -    
+
+                   sPtCsYFYGdfTDDEySettEdElDrLldlrvtAiGEdrkTgkqsRkvGF
+                           GdfTDDE+SettE+E+DrL+dlr      dr+Tgk+sR++GF
+  ACTA_LISMO   407 --------GDFTDDENSETTEEEIDRLADLR------DRGTGKHSRNAGF 442  
+
+                   lPlvPllekPvAGGnGtLAEEqiiknPLpklkpkvqkidsialildlaKK
+                   lPl+P++++Pv                 p+l+pkv+ki+++ali+d++KK
+  ACTA_LISMO   443 LPLNPFASSPV-----------------PSLSPKVSKISAPALISDITKK 475  
+
+                   lpfkaekaalnvfvkKTtekTktkkvikvneaiKlAiLPkTkpaEtlsLL
+                   +pfk+++++lnvf+kKTt+kT+tkk+++v++a+KlA+LP+Tkp+Et+   
+  ACTA_LISMO   476 TPFKNPSQPLNVFNKKTTTKTVTKKPTPVKTAPKLAELPATKPQETV--- 522  
+
+                   tnstqtvGstLkvseNKlpfieKqaeTlksEnsslimaslPvIqkEslEk
+                               ++eNK+pfieKqaeT+k   +s++m+slPvIqkE++E+
+  ACTA_LISMO   523 ------------LRENKTPFIEKQAETNK---QSINMPSLPVIQKEATES 557  
+
+                   rKEemKtqleEktlkeselvekseGKnrsagieeeKLvAKSAEdEKakeE
+                   +KEemK+q+eEk+++ese++++++GKnrsagiee+KL+AKSAEdEKakeE
+  ACTA_LISMO   558 DKEEMKPQTEEKMVEESESANNANGKNRSAGIEEGKLIAKSAEDEKAKEE 607  
+
+                   agNhTvLilAllAIGviSLaviIKIIrlRKnd<-*
+                   +gNhT+LilA+lAIGv+SL+++IKII+lRKn+   
+  ACTA_LISMO   608 PGNHTTLILAMLAIGVFSLGAFIKIIQLRKNN    639  
+
+
+Total sequences searched: 122564
+
+Whole sequence top hits:
+tophits_s report:
+     Total hits:           28
+     Satisfying E cutoff:  1
+     Total memory:         19K
+
+Domain top hits:
+tophits_s report:
+     Total hits:           28
+     Satisfying E cutoff:  28
+     Total memory:         114K

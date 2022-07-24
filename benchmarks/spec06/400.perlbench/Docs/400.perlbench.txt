@@ -1,0 +1,104 @@
+                                 400.perlbench
+                       SPEC CPU2006 Benchmark Description
+
+Benchmark Name
+
+   400.perlbench
+
+     ----------------------------------------------------------------------
+
+Benchmark Authors
+
+   Larry Wall, et. al.
+
+     ----------------------------------------------------------------------
+
+Benchmark Program General Category
+
+   Programming language
+
+     ----------------------------------------------------------------------
+
+Benchmark Description
+
+   400.perlbench is a cut-down version of Perl v5.8.7, the popular scripting
+   language. SPEC's version of Perl has had most of OS-specific features
+   removed. In addition to the core Perl interpreter, several third-party
+   modules are used:
+
+     * SpamAssassin v2.61
+     * Digest-MD5 v2.33
+     * HTML-Parser v3.35
+     * MHonArc v2.6.8
+     * IO-stringy v1.205
+     * MailTools v1.60
+     * TimeDate v1.16
+
+   Sources for all of the freely-available components used in 400.perlbench
+   can be found in $SPEC/original.src/400.perlbench.
+
+     ----------------------------------------------------------------------
+
+Input Description
+
+   The reference workload for 400.perlbench consists of three scripts:
+
+     * The primary component of the workload is the Open Source spam checking
+       software SpamAssassin. SpamAssassin is used to score a couple of known
+       corpora of both spam and ham (non-spam), as well as a sampling of mail
+       generated from a set of random components. SpamAssassin has been
+       heavily patched to avoid doing file I/O, and currently (8/31/2004)
+       does not use the Bayesian filtering.
+     * Another component is the popular freeware email-to-HTML converter
+       MHonArc. Email messages are generated randomly and converted to HTML.
+       In addition to MHonArc, which was lightly patched to avoid file I/O,
+       this component also uses several standard modules from the CPAN
+       (Comprehensive Perl Archive Network).
+     * The third script (which also uses the mail generator for convienience)
+       excercises a slightly-modified version of the 'specdiff' script, which
+       is a part of the CPU2006 tool suite.
+
+   The training workload is similar, but not identical, to the reference
+   workload from CPU2000. The test workload consists of the non-system-
+   specific parts of the actual Perl 5.8.7 test harness.
+
+     ----------------------------------------------------------------------
+
+Output Description
+
+   In the case of the mail-based benchmarks, a line with salient
+   characteristics (number of header lines, number of body lines, etc) is
+   output for each message generated. During processing, MD5 hashes of the
+   contents of output "files" (in memory) are computed and output. For
+   SpamAssassin, the message's score and the rules that it triggered are also
+   output.
+
+     ----------------------------------------------------------------------
+
+Programming Language
+
+   ANSI C
+
+     ----------------------------------------------------------------------
+
+Known portability issues
+
+   There are some known aliasing issues. The internal data structures that
+   represent Perl's variables are accessed in such as a way as to violate
+   ANSI aliasing rules. Compilation with optimizations that rely on strict
+   compliance to ANSI C aliasing rules will most likely produce binaries that
+   will not validate.
+
+     ----------------------------------------------------------------------
+
+References
+
+     * Perl Mongers: http://www.perl.org/
+     * O'Reilly's Perl Pages: http://www.perl.com/
+     * The Comprehensive Perl Archive Network: http://www.cpan.org/
+     * SpamAssassin: http://spamassassin.apache.org/
+     * MHonArc: http://www.mhonarc.org/
+
+     ----------------------------------------------------------------------
+
+   Last updated: 27 July 2006

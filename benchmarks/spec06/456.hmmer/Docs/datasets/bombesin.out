@@ -1,0 +1,203 @@
+hmmsearch - search a sequence database with a profile HMM
+HMMER 2.3 (May 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                   bombesin.hmm [Bombesin]
+Sequence database:          /spec/cpu2006/benchspec/CPU2006/456.hmmer/data/ref/input/sprot41.dat
+per-sequence score cutoff:  [none]
+per-domain score cutoff:    [none]
+per-sequence Eval cutoff:   <= 10        
+per-domain Eval cutoff:     [none]
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query HMM:   Bombesin
+Accession:   PF02044
+Description: Bombesin-like peptide
+  [HMM has been calibrated; E-values are empirical estimates]
+
+Alignments of top-scoring domains:
+NEUB_XENLA: domain 1 of 1, from 45 to 54: score 17.1, E = 0.19
+                   *->gnqWAvGhfm<-*
+                      gnqWA+Ghfm   
+  NEUB_XENLA    45    GNQWAIGHFM    54   
+
+BOML_PSEGU: domain 1 of 1, from 4 to 13: score 17.0, E = 0.19
+                   *->gnqWAvGhfm<-*
+                      g+qWAvGhfm   
+  BOML_PSEGU     4    GPQWAVGHFM    13   
+
+RANR_RANRU: domain 1 of 1, from 8 to 17: score 16.9, E = 0.21
+                   *->gnqWAvGhfm<-*
+                      +nqWA+Ghfm   
+  RANR_RANRU     8    YNQWATGHFM    17   
+
+BOMB_BOMVA: domain 1 of 1, from 46 to 55: score 16.6, E = 0.25
+                   *->gnqWAvGhfm<-*
+                      gnqWAvGh+m   
+  BOMB_BOMVA    46    GNQWAVGHLM    55   
+
+BOMB_BOMOR: domain 1 of 1, from 49 to 58: score 16.6, E = 0.25
+                   *->gnqWAvGhfm<-*
+                      gnqWAvGh+m   
+  BOMB_BOMOR    49    GNQWAVGHLM    58   
+
+RANA_RANPI: domain 1 of 1, from 49 to 58: score 16.5, E = 0.26
+                   *->gnqWAvGhfm<-*
+                       +qWAvGhfm   
+  RANA_RANPI    49    VPQWAVGHFM    58   
+
+RANC_RANPI: domain 1 of 1, from 2 to 11: score 16.0, E = 0.35
+                   *->gnqWAvGhfm<-*
+                      ++qWA+Ghfm   
+  RANC_RANPI     2    TPQWATGHFM    11   
+
+LITO_LITAU: domain 1 of 1, from 1 to 9: score 15.7, E = 0.42
+                   *->gnqWAvGhfm<-*
+                       +qWAvGhfm   
+  LITO_LITAU     1    -QQWAVGHFM    9    
+
+ALYT_ALYOB: domain 1 of 1, from 5 to 14: score 15.3, E = 0.52
+                   *->gnqWAvGhfm<-*
+                      g+qWAvGh+m   
+  ALYT_ALYOB     5    GTQWAVGHLM    14   
+
+GRP_SHEEP: domain 1 of 1, from 41 to 50: score 15.3, E = 0.53
+                   *->gnqWAvGhfm<-*
+                      gn+WAvGh+m   
+   GRP_SHEEP    41    GNHWAVGHLM    50   
+
+GRP_PIG: domain 1 of 1, from 18 to 27: score 15.3, E = 0.53
+                   *->gnqWAvGhfm<-*
+                      gn+WAvGh+m   
+     GRP_PIG    18    GNHWAVGHLM    27   
+
+GRP_ONCMY: domain 1 of 1, from 14 to 23: score 15.3, E = 0.53
+                   *->gnqWAvGhfm<-*
+                      gn+WAvGh+m   
+   GRP_ONCMY    14    GNHWAVGHLM    23   
+
+GRP_HUMAN: domain 1 of 1, from 41 to 50: score 15.3, E = 0.53
+                   *->gnqWAvGhfm<-*
+                      gn+WAvGh+m   
+   GRP_HUMAN    41    GNHWAVGHLM    50   
+
+GRP_CANFA: domain 1 of 1, from 18 to 27: score 15.3, E = 0.53
+                   *->gnqWAvGhfm<-*
+                      gn+WAvGh+m   
+   GRP_CANFA    18    GNHWAVGHLM    27   
+
+NEUB_PIG: domain 1 of 1, from 23 to 32: score 15.2, E = 0.55
+                   *->gnqWAvGhfm<-*
+                      gn+WA+Ghfm   
+    NEUB_PIG    23    GNLWATGHFM    32   
+
+NEUB_MOUSE: domain 1 of 1, from 47 to 56: score 15.2, E = 0.55
+                   *->gnqWAvGhfm<-*
+                      gn+WA+Ghfm   
+  NEUB_MOUSE    47    GNLWATGHFM    56   
+
+NEUB_HUMAN: domain 1 of 1, from 47 to 56: score 15.2, E = 0.55
+                   *->gnqWAvGhfm<-*
+                      gn+WA+Ghfm   
+  NEUB_HUMAN    47    GNLWATGHFM    56   
+
+GRP_SCYCA: domain 1 of 1, from 16 to 25: score 14.0, E = 1.1
+                   *->gnqWAvGhfm<-*
+                      g++WAvGh+m   
+   GRP_SCYCA    16    GSHWAVGHLM    25   
+
+GRP_BOMOR: domain 1 of 1, from 51 to 60: score 14.0, E = 1.1
+                   *->gnqWAvGhfm<-*
+                      g++WAvGh+m   
+   GRP_BOMOR    51    GSHWAVGHLM    60   
+
+GRP_ALLMI: domain 1 of 1, from 19 to 28: score 14.0, E = 1.1
+                   *->gnqWAvGhfm<-*
+                      g++WAvGh+m   
+   GRP_ALLMI    19    GSHWAVGHLM    28   
+
+GRP_RANRI: domain 1 of 1, from 1 to 10: score 14.0, E = 1.1
+                   *->gnqWAvGhfm<-*
+                      g++WAvGh+m   
+   GRP_RANRI     1    GSHWAVGHLM    10   
+
+GRP_CHICK: domain 1 of 1, from 18 to 27: score 14.0, E = 1.1
+                   *->gnqWAvGhfm<-*
+                      g++WAvGh+m   
+   GRP_CHICK    18    GSHWAVGHLM    27   
+
+GRP_RAT: domain 1 of 1, from 43 to 52: score 14.0, E = 1.1
+                   *->gnqWAvGhfm<-*
+                      g++WAvGh+m   
+     GRP_RAT    43    GSHWAVGHLM    52   
+
+LITP_PHYSA: domain 1 of 1, from 48 to 57: score 13.4, E = 1.6
+                   *->gnqWAvGhfm<-*
+                      +++WAvG+fm   
+  LITP_PHYSA    48    RQLWAVGSFM    57   
+
+LITR_PHYRO: domain 1 of 1, from 1 to 9: score 13.1, E = 1.9
+                   *->gnqWAvGhfm<-*
+                       ++WA+Ghfm   
+  LITR_PHYRO     1    -QLWATGHFM    9    
+
+LITL_PHYSA: domain 1 of 1, from 48 to 57: score 12.0, E = 3.5
+                   *->gnqWAvGhfm<-*
+                      +++WAvG++m   
+  LITL_PHYSA    48    RQLWAVGSLM    57   
+
+RELN_MOUSE: domain 3 of 8, from 1587 to 1596: score 3.9, E = 4.1e+02
+                   *->gnqWAvGhfm<-*
+                        qWA G ++   
+  RELN_MOUSE  1587    SAQWALGDVL    1596 
+
+RELN_MOUSE: domain 7 of 8, from 3218 to 3227: score 2.4, E = 9.5e+02
+                   *->gnqWAvGhfm<-*
+                      ++ WA+ h+    
+  RELN_MOUSE  3218    KQSWAIDHVY    3227 
+
+RELN_MOUSE: domain 2 of 8, from 1210 to 1219: score 2.3, E = 1e+03
+                   *->gnqWAvGhfm<-*
+                      ++qWAv  ++   
+  RELN_MOUSE  1210    YDQWAVDDII    1219 
+
+RELN_MOUSE: domain 1 of 8, from 551 to 560: score 1.1, E = 2e+03
+                   *->gnqWAvGhfm<-*
+                      +n WAv  f    
+  RELN_MOUSE   551    RNVWAVDFFH    560  
+
+RELN_MOUSE: domain 8 of 8, from 3416 to 3425: score 1.0, E = 2.2e+03
+                   *->gnqWAvGhfm<-*
+                      ++qWA  h+    
+  RELN_MOUSE  3416    HDQWALDHVE    3425 
+
+RELN_MOUSE: domain 5 of 8, from 2843 to 2852: score 0.7, E = 2.6e+03
+                   *->gnqWAvGhfm<-*
+                        qWA+  f    
+  RELN_MOUSE  2843    DVQWAIDNFY    2852 
+
+RELN_MOUSE: domain 6 of 8, from 3039 to 3048: score 0.3, E = 3.2e+03
+                   *->gnqWAvGhfm<-*
+                      + qWA   ++   
+  RELN_MOUSE  3039    RAQWALDNIL    3048 
+
+RELN_MOUSE: domain 4 of 8, from 2651 to 2660: score 0.1, E = 3.5e+03
+                   *->gnqWAvGhfm<-*
+                      +n WA+  ++   
+  RELN_MOUSE  2651    QNDWAIDNVL    2660 
+
+
+Total sequences searched: 122564
+
+Whole sequence top hits:
+tophits_s report:
+     Total hits:           183
+     Satisfying E cutoff:  27
+     Total memory:         33K
+
+Domain top hits:
+tophits_s report:
+     Total hits:           191
+     Satisfying E cutoff:  191
+     Total memory:         55K

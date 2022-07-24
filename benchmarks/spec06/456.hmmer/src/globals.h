@@ -1,0 +1,25 @@
+/************************************************************
+ * HMMER - Biological sequence analysis with profile HMMs
+ * Copyright (C) 1992-2003 Washington University School of Medicine
+ * All Rights Reserved
+ * 
+ *     This source code is distributed under the terms of the
+ *     GNU General Public License. See the files COPYING and LICENSE
+ *     for details.
+ ************************************************************/
+
+/* globals.h
+ * Mon Nov 18 13:05:03 1996
+ * 
+ * Global variable definitions. 
+ * This file may only be included in a main() .c file.
+ */
+
+/* char  Alphabet[MAXCODE];  ACGT, for instance adviced Sean Kaivalya 10/3 */
+char  Alphabet[MAXCODE+1]; /* ACGT, for instance Kaivalya 10/3/03   */ 
+int   Alphabet_type;     /* hmmNUCLEIC or hmmAMINO                */
+int   Alphabet_size;     /* uniq alphabet size: 4 or 20           */
+int   Alphabet_iupac;    /* total size of alphabet + IUPAC degen. */
+char  Degenerate[MAXCODE][MAXABET];
+int   DegenCount[MAXCODE];
+

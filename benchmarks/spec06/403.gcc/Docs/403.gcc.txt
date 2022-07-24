@@ -1,0 +1,88 @@
+                                    403.gcc
+                       SPEC CPU2006 Benchmark Description
+
+Benchmark Name
+
+   403.gcc
+
+     ----------------------------------------------------------------------
+
+Benchmark Author
+
+   Richard Stallman and a large cast of helpers. For a full list, see
+   http://gcc.gnu.org/onlinedocs/gcc/Contributors.html .
+
+     ----------------------------------------------------------------------
+
+Benchmark Program General Category
+
+   C Language optimizing compiler
+
+     ----------------------------------------------------------------------
+
+Benchmark Description
+
+   403.gcc is based on gcc Version 3.2. It generates code for an AMD Opteron
+   processor. The benchmark runs as a compiler with many of its optimization
+   flags enabled.
+
+   403.gcc has had its inlining heuristics altered slightly, so as to inline
+   more code than may be typical of Unix systems as of the time that the
+   porting work was done for the benchmark. This was done so that 403.gcc
+   would spend more time analyzing its source code inputs, and use more
+   memory. Without this effect, 403.gcc would have done less analysis, and
+   needed more input workloads to achieve the run times required for CPU2006.
+
+     ----------------------------------------------------------------------
+
+Input Description
+
+   There are 9 input workloads in 403.gcc. These files are preprocessed C
+   code (.i files):
+
+     * cp-decl.i and expr.i come from the source files of 176.gcc from
+       CPU2000.
+     * 166.i is made by concatenating the Fortran source files of a
+       SPECint2000 candidate benchmark, then using the f2c translator to
+       produce C code, and then pre-processing.
+     * 200.i comes via the same method from a previous version of the
+       SPECfp2000 benchmark 200.sixtrack.
+     * scilab.i comes via the same method from a version of the Scilab
+       program.
+     * Expr2.i comes from the source of 403.gcc, as does c-typeck.i.
+     * g23.i comes from fold-const.c from 403.gcc, and s04.i comes from
+       sched-deps.c of 403.gcc
+
+     ----------------------------------------------------------------------
+
+Output Description
+
+   All output files are x86-64 assembly code files.
+
+     ----------------------------------------------------------------------
+
+Programming Language
+
+   C
+
+     ----------------------------------------------------------------------
+
+Known portability issues
+
+    1. Some of the optimizations 403.gcc performs require constant
+       propagation of floating point constants. These form an insignificant
+       amount of computation time, yet may depend on IEEE floating point
+       format to produce a correct result.
+    2. 403.gcc is not an ANSI C program. It uses GNU extensions.
+    3. The initial port of 403.gcc was to a 64 bit system. It has been
+       successfully ported by SPEC to many 32-bit UNIX implementations.
+
+     ----------------------------------------------------------------------
+
+References
+
+     * See the GCC home page at http://gcc.gnu.org
+
+     ----------------------------------------------------------------------
+
+   Last updated: 29 June 2006

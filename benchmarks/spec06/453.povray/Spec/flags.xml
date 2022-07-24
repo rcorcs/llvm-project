@@ -1,0 +1,869 @@
+<?xml version="1.0"?>
+<!DOCTYPE flagsdescription SYSTEM
+       "http://www.spec.org/dtd/cpuflags1.dtd">
+
+<!-- This file defines flags that appear in the sources for 453.povray.
+
+  Copyright (C) 2005-2006 Standard Performance Evaluation Corporation
+
+  $Revision: 4111 $
+  $Date: 2006-04-06 12:39:38 -0400 (Thu, 06 Apr 2006) $
+-->
+<flagsdescription>
+
+<!-- Normal flags file should suggest a name for themselves -->
+<filename>453.povray.flags</filename>
+
+<title>453.povray Flags</title>
+
+<header>
+<![CDATA[
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+]]>
+</header>
+
+<flag name="DALIGN16" class="forbidden">
+Used to set alignment for some data structures. Disabled for everyone. 
+</flag>
+
+<flag name="DALLOW_SMOOT_RAD_PREVIEW" class="forbidden">
+USed to set this parameter to 1 for everyone
+</flag>
+
+<flag name="DALTMAIN" class="forbidden">
+Always undefined to enable local output
+</flag>
+
+<flag name="DATMOSPH_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DAccumulatePoolStatistics" class="forbidden">
+Always undefined since we do not wish these statistics
+</flag>
+
+<flag name="DBBOX_EXTRA_STATS" class="forbidden">
+Always set to 1 to generate extra statistics
+</flag>
+
+<flag name="DBBOX_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DBCYL_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DBEGIN_POV_NAMESPACE" class="forbidden">
+Just a macro to set the namespace
+</flag>
+
+<flag name="DBEZIER_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DBLOB_EXTRA_STATS" class="forbidden">
+Always set to 1 to enable these statistics
+</flag>
+
+<flag name="DBLOB_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DBOUND_HUGE" class="forbidden">
+Maximum lengths of a bounding box is set with this to 2.0e10
+</flag>
+
+<flag name="DBOXES_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DBSPHERE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DC99_COMPATIBLE_RADIOSITY" class="portability">
+Select log or ilog functions for INHYP
+</flag>
+
+<flag name="DCALLOC" class="portability">
+Used to declare the way your system calls calloc
+</flag>
+
+<flag name="DCAMERA_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DCASE" class="forbidden">
+Convenient macro for case statement
+</flag>
+
+<flag name="DCDECL" class="forbidden">
+Always set to blank
+</flag>
+
+
+<flag name="DCHI2_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DCOLC" class="forbidden">
+Always set to float
+</flag>
+
+<flag name="DCOLOUR_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DCOLUTILS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DCOMPILER_VER" class="forbidden">
+Always set to blank
+</flag>
+
+<flag name="DCONES_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DCONFIGBASE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DCONFIGFRONTEND_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DCONFIG_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DCONFIG_MATH" class="forbidden">
+Always set to blank
+</flag>
+
+<flag name="DCOOPERATE" class="forbidden">
+Always set to blank since this is only for multi-threaded versions
+</flag>
+
+<flag name="DCOOPERATE_0" class="forbidden">
+Always set to blank since this is only for multi-threaded versions
+</flag>
+
+<flag name="DCOOPERATE_1" class="forbidden">
+Always set to blank since this is only for multi-threaded versions
+</flag>
+
+<flag name="DCOOPERATE_2" class="forbidden">
+Always set to blank since this is only for multi-threaded versions
+</flag>
+
+<flag name="DCRITICAL_LENGTH" class="forbidden">
+Always set to 1.0e6
+</flag>
+
+<flag name="DCSG_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DDBL" class="forbidden">
+Always set to double to use that data type
+</flag>
+
+<flag name="DDBL_FORMAT_STRING" class="forbidden">
+Always set to %lf to print doubles
+</flag>
+
+<flag name="DDEBUG_DEFAULTCPU" class="forbidden">
+Always set to 0 since this enables debug when set to 1
+</flag>
+
+<flag name="DDEBUG_FLOATFUNCTION" class="forbidden">
+Always set to 0 since this enables debug when set to 1
+</flag>
+
+<flag name="DDEFAULTMESSAGEOUTPUT_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DDEFAULTPLATFORMBASE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DDEFAULT_ASSUMED_GAMMA" class="forbidden">
+Always set to 1
+</flag>
+
+<flag name="DDEFAULT_DISPLAY_GAMMA" class="forbidden">
+Always set to 2.2
+</flag>
+
+<flag name="DDEFAULT_ITEXTSTREAM_BUFFER_SIZE" class="forbidden">
+Always set to 512
+</flag>
+
+<flag name="DDEFAULT_OUTPUT_FORMAT" class="forbidden">
+Always set to 't'
+</flag>
+
+<flag name="DDELETE_FILE" class="forbidden">
+Always set to unlink
+</flag>
+
+<flag name="DDELETE_FILE_ERR" class="forbidden">
+Always set to -1
+</flag>
+
+<flag name="DDISCS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DDONT_SHOW_IMAGE_LIB_VERSIONS" class="forbidden">
+Always set to blank
+</flag>
+
+<flag name="DDRIVE_SEPARATOR" class="forbidden">
+Set to ':' for some file systems
+</flag>
+
+<flag name="DDUMP_OBJECT_DATA" class="forbidden">
+Always set to 0
+</flag>
+
+<flag name="DDYNAMIC_HASHTABLE" class="forbidden">
+Always set to blank
+</flag>
+
+<flag name="DEND_POV_NAMESPACE" class="forbidden">
+Convenient macro to delimit povray's namespace
+</flag>
+
+<flag name="DEPSILON" class="forbidden">
+Always set to 1e-10
+</flag>
+
+<flag name="DEXIST_FILE" class="forbidden">
+Always set to POV_BASE_NAMESPACE::File_Exist(name)
+</flag>
+
+
+<flag name="DEXIST_FONT_FILE" class="forbidden">
+Always set to FALSe
+</flag>
+
+<flag name="DEXIT_POVRAY" class="forbidden">
+Use to define povray's exit function
+</flag>
+
+<flag name="DEXPRESS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DFASTER_NOISE_INIT" class="forbidden">
+Always set to blank
+</flag>
+
+<flag name="DFILEINPUTOUTPUT_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DFILENAME_SEPARATOR" class="forbidden">
+Set to :, / or \
+</flag>
+
+<flag name="DFILE_NAME_LENGTH" class="forbidden">
+Always set to 150
+</flag>
+
+<flag name="DFINISH_POVRAY" class="forbidden">
+Always set to blank
+</flag>
+
+<flag name="DFNCODE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DFNINTERN_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DFNPOVFPU_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DFNSYNTAX_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DFPMETRIC_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DFRACTAL_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DFRAME_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DFRONTEND_ADDRESS" class="forbidden">
+Always set to povray_getoutputcontext()
+</flag>
+
+<flag name="DFUDGE_FACTOR1" class="forbidden">
+Always set to 1.0e12
+</flag>
+
+<flag name="DFUDGE_FACTOR2" class="forbidden">
+Always set to -1.0e-5
+</flag>
+
+<flag name="DFUDGE_FACTOR3" class="forbidden">
+Always set to 1.0e-7
+</flag>
+
+<flag name="DFUNCTION_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DGETCOMMANDLINE" class="forbidden">
+Always set to ccommand
+</flag>
+
+<flag name="DHCMPLX_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DHEAP" class="forbidden">
+Always set to blank
+</flag>
+
+<flag name="DHFIELD_EXTRA_STATS" class="forbidden">
+Always set to 1
+</flag>
+
+<flag name="DHFIELD_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DHISTOGRA_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DHUGE_VAL" class="forbidden">
+Always set to 1.0e+17
+</flag>
+
+<flag name="DIFF_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DIFF_SWITCH_CAST" class="forbidden">
+Always set to (int)
+</flag>
+
+<flag name="DIMAGE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DINLINE_NOISE" class="forbidden">
+Always set to blank
+</flag>
+
+
+
+<flag name="DINTERIOR_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DISOSURF_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DJULIA_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DLATHE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DLBUFFER_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DLIGHTGRP_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DLIGHTING_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DLOW_COUNT_BRIGHT" class="forbidden">
+Always FALSE
+</flag>
+
+<flag name="DMATHUTIL_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DMATRICES_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DMAX_BUFSIZE" class="forbidden">
+Always set to MAX_INT
+</flag>
+
+<flag name="DMAX_TRACE_LEVEL_LIMIT" class="forbidden">
+Always set to 256
+</flag>
+
+<flag name="DMEDIA_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DMEM_HEADER_ALIGNMENT" class="forbidden">
+Always set to align on doubles
+</flag>
+
+<flag name="DMEM_RECLAIM" class="forbidden">
+Always set to 0 to disable garbage collection
+</flag>
+
+<flag name="DMEM_STATS" class="forbidden">
+Always set to 0 to disable memory stats
+</flag>
+
+<flag name="DMEM_TAG" class="forbidden">
+Always set to 0 to disable memory tagging
+</flag>
+
+<flag name="DMEM_TRACE" class="forbidden">
+Always set to 0 to disable memory tracing
+</flag>
+
+<flag name="DMESH_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DM_PI" class="forbidden">
+Used to define value of PI
+</flag>
+
+<flag name="DM_PI_180" class="forbidden">
+Used to define value of PI/180
+</flag>
+
+<flag name="DM_PI_2" class="forbidden">
+Used to define value of PI/2
+</flag>
+<flag name="DM_PI_360" class="forbidden">
+Used to define value of PI/360
+</flag>
+
+<flag name="DNEED_INVHYP" class="portability">
+User uses this to use the inv hyp functions in the source code
+</flag>
+
+<flag name="DNORMAL_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DOBJECTS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DOCTREE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DOPTOUT_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DORDERED" class="forbidden">
+Always set to 0
+</flag>
+
+<flag name="DOT_DEBUG" class="forbidden">
+Always set to 0
+</flag>
+
+<flag name="DPARSESTR_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPARSE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPARSTXTR_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPATTERN_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPGM_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPHOTONS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPIGMENT_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPLANES_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPLATFORMBASE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOINTER_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOINT_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOLYGON_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOLYSOLV_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOLY_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DPOVMSAddress" class="forbidden">
+Always set to void *
+</flag>
+
+<flag name="DPOVMSBool" class="forbidden">
+Always set to int
+</flag>
+
+<flag name="DPOVMSCPP_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOVMSFloat" class="forbidden">
+Always set to float
+</flag>
+
+<flag name="DPOVMSGID_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOVMSIEEEFloat" class="forbidden">
+Always set to float
+</flag>
+
+<flag name="DPOVMSInt" class="forbidden">
+Always set to int
+</flag>
+
+<flag name="DPOVMSLong" class="forbidden">
+Always set to long
+</flag>
+
+<flag name="DPOVMSPixel" class="forbidden">
+Always set to unsigned char[4]
+</flag>
+
+<flag name="DPOVMSRECEIVE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOVMSSEND_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOVMSStream" class="forbidden">
+Always set to unsigned char
+</flag>
+
+<flag name="DPOVMS_CDECL" class="forbidden">
+Always set to blank
+</flag>
+
+<flag name="DPOVMS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DPOVMS_SIMPLE_LONG_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOVRAY_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DPOV_ERR_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPOV_LONG" class="portability">
+Always defined to be a 64-bit integer type
+</flag>
+
+
+<flag name="DPOV_MEM_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DPOV_NAME_MAX" class="portability">
+Set to 8 for filesystems with 8.3 names
+</flag>
+
+<flag name="DPOV_NUM_ECHO_LINES" class="portability">
+Always set to 8
+</flag>
+
+<flag name="DPOV_ULONG" class="portability">
+Set to unsigned long long
+</flag>
+
+<flag name="DPOV_UTIL_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPPM_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPRECISION_TIMER_AVAILABLE" class="portability">
+Always set to 0 for SPEC_CPU
+</flag>
+
+
+<flag name="DPRISM_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPROCESSOPTIONS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DPROCESSRENDEROPTIONS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DQUADRICS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DRADIOSIT_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DRAY_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DRENDCTRL_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DRENDERFRONTEND_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DRENDERIO_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DRENDER_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DSKIP_COMPLEX_OPTOUT_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DSNGL" class="portability">
+Always set to float
+</flag>
+
+<flag name="DSOR_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DSPEC_CPU" class="mandatory">
+Sets all the options for the most portable benchmark code
+</flag>
+
+<flag name="DSPEC_CPU_ILP64" class="portability">
+Definitions for ILP64 systems
+</flag>
+
+<flag name="DSPEC_CPU_LP64" class="portability">
+Definitions for LP64 systems
+</flag>
+
+<flag name="DSPEC_CPU_NEED_INVHYP" class="portability">
+Use this to choose the radiosity calculation implementation
+</flag>
+
+<flag name="DSPEC_CPU_NO_NESTED_CLASS_ACCESS" class="portability">
+Work around some compilers' limitation with nested class and private members
+</flag>
+
+<flag name="DSPEC_CPU_WINDOWS" class="mandatory">
+Definitions for Windows systems
+</flag>
+
+<flag name="DSPEC_CPU_WINDOWS_ICL" class="portability">
+Definitions for Windows and Intel Compiler
+</flag>
+
+<flag name="DSPHERES_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DSPHERE_SWEEP_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DSPLINE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DSTANDARDMESSAGEOUTPUT_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DSTATSPOV_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DSTRINGUTILITIES_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DSUPER_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DSYS_MATH_PARAM" class="portability">
+Always set to double
+</flag>
+
+<flag name="DSYS_MATH_RETURN" class="portability">
+Always set to double
+</flag>
+
+<flag name="DTARGA_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DTARGET_OS_MAC" class="portability">
+Enable MacOS portability changes
+</flag>
+
+<flag name="DTEXTSTREAMBUFFER_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DTEXTSTREAM_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DTEXTURE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DTOKENIZE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DTORUS_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DTRIANGLE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DTRUETYPE_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DTWO_M_PI" class="portability">
+Always defined as 2*PI 
+</flag>
+
+<flag name="DTXTTEST_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+
+<flag name="DUSERDISP_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DUSERIO_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DUSE_FASTER_NOISE" class="forbidden">
+Always disabled
+</flag>
+
+
+<flag name="DVBUFFER_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DVECTOR_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DVLBUFFER_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="DWARP_H" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="D_SPECQSORTH_" class="forbidden">
+Prevents multiple inclusion of header files
+</flag>
+
+<flag name="D__MWERKS__" class="portability">
+Enables portability changes for Metrowerks compiler
+</flag>
+
+<flag name="D__cplusplus" class="portability">
+portability changes for CPP
+</flag>
+
+
+
+</flagsdescription>

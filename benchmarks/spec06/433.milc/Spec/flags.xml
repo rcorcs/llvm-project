@@ -1,0 +1,217 @@
+<?xml version="1.0"?>
+<!DOCTYPE flagsdescription SYSTEM
+       "http://www.spec.org/dtd/cpuflags1.dtd">
+
+<!-- This file defines flags that appear in the sources for 433.milc.
+
+  Copyright (C) 2005 Standard Performance Evaluation Corporation
+
+  $Revision: 4254 $
+  $Date: 2006-05-21 19:31:24 -0400 (Sun, 21 May 2006) $
+-->
+<flagsdescription>
+
+<filename>433.milc.flags</filename>
+
+<title>433.milc Flags</title>
+
+<header>
+<![CDATA[
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+]]>
+</header>
+
+<flag name="currdir_inc" class="mandatory" regexp="-I\.(?:\s+|$)">
+<example>-I.</example>
+This flag is included automatically by Spec/object.pm.
+</flag>
+
+<flag name="DASQ_OPTIMIZED_FATTENING" class="forbidden">
+Provides optimizations specific to the Aqstad action.
+</flag>
+
+<flag name="DASQ_OPTIMIZED_FORCE" class="forbidden">
+Provides optimizations specific to the Aqstad action.
+</flag>
+
+<flag name="DBPCORR" class="forbidden">
+Saves the Polyakov loop value for each site in the site member "ploop"
+for later use
+</flag>
+
+<flag name="DCGTIME" class="forbidden">
+Timing of individual portions of code turned off.
+</flag>
+
+<flag name="DCONGRAD_TMP_VECTORS" class="mandatory">
+Optimizes performance for conjugate gradient by copying some vectors
+from site structure to temporary vectors.
+</flag>
+
+<flag name="DCONTROL" class="forbidden">
+Used to define the main program, so that global variables are
+ allocated, not defined as external.
+</flag>
+
+<flag name="DDSLASH_TMP_LINKS" class="mandatory">
+Optimizes performance by copying gauge links from site structure to
+temporary arrays.
+</flag>
+
+<flag name="DEO" class="forbidden">
+Defines for actions that allow even-odd subgrids.
+</flag>
+
+<flag name="DFAST" class="mandatory">
+Performance enhancing code transformation.
+</flag>
+
+<flag name="DFFTIME" class="forbidden">
+Timing of individual portions of code turned off.
+</flag>
+
+<flag name="DFN" class="mandatory">
+Action contains both fat link in Naik (long link) terms.
+</flag>
+
+<flag name="DGAUGE_ACTION_PART1" class="forbidden">
+Used in gauge action include files to distinguish definitions from
+executable part of code
+</flag>
+
+<flag name="DGAUGE_ACTION_PART2" class="forbidden">
+Used in gauge action include files to distinguish definitions from
+executable part of code
+</flag>
+
+<flag name="DGFTIME" class="forbidden">
+Timing of individual portions of the code turned off.
+</flag>
+
+<flag name="DHAVE_FSEEKO" class="forbidden">
+Operating system has support for fseeko.
+</flag>
+
+<flag name="DHAVE_SYS_TIME_H" class="forbidden">
+Operating system has systime.h.
+</flag>
+
+<flag name="DHAVE_UNISTD_H" class="forbidden">
+Operating system has unistd.h.
+</flag>
+
+<flag name="DHMC_ALGORITHM" class="forbidden">
+Use the hybrid Monte Carlo algorithm
+</flag>
+
+<flag name="DHPUX" class="forbidden">
+For HPUX operating system
+</flag>
+
+<flag name="DINT_IS_32BIT" class="forbidden">
+int data type is 32bits
+</flag>
+
+<flag name="DLLTIME" class="forbidden">
+Timing of individual portions of code turned off.
+</flag>
+
+<flag name="DLOOPEND" class="forbidden">
+Performance enhancement for layouts that store all even sites before
+all odd sites
+</flag>
+
+<flag name="DMPI" class="forbidden">
+The code is to be run under MPI.
+</flag>
+
+<flag name="DNATIVEDOUBLE" class="forbidden">
+For 64bit fp units. The code has now been converted to double precision.
+</flag>
+
+<flag name="DNPBP_REPS" class="forbidden">
+Define the number of repetitions of the measurement routine for the
+chiral condensate.
+</flag>
+
+<flag name="DN_SUBL32" class="forbidden">
+The set of grid points is divided into 32 subsets, as opposed to the
+usual even-odd subgrids.
+</flag>
+
+<flag name="DPHI_ALGORITHM" class="forbidden">
+Use the phi algorithm.
+</flag>
+
+<flag name="DSCHROED_FUN" class="forbidden">
+Use the Schroedinger functional method.
+</flag>
+
+<flag name="DSHORT_IS_32BIT" class="forbidden">
+Type short is 32 bits.
+</flag>
+
+<flag name="DSITERAND" class="forbidden">
+Use a separate random number generator for each grid point.
+</flag>
+
+<flag name="DSPECTRUM" class="forbidden">
+Compile in spectrum measurement routines.
+</flag>
+
+<flag name="DSPEC_CPU" class="mandatory">
+Mandatory flag that sets a number of default portability flags.
+</flag>
+
+<flag name="DSPEC_CPU_NEED_COMPLEX_TYPES" class="portability">
+Complex inrinsic functions.
+</flag>
+
+<flag name="DSPEC_CPU_WINDOWS" class="mandatory">
+Portability flag for windows.
+</flag>
+
+<flag name="DSTRONG" class="forbidden">
+Used in unitarity checking code to enhance check.
+</flag>
+
+<flag name="DT3E" class="forbidden">
+Code modification specific to the Cray T3E.
+</flag>
+
+<flag name="DTADPOLE_IMPROVE" class="forbidden">
+Use the tadpole improvement physics method.
+</flag>
+
+<flag name="DUNIDEBUG" class="forbidden">
+Used in unitarity checking code to enhance check.
+</flag>
+
+<flag name="header_guards" class="forbidden" regexp="[-/]D_(?:ASQTAD_ACTION|COMDEFS|CONFIG|DEFINES|DIRS|GENERIC|GENERIC_KS|GENERIC_QUARK_TYPES|IO_LAT|LATTICE|LOOPEND|MACROS|MILC_COMPLEX|PARAMS|RANDOM|SU3|TYPE32)_H(?:=\S*)?\b">
+<example>
+-D_ASQTAD_ACTION_H,
+-D_COMDEFS_H,
+-D_CONFIG_H,
+-D_DEFINES_H,
+-D_DIRS_H,
+-D_GENERIC_H,
+-D_GENERIC_KS_H,
+-D_GENERIC_QUARK_TYPES_H,
+-D_IO_LAT_H,
+-D_LATTICE_H,
+-D_LOOPEND_H,
+-D_MACROS_H,
+-D_MILC_COMPLEX_H,
+-D_PARAMS_H,
+-D_RANDOM_H,
+-D_SU3_H,
+-D_TYPE32_H
+</example>
+This macro is used to guard against multiple header inclusions.  It may not be
+set explicitly.
+</flag>
+
+
+</flagsdescription>
