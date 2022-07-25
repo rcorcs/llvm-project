@@ -3,6 +3,7 @@
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
@@ -247,6 +248,17 @@ void RegionReplicator::fullPredicateStores(Region *RToReplicate,
 
 void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
                                    Region *ReplicatedRegion) {
+
+  // users of defs in expanded block are only replaced if the user is
+  // outside the replicated region
+  auto ShouldReplaceUse = [&] (Use &U) -> bool {
+    Instruction* User = dyn_cast<Instruction>(U.getUser());
+    if (User->getParent() == ReplicatedRegion->getExit()) return false;
+    for (auto * BB : ReplicatedRegion->blocks()){
+      if (User->getParent() == BB) return false;
+    }
+    return true;
+  };
   // errs() << "computing DF\n";
   // compute DF
   DominatorTree &DT = MA.getCFGInfo().getDomTree();
@@ -261,6 +273,8 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
     for (Use &Use : I.uses()) {
       Instruction *User = cast<Instruction>(Use.getUser());
       if (User->getParent() != ExpandedBlock) {
+        errs() << "instruction has users outside expanded block\n";
+        I.print(errs()); errs() << "\n";
         InstrsWithOutsideUses.insert(&I);
         break;
       }
@@ -274,6 +288,9 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
   while (!WorkList.empty()) {
     Instruction *I = *WorkList.begin();
     WorkList.erase(I);
+
+    errs() << "processing instruction : \n";
+    I->print(errs()); errs() << "\n";
 
 
     // if (Visited.count(I)) {
@@ -292,6 +309,7 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
       // includes loops header ignore it
       if (BB == I->getParent())
         continue;
+      errs() << "processing frontier at " << BB->getNameOrAsOperand() << "\n";
       // add a phi node only if DF is within the replicated region
       if (ReplicatedRegion->contains(BB) || ReplicatedRegion->getExit() == BB) {
         PHINode *NewPHI =
@@ -304,21 +322,10 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
             NewPHI->addIncoming(llvm::UndefValue::get(I->getType()), Pred);
           }
         }
-        // replace users
-	// errs() << "updating users to use the phi-node\n";
-	// BB->dump();
-        SmallVector<Instruction *> UsersToModify;
-        for (Use &Use : I->uses()) {
-          Instruction *User = cast<Instruction>(Use.getUser());
-          if (User->getParent() != NewPHI->getParent() &&
-              User->getParent() != ExpandedBlock) {
-            UsersToModify.push_back(User);
-          }
-        }
-        for (Instruction *User : UsersToModify) {
-          User->replaceUsesOfWith(I, NewPHI);
-        }
+        I->replaceUsesWithIf(NewPHI, ShouldReplaceUse);
         // this phi must be furthur processed using its DF
+        errs() << "new PHI node : \n";
+        NewPHI->print(errs()); errs() << "\n";
         WorkList.insert(NewPHI);
       }
     }
