@@ -410,6 +410,9 @@ static bool isEligibleForMerging(Function &F) {
 bool MergeFunctions::runOnModule(Module &M) {
   bool Changed = false;
 
+  errs() << "Running MergeFunctions::runOnModule " << M.getName().str() << "\n";
+
+
   // All functions in the module, ordered by hash. Functions with a unique
   // hash value are easily eliminated.
   std::vector<std::pair<FunctionComparator::FunctionHash, Function *>>
