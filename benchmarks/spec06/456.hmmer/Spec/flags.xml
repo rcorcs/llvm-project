@@ -1,0 +1,293 @@
+<?xml version="1.0"?>
+<!DOCTYPE flagsdescription SYSTEM
+       "http://www.spec.org/dtd/cpuflags1.dtd">
+
+<!-- This file defines flags that appear in the sources for 456.hmmer.
+
+  Copyright (C) 2005-2006 Standard Performance Evaluation Corporation
+
+  $Revision: 3869 $
+  $Date: 2006-02-24 10:01:32 -0500 (Fri, 24 Feb 2006) $
+
+-->
+<flagsdescription>
+
+<!-- Normal flags file should suggest a name for themselves -->
+<filename>456.hmmer.flags</filename>
+
+<title>456.hmmer Flags</title>
+
+<header>
+<![CDATA[
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+]]>
+</header>
+
+<flag name="DALL_SEQUENCE_SPACE" class="forbidden" >
+Count gaps in sequences as a symbol and not a space.
+</flag>
+
+<flag name="DALTIVEC" class="forbidden" >
+The benchmark uses ALTIVEC-specific code.
+</flag>
+
+<flag name="DA_QUIET_DAY" class="forbidden">
+Adds a main function for SQIO testing.
+</flag>
+
+<flag name="DCONFIGH_INCLUDED" class="forbidden">
+Indicates that the config.h has already been included.
+</flag>
+
+<flag name="DCUBS_WIN" class="forbidden">
+Adds a main function for sre_strcat timing.
+</flag>
+
+<flag name="DDEBUG" class="forbidden">
+Enables debugging features.  
+</flag>
+
+<flag name="DDIRSLASH" class="forbidden">
+Defines the directory path seperator character. Not needed for SPEC CPU2006 because no paths are specified in the test pararmeters.
+</flag>
+
+<flag name="DDEBUGLEVEL" class="forbidden">
+Used to determine how much debug information to provide.
+</flag>
+
+<flag name="DEXIT_FAILURE" class="forbidden">
+Value to print on a Failure exit.
+</flag>
+
+<flag name="DEXIT_SUCCESS" class="forbidden">
+Value to print on a Success exit.
+</flag>
+
+<flag name="DFALSE" class="forbidden">
+Used as a boolean value, set to 0 if not already set.
+</flag>
+
+<flag name="DFUNCSH_INCLUDED" class="forbidden">
+Indicates that the funcs.h has already been included.
+</flag>
+
+<flag name="DGETOPT_TESTDRIVER" class="forbidden">
+Provides testing of getopt functions.
+</flag>
+
+<flag name="DGSIH_INCLUDED" class="forbidden">
+Indicates that the gsi.h has already been included.
+</flag>
+
+<flag name="DHAS_64BIT_FILE_OFFSETS" class="forbidden">
+Indicates that 64 bit files offsets need to be used. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DHAVE_FSEEKO" class="forbidden">
+Indicates if fseek function is present. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DHAVE_FSEEKO64" class="forbidden">
+Indicates if fseek function is present. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DHAVE_FTELLO" class="forbidden">
+Indicates if ftell function is present. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DHAVE_FTELLO64" class="forbidden">
+Indicates if ftell function is present. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DHAVE_HTONL" class="forbidden">
+Indicates if htonl function is present for doing byte swaps. Used only to set USE_HOST_BYTESWAP_FUNCTIONS.
+</flag>
+
+<flag name="DHAVE_HTONS" class="forbidden">
+Indicates if htons function is present for doing byte swaps. Used only to set USE_HOST_BYTESWAP_FUNCTIONS.
+</flag>
+
+<flag name="DHAVE_NTOHL" class="forbidden">
+Indicates if ntohl function is present for doing byte swaps. Used only to set USE_HOST_BYTESWAP_FUNCTIONS.
+</flag>
+
+<flag name="DHAVE_NTOHS" class="forbidden">
+Indicates if ntohs function is present for doing byte swaps. Used only to set USE_HOST_BYTESWAP_FUNCTIONS.
+</flag>
+
+<flag name="DHAVE_PTHREAD_ATTR_SETSCOPE" class="forbidden">
+Set pthreaded (not allowed) options.
+</flag>
+
+<flag name="DHAVE_PTHREAD_SETCONCURRENCY" class="forbidden">
+Set pthreaded (not allowed) options.
+</flag>
+
+<flag name="DHAVE_STAT64" class="forbidden">
+Indicates if stat64 function is present. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DHAVE_STRTOUL" class="forbidden">
+Indicates if strtoul function is present. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DHAVE_STRTOULL" class="forbidden">
+Indicates if strtoull function is present. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DHMMER_PVM" class="forbidden">
+Compiles the application as a parallel virtual machine.
+</flag>
+
+<flag name="DHMMER_THREADS" class="forbidden">
+Compiles the application as a pthreads - multi-threaded application.
+</flag>
+
+<flag name="DMAX" class="forbidden">
+Sets up the max() function. if not defined.
+</flag>
+
+<flag name="DMICHAEL_JORDAN_BUYS_THE_PACERS" class="forbidden">
+If set, uses a new function NewTraceScoreCorrection().
+</flag>
+
+<flag name="DMIN" class="forbidden">
+Sets up the min() function. if not defined.
+</flag>
+
+<flag name="DMUGGINS_LETS_ME_SLEEP" class="forbidden">
+Enables a main() for testing.
+</flag>
+
+<flag name="DNBA_TEAM_IN_STL" class="forbidden">
+Enables a main() for a test driver.
+</flag>
+
+<flag name="DNOSTR" class="portability">
+sets : extern char *strstr(char *s, char *subs);
+</flag>
+
+<flag name="DPTHREAD_TIMES_HACK" class="forbidden">
+Used to print timings when running with >0 threads.
+</flag>
+
+<flag name="DRAMLIMIT" class="forbidden">
+RAMLIMIT determines the point at which we switch from fast,full dynamic programming to slow, linear-memory divide and conquer dynamic programming algorithms. It is the minimum amount of available RAM on the systems the package will run on.
+</flag>
+
+<flag name="DREVCOMP_TESTDRIVER" class="forbidden">
+Enables a main() for a test driver.
+</flag>
+
+<flag name="DSEEK_SET" class="portability">
+If not already defined by other includes, include unistd.h to get definition.
+</flag>
+
+<flag name="DSIZEOF_OFF_T" class="forbidden">
+Used in determining how to set HAS_64BIT_FILE_OFFSETS. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DSIZEOF_UNSIGNED_INT" class="forbidden">
+The number bytes in a long. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DSIZEOF_UNSIGNED_LONG" class="forbidden">
+The number bytes in a long. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DSIZEOF_UNSIGNED_LONG_LONG" class="forbidden">
+The number bytes in a long. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DSIZEOF_UNSIGNED_SHORT" class="forbidden">
+The number bytes in a long. Not used for SPEC CPU2006.
+</flag>
+
+<flag name="DSLOW" class="forbidden">
+Causes the code to execute using a different algorithm.
+</flag>
+
+<flag name="DSQFUNCSH_INCLUDED" class="forbidden">
+Indicates that the sqfuncs.h has already been included.
+</flag>
+
+<flag name="DSQRKH_INCLUDED" class="forbidden">
+Indicates that the sqrk.h has already been included.
+</flag>
+
+<flag name="DSQUIDCONFH_INCLUDED" class="forbidden">
+Indicates that the squidconf.h has already been included.
+</flag>
+
+<flag name="DSQUIDH_INCLUDED" class="forbidden">
+Indicates that the squid.h has already been included.
+</flag>
+
+<flag name="DSQUID_GKI_INCLUDED" class="forbidden">
+Indicates that the squid_gki.h has already been included.
+</flag>
+
+<flag name="DSQUID_MSA_INCLUDED" class="forbidden">
+Indicates that the squid_msa.h has already been included.
+</flag>
+
+<flag name="DSRE_REMOVED" class="forbidden">
+SRE_REMOVED removes the compilation of the EmitBestSequence routine
+</flag>
+
+<flag name="DSRE_STRICT_ANSI" class="portability">
+Set by SPEC_CPU to use ANSI code.
+</flag>
+
+<flag name="DSSIH_INCLUDED" class="forbidden">
+Indicates that the ssi.h has already been included.
+</flag>
+
+<flag name="DSTOPWATCH_H_INCLUDED" class="forbidden">
+Indicates that the stopwatch.h has already been included.
+</flag>
+
+<flag name="DSTRUCTSH_INCLUDED" class="forbidden">
+Indicates that the structs.h has already been included.
+</flag>
+
+<flag name="DTESTDRIVER" class="forbidden">
+Enables a main() for a test driver.
+</flag>
+
+<flag name="DTESTDRIVE_CLUSTAL" class="forbidden">
+Enables a main() for a test driver.
+</flag>
+
+<flag name="DTESTDRIVE_MSF" class="forbidden">
+Enables a main() for a test driver.
+</flag>
+
+<flag name="DTESTDRIVE_PHYLIP" class="forbidden">
+Enables a main() for a test driver.
+</flag>
+
+<flag name="DTESTDRIVE_STOCKHOLM" class="forbidden">
+Enables a main() for a test driver.
+</flag>
+
+<flag name="DTRUE" class="forbidden">
+Used as a boolean value, set to 1 if not already set.
+</flag>
+
+<flag name="DUSE_HOST_BYTESWAP_FUNCTIONS" class="forbidden">
+Indicates the sys/types.h and netinet/in.h are to be included to define ntoh[ls] and hton[ls].
+</flag>
+
+<flag name="DWORDS_BIGENDIAN" class="forbidden">
+WORDS_BIGENDIAN set to 1 by default, indicates that the words are big endian style.
+</flag>
+
+<flag name="D__sgi" class="compiler">
+Helps choose IRIX-friendly code for pthreads. Not used in SPEC CPU2006.
+</flag>
+
+
+</flagsdescription>

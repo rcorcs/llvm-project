@@ -1,0 +1,164 @@
+hmmsearch - search a sequence database with a profile HMM
+HMMER 2.3 (May 2003)
+Copyright (C) 1992-2003 HHMI/Washington University School of Medicine
+Freely distributed under the GNU General Public License (GPL)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HMM file:                   leng100.hmm [COQ7]
+Sequence database:          /spec/cpu2006/benchspec/CPU2006/456.hmmer/data/ref/input/sprot41.dat
+per-sequence score cutoff:  [none]
+per-domain score cutoff:    [none]
+per-sequence Eval cutoff:   <= 10        
+per-domain Eval cutoff:     [none]
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+Query HMM:   COQ7
+Accession:   PF03232
+Description: Ubiquinone biosynthesis protein COQ7
+  [HMM has been calibrated; E-values are empirical estimates]
+
+Alignments of top-scoring domains:
+COQ7_MOUSE: domain 1 of 2, from 38 to 129: score 203.8, E = 5.5e-57
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                      G++l+++++aav+++IrVDHAGE+GA+r+YaGQ++vL++      t 
+  COQ7_MOUSE    38    GMTLDNINRAAVDRIIRVDHAGEYGANRIYAGQMAVLGR------T- 77   
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                    ++++vI+k++D+E++Hl++f+el++++rVRptvl+P+w+vagfalgaG+
+  COQ7_MOUSE    78 -SVGPVIQKMWDQEKNHLKKFNELMIAFRVRPTVLMPLWNVAGFALGAGT 126  
+
+                   ala<-*
+                   al+   
+  COQ7_MOUSE   127 ALL    129  
+
+CAT5_YEAST: domain 1 of 2, from 80 to 173: score 202.6, E = 1.3e-56
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                      +++l++a++a++++vIrVD+AGELGAd++YaGQ++vLah      +y
+  CAT5_YEAST    80    CQNLSDAQAAFLDRVIRVDQAGELGADYIYAGQYFVLAH------RY 120  
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                   ++L++v+k+++D+E++H++tf++l+lkrrVRp++l+P+w++ +fa+gaG+
+  CAT5_YEAST   121 PHLKPVLKHIWDQEIHHHNTFNNLQLKRRVRPSLLTPLWKAGAFAMGAGT 170  
+
+                   ala<-*
+                   al+   
+  CAT5_YEAST   171 ALI    173  
+
+COQ7_HUMAN: domain 1 of 2, from 38 to 129: score 195.3, E = 2e-54
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                      G++l+++ +aav+++IrVDHAGE+GA+r+YaGQ++vL++      t 
+  COQ7_HUMAN    38    GMTLDNISRAAVDRIIRVDHAGEYGANRIYAGQMAVLGR------T- 77   
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                    ++++vI+k++D+E+ Hl++f+el+  +rVRptvl+P+w+v+gfalgaG+
+  COQ7_HUMAN    78 -SVGPVIQKMWDQEKDHLKKFNELMVMFRVRPTVLMPLWNVLGFALGAGT 126  
+
+                   ala<-*
+                   al+   
+  COQ7_HUMAN   127 ALL    129  
+
+COQ7_RAT: domain 1 of 2, from 1 to 91: score 194.8, E = 2.8e-54
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                       ++l+++++aav+++IrVDHAGE+GA+r+YaGQ++vL++      t 
+    COQ7_RAT     1    -MTLDNINRAAVDRIIRVDHAGEYGANRIYAGQMAVLGR------T- 39   
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                    ++++vI+k++D+E++Hl++f+el+ ++rVRptvl+P+w+vagfalgaG+
+    COQ7_RAT    40 -SVGPVIQKMWDQEKNHLKKFNELMVAFRVRPTVLMPLWNVAGFALGAGT 88   
+
+                   ala<-*
+                   al+   
+    COQ7_RAT    89 ALL    91   
+
+COQ7_CAEEL: domain 1 of 2, from 8 to 99: score 190.6, E = 5.2e-53
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                      G+++a++++a++E++IrVDHAGELGAdr+YaGQl+vL++      + 
+  COQ7_CAEEL     8    GAHTAASRQALIEKIIRVDHAGELGADRIYAGQLAVLQG------S- 47   
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                    +++svIkk++DeE+eHldt+++l++k++V++tv++P+++va++alg+G+
+  COQ7_CAEEL    48 -SVGSVIKKMWDEEKEHLDTMERLAAKHNVPHTVFSPVFSVAAYALGVGS 96   
+
+                   ala<-*
+                   al+   
+  COQ7_CAEEL    97 ALL    99   
+
+COQ7_MOUSE: domain 2 of 2, from 130 to 210: score 167.8, E = 3.8e-46
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                      Gke+amact+avEe I+          +hY++Q+r+L  +e+dpE+y
+  COQ7_MOUSE   130    GKEGAMACTVAVEESIA----------NHYNNQIRML--MEEDPEKY 164  
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                   +eLl+vIk+frDeEleH+dt+ ++       +++laP++++++++++aGc
+  COQ7_MOUSE   165 EELLQVIKQFRDEELEHHDTGLDH-------DAELAPAYALLKRIIQAGC 207  
+
+                   ala<-*
+                   ++a   
+  COQ7_MOUSE   208 SAA    210  
+
+COQ7_HUMAN: domain 2 of 2, from 130 to 210: score 158.9, E = 1.9e-43
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                      Gke+amact+avEe I+           hY++Q+r L  +e+dpE+y
+  COQ7_HUMAN   130    GKEGAMACTVAVEESIA----------HHYNNQIRTL--MEEDPEKY 164  
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                   +eLl++IkkfrDeEleH+d++ ++       +++laP+++v++ +++aGc
+  COQ7_HUMAN   165 EELLQLIKKFRDEELEHHDIGLDH-------DAELAPAYAVLKSIIQAGC 207  
+
+                   ala<-*
+                   ++a   
+  COQ7_HUMAN   208 RVA    210  
+
+COQ7_CAEEL: domain 2 of 2, from 100 to 180: score 158.3, E = 2.7e-43
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                      Gke+amact+avEe I+          +hY++Ql++L  l++dpEt+
+  COQ7_CAEEL   100    GKEGAMACTIAVEELIG----------QHYNDQLKEL--LADDPETH 134  
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                   keLl++++++rDeEl+H+dt++e+       ++++aP+++++++++++Gc
+  COQ7_CAEEL   135 KELLKILTRLRDEELHHHDTGVEH-------DGMKAPAYSALKWIIQTGC 177  
+
+                   ala<-*
+                   + a   
+  COQ7_CAEEL   178 KGA    180  
+
+COQ7_RAT: domain 2 of 2, from 92 to 172: score 156.6, E = 9e-43
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                      Gke+ mact+avEe I+           hY++Q+r+L  +e+d+E+y
+    COQ7_RAT    92    GKEGGMACTVAVEESIA----------HHYNNQIRML--MEEDAEKY 126  
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                   +eLl+vIk+frDeEleH+dt+ e+       +++laP++++++++++aGc
+    COQ7_RAT   127 EELLQVIKQFRDEELEHHDTGLEH-------DAELAPAYTLLKRLIQAGC 169  
+
+                   ala<-*
+                   ++a   
+    COQ7_RAT   170 SAA    172  
+
+CAT5_YEAST: domain 2 of 2, from 174 to 265: score 151.9, E = 2.3e-41
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlek.....
+                        e+amact+avE+vI+          +hY+GQlr+L  +++ + ++
+  CAT5_YEAST   174    SPEAAMACTEAVETVIG----------GHYNGQLRNL--ANQfnler 208  
+
+                   ......dpEtykeLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfw
+                   ++++++++E++k+L+s+I++frD+EleHldt+i++       ++++a+++
+  CAT5_YEAST   209 tdgtkgPSEEIKSLTSTIQQFRDDELEHLDTAIKH-------DSYMAVPY 251  
+
+                   dvagfalgaGcala<-*
+                   +v++++++++c++a   
+  CAT5_YEAST   252 TVITEGIKTICRVA    265  
+
+YF57_STRPN: domain 1 of 1, from 207 to 276: score -26.7, E = 7.4
+                   *->GkelamactaavEevIrVDHAGELGAdrhYaGQlrvLahlekdpEty
+                       k++  +  +++ e  +              GQ+rv+    + pE+ 
+  YF57_STRPN   207    EKKATKRLIEIIKETTA-------------SGQYRVIVIHGNAPEKA 240  
+
+                   keLlsvIkkfrDeEleHldtfielllkrrVRptvlaPfwdvagfalgaGc
+                   +eL++++          ld++          +  la f +v+g  lgaG+
+  YF57_STRPN   241 EELRQHL----------LDFGLGS-------DVSLATFGSVIGTHLGAGS 273  
+
+                   ala<-*
+                    ++   
+  YF57_STRPN   274 IAL    276  
+
+
+Total sequences searched: 122564

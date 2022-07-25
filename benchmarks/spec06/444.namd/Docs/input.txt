@@ -1,0 +1,18 @@
+The apoa1 input is based on an old model of a high density lipoprotein
+particle, comprising two apolipoprotein A-I molecules, 160 POPC lipids,
+and water for a total of 92224 atoms in a 109x109x78A periodic cell, using
+the CHARMM 22 force field, particle mesh Ewald full electrostatics, a 12A
+cutoff, and multiple timestepping.  This is decomposed into 144 regular
+spatial domains whose atoms only interact with those in the same or
+neighboring domains.
+
+The input set is generated from NAMD by adding "dumpbench <filename>" to
+the end of a config file (to be released).  This ensures a realistic
+dataset and the performance of spec_namd tracks the real NAMD very well.
+
+The benchmark calculates nonbonded interactions between these atoms, using
+two sets (within domain or neighboring domains) of six functions (with and
+without calculating energy for short-only, short-and-PME-separate, and
+short-and-PME-merged).  Each iteration exercises all six versions, and
+verifies several identities between them to test correctness even when a
+standard file is not supplied for comparison.

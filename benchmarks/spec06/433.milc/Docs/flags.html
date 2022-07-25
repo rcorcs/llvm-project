@@ -1,0 +1,1565 @@
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta name="generator" content="SPEC CPU2006 Tools  (flags v4553)" />
+<style type="text/css" id="internalScreen" media="screen">
+<!--
+body {
+  margin:  1em;
+  border:  0;
+  padding: 0;
+  background: white;
+  color:      black;
+  font-family: "Times Roman", times, serif;
+}
+
+.tt {
+  font-family: monospace;
+}
+
+div.flagClass > h2 {
+  border-bottom: 1px dotted black;
+  width: 80%;
+  font-family: sans-serif;
+}
+
+div.flagDesc {
+  clear: both;
+  background-color: rgb(255, 245, 220);
+  border: 1px solid blue; /* XXX This is for debugging */ 
+  margin: 0 auto;
+  width: 90%;
+}
+
+li.flagName {
+  font-weight: bold;
+  width: 100%;
+  border-bottom: 1px solid black;
+  display: block;
+  margin: 0.5em 0 0.5em 0;
+  font-size: 125%;
+}
+
+/* (presumably short) informationals all get grouped together near the top
+ * of the flag description block.
+ */
+.flagOrigin, .flagDescClass, .flagDescCompiler, .flagDescRE, .flagVar {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  float: left;
+  padding: 0.25em;
+  margin: 0 0 0.25em 0;
+}
+
+.flagDescClass::before {
+  content: "Flag Class: ";
+}
+.flagDescCompiler::before {
+  content: "Compilers that recognize this flag: ";
+}
+.flagDescRE::before {
+  content: "Regular Expression: ";
+}
+.flagVar::before {
+  content: "Found In: ";
+}
+
+span.flagDescInc {
+  border-bottom: 1px solid black;
+}
+
+/* The description text stands alone. */
+.descText {
+  clear: both;
+  padding: 0.5em 1em 0.5em 1em;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin: 0.5em 0 0.5em 0;
+}
+
+/* This is a separate class so that in the print style sheet it can
+ * be ignored.
+ * Also, 'style="clear:both;"' is longer than 'class="clear"'
+ */
+.clear {
+  clear: both;
+}
+
+/* This is really for the link _to_ the flag report */
+li.unknown > a:link, a:visited { text-decoration: none; }
+
+.monospace {
+  font-family: Courier, "Courier New", monospace;
+}
+
+ul.flagDescList {
+  clear: both;
+  list-style-type: none;
+}
+
+/* Arrange for each flag description to have some headroom. */
+ul.flagDescList > li {
+  margin: 2em 0 0 0;
+}
+
+ul.flagDesc {
+  list-style-type: none;
+}
+
+div.flagTOC {
+  border: 1px solid white;
+  padding: 0.5em 1em;
+  margin: 0 auto;
+  width: 80%;
+}
+
+ul.flagTOC {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.flagTOC > li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+  margin: 0;
+  padding: 0.25em 0 0.25em 0;
+  float: left;
+  display: inline-block; /* Fix IE bug; compliant browsers will ignore this */
+  width: 24.3%;
+  min-height: 1.5em;
+  overflow: hidden; /* If the table gets squeezed too much, don't let the
+                     * text overlap
+                     */
+}
+
+ul.SubMenu li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+}
+
+ul.SubMenu {
+  display: none;
+  position: absolute;
+  list-style-type: none;
+  border: 1px solid black;
+  background-color: white;
+  margin: 0 0 0 2em;
+  padding: 0.25em 5em 0.25em 0.5em;
+  white-space: nowrap;
+}
+
+li:hover > ul.SubMenu, ul.SubMenu:hover {
+  display: block;
+}
+
+ul.SubMenu > li:hover, ul.flagTOC > li:hover {
+  background-color: rgb(176, 196, 238); /* lightsteelgray... almost */
+  border: 1px solid rgb(128, 128, 128);
+}
+
+
+.resultpage a:link, .resultpage a:visited {
+  text-decoration: none;
+  border-bottom: 1px dashed black;
+  color: inherit;
+}
+
+.resultpage {
+  margin: auto;
+  padding: 0;
+  width: 800px;
+}
+
+.logo {
+  float: left;
+}
+
+.titlebarcontainer, .resultstable {
+  border: solid 1px;
+  width: 100%;
+  float: left;
+}
+
+div.logo > img {
+  vertical-align: 50%;
+  margin: auto;
+}
+
+.titlebar {
+  float: left;
+  padding: 0em 1em 0em 1em;
+  text-align: center;
+  width: 92%;
+}
+
+div.titlebar > h1, div.titlebar > p {
+  margin: 0 1em 0 1em;
+}
+
+.systembar {
+  float: left;
+  width: 65%;
+  font-size: 150%;
+  margin: 0;
+  padding: 0.1em;
+  border-right: solid 1px black;
+}
+
+.metricbar {
+  padding: 0.1em;
+  margin: 0;
+  float: right;
+  width: 33%;
+  height: 50%;
+  font-size: 120%;
+}
+
+.metricbar#base {
+  background-color: #c8c8c8;
+  color: black;
+}
+
+.metricbar#peak {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+}
+
+.metricbar p {
+  margin: 0;
+  padding: 0.2em;
+}
+
+.datebar p, .systembar p {
+  margin: 0;
+  padding: 0;
+}
+
+.datebar p {
+  float: left;
+  border-left: solid 1px black;
+}
+
+span.item {
+  float: left;
+  margin: 0;
+  padding: 0 0 0 0.1em;
+}
+
+span.value {
+  float: right;
+  padding: 0 0.1em 0 0;
+}
+
+.datebar {
+  width: 100%;
+  float: left;
+  font-size: 50%;
+  min-height: 100%;
+  border: solid 1px black;
+}
+
+p#test_sponsor {
+  width: 31%;
+}
+
+p#license_num {
+  width: 16%;
+}
+
+p#test_date {
+  width: 15%;
+}
+
+p#hw_avail, p#sw_avail {
+  width: 18%;
+}
+
+div.graph {
+  margin: auto;
+}
+
+div.infobox {
+  float: left;
+  width: 100%;
+  padding: 0;
+  border: solid 1px black;
+}
+
+div.infobox table {
+  width: 49%;
+  float: left;
+}
+
+div.infobox table tr {
+  vertical-align: top;
+}
+
+div.infobox table#Hardware {
+  width: 50%;
+  border-right: 1px solid black;
+}
+
+div.infobox thead th {
+  font-size: 200%;
+}
+
+div.infobox tbody th {
+  text-align: left;
+}
+
+.resultstable h2, div.notes h2 {
+  text-align: center;
+  margin: 0.1em;
+}
+
+div.notes h3 {
+  margin: 0.1em;
+}
+
+div.notes dd {
+  margin-bottom: 1em;
+}
+
+.resultstable table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.resultstable th.basecol, .resultstable th.peakcol {
+  padding: 0.1em;
+  font-size: 90%;
+}
+
+.resultstable th {
+  border: solid 2px black;
+}
+
+.resultstable td {
+  border: solid 1px #b8b8b8;
+}
+
+td.bm, th.bm { 
+  border-right: solid 2px black;
+  border-left: solid 2px black;
+}
+
+td.secs { 
+  border-left: solid 2px black;
+}
+
+td.ratio { 
+  border-right: solid 2px black;
+}
+
+.resultstable tfoot td {
+  text-align: center;
+  border: solid 2px black;
+}
+
+th.basecol {
+  background-color: #c8c8c8;
+  color: black;
+}
+td.basecol {
+  text-align: right;
+  background-color: transparent;
+  color: black;
+}
+
+th.peakcol {
+  text-align: center;
+}
+
+.peakcol {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+  text-align: right;
+}
+
+td.bm {
+  /* Basically, the benchmark name and copies columns */
+  background-color: #c8c8c8;
+  color: black;
+}
+
+span.selected {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+div.notes {
+  width: 100%;
+  float: left;
+  border: solid 1px black;
+}
+
+div.flagfooter {
+  text-align: center;
+}
+
+div.errors {
+  border: solid 2px red;
+}
+div.errors h2 {
+  background-color: transparent;
+  color: red;
+}
+
+div.footer {
+  border: none;
+}
+
+/* People find the "double underline" confusing.  And Safari 1.3 doesn't deal
+ * well with attempting to disable the border for userflag links.  So just
+ * give up and don't decorate user flags specially.
+********************
+span.userflag {
+  text-decoration: underline;
+}
+
+.userflag a:link {
+  border-bottom: 0;
+}
+********************
+*/
+/* Most of the screen-specific CSS is also the common CSS */
+
+/* Style for the non-image W3C marking at the bottom of the page, courtesy of
+ * Marek Prokop (http://www.sovavsiti.cz/css/w3c_buttons.html)
+ */
+.w3cbutton3 {
+  margin: 1em 1em 0 0;
+  width: 9em;
+  border: 1px solid #ccc;
+  font-family: helvetica,arial,sans-serif;
+  font-size: 70%;
+  font-weight: bold;
+  float: left;
+}
+.w3cbutton3 a {
+  display: block;
+  width: 100%;
+}
+.w3cbutton3 a:link,
+.w3cbutton3 a:visited,
+.w3cbutton3 a:hover {
+  background-color: #fc6;
+  color: #000;
+  text-decoration: none;
+  border-bottom: none;
+}
+.w3cbutton3 span.w3c {
+  padding: 0 0.4em;
+  background-color: #fff;
+  color: #0c479d;
+}
+
+-->
+</style>
+<style type="text/css" id="internalPrint" media="print">
+<!--
+body {
+  margin:  1em;
+  border:  0;
+  padding: 0;
+  background: white;
+  color:      black;
+  font-family: "Times Roman", times, serif;
+}
+
+.tt {
+  font-family: monospace;
+}
+
+div.flagClass > h2 {
+  border-bottom: 1px dotted black;
+  width: 80%;
+  font-family: sans-serif;
+}
+
+div.flagDesc {
+  clear: both;
+  background-color: rgb(255, 245, 220);
+  border: 1px solid blue; /* XXX This is for debugging */ 
+  margin: 0 auto;
+  width: 90%;
+}
+
+li.flagName {
+  font-weight: bold;
+  width: 100%;
+  border-bottom: 1px solid black;
+  display: block;
+  margin: 0.5em 0 0.5em 0;
+  font-size: 125%;
+}
+
+/* (presumably short) informationals all get grouped together near the top
+ * of the flag description block.
+ */
+.flagOrigin, .flagDescClass, .flagDescCompiler, .flagDescRE, .flagVar {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  float: left;
+  padding: 0.25em;
+  margin: 0 0 0.25em 0;
+}
+
+.flagDescClass::before {
+  content: "Flag Class: ";
+}
+.flagDescCompiler::before {
+  content: "Compilers that recognize this flag: ";
+}
+.flagDescRE::before {
+  content: "Regular Expression: ";
+}
+.flagVar::before {
+  content: "Found In: ";
+}
+
+span.flagDescInc {
+  border-bottom: 1px solid black;
+}
+
+/* The description text stands alone. */
+.descText {
+  clear: both;
+  padding: 0.5em 1em 0.5em 1em;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin: 0.5em 0 0.5em 0;
+}
+
+/* This is a separate class so that in the print style sheet it can
+ * be ignored.
+ * Also, 'style="clear:both;"' is longer than 'class="clear"'
+ */
+.clear {
+  clear: both;
+}
+
+/* This is really for the link _to_ the flag report */
+li.unknown > a:link, a:visited { text-decoration: none; }
+
+.monospace {
+  font-family: Courier, "Courier New", monospace;
+}
+
+ul.flagDescList {
+  clear: both;
+  list-style-type: none;
+}
+
+/* Arrange for each flag description to have some headroom. */
+ul.flagDescList > li {
+  margin: 2em 0 0 0;
+}
+
+ul.flagDesc {
+  list-style-type: none;
+}
+
+div.flagTOC {
+  border: 1px solid white;
+  padding: 0.5em 1em;
+  margin: 0 auto;
+  width: 80%;
+}
+
+ul.flagTOC {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.flagTOC > li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+  margin: 0;
+  padding: 0.25em 0 0.25em 0;
+  float: left;
+  display: inline-block; /* Fix IE bug; compliant browsers will ignore this */
+  width: 24.3%;
+  min-height: 1.5em;
+  overflow: hidden; /* If the table gets squeezed too much, don't let the
+                     * text overlap
+                     */
+}
+
+ul.SubMenu li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+}
+
+ul.SubMenu {
+  display: none;
+  position: absolute;
+  list-style-type: none;
+  border: 1px solid black;
+  background-color: white;
+  margin: 0 0 0 2em;
+  padding: 0.25em 5em 0.25em 0.5em;
+  white-space: nowrap;
+}
+
+li:hover > ul.SubMenu, ul.SubMenu:hover {
+  display: block;
+}
+
+ul.SubMenu > li:hover, ul.flagTOC > li:hover {
+  background-color: rgb(176, 196, 238); /* lightsteelgray... almost */
+  border: 1px solid rgb(128, 128, 128);
+}
+
+
+.resultpage a:link, .resultpage a:visited {
+  text-decoration: none;
+  border-bottom: 1px dashed black;
+  color: inherit;
+}
+
+.resultpage {
+  margin: auto;
+  padding: 0;
+  width: 800px;
+}
+
+.logo {
+  float: left;
+}
+
+.titlebarcontainer, .resultstable {
+  border: solid 1px;
+  width: 100%;
+  float: left;
+}
+
+div.logo > img {
+  vertical-align: 50%;
+  margin: auto;
+}
+
+.titlebar {
+  float: left;
+  padding: 0em 1em 0em 1em;
+  text-align: center;
+  width: 92%;
+}
+
+div.titlebar > h1, div.titlebar > p {
+  margin: 0 1em 0 1em;
+}
+
+.systembar {
+  float: left;
+  width: 65%;
+  font-size: 150%;
+  margin: 0;
+  padding: 0.1em;
+  border-right: solid 1px black;
+}
+
+.metricbar {
+  padding: 0.1em;
+  margin: 0;
+  float: right;
+  width: 33%;
+  height: 50%;
+  font-size: 120%;
+}
+
+.metricbar#base {
+  background-color: #c8c8c8;
+  color: black;
+}
+
+.metricbar#peak {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+}
+
+.metricbar p {
+  margin: 0;
+  padding: 0.2em;
+}
+
+.datebar p, .systembar p {
+  margin: 0;
+  padding: 0;
+}
+
+.datebar p {
+  float: left;
+  border-left: solid 1px black;
+}
+
+span.item {
+  float: left;
+  margin: 0;
+  padding: 0 0 0 0.1em;
+}
+
+span.value {
+  float: right;
+  padding: 0 0.1em 0 0;
+}
+
+.datebar {
+  width: 100%;
+  float: left;
+  font-size: 50%;
+  min-height: 100%;
+  border: solid 1px black;
+}
+
+p#test_sponsor {
+  width: 31%;
+}
+
+p#license_num {
+  width: 16%;
+}
+
+p#test_date {
+  width: 15%;
+}
+
+p#hw_avail, p#sw_avail {
+  width: 18%;
+}
+
+div.graph {
+  margin: auto;
+}
+
+div.infobox {
+  float: left;
+  width: 100%;
+  padding: 0;
+  border: solid 1px black;
+}
+
+div.infobox table {
+  width: 49%;
+  float: left;
+}
+
+div.infobox table tr {
+  vertical-align: top;
+}
+
+div.infobox table#Hardware {
+  width: 50%;
+  border-right: 1px solid black;
+}
+
+div.infobox thead th {
+  font-size: 200%;
+}
+
+div.infobox tbody th {
+  text-align: left;
+}
+
+.resultstable h2, div.notes h2 {
+  text-align: center;
+  margin: 0.1em;
+}
+
+div.notes h3 {
+  margin: 0.1em;
+}
+
+div.notes dd {
+  margin-bottom: 1em;
+}
+
+.resultstable table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.resultstable th.basecol, .resultstable th.peakcol {
+  padding: 0.1em;
+  font-size: 90%;
+}
+
+.resultstable th {
+  border: solid 2px black;
+}
+
+.resultstable td {
+  border: solid 1px #b8b8b8;
+}
+
+td.bm, th.bm { 
+  border-right: solid 2px black;
+  border-left: solid 2px black;
+}
+
+td.secs { 
+  border-left: solid 2px black;
+}
+
+td.ratio { 
+  border-right: solid 2px black;
+}
+
+.resultstable tfoot td {
+  text-align: center;
+  border: solid 2px black;
+}
+
+th.basecol {
+  background-color: #c8c8c8;
+  color: black;
+}
+td.basecol {
+  text-align: right;
+  background-color: transparent;
+  color: black;
+}
+
+th.peakcol {
+  text-align: center;
+}
+
+.peakcol {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+  text-align: right;
+}
+
+td.bm {
+  /* Basically, the benchmark name and copies columns */
+  background-color: #c8c8c8;
+  color: black;
+}
+
+span.selected {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+div.notes {
+  width: 100%;
+  float: left;
+  border: solid 1px black;
+}
+
+div.flagfooter {
+  text-align: center;
+}
+
+div.errors {
+  border: solid 2px red;
+}
+div.errors h2 {
+  background-color: transparent;
+  color: red;
+}
+
+div.footer {
+  border: none;
+}
+
+/* People find the "double underline" confusing.  And Safari 1.3 doesn't deal
+ * well with attempting to disable the border for userflag links.  So just
+ * give up and don't decorate user flags specially.
+********************
+span.userflag {
+  text-decoration: underline;
+}
+
+.userflag a:link {
+  border-bottom: 0;
+}
+********************
+*/
+/* Classes that contain links - useless on paper */
+.flagTOC, .SubMenu, .NoPrint {
+  display: none;
+}
+
+/* Don't decorate links - they're not clickable */
+a {
+  text-decoration: none;
+  background: inherit;
+  color: inherit;
+}
+
+.resultpage {
+  width: 100%;
+}
+
+.w3cbutton3 {
+  display: none;
+}
+-->
+</style>
+<title>433.milc Flags</title>
+</head><body>
+<h1>433.milc Flags</h1>
+
+
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+
+<div class="NoPrint">
+<h3>Sections</h3>
+<p>Selecting one of the following will take you directly to that section:</p>
+<ul>
+<li><a href="#Section_portability">Portability Flags</a></li>
+<li><a href="#Section_mandatory">Mandatory Flags</a></li>
+<li><a href="#Section_forbidden">Forbidden Flags</a></li>
+</ul>
+</div>
+
+<hr />
+
+<div class="flagClass" id="portability">
+<h2><a name="Section_portability" id="Section_portability">Portability Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b433.milc_DSPEC_CPU_NEED_COMPLEX_TYPES">-DSPEC_CPU_NEED_COMPLEX_TYPES</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DSPEC_CPU_NEED_COMPLEX_TYPES" id="b433.milc_DSPEC_CPU_NEED_COMPLEX_TYPES">-DSPEC_CPU_NEED_COMPLEX_TYPES</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_NEED_COMPLEX_TYPES(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Complex inrinsic functions.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+<div class="flagClass" id="mandatory">
+<h2><a name="Section_mandatory" id="Section_mandatory">Mandatory Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b433.milc_currdir_inc">-I.</a></li>
+ <li><a href="#b433.milc_DCONGRAD_TMP_VECTORS">-DCONGRAD_TMP_VECTORS</a></li>
+ <li><a href="#b433.milc_DDSLASH_TMP_LINKS">-DDSLASH_TMP_LINKS</a></li>
+ <li><a href="#b433.milc_DFAST">-DFAST</a></li>
+ <li><a href="#b433.milc_DFN">-DFN</a></li>
+ <li><a href="#b433.milc_DSPEC_CPU">-DSPEC_CPU</a></li>
+ <li><a href="#b433.milc_DSPEC_CPU_WINDOWS">-DSPEC_CPU_WINDOWS</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_currdir_inc" id="b433.milc_currdir_inc">-I.</a></li>
+<li class="flagDescRE"><span class="tt">-I\.(?:\s+|$)</span></li>
+<li class="descText">
+<p>
+This flag is included automatically by Spec/object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DCONGRAD_TMP_VECTORS" id="b433.milc_DCONGRAD_TMP_VECTORS">-DCONGRAD_TMP_VECTORS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DCONGRAD_TMP_VECTORS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Optimizes performance for conjugate gradient by copying some vectors
+from site structure to temporary vectors.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DDSLASH_TMP_LINKS" id="b433.milc_DDSLASH_TMP_LINKS">-DDSLASH_TMP_LINKS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DDSLASH_TMP_LINKS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Optimizes performance by copying gauge links from site structure to
+temporary arrays.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DFAST" id="b433.milc_DFAST">-DFAST</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DFAST(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Performance enhancing code transformation.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DFN" id="b433.milc_DFN">-DFN</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DFN(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Action contains both fat link in Naik (long link) terms.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DSPEC_CPU" id="b433.milc_DSPEC_CPU">-DSPEC_CPU</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Mandatory flag that sets a number of default portability flags.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DSPEC_CPU_WINDOWS" id="b433.milc_DSPEC_CPU_WINDOWS">-DSPEC_CPU_WINDOWS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_WINDOWS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Portability flag for windows.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+<div class="flagClass" id="forbidden">
+<h2><a name="Section_forbidden" id="Section_forbidden">Forbidden Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b433.milc_DASQ_OPTIMIZED_FATTENING">-DASQ_OPTIMIZED_FATTENING</a></li>
+ <li><a href="#b433.milc_DASQ_OPTIMIZED_FORCE">-DASQ_OPTIMIZED_FORCE</a></li>
+ <li><a href="#b433.milc_DBPCORR">-DBPCORR</a></li>
+ <li><a href="#b433.milc_DCGTIME">-DCGTIME</a></li>
+ <li><a href="#b433.milc_DCONTROL">-DCONTROL</a></li>
+ <li><a href="#b433.milc_DEO">-DEO</a></li>
+ <li><a href="#b433.milc_DFFTIME">-DFFTIME</a></li>
+ <li><a href="#b433.milc_DGAUGE_ACTION_PART1">-DGAUGE_ACTION_PART1</a></li>
+ <li><a href="#b433.milc_DGAUGE_ACTION_PART2">-DGAUGE_ACTION_PART2</a></li>
+ <li><a href="#b433.milc_DGFTIME">-DGFTIME</a></li>
+ <li><a href="#b433.milc_DHAVE_FSEEKO">-DHAVE_FSEEKO</a></li>
+ <li><a href="#b433.milc_DHAVE_SYS_TIME_H">-DHAVE_SYS_TIME_H</a></li>
+ <li><a href="#b433.milc_DHAVE_UNISTD_H">-DHAVE_UNISTD_H</a></li>
+ <li><a href="#b433.milc_DHMC_ALGORITHM">-DHMC_ALGORITHM</a></li>
+ <li><a href="#b433.milc_DHPUX">-DHPUX</a></li>
+ <li><a href="#b433.milc_DINT_IS_32BIT">-DINT_IS_32BIT</a></li>
+ <li><a href="#b433.milc_DLLTIME">-DLLTIME</a></li>
+ <li><a href="#b433.milc_DLOOPEND">-DLOOPEND</a></li>
+ <li><a href="#b433.milc_DMPI">-DMPI</a></li>
+ <li><a href="#b433.milc_DNATIVEDOUBLE">-DNATIVEDOUBLE</a></li>
+ <li><a href="#b433.milc_DNPBP_REPS">-DNPBP_REPS</a></li>
+ <li><a href="#b433.milc_DN_SUBL32">-DN_SUBL32</a></li>
+ <li><a href="#b433.milc_DPHI_ALGORITHM">-DPHI_ALGORITHM</a></li>
+ <li><a href="#b433.milc_DSCHROED_FUN">-DSCHROED_FUN</a></li>
+ <li><a href="#b433.milc_DSHORT_IS_32BIT">-DSHORT_IS_32BIT</a></li>
+ <li><a href="#b433.milc_DSITERAND">-DSITERAND</a></li>
+ <li><a href="#b433.milc_DSPECTRUM">-DSPECTRUM</a></li>
+ <li><a href="#b433.milc_DSTRONG">-DSTRONG</a></li>
+ <li><a href="#b433.milc_DT3E">-DT3E</a></li>
+ <li><a href="#b433.milc_DTADPOLE_IMPROVE">-DTADPOLE_IMPROVE</a></li>
+ <li><a href="#b433.milc_DUNIDEBUG">-DUNIDEBUG</a></li>
+ <li><a href="#b433.milc_header_guards">-D_ASQTAD_ACTION_H,
+-D_COMDEFS_H,
+-D_CONFIG_H,
+-D_DEFINES_H,
+-D_DIRS_H,
+-D_GENERIC_H,
+-D_GENERIC_KS_H,
+-D_GENERIC_QUARK_TYPES_H,
+-D_IO_LAT_H,
+-D_LATTICE_H,
+-D_LOOPEND_H,
+-D_MACROS_H,
+-D_MILC_COMPLEX_H,
+-D_PARAMS_H,
+-D_RANDOM_H,
+-D_SU3_H,
+-D_TYPE32_H</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DASQ_OPTIMIZED_FATTENING" id="b433.milc_DASQ_OPTIMIZED_FATTENING">-DASQ_OPTIMIZED_FATTENING</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DASQ_OPTIMIZED_FATTENING(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Provides optimizations specific to the Aqstad action.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DASQ_OPTIMIZED_FORCE" id="b433.milc_DASQ_OPTIMIZED_FORCE">-DASQ_OPTIMIZED_FORCE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DASQ_OPTIMIZED_FORCE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Provides optimizations specific to the Aqstad action.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DBPCORR" id="b433.milc_DBPCORR">-DBPCORR</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DBPCORR(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Saves the Polyakov loop value for each site in the site member "ploop"
+for later use
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DCGTIME" id="b433.milc_DCGTIME">-DCGTIME</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DCGTIME(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Timing of individual portions of code turned off.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DCONTROL" id="b433.milc_DCONTROL">-DCONTROL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DCONTROL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Used to define the main program, so that global variables are
+ allocated, not defined as external.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DEO" id="b433.milc_DEO">-DEO</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DEO(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Defines for actions that allow even-odd subgrids.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DFFTIME" id="b433.milc_DFFTIME">-DFFTIME</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DFFTIME(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Timing of individual portions of code turned off.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DGAUGE_ACTION_PART1" id="b433.milc_DGAUGE_ACTION_PART1">-DGAUGE_ACTION_PART1</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DGAUGE_ACTION_PART1(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Used in gauge action include files to distinguish definitions from
+executable part of code
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DGAUGE_ACTION_PART2" id="b433.milc_DGAUGE_ACTION_PART2">-DGAUGE_ACTION_PART2</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DGAUGE_ACTION_PART2(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Used in gauge action include files to distinguish definitions from
+executable part of code
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DGFTIME" id="b433.milc_DGFTIME">-DGFTIME</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DGFTIME(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Timing of individual portions of the code turned off.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DHAVE_FSEEKO" id="b433.milc_DHAVE_FSEEKO">-DHAVE_FSEEKO</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_FSEEKO(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Operating system has support for fseeko.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DHAVE_SYS_TIME_H" id="b433.milc_DHAVE_SYS_TIME_H">-DHAVE_SYS_TIME_H</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_SYS_TIME_H(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Operating system has systime.h.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DHAVE_UNISTD_H" id="b433.milc_DHAVE_UNISTD_H">-DHAVE_UNISTD_H</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHAVE_UNISTD_H(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Operating system has unistd.h.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DHMC_ALGORITHM" id="b433.milc_DHMC_ALGORITHM">-DHMC_ALGORITHM</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHMC_ALGORITHM(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Use the hybrid Monte Carlo algorithm
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DHPUX" id="b433.milc_DHPUX">-DHPUX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHPUX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+For HPUX operating system
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DINT_IS_32BIT" id="b433.milc_DINT_IS_32BIT">-DINT_IS_32BIT</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DINT_IS_32BIT(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+int data type is 32bits
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DLLTIME" id="b433.milc_DLLTIME">-DLLTIME</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DLLTIME(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Timing of individual portions of code turned off.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DLOOPEND" id="b433.milc_DLOOPEND">-DLOOPEND</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DLOOPEND(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Performance enhancement for layouts that store all even sites before
+all odd sites
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DMPI" id="b433.milc_DMPI">-DMPI</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DMPI(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+The code is to be run under MPI.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DNATIVEDOUBLE" id="b433.milc_DNATIVEDOUBLE">-DNATIVEDOUBLE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNATIVEDOUBLE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+For 64bit fp units. The code has now been converted to double precision.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DNPBP_REPS" id="b433.milc_DNPBP_REPS">-DNPBP_REPS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNPBP_REPS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Define the number of repetitions of the measurement routine for the
+chiral condensate.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DN_SUBL32" id="b433.milc_DN_SUBL32">-DN_SUBL32</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DN_SUBL32(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+The set of grid points is divided into 32 subsets, as opposed to the
+usual even-odd subgrids.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DPHI_ALGORITHM" id="b433.milc_DPHI_ALGORITHM">-DPHI_ALGORITHM</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPHI_ALGORITHM(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Use the phi algorithm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DSCHROED_FUN" id="b433.milc_DSCHROED_FUN">-DSCHROED_FUN</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSCHROED_FUN(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Use the Schroedinger functional method.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DSHORT_IS_32BIT" id="b433.milc_DSHORT_IS_32BIT">-DSHORT_IS_32BIT</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSHORT_IS_32BIT(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Type short is 32 bits.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DSITERAND" id="b433.milc_DSITERAND">-DSITERAND</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSITERAND(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Use a separate random number generator for each grid point.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DSPECTRUM" id="b433.milc_DSPECTRUM">-DSPECTRUM</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPECTRUM(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Compile in spectrum measurement routines.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DSTRONG" id="b433.milc_DSTRONG">-DSTRONG</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSTRONG(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Used in unitarity checking code to enhance check.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DT3E" id="b433.milc_DT3E">-DT3E</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DT3E(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Code modification specific to the Cray T3E.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DTADPOLE_IMPROVE" id="b433.milc_DTADPOLE_IMPROVE">-DTADPOLE_IMPROVE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTADPOLE_IMPROVE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Use the tadpole improvement physics method.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_DUNIDEBUG" id="b433.milc_DUNIDEBUG">-DUNIDEBUG</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DUNIDEBUG(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Used in unitarity checking code to enhance check.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b433.milc_header_guards" id="b433.milc_header_guards">
+-D_ASQTAD_ACTION_H,
+-D_COMDEFS_H,
+-D_CONFIG_H,
+-D_DEFINES_H,
+-D_DIRS_H,
+-D_GENERIC_H,
+-D_GENERIC_KS_H,
+-D_GENERIC_QUARK_TYPES_H,
+-D_IO_LAT_H,
+-D_LATTICE_H,
+-D_LOOPEND_H,
+-D_MACROS_H,
+-D_MILC_COMPLEX_H,
+-D_PARAMS_H,
+-D_RANDOM_H,
+-D_SU3_H,
+-D_TYPE32_H
+</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_(?:ASQTAD_ACTION|COMDEFS|CONFIG|DEFINES|DIRS|GENERIC|GENERIC_KS|GENERIC_QUARK_TYPES|IO_LAT|LATTICE|LOOPEND|MACROS|MILC_COMPLEX|PARAMS|RANDOM|SU3|TYPE32)_H(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This macro is used to guard against multiple header inclusions.  It may not be
+set explicitly.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+</body>
+</html>

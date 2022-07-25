@@ -1,0 +1,2703 @@
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta name="generator" content="SPEC CPU2006 Tools  (flags v4553)" />
+<style type="text/css" id="internalScreen" media="screen">
+<!--
+body {
+  margin:  1em;
+  border:  0;
+  padding: 0;
+  background: white;
+  color:      black;
+  font-family: "Times Roman", times, serif;
+}
+
+.tt {
+  font-family: monospace;
+}
+
+div.flagClass > h2 {
+  border-bottom: 1px dotted black;
+  width: 80%;
+  font-family: sans-serif;
+}
+
+div.flagDesc {
+  clear: both;
+  background-color: rgb(255, 245, 220);
+  border: 1px solid blue; /* XXX This is for debugging */ 
+  margin: 0 auto;
+  width: 90%;
+}
+
+li.flagName {
+  font-weight: bold;
+  width: 100%;
+  border-bottom: 1px solid black;
+  display: block;
+  margin: 0.5em 0 0.5em 0;
+  font-size: 125%;
+}
+
+/* (presumably short) informationals all get grouped together near the top
+ * of the flag description block.
+ */
+.flagOrigin, .flagDescClass, .flagDescCompiler, .flagDescRE, .flagVar {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  float: left;
+  padding: 0.25em;
+  margin: 0 0 0.25em 0;
+}
+
+.flagDescClass::before {
+  content: "Flag Class: ";
+}
+.flagDescCompiler::before {
+  content: "Compilers that recognize this flag: ";
+}
+.flagDescRE::before {
+  content: "Regular Expression: ";
+}
+.flagVar::before {
+  content: "Found In: ";
+}
+
+span.flagDescInc {
+  border-bottom: 1px solid black;
+}
+
+/* The description text stands alone. */
+.descText {
+  clear: both;
+  padding: 0.5em 1em 0.5em 1em;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin: 0.5em 0 0.5em 0;
+}
+
+/* This is a separate class so that in the print style sheet it can
+ * be ignored.
+ * Also, 'style="clear:both;"' is longer than 'class="clear"'
+ */
+.clear {
+  clear: both;
+}
+
+/* This is really for the link _to_ the flag report */
+li.unknown > a:link, a:visited { text-decoration: none; }
+
+.monospace {
+  font-family: Courier, "Courier New", monospace;
+}
+
+ul.flagDescList {
+  clear: both;
+  list-style-type: none;
+}
+
+/* Arrange for each flag description to have some headroom. */
+ul.flagDescList > li {
+  margin: 2em 0 0 0;
+}
+
+ul.flagDesc {
+  list-style-type: none;
+}
+
+div.flagTOC {
+  border: 1px solid white;
+  padding: 0.5em 1em;
+  margin: 0 auto;
+  width: 80%;
+}
+
+ul.flagTOC {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.flagTOC > li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+  margin: 0;
+  padding: 0.25em 0 0.25em 0;
+  float: left;
+  display: inline-block; /* Fix IE bug; compliant browsers will ignore this */
+  width: 24.3%;
+  min-height: 1.5em;
+  overflow: hidden; /* If the table gets squeezed too much, don't let the
+                     * text overlap
+                     */
+}
+
+ul.SubMenu li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+}
+
+ul.SubMenu {
+  display: none;
+  position: absolute;
+  list-style-type: none;
+  border: 1px solid black;
+  background-color: white;
+  margin: 0 0 0 2em;
+  padding: 0.25em 5em 0.25em 0.5em;
+  white-space: nowrap;
+}
+
+li:hover > ul.SubMenu, ul.SubMenu:hover {
+  display: block;
+}
+
+ul.SubMenu > li:hover, ul.flagTOC > li:hover {
+  background-color: rgb(176, 196, 238); /* lightsteelgray... almost */
+  border: 1px solid rgb(128, 128, 128);
+}
+
+
+.resultpage a:link, .resultpage a:visited {
+  text-decoration: none;
+  border-bottom: 1px dashed black;
+  color: inherit;
+}
+
+.resultpage {
+  margin: auto;
+  padding: 0;
+  width: 800px;
+}
+
+.logo {
+  float: left;
+}
+
+.titlebarcontainer, .resultstable {
+  border: solid 1px;
+  width: 100%;
+  float: left;
+}
+
+div.logo > img {
+  vertical-align: 50%;
+  margin: auto;
+}
+
+.titlebar {
+  float: left;
+  padding: 0em 1em 0em 1em;
+  text-align: center;
+  width: 92%;
+}
+
+div.titlebar > h1, div.titlebar > p {
+  margin: 0 1em 0 1em;
+}
+
+.systembar {
+  float: left;
+  width: 65%;
+  font-size: 150%;
+  margin: 0;
+  padding: 0.1em;
+  border-right: solid 1px black;
+}
+
+.metricbar {
+  padding: 0.1em;
+  margin: 0;
+  float: right;
+  width: 33%;
+  height: 50%;
+  font-size: 120%;
+}
+
+.metricbar#base {
+  background-color: #c8c8c8;
+  color: black;
+}
+
+.metricbar#peak {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+}
+
+.metricbar p {
+  margin: 0;
+  padding: 0.2em;
+}
+
+.datebar p, .systembar p {
+  margin: 0;
+  padding: 0;
+}
+
+.datebar p {
+  float: left;
+  border-left: solid 1px black;
+}
+
+span.item {
+  float: left;
+  margin: 0;
+  padding: 0 0 0 0.1em;
+}
+
+span.value {
+  float: right;
+  padding: 0 0.1em 0 0;
+}
+
+.datebar {
+  width: 100%;
+  float: left;
+  font-size: 50%;
+  min-height: 100%;
+  border: solid 1px black;
+}
+
+p#test_sponsor {
+  width: 31%;
+}
+
+p#license_num {
+  width: 16%;
+}
+
+p#test_date {
+  width: 15%;
+}
+
+p#hw_avail, p#sw_avail {
+  width: 18%;
+}
+
+div.graph {
+  margin: auto;
+}
+
+div.infobox {
+  float: left;
+  width: 100%;
+  padding: 0;
+  border: solid 1px black;
+}
+
+div.infobox table {
+  width: 49%;
+  float: left;
+}
+
+div.infobox table tr {
+  vertical-align: top;
+}
+
+div.infobox table#Hardware {
+  width: 50%;
+  border-right: 1px solid black;
+}
+
+div.infobox thead th {
+  font-size: 200%;
+}
+
+div.infobox tbody th {
+  text-align: left;
+}
+
+.resultstable h2, div.notes h2 {
+  text-align: center;
+  margin: 0.1em;
+}
+
+div.notes h3 {
+  margin: 0.1em;
+}
+
+div.notes dd {
+  margin-bottom: 1em;
+}
+
+.resultstable table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.resultstable th.basecol, .resultstable th.peakcol {
+  padding: 0.1em;
+  font-size: 90%;
+}
+
+.resultstable th {
+  border: solid 2px black;
+}
+
+.resultstable td {
+  border: solid 1px #b8b8b8;
+}
+
+td.bm, th.bm { 
+  border-right: solid 2px black;
+  border-left: solid 2px black;
+}
+
+td.secs { 
+  border-left: solid 2px black;
+}
+
+td.ratio { 
+  border-right: solid 2px black;
+}
+
+.resultstable tfoot td {
+  text-align: center;
+  border: solid 2px black;
+}
+
+th.basecol {
+  background-color: #c8c8c8;
+  color: black;
+}
+td.basecol {
+  text-align: right;
+  background-color: transparent;
+  color: black;
+}
+
+th.peakcol {
+  text-align: center;
+}
+
+.peakcol {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+  text-align: right;
+}
+
+td.bm {
+  /* Basically, the benchmark name and copies columns */
+  background-color: #c8c8c8;
+  color: black;
+}
+
+span.selected {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+div.notes {
+  width: 100%;
+  float: left;
+  border: solid 1px black;
+}
+
+div.flagfooter {
+  text-align: center;
+}
+
+div.errors {
+  border: solid 2px red;
+}
+div.errors h2 {
+  background-color: transparent;
+  color: red;
+}
+
+div.footer {
+  border: none;
+}
+
+/* People find the "double underline" confusing.  And Safari 1.3 doesn't deal
+ * well with attempting to disable the border for userflag links.  So just
+ * give up and don't decorate user flags specially.
+********************
+span.userflag {
+  text-decoration: underline;
+}
+
+.userflag a:link {
+  border-bottom: 0;
+}
+********************
+*/
+/* Most of the screen-specific CSS is also the common CSS */
+
+/* Style for the non-image W3C marking at the bottom of the page, courtesy of
+ * Marek Prokop (http://www.sovavsiti.cz/css/w3c_buttons.html)
+ */
+.w3cbutton3 {
+  margin: 1em 1em 0 0;
+  width: 9em;
+  border: 1px solid #ccc;
+  font-family: helvetica,arial,sans-serif;
+  font-size: 70%;
+  font-weight: bold;
+  float: left;
+}
+.w3cbutton3 a {
+  display: block;
+  width: 100%;
+}
+.w3cbutton3 a:link,
+.w3cbutton3 a:visited,
+.w3cbutton3 a:hover {
+  background-color: #fc6;
+  color: #000;
+  text-decoration: none;
+  border-bottom: none;
+}
+.w3cbutton3 span.w3c {
+  padding: 0 0.4em;
+  background-color: #fff;
+  color: #0c479d;
+}
+
+-->
+</style>
+<style type="text/css" id="internalPrint" media="print">
+<!--
+body {
+  margin:  1em;
+  border:  0;
+  padding: 0;
+  background: white;
+  color:      black;
+  font-family: "Times Roman", times, serif;
+}
+
+.tt {
+  font-family: monospace;
+}
+
+div.flagClass > h2 {
+  border-bottom: 1px dotted black;
+  width: 80%;
+  font-family: sans-serif;
+}
+
+div.flagDesc {
+  clear: both;
+  background-color: rgb(255, 245, 220);
+  border: 1px solid blue; /* XXX This is for debugging */ 
+  margin: 0 auto;
+  width: 90%;
+}
+
+li.flagName {
+  font-weight: bold;
+  width: 100%;
+  border-bottom: 1px solid black;
+  display: block;
+  margin: 0.5em 0 0.5em 0;
+  font-size: 125%;
+}
+
+/* (presumably short) informationals all get grouped together near the top
+ * of the flag description block.
+ */
+.flagOrigin, .flagDescClass, .flagDescCompiler, .flagDescRE, .flagVar {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  float: left;
+  padding: 0.25em;
+  margin: 0 0 0.25em 0;
+}
+
+.flagDescClass::before {
+  content: "Flag Class: ";
+}
+.flagDescCompiler::before {
+  content: "Compilers that recognize this flag: ";
+}
+.flagDescRE::before {
+  content: "Regular Expression: ";
+}
+.flagVar::before {
+  content: "Found In: ";
+}
+
+span.flagDescInc {
+  border-bottom: 1px solid black;
+}
+
+/* The description text stands alone. */
+.descText {
+  clear: both;
+  padding: 0.5em 1em 0.5em 1em;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin: 0.5em 0 0.5em 0;
+}
+
+/* This is a separate class so that in the print style sheet it can
+ * be ignored.
+ * Also, 'style="clear:both;"' is longer than 'class="clear"'
+ */
+.clear {
+  clear: both;
+}
+
+/* This is really for the link _to_ the flag report */
+li.unknown > a:link, a:visited { text-decoration: none; }
+
+.monospace {
+  font-family: Courier, "Courier New", monospace;
+}
+
+ul.flagDescList {
+  clear: both;
+  list-style-type: none;
+}
+
+/* Arrange for each flag description to have some headroom. */
+ul.flagDescList > li {
+  margin: 2em 0 0 0;
+}
+
+ul.flagDesc {
+  list-style-type: none;
+}
+
+div.flagTOC {
+  border: 1px solid white;
+  padding: 0.5em 1em;
+  margin: 0 auto;
+  width: 80%;
+}
+
+ul.flagTOC {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.flagTOC > li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+  margin: 0;
+  padding: 0.25em 0 0.25em 0;
+  float: left;
+  display: inline-block; /* Fix IE bug; compliant browsers will ignore this */
+  width: 24.3%;
+  min-height: 1.5em;
+  overflow: hidden; /* If the table gets squeezed too much, don't let the
+                     * text overlap
+                     */
+}
+
+ul.SubMenu li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+}
+
+ul.SubMenu {
+  display: none;
+  position: absolute;
+  list-style-type: none;
+  border: 1px solid black;
+  background-color: white;
+  margin: 0 0 0 2em;
+  padding: 0.25em 5em 0.25em 0.5em;
+  white-space: nowrap;
+}
+
+li:hover > ul.SubMenu, ul.SubMenu:hover {
+  display: block;
+}
+
+ul.SubMenu > li:hover, ul.flagTOC > li:hover {
+  background-color: rgb(176, 196, 238); /* lightsteelgray... almost */
+  border: 1px solid rgb(128, 128, 128);
+}
+
+
+.resultpage a:link, .resultpage a:visited {
+  text-decoration: none;
+  border-bottom: 1px dashed black;
+  color: inherit;
+}
+
+.resultpage {
+  margin: auto;
+  padding: 0;
+  width: 800px;
+}
+
+.logo {
+  float: left;
+}
+
+.titlebarcontainer, .resultstable {
+  border: solid 1px;
+  width: 100%;
+  float: left;
+}
+
+div.logo > img {
+  vertical-align: 50%;
+  margin: auto;
+}
+
+.titlebar {
+  float: left;
+  padding: 0em 1em 0em 1em;
+  text-align: center;
+  width: 92%;
+}
+
+div.titlebar > h1, div.titlebar > p {
+  margin: 0 1em 0 1em;
+}
+
+.systembar {
+  float: left;
+  width: 65%;
+  font-size: 150%;
+  margin: 0;
+  padding: 0.1em;
+  border-right: solid 1px black;
+}
+
+.metricbar {
+  padding: 0.1em;
+  margin: 0;
+  float: right;
+  width: 33%;
+  height: 50%;
+  font-size: 120%;
+}
+
+.metricbar#base {
+  background-color: #c8c8c8;
+  color: black;
+}
+
+.metricbar#peak {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+}
+
+.metricbar p {
+  margin: 0;
+  padding: 0.2em;
+}
+
+.datebar p, .systembar p {
+  margin: 0;
+  padding: 0;
+}
+
+.datebar p {
+  float: left;
+  border-left: solid 1px black;
+}
+
+span.item {
+  float: left;
+  margin: 0;
+  padding: 0 0 0 0.1em;
+}
+
+span.value {
+  float: right;
+  padding: 0 0.1em 0 0;
+}
+
+.datebar {
+  width: 100%;
+  float: left;
+  font-size: 50%;
+  min-height: 100%;
+  border: solid 1px black;
+}
+
+p#test_sponsor {
+  width: 31%;
+}
+
+p#license_num {
+  width: 16%;
+}
+
+p#test_date {
+  width: 15%;
+}
+
+p#hw_avail, p#sw_avail {
+  width: 18%;
+}
+
+div.graph {
+  margin: auto;
+}
+
+div.infobox {
+  float: left;
+  width: 100%;
+  padding: 0;
+  border: solid 1px black;
+}
+
+div.infobox table {
+  width: 49%;
+  float: left;
+}
+
+div.infobox table tr {
+  vertical-align: top;
+}
+
+div.infobox table#Hardware {
+  width: 50%;
+  border-right: 1px solid black;
+}
+
+div.infobox thead th {
+  font-size: 200%;
+}
+
+div.infobox tbody th {
+  text-align: left;
+}
+
+.resultstable h2, div.notes h2 {
+  text-align: center;
+  margin: 0.1em;
+}
+
+div.notes h3 {
+  margin: 0.1em;
+}
+
+div.notes dd {
+  margin-bottom: 1em;
+}
+
+.resultstable table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.resultstable th.basecol, .resultstable th.peakcol {
+  padding: 0.1em;
+  font-size: 90%;
+}
+
+.resultstable th {
+  border: solid 2px black;
+}
+
+.resultstable td {
+  border: solid 1px #b8b8b8;
+}
+
+td.bm, th.bm { 
+  border-right: solid 2px black;
+  border-left: solid 2px black;
+}
+
+td.secs { 
+  border-left: solid 2px black;
+}
+
+td.ratio { 
+  border-right: solid 2px black;
+}
+
+.resultstable tfoot td {
+  text-align: center;
+  border: solid 2px black;
+}
+
+th.basecol {
+  background-color: #c8c8c8;
+  color: black;
+}
+td.basecol {
+  text-align: right;
+  background-color: transparent;
+  color: black;
+}
+
+th.peakcol {
+  text-align: center;
+}
+
+.peakcol {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+  text-align: right;
+}
+
+td.bm {
+  /* Basically, the benchmark name and copies columns */
+  background-color: #c8c8c8;
+  color: black;
+}
+
+span.selected {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+div.notes {
+  width: 100%;
+  float: left;
+  border: solid 1px black;
+}
+
+div.flagfooter {
+  text-align: center;
+}
+
+div.errors {
+  border: solid 2px red;
+}
+div.errors h2 {
+  background-color: transparent;
+  color: red;
+}
+
+div.footer {
+  border: none;
+}
+
+/* People find the "double underline" confusing.  And Safari 1.3 doesn't deal
+ * well with attempting to disable the border for userflag links.  So just
+ * give up and don't decorate user flags specially.
+********************
+span.userflag {
+  text-decoration: underline;
+}
+
+.userflag a:link {
+  border-bottom: 0;
+}
+********************
+*/
+/* Classes that contain links - useless on paper */
+.flagTOC, .SubMenu, .NoPrint {
+  display: none;
+}
+
+/* Don't decorate links - they're not clickable */
+a {
+  text-decoration: none;
+  background: inherit;
+  color: inherit;
+}
+
+.resultpage {
+  width: 100%;
+}
+
+.w3cbutton3 {
+  display: none;
+}
+-->
+</style>
+<title>483.xalancbmk Flags</title>
+</head><body>
+<h1>483.xalancbmk Flags</h1>
+
+
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+
+<div class="NoPrint">
+<h3>Sections</h3>
+<p>Selecting one of the following will take you directly to that section:</p>
+<ul>
+<li><a href="#Section_portability">Portability Flags</a></li>
+<li><a href="#Section_mandatory">Mandatory Flags</a></li>
+<li><a href="#Section_forbidden">Forbidden Flags</a></li>
+</ul>
+</div>
+
+<hr />
+
+<div class="flagClass" id="portability">
+<h2><a name="Section_portability" id="Section_portability">Portability Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b483.xalancbmk_DEXM_OS390">-DEXM_OS390</a></li>
+ <li><a href="#b483.xalancbmk_DOS390">-DOS390</a></li>
+ <li><a href="#b483.xalancbmk_DOS400">-DOS400</a></li>
+ <li><a href="#b483.xalancbmk_DSOLARIS">-DSOLARIS</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_AIX">-DSPEC_CPU_AIX</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_AIX_GCC">-DSPEC_CPU_AIX_GCC</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_HPUX">-DSPEC_CPU_HPUX</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_HPUX_HPPA">-DSPEC_CPU_HPUX_HPPA</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_HPUX_IA64">-DSPEC_CPU_HPUX_IA64</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_IRIX">-DSPEC_CPU_IRIX</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_LINUX">-DSPEC_CPU_LINUX</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_LINUX_XLC">-DSPEC_CPU_LINUX_XLC</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_MACOSX">-DSPEC_CPU_MACOSX</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_MACOSX_GCC">-DSPEC_CPU_MACOSX_GCC</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_MACOSX_XLC">-DSPEC_CPU_MACOSX_XLC</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_SOLARIS">-DSPEC_CPU_SOLARIS</a></li>
+ <li><a href="#b483.xalancbmk_DWIN32">-DWIN32</a></li>
+ <li><a href="#b483.xalancbmk_DWIN64">-DWIN64</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DEXM_OS390" id="b483.xalancbmk_DEXM_OS390">-DEXM_OS390</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DEXM_OS390(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for the 390 platform.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DOS390" id="b483.xalancbmk_DOS390">-DOS390</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DOS390(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for the 390 platform.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DOS400" id="b483.xalancbmk_DOS400">-DOS400</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DOS400(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for the OS400 platform.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSOLARIS" id="b483.xalancbmk_DSOLARIS">-DSOLARIS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSOLARIS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for the Solaris platform.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_AIX" id="b483.xalancbmk_DSPEC_CPU_AIX">-DSPEC_CPU_AIX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_AIX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for AIX using default compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_AIX_GCC" id="b483.xalancbmk_DSPEC_CPU_AIX_GCC">-DSPEC_CPU_AIX_GCC</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_AIX_GCC(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for AIX using GCC compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_HPUX" id="b483.xalancbmk_DSPEC_CPU_HPUX">-DSPEC_CPU_HPUX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_HPUX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for HPUX using default compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_HPUX_HPPA" id="b483.xalancbmk_DSPEC_CPU_HPUX_HPPA">-DSPEC_CPU_HPUX_HPPA</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_HPUX_HPPA(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for HPUX on HPPA using default compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_HPUX_IA64" id="b483.xalancbmk_DSPEC_CPU_HPUX_IA64">-DSPEC_CPU_HPUX_IA64</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_HPUX_IA64(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for HPUX on IA64 using default compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_IRIX" id="b483.xalancbmk_DSPEC_CPU_IRIX">-DSPEC_CPU_IRIX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_IRIX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for IRIX using default compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_LINUX" id="b483.xalancbmk_DSPEC_CPU_LINUX">-DSPEC_CPU_LINUX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_LINUX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for LINUX using default compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_LINUX_XLC" id="b483.xalancbmk_DSPEC_CPU_LINUX_XLC">-DSPEC_CPU_LINUX_XLC</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_LINUX_XLC(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for LINUX using XLC compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_MACOSX" id="b483.xalancbmk_DSPEC_CPU_MACOSX">-DSPEC_CPU_MACOSX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_MACOSX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for MACOSX using default compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_MACOSX_GCC" id="b483.xalancbmk_DSPEC_CPU_MACOSX_GCC">-DSPEC_CPU_MACOSX_GCC</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_MACOSX_GCC(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for MACOSX using GCC compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_MACOSX_XLC" id="b483.xalancbmk_DSPEC_CPU_MACOSX_XLC">-DSPEC_CPU_MACOSX_XLC</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_MACOSX_XLC(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for MACOSX using XLC compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_SOLARIS" id="b483.xalancbmk_DSPEC_CPU_SOLARIS">-DSPEC_CPU_SOLARIS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_SOLARIS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for SOLARIS using default compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DWIN32" id="b483.xalancbmk_DWIN32">-DWIN32</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DWIN32(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for the Win32 platform.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DWIN64" id="b483.xalancbmk_DWIN64">-DWIN64</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DWIN64(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for the Win64 platform.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+<div class="flagClass" id="mandatory">
+<h2><a name="Section_mandatory" id="Section_mandatory">Mandatory Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b483.xalancbmk_includes">-I., -Ixercesc, -Ixercesc/dom, -Ixercesc/dom/impl, -Ixercesc/sax, -Ixercesc/util/MsgLoaders/InMemory, -Ixercesc/util/Transcoders/Iconv, -Ixalanc/include</a></li>
+ <li><a href="#b483.xalancbmk_DXERCES_NO_ASM">-DXERCES_NO_ASM</a></li>
+ <li><a href="#b483.xalancbmk_DXML_USE_NATIVE_TRANSCODER">-DXML_USE_NATIVE_TRANSCODER</a></li>
+ <li><a href="#b483.xalancbmk_DXML_USE_INMEM_MESSAGELOADER">-DXML_USE_INMEM_MESSAGELOADER</a></li>
+ <li><a href="#b483.xalancbmk_DXML_USE_PTHREADS">-DXML_USE_PTHREADS</a></li>
+ <li><a href="#b483.xalancbmk_DAPP_NO_THREADS">-DAPP_NO_THREADS</a></li>
+ <li><a href="#b483.xalancbmk_DPROJ_DOM">-DPROJ_DOM</a></li>
+ <li><a href="#b483.xalancbmk_DPROJ_PARSERS">-DPROJ_PARSERS</a></li>
+ <li><a href="#b483.xalancbmk_DPROJ_SAX2">-DPROJ_SAX2</a></li>
+ <li><a href="#b483.xalancbmk_DPROJ_SAX4C">-DPROJ_SAX4C</a></li>
+ <li><a href="#b483.xalancbmk_DPROJ_VALIDATORS">-DPROJ_VALIDATORS</a></li>
+ <li><a href="#b483.xalancbmk_DPROJ_XMLPARSER">-DPROJ_XMLPARSER</a></li>
+ <li><a href="#b483.xalancbmk_DPROJ_XMLUTIL">-DPROJ_XMLUTIL</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU">-DSPEC_CPU</a></li>
+ <li><a href="#b483.xalancbmk_DSPEC_CPU_WINDOWS">-DSPEC_CPU_WINDOWS</a></li>
+ <li><a href="#b483.xalancbmk_DXALAN_INMEM_MSG_LOADER">-DXALAN_INMEM_MSG_LOADER</a></li>
+ <li><a href="#b483.xalancbmk_DXML_USE_INMEMORY_MSGLOADER">-DXML_USE_INMEMORY_MSGLOADER</a></li>
+ <li><a href="#b483.xalancbmk_DXML_USE_NETACCESSOR_SOCKET">-DXML_USE_NETACCESSOR_SOCKET</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_includes" id="b483.xalancbmk_includes">-I., -Ixercesc, -Ixercesc/dom, -Ixercesc/dom/impl, -Ixercesc/sax, -Ixercesc/util/MsgLoaders/InMemory, -Ixercesc/util/Transcoders/Iconv, -Ixalanc/include</a></li>
+<li class="flagDescRE"><span class="tt">-I(?:\.|xercesc(?:/dom|/dom/impl|/sax|/util/MsgLoaders/InMemory|/util/Transcoders/Iconv)?|xalanc/include)(?:\s+|$)</span></li>
+<li class="descText">
+<p>
+This flag is set for all builds in Spec/object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DXERCES_NO_ASM" id="b483.xalancbmk_DXERCES_NO_ASM">-DXERCES_NO_ASM</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DXERCES_NO_ASM(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This macro indicates that platform-specific assembly code is not to be used.
+It is set in Spec/object.pm and may not be changed.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DXML_USE_NATIVE_TRANSCODER" id="b483.xalancbmk_DXML_USE_NATIVE_TRANSCODER">-DXML_USE_NATIVE_TRANSCODER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DXML_USE_NATIVE_TRANSCODER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This macro selects the "native" transcoder.  It is set in Spec/object.pm and
+may not be changed.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DXML_USE_INMEM_MESSAGELOADER" id="b483.xalancbmk_DXML_USE_INMEM_MESSAGELOADER">-DXML_USE_INMEM_MESSAGELOADER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DXML_USE_INMEM_MESSAGELOADER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This macro selects the in-memory message loader.  It is set in Spec/object.pm
+and may not be changed.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DXML_USE_PTHREADS" id="b483.xalancbmk_DXML_USE_PTHREADS">-DXML_USE_PTHREADS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DXML_USE_PTHREADS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is set in Spec/object.pm, but has no effect on the compilation.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DAPP_NO_THREADS" id="b483.xalancbmk_DAPP_NO_THREADS">-DAPP_NO_THREADS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DAPP_NO_THREADS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+For every platform, this separates code that is the multi-threaded version fro mthe single threaded version. This is always defined in the object.pm to force the single threaded version.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DPROJ_DOM" id="b483.xalancbmk_DPROJ_DOM">-DPROJ_DOM</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPROJ_DOM(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag turns on DOM project code. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DPROJ_PARSERS" id="b483.xalancbmk_DPROJ_PARSERS">-DPROJ_PARSERS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPROJ_PARSERS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag turns on Parsers project code. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DPROJ_SAX2" id="b483.xalancbmk_DPROJ_SAX2">-DPROJ_SAX2</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPROJ_SAX2(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag turns on Sax2 project code. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DPROJ_SAX4C" id="b483.xalancbmk_DPROJ_SAX4C">-DPROJ_SAX4C</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPROJ_SAX4C(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag turns on Sax4c project code. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DPROJ_VALIDATORS" id="b483.xalancbmk_DPROJ_VALIDATORS">-DPROJ_VALIDATORS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPROJ_VALIDATORS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag turns on Validation project code. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DPROJ_XMLPARSER" id="b483.xalancbmk_DPROJ_XMLPARSER">-DPROJ_XMLPARSER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPROJ_XMLPARSER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag turns on XMLParser project code. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DPROJ_XMLUTIL" id="b483.xalancbmk_DPROJ_XMLUTIL">-DPROJ_XMLUTIL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPROJ_XMLUTIL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag turns on XMLUntil project code. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU" id="b483.xalancbmk_DSPEC_CPU">-DSPEC_CPU</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This macro is set by the SPEC framework. You cannot undefine this macro.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSPEC_CPU_WINDOWS" id="b483.xalancbmk_DSPEC_CPU_WINDOWS">-DSPEC_CPU_WINDOWS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_WINDOWS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for SPEC compilation for Windows using default compiler.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DXALAN_INMEM_MSG_LOADER" id="b483.xalancbmk_DXALAN_INMEM_MSG_LOADER">-DXALAN_INMEM_MSG_LOADER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DXALAN_INMEM_MSG_LOADER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be set for inmemory message loader. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DXML_USE_INMEMORY_MSGLOADER" id="b483.xalancbmk_DXML_USE_INMEMORY_MSGLOADER">-DXML_USE_INMEMORY_MSGLOADER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DXML_USE_INMEMORY_MSGLOADER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets the inmemory message loader. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DXML_USE_NETACCESSOR_SOCKET" id="b483.xalancbmk_DXML_USE_NETACCESSOR_SOCKET">-DXML_USE_NETACCESSOR_SOCKET</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DXML_USE_NETACCESSOR_SOCKET(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets the net accessort socket. Must be set in object.pm.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+<div class="flagClass" id="forbidden">
+<h2><a name="Section_forbidden" id="Section_forbidden">Forbidden Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b483.xalancbmk_HPP">HPP</a></li>
+ <li><a href="#b483.xalancbmk_header_guard">header_guard</a></li>
+ <li><a href="#b483.xalancbmk_include_guard">include_guard</a></li>
+ <li><a href="#b483.xalancbmk_DBEOS">-DBEOS</a></li>
+ <li><a href="#b483.xalancbmk_DENDIANMODE_LITTLE">-DENDIANMODE_LITTLE</a></li>
+ <li><a href="#b483.xalancbmk_ERRHEADER">ERRHEADER</a></li>
+ <li><a href="#b483.xalancbmk_DFALSE">-DFALSE</a></li>
+ <li><a href="#b483.xalancbmk_DFREEBSD">-DFREEBSD</a></li>
+ <li><a href="#b483.xalancbmk_DGCCDEFS_HPP">-DGCCDEFS_HPP</a></li>
+ <li><a href="#b483.xalancbmk_HAVE_TYPE">HAVE_TYPE</a></li>
+ <li><a href="#b483.xalancbmk_DHPUX">-DHPUX</a></li>
+ <li><a href="#b483.xalancbmk_DICUMSG_DATA1357924680">-DICUMSG_DATA1357924680</a></li>
+ <li><a href="#b483.xalancbmk_DICURESHANDLER_MSGCREATOR_1357924680">-DICURESHANDLER_MSGCREATOR_1357924680</a></li>
+ <li><a href="#b483.xalancbmk_DICUTRANSSERVICE_HPP">-DICUTRANSSERVICE_HPP</a></li>
+ <li><a href="#b483.xalancbmk_DINMEMHANDLER_MSGCREATOR_1357924680">-DINMEMHANDLER_MSGCREATOR_1357924680</a></li>
+ <li><a href="#b483.xalancbmk_DINMEMMSGLOADER_HPP">-DINMEMMSGLOADER_HPP</a></li>
+ <li><a href="#b483.xalancbmk_DLINUX">-DLINUX</a></li>
+ <li><a href="#b483.xalancbmk_DLITTLE_ENDIAN">-DLITTLE_ENDIAN</a></li>
+ <li><a href="#b483.xalancbmk_DMSG_CREATOR_1357924680">-DMSG_CREATOR_1357924680</a></li>
+ <li><a href="#b483.xalancbmk_DMSG_CREATOR_DATA1357924680">-DMSG_CREATOR_DATA1357924680</a></li>
+ <li><a href="#b483.xalancbmk_DNDEBUG_SYMBOLS">-DNDEBUG_SYMBOLS</a></li>
+ <li><a href="#b483.xalancbmk_DNEED_TO_GEN_ELEM_ATT_MAP_TABLE">-DNEED_TO_GEN_ELEM_ATT_MAP_TABLE</a></li>
+ <li><a href="#b483.xalancbmk_DNEED_TO_GEN_TABLE">-DNEED_TO_GEN_TABLE</a></li>
+ <li><a href="#b483.xalancbmk_DNETBSD">-DNETBSD</a></li>
+ <li><a href="#b483.xalancbmk_DNLSHANDLER_MSGCREATOR_1357924680">-DNLSHANDLER_MSGCREATOR_1357924680</a></li>
+ <li><a href="#b483.xalancbmk_DNLS_DATA1357924680">-DNLS_DATA1357924680</a></li>
+ <li><a href="#b483.xalancbmk_DNO_NATIVE_BOOL">-DNO_NATIVE_BOOL</a></li>
+ <li><a href="#b483.xalancbmk_DNULL">-DNULL</a></li>
+ <li><a href="#b483.xalancbmk_DOBSOLETED">-DOBSOLETED</a></li>
+ <li><a href="#b483.xalancbmk_DOS390BATCH">-DOS390BATCH</a></li>
+ <li><a href="#b483.xalancbmk_DOS400SETDEFS_H">-DOS400SETDEFS_H</a></li>
+ <li><a href="#b483.xalancbmk_DPTX">-DPTX</a></li>
+ <li><a href="#b483.xalancbmk_DRWSTD_MULTI_THREAD">-DRWSTD_MULTI_THREAD</a></li>
+ <li><a href="#b483.xalancbmk_DSAX2HANDLER_MSGCREATOR_1357924680">-DSAX2HANDLER_MSGCREATOR_1357924680</a></li>
+ <li><a href="#b483.xalancbmk_DSIZE_MAX">-DSIZE_MAX</a></li>
+ <li><a href="#b483.xalancbmk_DSSIZE_MAX">-DSSIZE_MAX</a></li>
+ <li><a href="#b483.xalancbmk_DTRU64">-DTRU64</a></li>
+ <li><a href="#b483.xalancbmk_DTRUE">-DTRUE</a></li>
+ <li><a href="#b483.xalancbmk_DUCNV_H">-DUCNV_H</a></li>
+ <li><a href="#b483.xalancbmk_DUTYPES_H">-DUTYPES_H</a></li>
+ <li><a href="#b483.xalancbmk_DU_ICU_VERSION_MAJOR_NUM">-DU_ICU_VERSION_MAJOR_NUM</a></li>
+ <li><a href="#b483.xalancbmk_DU_SIZEOF_WCHAR_T">-DU_SIZEOF_WCHAR_T</a></li>
+ <li><a href="#b483.xalancbmk_DWEAVEPATH_CPP">-DWEAVEPATH_CPP</a></li>
+ <li><a href="#b483.xalancbmk_XALAN">XALAN</a></li>
+ <li><a href="#b483.xalancbmk_XERCES">XERCES</a></li>
+ <li><a href="#b483.xalancbmk_XML">XML</a></li>
+ <li><a href="#b483.xalancbmk_DXP_CPLUSPLUS">-DXP_CPLUSPLUS</a></li>
+ <li><a href="#b483.xalancbmk_D_AIX">-D_AIX</a></li>
+ <li><a href="#b483.xalancbmk_D_BOOL">-D_BOOL</a></li>
+ <li><a href="#b483.xalancbmk_D_DEBUG">-D_DEBUG</a></li>
+ <li><a href="#b483.xalancbmk_D_GNU_SOURCE">-D_GNU_SOURCE</a></li>
+ <li><a href="#b483.xalancbmk_D_HP_NAMESPACE_STD">-D_HP_NAMESPACE_STD</a></li>
+ <li><a href="#b483.xalancbmk_D_MSC_VER">-D_MSC_VER</a></li>
+ <li><a href="#b483.xalancbmk_D_OS400PLATFORMUTILS_H">-D_OS400PLATFORMUTILS_H</a></li>
+ <li><a href="#b483.xalancbmk_D_SIZE_T">-D_SIZE_T</a></li>
+ <li><a href="#b483.xalancbmk_D_SSIZE_T">-D_SSIZE_T</a></li>
+ <li><a href="#b483.xalancbmk_D_WIN32">-D_WIN32</a></li>
+ <li><a href="#b483.xalancbmk_D_WIN64">-D_WIN64</a></li>
+ <li><a href="#b483.xalancbmk_D_XERCES_VERSION">-D_XERCES_VERSION</a></li>
+ <li><a href="#b483.xalancbmk_D__APPLE__">-D__APPLE__</a></li>
+ <li><a href="#b483.xalancbmk_D__BOOL__">-D__BOOL__</a></li>
+ <li><a href="#b483.xalancbmk_D__BORLANDC__">-D__BORLANDC__</a></li>
+ <li><a href="#b483.xalancbmk_D__BYTE_ORDER">-D__BYTE_ORDER</a></li>
+ <li><a href="#b483.xalancbmk_D__CYGWIN__">-D__CYGWIN__</a></li>
+ <li><a href="#b483.xalancbmk_D__FreeBSD_cc_version">-D__FreeBSD_cc_version</a></li>
+ <li><a href="#b483.xalancbmk_D__GNUC__">-D__GNUC__</a></li>
+ <li><a href="#b483.xalancbmk_D__HPACC_THREAD_SAFE_RB_TREE">-D__HPACC_THREAD_SAFE_RB_TREE</a></li>
+ <li><a href="#b483.xalancbmk_D__IBMCPP__">-D__IBMCPP__</a></li>
+ <li><a href="#b483.xalancbmk_D__INTEL_COMPILER">-D__INTEL_COMPILER</a></li>
+ <li><a href="#b483.xalancbmk_D__LITTLEENDIAN__">-D__LITTLEENDIAN__</a></li>
+ <li><a href="#b483.xalancbmk_D__MACH__">-D__MACH__</a></li>
+ <li><a href="#b483.xalancbmk_D__OS400__">-D__OS400__</a></li>
+ <li><a href="#b483.xalancbmk_D__SGI_STL_PORT">-D__SGI_STL_PORT</a></li>
+ <li><a href="#b483.xalancbmk_D__STD_STRICT_ANSI">-D__STD_STRICT_ANSI</a></li>
+ <li><a href="#b483.xalancbmk_D__STD_STRICT_ANSI_ERRORS">-D__STD_STRICT_ANSI_ERRORS</a></li>
+ <li><a href="#b483.xalancbmk_D__STL_MEMBER_TEMPLATES">-D__STL_MEMBER_TEMPLATES</a></li>
+ <li><a href="#b483.xalancbmk_D__SUNPRO_CC">-D__SUNPRO_CC</a></li>
+ <li><a href="#b483.xalancbmk_D__TANDEM">-D__TANDEM</a></li>
+ <li><a href="#b483.xalancbmk_D__cplusplus">-D__cplusplus</a></li>
+ <li><a href="#b483.xalancbmk_D__i386__">-D__i386__</a></li>
+ <li><a href="#b483.xalancbmk_Dbe">-Dbe</a></li>
+ <li><a href="#b483.xalancbmk_Dby">-Dby</a></li>
+ <li><a href="#b483.xalancbmk_Dreimplemented">-Dreimplemented</a></li>
+ <li><a href="#b483.xalancbmk_Drelease">-Drelease</a></li>
+ <li><a href="#b483.xalancbmk_Dshould">-Dshould</a></li>
+ <li><a href="#b483.xalancbmk_Dsomeone">-Dsomeone</a></li>
+ <li><a href="#b483.xalancbmk_Dsymbols">-Dsymbols</a></li>
+ <li><a href="#b483.xalancbmk_Dwith">-Dwith</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_HPP" id="b483.xalancbmk_HPP">HPP</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D\S*_HPP\S*\b</span></li>
+<li class="descText">
+<p>
+This macro prevents multiple inclusion of header files.  Setting it explicitly
+is forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_header_guard" id="b483.xalancbmk_header_guard">header_guard</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D\S*HEADER_GUARD\S*\b</span></li>
+<li class="descText">
+<p>
+This macro prevents multiple inclusion of header files.  Setting it explicitly
+is forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_include_guard" id="b483.xalancbmk_include_guard">include_guard</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D\S*INCLUDE_GUARD\S*\b</span></li>
+<li class="descText">
+<p>
+This macro prevents multiple inclusion of header files.  Setting it explicitly
+is forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DBEOS" id="b483.xalancbmk_DBEOS">-DBEOS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DBEOS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets platform specific definitions for BEOS. Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DENDIANMODE_LITTLE" id="b483.xalancbmk_DENDIANMODE_LITTLE">-DENDIANMODE_LITTLE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DENDIANMODE_LITTLE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Will set little endianmode based on the platform specifci definitons.Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_ERRHEADER" id="b483.xalancbmk_ERRHEADER">ERRHEADER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D\SERRHEADER_XML*\S*\b</span></li>
+<li class="descText">
+<p>
+This macro sets the error message mode for specific file. Changing this macro is forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DFALSE" id="b483.xalancbmk_DFALSE">-DFALSE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DFALSE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an internal macro for true and false. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DFREEBSD" id="b483.xalancbmk_DFREEBSD">-DFREEBSD</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DFREEBSD(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets platform specific definitions for FREEBSD. Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DGCCDEFS_HPP" id="b483.xalancbmk_DGCCDEFS_HPP">-DGCCDEFS_HPP</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DGCCDEFS_HPP(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets compiler specific definitions for GCC compiler. Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_HAVE_TYPE" id="b483.xalancbmk_HAVE_TYPE">HAVE_TYPE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D\SHAVE_*\S*\b</span></li>
+<li class="descText">
+<p>
+This macro determines if specific types are avaialble. Will be determined internally.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DHPUX" id="b483.xalancbmk_DHPUX">-DHPUX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DHPUX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets platform specific definitions for HPUX. Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DICUMSG_DATA1357924680" id="b483.xalancbmk_DICUMSG_DATA1357924680">-DICUMSG_DATA1357924680</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DICUMSG_DATA1357924680(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DICURESHANDLER_MSGCREATOR_1357924680" id="b483.xalancbmk_DICURESHANDLER_MSGCREATOR_1357924680">-DICURESHANDLER_MSGCREATOR_1357924680</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DICURESHANDLER_MSGCREATOR_1357924680(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DICUTRANSSERVICE_HPP" id="b483.xalancbmk_DICUTRANSSERVICE_HPP">-DICUTRANSSERVICE_HPP</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DICUTRANSSERVICE_HPP(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DINMEMHANDLER_MSGCREATOR_1357924680" id="b483.xalancbmk_DINMEMHANDLER_MSGCREATOR_1357924680">-DINMEMHANDLER_MSGCREATOR_1357924680</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DINMEMHANDLER_MSGCREATOR_1357924680(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DINMEMMSGLOADER_HPP" id="b483.xalancbmk_DINMEMMSGLOADER_HPP">-DINMEMMSGLOADER_HPP</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DINMEMMSGLOADER_HPP(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DLINUX" id="b483.xalancbmk_DLINUX">-DLINUX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DLINUX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets platform specific definitions for LINUX. Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DLITTLE_ENDIAN" id="b483.xalancbmk_DLITTLE_ENDIAN">-DLITTLE_ENDIAN</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DLITTLE_ENDIAN(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This macro sets LITTLE ENDIAN mode. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DMSG_CREATOR_1357924680" id="b483.xalancbmk_DMSG_CREATOR_1357924680">-DMSG_CREATOR_1357924680</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DMSG_CREATOR_1357924680(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DMSG_CREATOR_DATA1357924680" id="b483.xalancbmk_DMSG_CREATOR_DATA1357924680">-DMSG_CREATOR_DATA1357924680</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DMSG_CREATOR_DATA1357924680(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DNDEBUG_SYMBOLS" id="b483.xalancbmk_DNDEBUG_SYMBOLS">-DNDEBUG_SYMBOLS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNDEBUG_SYMBOLS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This macro turns on additonal debug code. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DNEED_TO_GEN_ELEM_ATT_MAP_TABLE" id="b483.xalancbmk_DNEED_TO_GEN_ELEM_ATT_MAP_TABLE">-DNEED_TO_GEN_ELEM_ATT_MAP_TABLE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNEED_TO_GEN_ELEM_ATT_MAP_TABLE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag turns on alternate path for character flag table. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DNEED_TO_GEN_TABLE" id="b483.xalancbmk_DNEED_TO_GEN_TABLE">-DNEED_TO_GEN_TABLE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNEED_TO_GEN_TABLE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag turns on alternate path for character flag table. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DNETBSD" id="b483.xalancbmk_DNETBSD">-DNETBSD</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNETBSD(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets platform specific definitions for NETSD. Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DNLSHANDLER_MSGCREATOR_1357924680" id="b483.xalancbmk_DNLSHANDLER_MSGCREATOR_1357924680">-DNLSHANDLER_MSGCREATOR_1357924680</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNLSHANDLER_MSGCREATOR_1357924680(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DNLS_DATA1357924680" id="b483.xalancbmk_DNLS_DATA1357924680">-DNLS_DATA1357924680</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNLS_DATA1357924680(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DNO_NATIVE_BOOL" id="b483.xalancbmk_DNO_NATIVE_BOOL">-DNO_NATIVE_BOOL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNO_NATIVE_BOOL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag determines if compiler has native BOOL type support. Determined automatically. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DNULL" id="b483.xalancbmk_DNULL">-DNULL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DNULL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets the NULL value. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DOBSOLETED" id="b483.xalancbmk_DOBSOLETED">-DOBSOLETED</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DOBSOLETED(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag guards unoptimized code. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DOS390BATCH" id="b483.xalancbmk_DOS390BATCH">-DOS390BATCH</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DOS390BATCH(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flags the 390 batch mode. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DOS400SETDEFS_H" id="b483.xalancbmk_DOS400SETDEFS_H">-DOS400SETDEFS_H</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DOS400SETDEFS_H(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets platform specific definitions for OS400. Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DPTX" id="b483.xalancbmk_DPTX">-DPTX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPTX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets platform specific definitions for Dynix PTX. Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DRWSTD_MULTI_THREAD" id="b483.xalancbmk_DRWSTD_MULTI_THREAD">-DRWSTD_MULTI_THREAD</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DRWSTD_MULTI_THREAD(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets the HPUX thread safe mode. No need to set
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSAX2HANDLER_MSGCREATOR_1357924680" id="b483.xalancbmk_DSAX2HANDLER_MSGCREATOR_1357924680">-DSAX2HANDLER_MSGCREATOR_1357924680</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSAX2HANDLER_MSGCREATOR_1357924680(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This determines message handling method. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSIZE_MAX" id="b483.xalancbmk_DSIZE_MAX">-DSIZE_MAX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSIZE_MAX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag determies maximum size for XML types. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DSSIZE_MAX" id="b483.xalancbmk_DSSIZE_MAX">-DSSIZE_MAX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSSIZE_MAX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag determies maximum size for XML types. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DTRU64" id="b483.xalancbmk_DTRU64">-DTRU64</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTRU64(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets platform specific definitions for Tru64. Will automatically define. No need to set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DTRUE" id="b483.xalancbmk_DTRUE">-DTRUE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTRUE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets TRUE value. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DUCNV_H" id="b483.xalancbmk_DUCNV_H">-DUCNV_H</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DUCNV_H(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets Universal Character Name value. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DUTYPES_H" id="b483.xalancbmk_DUTYPES_H">-DUTYPES_H</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DUTYPES_H(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets Utypes value. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DU_ICU_VERSION_MAJOR_NUM" id="b483.xalancbmk_DU_ICU_VERSION_MAJOR_NUM">-DU_ICU_VERSION_MAJOR_NUM</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DU_ICU_VERSION_MAJOR_NUM(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets ICU version value. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DU_SIZEOF_WCHAR_T" id="b483.xalancbmk_DU_SIZEOF_WCHAR_T">-DU_SIZEOF_WCHAR_T</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DU_SIZEOF_WCHAR_T(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets Wchar_t size. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DWEAVEPATH_CPP" id="b483.xalancbmk_DWEAVEPATH_CPP">-DWEAVEPATH_CPP</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DWEAVEPATH_CPP(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag sets path value. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_XALAN" id="b483.xalancbmk_XALAN">XALAN</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D\SXALAN_*\S*\b</span></li>
+<li class="descText">
+<p>
+This macro determines if specific XALAN types are avaialble. Will be determined internally.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_XERCES" id="b483.xalancbmk_XERCES">XERCES</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D\SXERCES*\S*\b</span></li>
+<li class="descText">
+<p>
+This macro determines if specific XERCES types are avaialble. Will be determined internally.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_XML" id="b483.xalancbmk_XML">XML</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D\SXML_*\S*\b</span></li>
+<li class="descText">
+<p>
+This macro determines if specific XML types are avaialble. Will be determined internally.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_DXP_CPLUSPLUS" id="b483.xalancbmk_DXP_CPLUSPLUS">-DXP_CPLUSPLUS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DXP_CPLUSPLUS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is a cross-platform symbole defined automatically when using C++. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_AIX" id="b483.xalancbmk_D_AIX">-D_AIX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_AIX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_BOOL" id="b483.xalancbmk_D_BOOL">-D_BOOL</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_BOOL(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_DEBUG" id="b483.xalancbmk_D_DEBUG">-D_DEBUG</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_DEBUG(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_GNU_SOURCE" id="b483.xalancbmk_D_GNU_SOURCE">-D_GNU_SOURCE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_GNU_SOURCE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_HP_NAMESPACE_STD" id="b483.xalancbmk_D_HP_NAMESPACE_STD">-D_HP_NAMESPACE_STD</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_HP_NAMESPACE_STD(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_MSC_VER" id="b483.xalancbmk_D_MSC_VER">-D_MSC_VER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_MSC_VER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_OS400PLATFORMUTILS_H" id="b483.xalancbmk_D_OS400PLATFORMUTILS_H">-D_OS400PLATFORMUTILS_H</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_OS400PLATFORMUTILS_H(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_SIZE_T" id="b483.xalancbmk_D_SIZE_T">-D_SIZE_T</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_SIZE_T(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_SSIZE_T" id="b483.xalancbmk_D_SSIZE_T">-D_SSIZE_T</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_SSIZE_T(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_WIN32" id="b483.xalancbmk_D_WIN32">-D_WIN32</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_WIN32(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_WIN64" id="b483.xalancbmk_D_WIN64">-D_WIN64</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_WIN64(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D_XERCES_VERSION" id="b483.xalancbmk_D_XERCES_VERSION">-D_XERCES_VERSION</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_XERCES_VERSION(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__APPLE__" id="b483.xalancbmk_D__APPLE__">-D__APPLE__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__APPLE__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__BOOL__" id="b483.xalancbmk_D__BOOL__">-D__BOOL__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__BOOL__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__BORLANDC__" id="b483.xalancbmk_D__BORLANDC__">-D__BORLANDC__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__BORLANDC__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__BYTE_ORDER" id="b483.xalancbmk_D__BYTE_ORDER">-D__BYTE_ORDER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__BYTE_ORDER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__CYGWIN__" id="b483.xalancbmk_D__CYGWIN__">-D__CYGWIN__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__CYGWIN__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__FreeBSD_cc_version" id="b483.xalancbmk_D__FreeBSD_cc_version">-D__FreeBSD_cc_version</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__FreeBSD_cc_version(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__GNUC__" id="b483.xalancbmk_D__GNUC__">-D__GNUC__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__GNUC__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__HPACC_THREAD_SAFE_RB_TREE" id="b483.xalancbmk_D__HPACC_THREAD_SAFE_RB_TREE">-D__HPACC_THREAD_SAFE_RB_TREE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__HPACC_THREAD_SAFE_RB_TREE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__IBMCPP__" id="b483.xalancbmk_D__IBMCPP__">-D__IBMCPP__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__IBMCPP__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__INTEL_COMPILER" id="b483.xalancbmk_D__INTEL_COMPILER">-D__INTEL_COMPILER</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__INTEL_COMPILER(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__LITTLEENDIAN__" id="b483.xalancbmk_D__LITTLEENDIAN__">-D__LITTLEENDIAN__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__LITTLEENDIAN__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__MACH__" id="b483.xalancbmk_D__MACH__">-D__MACH__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__MACH__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__OS400__" id="b483.xalancbmk_D__OS400__">-D__OS400__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__OS400__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__SGI_STL_PORT" id="b483.xalancbmk_D__SGI_STL_PORT">-D__SGI_STL_PORT</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__SGI_STL_PORT(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__STD_STRICT_ANSI" id="b483.xalancbmk_D__STD_STRICT_ANSI">-D__STD_STRICT_ANSI</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__STD_STRICT_ANSI(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__STD_STRICT_ANSI_ERRORS" id="b483.xalancbmk_D__STD_STRICT_ANSI_ERRORS">-D__STD_STRICT_ANSI_ERRORS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__STD_STRICT_ANSI_ERRORS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__STL_MEMBER_TEMPLATES" id="b483.xalancbmk_D__STL_MEMBER_TEMPLATES">-D__STL_MEMBER_TEMPLATES</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__STL_MEMBER_TEMPLATES(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__SUNPRO_CC" id="b483.xalancbmk_D__SUNPRO_CC">-D__SUNPRO_CC</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__SUNPRO_CC(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__TANDEM" id="b483.xalancbmk_D__TANDEM">-D__TANDEM</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__TANDEM(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__cplusplus" id="b483.xalancbmk_D__cplusplus">-D__cplusplus</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__cplusplus(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_D__i386__" id="b483.xalancbmk_D__i386__">-D__i386__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__i386__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an autodetected variable based on builtin platform macro that is set either by the compiler or the OS. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_Dbe" id="b483.xalancbmk_Dbe">-Dbe</a></li>
+<li class="flagDescRE"><span class="tt">[-/]Dbe(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an internal macro. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_Dby" id="b483.xalancbmk_Dby">-Dby</a></li>
+<li class="flagDescRE"><span class="tt">[-/]Dby(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an internal macro. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_Dreimplemented" id="b483.xalancbmk_Dreimplemented">-Dreimplemented</a></li>
+<li class="flagDescRE"><span class="tt">[-/]Dreimplemented(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an internal macro. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_Drelease" id="b483.xalancbmk_Drelease">-Drelease</a></li>
+<li class="flagDescRE"><span class="tt">[-/]Drelease(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an internal macro. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_Dshould" id="b483.xalancbmk_Dshould">-Dshould</a></li>
+<li class="flagDescRE"><span class="tt">[-/]Dshould(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an internal macro. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_Dsomeone" id="b483.xalancbmk_Dsomeone">-Dsomeone</a></li>
+<li class="flagDescRE"><span class="tt">[-/]Dsomeone(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an internal macro. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_Dsymbols" id="b483.xalancbmk_Dsymbols">-Dsymbols</a></li>
+<li class="flagDescRE"><span class="tt">[-/]Dsymbols(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an internal macro. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b483.xalancbmk_Dwith" id="b483.xalancbmk_Dwith">-Dwith</a></li>
+<li class="flagDescRE"><span class="tt">[-/]Dwith(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is an internal macro. Do not set.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+</body>
+</html>

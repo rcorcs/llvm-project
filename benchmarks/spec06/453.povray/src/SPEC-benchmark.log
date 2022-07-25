@@ -1,0 +1,37 @@
+Redirecting Options
+  All Streams to console..........On   and file SPEC-benchmark.log
+  Debug Stream to console.........Off
+  Fatal Stream to console.........On 
+  Render Stream to console........On 
+  Statistics Stream to console....On 
+  Warning Stream to console.......Off
+Parsing Options
+  Input file: SPEC-benchmark-test.pov (compatible to version 3.50)
+  Remove bounds........Off
+  Split unions.........Off
+  Library paths:
+Output Options
+  Image resolution 50 by 50 (rows 1 to 50, columns 1 to 50).
+  Graphic display......Off
+  Mosaic preview.......Off
+  CPU usage histogram..Off
+  Continued trace......Off
+Tracing Options
+  Quality:  9
+  Bounding boxes.......On   Bounding threshold: 1
+  Light Buffer.........On 
+  Vista Buffer.........On   Draw Vista Buffer....Off
+  Antialiasing.........On  (Method 1, Threshold 0.300, Depth 3, Jitter Off)
+  Clock value:    0.000  (Animation off)
+File: SPEC-benchmark-test.pov  Line: 28
+Possible Parse Error: Could not find file 'shapes.inc'
+File: SPEC-benchmark-test.pov  Line: 28
+File Context (5 lines):
+
+global_settings { assumed_gamma 2.2 max_trace_level 5 }
+#include "shapes.inc"
+Parse Error: Cannot open include file shapes.inc.
+File: SPEC-benchmark-test.pov  Line: 28
+Parse Warning: Check that the file is in a directory specifed with a +L switch
+ or 'Library_Path=' .INI item. Standard include files are in the include
+ directory or folder. Please read your documentation carefully.

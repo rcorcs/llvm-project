@@ -1,0 +1,237 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>464.h264ref: SPEC CPU2006 Benchmark Description</title>
+</head>
+<body>
+<div style="text-align: center">
+<h1>464.h264ref<br />
+SPEC CPU2006 Benchmark Description</h1>
+</div>
+
+<h2>Benchmark Name</h2>
+
+<p>464.h264ref</p>
+
+<hr />
+
+<h2>Benchmark Author</h2>
+
+<p>Karsten S&uuml;hring and 
+<a href="http://iphome.hhi.de/suehring/tml/doc/lenc/html/contributors_8h.html#_details">many 
+others</a> wrote the H.264/AVC reference software implementation.  (The list of contributors
+may also be found in the benchmark tree, as 
+<span style="white-space:nowrap; font-family:monospace;">$SPEC/benchspec/CPU2006/464.h264ref/src/contributors.h</span>.)</p>
+
+<p>Tom Pycke &lt;Tom.Pycke &#x5b;at&#x5d; telenet.be&gt; has coordinated
+packaging the reference version for use by SPEC.</p>
+
+<hr />
+
+<h2>Benchmark Program General Category</h2>
+
+<p>Video compression</p>
+
+<hr />
+
+<h2>Benchmark Description</h2>
+
+<p>464.h264ref is a reference implementation of 
+H.264/AVC (Advanced Video Coding), 
+the latest state-of-the-art video compression
+standard. The standard is developed by the VCEG (Video Coding Experts Group)
+of the ITU (International Telecommunications Union, <a href=
+"http://www.itu.int">http://www.itu.int</a>) and the MPEG (Moving
+Pictures Experts Group, <a href=
+"http://www.chiariglione.org/mpeg">http://www.chiariglione.org/mpeg</a>)
+of the ISO/IEC (International Standardization Organization,
+<a href="http://www.iso.ch">http://www.iso.ch</a>). This standard replaces 
+the currently widely used MPEG-2
+standard, and is being applied for applications such as the
+next-generation DVDs (Blu-ray and HD DVD) and video
+broadcasting.</p>
+
+<p>The 464.h264ref source code, which is part of SPEC CPU2006, is based on 
+version 9.3 of the h264avc reference implementation downloaded from 
+<a href="http://iphome.hhi.de/suehring/tml/index.htm">Karsten S&uuml;hring's website
+</a> (interested readers can get the latest version of the h264avc reference software 
+directly from <a href="http://iphome.hhi.de/suehring/tml/download/">here</a>). 
+The original sources have been modified to ensure portability, 
+validation, and fairness across multiple hardware and software platforms. Utmost care 
+has been taken to keep the modifications to the minimum so as to ensure the 
+integrity and intent of the original sources. 
+</p>
+
+<p>In the process of converting the original h264avc reference implementation sources
+(version 9.3) to the SPEC CPU2006 benchmark 464.h264ref, the following changes were 
+made: </p>
+<ul>
+<li>Put benchmark sources into the SPEC CPU2006 harness</li>
+<li>Removed the sources for decoder since decoder is not part of 464.h264ref 
+benchmark</li>
+<li>Suppressed the printing of log files and encoded output to reduce I/O traffic</li>
+<li>Made changes to ensure validation across multiple hardware and software 
+platforms</li>
+</ul>
+
+
+<p>This benchmark encodes video streams using 2 different parameter
+sets (*.cfg files):</p>
+
+<ul>
+<li>Basic profile (*_baseline.cfg): Good compression, fast encoding and decoding.
+This profile can be used for real-time encoding applications such
+as video conferencing.</li>
+
+<li>Main profile *_main.cfg): Best compression. This can be used in
+applications where no loss of data can occur (no <i>error
+resilience</i> needed) such as the next generation DVD.</li>
+</ul>
+
+<p>These two parameter sets make sure the most processing-intensive
+algorithms available in the standard are used during the
+benchmark.</p>
+
+<hr />
+
+<h2>Input Description</h2>
+
+<p>For the reference workload, we are using two different files for input. 
+Both are raw (uncompressed) video data in YUV-format.</p>
+
+<ul>
+<li>Foreman (foreman_qcif.yuv): a standard sequence used in video compression,
+consisting of 120 frames with resolution 176x144 pixels.</li>
+
+<li>SSS (sss.yuv): a sequence from a video game, consisting of 171 frames
+with resolution 512x320 pixels</li>
+</ul>
+
+<hr />
+
+<h2>Output Description</h2>
+
+<p>The output for the reference run consists of 6 files:</p>
+
+<ul>
+<li><kbd>foreman_ref_baseline_encodelog.out</kbd>: the encode log from the foreman
+sequence, encoded using the baseline profile.</li>
+
+<li><kbd>foreman_ref_main_encodelog.out</kbd>: the encode log from the foreman
+sequence, encoded using the main profile.</li>
+
+<li><kbd>sss_main_encodelog.out</kbd>: the encode log from the SSS sequence,
+encoded using the main profile.</li>
+
+<li><kbd>*_leakybucketparam.cfg</kbd>: leakybucketparam.cfg file for each input.</li>
+</ul>
+
+<p>The output log files and leackybucketparam.cfg (binary format) files for all 
+inputs are verified at the end of each run. </p>
+
+<hr />
+<h2>Copyrights</h2>
+<p>The 464.h264ref benchmarks sources are protected by the original copyright notice 
+that is part of the official h264avc reference software, version 9.3
+(<a href="http://iphome.hhi.de/suehring/tml/download/old_jm/jm39.zip">jm93.zip</a>). 
+Here is the full text of the copyright notice from the <kbd>copyrights.txt</kbd> file: </p>
+
+<pre>
+/* 
+***********************************************************************
+* COPYRIGHT AND WARRANTY INFORMATION
+*
+* Copyright 2001, International Telecommunications Union, Geneva
+*
+* DISCLAIMER OF WARRANTY
+*
+* These software programs are available to the user without any
+* license fee or royalty on an "as is" basis. The ITU disclaims
+* any and all warranties, whether express, implied, or
+* statutory, including any implied warranties of merchantability
+* or of fitness for a particular purpose.  In no event shall the
+* contributor or the ITU be liable for any incidental, punitive, or
+* consequential damages of any kind whatsoever arising from the
+* use of these programs.
+*
+* This disclaimer of warranty extends to the user of these programs
+* and user's customers, employees, agents, transferees, successors,
+* and assigns.
+*
+* The ITU does not represent or warrant that the programs furnished
+* hereunder are free of infringement of any third-party patents.
+* Commercial implementations of ITU-T Recommendations, including
+* shareware, may be subject to royalty fees to patent holders.
+* Information regarding the ITU-T patent policy is available from
+* the ITU Web site at http://www.itu.int.
+*
+* THIS IS NOT A GRANT OF PATENT RIGHTS - SEE THE ITU-T PATENT POLICY.
+************************************************************************
+*/
+</pre>
+
+<hr />
+<h2>Disclaimer</h2>
+<p>The source, config, and input data files which are a part of the 464.h264ref 
+benchmark are solely provided for benchmarking as part of SPEC CPU2006 and 
+must not be used as a tool for encoding. This disclaimer is provided in addition
+to the one that comes with the official h264avc reference software, version 9.3
+(<a href="http://iphome.hhi.de/suehring/tml/download/old_jm/jm39.zip">jm93.zip</a>)
+as documented in the <kbd>disclaimer.txt</kbd> file: </p>
+
+<pre>
+/*
+ * Disclaimer of Warranty
+ *
+ * These software programs are available to the user without any
+ * license fee or royalty on an "as is" basis. The ITU-T
+ * disclaims any and all warranties, whether express, implied, or
+ * statutory, including any implied warranties of merchantability
+ * or of fitness for a particular purpose.  In no event shall the
+ * copyright-holder be liable for any incidental, punitive, or
+ * consequential damages of any kind whatsoever arising from the
+ * use of these programs.
+ *
+ * This disclaimer of warranty extends to the user of these programs
+ * and user's customers, employees, agents, transferees, successors,
+ * and assigns.
+ *
+ * The ITU-T does not represent or warrant that the programs furnished
+ * hereunder are free of infringement of any third-party patents.
+ * Commercial implementations of ITU-T standards, including shareware,
+ * may be subject to royalty fees to patent holders.  Information
+ * regarding the ITU patent policy is available from the ITU
+ * Web site at http://www.itu.int.
+ *
+ */
+</pre>
+
+<hr />
+
+<h2>Programming Language</h2>
+
+<p>C</p>
+
+<hr />
+
+<h2>Known portability issues</h2>
+
+<p>None</p>
+
+<hr />
+
+<h2>References</h2>
+
+<ul>
+<li>Homepage of the maintainer of the reference implementation:
+<a href=
+"http://iphome.hhi.de/suehring/tml/index.htm">http://iphome.hhi.de/suehring/tml/index.htm</a></li>
+<li><a href="http://en.wikipedia.org/wiki/H264">H.264/MPEG-4 AVC</a> page on wikipedia</li>
+</ul>
+
+<hr />
+
+<p>Last updated: 3 August 2006</p>
+</body>
+</html>

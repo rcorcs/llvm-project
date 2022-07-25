@@ -1,0 +1,8 @@
+This directory contains some platform-specific config.h files.  If you're
+trying to port 447.dealII, it might be helpful to take a look in one for
+a platform similar to yours in order to get some hints.
+
+Note that the SPEC version does not actually use these config files: SPEC 
+attempts to minimize the platform differences.  So, take these with a grain
+of salt, and look at actual submissions at www.spec.org/cpu2006 to see what
+is actually being used for deal flags.

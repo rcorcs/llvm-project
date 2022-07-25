@@ -1,0 +1,97 @@
+This document explains the meaning and function of some preprocessor macros
+set in the configuration file config.h and corresponding #ifdefs in the
+source code of 447.dealII.  It is adapted from email from the primary
+author Wolfgang Bangerth from October of 2004.  It contains an audit of the
+places where the macros are used as well as their meaning.  The author
+believes that none of them should be able to yield optimization
+opportunities not available when the macros are not set.  It should be
+noted, though, that the use and setting of these macros was changed
+significantly before release.
+
+- DEAL_II_ANON_NAMESPACE_BUG and DEAL_II_ANON_NAMESPACE_LINKAGE_BUG (14
+  occurrences): This determines whether functions in anonymous namespaces can
+  or have to be declared "static" in addition. Since elements of anonymous
+  namespaces can only be used in the file in which they are declared, this
+  should not affect code generation. None of the affected functions is called
+  very often.
+
+- DEAL_II_MEMBER_VAR_SPECIALIZATION_BUG (7 occurrences): whether we can (or
+  have to) declare explicit specializations of member variables of class
+  templates. Some compilers don't understand this construct, or mistake it for
+  a definition. This doesn't affect the code generated.
+
+- SPEC_CPU_WINDOWS_ICL and SPEC_CPU_WINDOWS_MSVC (3 occurrences): this
+  is used to work around a problem with compilers on Microsoft Windows, which
+  do not accept definitions of static member variables of classes without
+  giving an initial value. Since the value is initialized in the declaration
+  already, this is harmless.
+
+- ANON_NAMESPACE_BOGUS_WARNING (2 occurrences): This make an anonymous
+  namespace a named namespace depending on whether some compilers issue bogus
+  warnings. No impact on generated code since the functions in that namespace
+  are not used anywhere except in that file.
+
+- DEAL_II_NESTED_CLASS_FRIEND_BUG (6 occurrences),
+  DEAL_II_NAMESP_TEMPL_FRIEND_BUG (5 occurrences),
+  DEAL_II_TEMPL_SPEC_FRIEND_BUG (2 occurrences): These defines are used to
+  specify alternative syntax for friend declarations, like here:
+
+  #ifndef DEAL_II_NAMESP_TEMPL_FRIEND_BUG
+        template <int N1, typename T1> friend class Table;
+        template <int N1, typename T1, bool C1, unsigned int P1>
+        friend class Accessor;
+  #  ifndef DEAL_II_TEMPL_SPEC_FRIEND_BUG
+        friend class Table<N,T>;
+        friend class Accessor<N,T,C,P+1>;
+  #  endif
+  #else
+        friend class Table<N,T>;
+        friend class Accessor<N,T,C,P+1>;
+  #endif
+
+  There is no impact on the generated code.
+
+- DEAL_II_LOCAL_TYPEDEF_COMP_WORKAROUND (1 occurrence): this is in code not
+  used by the benchmark but the workaround is necessary to allow compilation
+  anyway.
+
+- DEAL_II_TEMPLATE_SPEC_ACCESS_WORKAROUND (1 occurrence): makes some member
+  variables public since there seems no way to tell some compilers how to have
+  other classes be a friend of the present class. No impact on generated
+  code.
+
+- DEAL_II_TEMPLATE_TEMPLATE_TYPEDEF_BUG (1 occurrence): some compilers
+  stumbled on this construct
+    template <template <int> class GridClass, int dim>
+    class InterGridMap {
+      typedef typename GridClass<dim>::cell_iterator cell_iterator;
+  The #define enables a workaround with the same net effect for the
+  typedef. There is no impact on generated code.
+
+- __IBMCPP__ (1 occurrence): work around a problem with the IBM compiler
+  similar to DEAL_II_MEMBER_VAR_SPECIALIZATION_BUG. This does not affect
+  code generation.
+
+The following cases should not affect any of the present compilers at all
+(since they provide the respective header files). The ifdefs are in the code
+to support gcc2.95:
+
+- HAVE_STD_STRINGSTREAM (61 occurrences): some old compilers only provide
+  classes [io]strstream instead of std::[io]stringstream. This does not affect
+  any of the present compilers.
+
+- HAVE_STD_NUMERIC_LIMITS (9 occurrences): whether we can use the
+  std::numeric_limits class. The 7 occurrences in parameter_handler.cc aren't
+  used in the benchmark, but the 2 places in quadrature_lib.cc may
+  be. Fortunately, all recent compilers have the std::numeric_limits class, so
+  that there are no differences in the actual code the different compilers
+  see.
+
+- HAVE_STD_OSTREAM_HEADER (8 occurrences): whether the header file <ostream>
+  exists, or whether we have include the full <iostream> header file. This
+  doesn't affect the code generated, only compile time.
+
+- HAVE_STD_ITERATOR_CLASS (2 occurrences): whether the compiler has a
+  std::iterator class implemented. All present compilers have this.
+
+-------------------------------------------------------------------------

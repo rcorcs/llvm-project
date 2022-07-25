@@ -1,0 +1,5046 @@
+<?xml version="1.0"?>
+<!DOCTYPE flagsdescription SYSTEM
+       "http://www.spec.org/dtd/cpuflags1.dtd">
+
+<!-- This file defines flags that appear in the sources for 403.gcc.
+
+  Copyright (C) 2006 Standard Performance Evaluation Corporation
+
+  $Revision: 4496 $
+  $Date: 2006-06-28 16:26:08 -0400 (Wed, 28 Jun 2006) $
+-->
+<flagsdescription>
+
+<!-- Normal flags file should suggest a name for themselves -->
+<filename>403.gcc.flags</filename>
+
+<title>403.gcc Flags</title>
+
+<header>
+<![CDATA[
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+]]>
+</header>
+
+<flag name="currdir_inc" class="mandatory" regexp="-I\.(?:\s+|$)">
+<example>-I.</example>
+This flag is set for all builds in Spec/object.pm.
+</flag>
+
+<flag name="DA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DACCUMULATE_OUTGOING_ARGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DADDITIONAL_REGISTER_NAMES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DADDRESS_COST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DADDR_VEC_ALIGN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DADJUST_FIELD_ALIGN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DADJUST_INSN_LENGTH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DALIGN_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DALLOCATE_INITIAL_VALUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DALLOCATE_TRAMPOLINE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DALMOST_STDC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DANNUL_IFFALSE_SLOTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DANNUL_IFTRUE_SLOTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DANSI_PROTOTYPES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DAPPLY_RESULT_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DARGS_GROW_DOWNWARD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DARG_POINTER_CFA_OFFSET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DARG_POINTER_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DARM_EXTENDED_IEEE_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_BYTE_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_COMMENT_START" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_DECLARE_FUNCTION_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_DECLARE_FUNCTION_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_DECLARE_OBJECT_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_DECLARE_REGISTER_GLOBAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_DECLARE_RESULT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_EMIT_BSS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_FILE_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_FILE_START" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_FINISH_DECLARE_OBJECT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_FORMAT_PRIVATE_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_FPRINTF_EXTENSIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_MAYBE_OUTPUT_ENCODED_ADDR_RTX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_NAME_TO_STRING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_NO_SKIP_IN_TEXT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ADDR_DIFF_ELT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ADDR_DIFF_VEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ADDR_VEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ADDR_VEC_ELT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ALIGNED_BSS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ALIGNED_COMMON" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ALIGNED_DECL_COMMON" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ALIGNED_DECL_LOCAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ALIGNED_LOCAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ALTERNATE_LABEL_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_ASCII" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_BEFORE_CASE_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_BSS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_CASE_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_CASE_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_ADDR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_ADDR_CONST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_ADDR_DATA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_ADDR_DELTA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_DATA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_DATA1" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_DATA2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_DATA4" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_DATA8" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_DELTA2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_DELTA4" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEBUG_STRING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEFINE_LABEL_DIFFERENCE_SYMBOL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DEF_FROM_DECLS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_ADDR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_ADDR_CONST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_ATTRIBUTE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_DATA1" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_DATA2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_DATA4" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_DATA8" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_DELTA2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_DELTA4" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_FMT_BYTE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_FUND_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_OFFSET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_PCREL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_REF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_STACK_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_STRING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_TAG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_DWARF_TYPE_MODIFIER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_EXTERNAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_EXTERNAL_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_FDESC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_FUNCTION_PREFIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_IDENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_LABELREF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_LABEL_REF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_MAIN_SOURCE_FILENAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_MAX_SKIP_ALIGN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_OPCODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_POOL_EPILOGUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_POOL_PROLOGUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_POP_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_PUSH_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_REG_PUSH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_SECTION_START" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_SHARED_BSS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_SHARED_COMMON" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_SHARED_LOCAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_SOURCE_FILENAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_SOURCE_LINE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_SPECIAL_POOL_ENTRY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_SYMBOL_REF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_OUTPUT_WEAK_ALIAS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_PREFERRED_EH_DATA_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_QUAD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_SIMPLIFY_DWARF_ADDR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_STABD_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_STABN_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_STABS_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_WEAKEN_DECL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASM_WEAKEN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DASSEMBLER_DIALECT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DATTRIBUTE_MALLOC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DATTRIBUTE_NORETURN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DATTRIBUTE_PRINTF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DATTRIBUTE_UNUSED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DATTRIBUTE_UNUSED_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DAUTO_INC_DEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DAVOID_CCMODE_COPIES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBASIC_BLOCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBIGGEST_FIELD_ALIGNMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBITFIELD_NBYTES_LIMITED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBITMAP_ELEMENT_WORDS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBLOCK_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBLOCK_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBLOCK_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBLOCK_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBODY_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBODY_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBODY_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBODY_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBOOL_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBOUND_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBOUND_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBRANCH_COST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBSS_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBSS_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBSS_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBSS_SECTION_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBUFF_SIZE_UPPER_BOUND" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBUFSIZ" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBUILD_VA_LIST_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DBUILTIN_SETJMP_FRAME_VALUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DC4X" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DC4X_FLOAT_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCALLER_SAVE_PROFITABLE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCALL_POPS_ARGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCALL_REALLY_USED_REGISTERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCANONICALIZE_COMPARISON" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCAN_DEBUG_WITHOUT_FP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCASE_DROPS_THROUGH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCASE_VALUES_THRESHOLD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCASE_VECTOR_PC_RELATIVE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCASE_VECTOR_SHORTEN_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCC1_CPU_SPEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCC1_SPEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCC_STATUS_INIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCC_STATUS_MDEP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCC_STATUS_MDEP_INIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCHAR_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCHECK_FLOAT_VALUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCHECK_STACK_LIMIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCLASS_CANNOT_CHANGE_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCLASS_LIKELY_SPILLED_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCLEAR_HARD_REG_SET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCLEAR_REG_SET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCLK_TCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCMOV_SUN_AS_SYNTAX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCONDITIONAL_REGISTER_USAGE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCONFIG_SJLJ_EXCEPTIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCONSTANT_AFTER_FUNCTION_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCONSTANT_ALIGNMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCONSTANT_POOL_BEFORE_FUNCTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCONST_COSTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCONST_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCONVERT_HARD_REGISTER_TO_SSA_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCOPYING_UNIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCPLUSPLUS_CPP_SPEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCPP_CPU_DEFAULT_SPEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCPP_CPU_SPEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCPP_SPEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCRAY" class="portability">
+CRAY appears 2 times!  Assists with CRAY alloca issues
+</flag>
+
+<flag name="DCRAY2" class="portability">
+CRAY2 appears 2 times!  Assists with CRAY alloca issues
+</flag>
+
+<flag name="DCRAY_STACK" class="portability">
+CRAY_STACK appears 1 times!  Assists with CRAY alloca issues
+</flag>
+
+<flag name="DCRAY_STACKSEG_END" class="portability">
+CRAY_STACKSEG_END appears 2 times!  Assists with CRAY alloca issues
+</flag>
+
+<flag name="DCROSS_COMPILE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCROSS_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCTORS_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDATA1_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDATA1_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDATA1_SECTION_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDATA_ALIGNMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDATA_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDATA_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDATA_SECTION_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBR_OUTPUT_SEQEND" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_BLOCKS_FUNCTION_RELATIVE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_CONTIN_CHAR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_CONTIN_LENGTH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_DEBUGGING_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_FINISH_SYMBOL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_FUNCTION_FIRST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_LBRAC_FIRST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_MEMPARM_STABS_LETTER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_NO_XREFS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_CATCH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_CONSTANT_SYMBOL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_ENUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_FUNCTION_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_GCC_MARKER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_LBRAC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_MAIN_SOURCE_DIRECTORY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_MAIN_SOURCE_FILENAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_MAIN_SOURCE_FILE_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_RBRAC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_SOURCE_FILENAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_OUTPUT_STANDARD_TYPES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_REGISTER_NUMBER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_REGPARM_STABS_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_REGPARM_STABS_LETTER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_STATIC_BLOCK_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_STATIC_BLOCK_START" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_STATIC_CONST_VAR_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_STATIC_STAB_DATA_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_TYPE_DECL_STABS_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_TYPE_DEFINED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_USE_BINCL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDBX_WORKING_DIRECTORY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUGGER_ARG_OFFSET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUGGER_AUTO_OFFSET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_ABBREV_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_ABBREV_SECTION_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_ARANGES_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_ARANGES_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_ARANGES_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_FRAME_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_I00AFUNC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_INFO_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_INFO_SECTION_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_LINE_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_LINE_SECTION_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_LOC_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_LOC_SECTION_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_MACINFO_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_MACINFO_SECTION_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_PRINT_REG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_PUBNAMES_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_RANGES_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_RANGES_SECTION_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_REGISTER_NAMES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_SFNAMES_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_SRCINFO_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_STR_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUG_SYMS_TEXT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDECL_NAME_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEFAULT_CALLER_SAVES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEFAULT_GDB_EXTENSIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEFAULT_MAIN_RETURN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEFAULT_PCC_STRUCT_RETURN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEFAULT_RTX_COSTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEFAULT_SHORT_ENUMS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEFAULT_SIGNED_CHAR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEFAULT_USE_CXA_ATEXIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDELAY_SLOTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDELAY_SLOTS_FOR_EPILOGUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDERIV_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDERIV_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDFMODE_NAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDIE_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDIE_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDIR_SEPARATOR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDIR_SEPARATOR_2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDIVDI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDIVSI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDOLLARS_IN_IDENTIFIERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDONT_DECLARE_STRERROR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDONT_REDUCE_ADDR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDONT_USE_BUILTIN_SETJMP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDOUBLE_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDO_GLOBAL_CTORS_BODY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDRECTVE_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDTORS_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDUMPFILE_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF2_ADDR_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF2_ASM_LINE_DEBUG_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF2_DEBUGGING_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF2_FRAME_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF2_GENERATE_TEXT_SECTION_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF2_UNWIND_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF_CIE_DATA_ALIGNMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF_DEBUGGING_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF_DECL_COORDINATES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF_FRAME_REGISTERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF_FRAME_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF_FRAME_RETURN_COLUMN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF_OFFSET_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF_TIMESTAMPS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDWARF_VERSION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDYNAMIC_CHAIN_ADDRESS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEE_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEE_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEH_FRAME_IN_DATA_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEH_FRAME_SECTION_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEH_RETURN_DATA_REGNO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEH_RETURN_HANDLER_RTX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEH_RETURN_STACKADJ_RTX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEH_USES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DELIDE_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DELIMINABLE_REGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEMPTY_FIELD_BOUNDARY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEMULONG_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEMUSHORT_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEMU_NON_COMPILE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENABLE_CHECKING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENABLE_GC_ALWAYS_COLLECT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENABLE_GC_CHECKING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENABLE_NLS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENABLE_RTL_CHECKING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENABLE_TREE_CHECKING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENABLE_WIN32_REGISTRY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENCODE_SECTION_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENOENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DENOTDIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEOF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEPILOGUE_USES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DERANGE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXIT_FAILURE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXIT_IGNORE_STACK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXIT_SUCCESS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXPAND_BUILTIN_SAVEREGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXPAND_BUILTIN_VA_ARG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXPAND_BUILTIN_VA_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXPAND_BUILTIN_VA_START" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXPORTS_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXTENDED_SDB_BASIC_TYPES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXTRA_CC_MODES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXTRA_CONSTRAINT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXTRA_SECTIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEXTRA_SECTION_FUNCTIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFATAL_EXIT_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFILE_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFILE_NAME_JOINER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFINALIZE_PIC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFINAL_PRESCAN_INSN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFINAL_PRESCAN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFINAL_REG_PARM_STACK_SPACE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFIND_BASE_TERM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFINI_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFIRST_INSN_ADDRESS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFIRST_PSEUDO_REGISTER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFIXUNS_TRUNC_LIKE_FIX_TRUNC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFLOATFORMAT_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFLOAT_LIB_COMPARE_RETURNS_BOOL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFLOAT_STORE_FLAG_VALUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFLOAT_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFLOAT_WORDS_BIG_ENDIAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFORBIDDEN_INC_DEC_CLASSES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFORCE_PREFERRED_STACK_BOUNDARY_IN_MAIN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFRAME_GROWS_DOWNWARD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFRAME_POINTER_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNCTION_ARG_BOUNDARY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNCTION_ARG_CALLEE_COPIES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNCTION_ARG_PADDING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNCTION_ARG_PARTIAL_NREGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNCTION_ARG_PASS_BY_REFERENCE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNCTION_ARG_REG_LITTLE_ENDIAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNCTION_INCOMING_ARG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNCTION_OK_FOR_SIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNCTION_OUTGOING_VALUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNC_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNC_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNC_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFUNC_PROLOG_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DF_OK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGAS_MNEMONICS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGATHER_STATISTICS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGCC_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGCC_VERSION" class="portability">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGDB_INV_REF_REGPARM_STABS_LETTER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGENERATOR_FILE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGEN_ERRNO_RTX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGET_CLASS_NARROWEST_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGET_ENVIRONMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGET_ENV_PATH_LIST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGET_MODE_ALIGNMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGET_MODE_MASK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGET_MODE_WIDER_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGGC_ALWAYS_COLLECT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGGC_POISON" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGPLUSPLUS_BACKWARD_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGPLUSPLUS_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGPLUSPLUS_TOOL_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAIFA_INLINE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHALF_PIC_DEBUG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHALF_PIC_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHANDLE_PRAGMA_EXTERN_PREFIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHANDLE_PRAGMA_PACK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHANDLE_PRAGMA_PACK_PUSH_POP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHANDLE_PRAGMA_REDEFINE_EXTNAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHANDLE_PRAGMA_WEAK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHANDLE_SYSV_PRAGMA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHARD_CONST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHARD_FRAME_POINTER_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHARD_REGNO_CALLER_SAVE_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHARD_REGNO_CALL_PART_CLOBBERED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHARD_REGNO_RENAME_OK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHARD_REG_SET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAS_INIT_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_AS_DWARF2_DEBUG_LINE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_AS_LEB128" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_ATTR_length" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_CLOCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_CLOCK_T" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_ABORT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_ATOF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_ATOL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_BASENAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_CALLOC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_CLOCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_ERRNO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_FPRINTF_UNLOCKED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_FPUTS_UNLOCKED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_FREE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_FWRITE_UNLOCKED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_GETCWD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_GETENV" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_GETOPT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_GETRLIMIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_GETRUSAGE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_GETWD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_MALLOC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_PUTC_UNLOCKED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_REALLOC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_SBRK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_SETRLIMIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_STRSIGNAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_STRSTR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DECL_TIMES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DESIGNATED_INITIALIZERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_DOS_BASED_FILE_SYSTEM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_FCNTL_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_FPRINTF_UNLOCKED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_FPUTC_UNLOCKED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_FPUTS_UNLOCKED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_FWRITE_UNLOCKED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_GAS_FILDS_FISTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_GAS_HIDDEN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_GAS_MAX_SKIP_P2ALIGN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_GAS_SHF_MERGE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_GAS_SUBSECTION_ORDERING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_GETCWD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_GETRLIMIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_GETRUSAGE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_GETWD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_LC_MESSAGES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_LIBINTL_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_LIMITS_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_LOCALE_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_LONG_DOUBLE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_LONG_LONG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_LSTAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_MACHINE_MODES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_MALLOC_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_MEMCPY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_MMAP_ANON" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_MMAP_DEV_ZERO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_MMAP_FILE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_POST_DECREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_POST_INCREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_POST_MODIFY_DISP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_POST_MODIFY_REG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_PRE_DECREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_PRE_INCREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_PRE_MODIFY_DISP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_PRE_MODIFY_REG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_PRINTF_PTR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_PUTC_UNLOCKED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SBRK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SECONDARY_RELOADS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SETLOCALE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SETRLIMIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_STDBOOL_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_STDDEF_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_STDLIB_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_STRINGIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_STRINGS_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_STRING_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_STRSIGNAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_STRUCT_TMS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SYSCONF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SYS_FILE_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SYS_PARAM_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SYS_RESOURCE_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SYS_STAT_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SYS_TIME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SYS_TIMES_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SYS_TIME_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_SYS_WAIT_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_TIMES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_TIME_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_UNISTD_H" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_USER_TIME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_VOLATILE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_WALL_TIME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE__BOOL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE___INT64" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_allocate_stack" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_builtin_longjmp" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_builtin_setjmp_receiver" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_builtin_setjmp_setup" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_call" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_call_pop" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_call_value" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_call_value_pop" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_canonicalize_funcptr_for_compare" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_casesi" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_cc0" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_check_stack" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_cmpstrhi" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_cmpstrqi" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_cmpstrsi" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_conditional_execution" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_conditional_move" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_conditional_trap" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_decrement_and_branch_on_count" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_decrement_and_branch_until_zero" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_decscc" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_doloop_begin" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_doloop_end" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_eh_return" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_epilogue" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_exception_receiver" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_extendpdidi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_extendpqiqi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_extendpsisi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_extv" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_extzv" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_incscc" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_insv" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_lo_sum" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_load_multiple" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_movstrdi" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_movstrhi" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_movstrqi" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_movstrsi" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_movstrti" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_nonlocal_goto" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_nonlocal_goto_receiver" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_peephole" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_peephole2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_prefetch" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_probe" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_prologue" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_ptr_extend" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_reload_load_address" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_restore_stack_block" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_restore_stack_function" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_restore_stack_nonlocal" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_return" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_save_stack_block" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_save_stack_function" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_save_stack_nonlocal" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_sibcall" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_sibcall_epilogue" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_sibcall_pop" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_sibcall_value" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_sibcall_value_pop" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_slt" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_store_multiple" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_tablejump" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trap" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncdfhf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncdfqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncdfsf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncdftqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncdihi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncdipdi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncdiqi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncdisi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunchfqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunchiqi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncqipqi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncsfhf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncsfqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncsftqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncsihi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncsipsi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncsiqi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctfdf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctfhf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctfqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctfsf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctftqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctidi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctihi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctiqi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctisi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctqfhf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_trunctqfqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncxfdf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncxfhf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncxfqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncxfsf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_truncxftqf2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_untyped_call" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_untyped_return" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAVE_zero_extendpsisi2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_BITS_PER_CHAR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_BITS_PER_INT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_BITS_PER_LONG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_BITS_PER_LONGLONG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_BITS_PER_PTR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_BITS_PER_SHORT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_BITS_PER_WIDE_INT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_BIT_BUCKET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_EBCDIC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_FLOAT_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_FLOAT_WORDS_BIG_ENDIAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_PTR_PRINTF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_WIDEST_INT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_WIDE_INT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_WIDE_INT_PRINT_DEC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_WIDE_INT_PRINT_DOUBLE_HEX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_WIDE_INT_PRINT_HEX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_WIDE_INT_PRINT_UNSIGNED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHOST_WORDS_BIG_ENDIAN" class="portability">
+This flag indicates that the benchmark is being built on a big-endian system. it seems not to be  needed unless FP words are a different order from int words.
+</flag>
+
+<flag name="DHZ" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIA64_UNWIND_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIBM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIBM_FLOAT_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIDENT_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIEEE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIEEE_FLOAT_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIFCVT_MODIFY_CANCEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIFCVT_MODIFY_FINAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIFCVT_MODIFY_INSN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIFCVT_MODIFY_TESTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIMMEDIATE_PREFIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINCLUDE_DEFAULTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINCOMING_FRAME_SP_OFFSET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINCOMING_REGNO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINCOMING_RETURN_ADDR_RTX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINFINITY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINIT_CUMULATIVE_INCOMING_ARGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINIT_CUMULATIVE_LIBCALL_ARGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINIT_EXPANDERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINIT_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINIT_TARGET_OPTABS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINLINE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINSN_LENGTH_ALIGNMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINSN_REFERENCES_ARE_DELAYED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINSN_SCHEDULING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINSN_SETS_ARE_DELAYED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINTEGRATE_THRESHOLD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINTEL_EXTENDED_IEEE_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINTMAX_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINT_MAX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINT_MAX_32_BITS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINT_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DINVOKE__main" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIN_GCC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIN_GLIBCPP_V3" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIN_LIBGCC2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIN_NAMED_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIN_TARGET_LIBS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIO_BUFFER_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DIS_ASM_LOGICAL_LINE_SEPARATOR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DJCR_SECTION_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DJMP_BUF_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DJUMP_ALIGN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DJUMP_ALIGN_MAX_SKIP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DJUMP_TABLES_IN_TEXT_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLABEL_ALIGN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLABEL_ALIGN_AFTER_BARRIER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLABEL_ALIGN_AFTER_BARRIER_MAX_SKIP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLABEL_ALIGN_MAX_SKIP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLCM_DEBUG_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLEAF_REGISTERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLEAF_REG_REMAP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLEGITIMATE_PIC_OPERAND_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLEGITIMIZE_RELOAD_ADDRESS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLIBGCC_NEEDS_DOUBLE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLIMIT_RELOAD_CLASS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLINE_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLINE_CODE_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLINE_CODE_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLINE_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLINE_ENTRY_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLINE_LAST_ENTRY_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLINE_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLINK_ELIMINATE_DUPLICATE_LDIRECTORIES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLINUX_DEFAULT_ELF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLLONG_MAX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOAD_ARGS_REVERSED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOAD_EXTEND_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOCAL_ALIGNMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOCAL_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOCAL_LABEL_PREFIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOCAL_REGNO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOC_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOC_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLONGLONG_MAX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLONG_DOUBLE_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLONG_LONG_MAX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLONG_LONG_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLONG_MAX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLONG_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOOP_ALIGN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DLOOP_ALIGN_MAX_SKIP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMACHINE_DEPENDENT_REORG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMACINFO_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAIN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAKE_DECL_ONE_ONLY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAP_ANON" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAP_ANONYMOUS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAP_CHARACTER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAP_FAILED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMASK_RETURN_ADDR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAXPATHLEN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_BITS_PER_WORD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_CHAR_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_CONDITIONAL_EXECUTE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_FIXED_MODE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_INSNS_PER_SPLIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_INTEGER_COMPUTATION_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_LONG_DOUBLE_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_LONG_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_MOVE_MAX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_MULTIPLICITY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_OFILE_ALIGNMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_UNROLLED_INSNS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAX_WCHAR_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMAYBE_REG_PARM_STACK_SPACE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMD_ASM_CLOBBERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMD_CAN_REDIRECT_BRANCH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMEMBER_TYPE_FORCES_BLK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMEMORY_MOVE_COST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMEM_DEPENDENCY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMIN_BUFF_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMIN_UNITS_PER_WORD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMIPSEB" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMIPSEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMIPS_DEBUGGING_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMKDIR_TAKES_ONE_ARG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMMAP_THRESHOLD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMODDI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMODE_BASE_REG_CLASS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMODSI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMOVE_BY_PIECES_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMOVE_MAX_PIECES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMOVE_RATIO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMT_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMT_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMULDI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMULSI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMULTIBYTE_CHARS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DMUST_PASS_IN_STACK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNAME__MAIN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNANS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNEED_ATEXIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNEED_SEPARATE_AP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNON_SAVING_SETJMP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNORMAL_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_BUILTIN_PTRDIFF_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_BUILTIN_SIZE_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_BUILTIN_WCHAR_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_BUILTIN_WINT_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_DBX_FUNCTION_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_DOLLAR_IN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_DOT_IN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_FUNCTION_CSE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_GENRTL_H" class="forbidden">   
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_IMPLICIT_EXTERN_C" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_PROFILE_COUNTERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNO_RECURSIVE_FUNCTION_CSE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNULL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNUM_MACHINE_MODES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DN_" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DN_DECL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DN_RPSYM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOBJECT_FORMAT_ELF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOBJECT_FORMAT_ROSE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOBSTACK_CHUNK_ALLOC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOBSTACK_CHUNK_FREE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOBSTACK_CHUNK_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOBSTACK_INTERFACE_VERSION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOLD_DF_INTERFACE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOPTIMIZATION_OPTIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOPTIMIZE_MODE_SWITCHING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DORDER_REGS_FOR_LOCAL_ALLOC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOSF_OS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOUTGOING_REGNO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOUTGOING_REG_PARM_STACK_SPACE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOUTPUT_ADDR_CONST_EXTRA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOUTPUT_QUOTED_STRING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOVERRIDE_OPTIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DO_BINARY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DO_NOCTTY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DO_NONBLOCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DO_RDONLY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DO_WRONLY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPAD_VARARGS_DOWN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPATH_SEPARATOR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPCC_BITFIELD_TYPE_MATTERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPCC_STATIC_STRUCT_RETURN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPC_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPIC_CASE_VECTOR_ADDRESS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPIC_OFFSET_TABLE_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPIC_OFFSET_TABLE_REG_CALL_CLOBBERED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPOINTERS_EXTEND_UNSIGNED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPOPSECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPOSIX" class="portability">
+This macro indicates that the benchmark is being built on a POSIX-compliant
+system.  Its default value may not be changed.
+</flag>
+
+<flag name="DPREFERRED_DEBUGGING_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFERRED_OUTPUT_RELOAD_CLASS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFERRED_STACK_BOUNDARY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_BLOCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_DENSE_MEM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_EXTREME_STRIDE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_LIMIT_TO_SIMULTANEOUS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_LOW_LOOPCNT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_NOT_ALWAYS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_NO_CALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_NO_EXTREME_STRIDE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_NO_LOW_LOOPCNT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_NO_REVERSE_ORDER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFETCH_ONLY_DENSE_MEM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPREFIX_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPRETEND_OUTGOING_VARARGS_NAMED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPRINT_OPERAND_PUNCT_VALID_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPRINT_REG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPROFILE_BEFORE_PROLOGUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPROFILE_HOOK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPROMOTE_FOR_CALL_ONLY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPROMOTE_FUNCTION_ARGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPROMOTE_FUNCTION_RETURN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPROMOTE_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPROMOTE_PROTOTYPES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPTRDIFF_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPTR_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUB_DIE_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUSHSECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUSHSECTION_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUSH_ARGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUSH_ARGS_REVERSED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUSH_ROUNDING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_BLOCK_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_BLOCK_START" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_DEF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_ENDEF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_EPILOGUE_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_FUNCTION_END" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_FUNCTION_START" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_INT_VAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_LAST_DIM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_NEXT_DIM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_PLAIN_DEF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_SCL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_SRC_FILE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_START_DIM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_TAG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPUT_SDB_VAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DQUEUED_VAR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRDATA_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREADONLY_DATA_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_ARITHMETIC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_INFINITY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_IS_NOT_DOUBLE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUES_EQUAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUES_LESS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_ATOF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_FIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_HTOF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_ISINF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_ISNAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_LDEXP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_MINUS_ZERO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_NEGATE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_NEGATIVE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_RNDZINT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_TO_DECIMAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_TO_TARGET_DOUBLE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_TO_TARGET_LONG_DOUBLE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_TO_TARGET_SINGLE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_TRUNCATE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_UNSIGNED_FIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_VALUE_UNSIGNED_RNDZINT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREAL_WIDTH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREDO_SECTION_INFO_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREGISTER_MOVE_COST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREGISTER_PREFIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREGISTER_TARGET_PRAGMAS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREGMODE_NATURAL_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREGNO_MODE_OK_FOR_BASE_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREG_ALLOC_ORDER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREG_MODE_OK_FOR_BASE_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREG_OK_FOR_BASE_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREG_OK_STRICT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREG_PARM_STACK_SPACE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRETURN_ADDRESS_POINTER_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRETURN_ADDR_IN_PREVIOUS_FRAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRETURN_ADDR_OFFSET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRETURN_ADDR_RTX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRETURN_IN_MEMORY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREVERSE_CONDEXEC_PREDICATES_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREVERSE_CONDITION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DREVERSIBLE_CC_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRMS_QUICK_HACK_1" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRODATA1_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRODATA1_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRODATA1_SECTION_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRODATA_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRODATA_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRODATA_SECTION_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DROUND_TYPE_ALIGN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DROUND_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRTX_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRTX_COSTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DRUSAGE_SELF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSCCS_DIRECTIVE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSDATA_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSDB_ALLOW_FORWARD_REFERENCES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSDB_ALLOW_UNKNOWN_REFERENCES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSDB_DEBUGGING_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSDB_DELIM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSDB_GENERATE_FAKE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSDB_MAX_DIM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSECONDARY_INPUT_RELOAD_CLASS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSECONDARY_MEMORY_NEEDED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSECONDARY_MEMORY_NEEDED_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSECONDARY_MEMORY_NEEDED_RTX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSECONDARY_OUTPUT_RELOAD_CLASS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSECONDARY_RELOAD_CLASS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSEEK_SET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSELECT_RTX_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSELECT_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSEPARATE_LINE_CODE_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSETJMP_VIA_SAVE_AREA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSETUP_FRAME_ADDRESSES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSETUP_INCOMING_VARARGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSET_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSET_HARD_REG_BIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSET_WORD_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSFMODE_NAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSFNAMES_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSFNAMES_ENTRY_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSHARED_BSS_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSHARED_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSHIFT_COUNT_TRUNCATED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSHORT_IMMEDIATES_SIGN_EXTEND" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSHORT_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSHRT_MAX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSIGABRT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSIGBUS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSIGILL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSIGIOT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSIGSEGV" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSIMULTANEOUS_PREFETCHES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSIZE_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSLOW_UNALIGNED_ACCESS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSL_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSL_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSMALL_REGISTER_CLASSES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSMALL_STACK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSPEC_CPU" class="mandatory">
+SPEC_CPU is used to modify original code to function as required by SPEC
+</flag>
+
+<flag name="DSPEC_CPU_AIX" class="portability">
+SPEC_CPU_AIX is used so that IBM submitters don't have to bother specifying SPEC_CPU_HAVE_BOOL. It sets HAVE__BOOL
+</flag>
+
+<flag name="DSPEC_CPU_HAVE_BOOL" class="portability">
+SPEC_CPU_HAVE_BOOL allows the compiler to indicate that it has the bool type.
+</flag>
+
+<flag name="DSPEC_CPU_HPUX" class="portability">
+SPEC_CPU_HPUX is used so that HPUX submitters don't have to bother specifying SPEC_CPU_HAVE_BOOL. It sets HAVE__BOOL, and also includes alloca.h.
+</flag>
+
+<flag name="DSPEC_CPU_IRIX" class="portability">
+SPEC_CPU_IRIX is used so that SGI submitters can have alloca.h included
+</flag>
+
+<flag name="DSPEC_CPU_LP64" class="portability">
+SPEC_CPU_LP64 defines the number of bytes in type long
+</flag>
+
+<flag name="DSPEC_CPU_MACOSX" class="portability">
+SPEC_CPU_MACOSX indicates that that OS has the malloc.h header file.
+</flag>
+
+<flag name="DSPEC_CPU_NO_HAVE_BOOL" class="portability">
+SPEC_CPU_NO_HAVE_BOOL allows the compiler to indicate that it hasn't the bool type.
+</flag>
+
+<flag name="DSPEC_CPU_SOLARIS" class="portability">
+SPEC_CPU_SOLARIS is used so that SUN submitters don't have to bother specifying SPEC_CPU_HAVE_BOOL. It sets HAVE__BOOL, and also includes alloca.h.
+</flag>
+
+<flag name="DSPEC_CPU_WIN32" class="portability">
+SPEC_CPU_WIN32 sets up types for gcc's compile time arithmetic, reflects the lack of a unistd.g file, sets the size and existence of the __int64 type, and sets the default page size on Windows.
+</flag>
+
+<flag name="DSPEC_CPU_WIN64" class="portability">
+SPEC_CPU_WIN64 sets up types for gcc's compile time arithmetic, reflects the lack of a unistd.g file, sets the size and existence of the __int64 type, and sets the default page size on Windows. It also sets a type of __int64 instead of long for 2 variables.
+</flag>
+
+<flag name="DSPEC_CPU_WINDOWS" class="mandatory">
+SPEC_CPU_WINDOWS allows that the Windows C Preprocessor is a STDC one, and sets ssize_t to int
+</flag>
+
+<flag name="DSPEC_CPU_XLC" class="portability">
+SPEC_CPU_XLC is used so that IBM submitters don't have to bother specifying SPEC_CPU_HAVE_BOOL. It sets HAVE__BOOL
+</flag>
+
+<flag name="DSRCINFO_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSS_BEGIN_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSS_END_LABEL_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTABS_GCC_MARKER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_BOUNDARY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_CHECK_BUILTIN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_CHECK_FIXED_FRAME_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_CHECK_MAX_FRAME_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_CHECK_MAX_VAR_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_CHECK_PROBE_INTERVAL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_CHECK_PROBE_LOAD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_CHECK_PROTECT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_DIRECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_DYNAMIC_OFFSET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_GROWS_DOWNWARD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_PARMS_IN_REG_PARM_AREA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_POINTER_OFFSET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_POP_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_PUSH_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_REGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_SAVEAREA_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTACK_SIZE_MODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTANDARD_INCLUDE_COMPONENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTANDARD_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTATIC_CHAIN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTATIC_CHAIN_INCOMING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTATIC_CHAIN_INCOMING_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTATIC_CHAIN_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTDC_0_IN_SYSTEM_HEADERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTDC_HEADERS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTDERR_FILENO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTDIN_FILENO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTDOUT_FILENO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTORE_FLAG_VALUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTRICT_ARGUMENT_NAMING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTRING_WITH_STRINGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTRIP_NAME_ENCODING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTRUCTURE_SIZE_BOUNDARY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTRUCT_VALUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTRUCT_VALUE_INCOMING" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTRUCT_VALUE_INCOMING_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTRUCT_VALUE_REGNUM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSUBTARGET_EXTRA_SPECS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSUBTARGET_FRAME_POINTER_REQUIRED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSUBTARGET_OVERRIDE_OPTIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSUBTARGET_PROLOGUE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSUCCESS_EXIT_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSUPPORTS_INIT_PRIORITY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSUPPORTS_ONE_ONLY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSUPPORTS_WEAK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSYSTEM_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSYSV386_COMPAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DS_IFBLK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DS_IFIFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DS_IFSOCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DS_ISBLK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DS_ISCHR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DS_ISDIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DS_ISFIFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DS_ISREG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DS_ISSOCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_64BIT_DEFAULT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_ALLOWS_PROFILING_WITHOUT_FRAME_POINTER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_ASM_CONSTRUCTOR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_ASM_DESTRUCTOR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_ASM_EH_FRAME_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_ASM_EXCEPTION_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_ASM_NAMED_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_ATTRIBUTE_WEAK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_BELL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_BI_ARCH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_athlon" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_athlon_sse" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_i486" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_k6" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_k6_2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_k6_3" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_pentium" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_pentium2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_pentium3" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_pentium4" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_pentium_mmx" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_CPU_DEFAULT_pentiumpro" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_DLLIMPORT_DECL_ATTRIBUTES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_EBCDIC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_EDOM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_FLOAT_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_MEM_FUNCTIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_OBJECT_SUFFIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_OPTIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_OSF1ELF" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_PTRMEMFUNC_VBIT_LOCATION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_SECTION_TYPE_FLAGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_VERSION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTARGET_VTABLE_USES_DESCRIPTORS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTDESC_SECTION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTEST" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTEXT_BEGIN_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTEXT_END_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTEXT_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTEXT_SECTION_LABEL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTEXT_SECTION_NAME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTFMODE_NAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTIME_WITH_SYS_TIME" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTOOL_INCLUDE_DIR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTRADITIONAL_RETURN_FLOAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTRAMPOLINE_ADJUST_ADDRESS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTRAMPOLINE_ALIGNMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTRAMPOLINE_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTRAMPOLINE_TEMPLATE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTREE_CODE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTYPE_NAME_FMT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUCHAR_MAX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUDIVDI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUDIVSI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUINTMAX_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUMODDI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUMODSI3_LIBCALL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNALIGNED_DOUBLE_INT_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNALIGNED_INT_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNALIGNED_LONG_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNALIGNED_OFFSET_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNALIGNED_PTR_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNALIGNED_SHORT_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNIQUE_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNKNOWN_FLOAT_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUPDATE_PATH_HOST_CANONICALIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSER_LABEL_PREFIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_CLOCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_COLLECT2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_C_ALLOCA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_GETRUSAGE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_GNULIBC_1" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_INCLUDED_LIBINTL" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_LOAD_POST_DECREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_LOAD_POST_INCREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_LOAD_PRE_DECREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_LOAD_PRE_INCREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_ORDERING_ATTRIBUTE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_STORE_POST_DECREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_STORE_POST_INCREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_STORE_PRE_DECREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_STORE_PRE_INCREMENT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSE_TIMES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSING_MALLOC_PAGE_GROUPS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSING_MMAP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUSING_SJLJ_EXCEPTIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DVAX_FLOAT_FORMAT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DVECTOR_MODE_SUPPORTED_P" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DVERSION_ASM_OP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DVMS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DVMS_DEBUGGING_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWCHAR_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWCHAR_TYPE_SIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWCHAR_UNSIGNED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWEXITSTATUS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWIFEXITED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWIFSIGNALED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWINNING_GDB" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWINT_TYPE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWORDS_BIGENDIAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWORD_REGISTER_OPERATIONS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWSTOPSIG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DWTERMSIG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DXCOFF_DEBUGGING_INFO" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DXFMODE_NAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYDEBUG" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYERROR_VERBOSE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYINITDEPTH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYLEX_PARAM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYLSP_NEEDED" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYMAXDEPTH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYPARSE_PARAM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYPRINT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYPURE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DYYSTACK_USE_ALLOCA" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_AIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_BSD_VA_LIST_" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_GNU_OBSTACK_INTERFACE_VERSION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_GNU_SOURCE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_LIBC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_MSDOS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_MSDOS_" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_POSIX_C_SOURCE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_SC_CLK_TCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_SYSTYPE_SVR4" class="portability">
+This macro indicates that the benchmark is being built on a System Vr4-type
+system.
+</flag>
+
+<flag name="D_UWIN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_WIN32" class="portability">
+This macro indicates that the benchmark is being built on a Windows system.
+</flag>
+
+<flag name="D__BIG_ENDIAN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__BYTE_ORDER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__CYGWIN32__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__CYGWIN__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__DJGPP__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__FUNCTION__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__FreeBSD__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__GNUC_MINOR__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__GNUC__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__GNU_LIBRARY__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__HIDE_FORBIDDEN_NAMES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__INT_TO_PTR" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__MSDOS__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__NeXT__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__OS2__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__OpenBSD__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__PIC__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__PTRDIFF_TYPE__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__PTR_TO_INT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__STDC_VERSION__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__STDC__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__STRICT_ANSI__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__TURBOC__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__VERSION__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__cplusplus" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__hpux" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__i386" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__ia64__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__linux__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__mips" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__sgi" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__sparc" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__sparc__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__sun" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__va_copy" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D__x86_64__" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Da" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dalloca" class="other">
+This allows alloca to be set to the compiler's preferred alloca by SPEC rules.
+</flag>
+
+<flag name="Datexit" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Derrno" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dexact_log2" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dfree" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dgetrlimit" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dinhibit_libc" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Disalpha" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dmalloc" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dmemcpy" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dn" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Doffsetof" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dsetrlimit" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dsparc" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dstrsignal" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dva_copy" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dvolatile" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="Dyyoverflow" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSPEC_CPU_NEED_ALLOCA_H" class="portability">
+Use this flag to force &lt;alloca.h&gt; to be included.
+</flag>
+
+<flag name="header_guards" class="forbidden" regexp="[-/]D(?:DEMANGLE_H|GCC_BASIC_BLOCK_H|GCC_BITMAP_H|GCC_CPPDEFAULT_H|GCC_CPPHASH_H|GCC_CPPLIB_H|GCC_C_COMMON_H|GCC_C_LEX_H|GCC_C_PRAGMA_H|GCC_C_TREE_H|GCC_DBX_ELF_H|GCC_DEBUG_H|GCC_DEFAULTS_H|GCC_DIAGNOSTIC_H|GCC_ERRORS_H|GCC_FLAGS_H|GCC_GCOV_IO_H|GCC_GENRTL_H|GCC_GRAPH_H|GCC_GSTAB_H|GCC_HARD_REG_SET_H|GCC_HASHTABLE_H|GCC_HOOKS_H|GCC_HWINT_H|GCC_INSN_ADDR_H|GCC_INSN_ATTR_H|GCC_INSN_CODES_H|GCC_INSN_CONFIG_H|GCC_INSN_CONSTANTS_H|GCC_INSN_FLAGS_H|GCC_INTL_H|GCC_LANG_HOOKS_DEF_H|GCC_LANG_HOOKS_H|GCC_LIBFUNCS_H|GCC_LINE_MAP_H|GCC_MBCHAR_H|GCC_MKDEPS_H|GCC_OPTABS_H|GCC_PARAMS_H|GCC_PREFIX_H|GCC_REAL_H|GCC_RTL_H|GCC_SBITMAP_H|GCC_SYSTEM_H|GCC_TIMEVAR_H|GCC_TM_PREDS_H|GCC_TOPLEV_H|GCC_TREE_CHECK_H|GCC_TREE_DUMP_H|GCC_TREE_INLINE_H|GCC_TSYSTEM_H|GCC_VARRAY_H|GCC_VERSION_H|GCC_VMSDBG_H|LIBIBERTY_H|OBJALLOC_H|SAFE_CTYPE_H|SORT_H|SYM_CAT_H|TERNARY_H_|_ANSIDECL_H|_FIBHEAP_H_|_FNMATCH_H|_GETOPT_H|_MD5_H|_OBSTACK_H|_PARTITION_H|_SPLAY_TREE_H|__HASHTAB_H__)(?:=\S*)?\b">
+<example>
+-DDEMANGLE_H,
+-DGCC_BASIC_BLOCK_H,
+-DGCC_BITMAP_H,
+-DGCC_CPPDEFAULT_H,
+-DGCC_CPPHASH_H,
+-DGCC_CPPLIB_H,
+-DGCC_C_COMMON_H,
+-DGCC_C_LEX_H,
+-DGCC_C_PRAGMA_H,
+-DGCC_C_TREE_H,
+-DGCC_DBX_ELF_H,
+-DGCC_DEBUG_H,
+-DGCC_DEFAULTS_H,
+-DGCC_DIAGNOSTIC_H,
+-DGCC_ERRORS_H,
+-DGCC_FLAGS_H,
+-DGCC_GCOV_IO_H,
+-DGCC_GENRTL_H,
+-DGCC_GRAPH_H,
+-DGCC_GSTAB_H,
+-DGCC_HARD_REG_SET_H,
+-DGCC_HASHTABLE_H,
+-DGCC_HOOKS_H,
+-DGCC_HWINT_H,
+-DGCC_INSN_ADDR_H,
+-DGCC_INSN_ATTR_H,
+-DGCC_INSN_CODES_H,
+-DGCC_INSN_CONFIG_H,
+-DGCC_INSN_CONSTANTS_H,
+-DGCC_INSN_FLAGS_H,
+-DGCC_INTL_H,
+-DGCC_LANG_HOOKS_DEF_H,
+-DGCC_LANG_HOOKS_H,
+-DGCC_LIBFUNCS_H,
+-DGCC_LINE_MAP_H,
+-DGCC_MBCHAR_H,
+-DGCC_MKDEPS_H,
+-DGCC_OPTABS_H,
+-DGCC_PARAMS_H,
+-DGCC_PREFIX_H,
+-DGCC_REAL_H,
+-DGCC_RTL_H,
+-DGCC_SBITMAP_H,
+-DGCC_SYSTEM_H,
+-DGCC_TIMEVAR_H,
+-DGCC_TM_PREDS_H,
+-DGCC_TOPLEV_H,
+-DGCC_TREE_CHECK_H,
+-DGCC_TREE_DUMP_H,
+-DGCC_TREE_INLINE_H,
+-DGCC_TSYSTEM_H,
+-DGCC_VARRAY_H,
+-DGCC_VERSION_H,
+-DGCC_VMSDBG_H,
+-DLIBIBERTY_H,
+-DOBJALLOC_H,
+-DSAFE_CTYPE_H,
+-DSORT_H,
+-DSYM_CAT_H,
+-DTERNARY_H_,
+-D_ANSIDECL_H,
+-D_FIBHEAP_H_,
+-D_FNMATCH_H,
+-D_GETOPT_H,
+-D_MD5_H,
+-D_OBSTACK_H,
+-D_PARTITION_H,
+-D_SPLAY_TREE_H,
+-D__HASHTAB_H__
+</example>
+These macros protect against multiple inclusion of the same header.  They
+may not be set explicitly.
+</flag>
+
+</flagsdescription>

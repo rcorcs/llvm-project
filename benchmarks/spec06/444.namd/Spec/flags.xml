@@ -1,0 +1,220 @@
+<?xml version="1.0"?>
+<!DOCTYPE flagsdescription SYSTEM
+       "http://www.spec.org/dtd/cpuflags1.dtd">
+
+<!-- This file defines flags that appear in the sources for 444.namd.
+
+  Copyright (C) 2005 Standard Performance Evaluation Corporation
+
+  $Revision: 4254 $
+  $Date: 2006-05-21 19:31:24 -0400 (Sun, 21 May 2006) $
+-->
+<flagsdescription>
+
+<filename>444.namd.flags</filename>
+
+<title>444.namd Flags</title>
+
+<header>
+<![CDATA[
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+]]>
+</header>
+
+<flag name="currdir_inc" class="mandatory" regexp="-I\.(?:\s+|$)">
+<example>-I.</example>
+This flag is included automatically by Spec/object.pm.
+</flag>
+
+<flag name="DALTVIRIAL" class="forbidden">
+Used to test virial calculation.  Not used in benchmark code.
+</flag>
+
+<flag name="DBOOLTYPE" class="forbidden">
+Eliminates macros true and false.  Not used in benchmark code.
+</flag>
+
+<flag name="DCALCENERGY" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DCOMMON_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DCOMPUTELIST_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DCOMPUTENONBONDEDUTIL_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DCOMPUTE_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DDEFINITION" class="forbidden">
+Adds include files to ComputeNonbondedBase.h.  Not used in benchmark code.
+</flag>
+
+<flag name="DFALSE" class="forbidden">
+Defined as 0.
+</flag>
+
+<flag name="DFEPFLAG" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DFULLELECT" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DINTFLAG" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DINT_MAX" class="forbidden">
+Standard definition, provided by system limits.h.
+</flag>
+
+<flag name="DLATTICE_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DLESFLAG" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DLJTABLE_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DMERGEELECT" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DMOLECULE_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DNAMDTYPES_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DNAMD_RESTRICT" class="forbidden">
+Allows (does not redefine) restrict keyword.  Not used in benchmark code.
+</flag>
+
+<flag name="DNBPAIR" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DNBSELF" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DNBTYPE" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DNO" class="forbidden">
+Defined as 0.
+</flag>
+
+<flag name="DOBJECTARENA_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DONE" class="forbidden">
+Defined as 1.0.  Not used in benchmark code.
+</flag>
+
+<flag name="DPATCHLIST_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DPATCH_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DPI" class="forbidden">
+3.1415...  Not used in benchmark code.
+</flag>
+
+<flag name="DPLACEMENT_NEW" class="portability">
+Provides definition for ::operator new(size_t, void *)
+</flag>
+
+<flag name="DPLACEMENT_NEW_GLOBAL" class="portability">
+Provides definition for operator new(size_t, void *)
+</flag>
+
+<flag name="DREDUCTIONMGR_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DRESIZEARRAYRAW_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DRESIZEARRAY_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DRESULTSET_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DSIMPARAMETERS_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DSLOWONLY" class="forbidden">
+Used for branchless compilation of ComputeNonbondedBase.h inner loop code.
+</flag>
+
+<flag name="DSMALLRAD" class="forbidden">
+Defines a small distance.  Not used in benchmark code.
+</flag>
+
+<flag name="DSMALLRAD2" class="forbidden">
+Square of SMALLRAD.  Not used in benchmark code.
+</flag>
+
+<flag name="DSPEC_CPU_WINDOWS_ICL" class="portability">
+Intel compilers use own erfc().
+</flag>
+
+<flag name="DSTRINGNULL" class="forbidden">
+Defined as '\0'.  Not used in benchmark code.
+</flag>
+
+<flag name="DTENSOR_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DTEST_VECTOR_CLASS" class="forbidden">
+Alternate main() in Vector.h  Not used in benchmark code.
+</flag>
+
+<flag name="DTWOPI" class="forbidden">
+2 * 3.1415...  Not used in benchmark code.
+</flag>
+
+<flag name="DVECTOR_H" class="forbidden">
+Include file sentinel.
+</flag>
+
+<flag name="DWIN32ERFC" class="mandatory">
+Enables 32-bit erfc() code for platforms like Windows that lack their own.
+</flag>
+
+<flag name="DZERO" class="forbidden">
+Defined as 0.0.  Not used in benchmark code.
+</flag>
+
+
+</flagsdescription>

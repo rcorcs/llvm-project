@@ -1,0 +1,589 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else37:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @__assert_fail(i8* getelementptr inbounds ([16 x i8], [16 x i8]* @.str.46, i64 0, i64 0), i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.16, i64 0, i64 0), i32 1066, i8* getelementptr inbounds ([54 x i8], [54 x i8]* @__PRETTY_FUNCTION__.dfa_add_string, i64 0, i64 0)) #21</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else28:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @__assert_fail(i8* getelementptr inbounds ([17 x i8], [17 x i8]* @.str.45, i64 0, i64 0), i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.16, i64 0, i64 0), i32 1061, i8* getelementptr inbounds ([54 x i8], [54 x i8]* @__PRETTY_FUNCTION__.dfa_add_string, i64 0, i64 0)) #21</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %strrot = alloca [1765 x i8], align 16</td></tr>
+<tr><td align="left">  %strdollar = alloca [1765 x i8], align 16</td></tr>
+<tr><td align="left">  %0 = load i32, i32* @aux_count, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %rem = srem i32 %0, 33</td></tr>
+<tr><td align="left">  %idxprom = sext i32 %rem to i64</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds [33 x %struct.dfa], [33 x %struct.dfa]* @aux_dfa, i64 0, i64 %idxprom</td></tr>
+<tr><td align="left">  %add = add nsw i32 %0, 1</td></tr>
+<tr><td align="left">  %rem1 = srem i32 %add, 33</td></tr>
+<tr><td align="left">  %idxprom2 = sext i32 %rem1 to i64</td></tr>
+<tr><td align="left">  %arrayidx3 = getelementptr inbounds [33 x %struct.dfa], [33 x %struct.dfa]* @aux_dfa, i64 0, i64 %idxprom2</td></tr>
+<tr><td align="left">  %1 = getelementptr inbounds [1765 x i8], [1765 x i8]* %strrot, i64 0, i64 0</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 1765, i8* nonnull %1) #18</td></tr>
+<tr><td align="left">  %cmp = icmp eq i32 %ll, 0</td></tr>
+<tr><td align="left">  br i1 %cmp, label %if.then, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %call = call i8* @strcpy(i8* noundef nonnull %1, i8* noundef nonnull dereferenceable(1) %str) #19</td></tr>
+<tr><td align="left">  br label %if.end50</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td align="left">  %2 = getelementptr inbounds [1765 x i8], [1765 x i8]* %strdollar, i64 0, i64 0</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 1765, i8* nonnull %2) #18</td></tr>
+<tr><td align="left">  call void @llvm.memset.p0i8.i64(i8* noundef nonnull align 16 dereferenceable(1765) %2, i8 36, i64 1765, i1 false)</td></tr>
+<tr><td align="left">  %call6 = call i8* @strcpy(i8* noundef nonnull %2, i8* noundef nonnull dereferenceable(1) %str) #19</td></tr>
+<tr><td align="left">  %call7 = call i64 @strlen(i8* noundef nonnull dereferenceable(1) %str) #20</td></tr>
+<tr><td align="left">  %arrayidx8 = getelementptr inbounds [1765 x i8], [1765 x i8]* %strdollar, i64 0, i64 %call7</td></tr>
+<tr><td align="left">  store i8 36, i8* %arrayidx8, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  call void @llvm.memset.p0i8.i64(i8* noundef nonnull align 16 dereferenceable(1765) %1, i8 36, i64 1765, i1 false)</td></tr>
+<tr><td align="left">  %idxprom19 = sext i32 %ll to i64</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %indvars.iv111 = phi i64 [ %indvars.iv.next112, %for.inc39 ], [ 0, %if.else ]</td></tr>
+<tr><td align="left">  %exitcond113.not = icmp eq i64 %indvars.iv111, 882</td></tr>
+<tr><td align="left">  br i1 %exitcond113.not, label %while.cond, label %for.cond11.preheader</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond11.preheader:</td></tr>
+<tr><td align="left">  %arrayidx16 = getelementptr inbounds [1764 x [8 x i32]], [1764 x [8 x i32]]* @spiral, i64 0, i64 %indvars.iv111, i64 0</td></tr>
+<tr><td align="left">  %3 = load i32, i32* %arrayidx16, align 16, !tbaa !3</td></tr>
+<tr><td align="left">  br label %for.cond11</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond11:</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ 0, %for.cond11.preheader ], [ %indvars.iv.next, %for.inc ]</td></tr>
+<tr><td align="left">  %exitcond.not = icmp eq i64 %indvars.iv, 1765</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %exitcond.not, label %if.else37, label %for.body13</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb6 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body13:</td></tr>
+<tr><td align="left">  %arrayidx20 = getelementptr inbounds [1764 x [8 x i32]], [1764 x [8 x i32]]* @spiral, i64 0, i64 %indvars.iv, i64 %idxprom19</td></tr>
+<tr><td align="left">  %4 = load i32, i32* %arrayidx20, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp21 = icmp eq i32 %3, %4</td></tr>
+<tr><td align="left">  br i1 %cmp21, label %if.then22, label %for.inc</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb7 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then22:</td></tr>
+<tr><td align="left">  %arrayidx24 = getelementptr inbounds [1765 x i8], [1765 x i8]* %strrot, i64 0, i64 %indvars.iv111</td></tr>
+<tr><td align="left">  %5 = load i8, i8* %arrayidx24, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  %cmp25 = icmp eq i8 %5, 36</td></tr>
+<tr><td align="left">  br i1 %cmp25, label %for.inc39, label %if.else28</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc:</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  br label %for.cond11, !llvm.loop !55</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none,  xlabel="R", label  = <<table  bgcolor="LightCyan"  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc39:</td></tr>
+<tr><td align="left">  %idxprom17.le = and i64 %indvars.iv, 4294967295</td></tr>
+<tr><td align="left">  %arrayidx30 = getelementptr inbounds [1765 x i8], [1765 x i8]* %strdollar, i64 0, i64 %idxprom17.le</td></tr>
+<tr><td align="left">  %6 = load i8, i8* %arrayidx30, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  store i8 %6, i8* %arrayidx24, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  %indvars.iv.next112 = add nuw nsw i64 %indvars.iv111, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !56</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">while.cond:</td></tr>
+<tr><td align="left">  %indvars.iv114 = phi i64 [ %indvars.iv.next115, %while.cond ], [ 1764, %for.cond ]</td></tr>
+<tr><td align="left">  %arrayidx43 = getelementptr inbounds [1765 x i8], [1765 x i8]* %strrot, i64 0, i64 %indvars.iv114</td></tr>
+<tr><td align="left">  %7 = load i8, i8* %arrayidx43, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  %cmp45 = icmp eq i8 %7, 36</td></tr>
+<tr><td align="left">  %indvars.iv.next115 = add i64 %indvars.iv114, -1</td></tr>
+<tr><td align="left">  br i1 %cmp45, label %while.cond, label %while.end, !llvm.loop !57</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">while.end:</td></tr>
+<tr><td align="left">  %add47 = shl i64 %indvars.iv114, 32</td></tr>
+<tr><td align="left">  %sext = add i64 %add47, 4294967296</td></tr>
+<tr><td align="left">  %idxprom48 = ashr exact i64 %sext, 32</td></tr>
+<tr><td align="left">  %arrayidx49 = getelementptr inbounds [1765 x i8], [1765 x i8]* %strrot, i64 0, i64 %idxprom48</td></tr>
+<tr><td align="left">  store i8 0, i8* %arrayidx49, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 1765, i8* nonnull %2) #18</td></tr>
+<tr><td align="left">  br label %if.end50</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end50:</td></tr>
+<tr><td align="left">  %8 = load i32, i32* @dfa_verbose, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp51 = icmp sgt i32 %8, 1</td></tr>
+<tr><td align="left">  br i1 %cmp51, label %if.then53, label %if.end58</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then53:</td></tr>
+<tr><td align="left">  %9 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %arraydecay54 = getelementptr inbounds %struct.dfa, %struct.dfa* %pdfa, i64 0, i32 0, i64 0</td></tr>
+<tr><td align="left">  %call56 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %9, i8* getelementptr inbounds ([33 x i8], [33 x i8]* @.str.47, i64 0, i64 0), i8* %arraydecay54, i8* nonnull %1) #22</td></tr>
+<tr><td align="left">  %10 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %11 = load i32, i32* @aux_count, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %call57 = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %10, i8* getelementptr inbounds ([40 x i8], [40 x i8]* @.str.48, i64 0, i64 0), i32 %pattern_index, i32 %ll, i32 %11) #22</td></tr>
+<tr><td align="left">  br label %if.end58</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end58:</td></tr>
+<tr><td align="left">  %12 = load i32, i32* @dfa_was_initialized, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp59 = icmp sgt i32 %12, 0</td></tr>
+<tr><td align="left">  br i1 %cmp59, label %if.end63, label %if.else62</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else62:</td></tr>
+<tr><td align="left">  call void @__assert_fail(i8* getelementptr inbounds ([24 x i8], [24 x i8]* @.str.49, i64 0, i64 0), i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.16, i64 0, i64 0), i32 1081, i8* getelementptr inbounds ([54 x i8], [54 x i8]* @__PRETTY_FUNCTION__.dfa_add_string, i64 0, i64 0)) #21</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end63:</td></tr>
+<tr><td align="left">  %cmp64.not = icmp eq %struct.dfa* %pdfa, null</td></tr>
+<tr><td align="left">  br i1 %cmp64.not, label %if.else67, label %if.end68</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else67:</td></tr>
+<tr><td align="left">  call void @__assert_fail(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @.str.50, i64 0, i64 0), i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.16, i64 0, i64 0), i32 1082, i8* getelementptr inbounds ([54 x i8], [54 x i8]* @__PRETTY_FUNCTION__.dfa_add_string, i64 0, i64 0)) #21</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end68:</td></tr>
+<tr><td align="left">  %pre_rotated = getelementptr inbounds %struct.dfa, %struct.dfa* %pdfa, i64 0, i32 1</td></tr>
+<tr><td align="left">  %13 = load i32, i32* %pre_rotated, align 8, !tbaa !58</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %13, 0</td></tr>
+<tr><td align="left">  %mul = shl nsw i32 %pattern_index, 3</td></tr>
+<tr><td align="left">  %add70 = add nsw i32 %mul, %ll</td></tr>
+<tr><td align="left">  %pattern_index.addr.0 = select i1 %tobool.not, i32 %pattern_index, i32 %add70</td></tr>
+<tr><td align="left">  %14 = load i32, i32* @dfa_verbose, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp.i = icmp sgt i32 %14, 1</td></tr>
+<tr><td align="left">  br i1 %cmp.i, label %if.then.i, label %if.end.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then.i:</td></tr>
+<tr><td align="left">  %15 = load %struct._IO_FILE*, %struct._IO_FILE** @stderr, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %call.i = call i32 (%struct._IO_FILE*, i8*, ...) @fprintf(%struct._IO_FILE* %15, i8* getelementptr inbounds ([34 x i8], [34 x i8]* @.str.74, i64 0, i64 0), i8* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 0, i64 0), i8* nonnull %1) #23</td></tr>
+<tr><td align="left">  br label %if.end.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb20 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end.i:</td></tr>
+<tr><td align="left">  %16 = load i32, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 3), align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %cmp4.i = icmp sgt i32 %16, 1</td></tr>
+<tr><td align="left">  br i1 %cmp4.i, label %if.end7.i, label %if.else6.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb21 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else6.i:</td></tr>
+<tr><td align="left">  call void @__assert_fail(i8* getelementptr inbounds ([21 x i8], [21 x i8]* @.str.76, i64 0, i64 0), i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.16, i64 0, i64 0), i32 614, i8* getelementptr inbounds ([44 x i8], [44 x i8]* @__PRETTY_FUNCTION__.create_dfa, i64 0, i64 0)) #21</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb22 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end7.i:</td></tr>
+<tr><td align="left">  %17 = load i32, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 6), align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %cmp8.i = icmp sgt i32 %17, 1</td></tr>
+<tr><td align="left">  br i1 %cmp8.i, label %if.end11.i, label %if.else10.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.else10.i:</td></tr>
+<tr><td align="left">  call void @__assert_fail(i8* getelementptr inbounds ([22 x i8], [22 x i8]* @.str.77, i64 0, i64 0), i8* getelementptr inbounds ([19 x i8], [19 x i8]* @.str.16, i64 0, i64 0), i32 615, i8* getelementptr inbounds ([44 x i8], [44 x i8]* @__PRETTY_FUNCTION__.create_dfa, i64 0, i64 0)) #21</td></tr>
+<tr><td align="left">  unreachable</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb24 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end11.i:</td></tr>
+<tr><td align="left">  call fastcc void @clean_dfa(%struct.dfa* nonnull @aux_temp) #19</td></tr>
+<tr><td align="left">  br label %for.cond.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb25 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond.i:</td></tr>
+<tr><td align="left">  %indvars.iv.i = phi i64 [ %.pre15.i, %for.inc.i ], [ 1, %if.end11.i ]</td></tr>
+<tr><td align="left">  %str.addr.0.i = phi i8* [ %incdec.ptr.i, %for.inc.i ], [ %1, %if.end11.i ]</td></tr>
+<tr><td align="left">  %18 = load i8, i8* %str.addr.0.i, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  %cmp12.not.i = icmp eq i8 %18, 0</td></tr>
+<tr><td align="left">  br i1 %cmp12.not.i, label %for.end.i, label %land.rhs.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb26 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">land.rhs.i:</td></tr>
+<tr><td align="left">  %conv.i = sext i8 %18 to i32</td></tr>
+<tr><td align="left">  %memchr.i = call i8* @memchr(i8* noundef nonnull dereferenceable(16) getelementptr inbounds ([16 x i8], [16 x i8]* @.str.78, i64 0, i64 0), i32 %conv.i, i64 16) #18</td></tr>
+<tr><td align="left">  %tobool.not.i = icmp eq i8* %memchr.i, null</td></tr>
+<tr><td align="left">  br i1 %tobool.not.i, label %for.end.i, label %for.body.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb27 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body.i:</td></tr>
+<tr><td align="left">  %19 = load %struct.state*, %struct.state** getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 2), align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %arraydecay16.i = getelementptr inbounds %struct.state, %struct.state* %19, i64 %indvars.iv.i, i32 1, i64 0</td></tr>
+<tr><td align="left">  %20 = bitcast i32* %arraydecay16.i to i8*</td></tr>
+<tr><td align="left">  call void @llvm.memset.p0i8.i64(i8* noundef nonnull align 4 dereferenceable(16) %20, i8 0, i64 16, i1 false) #18</td></tr>
+<tr><td align="left">  %21 = load i8, i8* %str.addr.0.i, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  %conv17.i = sext i8 %21 to i32</td></tr>
+<tr><td align="left">  %memchr1.i = call i8* @memchr(i8* noundef nonnull dereferenceable(10) getelementptr inbounds ([10 x i8], [10 x i8]* @.str.79, i64 0, i64 0), i32 %conv17.i, i64 10) #18</td></tr>
+<tr><td align="left">  %tobool19.not.i = icmp eq i8* %memchr1.i, null</td></tr>
+<tr><td align="left">  br i1 %tobool19.not.i, label %if.end26.i, label %if.then20.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb28 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then20.i:</td></tr>
+<tr><td align="left">  %22 = load %struct.state*, %struct.state** getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 2), align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %arrayidx25.i = getelementptr inbounds %struct.state, %struct.state* %22, i64 %indvars.iv.i, i32 1, i64 0</td></tr>
+<tr><td align="left">  %23 = trunc i64 %indvars.iv.i to i32</td></tr>
+<tr><td align="left">  %24 = add i32 %23, 1</td></tr>
+<tr><td align="left">  store i32 %24, i32* %arrayidx25.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %.pre.i = load i8, i8* %str.addr.0.i, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  %.pre12.i = sext i8 %.pre.i to i32</td></tr>
+<tr><td align="left">  br label %if.end26.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb29 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end26.i:</td></tr>
+<tr><td align="left">  %conv27.pre-phi.i = phi i32 [ %.pre12.i, %if.then20.i ], [ %conv17.i, %for.body.i ]</td></tr>
+<tr><td align="left">  %memchr2.i = call i8* @memchr(i8* noundef nonnull dereferenceable(5) getelementptr inbounds ([5 x i8], [5 x i8]* @.str.80, i64 0, i64 0), i32 %conv27.pre-phi.i, i64 5) #18</td></tr>
+<tr><td align="left">  %tobool29.not.i = icmp eq i8* %memchr2.i, null</td></tr>
+<tr><td align="left">  br i1 %tobool29.not.i, label %if.end37.i, label %if.then30.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb30 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then30.i:</td></tr>
+<tr><td align="left">  %25 = load %struct.state*, %struct.state** getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 2), align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %arrayidx36.i = getelementptr inbounds %struct.state, %struct.state* %25, i64 %indvars.iv.i, i32 1, i64 1</td></tr>
+<tr><td align="left">  %26 = trunc i64 %indvars.iv.i to i32</td></tr>
+<tr><td align="left">  %27 = add i32 %26, 1</td></tr>
+<tr><td align="left">  store i32 %27, i32* %arrayidx36.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %.pre9.i = load i8, i8* %str.addr.0.i, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  %.pre13.i = sext i8 %.pre9.i to i32</td></tr>
+<tr><td align="left">  br label %if.end37.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb31 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end37.i:</td></tr>
+<tr><td align="left">  %conv38.pre-phi.i = phi i32 [ %.pre13.i, %if.then30.i ], [ %conv27.pre-phi.i, %if.end26.i ]</td></tr>
+<tr><td align="left">  %memchr3.i = call i8* @memchr(i8* noundef nonnull dereferenceable(5) getelementptr inbounds ([5 x i8], [5 x i8]* @.str.81, i64 0, i64 0), i32 %conv38.pre-phi.i, i64 5) #18</td></tr>
+<tr><td align="left">  %tobool40.not.i = icmp eq i8* %memchr3.i, null</td></tr>
+<tr><td align="left">  br i1 %tobool40.not.i, label %if.end48.i, label %if.then41.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb32 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then41.i:</td></tr>
+<tr><td align="left">  %28 = load %struct.state*, %struct.state** getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 2), align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %arrayidx47.i = getelementptr inbounds %struct.state, %struct.state* %28, i64 %indvars.iv.i, i32 1, i64 2</td></tr>
+<tr><td align="left">  %29 = trunc i64 %indvars.iv.i to i32</td></tr>
+<tr><td align="left">  %30 = add i32 %29, 1</td></tr>
+<tr><td align="left">  store i32 %30, i32* %arrayidx47.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %.pre10.i = load i8, i8* %str.addr.0.i, align 1, !tbaa !54</td></tr>
+<tr><td align="left">  %.pre14.i = sext i8 %.pre10.i to i32</td></tr>
+<tr><td align="left">  br label %if.end48.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb33 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end48.i:</td></tr>
+<tr><td align="left">  %conv49.pre-phi.i = phi i32 [ %.pre14.i, %if.then41.i ], [ %conv38.pre-phi.i, %if.end37.i ]</td></tr>
+<tr><td align="left">  %memchr4.i = call i8* @memchr(i8* noundef nonnull dereferenceable(6) getelementptr inbounds ([6 x i8], [6 x i8]* @.str.82, i64 0, i64 0), i32 %conv49.pre-phi.i, i64 6) #18</td></tr>
+<tr><td align="left">  %tobool51.not.i = icmp eq i8* %memchr4.i, null</td></tr>
+<tr><td align="left">  %.pre15.i = add nuw i64 %indvars.iv.i, 1</td></tr>
+<tr><td align="left">  br i1 %tobool51.not.i, label %if.end48.if.end59_crit_edge.i, label %if.then52.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb34 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end48.if.end59_crit_edge.i:</td></tr>
+<tr><td align="left">  %.pre16.i = trunc i64 %.pre15.i to i32</td></tr>
+<tr><td align="left">  br label %if.end59.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb35 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then52.i:</td></tr>
+<tr><td align="left">  %31 = load %struct.state*, %struct.state** getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 2), align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %arrayidx58.i = getelementptr inbounds %struct.state, %struct.state* %31, i64 %indvars.iv.i, i32 1, i64 3</td></tr>
+<tr><td align="left">  %32 = trunc i64 %.pre15.i to i32</td></tr>
+<tr><td align="left">  store i32 %32, i32* %arrayidx58.i, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  br label %if.end59.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb36 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end59.i:</td></tr>
+<tr><td align="left">  %.pre-phi.i = phi i32 [ %.pre16.i, %if.end48.if.end59_crit_edge.i ], [ %32, %if.then52.i ]</td></tr>
+<tr><td align="left">  %33 = load i32, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 3), align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %cmp61.not.i = icmp slt i32 %.pre-phi.i, %33</td></tr>
+<tr><td align="left">  br i1 %cmp61.not.i, label %for.inc.i, label %if.then63.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb37 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then63.i:</td></tr>
+<tr><td align="left">  %add65.i = add nsw i32 %33, 20000</td></tr>
+<tr><td align="left">  %34 = load i32, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 6), align 8, !tbaa !21</td></tr>
+<tr><td align="left">  call fastcc void @resize_dfa(%struct.dfa* nonnull @aux_temp, i32 %add65.i, i32 %34) #19</td></tr>
+<tr><td align="left">  br label %for.inc.i</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb38 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc.i:</td></tr>
+<tr><td align="left">  %incdec.ptr.i = getelementptr inbounds i8, i8* %str.addr.0.i, i64 1</td></tr>
+<tr><td align="left">  br label %for.cond.i, !llvm.loop !59</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end.i:</td></tr>
+<tr><td align="left">  %35 = load %struct.state*, %struct.state** getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 2), align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %idxprom69.i = and i64 %indvars.iv.i, 4294967295</td></tr>
+<tr><td align="left">  %arraydecay72.i = getelementptr inbounds %struct.state, %struct.state* %35, i64 %idxprom69.i, i32 1, i64 0</td></tr>
+<tr><td align="left">  %36 = bitcast i32* %arraydecay72.i to i8*</td></tr>
+<tr><td align="left">  call void @llvm.memset.p0i8.i64(i8* noundef nonnull align 4 dereferenceable(16) %36, i8 0, i64 16, i1 false) #18</td></tr>
+<tr><td align="left">  %37 = load i32, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 7), align 4, !tbaa !19</td></tr>
+<tr><td align="left">  %inc73.i = add nsw i32 %37, 1</td></tr>
+<tr><td align="left">  store i32 %inc73.i, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 7), align 4, !tbaa !19</td></tr>
+<tr><td align="left">  %38 = load i32, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 6), align 8, !tbaa !21</td></tr>
+<tr><td align="left">  %cmp76.not.i = icmp slt i32 %inc73.i, %38</td></tr>
+<tr><td align="left">  br i1 %cmp76.not.i, label %create_dfa.exit, label %if.then78.i</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb40 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then78.i:</td></tr>
+<tr><td align="left">  %39 = load i32, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 3), align 8, !tbaa !20</td></tr>
+<tr><td align="left">  %add81.i = add nsw i32 %38, 20000</td></tr>
+<tr><td align="left">  call fastcc void @resize_dfa(%struct.dfa* nonnull @aux_temp, i32 %39, i32 %add81.i) #19</td></tr>
+<tr><td align="left">  %.pre11.i = load i32, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 7), align 4, !tbaa !19</td></tr>
+<tr><td align="left">  br label %create_dfa.exit</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb41 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">create_dfa.exit:</td></tr>
+<tr><td align="left">  %40 = phi i32 [ %.pre11.i, %if.then78.i ], [ %inc73.i, %for.end.i ]</td></tr>
+<tr><td align="left">  %41 = trunc i64 %indvars.iv.i to i32</td></tr>
+<tr><td align="left">  %42 = load %struct.attrib*, %struct.attrib** getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 5), align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %idxprom84.i = sext i32 %40 to i64</td></tr>
+<tr><td align="left">  %arrayidx85.i = getelementptr inbounds %struct.attrib, %struct.attrib* %42, i64 %idxprom84.i</td></tr>
+<tr><td align="left">  %43 = bitcast %struct.attrib* %arrayidx85.i to i64*</td></tr>
+<tr><td align="left">  store i64 0, i64* %43, align 4</td></tr>
+<tr><td align="left">  %44 = load i32, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 7), align 4, !tbaa !19</td></tr>
+<tr><td align="left">  %45 = load %struct.state*, %struct.state** getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 2), align 8, !tbaa !22</td></tr>
+<tr><td align="left">  %att.i = getelementptr inbounds %struct.state, %struct.state* %45, i64 %idxprom69.i, i32 0</td></tr>
+<tr><td align="left">  store i32 %44, i32* %att.i, align 4, !tbaa !23</td></tr>
+<tr><td align="left">  %46 = load %struct.attrib*, %struct.attrib** getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 5), align 8, !tbaa !25</td></tr>
+<tr><td align="left">  %idxprom95.i = sext i32 %44 to i64</td></tr>
+<tr><td align="left">  %val.i = getelementptr inbounds %struct.attrib, %struct.attrib* %46, i64 %idxprom95.i, i32 0</td></tr>
+<tr><td align="left">  store i32 %pattern_index.addr.0, i32* %val.i, align 4, !tbaa !26</td></tr>
+<tr><td align="left">  %next104.i = getelementptr inbounds %struct.attrib, %struct.attrib* %46, i64 %idxprom95.i, i32 1</td></tr>
+<tr><td align="left">  store i32 0, i32* %next104.i, align 4, !tbaa !28</td></tr>
+<tr><td align="left">  store i32 %41, i32* getelementptr inbounds (%struct.dfa, %struct.dfa* @aux_temp, i64 0, i32 4), align 4, !tbaa !17</td></tr>
+<tr><td align="left">  call fastcc void @sync_product(%struct.dfa* nonnull %arrayidx, %struct.dfa* nonnull %arrayidx3, %struct.dfa* nonnull @aux_temp) #24</td></tr>
+<tr><td align="left">  %47 = load i32, i32* @aux_count, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %inc73 = add nsw i32 %47, 1</td></tr>
+<tr><td align="left">  store i32 %inc73, i32* @aux_count, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %call74 = call i32 @dfa_size(%struct.dfa* nonnull %arrayidx3) #24</td></tr>
+<tr><td align="left">  %cmp75 = icmp sgt i32 %call74, 0</td></tr>
+<tr><td align="left">  br i1 %cmp75, label %if.then77, label %if.end81</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb42 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then77:</td></tr>
+<tr><td align="left">  %call78 = call i32 @dfa_size(%struct.dfa* nonnull %arrayidx) #24</td></tr>
+<tr><td align="left">  %div = sdiv i32 %call78, %call74</td></tr>
+<tr><td align="left">  %conv80 = sitofp i32 %div to float</td></tr>
+<tr><td align="left">  br label %if.end81</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb43 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end81:</td></tr>
+<tr><td align="left">  %ratio.0 = phi float [ %conv80, %if.then77 ], [ 1.000000e+00, %create_dfa.exit ]</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 1765, i8* nonnull %1) #18</td></tr>
+<tr><td align="left">  ret float %ratio.0</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> f_bb1:f
+f_bb0:fF -> f_bb2:f
+f_bb1:f -> f_bb12:f
+f_bb2:f -> f_bb3:f
+f_bb3:fT -> f_bb10:f
+f_bb3:fF -> f_bb4:f
+f_bb4:f -> f_bb5:f
+f_bb5:fT -> m_bb0:f1
+f_bb5:fF -> f_bb6:f
+f_bb6:fT -> f_bb7:f
+f_bb6:fF -> f_bb8:f
+f_bb7:fT -> f_bb9:f
+f_bb7:fF -> m_bb0:f2
+f_bb8:f -> f_bb5:f
+f_bb9:f -> f_bb3:f
+f_bb10:fT -> f_bb10:f
+f_bb10:fF -> f_bb11:f
+f_bb11:f -> f_bb12:f
+f_bb12:fT -> f_bb13:f
+f_bb12:fF -> f_bb14:f
+f_bb13:f -> f_bb14:f
+f_bb14:fT -> f_bb16:f
+f_bb14:fF -> f_bb15:f
+f_bb16:fT -> f_bb17:f
+f_bb16:fF -> f_bb18:f
+f_bb18:fT -> f_bb19:f
+f_bb18:fF -> f_bb20:f
+f_bb19:f -> f_bb20:f
+f_bb20:fT -> f_bb22:f
+f_bb20:fF -> f_bb21:f
+f_bb22:fT -> f_bb24:f
+f_bb22:fF -> f_bb23:f
+f_bb24:f -> f_bb25:f
+f_bb25:fT -> f_bb39:f
+f_bb25:fF -> f_bb26:f
+f_bb26:fT -> f_bb39:f
+f_bb26:fF -> f_bb27:f
+f_bb27:fT -> f_bb29:f
+f_bb27:fF -> f_bb28:f
+f_bb28:f -> f_bb29:f
+f_bb29:fT -> f_bb31:f
+f_bb29:fF -> f_bb30:f
+f_bb30:f -> f_bb31:f
+f_bb31:fT -> f_bb33:f
+f_bb31:fF -> f_bb32:f
+f_bb32:f -> f_bb33:f
+f_bb33:fT -> f_bb34:f
+f_bb33:fF -> f_bb35:f
+f_bb34:f -> f_bb36:f
+f_bb35:f -> f_bb36:f
+f_bb36:fT -> f_bb38:f
+f_bb36:fF -> f_bb37:f
+f_bb37:f -> f_bb38:f
+f_bb38:f -> f_bb25:f
+f_bb39:fT -> f_bb41:f
+f_bb39:fF -> f_bb40:f
+f_bb40:f -> f_bb41:f
+f_bb41:fT -> f_bb42:f
+f_bb41:fF -> f_bb43:f
+f_bb42:f -> f_bb43:f
+}
+

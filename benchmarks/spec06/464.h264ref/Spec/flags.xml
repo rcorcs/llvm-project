@@ -1,0 +1,398 @@
+<?xml version="1.0"?>
+<!DOCTYPE flagsdescription SYSTEM
+       "http://www.spec.org/dtd/cpuflags1.dtd">
+
+<!-- This file defines flags that appear in the sources for 464.h264avc.
+
+  Copyright (C) 2005-2006 Standard Performance Evaluation Corporation
+
+  $Revision: 3869 $
+  $Date: 2006-02-24 10:01:32 -0500 (Fri, 24 Feb 2006) $
+-->
+<flagsdescription>
+
+<!-- Normal flags file should suggest a name for themselves -->
+<filename>464.h264ref.flags</filename>
+
+<title>464.h264avc Flags</title>
+
+<header>
+<![CDATA[
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+]]>
+</header>
+
+<flag name="DBEST_NZ_COEFF" class="forbidden">
+Use of this flag is forbidden.
+</flag>
+
+<flag name="DBI_PREDICTION" class="forbidden">
+BI_PREDICTION is explicitly set in "defines.h". This flag is therefore 
+not permitted on the command-line.
+</flag>
+
+<flag name="DCONTEXT_INI_C" class="forbidden">
+This flag is explicitly declared in "context_ini.c" file to indicate
+presence of CABAC context initialization. This flag is therefore
+not permitted on the command-line. 
+</flag>
+
+<flag name="DINCLUDED_BY_CONFIGFILE_C" class="forbidden">
+This flag is explicitly declared in "configfile.c" file to indicate
+that the parameters must be read from a config file. This flag is therefore
+not permitted on the command-line.
+</flag>
+
+<flag name="DINT64_MIN" class="forbidden">
+Defines the value of INT64_MIN if is not defined. This flag is protected 
+by SPEC_CPU_NO_INTTYPES flag. C99 standards suggests that INT64_MIN
+be defined in "stdint.h". If you have defined flag SPEC_CPU_NO_INTTYPES
+and no definition is found for INT64_MIN, the program explicitly assigns
+value to INT64_MIN to (-9223372036854775807LL - 1LL). 
+</flag>
+
+<flag name="DKS_MV" class="forbidden">
+This flag is explicitly declared in "rdopt.c" file. This flag is therefore
+not permitted on the command-line.
+</flag>
+
+<flag name="DPMVFAST" class="forbidden">
+Sets variable "mvblocktype" which is actually NOT used in the program. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="DPRINT_FMO_MAPS" class="forbidden">
+Prints FMO maps to stdout. Setting this flag will generate invalid output
+resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="DPRINT_PAN_SCAN_RECT" class="forbidden">
+Prints Pan Scan data to stdout. Setting this flag will generate invalid output
+resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="DPRINT_RANDOM_ACCESS" class="forbidden">
+Prints recovery point data to stdout. Setting this flag will 
+generate invalid output resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="DPRINT_USER_DATA_REGISTERED_ITU_T_T35_INFO" class="forbidden">
+Prints ITU_T_T35_COUNTRTY_CODE to stdout. Setting this flag will 
+generate invalid output resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="DPRINT_USER_DATA_UNREGISTERED_INFO" class="forbidden">
+Prints user data unregistered information to stdout. Setting this flag will 
+generate invalid output resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="DSEI_H" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"sei.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden. 
+</flag>
+
+<flag name="DSPEC_CPU" class="mandatory">
+This preprocessor macro is always defined when compiling any benchmark
+in CPU2006. All platforms get the source lines enclosed within this 
+macro block. 
+</flag>
+
+<flag name="DSPEC_CPU_AIX" class="portability">
+This flag allow correct compilation and execution of 464.h264avc on 
+the AIX platform. 
+</flag>
+
+<flag name="DSPEC_CPU_NO_INTTYPES" class="portability">
+This flag can be used as a portability flag on systems which do not have
+the standard header file "stdint.h". Inclusion of this flag defines the
+value of INT64_MIN (if it is not defined) and sets the "int64" type (if
+it is not set already)
+</flag>
+
+<flag name="DTRACE" class="forbidden">
+This is a flag to turn on tracing. Primarily used for debugging purposes. 
+Setting this flag will generate invalid output resulting in verification 
+error at runtime. Setting this flag on the 
+command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="DWIN32" class="portability">
+This flag is set when building 464.h264avc on Windows systems. 
+</flag>
+
+<flag name="DWRITE_MAP_IMAGE" class="forbidden">
+Writes map image to file. Used for debugging purposes. Setting this 
+flag will generate invalid output resulting in verification
+error at runtime. Setting this flag on the 
+command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="DZEROSNR" class="forbidden">
+ZEROSNR is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line. 
+</flag>
+
+<flag name="D_ADAPT_LAST_GROUP_" class="forbidden">
+_ADAPT_LAST_GROUP_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</flag>
+
+<flag name="D_ANNEXB_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"annexb.h". Explicitly defining this flag will not build the benchmark.
+Setting this flag on the command-line during compile is therefore forbidden. 
+</flag>
+
+<flag name="D_BIARIENCOD_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"biariencode.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_BLOCK_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"block.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_CABAC_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"cabac.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_CHANGE_QP_" class="forbidden">
+_CHANGE_QP_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</flag>
+
+<flag name="D_CONFIGFILE_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"configfile.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_CONTEXT_INI_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"context_ini.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_DEBUG" class="forbidden">
+Setting this flag turns ON tracing.  Setting this 
+flag will generate invalid output resulting in verification
+error at runtime. Setting this flag on the
+command-line during compile is therefore forbidden.
+
+</flag>
+
+<flag name="D_DEFINES_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"defines.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_ELEMENTS_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"elements.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_EXPLICIT_GOP_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"explicit_gop.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_FAST_FULL_ME_" class="forbidden">
+_FAST_FULL_ME_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</flag>
+
+<flag name="D_FAST_ME_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"fast_me.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_FMO_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"fmo.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_FULL_SEARCH_RANGE_" class="forbidden">
+_FULL_SEARCH_RANGE_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</flag>
+
+<flag name="D_GLOBAL_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"global.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_HEADER_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"header.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_IMAGE_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"image.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_INTRAREFRESH_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"intrarefresh.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_LEAKYBUCKET_" class="forbidden">
+_LEAKYBUCKET_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</flag>
+
+<flag name="D_LEAKY_BUCKET_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"leaky_bucket.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_MACROBLOCK_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"macroblock.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_MBUFFER_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"mbuffer.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_MB_ACCESS_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"mb_access.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_MEMALLOC_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"memalloc.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_MINMAX_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"minmax.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_MV_SEARCH_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"mv-search.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_NALUCOMMON_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"nalucommon.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_NALU_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"nalu.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_OUTPUT_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"output.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_PARSETCOMMON_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"parsetcommon.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_PARSET_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"parset.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_Q_MATRIX_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"q_matrix.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_Q_OFFSETS_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"q_offsets.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_RATE_CTL_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"ratectl.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_RD_OPT_CS_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"rdopt_coding_state.h". Explicitly defining this flag will not build
+the benchmark. Setting this flag on the command-line during 
+compile is therefore forbidden. 
+</flag>
+
+<flag name="D_REBUF_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file
+"refbuf.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_RTP_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file 
+"rtp.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_TRANSFORM8X8_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file 
+"transform8x8.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D_VLC_H_" class="forbidden">
+This flag is used to prohibit multiple includes of header file 
+"vlc.h". Explicitly defining this flag will not build the benchmark.  
+Setting this flag on the command-line during compile is therefore forbidden.
+</flag>
+
+<flag name="D__GNUC__" class="portability">
+This flag is defined at two locations. At both locations, it is used
+in conjunction with the WIN32 flag to distinguish non-Windows 
+environment. 
+</flag>
+
+<flag name="DSPEC_CPU_NEED_MINMAX" class="portability">
+If your platform does not provide min() and max() functions (or macros), use
+this flag.
+</flag>
+
+</flagsdescription>

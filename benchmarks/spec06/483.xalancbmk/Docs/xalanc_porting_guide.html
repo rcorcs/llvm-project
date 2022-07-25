@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>xercsc</title>
+</head>
+<body>
+This is instruction on how to convert future platforms for this
+benchmark.<br>
+This benchmark already comes with a large number of combinations of
+platforms and compilers. <br>
+<br>
+Although it is possible to visit the Apache website to see if they have
+converted their latest version of the software to your platform, it is
+likely difficult to integrate it back.<br>
+<br>
+A simpler way is to start with<br>
+xercesc/util/AutoSens.hpp<br>
+This file starts with the platforms and looks like this:<br>
+//
+---------------------------------------------------------------------------<br>
+//&nbsp; This section attempts to auto detect the operating system. It
+will set<br>
+//&nbsp; up XercesC specific defines that are used by the rest of the
+code.<br>
+//
+---------------------------------------------------------------------------<br>
+#if defined(_AIX)<br>
+&nbsp;&nbsp;&nbsp; #define XML_AIX<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+&nbsp;&nbsp;&nbsp; #if defined(_AIXVERSION_430)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #define XML_AIX43&nbsp; //
+for use of POSIX compliant pthread functions<br>
+&nbsp;&nbsp;&nbsp; #endif<br>
+#elif defined(_SEQUENT_)<br>
+&nbsp;&nbsp;&nbsp; #define XML_PTX<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(_HP_UX) || defined(__hpux) || defined(_HPUX_SOURCE)<br>
+&nbsp;&nbsp;&nbsp; #define XML_HPUX<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(SOLARIS) || defined(__SVR4)<br>
+&nbsp;&nbsp;&nbsp; #define XML_SOLARIS<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(_SCO_DS)<br>
+&nbsp;&nbsp;&nbsp; #define XML_OPENSERVER<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(__UNIXWARE__) || defined(__USLC__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIXWARE<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(__BEOS__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_BEOS<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(__QNXNTO__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_QNX<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(__linux__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_LINUX<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+&nbsp;&nbsp;&nbsp; #if defined(__s390__)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #define XML_LINUX_390<br>
+&nbsp;&nbsp;&nbsp; #endif<br>
+#elif defined(__FreeBSD__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_FREEBSD<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(IRIX) || defined(__sgi)<br>
+&nbsp;&nbsp;&nbsp; #define XML_IRIX<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(__MVS__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_OS390<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(EXM_OS390)<br>
+&nbsp;&nbsp;&nbsp; #define XML_OS390<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(__OS400__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_AS400<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#elif defined(__OS2__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_OS2<br>
+#elif defined(__TANDEM)<br>
+&nbsp;&nbsp;&nbsp; #define XML_TANDEM<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+&nbsp;&nbsp;&nbsp; #define XML_CSET<br>
+#elif defined(_WIN32) || defined(WIN32) || defined(__CYGWIN__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_WIN32<br>
+&nbsp;&nbsp;&nbsp; #ifndef WIN32<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #define WIN32<br>
+&nbsp;&nbsp;&nbsp; #endif<br>
+#elif defined(__WINDOWS__)<br>
+<br>
+&nbsp;&nbsp;&nbsp; // IBM VisualAge special handling<br>
+&nbsp;&nbsp;&nbsp; #if defined(__32BIT__)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #define XML_WIN32<br>
+&nbsp;&nbsp;&nbsp; #else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #define XML_WIN16<br>
+&nbsp;&nbsp;&nbsp; #endif<br>
+#elif defined(__MSDXML__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_DOS<br>
+<br>
+#elif defined(macintosh) || (defined(__APPLE__) &amp;&amp;
+defined(__MACH__))<br>
+&nbsp;&nbsp;&nbsp; #define XML_LINUX<br>
+#if defined (__GNUC__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_GCC<br>
+#else<br>
+&nbsp;&nbsp;&nbsp; #define XML_CSET<br>
+#endif<br>
+#elif defined(__alpha) &amp;&amp; defined(__osf__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_TRU64<br>
+#elif defined(__NetBSD__)<br>
+&nbsp;&nbsp;&nbsp; #define XML_NETBSD<br>
+#elif defined(__INTERIX)<br>
+&nbsp;&nbsp;&nbsp; #define XML_INTERIX<br>
+&nbsp;&nbsp;&nbsp; #define XML_UNIX<br>
+#else<br>
+&nbsp;&nbsp;&nbsp; #error Code requires port to host OS!<br>
+#endif<br>
+<br>
+If your platform is one of the above or similar to the above, just turn
+it on. Otherwise copy a similar one and add in the appropriate
+#defines. <br>
+This section's use is primarily to activate the correct header file
+defines for that platform in xercesc/util/Platforms<br>
+For example,&nbsp; sensing the _AIX macro defined (usually by the
+compiler internally) will cause XML_AIX to be defined which in turns
+cause <br>
+&lt;xercesc/util/Platforms/AIX/AIXDefs.hpp&gt;<br>
+to be included.<br>
+<br>
+The XML_AIX macro will also cause the subsequent setting of the
+compiler to be XML_CSET, which will cause:<br>
+&lt;xercesc/util/Compilers/CSetDefs.hpp&gt;<br>
+to be include.<br>
+It may also select a few specific section of code to work around
+platform specific bugs.<br>
+<br>
+The definition files tries to collect all the platform peculiarities
+into one place. The above information can be found in
+xrecesc/util/XercesDefs.hpp<br>
+<br>
+If you have to add new definition files, try to copy one from a similar
+platform and selectively comment out each function to see if you really
+needed it and iteratively rebuild to see what may fail.<br>
+<br>
+Finally, make sure you add as a file guard the macro for every compiler
+(if you may use more the none compiler on the same platform) that you
+may use in the definition files. This will prevent other platform
+definition files to be read by platforms that don't use it. For
+example, if you may use the default XLC compiler and the GCC compiler
+on AIX, then you would guard the&nbsp; AIXPlatformUtils.cpp as follows:<br>
+SPEC_CPU2005_AIX || defined(SPEC_CPU2005_AIX_GCC)<br>
+<br>
+If you have a case where a compiler&nbsp; may be used on multiple
+platforms, then you should add a guard macro to the compiler definition
+file. One example is like this for the CSetDefs.cpp<br>
+#if defined(SPEC_CPU2005_AIX) || defined(SPEC_CPU2005_MACOSX)<br>
+<br>
+<br>
+Additional note for Xalancbmk:<br>
+There is an additional file for Xalancbmk which is called
+PlatformDefinitions.hpp (one in the top level directory and one in
+xalanc/include). This file indicates the additional definition files<br>
+needed for the Xalanc part (XSLT transformation) part. It also farms
+out responsibility based on platform as well as setting some basic
+feature of the C++ language, specifically regarding the support of
+namespaces. <br>
+Note that there are two copies of the platform definition files. They
+are the exact same copy. For example, there is AIXDefinitions.hpp&nbsp;
+at the top level source directory and an exact copy in
+xalanc/include/AIXDefinitions.hpp.<br>
+<br>
+To port this to a new platform, start with PlatformDefinitions.hpp<br>
+This will define the correct compiler based on compiler macros after
+first calling the XercesDefs.hpp<br>
+<br>
+#if defined(__cplusplus)<br>
+#include "xercesc/util/XercesDefs.hpp"<br>
+#endif<br>
+<br>
+#if defined(_MSC_VER)<br>
+#include "VCPPDefinitions.hpp"<br>
+#elif defined(CYGWIN)<br>
+#include "CygwinDefinitions.hpp"<br>
+#elif defined(__GNUC__)<br>
+#include "GCCDefinitions.hpp"<br>
+#elif defined(_AIX)<br>
+#include "AIXDefinitions.hpp"<br>
+#elif defined(__hpux)<br>
+#include "HPUXDefinitions.hpp"<br>
+#elif defined(SOLARIS)<br>
+#include "SolarisDefinitions.hpp"<br>
+#elif defined(OS390)<br>
+#include "OS390Definitions.hpp"<br>
+#elif defined(OS400)<br>
+#include "OS400Definitions.hpp"<br>
+#elif defined(__DECCXX)<br>
+#include "TRU64Definitions.hpp"<br>
+#elif defined(__INTEL_COMPILER)<br>
+#include "IntelDefinitions.hpp"<br>
+#elif defined(__IBMCPP__) &amp;&amp; defined(__PPC__)<br>
+#include "IBMPPCLinuxDefinitions.hpp"<br>
+#else<br>
+#error Unknown compiler!<br>
+#endif<br>
+<br>
+In this file, copy a similar platform's XXXDefinitions.hpp and rename
+it to your platform, after identifying the macro that is predefined by
+your compiler. Then go into XXXDefinitions.hpp (where XXX is the name
+you have given your platform's compiler) and comment out all lines, and
+let it compile until it fails. Then identify the likely macro that may
+be required to make the compile move forward.<br>
+Note that both the platform and the compiler is encoded in this file.
+So if you have multiple platforms for the same compiler, or multiple
+compilers for the same platform, simply&nbsp; use t2o macros like:<br>
+<br>
+#elif defined(__IBMCPP__) &amp;&amp; defined(__PPC__)<br>
+#include "IBMPPCLinuxDefinitions.hpp"<br>
+<br>
+for an IBM compiler running on Linux platform.<br>
+<br>
+<br>
+</body>
+</html>

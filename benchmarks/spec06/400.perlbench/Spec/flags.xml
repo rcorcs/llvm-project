@@ -1,0 +1,6043 @@
+<?xml version="1.0"?>
+<!DOCTYPE flagsdescription SYSTEM
+       "http://www.spec.org/dtd/cpuflags1.dtd">
+
+<!-- This file defines flags that appear in the sources for 400.perlbench.
+
+  Copyright (C) 2005-2006 Standard Performance Evaluation Corporation
+
+  $Revision: 4153 $
+  $Date: 2006-04-18 15:07:02 -0400 (Tue, 18 Apr 2006) $
+-->
+<flagsdescription>
+
+<!-- Normal flags file should suggest a name for themselves -->
+<filename>400.perlbench.flags</filename>
+
+<title>400.perlbench Flags</title>
+
+<header>
+<![CDATA[
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+The descriptions of the pre-existing Perl preprocessor macros are in
+general taken from src/spec_config.h.</p>
+]]>
+</header>
+
+<!-- These are default flags that _ALL_ builds get.  Note that Windows -->
+<!-- builds get a few extra flags. -->
+
+<flag name="DPERL_CORE" class="mandatory">
+The preprocessor macro PERL_CORE is always defined when building 400.perlbench.</flag>
+
+<flag name="UPERL_CORE" class="forbidden">
+It is forbidden to undefine this mandatory flag.
+</flag>
+
+<flag name="I." class="mandatory" regexp="-I\.(?=\s|$)">
+The source code for 400.perlbench includes header files in the same
+directory as the sources.
+<example>
+-I.
+</example>
+</flag>
+
+<flag name="Iwin32" class="mandatory">
+Windows systems need access to some portability header files contained in the
+win32 subdirectory when building 400.perlbench.
+</flag>
+
+<flag name="DWIN32" class="mandatory">
+This flag is set when building 400.perlbench on Windows systems.
+</flag>
+
+<flag name="UWIN32" class="forbidden">
+It is forbidden to undefine this mandatory flag.
+</flag>
+
+<flag name="DPERLDLL" class="mandatory">
+This flag is set when building 400.perlbench on Windows systems.
+</flag>
+
+<flag name="UPERLDLL" class="forbidden">
+It is forbidden to undefine this mandatory flag.
+</flag>
+
+<flag name="D_CONSOLE" class="mandatory">
+This flag instructs the compilation system on Windows platforms to generate
+a non-graphical executable.
+</flag>
+
+<!-- These are the optional flags that _MAY_ be used when building -->
+<!-- 400.perlbench.  Note that it is likely that at least one (which -->
+<!-- includes many others) will be needed. -->
+<!-- The canonical source is src/spec_config.h, which this file attempts -->
+<!-- to faithfully reproduce. -->
+
+<flag name="DSPEC_CPU_LINUX" class="portability">
+<include flag="DI_TIME" />
+This macro indicates that the benchmark is being compiled on a system
+running Linux.
+</flag>
+
+<flag name="DSPEC_CPU_LINUX_IA32" class="portability">
+<include flag="DSPEC_CPU_LINUX" />
+<include flag="DSPEC_CPU_IA32" />
+This macro indicates that the benchmark is being compiled on an Intel
+IA32-compatible system running the Linux operating system.
+</flag>
+
+<flag name="DSPEC_CPU_LINUX_IA64" class="portability">
+<include flag="DSPEC_CPU_LINUX" />
+<include flag="DSPEC_CPU_IA64LE" />
+<include flag="DSPEC_CPU_IA64" />
+<include flag="DSPEC_CPU_NO_CASTNEGFLOAT" />
+<include flag="DSPEC_CPU_NO_NV_PRESERVES_UV" />
+This macro indicates that the benchmark is being compiled on an Intel
+IA64-compatible system running the Linux operating system.
+</flag>
+
+<flag name="DSPEC_CPU_LINUX_SPARC" class="portability">
+<include flag="DSPEC_CPU_LINUX" />
+<include flag="DSPEC_CPU_SPARC" />
+This macro indicates that the benchmark is being compiled on an SPARC
+system running the Linux operating system.
+</flag>
+
+<flag name="DSPEC_CPU_LINUX_PPC" class="portability">
+<include flag="DSPEC_CPU_LINUX" />
+<include flag="DSPEC_CPU_PPC" />
+<include flag="DCASTI32" />
+This macro indicates that the benchmark is being compiled on a PowerPC
+system running the Linux operating system.
+</flag>
+
+<flag name="DSPEC_CPU_LINUX_ALPHA" class="portability">
+<include flag="DSPEC_CPU_LINUX" />
+<include flag="DSPEC_CPU_ALPHA" />
+This macro indicates that the benchmark is being compiled on an Alpha
+system running the Linux operating system.
+</flag>
+
+<flag name="DSPEC_CPU_LINUX_MIPS" class="portability">
+<include flag="DSPEC_CPU_LINUX" />
+This macro indicates that the benchmark is being compiled on a MIPS-based
+system running the Linux operating system.
+</flag>
+
+<flag name="DSPEC_CPU_LINUX_X64" class="portability">
+<include flag="DSPEC_CPU_LINUX" />
+<include flag="DSPEC_CPU_X64" />
+This macro indicates that the benchmark is being compiled on an AMD64-compatible
+system running the Linux operating system.
+</flag>
+
+<flag name="DSPEC_CPU_BSD_IA32" class="portability">
+<include flag="DSPEC_CPU_BSD" />
+<include flag="DSPEC_CPU_IA32" />
+This macro indicates that the benchmark is being compiled on an Intel
+IA32-compatible system running some variant of BSD Unix.
+</flag>
+
+<flag name="DSPEC_CPU_BSD_IA64" class="portability">
+<include flag="DSPEC_CPU_BSD" />
+<include flag="DSPEC_CPU_IA64LE" />
+<include flag="DSPEC_CPU_IA64" />
+This macro indicates that the benchmark is being compiled on an Intel
+IA64-compatible system running some variant of BSD Unix.
+</flag>
+
+<flag name="DSPEC_CPU_BSD_SPARC" class="portability">
+<include flag="DSPEC_CPU_BSD" />
+<include flag="DSPEC_CPU_SPARC" />
+This macro indicates that the benchmark is being compiled on a SPARC
+system running some variant of BSD Unix.
+</flag>
+
+<flag name="DSPEC_CPU_BSD_PPC" class="portability">
+<include flag="DSPEC_CPU_BSD" />
+<include flag="DSPEC_CPU_PPC" />
+This macro indicates that the benchmark is being compiled on a PowerPC
+system running some variant of BSD Unix.
+</flag>
+
+<flag name="DSPEC_CPU_BSD_ALPHA" class="portability">
+<include flag="DSPEC_CPU_BSD" />
+<include flag="DSPEC_CPU_ALPHA" />
+This macro indicates that the benchmark is being compiled on an Alpha
+system running some variant of BSD Unix.
+</flag>
+
+<flag name="DSPEC_CPU_BSD_MIPS" class="portability">
+<include flag="DSPEC_CPU_BSD" />
+This macro indicates that the benchmark is being compiled on a MIPS-based
+system running some variant of BSD Unix.
+</flag>
+
+<flag name="DSPEC_CPU_BSD_X64" class="portability">
+<include flag="DSPEC_CPU_BSD" />
+<include flag="DSPEC_CPU_X64" />
+This macro indicates that the benchmark is being compiled on an AMD64-compatible
+system running some variant of BSD Unix.
+</flag>
+
+<flag name="DSPEC_CPU_SOLARIS_SPARC" class="portability">
+<include flag="DSPEC_CPU_SOLARIS" />
+<include flag="DSPEC_CPU_SPARC" />
+This macro indicates that the benchmark is being compiled on a SPARC/Solaris
+system.
+</flag>
+
+<flag name="DSPEC_CPU_SOLARIS_IA32" class="portability">
+<include flag="DSPEC_CPU_SOLARIS" />
+<include flag="DSPEC_CPU_IA32" />
+This macro indicates that the benchmark is being compiled on an x86/Solaris
+system.
+</flag>
+
+<flag name="DSPEC_CPU_SOLARIS_X64" class="portability">
+<include flag="DSPEC_CPU_SOLARIS" />
+<include flag="DSPEC_CPU_X64" />
+This macro indicates that the benchmark is being compiled on an x64/Solaris
+system.
+</flag>
+
+
+<flag name="DSPEC_CPU_HPUX_IA64" class="portability">
+<include flag="DSPEC_CPU_HPUX" />
+<include flag="DSPEC_CPU_IA64BE" />
+<include flag="DSPEC_CPU_IA64" />
+This macro indicates that the benchmark is being compiled on an Intel
+IA64-compatible system running HP-UX.
+</flag>
+
+<flag name="DSPEC_CPU_HPUX_HPPA" class="portability">
+<include flag="DSPEC_CPU_HPUX" />
+<include flag="DSPEC_CPU_HPPA" />
+This macro indicates that the benchmark is being compiled on an HP PA-RISC
+system running HP-UX.
+</flag>
+
+<flag name="DSPEC_CPU_X64" class="portability">
+<include flag="DSPEC_CPU_LITTLEENDIAN" />
+<include flag="DMYSWAP" />
+<include flag="DNEED_VA_COPY" />
+<include flag="DSPEC_CPU_NO_NV_PRESERVES_UV" />
+This macro indicates that the benchmark is being built on an AMD64-compatible
+system.
+</flag>
+
+<flag name="DSPEC_CPU_RELIANT_MIPS" class="portability">
+<include flag="DSPEC_CPU_RELIANT" />
+<include flag="DSPEC_CPU_MIPS" />
+This macro indicates that the benchmark is being built on a MIPS-based
+Reliant Unix system.
+</flag>
+
+
+<flag name="DSPEC_CPU_WIN32" class="portability">
+<include flag="DSPEC_CPU_WINDOWS" />
+<include flag="DSPEC_CPU_IA32" />
+This macro indicates that the benchmark is being built on a 32-bit Windows
+system.
+</flag>
+
+<flag name="DSPEC_CPU_IRIX" class="portability">
+<include flag="DSPEC_CPU_MIPS" />
+<include flag="DI_FCNTL" />
+This macro indicates that the benchmark is being built on a MIPS-based
+IRIX system.
+</flag>
+
+<flag name="DSPEC_CPU_AIX" class="portability">
+<include flag="DSPEC_CPU_PPC" />
+<include flag="DI_SYS_PARAM" />
+<include flag="DDIRNAMLEN" />
+<include flag="DI_TIME" />
+<include flag="DCASTI32" />
+<include flag="DSPEC_CPU_NO_CASTNEGFLOAT" />
+This macro indicates that the benchmark is being built on a PowerPC-based
+AIX system.
+</flag>
+
+<flag name="DSPEC_CPU_MACOSX_PPC" class="portability">
+<include flag="DSPEC_CPU_MACOSX" />
+<include flag="DSPEC_CPU_PPC" />
+This macro indicates that the benchmark is being built on a PowerPC-based
+MacOS X system.
+</flag>
+
+<flag name="DSPEC_CPU_MACOSX_IA32" class="portability">
+<include flag="DSPEC_CPU_MACOSX" />
+<include flag="DSPEC_CPU_IA32" />
+This macro indicates that the benchmark is being built on an Intel-based
+MacOS X system.
+</flag>
+
+<flag name="DSPEC_CPU_MACOSX" class="portability">
+<include flag="DDIRNAMLEN" />
+<include flag="DCASTI32" />
+<include flag="DHAS_DUP2" />
+This macro indicates that the benchmark is being built on a MacOS X system.
+</flag>
+
+<flag name="DSPEC_CPU_IA32" class="portability">
+<include flag="DSPEC_CPU_LITTLEENDIAN" />
+<include flag="DMYSWAP" />
+This macro indicates that the benchmark is being compiled on an Intel
+IA32-compatible system.
+</flag>
+
+
+<flag name="DSPEC_CPU_TRU64" class="portability">
+<include flag="DSPEC_CPU_ALPHA" />
+<include flag="DDIRNAMLEN" />
+This macro indicates that the benchmark is being compiled on an Alpha-based
+Tru64 Unix system.
+</flag>
+
+<flag name="DSPEC_CPU_ALPHA" class="portability">
+<include flag="DSPEC_CPU_LITTLEENDIAN" />
+<include flag="DMYSWAP" />
+<include flag="DSPEC_CPU_NO_NV_PRESERVES_UV" />
+This macro indicates that the target system runs an Alpha processor.
+</flag>
+
+<flag name="DSPEC_CPU_IA64LE" class="portability">
+<include flag="DSPEC_CPU_LITTLEENDIAN" />
+<include flag="DMYSWAP" />
+This macro indicates that the target system runs an IA64 processor in
+little-endian mode.
+</flag>
+
+<flag name="DSPEC_CPU_PPC" class="portability">
+<include flag="DSPEC_CPU_BIGENDIAN" />
+<include flag="DNEED_VA_COPY" />
+This macro indicates that the target system runs a big-endian PowerPC processor.
+</flag>
+
+<flag name="DSPEC_CPU_SPARC" class="portability">
+<include flag="DSPEC_CPU_BIGENDIAN" />
+<include flag="DCASTI32" />
+This macro indicates that the target system runs a SPARC processor.
+</flag>
+
+<flag name="DSPEC_CPU_HPPA" class="portability">
+<include flag="DSPEC_CPU_BIGENDIAN" />
+This macro indicates that the target system runs an HP PA-RISC processor.
+</flag>
+
+<flag name="DSPEC_CPU_IA64BE" class="portability">
+<include flag="DSPEC_CPU_BIGENDIAN" />
+This macro indicates that the target system runs an IA64 processor in
+big-endian mode.
+</flag>
+
+<flag name="DSPEC_CPU_MIPS" class="portability">
+<include flag="DSPEC_CPU_BIGENDIAN" />
+This macro indicates that the target system runs a MIPS processor.
+</flag>
+
+<flag name="DSPEC_CPU_LP64" class="portability">
+<include flag="SPEC_INT32_T" />
+<include flag="DUSE_64_BIT_INT" />
+This macro specifies that the target system uses the LP64 data model;
+specifically, that integers are 32 bits, while longs and pointers are 64 bits.
+</flag>
+
+<flag name="DSPEC_CPU_ILP64" class="portability">
+This macro specifies that the target system uses the ILP64 data model;
+specifically, that integers, longs, and pointers are all 64 bits.
+</flag>
+
+<flag name="DSPEC_CPU_GOOFY_DATAMODEL" class="portability">
+This macro specifies that the target system uses some strange data model that
+is not ILP32, ILP64, LP64, or P64.  All of the settings related to the
+datamodel (type selection and sizes, etc) must be made by hand.
+</flag>
+
+<flag name="DSPEC_CPU_WIN64" class="portability">
+<include flag="DCONSERVATIVE" />
+<include flag="LSEEKSIZE" />
+<include flag="NVSIZE" />
+<include flag="NVTYPE" />
+<include flag="Off_t" />
+<include flag="Off_t_size" />
+<include flag="SPEC_INT32_T" />
+<include flag="SSize_t" />
+<include flag="DUSE_64_BIT_INT" />
+<include flag="DWIN64" />
+<include flag="DSPEC_CPU_NO_NV_PRESERVES_UV" />
+<include flag="DSPEC_CPU_WINDOWS" />
+<include flag="DSPEC_CPU_IA64LE" />
+<include flag="DSPEC_CPU_IA64" />
+This macro indicates that the benchmark is being compiled on a 64-bit Windows
+system.
+</flag>
+
+<flag name="DSPEC_CPU_WIN64_X64" class="portability">
+<include flag="DSPEC_CPU_X64" />
+<include flag="DCONSERVATIVE" />
+<include flag="LSEEKSIZE" />
+<include flag="NVSIZE" />
+<include flag="NVTYPE" />
+<include flag="Off_t" />
+<include flag="Off_t_size" />
+<include flag="SPEC_INT32_T" />
+<include flag="SSize_t" />
+<include flag="DUSE_64_BIT_INT" />
+<include flag="DWIN64" />
+This macro indicates that the benchmark is being compiled on a 64-bit Windows
+system running an AMD64-compliant processor.
+</flag>
+
+<flag name="DSPEC_CPU_P64" class="portability">
+<include flag="SPEC_INT32_T" />
+This macro specifies that the target system uses the P64 data model;
+specifically, that integers and longs are 32 bits, while pointers are 64
+bits.
+</flag>
+
+<flag name="DOUBLESIZE" class="portability" regexp="-DDOUBLESIZE=\d+">
+This macro specifies the size (in octets) of a native C double on the target
+system.
+<example>
+-DDOUBLESIZE=XXX
+</example>
+</flag>
+
+<flag name="LONGLONGSIZE" class="portability" regexp="-DLONGLONGSIZE=\d+">
+This macro specifies the size (in octets) of a native C long long integer on
+the target system.
+<example>
+-DLONGLONGSIZE=XXX
+</example>
+</flag>
+
+<flag name="I16SIZE" class="portability" regexp="-DI16SIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+I16TYPE on the target system.
+<example>
+-DI16SIZE=XXX
+</example>
+</flag>
+
+<flag name="I16TYPE" class="portability" regexp="-DI16TYPE=\d+">
+This macro specifies a native C type that can contain a signed 16-bit integer value.
+<example>
+-DI16TYPE=XXX
+</example>
+</flag>
+
+<flag name="I32SIZE" class="portability" regexp="-DI32SIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+I32TYPE on the target system.
+<example>
+-DI32SIZE=XXX
+</example>
+</flag>
+
+<flag name="I32TYPE" class="portability" regexp="-DI32TYPE=\d+">
+This macro specifies a native C type that can contain a signed 32-bit integer
+value.
+<example>
+-DI32TYPE=XXX
+</example>
+</flag>
+
+<flag name="I64SIZE" class="portability" regexp="-DI64SIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+I64TYPE on the target system.
+<example>
+-DI64SIZE=XXX
+</example>
+</flag>
+
+<flag name="I64TYPE" class="portability" regexp="-DI64TYPE=\d+">
+This macro specifies a native C type that can contain a signed 64-bit integer value.
+<example>
+-DI64TYPE=XXX
+</example>
+</flag>
+
+<flag name="I8SIZE" class="portability" regexp="-DI8SIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+I8TYPE on the target system.
+<example>
+-DI8SIZE=XXX
+</example>
+</flag>
+
+<flag name="I8TYPE" class="portability" regexp="-DI8TYPE=\d+">
+This macro specifies a native C type that can contain a signed 8-bit integer value.
+<example>
+-DI8TYPE=XXX
+</example>
+</flag>
+
+<flag name="U16SIZE" class="portability" regexp="-DU16SIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+U16TYPE on the target system.
+<example>
+-DU16SIZE=XXX
+</example>
+</flag>
+
+<flag name="U16TYPE" class="portability" regexp="-DU16TYPE=\d+">
+This macro specifies a native C type that can contain an unsigned 16-bit integer value.
+<example>
+-DU16TYPE=XXX
+</example>
+</flag>
+
+<flag name="U32SIZE" class="portability" regexp="-DU32SIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+U32TYPE on the target system.
+<example>
+-DU32SIZE=XXX
+</example>
+</flag>
+
+<flag name="U32TYPE" class="portability" regexp="-DU32TYPE=\d+">
+This macro specifies a native C type that can contain an unsigned 32-bit integer value.
+<example>
+-DU32TYPE=XXX
+</example>
+</flag>
+
+<flag name="U64SIZE" class="portability" regexp="-DU64SIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+U64TYPE on the target system.
+<example>
+-DU64SIZE=XXX
+</example>
+</flag>
+
+<flag name="U64TYPE" class="portability" regexp="-DU64TYPE=\d+">
+This macro specifies a native C type that can contain an unsigned 64-bit integer value.
+<example>
+-DU64TYPE=XXX
+</example>
+</flag>
+
+<flag name="U8SIZE" class="portability" regexp="-DU8SIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+U8TYPE on the target system.
+<example>
+-DU8SIZE=XXX
+</example>
+</flag>
+
+<flag name="U8TYPE" class="portability" regexp="-DU8TYPE=\d+">
+This macro specifies a native C type that can contain an unsigned 8-bit integer value.
+<example>
+-DU8TYPE=XXX
+</example>
+</flag>
+
+<flag name="INTSIZE" class="portability" regexp="-DINTSIZE=\d+">
+This macro specifies the size (in octets) of a native C int on the target
+system.
+<example>
+-DINTSIZE=XXX
+</example>
+</flag>
+
+<flag name="IVSIZE" class="portability" regexp="-DIVSIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+IVTYPE on the target system.
+<example>
+-DIVSIZE=XXX
+</example>
+</flag>
+
+<flag name="IVTYPE" class="portability" regexp="-DIVTYPE=\d+">
+This macro specifies the native C type that will be used in the IV (Integer
+Value) slot in Perl's scalar struct.
+<example>
+-DIVTYPE=XXX
+</example>
+</flag>
+
+<flag name="LONGSIZE" class="portability" regexp="-DLONGSIZE=\d+">
+This macro specifies the size (in octets) of a native C long on the target
+system.
+<example>
+-DLONGSIZE=XXX
+</example>
+</flag>
+
+<flag name="NVSIZE" class="portability" regexp="-DNVSIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+NVTYPE on the target system.
+<example>
+-DNVSIZE=XXX
+</example>
+</flag>
+
+<flag name="NVTYPE" class="portability" regexp="-DNVTYPE=\d+">
+This macro specifies the native C type that will be used in the NV (Natural
+Value) slot in Perl's scalar struct.
+<example>
+-DNVTYPE=XXX
+</example>
+</flag>
+
+<flag name="PTRSIZE" class="portability" regexp="-DPTRSIZE=\d+">
+This macro specifies the size (in octets) of a native C pointer on the target
+system.
+<example>
+-DPTRSIZE=XXX
+</example>
+</flag>
+
+<flag name="QUADKIND" class="portability" regexp="-DQUADKIND=\d+">
+<![CDATA[
+This macro indicates what kind of native C type Quad_t and Uquad_t are.  It
+will be one of
+<ol>
+  <li> QUAD_IS_INT (use 'int')</li>
+  <li> QUAD_IS_LONG (use 'long')</li>
+  <li> QUAD_IS_LONG_LONG (use 'long long')</li>
+  <li> QUAD_IS_INT64_T (use 'int64_t')</li>
+</ol>
+]]>
+<example>
+-DQUADKIND=XXX
+</example>
+</flag>
+
+<flag name="Quad_t" class="portability" regexp="-DQuad_t=\d+">
+This macro specifies the native C type that can be used to hold signed quad
+values.
+<example>
+-DQuad_t=XXX
+</example>
+</flag>
+
+<flag name="SHORTSIZE" class="portability" regexp="-DSHORTSIZE=\d+">
+This macro specifies the size (in octets) of a native C short on the target
+system.
+<example>
+-DSHORTSIZE=XXX
+</example>
+</flag>
+
+<flag name="SPEC_INT32_T" class="portability" regexp="-DSPEC_INT32_T=\d+">
+This macro specifies a native C integer type that is at least 32 bits wide.  It
+is used by the SPEC pseudo-random number generator.
+<example>
+-DSPEC_INT32_T=XXX
+</example>
+</flag>
+
+<flag name="Size_t_size" class="portability" regexp="-DSize_t_size=\d+">
+This macro specifies the size (in octets) of a C size_t on the target system.
+<example>
+-DSize_t_size=XXX
+</example>
+</flag>
+
+<flag name="UVSIZE" class="portability" regexp="-DUVSIZE=\d+">
+This macro specifies the size (in octets) of the native C type specified by
+UVTYPE on the target system.
+<example>
+-DUVSIZE=XXX
+</example>
+</flag>
+
+<flag name="UVTYPE" class="portability" regexp="-DUVTYPE=\d+">
+This macro specifies the native C type that will be used in the UV (Unsigned
+Value) slot in Perl's scalar struct.
+<example>
+-DUVTYPE=XXX
+</example>
+</flag>
+
+<flag name="Uquad_t" class="portability" regexp="-DUquad_t=\d+">
+This macro specifies the native C type that can be used to hold unsigned quad
+values.
+<example>
+-DUquad_t=XXX
+</example>
+</flag>
+
+<flag name="DSPEC_CPU_BIGENDIAN" class="portability">
+This macro specifies that the target system uses big-endian (MSB first) byte
+order.
+</flag>
+
+<flag name="DSPEC_CPU_LITTLEENDIAN" class="portability">
+This macro specifies that the target system uses little-endian (LSB first) byte
+order.
+</flag>
+
+<flag name="DCONSERVATIVE" class="portability">
+The opposite of LIBERAL.  If this macro is set, some assumptions about how
+some automatic variables are aligned will not be made.  Vector operations and
+the complement operator may be slower as a result.
+</flag>
+
+<flag name="DHAS_QUAD" class="portability">
+This macro indicates the presence of a 64-bit integer type (Quad_t) and its
+unsigned counterpart (Uquad_t).  In cases where this is automatically defined,
+it can be disabled by also defining SPEC_CPU_NO_HAS_QUAD.
+</flag>
+
+<flag name="DSPEC_CPU_NO_HAS_QUAD" class="portability">
+This macro prevents HAS_QUAD from being defined.
+</flag>
+
+<flag name="DHAS_FORK" class="portability">
+This macro indicates the presence of a fork routine.
+In cases where this is automatically defined,
+it can be disabled by also defining SPEC_CPU_NO_HAS_FORK.
+</flag>
+
+<flag name="DSPEC_CPU_NO_HAS_FORK" class="portability">
+This macro prevents HAS_FORK from being defined.
+</flag>
+
+<flag name="IVdf" class="portability" regexp="-DIVdf=\S+">
+This symbol defines the format string used for printing a Perl IV
+as a signed decimal integer.
+<example>
+-DIVdf=XXX
+</example>
+</flag>
+
+<flag name="UVuf" class="portability" regexp="-DUVuf=\S+">
+This symbol defines the format string used for printing a Perl UV
+as an unsigned decimal integer.
+<example>
+-DUVuf=XXX
+</example>
+</flag>
+
+<flag name="UVof" class="portability" regexp="-DUVof=\S+">
+This symbol defines the format string used for printing a Perl UV
+as an unsigned octal integer.
+<example>
+-DUVof=XXX
+</example>
+</flag>
+
+<flag name="UVxf" class="portability" regexp="-DUVxf=\S+">
+This symbol defines the format string used for printing a Perl UV
+as an unsigned hexadecimal integer in lowercase abcdef.
+<example>
+-DUVxf=XXX
+</example>
+</flag>     
+
+<flag name="UVXf" class="portability" regexp="-DUVXf=\S+">
+This symbol defines the format string used for printing a Perl UV
+as an unsigned hexadecimal integer in uppercase ABCDEF.
+<example>
+-DUVXf=XXX
+</example>
+</flag>
+
+<flag name="NVef" class="portability" regexp="-DNVef=\S+">
+This symbol defines the format string used for printing a Perl NV
+using %e-ish floating point format.
+<example>
+-DNVef=XXX
+</example>
+</flag>     
+
+<flag name="NVff" class="portability" regexp="-DNVff=\S+">
+This symbol defines the format string used for printing a Perl NV
+using %f-ish floating point format.
+<example>
+-DNVff=XXX
+</example>
+</flag>
+
+<flag name="NVgf" class="portability" regexp="-DNVgf=\S+">
+This symbol defines the format string used for printing a Perl NV
+using %g-ish floating point format.
+<example>
+-DNVgf=XXX
+</example>
+</flag>
+
+<flag name="Off_t" class="portability" regexp="-DOff_t=\S+">
+This symbol holds the type used to declare offsets in the kernel.
+<example>
+-DOff_t=XXX
+</example>
+</flag>
+
+<flag name="LSEEKSIZE" class="portability" regexp="-DLSEEKSIZE=\d+">
+This symbol holds the number of bytes used by the type specified by Off_t.
+<example>
+-DLSEEKSIZE=XXX
+</example>
+</flag>
+
+<flag name="Off_t_size" class="portability" regexp="-DOff_t_size=\d+">
+This symbol holds the number of bytes used by the type specified by Off_t.
+<example>
+-DOff_t_size=XXX
+</example>
+</flag>
+
+<flag name="SSize_t" class="portability" regexp="-DSSize_t=\d+">
+This symbol holds the type used by functions that return
+a count of bytes or an error condition.  It must be a signed type.
+It is usually ssize_t, but may be long or int, etc.
+<example>
+-DSSize_t=XXX
+</example>
+</flag>
+
+<flag name="Pid_t" class="portability" regexp="-DPid_t=\S+">
+This symbol holds the type used to declare process IDs in the kernel.
+<example>
+-DPid_t=XXX
+</example>
+</flag>
+
+<flag name="Select_fd_set_t" class="portability" regexp="-DSelect_fd_set_t=\S+">
+This symbol holds the type used for the 2nd, 3rd, and 4th
+arguments to select.  This is only useful if you have select(), of course.
+<example>
+-DSelect_fd_set_t=XXX
+</example>
+</flag>
+
+<flag name="DUSE_64_BIT_INT" class="portability">
+This symbol, if defined, indicates that 64-bit integers should
+be used when available.
+</flag>
+
+<flag name="DWIN64" class="portability">
+This macro indicates that the benchmark is being compiled on a 64-bit Windows
+system.
+</flag>
+
+<flag name="DSPEC_CPU_WINDOWS" class="mandatory">
+<include flag="DI_FCNTL" />
+<include flag="DDIRNAMLEN" />
+<include flag="DI_TIME" />
+<include flag="DSPEC_CPU_NO_HAS_QUAD" />
+<include flag="DSPEC_CPU_NO_HAS_FORK" />
+<include flag="DHAS_DUP2" />
+<include flag="DSPEC_CPU_NO_HAS_SIGSETJMP" />
+<include flag="DSPEC_CPU_NO_I_SYS_IOCTL" />
+<include flag="DSPEC_CPU_NO_I_UNISTD" />
+<include flag="DSPEC_CPU_NO_I_INTTYPES" />
+<include flag="DSPEC_CPU_NO_HAS_LONG_LONG" />
+<include flag="DSPEC_CPU_NO_HAS_INT64_T" />
+<include flag="DSPEC_CPU_NO_HAS_FCNTL" />
+<include flag="DSPEC_CPU_NO_I_SYS_TIME" />
+<include flag="DSPEC_CPU_NO_I_SYS_TIMES" />
+<include flag="DSPEC_CPU_NO_I_SYS_WAIT" />
+<include flag="DSPEC_CPU_NO_HAS_TRUNCATE" />
+<include flag="DSPEC_CPU_NO_I_ARPA_INET" />
+<include flag="DUSE_STAT_RDEV" />
+This macro indicates that the benchmark is being compiled on a Windows system.
+</flag>
+
+<flag name="DSPEC_CPU_SOLARIS" class="portability">
+<include flag="DI_FCNTL" />
+<include flag="DSPEC_CPU_NO_FFLUSH_NULL" />
+<include flag="DSPEC_CPU_NO_HAS_SIGSETJMP" />
+This macro indicates that the benchmark is being compiled on a Solaris system.
+</flag>
+
+<flag name="DSPEC_CPU_BSD" class="portability">
+This macro indicates that the benchmark is being compiled on a BSD Unix system.
+</flag>
+
+<flag name="DSPEC_CPU_HPUX" class="portability">
+<include flag="DDIRNAMLEN" />
+<include flag="DSPEC_CPU_NO_FFLUSH_NULL" />
+This macro indicates that the benchmark is being compiled on an HP-UX system.
+</flag>
+
+<flag name="DSPEC_CPU_RELIANT" class="portability">
+This macro indicates that the benchmark is being compiled on a Reliant Unix
+system.
+</flag>
+
+<flag name="DSPEC_CPU_IA64" class="portability">
+This macro indicates that the benchmark is being compiled on a system running
+an Intel IA64-compatible processor.
+</flag>
+
+<flag name="DMYSWAP" class="portability">
+This macro indicates that Perl should use its own implementation of the htonl
+and ntohl byte-swapping routines.
+</flag>
+
+<flag name="DI_SYS_PARAM" class="portability">
+This macro indicates that sys/param.h should be included.
+</flag>
+
+<flag name="DI_FCNTL" class="portability">
+This macro indicates that fcntl.h should be included.  In cases where this
+is set automatically, it can be disabled by also defining
+SPEC_CPU_NO_I_FCNTL.
+</flag>
+
+<flag name="DSPEC_CPU_NO_I_FCNTL" class="portability">
+Prevent I_FCNTL from being automatically defined.
+</flag>
+
+<flag name="DI_SYS_FILE" class="portability">
+This macro indicates that sys/file.h should be included.  In cases where this
+is set automatically, it can be disabled by also defining
+SPEC_CPU_NO_I_SYS_FILE.
+</flag>
+
+<flag name="DSPEC_CPU_NO_I_SYS_FILE" class="portability">
+Prevent I_SYS_FILE from being automatically defined.
+</flag>
+
+<flag name="MEM_ALIGNBYTES" class="portability" regexp="-DMEM_ALIGNBYTES=\d+">
+This symbol contains the number of bytes required to align a
+double, or a long double when applicable.  Usual values are 2,
+4 and 8.
+<example>
+-DMEM_ALIGNBYTES=XXX
+</example>
+</flag>
+
+<flag name="DDIRNAMLEN" class="portability">
+This macro indicates that the length of directory entry names is provided by
+a d_namlen field.  In cases where this is set automatically, it can be
+disabled by also defining SPEC_CPU_NO_DIRNAMLEN.
+</flag>
+
+<flag name="DSPEC_CPU_NO_DIRNAMLEN" class="portability">
+Prevent DIRNAMLEN from being automatically defined.
+</flag>
+
+<flag name="Direntry_t" class="portability" regexp="-DDirentry_t=struct.dir\S+">
+This symbol is set to 'struct dirent' or 'struct direct' depending on whether
+dirent is available or not.
+<example>
+-DDirentry_t=struct.dirS+
+</example>
+</flag>
+
+<flag name="DI_TIME" class="portability">
+This macro indicates that time.h should be included.  In cases where this
+is set automatically, it can be disabled by also defining
+SPEC_CPU_NO_I_TIME.
+</flag>
+
+<flag name="DSPEC_CPU_NO_I_TIME" class="portability">
+Prevent I_TIME from being automatically defined.
+</flag>
+
+<flag name="DCASTI32" class="portability">
+This symbol is defined if the C compiler can cast negative
+or large floating point numbers to 32-bit ints.  In cases where this
+is set automatically, it can be disabled by also defining
+SPEC_CPU_NO_CASTI32.
+</flag>
+
+<flag name="DSPEC_CPU_NO_CASTI32" class="portability">
+Prevent CASTI32 from being automatically defined.
+</flag>
+
+<flag name="DCASTNEGFLOAT" class="portability">
+This symbol is defined if the C compiler can cast negative
+numbers to longs, ints, and shorts.  In cases where this
+is set automatically, it can be disabled by also defining
+SPEC_CPU_NO_CASTNEGFLOAT.
+</flag>
+
+<flag name="DSPEC_CPU_NO_CASTNEGFLOAT" class="portability">
+Prevent CASTNEGFLOAT from being automatically defined.
+</flag>
+
+<flag name="CASTFLAGS" class="portability" regexp="[-/]DCASTFLAGS(?:=\d*)?\b">
+<![CDATA[
+This symbol contains flags that say what difficulties the compiler has casting
+odd floating point values to unsigned long.  It will be one of
+<ul>
+  <li> 0 = no troubles</li>
+  <li> 1 = couldn't cast &lt; 0</li>
+  <li> 2 = couldn't cast &gt;= 0x80000000</li>
+  <li> 4 = couldn't cast in argument expression list</li>
+</ul>
+]]>
+<example>
+-DCASTFLAGS=XXX
+</example>
+</flag>
+
+<flag name="LONG_DOUBLESIZE" class="portability" regexp="-DLONG_DOUBLESIZE=\d+">
+This symbol holds the size of a long double.
+<example>
+-DLONG_DOUBLESIZE=XXX
+</example>
+</flag>
+
+<flag name="DFFLUSH_NULL" class="portability">
+This symbol is defined if calling fflush(NULL) really does flush all pending
+stdio output.  In cases where this is set automatically, it can be disabled by
+also defining SPEC_CPU_NO_FFLUSH_NULL.
+</flag>
+
+<flag name="DSPEC_CPU_NO_FFLUSH_NULL" class="portability">
+Prevent FFLUSH_NULL from being automatically defined.
+</flag>
+
+<flag name="STDCHAR" class="portability" regexp="-DSTDCHAR=\S+">
+This symbol is defined to be the type of char used in stdio.h.
+<example>
+-DSTDCHAR=XXX
+</example>
+</flag>
+
+<flag name="DNEED_VA_COPY" class="portability">
+This symbol, if defined, indicates that the system stores
+the variable argument list datatype, va_list, in a format
+that cannot be copied by simple assignment, so that some
+other means must be used when copying is required.
+As such systems vary in their provision (or non-provision)
+of copying mechanisms, handy.h defines a platform-independent macro,
+Perl_va_copy(src, dst), to do the job.
+</flag>
+
+<flag name="DHAS_DUP2" class="portability">
+This symbol is defined if the dup2 routine is available to duplicate file
+descriptors.
+In cases where this is set automatically, it can be disabled by
+also defining SPEC_CPU_NO_HAS_DUP2.
+</flag>
+
+<flag name="DSPEC_CPU_NO_HAS_DUP2" class="portability">
+Prevent HAS_DUP2 from being automatically defined.
+</flag>
+
+<flag name="Gconvert" class="portability" regexp="-DGconvert=\S+">
+<![CDATA[
+This preprocessor macro is defined to convert a floating point
+number to a string without a trailing decimal point.  This 
+emulates the behavior of sprintf("%g"), but is sometimes much more 
+efficient.  If gconvert() is not available, but gcvt() drops the
+trailing decimal point, then gcvt() is used.  If all else fails, 
+a macro using sprintf("%g") is used. Arguments for the Gconvert 
+macro are: value, number of digits, whether trailing zeros should 
+be retained, and the output buffer. 
+The usual values are
+<ul>
+  <li> d_Gconvert='gconvert((x),(n),(t),(b))'</li>
+  <li> d_Gconvert='gcvt((x),(n),(b))'</li>
+  <li> d_Gconvert='sprintf((b),"%.*g",(n),(x))'</li>
+</ul>
+
+The last two assume trailing zeros should not be kept.
+]]>
+<example>
+-DGconvert=XXX
+</example>
+</flag>
+
+<flag name="Uid_t_sign" class="portability" regexp="-DUid_t_sign=\S+">
+This symbol holds the signedness of the Uid_t type.
+<example>
+-DUid_t_sign=XXX
+</example>
+</flag>
+
+<flag name="Gid_t_sign" class="portability" regexp="-DGid_t_sign=\S+">
+This symbol holds the signedness of the Gid_t type.
+<example>
+-DGid_t_sign=XXX
+</example>
+</flag>
+
+<flag name="DNV_PRESERVES_UV" class="portability">
+This symbol indicates that a variable of type NVTYPE can preserve all the bits
+of a variable of type UVTYPE.  
+In cases where this is set automatically, it can be disabled by
+also defining SPEC_CPU_NO_NV_PRESERVES_UV.
+</flag>
+
+<flag name="DSPEC_CPU_NO_NV_PRESERVES_UV" class="portability">
+Prevent NV_PRESERVES_UV from being automatically defined.
+</flag>
+
+<flag name="NV_PRESERVES_UV_BITS" class="portability" regexp="-DNV_PRESERVES_UV_BITS=\d+">
+This symbol contains the number of bits a variable of type NVTYPE can preserve
+of a variable of type UVTYPE.  
+<example>
+-DNV_PRESERVES_UV_BITS=XXX
+</example>
+</flag>
+
+<flag name="SELECT_MIN_BITS" class="portability" regexp="-DSELECT_MIN_BITS=\d+">
+This symbol holds the minimum number of bits operated by select.
+That is, if you do select(n, ...), how many bits at least will be
+cleared in the masks if some activity is detected.  Usually this
+is either n or 32*ceil(n/32), especially many little-endians do
+the latter.  This is only useful if you have select(), naturally.
+<example>
+-DSELECT_MIN_BITS=XXX
+</example>
+</flag>
+
+<flag name="PERL_PRIfldbl" class="portability" regexp="-DPERL_PRIfldbl=\S+">
+This symbol, if defined, contains the string used by stdio to
+format long doubles (format 'f') for output.
+<example>
+-DPERL_PRIfldbl=XXX
+</example>
+</flag>
+
+<flag name="PERL_PRIgldbl" class="portability" regexp="-DPERL_PRIgldbl=\S+">
+This symbol, if defined, contains the string used by stdio to
+format long doubles (format 'g') for output.
+<example>
+-DPERL_PRIgldbl=XXX
+</example>
+</flag>
+
+
+<flag name="PERL_PRIeldbl" class="portability" regexp="-DPERL_PRIeldbl=\S+">
+This symbol, if defined, contains the string used by stdio to
+format long doubles (format 'e') for output.
+<example>
+-DPERL_PRIeldbl=XXX
+</example>
+</flag>
+
+<flag name="PERL_SCNfldbl" class="portability" regexp="-DPERL_SCNfldbl=\S+">
+This symbol, if defined, contains the string used by stdio to
+format long doubles (format 'f') for input.
+<example>
+-DPERL_SCNfldbl=XXX
+</example>
+</flag>
+
+<flag name="DHAS_SIGSETJMP" class="portability">
+This macro indicates to the C program that the sigsetjmp()
+routine is available to save the calling process's registers
+and stack environment for later use by siglongjmp(), and
+to optionally save the process's signal mask.  
+In cases where this is set automatically, it can be disabled by
+also defining SPEC_CPU_NO_HAS_SIGSETJMP.
+</flag>
+
+<flag name="DSPEC_CPU_NO_HAS_SIGSETJMP" class="portability">
+Prevent HAS_SIGSETJMP from being automatically defined.
+</flag>
+
+<flag name="DI_SYS_IOCTL" class="portability">
+This macro indicates that sys/ioctl.h exists and should be included.
+</flag>
+<flag name="DSPEC_CPU_NO_I_SYS_IOCTL" class="portability">
+Prevent I_SYS_IOCTL from being automatically defined.
+</flag>
+
+<flag name="DI_UNISTD" class="portability">
+This macro indicates that unistd.h exists and should be included.
+</flag>
+<flag name="DSPEC_CPU_NO_I_UNISTD" class="portability">
+Prevent I_UNISTD  from being automatically defined.
+</flag>
+
+<flag name="DI_INTTYPES" class="portability">
+This macro indicates that inttypes.h exists and should be included.
+</flag>
+<flag name="DSPEC_CPU_NO_I_INTTYPES" class="portability">
+Prevent I_INTTYPES from being automatically defined.
+</flag>
+
+<flag name="DHAS_LONG_LONG" class="portability">
+This macro indicates that the C compiler supports a 'long long' type.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_LONG_LONG" class="portability">
+Prevent HAS_LONG_LONG from being automatically defined.
+</flag>
+
+<flag name="DHAS_INT64_T" class="portability">
+This macro indicates that the C compiler supports an 'int64_t' type.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_INT64_T" class="portability">
+Prevent HAS_INT64_T from being automatically defined.
+</flag>
+
+<flag name="DHAS_FCNTL" class="portability">
+This macro indicates that the fcntl() function exists.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_FCNTL" class="portability">
+Prevent HAS_FCNTL from being automatically defined.
+</flag>
+
+<flag name="DI_SYS_TIME" class="portability">
+This macro indicates that sys/time.h exists and should be included.
+</flag>
+<flag name="DSPEC_CPU_NO_I_SYS_TIME" class="portability">
+Prevent I_SYS_TIME from being automatically defined.
+</flag>
+
+<flag name="DI_SYS_TIMES" class="portability">
+This macro indicates that sys/times.h exists and should be included.
+</flag>
+<flag name="DSPEC_CPU_NO_I_SYS_TIMES" class="portability">
+Prevent I_SYS_TIMES from being automatically defined.
+</flag>
+
+<flag name="DI_SYS_WAIT" class="portability">
+This macro indicates that sys/wait.h exists and should be included.
+</flag>
+<flag name="DSPEC_CPU_NO_I_SYS_WAIT" class="portability">
+Prevent I_SYS_WAIT from being automatically defined.
+</flag>
+
+<flag name="DHAS_TRUNCATE" class="portability">
+This macro indicates that the truncate() function exists.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_TRUNCATE" class="portability">
+Prevent HAS_TRUNCATE from being automatically defined.
+</flag>
+
+<flag name="DI_ARPA_INET" class="portability">
+This macro indicates that arpa/inet.h exists and should be included.
+</flag>
+<flag name="DSPEC_CPU_NO_I_ARPA_INET" class="portability">
+Prevent I_ARPA_INET from being automatically defined.
+</flag>
+
+<flag name="DSPEC_CPU_NO_dXSUB_SYS" class="forbidden">
+This macro prevents the usual (empty) definition of dXSUB_SYS.
+</flag>
+<flag name="dXSUB_SYS" class="forbidden" regexp="-DdXSUB_SYS(?:=\S*)?">
+This macro must remain defined, but empty.
+<example>
+-DdXSUB_SYS=XXX
+</example>
+</flag>
+
+<flag name="DUSE_STAT_RDEV" class="portability">
+This symbol is defined if the rdev return from Perl's stat() function should
+be taken from the st_rdev field of C's struct stat.
+In cases where this is set automatically, it can be disabled by
+also defining SPEC_CPU_NO_USE_STAT_RDEV.
+</flag>
+
+<flag name="DSPEC_CPU_NO_USE_STAT_RDEV" class="portability">
+Prevent USE_STAT_RDEV from being automatically defined.
+</flag>
+
+<flag name="DUSE_STDIO_PTR" class="portability">
+This symbol is defined if the _ptr and _cnt fields (or similar)
+of the stdio FILE structure can be used to access the stdio buffer 
+for a file handle.
+In cases where this is set automatically, it can be disabled by
+also defining SPEC_CPU_NO_USE_STDIO_PTR.
+</flag>
+
+<flag name="DSPEC_CPU_NO_USE_STDIO_PTR" class="portability">
+Prevent USE_STDIO_PTR from being automatically defined.
+</flag>
+
+<flag name="DUSE_STDIO_BASE" class="portability">
+This symbol is defined if the _base field (or similar) of the
+stdio FILE structure can be used to access the stdio buffer for
+a file handle.
+In cases where this is set automatically, it can be disabled by
+also defining SPEC_CPU_NO_USE_STDIO_BASE.
+</flag>
+
+<flag name="DSPEC_CPU_NO_USE_STDIO_BASE" class="portability">
+Prevent USE_STDIO_BASE from being automatically defined.
+</flag>
+
+<flag name="DUSE_DYNAMIC_LOADING" class="forbidden">
+Definition of this symbol is forbidden.
+</flag>
+
+<flag name="DHAS_CRYPT" class="forbidden">
+Definition of this symbol is forbidden.
+</flag>
+
+<flag name="DHASATTRIBUTE" class="forbidden">
+Definition of this symbol is forbidden.
+</flag>
+
+<flag name="DHAS_CHOWN" class="forbidden">
+Definition of this symbol is forbidden.
+</flag>
+
+<flag name="DHAS_CHROOT" class="forbidden">
+Definition of this symbol is forbidden.
+</flag>
+
+<flag name="DPERL_BINCOMPAT_5005" class="forbidden">
+Definition of this symbol is forbidden.
+</flag>
+
+<flag name="DHAS_PHOSTNAME" class="forbidden">
+Definition of this symbol is forbidden.
+</flag>
+
+<flag name="DHAS_CSH" class="forbidden">
+Definition of this symbol is forbidden.
+</flag>
+
+<flag name="DPERL_MALLOC_WRAP" class="forbidden">
+Definition of this symbol is forbidden.
+</flag>
+
+<flag name="DNO_LOCALE" class="portability">
+Prevent any non-C locales from being used.
+</flag>
+<flag name="DSPEC_CPU_REALLY_USE_LOCALE" class="portability">
+Prevent NO_LOCALE from being automatically defined.  Doing so will probably
+cause validation to fail.
+</flag>
+
+<flag name="DHASCONST" class="portability">
+This symbol, if defined, indicates that this C compiler knows about
+the const type.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HASCONST.
+</flag>
+<flag name="DSPEC_CPU_NO_HASCONST" class="portability">
+Prevent HASCONST from being automatically defined.
+</flag>
+
+<flag name="DCAN_PROTOTYPE" class="portability">
+If defined, this macro indicates that the C compiler can handle
+function prototypes.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_CAN_PROTOTYPE.
+</flag>
+<flag name="DSPEC_CPU_NO_CAN_PROTOTYPE" class="portability">
+Prevent CAN_PROTOTYPE from being automatically defined.
+</flag>
+
+<flag name="DHAS_ISNAN" class="portability">
+This symbol, if defined, indicates that the isnan routine is
+available to check whether a double is a NaN.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_ISNAN.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_ISNAN" class="portability">
+Prevent HAS_ISNAN from being automatically defined.
+</flag>
+
+<flag name="DHAS_MEMCHR" class="portability">
+This symbol, if defined, indicates that the memchr routine is available
+to locate characters within a C string.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_MEMCHR.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_MEMCHR" class="portability">
+Prevent HAS_MEMCHR from being automatically defined.
+</flag>
+
+<flag name="DHAS_MEMCMP" class="portability">
+This symbol, if defined, indicates that the memcmp routine is available
+to compare blocks of memory.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_MEMCMP.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_MEMCMP" class="portability">
+Prevent HAS_MEMCMP from being automatically defined.
+</flag>
+
+<flag name="DHAS_SANE_MEMCMP" class="portability">
+This symbol, if defined, indicates that the memcmp routine is available
+and can be used to compare relative magnitudes of chars with their high
+bits set.  If it is not defined, roll your own version.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_SANE_MEMCMP.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_SANE_MEMCMP" class="portability">
+Prevent HAS_SANE_MEMCMP from being automatically defined.
+</flag>
+
+<flag name="DHAS_MEMCPY" class="portability">
+This symbol, if defined, indicates that the memcpy routine is available
+to copy blocks of memory.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_MEMCPY.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_MEMCPY" class="portability">
+Prevent HAS_MEMCPY from being automatically defined.
+</flag>
+
+<flag name="DHAS_MEMMOVE" class="portability">
+This symbol, if defined, indicates that the memmove routine is available
+to copy potentially overlapping blocks of memory.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_MEMMOVE.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_MEMMOVE" class="portability">
+Prevent HAS_MEMMOVE from being automatically defined.
+</flag>
+
+<flag name="DHAS_MEMSET" class="portability">
+This symbol, if defined, indicates that the memset routine is available
+to set blocks of memory.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_MEMSET.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_MEMSET" class="portability">
+Prevent HAS_MEMSET from being automatically defined.
+</flag>
+
+<flag name="DEOF_NONBLOCK" class="portability">
+This symbol, if defined, indicates to the C program that a read() on     
+a non-blocking file descriptor will return 0 on EOF, and not the value   
+held in RD_NODATA (-1 usually, in that case!).
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_EOF_NONBLOCK.
+</flag>
+<flag name="DSPEC_CPU_NO_EOF_NONBLOCK" class="portability">
+Prevent EOF_NONBLOCK from being automatically defined.
+</flag>
+
+<flag name="DHAS_SELECT" class="portability">
+This symbol, if defined, indicates that the select routine is
+available to select active file descriptors. If the timeout field
+is used, sys/time.h may need to be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_SELECT.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_SELECT" class="portability">
+Prevent HAS_SELECT from being automatically defined.
+</flag>
+
+<flag name="DHAS_STRCHR" class="portability">
+This symbol is defined to indicate that the strchr()/strrchr()
+functions are available for string searching.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_STRCHR.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_STRCHR" class="portability">
+Prevent HAS_STRCHR from being automatically defined.
+</flag>
+
+<flag name="DHAS_STRCOLL" class="portability">
+This symbol, if defined, indicates that the strcoll routine is
+available to compare strings using collating information.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_STRCOLL.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_STRCOLL" class="portability">
+Prevent HAS_STRCOLL from being automatically defined.
+</flag>
+
+<flag name="DHAS_STRTOD" class="portability">
+This symbol, if defined, indicates that the strtod routine is
+available to provide better numeric string conversion than atof().
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_STRTOD.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_STRTOD" class="portability">
+Prevent HAS_STRTOD from being automatically defined.
+</flag>
+
+<flag name="DHAS_STRTOL" class="portability">
+This symbol, if defined, indicates that the strtol routine is available
+to provide better numeric string conversion than atoi() and friends.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_STRTOL.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_STRTOL" class="portability">
+Prevent HAS_STRTOL from being automatically defined.
+</flag>
+
+<flag name="DHAS_STRXFRM" class="portability">
+This symbol, if defined, indicates that the strxfrm() routine is
+available to transform strings.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_STRXFRM.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_STRXFRM" class="portability">
+Prevent HAS_STRXFRM from being automatically defined.
+</flag>
+
+<flag name="DHAS_SYSTEM" class="portability">
+This symbol, if defined, indicates that the system routine is
+available to issue a shell command.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_SYSTEM.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_SYSTEM" class="portability">
+Prevent HAS_SYSTEM from being automatically defined.
+</flag>
+
+<flag name="VOIDUSED" class="portability" regexp="-DVOIDUSED=\d+">
+<![CDATA[
+This symbol indicates how much support of the void type is needed.
+What various bits mean:
+
+<ul>
+  <li> 1 = supports declaration of void</li>
+  <li> 2 = supports arrays of pointers to functions returning void</li>
+  <li> 4 = supports comparisons between pointers to void functions and addresses of void functions</li>
+  <li> 8 = suports declaration of generic void pointers</li>
+</ul>
+]]>
+<example>
+-DVOIDUSED=XXX
+</example>
+</flag>
+
+<flag name="VOIDFLAGS" class="portability" regexp="-DVOIDFLAGS=\d+">
+<![CDATA[
+This symbol indicates how much support of the void type is given by this
+compiler.  What various bits mean:
+
+<ul>
+  <li> 1 = supports declaration of void</li>
+  <li> 2 = supports arrays of pointers to functions returning void</li>
+  <li> 4 = supports comparisons between pointers to void functions and addresses of void functions</li>
+  <li> 8 = suports declaration of generic void pointers</li>
+</ul>
+]]>
+<example>
+-DVOIDFLAGS=XXX
+</example>
+</flag>
+
+<flag name="DHASVOLATILE" class="portability">
+This symbol, if defined, indicates that this C compiler knows about
+the volatile declaration.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HASVOLATILE.
+</flag>
+<flag name="DSPEC_CPU_NO_HASVOLATILE" class="portability">
+Prevent HASVOLATILE from being automatically defined.
+</flag>
+
+<flag name="DHAS_VPRINTF" class="portability">
+This symbol, if defined, indicates that the vprintf routine is available
+to printf with a pointer to an argument list. 
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_VPRINTF.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_VPRINTF" class="portability">
+Prevent HAS_VPRINTF from being automatically defined.
+</flag>
+
+<flag name="DHAS_DBL_DIG" class="portability">
+<![CDATA[
+This symbol, if defined, indicates that this system's &lt;float.h&gt;
+or &lt;limits.h&gt; defines the symbol DBL_DIG, which is the number
+of significant digits in a double precision number.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_DBL_DIG.
+]]>
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_DBL_DIG" class="portability">
+Prevent HAS_DBL_DIG from being automatically defined.
+</flag>
+
+<flag name="DHAS_LDBL_DIG" class="portability">
+<![CDATA[
+This symbol, if defined, indicates that this system's &lt;float.h&gt;
+or &lt;limits.h&gt; defines the symbol LDBL_DIG, which is the number
+of significant digits in a long double precision number.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_LDBL_DIG.
+]]>
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_LDBL_DIG" class="portability">
+Prevent HAS_LDBL_DIG from being automatically defined.
+</flag>
+
+<flag name="DHAS_LONG_DOUBLE" class="portability">
+This symbol will be defined if the C compiler supports long doubles.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_LONG_DOUBLE.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_LONG_DOUBLE" class="portability">
+Prevent HAS_LONG_DOUBLE from being automatically defined.
+</flag>
+
+<flag name="DFLEXFILENAMES" class="portability">
+This symbol, if defined, indicates that the system supports filenames
+longer than 14 characters.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_FLEXFILENAMES.
+</flag>
+<flag name="DSPEC_CPU_NO_FLEXFILENAMES" class="portability">
+Prevent FLEXFILENAMES from being automatically defined.
+</flag>
+
+<flag name="DU32_ALIGNMENT_REQUIRED" class="portability">
+This symbol, if defined, indicates that you must access
+character data through U32-aligned pointers.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_U32_ALIGNMENT_REQUIRED.
+</flag>
+<flag name="DSPEC_CPU_NO_U32_ALIGNMENT_REQUIRED" class="portability">
+Prevent U32_ALIGNMENT_REQUIRED from being automatically defined.
+</flag>
+
+<flag name="DI_UTIME" class="portability">
+Indicates that the utime.h header file exists and should be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_I_UTIME.
+</flag>
+<flag name="DSPEC_CPU_NO_I_UTIME" class="portability">
+Prevent I_UTIME from being automatically defined.
+</flag>
+
+<flag name="DI_DIRENT" class="portability">
+Indicates that the dirent.h header file exists and should be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_I_DIRENT.
+</flag>
+<flag name="DSPEC_CPU_NO_I_DIRENT" class="portability">
+Prevent I_DIRENT from being automatically defined.
+</flag>
+
+<flag name="DI_FLOAT" class="portability">
+Indicates that the float.h header file exists and should be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_I_FLOAT.
+</flag>
+<flag name="DSPEC_CPU_NO_I_FLOAT" class="portability">
+Prevent I_FLOAT from being automatically defined.
+</flag>
+
+<flag name="DI_LIMITS" class="portability">
+Indicates that the limits.h header file exists and should be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_I_LIMITS.
+</flag>
+<flag name="DSPEC_CPU_NO_I_LIMITS" class="portability">
+Prevent I_LIMITS from being automatically defined.
+</flag>
+
+<flag name="DI_MATH" class="portability">
+Indicates that the math.h header file exists and should be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_I_MATH.
+</flag>
+<flag name="DSPEC_CPU_NO_I_MATH" class="portability">
+Prevent I_MATH from being automatically defined.
+</flag>
+
+<flag name="DI_SYS_STAT" class="portability">
+Indicates that the sys/stat.h header file exists and should be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_I_SYS_STAT.
+</flag>
+<flag name="DSPEC_CPU_NO_I_SYS_STAT" class="portability">
+Prevent I_SYS_STAT from being automatically defined.
+</flag>
+
+<flag name="DI_STDARG" class="portability">
+Indicates that the stdarg.h header file exists and should be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_I_STDARG.
+</flag>
+<flag name="DSPEC_CPU_NO_I_STDARG" class="portability">
+Prevent I_STDARG from being automatically defined.
+</flag>
+
+<flag name="DI_STDLIB" class="portability">
+Indicates that the stdlib.h header file exists and should be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_I_STDLIB.
+</flag>
+<flag name="DSPEC_CPU_NO_I_STDLIB" class="portability">
+Prevent I_STDLIB from being automatically defined.
+</flag>
+
+<flag name="DI_STRING" class="portability">
+Indicates that the string.h header file exists and should be included.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_I_STRING.
+</flag>
+<flag name="DSPEC_CPU_NO_I_STRING" class="portability">
+Prevent I_STRING from being automatically defined.
+</flag>
+
+<flag name="DUSE_STRUCT_COPY" class="portability">
+This symbol, if defined, indicates that this C compiler knows how
+to copy structures. 
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_STRUCT_COPY.
+</flag>
+<flag name="DSPEC_CPU_NO_STRUCT_COPY" class="portability">
+Prevent USE_STRUCT_COPY from being automatically defined.
+</flag>
+
+<flag name="DHAS_RMDIR" class="portability">
+This symbol, if defined, indicates that the rmdir routine is
+available to remove directories.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_RMDIR.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_RMDIR" class="portability">
+Prevent HAS_RMDIR from being automatically defined.
+</flag>
+
+<flag name="DHAS_GETTIMEOFDAY" class="portability">
+This symbol, if defined, indicates that the gettimeofday() system
+call is available for a sub-second accuracy clock. 
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_GETTIMEOFDAY.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_GETTIMEOFDAY" class="portability">
+Prevent HAS_GETTIMEOFDAY from being automatically defined.
+</flag>
+
+<flag name="DHAS_IOCTL" class="portability">
+This symbol, if defined, indicates that the ioctl routine is available.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_IOCTL.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_IOCTL" class="portability">
+Prevent HAS_IOCTL from being automatically defined.
+</flag>
+
+<flag name="DHAS_WAIT" class="portability">
+This symbol, if defined, indicates that the wait routine is
+available to wait for child process.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_WAIT.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_WAIT" class="portability">
+Prevent HAS_WAIT from being automatically defined.
+</flag>
+
+<flag name="DHAS_WAITPID" class="portability">
+This symbol, if defined, indicates that the waitpid routine is
+available to wait for child process.
+In cases where this macro is automatically defined, it can be disabled by defining
+SPEC_CPU_NO_HAS_WAITPID.
+</flag>
+<flag name="DSPEC_CPU_NO_HAS_WAITPID" class="portability">
+Prevent HAS_WAITPID from being automatically defined.
+</flag>
+
+<flag name="DACC_SELF" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DADD_TO_REGEXEC" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="inet_consts" class="forbidden" regexp="[-/]D[AP]F_(?:UNIX|INET)(?:=\S*)\b">
+<example>
+-DPF_INET,
+-DAF_INET,
+-DAF_UNIX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DALLOC_THREAD_KEY" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DALTERNATE_SHEBANG" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DALWAYS_DEFTYPES" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DAMIGAOS" class="portability">
+This flag indicates that the source is being compiled on an Amiga running
+AmigaOS.  The Amiga was not a porting target for CPU2006, so it's unlikely
+that this will work.
+</flag>
+
+<flag name="lib_locs" class="forbidden" regexp="[-/]D(?:APPLLIB_EXP|ARCHLIB_EXP|PRIVLIB_EXP|SITEARCH_EXP|SITELIB_EXP|SITELIB_STEM|PERL_VENDORARCH_EXP|PERL_VENDORLIB_EXP|PERL_VENDORLIB_NAME|PERL_VENDORLIB_STEM|USE_SITECUSTOMIZE)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DAPPLLIB_EXP=XXX,
+-DARCHLIB_EXP=XXX,
+-DPRIVLIB_EXP=XXX,
+-DSITEARCH_EXP=XXX,
+-DSITELIB_EXP=XXX,
+-DSITELIB_STEM=XXX,
+-DPERL_VENDORARCH_EXP=XXX,
+-DPERL_VENDORLIB_EXP=XXX,
+-DPERL_VENDORLIB_NAME=XXX,
+-DPERL_VENDORLIB_STEM=XXX,
+-DUSE_SITECUSTOMIZE=XXX
+</example>
+</flag>
+
+<flag name="DARG_ZERO_IS_SCRIPT" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DATLEASTFIVEOHOHFIVE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="atol_atoul" class="forbidden" regexp="[-/]DAtou?l(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DAtoul=XXX,
+-DAtol=XXX
+</example>
+</flag>
+
+<flag name="DBASEOP_DEFINITION" class="forbidden">
+This macro defines the contents of one of Perl's internal data structures.
+Setting it to a non-default value is forbidden.
+</flag>
+
+<flag name="DBIG_TIME" class="portability">
+If the size of a Time_t is too large to fit into a Perl IV, this define
+should be set.  It will cause time values to be put into an NV.
+</flag>
+
+<flag name="DBINARY_BUILD_NOTICE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DBIT_BUCKET" class="portability" regexp="[-/]DBIT_BUCKET(?:=\S*)?">
+This macro should be set to the name of an openable file that will return
+EOF immediately upon read.  On Unix and Unix-like systems, this is "/dev/null".
+On Windows systems, it is "nul".
+<example>
+-DBIT_BUCKET=XXX
+</example>
+</flag>
+
+<flag name="DBOGUS_GETNAME_RETURN" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DBSD41" class="portability">
+<include flag="DBSDish" />
+This macro indicates that the source is being built on a BSD 4.1 system.
+</flag>
+
+<flag name="DBSD42" class="portability">
+<include flag="DBSDish" />
+This macro indicates that the source is being built on a BSD 4.2 system.
+</flag>
+
+<flag name="DBSD43" class="portability">
+<include flag="DBSDish" />
+This macro indicates that the source is being built on a BSD 4.3 system.
+</flag>
+
+<flag name="DBSD44" class="portability">
+<include flag="DBSDish" />
+This macro indicates that the source is being built on a BSD 4.4 system.
+</flag>
+
+<flag name="DBSD_GETPGRP" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DBSD_SETPGRP" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DBSDish" class="portability">
+This macro indicates that the system for which the benchmark is being compiled
+has some characteristics in common with BSD Unix systems.
+</flag>
+
+<flag name="DBUFSIZ" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DBUGGY_MSC" class="forbidden">
+In some cases, use of this macro adjusts optimization settings for the
+Microsoft compiler.  Its use is forbidden.
+</flag>
+
+<flag name="DBUGGY_MSC6" class="forbidden">
+In some cases, use of this macro adjusts optimization settings for the
+Microsoft compiler.  Its use is forbidden.
+</flag>
+
+<flag name="DBYTEORDER" class="portability" regexp="[-/]DBYTEORDER(?:=[0-9xX]*)?">
+<![CDATA[
+<p>This macro indicates the byte order and width of an IV.  Possible values are</p>
+<ul>
+ <li>0x87654321 - Big-endian 64-bit system</li>
+ <li>0x4321 - Big-endian 32-bit system</li>
+ <li>0x12345678 - Little-endian 64-bit system</li>
+ <li>0x1234 - Little-endian 32-bit system</li>
+</ul>
+]]>
+<example>
+-DBYTEORDER=12345
+</example>
+</flag>
+
+<flag name="DBYTESWAP" class="forbidden" regexp="[-/]DBYTESWAP(?:=\S*)?">
+When at least 32-bit alignment is required on a big-endian platform, this
+macro is used in the MD5 routines to do endian-reversal on 32-bit quantities.
+Otherwise an alignment-safe function is used.  Changing this setting from
+its default is not allowed.
+<example>
+-DBYTESWAP=XXX
+</example>
+</flag>
+
+<flag name="DCAST_INLINE" class="forbidden">
+This flag indicates that casting floating point values to integers should be
+done in-line via macros.  Its use is forbidden.
+</flag>
+
+<flag name="DCHARMASK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCHECK_FORMAT" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DCHECK_HOST_INTERP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCLINE" class="forbidden" regexp="[-/]DCLINE(?:=\S*)?">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DCLINE=XXX
+</example>
+</flag>
+
+<flag name="DCLK_TCK" class="portability" regexp="[-/]DCLK_TCK(?:=\d+)?">
+This macro is used in place of HZ if HZ is not defined.
+<example>
+-DCLK_TCK=XXX
+</example>
+</flag>
+
+<flag name="DCODESET" class="portability" regexp="[-/]DCODESET(?:=\S+)?">
+If the nl_langinfo function is available, AND if locales are in use (which
+would likely cause the benchmark to miscompare), this macro provides the
+argument to nl_langinfo.
+<example>
+-DCODESET=XXX
+</example>
+</flag>
+
+<flag name="DCOMMENTARY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCOMPLEX_STATUS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="thread_stuff" class="forbidden" regexp="[-/]DCOND_(?:DESTROY|BROADCAST|INIT|SIGNAL|WAIT)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DCOND_DESTROY=XXX,
+-DCOND_BROADCAST=XXX,
+-DCOND_INIT=XXX,
+-DCOND_SIGNAL=XXX,
+-DCOND_WAIT=XXX
+</example>
+</flag>
+
+<flag name="DCP_UTF8" class="forbidden" regexp="[-/]DCP_UTF8(?:=\S+)?">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DCP_UTF8=XXX
+</example>
+</flag>
+
+<flag name="DCRAY_HACK" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="r_protos1" class="forbidden" regexp="[-/]D(END|GET|SET)(GR|HOST|NET|PROTO|SERV|PW)ENT_R_PROTO(?:=\S+)?">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DENDGRENT_R_PROTO=XXX,
+-DENDHOSTENT_R_PROTO=XXX,
+-DENDNETENT_R_PROTO=XXX,
+-DENDPROTOENT_R_PROTO=XXX,
+-DENDSERVENT_R_PROTO=XXX,
+-DENDPWENT_R_PROTO=XXX,
+-DGETGRENT_R_PROTO=XXX,
+-DGETHOSTENT_R_PROTO=XXX,
+-DGETNETENT_R_PROTO=XXX,
+-DGETPROTOENT_R_PROTO=XXX,
+-DGETSERVENT_R_PROTO=XXX,
+-DGETPWENT_R_PROTO=XXX,
+-DSETGRENT_R_PROTO=XXX,
+-DSETHOSTENT_R_PROTO=XXX,
+-DSETNETENT_R_PROTO=XXX,
+-DSETPROTOENT_R_PROTO=XXX,
+-DSETSERVENT_R_PROTO=XXX,
+-DSETPWENT_R_PROTO=XXX
+</example>
+</flag>
+
+<flag name="r_protos2" class="forbidden" regexp="[-/]D[DS]RAND48_R_PROTO(?:=\S+)?">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DDRAND48_R_PROTO=XXX,
+-DSRAND48_R_PROTO=XXX
+</example>
+</flag>
+
+<flag name="r_protos3" class="forbidden" regexp="[-/]DREADDIR(|64)_R_PROTO(?:=\S+)?">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DREADDIR_R_PROTO=XXX,
+-DREADDIR64_R_PROTO=XXX
+</example>
+</flag>
+
+<flag name="r_protos4" class="forbidden" regexp="[-/]D(|S)RANDOM_R_PROTO(?:=\S+)?">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DRANDOM_R_PROTO=XXX,
+-DSRANDOM_R_PROTO=XXX
+</example>
+</flag>
+
+<flag name="r_protos5" class="forbidden" regexp="[-/]DGET(GRGID|(GR|PW)NAM|(HOST|NET|PROTO|SERV)BY(ADDR|NAME)|LOGIN|PWUID|SPNAM)_R_PROTO(?:=\S+)?">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DGETGRGID_R_PROTO=XXX,
+-DGETGRNAM_R_PROTO=XXX,
+-DGETPWNAM_R_PROTO=XXX,
+-DGETHOSTBYADDR_R_PROTO=XXX,
+-DGETHOSTBYNAME_R_PROTO=XXX,
+-DGETNETBYADDR_R_PROTO=XXX,
+-DGETNETBYNAME_R_PROTO=XXX,
+-DGETPROTOBYADDR_R_PROTO=XXX,
+-DGETPROTOBYNAME_R_PROTO=XXX,
+-DGETSERVBYADDR_R_PROTO=XXX,
+-DGETSERVBYNAME_R_PROTO=XXX,
+-DGETLOGIN_R_PROTO=XXX,
+-DGETPWUID_R_PROTO=XXX,
+-DGETSPNAM_R_PROTO=XXX
+</example>
+</flag>
+
+<flag name="r_protos6" class="forbidden" regexp="[-/]D(C|GM|LOCAL|ASC)TIME_R_PROTO(?:=\S+)?">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DCTIME_R_PROTO=XXX,
+-DGMTIME_R_PROTO=XXX,
+-DLOCALTIME_R_PROTO=XXX,
+-DASCTIME_R_PROTO=XXX
+</example>
+</flag>
+
+<flag name="r_protos7" class="forbidden" regexp="[-/]D(CRYPT|CTERMID|SETLOCALE|STRERROR|TMPNAM|TTYNAME)_R_PROTO(?:=\S+)?">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DCRYPT_R_PROTO=XXX,
+-DCTERMID_R_PROTO=XXX,
+-DSETLOCALE_R_PROTO=XXX,
+-DSTRERROR_R_PROTO=XXX,
+-DTMPNAM_R_PROTO=XXX,
+-DTTYNAME_R_PROTO=XXX
+</example>
+</flag>
+
+<flag name="DCSH" class="forbidden" regexp="[-/]DCSH(?:=\S+)?">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DCSH=XXX
+</example>
+</flag>
+
+<flag name="DCTYPE256" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DCYGWIN_WITH_W32API" class="portability">
+This macro is defined automatically when building under Cygwin with the
+Win32 API.
+</flag>
+
+<flag name="accessor_macro" class="forbidden" regexp="[-/]D(?:AvFILLp|Cop(?:yD|FILE(?:|AV|GV|GV_set|SV|_set)|STASH(?:|PV|PV_set|_eq|_set))|Hv(?:HASKFLAGS|PLACEHOLDERS|SHAREKEYS_off)|CVf_(?:ASSERTION|LVALUE)|boolSV)(?:=\S*)?">
+This macro is a Perl-internal data type accessor; setting it to something
+other than its default is forbidden.
+<example>
+-DAvFILLp=XXX,
+-DCopyD=XXX,
+-DCopFILE=XXX,
+-DCopFILEAV=XXX,
+-DCopFILEGV=XXX,
+-DCopFILEGV_set=XXX,
+-DCopFILESV=XXX,
+-DCopFILE_set=XXX,
+-DCopSTASH=XXX,
+-DCopSTASHPV=XXX,
+-DCopSTASHPV_set=XXX,
+-DCopSTASH_eq=XXX,
+-DCopSTASH_set=XXX,
+-DHvHASKFLAGS=XXX,
+-DHvPLACEHOLDERS=XXX,
+-DHvSHAREKEYS_off=XXX,
+-DCVf_ASSERTION=XXX,
+-DCVf_LVALUE=XXX,
+-DboolSV=XXX
+</example>
+</flag>
+
+<flag name="DDASSERT" class="forbidden">
+Enable assertions in the Storable module.  Use of this flag is forbidden for
+reportable runs.
+</flag>
+
+<flag name="DDBL_DIG" class="portability" regexp="[-/]DDBL_DIG(?:=\d*)?\b">
+This flag is used to indicate the number of significant digits in a double
+precision number.  Normally this would be set by the system's "float.h" or
+"limits.h" header file.
+<example>
+-DDBL_DIG=XXX
+</example>
+</flag>
+
+<flag name="DLDBL_DIG" class="portability" regexp="[-/]DLDBL_DIG(?:=\d*)?\b">
+This flag is used to indicate the number of significant digits in a long
+double.  Normally this would be set by the system's "float.h" or "limits.h"
+header file.
+<example>
+-DLDBL_DIG=XXX
+</example>
+</flag>
+
+<flag name="epsilons" class="forbidden" regexp="[-/]D(?:L?DBL|NV)_EPSILON(?:=\S*)?">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DLDBL_EPSILON=XXX,
+-DDBL_EPSILON=XXX,
+-DNV_EPSILON=XXX
+</example>
+</flag>
+
+<flag name="LDBL_INFINITY" class="portability" regexp="[-/]DLDBL_INFINITY(?i:=[-0-9+efg]*)?\b">
+This flag is used to set the largest value representable in a variable of type
+long double.
+<example>
+-DLDBL_INFINITY=12345
+</example>
+</flag>
+
+<flag name="DBL_INFINITY" class="portability" regexp="[-/]DDBL_INFINITY(?i:=[-0-9+efg]*)?\b">
+This flag is used to set the largest value representable in a variable of type
+double.
+<example>
+-DDBL_INFINITY=12345
+</example>
+</flag>
+
+<flag name="mant_digits" class="forbidden" regexp="[-/]DL?DBL_MANT_DIG(?:=\d*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DLDBL_MANT_DIG=XXX,
+-DDBL_MANT_DIG=XXX
+</example>
+</flag>
+
+<flag name="DDBL_MIN" class="portability" regexp="[-/]DDBL_MIN(?i:=[-0-9+efg]*)?\b">
+This symbol, if defined, contains the minimum value that can be stored in
+a variable of type double.
+<example>
+-DDBL_MIN=12345
+</example>
+</flag>
+
+<flag name="DLDBL_MIN" class="portability" regexp="[-/]DLDBL_MIN(?i:=[-0-9+efg]*)?\b">
+This symbol, if defined, contains the minimum value that can be stored in
+a variable of type long double.
+<example>
+-DLDBL_MIN=12345
+</example>
+</flag>
+
+<flag name="double_max" class="portability" regexp="[-/]D(?:DBL_MAX|HUGE_VAL)(?i:=[-0-9+efgl]*)?\b">
+<example>
+-DDBL_MAX=3.40282347E+38L,
+-DHUGE_VAL=3.40282347E+38L
+</example>
+This symbol, if defined, contains the maximum value that can be stored in
+a variable of type double.
+</flag>
+
+<flag name="DLDBL_MAX" class="portability" regexp="[-/]D(?:LDBL_MAX|HUGE_VALL)(?i:=[-0-9+efgl]*)?\b">
+<example>
+-DLDBL_MAX=1.7976931348623157E+308L,
+-DHUGE_VAL=1.7976931348623157E+308L
+</example>
+This symbol, if defined, contains the maximum value that can be stored in
+a variable of type long double.
+</flag>
+
+<flag name="DDBL_MIN_10_EXP" class="portability" regexp="[-/]DDBL_MIN_10_EXP(?:=\S*)\b">
+This symbol, if defined, contains the smallest power of 10 that can be
+stored in a variable of type double.
+<example>
+-DDBL_MIN_10_EXP=XXX
+</example>
+</flag>
+
+<flag name="DLDBL_MIN_10_EXP" class="portability" regexp="[-/]DLDBL_MIN_10_EXP(?:=\S*)\b">
+This symbol, if defined, contains the smallest power of 10 that can be
+stored in a variable of type long double.
+<example>
+-DLDBL_MIN_10_EXP=XXX
+</example>
+</flag>
+
+<flag name="DDBL_MAX_10_EXP" class="portability" regexp="[-/]DDBL_MAX_10_EXP(?:=\S*)\b">
+This symbol, if defined, contains the largest power of 10 that can be
+stored in a variable of type double.
+<example>
+-DDBL_MAX_10_EXP=XXX
+</example>
+</flag>
+
+<flag name="DLDBL_MAX_10_EXP" class="portability" regexp="[-/]DLDBL_MAX_10_EXP(?:=\S*)\b">
+This symbol, if defined, contains the largest power of 10 that can be
+stored in a variable of type long double.
+<example>
+-DLDBL_MAX_10_EXP=XXX
+</example>
+</flag>
+
+<flag name="NaNs" class="forbidden" regexp="[-/]D(?:L?DBL_)?[QS]?NAN(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DLDBL_QNAN=XXX,
+-DLDBL_SNAN=XXX,
+-DLDBL_NAN=XXX,
+-DDBL_QNAN=XXX,
+-DDBL_SNAN=XXX,
+-DDBL_NAN=XXX,
+-DQNAN=XXX,
+-DSNAN=XXX,
+-DNAN=XXX
+</example>
+</flag>
+
+<flag name="DDEBUGGING" class="forbidden" regexp="[-/]DDEBUGGING(?:=\S*)\b">
+This flag enables various Perl internal debugging features.  Its use is
+prohibited.
+<example>
+-DDEBUGGING=XXX
+</example>
+</flag>
+
+<flag name="DDEBUGGING_COMPILE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEBUGGING_MSTATS" class="forbidden" regexp="[-/]D(?:PERL_)?DEBUGGING_MSTATS\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DPERL_DEBUGGING_MSTATS,
+-DDEBUGGING_MSTATS
+</example>
+</flag>
+
+<flag name="DDEBUGGING_OPS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDEBUGME" class="forbidden">
+Enable debugging and assertions in the Storable module.  Use of this flag
+is forbidden for reportable runs.
+</flag>
+
+<flag name="DDEBUG_LEAKING_SCALARS" class="forbidden">
+Enables debugging output for leaked scalar variables.  Its use will probably
+cause the benchmark to miscompare, and is forbidden.
+</flag>
+
+<flag name="DDEC_OSF1_3_X" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DDEFAULT_BINMODE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="constant_SVs" class="forbidden" regexp="[-/]D(?:ERR|DEF)SV(?:=\S*)\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DERRSV=XXX,
+-DDEFSV=XXX
+</example>
+</flag>
+
+<flag name="DDETACH" class="forbidden" regexp="[-/]DDETACH(?:=\S*)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DDETACH=XXX
+</example>
+</flag>
+
+<flag name="DDGUX" class="portability">
+This flag indicates that the source is being compiled on an system running
+DG/UX.  DG/UX was not a porting target for CPU2006, so it's unlikely
+that this will work.
+</flag>
+
+<flag name="DDIR" class="forbidden" regexp="[-/]DDIR(?:=\S*)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DDIR=XXX
+</example>
+</flag>
+
+<flag name="DDIRSIZ" class="forbidden" regexp="[-/]DDIRSIZ(?:=\S*)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DDIRSIZ=XXX
+</example>
+</flag>
+
+<flag name="DDISABLE_DESTRUCTOR_KLUDGE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDJGPP" class="portability">
+This flag indicates that the source is being compiled on an MS-DOS system
+using the DJGPP development environment.
+This was not a porting target for CPU2006, so it's unlikely that using this
+flag will work.
+</flag>
+
+<flag name="DDOINIT" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDONT_DECLARE_STD" class="portability">
+This flag indicates that the source should not provide prototypes for
+standard functions.
+</flag>
+
+<flag name="DDONT_USE_CRITICAL_SECTION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDOSISH" class="portability">
+This flag indicates that the benchmark is being built on a system that is
+like MS-DOS.
+</flag>
+
+<flag name="DDOSUID" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DDPPP_NAMESPACE" class="forbidden" regexp="[-/]DDPPP_NAMESPACE(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DDPPP_NAMESPACE=XXX
+</example>
+</flag>
+
+<flag name="DDUMPADDR" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DDUMP_FDS" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DDYNAMIC_ENV_FETCH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DDieNull" class="forbidden" regexp="[-/]DDieNull(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DDieNull=XXX
+</example>
+</flag>
+
+<flag name="DDllMain" class="forbidden" regexp="[-/]DDllMain(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DDllMain=XXX
+</example>
+</flag>
+
+<flag name="return_codes" class="forbidden" regexp="[-/]D(?:EINVAL|EACCES|ENOTSOCK)(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DEINVAL=XXX,
+-DEACCES=XXX,
+-DENOTSOCK=XXX
+</example>
+</flag>
+
+<flag name="unused_return_codes" class="forbidden" regexp="[-/]D(?:ECONNABORTED|ECONNRESET|EAFNOSUPPORT)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DECONNABORTED=XXX,
+-DECONNRESET=XXX,
+-DEAFNOSUPPORT=XXX
+</example>
+</flag>
+
+<flag name="DEBCDIC" class="portability">
+This flag indicates that the benchmark is being built on an EBCDIC system.
+Good luck with that.
+</flag>
+
+<flag name="DEBCDIC_NEVER_MIND" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEFF_ONLY_OK" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DEMULATE_ATOMIC_REFCOUNTS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DEMULATE_POLL_WITH_SELECT" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="reentrant_fptr_flags" class="forbidden" regexp="[-/]D(?:(?:END|GET|SET)(?:PW|GR)ENT|GET(?:GR|PW)NAM|GET(?:PWUID|GRGID))_R_HAS_FPTR\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DENDPWENT_R_HAS_FPTR,
+-DENDGRENT_R_HAS_FPTR,
+-DGETPWENT_R_HAS_FPTR,
+-DGETGRENT_R_HAS_FPTR,
+-DSETPWENT_R_HAS_FPTR,
+-DSETGRENT_R_HAS_FPTR,
+-DGETGRNAM_R_HAS_FPTR,
+-DGETPWNAM_R_HAS_FPTR,
+-DGETPWUID_R_HAS_FPTR,
+-DGETGRGID_R_HAS_FPTR
+</example>
+</flag>
+
+<flag name="reentrant_ptr_buffer_flags" class="forbidden" regexp="[-/]DGET(?:(?:GRGID|PROTOBYNUMBER|PWUID|PWGID|SERVBYPORT)|(?:HOST|NET)BYADDR|(?:SERV|PROTO|NET|HOST)BYNAME|(?:HOST|NET|PROTO|SERV|PW|SP|GR)ENT|(?:PW|GR|SP)NAM)_R_HAS_(?:PTR|BUFFER)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DGETGRGID_R_HAS_PTR,
+-DGETGRGID_R_HAS_BUFFER,
+-DGETPROTOBYNUMBER_R_HAS_PTR,
+-DGETPROTOBYNUMBER_R_HAS_BUFFER,
+-DGETPWUID_R_HAS_PTR,
+-DGETPWUID_R_HAS_BUFFER,
+-DGETPWGID_R_HAS_PTR,
+-DGETPWGID_R_HAS_BUFFER,
+-DGETSERVBYPORT_R_HAS_PTR,
+-DGETSERVBYPORT_R_HAS_BUFFER,
+-DGETHOSTBYADDR_R_HAS_PTR,
+-DGETHOSTBYADDR_R_HAS_BUFFER,
+-DGETNETBYADDR_R_HAS_PTR,
+-DGETNETBYADDR_R_HAS_BUFFER,
+-DGETSERVBYNAME_R_HAS_PTR,
+-DGETSERVBYNAME_R_HAS_BUFFER,
+-DGETPROTOBYNAME_R_HAS_PTR,
+-DGETPROTOBYNAME_R_HAS_BUFFER,
+-DGETNETBYNAME_R_HAS_PTR,
+-DGETNETBYNAME_R_HAS_BUFFER,
+-DGETHOSTBYNAME_R_HAS_PTR,
+-DGETHOSTBYNAME_R_HAS_BUFFER,
+-DGETHOSTENT_R_HAS_PTR,
+-DGETHOSTENT_R_HAS_BUFFER,
+-DGETNETENT_R_HAS_PTR,
+-DGETNETENT_R_HAS_BUFFER,
+-DGETPROTOENT_R_HAS_PTR,
+-DGETPROTOENT_R_HAS_BUFFER,
+-DGETSERVENT_R_HAS_PTR,
+-DGETSERVENT_R_HAS_BUFFER,
+-DGETPWENT_R_HAS_PTR,
+-DGETPWENT_R_HAS_BUFFER,
+-DGETSPENT_R_HAS_PTR,
+-DGETSPENT_R_HAS_BUFFER,
+-DGETGRENT_R_HAS_PTR,
+-DGETGRENT_R_HAS_BUFFER,
+-DGETPWNAM_R_HAS_PTR,
+-DGETPWNAM_R_HAS_BUFFER,
+-DGETGRNAM_R_HAS_PTR,
+-DGETGRNAM_R_HAS_BUFFER,
+-DGETSPNAM_R_HAS_PTR,
+-DGETSPNAM_R_HAS_BUFFER
+</example>
+</flag>
+
+<flag name="reentrant_errno_flags" class="forbidden" regexp="[-/]DGET(?:HOST|NET)(?:BYADDR|BYNAME|ENT)_R_HAS_ERRNO\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DGETHOSTBYADDR_R_HAS_ERRNO,
+-DGETHOSTBYNAME_R_HAS_ERRNO,
+-DGETHOSTENT_R_HAS_ERRNO,
+-DGETNETBYADDR_R_HAS_ERRNO,
+-DGETNETBYNAME_R_HAS_ERRNO,
+-DGETNETENT_R_HAS_ERRNO
+</example>
+</flag>
+
+<flag name="DENV_IS_CASELESS" class="portability">
+This flag indicates that environment variable names are not case-sensitive.
+</flag>
+
+<flag name="DEOF" class="portability" regexp="[-/]DEOF(?:=\S*)?\b">
+This flag may be used to set the value returned by stdio functions upon
+encountering an end-of-file condition.
+<example>
+-DEOF=XXX
+</example>
+</flag>
+
+<flag name="DEPOC" class="portability">
+This flag indicates that the benchmark is being built on an EPOC system.
+Good luck with that.
+</flag>
+
+<flag name="DESPIPE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DEXEC_ARGV_CAST" class="portability" regexp="[-/]DEXEC_ARGV_CAST(?:=\S*)?\b">
+If the "argv" argument to exec must be cast to a specific type, this flag may
+be used to do so.
+<example>
+-DEXEC_ARGV_CAST=XXX
+</example>
+</flag>
+
+<flag name="extern_decls" class="forbidden" regexp="[-/]DEXT(?:ERN)?(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DEXTERN=XXX,
+-DEXT=XXX
+</example>
+</flag>
+
+<flag name="DEXTRA_F_IN_SEMUN_BUF" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="fake_things" class="forbidden" regexp="[-/]DFAKE_(?:THREADS|(?:PERSISTENT|DEFAULT)_SIGNAL_HANDLERS)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DFAKE_THREADS,
+-DFAKE_PERSISTENT_SIGNAL_HANDLERS,
+-DFAKE_DEFAULT_SIGNAL_HANDLERS
+</example>
+</flag>
+
+<flag name="boolean_values" class="forbidden" regexp="[-/]D(?:FALSE|TRUE)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DFALSE=XXX,
+-DTRUE=XXX
+</example>
+</flag>
+
+<flag name="DFCNTL_CAN_LOCK" class="portability">
+This flag should be used if the fcntl() function should be used for file
+locking.
+</flag>
+
+<flag name="locking_constants" class="forbidden" regexp="[-/]D(?:FCNTL|LOCKF)_EMULATE_FLOCK\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DFCNTL_EMULATE_FLOCK,
+-DLOCKF_EMULATE_FLOCK
+</example>
+</flag>
+
+<flag name="DFCRYPT" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="reentr_functions" class="forbidden" regexp="[-/]DHAS_(?:CRYPT|CTERMID|[DS]DRAND48|(?:GET|SET|END)(?:GR|HOST|NET|PROTO|PW|SERV)ENT|GET(?:GR(?:GID|NAM)|(?:HOST|NET)BY(?:NAME|ADDR)|LOGIN|PROTOBY(?:NAME|NUMBER)|PW(?:NAM|UID)|SERVBY(?:NAME|PORT)|SPNAM)|(?:C|ASC|LOCAL|GM)TIME|S?RANDOM|READDIR(?:64)?|SETLOCALE|STRERROR|TMPNAM|TTYNAME)_R\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAS_CRYPT_R,
+-DHAS_CTERMID_R,
+-DHAS_DDRAND48_R,
+-DHAS_SDRAND48_R,
+-DHAS_GETGRENT_R,
+-DHAS_GETHOSTENT_R,
+-DHAS_GETNETENT_R,
+-DHAS_GETPROTOENT_R,
+-DHAS_GETPWENT_R,
+-DHAS_GETSERVENT_R,
+-DHAS_SETGRENT_R,
+-DHAS_SETHOSTENT_R,
+-DHAS_SETNETENT_R,
+-DHAS_SETPROTOENT_R,
+-DHAS_SETPWENT_R,
+-DHAS_SETSERVENT_R,
+-DHAS_ENDGRENT_R,
+-DHAS_ENDHOSTENT_R,
+-DHAS_ENDNETENT_R,
+-DHAS_ENDPROTOENT_R,
+-DHAS_ENDPWENT_R,
+-DHAS_ENDSERVENT_R,
+-DHAS_GETGRGID_R,
+-DHAS_GETGRNAM_R,
+-DHAS_GETHOSTBYNAME_R,
+-DHAS_GETHOSTBYADDR_R,
+-DHAS_GETNETBYNAME_R,
+-DHAS_GETNETBYADDR_R,
+-DHAS_GETLOGIN_R,
+-DHAS_GETPROTOBYNAME_R,
+-DHAS_GETPROTOBYNUMBER_R,
+-DHAS_GETPWNAM_R,
+-DHAS_GETPWUID_R,
+-DHAS_GETSERVBYNAME_R,
+-DHAS_GETSERVBYPORT_R,
+-DHAS_GETSPNAM_R,
+-DHAS_CTIME_R,
+-DHAS_ASCTIME_R,
+-DHAS_LOCALTIME_R,
+-DHAS_GMTIME_R,
+-DHAS_SRANDOM_R,
+-DHAS_RANDOM_R,
+-DHAS_READDIR64_R,
+-DHAS_READDIR_R,
+-DHAS_SETLOCALE_R,
+-DHAS_STRERROR_R,
+-DHAS_TMPNAM_R,
+-DHAS_TTYNAME_R
+</example>
+</flag>
+
+<flag name="DFD_CLOEXEC" class="portability" regexp="[-/]DFD_CLOEXEC=[01]">
+If the close-on-exec flag must or must not be set for open file descriptors
+before exec()ing, this flag may be used.
+<example>
+-DFD_CLOEXEC=0,
+-DFD_CLOEXEC=1
+</example>
+</flag>
+
+<flag name="DFD_ON_NOSUID_CHECK_OKAY" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFFLUSH_ALL" class="portability">
+This flag says that to flush all pending stdio output one must loop through
+all the stdio file handles and fflush them individually.  This flag is
+ignored if FFLUSH_NULL is defined.
+</flag>
+
+<flag name="DFILE" class="forbidden" regexp="[-/]DFILE(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DFILE=XXX
+</example>
+</flag>
+
+<flag name="DFILE_SHARE_DELETE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DFILE_base" class="portability" regexp="[-/]DFILE_base(?:=\S*)\b">
+This macro is used to access the _base field (or equivalent) of the FILE
+structure which is its argument.  USE_STDIO_PTR must be defined for this to
+have any effect.
+<example>
+-DFILE_base=XXX
+</example>
+</flag>
+
+<flag name="DFILE_bufsiz" class="portability" regexp="[-/]DFILE_bufsiz(?:=\S*)\b">
+This macro is used to determine the number of bytes in the I/O buffer pointed
+to by the _base field (or equivalent) of the FILE structure which is its
+argument.  USE_STDIO_PTR must be defined for this to have any effect.
+<example>
+-DFILE_bufsiz=XXX
+</example>
+</flag>
+
+<flag name="DFILE_cnt" class="portability" regexp="[-/]DFILE_cnt(?:=\S*)\b">
+This macro is used to access the _cnt field (or equivalent) of the FILE
+structure which is its argument.  USE_STDIO_PTR must be defined for this to
+have any effect.
+<example>
+-DFILE_cnt=XXX
+</example>
+</flag>
+
+<flag name="DFILE_ptr" class="portability" regexp="[-/]DFILE_ptr(?:=\S*)\b">
+This macro is used to access the _ptr field (or equivalent) of the FILE
+structure which is its argument.  USE_STDIO_PTR must be defined for this to
+have any effect.
+<example>
+-DFILE_ptr=XXX
+</example>
+</flag>
+
+<flag name="DFIXCMD" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DFIXNEGATIVEZERO" class="portability">
+This flag will cause a number which would stringify as "-0" to be returned as
+simply "0".
+</flag>
+
+<flag name="DFLOCK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="unsettables" class="forbidden" regexp="[-/]D(?:FORMAT|SPACE)(?:=\S*)?\b">
+Attempting to setting this macro to a value other than its default is forbidden.
+<example>
+-DFORMAT=XXX,
+-DSPACE=XXX
+</example>
+</flag>
+
+<flag name="DFPUTS_BOTCH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="unused_fp_values" class="forbidden" regexp="[-/]DFP_(?:INFINITE|(?:POS|PLUS|NEG|MINUS)_(?:DENORM|INF|NORM|ZERO)|[QS]?NAN[SQ]?|(?:SUB)?NORMAL|[NP](?:DE)?NORM|[NP]?(?:INF|ZERO))(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DFP_INFINITE=XXX,
+-DFP_POS_DENORM=XXX,
+-DFP_POS_INF=XXX,
+-DFP_POS_NORM=XXX,
+-DFP_POS_ZERO=XXX,
+-DFP_PLUS_DENORM=XXX,
+-DFP_PLUS_INF=XXX,
+-DFP_PLUS_NORM=XXX,
+-DFP_PLUS_ZERO=XXX,
+-DFP_NEG_DENORM=XXX,
+-DFP_NEG_INF=XXX,
+-DFP_NEG_NORM=XXX,
+-DFP_NEG_ZERO=XXX,
+-DFP_MINUS_DENORM=XXX,
+-DFP_MINUS_INF=XXX,
+-DFP_MINUS_NORM=XXX,
+-DFP_MINUS_ZERO=XXX,
+-DFP_QNANS=XXX,
+-DFP_QNANQ=XXX,
+-DFP_QNAN=XXX,
+-DFP_SNANS=XXX,
+-DFP_SNANQ=XXX,
+-DFP_SNAN=XXX,
+-DFP_NANS=XXX,
+-DFP_NANQ=XXX,
+-DFP_NAN=XXX,
+-DFP_SUBNORMAL=XXX,
+-DFP_NORMAL=XXX,
+-DFP_NDENORM=XXX,
+-DFP_NNORM=XXX,
+-DFP_PDENORM=XXX,
+-DFP_PNORM=XXX,
+-DFP_NINF=XXX,
+-DFP_NZERO=XXX,
+-DFP_PINF=XXX,
+-DFP_PZERO=XXX,
+-DFP_INF=XXX,
+-DFP_ZERO=XXX
+</example>
+</flag>
+
+<flag name="DFREE_THREAD_KEY" class="forbidden" regexp="[-/]DFREE_THREAD_KEY(?:=\S*)?\n">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DFREE_THREAD_KEY=XXXn
+</example>
+</flag>
+
+<flag name="DFSEEKSIZE" class="portability" regexp="[-/]DFSEEKSIZE=\d+\b">
+This flag can be used to specify the size of the return value of fseek() (or
+fseeko()) in bytes.
+<example>
+-DFSEEKSIZE=XXX
+</example>
+</flag>
+
+<flag name="DFTELL_FOR_PIPE_IS_BROKEN" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DStrerror" class="portability" regexp="[-/]DStrerror(?:=\S*)?\b">
+<example>
+-DStrerror=XXX
+</example>
+This flag may be used to specify the name of the function that performs the
+equivalent of strerror(), if strerror() is not available on your system.
+</flag>
+
+<flag name="DStrtol" class="portability" regexp="[-/]DStrtol(?:=\S*)?\b">
+<example>
+-DStrtol=XXX
+</example>
+This flag may be used to specify the name of the function that performs the
+equivalent of strtol(), if strtol() is not available on your system.
+</flag>
+
+<flag name="DStrtoul" class="portability" regexp="[-/]DStrtoul(?:=\S*)?\b">
+<example>
+-DStrtoul=XXX
+</example>
+This flag may be used to specify the name of the function that performs the
+equivalent of strtoul(), if strtoul() is not available on your system.
+</flag>
+
+<flag name="DFflush" class="portability" regexp="[-/]DFflush=\S+\b">
+This flag may be used to specify the name of the function that performs the
+equivalent of fflush(), if fflush() is not available on your system.
+<example>
+-DFflush=XXX
+</example>
+</flag>
+
+<flag name="DFpos_t" class="portability" regexp="[-/]DFpos_t=\S+\b">
+This flag can be used to set the type used to declare file positions.
+<example>
+-DFpos_t=XXX
+</example>
+</flag>
+
+<flag name="DFree_t" class="portability" regexp="[-/]DFree_t=\S+\b">
+This flag can be used to set the return type of free().
+<example>
+-DFree_t=XXX
+</example>
+</flag>
+
+<flag name="DFstat" class="portability" regexp="[-/]DFstat=\S+\b">
+This flag can be used to define the equivalent of the fstat() function.
+<example>
+-DFstat=XXX
+</example>
+</flag>
+
+<flag name="DGROK_NUMERIC_RADIX" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DGRPASSWD" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DGV_UNIQUE_CHECK" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="warning_macros" class="forbidden" regexp="[-/](?:DG_WARN_(?:ALL_)?(?:OFF|ON|ONCE|MASK)|pWARN_(?:STD|ALL|NONE)|specialWARN)(?:=\S*)?\b">
+Attempting to change the value of this macro is not allowed.
+<example>
+-DG_WARN_ALL_OFF=XXX,
+-DG_WARN_ALL_ON=XXX,
+-DG_WARN_ALL_ONCE=XXX,
+-DG_WARN_ALL_MASK=XXX,
+-DG_WARN_OFF=XXX,
+-DG_WARN_ON=XXX,
+-DG_WARN_ONCE=XXX,
+-DG_WARN_MASK=XXX,
+-pWARN_STD=XXX,
+-pWARN_ALL=XXX,
+-pWARN_NONE=XXX,
+-specialWARN=XXX
+</example>
+</flag>
+
+<flag name="DGid_t" class="portability" regexp="[-/]DGid_t=\S+\b">
+This macro holds the return type of getgid() and the type of the argument to
+setrgid() and related functions.
+<example>
+-DGid_t=XXX
+</example>
+</flag>
+
+<flag name="DGid_t_size" class="portability" regexp="[-/]DGid_t_size=\d+\b">
+Use this flag to set the size of Gid_t in bytes.
+<example>
+-DGid_t_size=XXX
+</example>
+</flag>
+
+<flag name="DGpREFCNT_inc" class="forbidden" regexp="[-/]DGpREFCNT_inc(?:=\S*)\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DGpREFCNT_inc=XXX
+</example>
+</flag>
+
+<flag name="DHAS_64K_LIMIT" class="portability">
+This flag should be used on systems which impose a 64KB per-allocation limit.
+</flag>
+
+<flag name="DHAS_ACCESS" class="portability">
+This flag lets the benchmark know that the access() system call is available
+to check for accessibility using real UID/GID.
+</flag>
+
+<flag name="DHAS_ACCESSX" class="portability">
+This flag lets the benchmark know that the accessx() call is available
+to do extended access checks.
+</flag>
+
+<flag name="DHAS_AINTL" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DHAS_ALARM" class="portability">
+This flag lets the benchmark know that the alarm() routine is available.
+</flag>
+
+<flag name="DHAS_ATOLL" class="portability">
+This flag lets the benchmark know that the atoll() routine is available to
+convert strings into long longs.
+</flag>
+
+<flag name="DHAS_BCMP" class="portability">
+This flag lets the benchmark know that the bcmp() routine is available to
+compare blocks of memory.
+</flag>
+
+<flag name="DHAS_BCOPY" class="portability">
+This flag lets the benchmark know that the bcopy() routine is available to
+copy blocks of memory.
+</flag>
+
+<flag name="DHAS_BOOL" class="portability">
+This flag indicates that a bool type is available.
+</flag>
+
+<flag name="DHAS_BZERO" class="portability">
+This flag lets the benchmark know that the bzero() routine is available to
+set a block of memory to 0.
+</flag>
+
+<flag name="DHAS_CHSIZE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAS_CLASS" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DHAS_COPYSIGNL" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="has_protos" class="portability" regexp="[-/]DHAS_(DRAND48|FLOCK|GET(?:ENV|HOST|NET|PROTO|SERV)|LSEEK|MODFL|REALLOC|SETRES[UG]ID|SHMAT|SOCKATMARK|SYSCALL|TELLDIR|USLEEP)_PROTO(?:S|TYPE)?\b">
+<ex_replacement>a function (like drand48(), flock(), etc; there are a large number of such functions)</ex_replacement>
+This flag is used to indicate that a prototype for $1 (this should be in
+lower-case) is available.
+<example>
+-DHAS_DRAND48_PROTOS,
+-DHAS_DRAND48_PROTOTYPE,
+-DHAS_DRAND48_PROTO,
+-DHAS_FLOCK_PROTOS,
+-DHAS_FLOCK_PROTOTYPE,
+-DHAS_FLOCK_PROTO,
+-DHAS_GETENV_PROTOS,
+-DHAS_GETENV_PROTOTYPE,
+-DHAS_GETENV_PROTO,
+-DHAS_GETHOST_PROTOS,
+-DHAS_GETHOST_PROTOTYPE,
+-DHAS_GETHOST_PROTO,
+-DHAS_GETNET_PROTOS,
+-DHAS_GETNET_PROTOTYPE,
+-DHAS_GETNET_PROTO,
+-DHAS_GETPROTO_PROTOS,
+-DHAS_GETPROTO_PROTOTYPE,
+-DHAS_GETPROTO_PROTO,
+-DHAS_GETSERV_PROTOS,
+-DHAS_GETSERV_PROTOTYPE,
+-DHAS_GETSERV_PROTO,
+-DHAS_LSEEK_PROTOS,
+-DHAS_LSEEK_PROTOTYPE,
+-DHAS_LSEEK_PROTO,
+-DHAS_MODFL_PROTOS,
+-DHAS_MODFL_PROTOTYPE,
+-DHAS_MODFL_PROTO,
+-DHAS_REALLOC_PROTOS,
+-DHAS_REALLOC_PROTOTYPE,
+-DHAS_REALLOC_PROTO,
+-DHAS_SETRESUID_PROTOS,
+-DHAS_SETRESUID_PROTOTYPE,
+-DHAS_SETRESUID_PROTO,
+-DHAS_SETRESGID_PROTOS,
+-DHAS_SETRESGID_PROTOTYPE,
+-DHAS_SETRESGID_PROTO,
+-DHAS_SHMAT_PROTOS,
+-DHAS_SHMAT_PROTOTYPE,
+-DHAS_SHMAT_PROTO,
+-DHAS_SOCKATMARK_PROTOS,
+-DHAS_SOCKATMARK_PROTOTYPE,
+-DHAS_SOCKATMARK_PROTO,
+-DHAS_SYSCALL_PROTOS,
+-DHAS_SYSCALL_PROTOTYPE,
+-DHAS_SYSCALL_PROTO,
+-DHAS_TELLDIR_PROTOS,
+-DHAS_TELLDIR_PROTOTYPE,
+-DHAS_TELLDIR_PROTO,
+-DHAS_USLEEP_PROTOS,
+-DHAS_USLEEP_PROTOTYPE,
+-DHAS_USLEEP_PROTO
+</example>
+</flag>
+
+<flag name="DHAS_EACCESS" class="portability">
+This flag lets the benchmark know that the eaccess() call is available
+to do extended access checks.
+</flag>
+
+<flag name="DHAS_ENVGETENV" class="forbidden">
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="fast_stdio" class="forbidden" regexp="[-/]D(?:HAS|USE)_FAST_STDIO\b">
+<example>
+-DHAS_FAST_STDIO,
+-DUSE_FAST_STDIO
+</example>
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DHAS_FLOATINGPOINT_H" class="portability">
+This flag indicates that the "floatingpoint.h" header file is available.
+</flag>
+
+<flag name="stdio64_types" class="forbidden" regexp="[-/]DHAS_(?:FPOS|OFF)64_T\b">
+<example>
+-DHAS_FPOS64_T,
+-DHAS_OFF64_T
+</example>
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DHAS_GETENV_LEN" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAS_GNULIBC" class="forbidden">
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DHAS_GROUP" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAS_PASSWD" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAS_HASH_KEY_FLAGS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAS_LDBL_SPRINTF_BUG" class="portability">
+This enables code that tries to deal with a bug with Irix/NonStop-UX/PowerUX
+when calling sprintf with a long double argument.
+</flag>
+
+<flag name="DHAS_LDBL_SPRINTF_BUG_LESS1" class="portability">
+This flag should be used when the long double sprintf bug affects only values
+between -1L and 1L.  It has no effect unless HAS_LDBL_SPRINTF_BUG is also
+set.
+</flag>
+
+<flag name="DHAS_PROCSELFEXE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAS_RESTRICTED_HASHES" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="pthread_funcs" class="forbidden" regexp="[-/]D(?:NEED_PTHREAD_INIT|OLD_PTHREAD(?:S_API|_CREATE_JOINABLE)|PTHREAD_(?:ATFORK|ATTR_SETDETACHSTATE|CREATE(?:_JOINABLE)?|H_FIRST)|HAS_PTHREAD_(?:ATFORK|YIELD|UNCHECKED_GETSPECIFIC_NP)|HAS_SCHED_YIELD|(?:SET_)?THR|SCHED_YIELD|YIELD)(?:=\S*)?\b">
+<example>
+-DNEED_PTHREAD_INIT,
+-DOLD_PTHREADS_API,
+-DOLD_PTHREAD_CREATE_JOINABLE,
+-DPTHREAD_ATFORK,
+-DPTHREAD_ATTR_SETDETACHSTATE,
+-DPTHREAD_CREATE_JOINABLE,
+-DPTHREAD_CREATE,
+-DPTHREAD_H_FIRST,
+-DHAS_PTHREAD_ATFORK,
+-DHAS_PTHREAD_YIELD,
+-DHAS_PTHREAD_UNCHECKED_GETSPECIFIC_NP,
+-DHAS_SCHED_YIELD,
+-DSCHED_YIELD=XXX,
+-DYIELD=XXX,
+-DSET_THR,
+-DTHR
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DHAS_SAFE_BCOPY" class="portability">
+This flag indicates that bcopy() can copy overlapping blocks of memory.
+Normally memcpy() should be used.
+</flag>
+
+<flag name="DHAS_SAFE_MEMCPY" class="portability">
+This flag indicates that memcpy() can copy overlapping blocks of memory.
+</flag>
+
+<flag name="DHAS_SCALBNL" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DHAS_SEM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAS_UNION_SEMUN" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+
+<flag name="DHAS_SHM" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DHAS_STDIO_STREAM_ARRAY" class="forbidden">
+This flag tells that there is an array holding the stdio streams.  It is
+always enabled.
+</flag>
+
+<flag name="statfs_structs" class="forbidden" regexp="[-/]DHAS_STRUCT_(?:STATFS(?:_F_FLAGS)?|FS_DATA)\b">
+<example>
+-DHAS_STRUCT_FS_DATA,
+-DHAS_STRUCT_STATFS,
+-DHAS_STRUCT_STATFS_F_FLAGS
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DHAS_SYS_ERRLIST" class="forbidden">
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="tm_struct_members" class="forbidden" regexp="[-/]DHAS_TM_TM_(?:GMTOFF|ZONE)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAS_TM_TM_GMTOFF,
+-DHAS_TM_TM_ZONE
+</example>
+</flag>
+
+<flag name="utf8_stuff" class="forbidden" regexp="[-/]DHAS_UTF8_(?:ALL|HASHES|SCALARS)\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DHAS_UTF8_ALL,
+-DHAS_UTF8_HASHES,
+-DHAS_UTF8_SCALARS
+</example>
+</flag>
+
+<flag name="DHAS_W32API_WINDOWS_H" class="portability">
+<include flag="DCYGWIN_WITH_W32API" />
+This macro should be set to indicate the presence of "w32api/windows.h"
+under Cygwin on Windows.
+</flag>
+
+<flag name="DHAS_WAITPID_RUNTIME" class="portability">
+This flag indicates that the benchmark code should emulate the behavior
+of waitpid.
+</flag>
+
+<flag name="pw_gr_funcs" class="forbidden" regexp="[-/]DHAS_(?:(?:GET|SET|END)(?:GR|PW)ENT|[GS]ETGROUPS)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAS_GETGRENT,
+-DHAS_GETPWENT,
+-DHAS_SETGRENT,
+-DHAS_SETPWENT,
+-DHAS_ENDGRENT,
+-DHAS_ENDPWENT,
+-DHAS_GETGROUPS,
+-DHAS_SETGROUPS
+</example>
+</flag>
+
+<flag name="netinfo_funcs" class="forbidden" regexp="[-/]DHAS_(?:(?:GET|SET|END)(?:HOST|NET|PROTO|SERV)ENT|GET(?:HOST|NET)BY(?:ADDR|NAME)|GETPROTOBY(?:NAME|NUMBER)|GETSERVBY(?:NAME|PORT)|GETSPNAM|SOCK(?:ATMARK|ET|ETPAIR|S5_INIT))\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAS_GETHOSTENT,
+-DHAS_GETNETENT,
+-DHAS_GETPROTOENT,
+-DHAS_GETSERVENT,
+-DHAS_SETHOSTENT,
+-DHAS_SETNETENT,
+-DHAS_SETPROTOENT,
+-DHAS_SETSERVENT,
+-DHAS_ENDHOSTENT,
+-DHAS_ENDNETENT,
+-DHAS_ENDPROTOENT,
+-DHAS_ENDSERVENT,
+-DHAS_GETHOSTBYADDR,
+-DHAS_GETHOSTBYNAME,
+-DHAS_GETNETBYADDR,
+-DHAS_GETNETBYNAME,
+-DHAS_GETPROTOBYNAME,
+-DHAS_GETPROTOBYNUMBER,
+-DHAS_GETSERVBYNAME,
+-DHAS_GETSERVBYPORT,
+-DHAS_GETSPNAM,
+-DHAS_SOCKATMARK,
+-DHAS_SOCKET,
+-DHAS_SOCKETPAIR,
+-DHAS_SOCKS5_INIT
+</example>
+</flag>
+
+<flag name="stat_funcs" class="forbidden" regexp="[-/]DHAS_(?:MNT(?:ENT)?|FSTAT(?:FS|VFS)?|HASMNTOPT|USTAT)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAS_MNTENT,
+-DHAS_MNT,
+-DHAS_FSTATFS,
+-DHAS_FSTATVFS,
+-DHAS_FSTAT,
+-DHAS_HASMNTOPT,
+-DHAS_USTAT
+</example>
+</flag>
+
+<flag name="endian_conversion" class="portability" regexp="[-/]DHAS_([HVN]TO[NVH][LS])\b">
+<ex_replacement>a function (like htonl(), ntohs(), etc; there are a large number of such functions)</ex_replacement>
+This flag is used to indicate that the $1 (this should be in
+lower-case) routine is available.
+<example>
+-DHAS_HTONL,
+-DHAS_HTONS,
+-DHAS_HTOVL,
+-DHAS_HTOVS,
+-DHAS_HTOHL,
+-DHAS_HTOHS,
+-DHAS_VTONL,
+-DHAS_VTONS,
+-DHAS_VTOVL,
+-DHAS_VTOVS,
+-DHAS_VTOHL,
+-DHAS_VTOHS,
+-DHAS_NTONL,
+-DHAS_NTONS,
+-DHAS_NTOVL,
+-DHAS_NTOVS,
+-DHAS_NTOHL,
+-DHAS_NTOHS
+</example>
+</flag>
+
+<flag name="DHAS_FCHOWN" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="file_info_ops" class="portability" regexp="[-/]DHAS_(FCHDIR|FCHMOD|F[SG]ETPOS|FSEEKO|FTELLO|GETCWD)\b">
+<ex_replacement>a function (like fchdir(), fgetpos(), etc; there are a large number of such functions)</ex_replacement>
+This flag is used to indicate that the $1 (this should be in
+lower-case) routine is available.
+<example>
+-DHAS_FCHDIR,
+-DHAS_FCHMOD,
+-DHAS_FSETPOS,
+-DHAS_FGETPOS,
+-DHAS_FSEEKO,
+-DHAS_FTELLO,
+-DHAS_GETCWD
+</example>
+</flag>
+
+<flag name="fp_ops" class="forbidden" regexp="[-/]DHAS_(?:FINITE|FINITEL|FPCLASS|FPCLASSIFY|FPCLASSL|FPSETMASK|FP_CLASS|FREXPL|ISFINITE|ISINF|ISNANL|MODFL|SQRTL|UNORDERED)\b">
+<example>
+-DHAS_FINITE,
+-DHAS_FINITEL,
+-DHAS_FPCLASS,
+-DHAS_FPCLASSIFY,
+-DHAS_FPCLASSL,
+-DHAS_FPSETMASK,
+-DHAS_FP_CLASS,
+-DHAS_FREXPL,
+-DHAS_ISFINITE,
+-DHAS_ISINF,
+-DHAS_ISNANL,
+-DHAS_MODFL,
+-DHAS_SQRTL,
+-DHAS_UNORDERED
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="file_locking_etc" class="forbidden" regexp="[-/]DHAS_(?:FLOCK|FSYNC|LOCKF)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAS_FLOCK,
+-DHAS_FSYNC,
+-DHAS_LOCKF
+</example>
+</flag>
+
+<flag name="dir_reading_funcs" class="forbidden" regexp="[-/]DHAS_(?:READ|REWIND|SEEK|TELL)DIR\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAS_READDIR,
+-DHAS_REWINDDIR,
+-DHAS_SEEKDIR,
+-DHAS_TELLDIR
+</example>
+</flag>
+
+<flag name="proc_grp_funcs" class="forbidden" regexp="[-/]DHAS_(?:[GS]ET(?:PGID|PGRP2?|PRIORITY)|GETPPID)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAS_GETPGID,
+-DHAS_GETPGRP2,
+-DHAS_GETPGRP,
+-DHAS_GETPRIORITY,
+-DHAS_SETPGID,
+-DHAS_SETPGRP2,
+-DHAS_SETPGRP,
+-DHAS_SETPRIORITY,
+-DHAS_GETPPID
+</example>
+</flag>
+
+<flag name="setid_funcs" class="forbidden" regexp="[-/]DHAS_SET(?:E|RE|RES|R)[GU]ID\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAS_SETEGID,
+-DHAS_SETEUID,
+-DHAS_SETREGID,
+-DHAS_SETREUID,
+-DHAS_SETRESGID,
+-DHAS_SETRESUID,
+-DHAS_SETRGID,
+-DHAS_SETRUID
+</example>
+</flag>
+
+<flag name="string_funcs" class="portability" regexp="[-/]DHAS_(STR(?:ERROR|FTIME|LCAT|LCPY|TOLL|TOQ|TOUL|TOULL|TOUQ)|INDEX)\b">
+<ex_replacement>a function (like strerror(), strftime(), etc; there are a large number of such functions)</ex_replacement>
+This flag is used to indicate that the $1 (this should be in
+lower-case) routine is available.
+<example>
+-DHAS_STRERROR,
+-DHAS_STRFTIME,
+-DHAS_STRLCAT,
+-DHAS_STRLCPY,
+-DHAS_STRTOLL,
+-DHAS_STRTOQ,
+-DHAS_STRTOUL,
+-DHAS_STRTOULL,
+-DHAS_STRTOUQ,
+-DHAS_INDEX
+</example>
+</flag>
+
+<flag name="time_funcs" class="forbidden" regexp="[-/]DHAS_(?:[SG]ETITIMER|UALARM|USLEEP|TIMES|MKTIME|UTIME)\b">
+<example>
+-DHAS_SETITIMER,
+-DHAS_GETITIMER,
+-DHAS_UALARM,
+-DHAS_USLEEP,
+-DHAS_TIMES,
+-DHAS_MKTIME,
+-DHAS_UTIME
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="unused_stuff" class="forbidden" regexp="[-/]DHAS_(?:UMASK|SETVBUF|GETLOGIN|GETPAGESIZE|ILOGBL|ISASCII)\b">
+<example>
+-DHAS_UMASK,
+-DHAS_SETVBUF,
+-DHAS_GETLOGIN,
+-DHAS_GETPAGESIZE,
+-DHAS_ILOGBL,
+-DHAS_ISASCII
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="has_signal_stuff" class="forbidden" regexp="[-/]DHAS_(?:KILL|KILL(?:PG)?|SIGACTION|SIGPROCMASK)\b">
+<example>
+-DHAS_KILL,
+-DHAS_KILLPG,
+-DHAS_SIGACTION,
+-DHAS_SIGPROCMASK
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="more_unused_stuff" class="forbidden" regexp="[-/]DHAS_(?:LINK|PIPE|READLINK|LSTAT|RENAME|MKDIR|MKSTEMP|MMAP|PAUSE|POLL|SETLINEBUF|SETPROCTITLE|SYMLINK|SYSCALL|SYSCONF|UNAME|WAIT4|_FWALK)\b">
+<example>
+-DHAS_LINK,
+-DHAS_PIPE,
+-DHAS_READLINK,
+-DHAS_LSTAT,
+-DHAS_RENAME,
+-DHAS_MKDIR,
+-DHAS_MKSTEMP,
+-DHAS_MMAP,
+-DHAS_PAUSE,
+-DHAS_POLL,
+-DHAS_SETLINEBUF,
+-DHAS_SETPROCTITLE,
+-DHAS_SYMLINK,
+-DHAS_SYSCALL,
+-DHAS_SYSCONF,
+-DHAS_UNAME,
+-DHAS_WAIT4,
+-DHAS__FWALK
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="locale_stuff" class="portability" regexp="[-/]DHAS_(LOCALECONV|MSG|NL_LANGINFO|SETLOCALE)\b">
+<example>
+-DHAS_LOCALECONV,
+-DHAS_MSG,
+-DHAS_NL_LANGINFO,
+-DHAS_SETLOCALE
+</example>
+<ex_replacement>a function (like localeconv(), msg(), etc; there are a large number of such functions)</ex_replacement>
+This flag is used to indicate that the $1 (this should be in
+lower-case) routine is available.
+</flag>
+
+<flag name="DHAVE_DES_FCRYPT" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="threadvar_stuff" class="forbidden" regexp="[-/]DHAVE_(?:INTERP|THREAD)_INTERN\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DHAVE_INTERP_INTERN,
+-DHAVE_THREAD_INTERN
+</example>
+</flag>
+
+<flag name="DHOST_NOT_FOUND" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DHV_ITERNEXT_WANTPLACEHOLDERS" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="HZ" class="portability" regexp="[-/]DHZ=\d+\b">
+<example>
+-DHZ=100
+</example>
+Contains the number of clock ticks in one second.  It should be set by a system
+header file, but in case it's not, you can set it with this flag.
+</flag>
+
+<flag name="header_guard" class="forbidden" regexp="[-/]D(?:H_PERL|_INC_PERL_XSUB_H|__Inc__IPerl___|__PATCHLEVEL_H_INCLUDED__|__perlapi_h__|___PerlHost_H___|_PERLIOL?_H|POLL_H|_P_P_PORTABILITY_H_|REENTR(?:INC|_H)|_config_h_|___VDir_H___|___VMEM_H_INC___|_INC_WIN32_PERL5|WIN32IOP_H|_WIN32THREAD_H|_INC_(?:DIRENT|NETDB|SYS_SOCKET))\b">
+<example>
+-DH_PERL,
+-D_INC_PERL_XSUB_H,
+-D__Inc__IPerl___,
+-D__PATCHLEVEL_H_INCLUDED__,
+-D__perlapi_h__,
+-D___PerlHost_H___,
+-D_PERLIO_H,
+-D_PERLIOL_H,
+-DPOLL_H,
+-D_P_P_PORTABILITY_H_,
+-DREENTR_H,
+-DREENTRINC,
+-D_config_h_,
+-D___VDir_H___,
+-D___VMEM_H_INC___,
+-D_INC_WIN32_PERL5,
+-DWIN32IOP_H,
+-D_WIN32THREAD_H,
+-D_INC_DIRENT,
+-D_INC_NETDB,
+-D_INC_SYS_SOCKET
+</example>
+These macros are used to prevent multiple header inclusion; setting them
+explicitly is forbidden.
+</flag>
+
+<flag name="DHeKUTF8" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="i286_macros" class="forbidden" regexp="[-/]D(?:iAPX286|M_I286|I286)\b">
+<example>
+-DiAPX286,
+-DM_I286,
+-DI80286
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DIAMSUID" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DINCLUDE_PROTOTYPES" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DINCOMPLETE_TAINTS" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DINIT_THREADS" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="intX_max" class="portability" regexp="[-/]DINT(16|32|64)_MAX=[0-9Ll]+\b">
+<example>
+-DINT16_MAX=32767,
+-DINT32_MAX=2147483647,
+-DINT64_MAX=9223372036854775807
+</example>
+<ex_replacement>16 (or 32 or 64) </ex_replacement>
+This flag can be used to set the largest positive number that can fit in an
+$1-bit integer.  Its value is not used in all cases.
+</flag>
+
+<flag name="intX_min" class="portability" regexp="[-/]DINT(16|32|64)_MIN=[-0-9Ll]+\b">
+<example>
+-DINT16_MIN=-32768,
+-DINT32_MIN=-2147483648,
+-DINT64_MIN=-9223372036854775808
+</example>
+<ex_replacement>16 (or 32 or 64) </ex_replacement>
+This flag can be used to set the smallest negative number that can fit in an
+$1-bit integer.  Its value is not used in all cases.
+</flag>
+
+<flag name="uintX_max" class="portability" regexp="[-/]DUINT(8|16|32|64)_MAX=[0-9Ll]+\b">
+<example>
+-DUINT8_MAX=256,
+-DUINT16_MAX=65536,
+-DUINT32_MAX=4294967296,
+-DUINT64_MAX=18446744073709551616LL
+</example>
+<ex_replacement>8 (or 16 or 32 or 64) </ex_replacement>
+This flag can be used to set the largest positive number that can fit in an
+unsigned $1-bit integer.  Its value is not used in all cases.
+</flag>
+
+<flag name="uintX_min" class="portability" regexp="[-/]DUINT(32|64)_MIN=[-0-9Ll]+\b">
+<example>
+-DUINT32_MIN=0,
+-DUINT64_MIN=0
+</example>
+<ex_replacement>32 (or 64) </ex_replacement>
+This flag can be used to set the smallest number that can fit in an
+unsigned $1-bit integer.  Its value is not used in all cases.
+</flag>
+
+<flag name="uchar_max" class="portability" regexp="[-/]D(?:UCHAR_MAX|MAXUCHAR)=[0-9lL]*\b">
+<example>
+-DUCHAR_MAX=256,
+-DMAXUCHAR=256
+</example>
+This flag can be used to indicate to the benchmark the largest value that
+can be stored in an unsigned char.
+</flag>
+
+<flag name="ushort_max" class="portability" regexp="[-/]D(?:USHO?RT_MAX|MAXUSHORT)=[0-9lL]*\b">
+<example>
+-DUSHORT_MAX=65536,
+-DMAXUSHORT=65536,
+-DUSHRT_MAX=65536
+</example>
+This flag can be used to indicate to the benchmark the largest value that
+can be stored in an unsigned short integer.
+</flag>
+
+<flag name="uint_max" class="portability" regexp="[-/]D(?:UINT_MAX|MAXUINT)=[0-9lL]*\b">
+<example>
+-DUINT_MAX=4294967296,
+-DMAXUINT=4294967296
+</example>
+This flag can be used to indicate to the benchmark the largest value that
+can be stored in an unsigned integer.
+</flag>
+
+<flag name="ulong_max" class="portability" regexp="[-/]D(?:ULONG_MAX|MAXULONG)=[0-9lL]*\b">
+<example>
+-DULONG_MAX=4294967296,
+-DMAXULONG=4294967296
+</example>
+This flag can be used to indicate to the benchmark the largest value that
+can be stored in an unsigned long integer.
+</flag>
+
+<flag name="ulonglong_max" class="portability" regexp="[-/]D(?:ULONGLONG_MAX|MAXULONGLONG)=[0-9lL]*\b">
+<example>
+-DULONGLONG_MAX=18446744073709551616LL,
+-DMAXULONGLONG=18446744073709551616LL
+</example>
+This flag can be used to indicate to the benchmark the largest value that
+can be stored in an unsigned long long integer.
+</flag>
+
+<flag name="DMAXDOUBLE" class="portability" regexp="[-/]DMAXDOUBLE=(?i:[-0-9efgl]+)\b">
+<example>
+-DMAXDOUBLE=23482749729348729384
+</example>
+This flag can be use to indicate to the benchmark the largest value that
+is representable by a double.
+</flag>
+
+<flag name="DMINDOUBLE" class="portability" regexp="[-/]DMINDOUBLE=(?i:[-0-9efgl]+)\b">
+<example>
+-DMINDOUBLE=-23482749729348729384
+</example>
+This flag can be use to indicate to the benchmark the smallest value that
+is representable by a double.
+</flag>
+
+<flag name="short_max" class="portability" regexp="[-/]D(?:SHO?RT_MAX|MAXSHORT)=[-0-9lL]+\b">
+<example>
+-DMAXSHORT=32767,
+-DSHORT_MAX=32767,
+-DSHRT_MAX=32767
+</example>
+This flag can be used to indicate to the benchmark the largest value that
+can be stored in a short integer.
+</flag>
+
+<flag name="int_max" class="portability" regexp="[-/]D(?:INT_MAX|MAX_INT)=[0-9lL]+\b">
+<example>
+-DINT_MAX=2147483647,
+-DMAXINT=2147483647
+</example>
+This flag can be used to indicate to the benchmark the largest value that
+can be stored in an integer.
+</flag>
+
+<flag name="long_max" class="portability" regexp="[-/]D(?:LONG_MAX|MAXLONG)=[0-9Ll]+\b">
+<example>
+-DLONG_MAX=2147483647,
+-DMAXLONG=2147483647
+</example>
+This flag can be used to set the largest positive number that can fit in a
+long integer.  Its value is not used in all cases.
+</flag>
+
+<flag name="longlong_max" class="portability" regexp="[-/]D(?:LONGLONG_MAX|MAXLONGLONG)=[0-9Ll]+\b">
+<example>
+-DLONGLONG_MAX=9223372036854775807,
+-DMAXLONGLONG=9223372036854775807
+</example>
+This flag can be used to set the largest positive number that can fit in a
+long long integer.  Its value is not used in all cases.
+</flag>
+
+<flag name="short_min" class="portability" regexp="[-/]D(?:SHO?RT_MIN|MINSHORT)=[-0-9lL]+\b">
+<example>
+-DMINSHORT=-32768,
+-DSHORT_MIN=-32768,
+-DSHRT_MIN=-32768
+</example>
+This flag can be used to indicate to the benchmark the smallest value that
+can be stored in a short integer.
+</flag>
+
+<flag name="int_min" class="portability" regexp="[-/]D(?:INT_MIN|MININT)=[-0-9lL]+\b">
+<example>
+-DINT_MIN=-2147483648,
+-DMININT=-2147483648
+</example>
+This flag can be used to indicate to the benchmark the smallest value that
+can be stored in an integer.
+</flag>
+
+<flag name="long_min" class="portability" regexp="[-/]D(?:LONG_MIN|MINLONG)=[-0-9lL]+\b">
+<example>
+-DMINLONG=-2147483648,
+-DLONG_MIN=-2147483648
+</example>
+This flag can be used to indicate to the benchmark the smallest value that
+can be stored in a long integer.
+</flag>
+
+<flag name="longlong_min" class="portability" regexp="[-/]D(?:LONGLONG_MIN|MINLONGLONG)=[-0-9lL]+\b">
+<example>
+-DMINLONGLONG=-9223372036854775808LL,
+-DLONGLONG_MIN=-9223372036854775808LL
+</example>
+This flag can be used to indicate to the benchmark the smallest value that
+can be stored in a long long integer.
+</flag>
+
+<flag name="perl_type_minmax" class="forbidden" regexp="[-/]DPERL_U?(?:INT|LONG|QUAD|SHORT|CHAR)_(?:MAX|MIN)(?:=[-0-9lL]*)?\b">
+The values for these macros may not be set directly.
+<example>
+-DPERL_INT_MAX=0,
+-DPERL_INT_MIN=0,
+-DPERL_LONG_MAX=0,
+-DPERL_LONG_MIN=0,
+-DPERL_QUAD_MAX=0,
+-DPERL_QUAD_MIN=0,
+-DPERL_SHORT_MAX=0,
+-DPERL_SHORT_MIN=0,
+-DPERL_UCHAR_MAX=0,
+-DPERL_UCHAR_MIN=0,
+-DPERL_UINT_MAX=0,
+-DPERL_UINT_MIN=0,
+-DPERL_ULONG_MAX=0,
+-DPERL_ULONG_MIN=0,
+-DPERL_UQUAD_MAX=0,
+-DPERL_UQUAD_MIN=0,
+-DPERL_USHORT_MAX=0,
+-DPERL_USHORT_MIN=0,
+</example>
+</flag>
+
+<flag name="int_min_broken" class="portability" regexp="[-/]D(U?INT(?:32|64)_(?:MIN|MAX))_BROKEN\b">
+<example>
+-DINT32_MIN_BROKEN,
+-DINT32_MAX_BROKEN,
+-DINT64_MIN_BROKEN,
+-DINT64_MAX_BROKEN,
+-DUINT32_MAX_BROKEN
+</example>
+<ex_replacement>INT32_MAX (or INT32_MIN, or INT64_MAX, or INT64_MIN, or UINT32_MAX)</ex_replacement>
+If the macro $1 is set incorrectly by default, this flag may be used to
+indicate that that macro's value should not be used.
+</flag>
+
+<flag name="DINT2PTR" class="forbidden" regexp="[-/]DINT2PTR(?:=\S*)?\b">
+<example>
+-DINT2PTR=XXX
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="in_misc" class="forbidden" regexp="[-/]DIN_(?:LOCALE_(?:COMPILETIME|RUNTIME)?|PERL_COMPILETIME)(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DIN_LOCALE=XXX,
+-DIN_LOCALE_COMPILETIME=XXX,
+-DIN_LOCALE_RUNTIME=XXX,
+-DIN_PERL_COMPILETIME=XXX
+</example>
+</flag>
+
+<flag name="socket_stuff" class="forbidden" regexp="[-/]D(?:_SOCKADDR_LEN|PIPESOCK_MODE|PIPE_OPEN_MODE|SOCKET_OPEN_MODE|SOCKS5_VERSION_NAME|Sock_size_t|SOCK_DGRAM|PERL_SOCKS_NEED_PROTOTYPES|PERL_SOCK_SYSREAD_IS_RECV|PERL_SOCK_SYSWRITE_IS_SEND|USE_SOCKETS_AS_HANDLES|USE_SOCKS|VMS_DO_SOCKETS|DECCRTL_SOCKETS|EMULATE_SOCKETPAIR_UDP|HAS_SOCKET__bad_code_maybe)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-D_SOCKADDR_LEN=XXX,
+-DPIPESOCK_MODE=XXX,
+-DPIPE_OPEN_MODE=XXX,
+-DSOCKET_OPEN_MODE=XXX,
+-DSOCKS5_VERSION_NAME=XXX,
+-DSock_size_t=XXX,
+-DSOCK_DGRAM,
+-DPERL_SOCKS_NEED_PROTOTYPES,
+-DPERL_SOCK_SYSREAD_IS_RECV,
+-DPERL_SOCK_SYSWRITE_IS_SEND,
+-DUSE_SOCKETS_AS_HANDLES,
+-DUSE_SOCKS,
+-DVMS_DO_SOCKETS,
+-DDECCRTL_SOCKETS,
+-DEMULATE_SOCKETPAIR_UDP,
+-DHAS_SOCKET__bad_code_maybe
+</example>
+</flag>
+
+<flag name="iocparms" class="forbidden" regexp="[-/]DIOCPARM_(?:LEN|MASK)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DIOCPARM_LEN=XXX,
+-DIOCPARM_MASK=XXX
+</example>
+</flag>
+
+<flag name="DIOf_UNTAINT" class="forbidden" regexp="[-/]DIOf_UNTAINT(?:=\S*)?\b">
+It is forbidden to set this macro to a value other than its default.
+<example>
+-DIOf_UNTAINT=XXX
+</example>
+</flag>
+
+<flag name="DIRIX32_SEMUN_BROKEN_BY_GCC" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DISHISH" class="forbidden" regexp="[-/]DISHISH(?:=\S*)?\b">
+<example>
+-DISHISH=unix
+</example>
+This macro holds a value that indicates whether the source know what kind
+of system is being built for.  It should not be set.
+</flag>
+
+<flag name="is_number" class="forbidden" regexp="[-/]DIS_NUMBER_(?:GREATER_THAN_UV_MAX|INFINITY|IN_UV|NAN|NEG|NOT_INT)(?:=\S*)?\b">
+These macros hold Perl internal values, and must not be changed.
+<example>
+-DIS_NUMBER_GREATER_THAN_UV_MAX=XXX,
+-DIS_NUMBER_INFINITY=XXX,
+-DIS_NUMBER_IN_UV=XXX,
+-DIS_NUMBER_NAN=XXX,
+-DIS_NUMBER_NEG=XXX,
+-DIS_NUMBER_NOT_INT=XXX
+</example>
+</flag>
+
+<flag name="itimer" class="forbidden" regexp="[-/]DITIMER_(?:PROF|REAL|REALPROF|VIRTUAL)(?:=\S*)?\b">
+It is forbidden to set this macro to a value other than its default.
+<example>
+-DITIMER_PROF,
+-DITIMER_REAL,
+-DITIMER_REALPROF,
+-DITIMER_VIRTUAL
+</example>
+</flag>
+
+<flag name="Xv_is_quad" class="forbidden" regexp="[-/]D(IV|UV)_IS_QUAD\b">
+<example>
+-DIV_IS_QUAD,
+-DUV_IS_QUAD
+</example>
+<ex_replacement>IV (or UV)</ex_replacement>
+This flag indicates that the Perl $1 is a quad type.  It is set automatically.
+</flag>
+
+<flag name="DI_MACH_CTHREADS" class="forbidden" regexp="[-/]DI_(?:MACH_CTHREADS|NETINET_IN|NET_ERRNO)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DI_MACH_CTHREADS,
+-DI_NETINET_IN,
+-DI_NET_ERRNO
+</example>
+</flag>
+
+<flag name="inc_regular" class="portability" regexp="[-/]DI_(CRYPT|FP|FP_CLASS|GRP|IEEEFP|IEEFP|LANGINFO|LIBUTIL|LOCALE|MEMORY|MNTENT|NDBM|NETDB|POLL|PTHREAD|PWD|SFIO|SHADOW|SOCKS|STDDEF|SUNMATH|USTAT|VALUES|VARARGS)\b">
+Use of this flag indicates that the "$1.h" (lower-case, of course) should be
+used.
+<example>
+-DI_CRYPT,
+-DI_FP,
+-DI_FP_CLASS,
+-DI_GRP,
+-DI_IEEEFP,
+-DI_IEEFP,
+-DI_LANGINFO,
+-DI_LIBUTIL,
+-DI_LOCALE,
+-DI_MEMORY,
+-DI_MNTENT,
+-DI_NDBM,
+-DI_NETDB,
+-DI_POLL,
+-DI_PTHREAD,
+-DI_PWD,
+-DI_SFIO,
+-DI_SHADOW,
+-DI_SOCKS,
+-DI_STDDEF,
+-DI_SUNMATH,
+-DI_USTAT,
+-DI_VALUES,
+-DI_VARARGS
+</example>
+</flag>
+
+<flag name="inc_sys" class="portability" regexp="[-/]DI_SYS_?(MODE|UTSNAME|ACCESS|DIR|MOUNT|NDIR|RESOURCE|SECURITY|SELECT|SOCKIO|STATFS|STATVFS|TIME_KERNEL|VFS)\b">
+Use of this flag indicates that the "sys/$1.h" (lower-case, of course) should be
+used.
+<example>
+-DI_SYSMODE,
+-DI_SYSUTSNAME,
+-DI_SYS_ACCESS,
+-DI_SYS_DIR,
+-DI_SYS_MOUNT,
+-DI_SYS_NDIR,
+-DI_SYS_RESOURCE,
+-DI_SYS_SECURITY,
+-DI_SYS_SELECT,
+-DI_SYS_SOCKIO,
+-DI_SYS_STATFS,
+-DI_SYS_STATVFS,
+-DI_SYS_TIME_KERNEL,
+-DI_SYS_VFS
+</example>
+</flag>
+
+<flag name="locale_settings" class="portability" regexp="[-/]DLC_(?:ALL|COLLATE|CYTPE|NUMERIC)(?:=\S*)?\b">
+These flags are used to set the locale at compilation time.  You're allowed
+to set them, but use of ANY locale other than "C" will almost certainly
+cause the benchmark to miscompare.
+<example>
+-DLC_ALL=ja_JP,
+-DLC_COLLATE=ja_JP,
+-DLC_CTYPE=ja_JP,
+-DLC_NUMERIC=ja_JP
+</example>
+</flag>
+
+<flag name="DLIBC_SCCS" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DLIBERAL" class="forbidden">
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DLIBM_LIB_VERSION" class="forbidden">
+This flag indicates that libm exports _LIB_VERSION and that math.h defines
+the enum to manipulate it.
+</flag>
+
+<flag name="DLOCALE_ENVIRON_REQUIRED" class="portability">
+This flag indicates that setlocale() requires that at least one of the
+standard locate environment variables be defined.  Using locales will
+probably break the benchmark, but you're welcome to try anyway.
+</flag>
+
+<flag name="DLOCAL_PATCH_COUNT" class="forbidden" regexp="[-/]DLOCAL_PATCH_COUNT(?:=\S*)?\b">
+<example>
+-DLOCAL_PATCH_COUNT=1
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="mutex_funcs" class="forbidden" regexp="[-/]D(?:UN)?LOCK_(?:CRED|DOLLARZERO|FDPID|STRTAB|SV_LOCK|SV)_MUTEX(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DLOCK_CRED_MUTEX=XXX,
+-DLOCK_DOLLARZERO_MUTEX=XXX,
+-DLOCK_FDPID_MUTEX=XXX,
+-DLOCK_STRTAB_MUTEX=XXX,
+-DLOCK_SV_LOCK_MUTEX=XXX,
+-DLOCK_SV_MUTEX=XXX,
+-DUNLOCK_CRED_MUTEX=XXX,
+-DUNLOCK_DOLLARZERO_MUTEX=XXX,
+-DUNLOCK_FDPID_MUTEX=XXX,
+-DUNLOCK_STRTAB_MUTEX=XXX,
+-DUNLOCK_SV_LOCK_MUTEX=XXX,
+-DUNLOCK_SV_MUTEX=XXX
+</example>
+</flag>
+
+<flag name="lock_consts" class="forbidden" regexp="[-/]DLOCK_(?:EX|NB|SH|UN)(?:=\S*)?\b">
+These lock constants should be supplied by your system header files.  They
+may not be set directly.
+<example>
+-DLOCK_EX=XXX,
+-DLOCK_NB=XXX,
+-DLOCK_SH=XXX,
+-DLOCK_UN=XXX
+</example>
+</flag>
+
+<flag name="unsupp_os" class="forbidden" regexp="[-/]D(?:MACOS_TRADITIONAL|MPE|MSDOS)\b">
+These macros are used to indicate compilation on a system that is not
+supported.  They may not be used.
+<example>
+-DMACOS_TRADITIONAL,
+-DMPE,
+-DMSDOS
+</example>
+</flag>
+
+<flag name="DMARKED_SECTION" class="forbidden">
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DMAXPATHLEN" class="portability" regexp="[-/]D(?:MAXPATHLEN|(?:_POSIX_)?PATH_MAX)(?:=\S*)?\b">
+<example>
+-DMAXPATHLEN=2048,
+-DPATH_MAX=2048,
+-D_POSIX_PATH_MAX=2048
+</example>
+This macro contains the maximum length for a path name.  It should be supplied
+by system header files, but in case it is not, you can specify it using this
+flag.
+</flag>
+
+<flag name="os_maximums" class="forbidden" regexp="[-/]DMAX(?:HOSTNAMELEN|SYMLINKSSYSFD)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DMAXHOSTNAMELEN=XXX,
+-DMAXSYMLINKS=XXX,
+-DMAXSYSFD=XXX
+</example>
+</flag>
+
+<flag name="DMD5_DEBUG" class="forbidden">
+This flag enables debugging output from the Digest::MD5 module.
+</flag>
+
+<flag name="DMETHOD" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="suid_mntopts" class="forbidden" regexp="[-/]D(?:(?:MNT(?:OPT)?|(?:PERL_)?MOUNT|MS?)_NO(?:EXEC|SUID)|ST_NOEXEC(?:=\S*)?)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DMNTOPT_NOEXEC,
+-DMNTOPT_NOSUID,
+-DMNT_NOEXEC,
+-DMNT_NOSUID,
+-DMOUNT_NOEXEC,
+-DMOUNT_NOSUID,
+-DPERL_MOUNT_NOEXEC,
+-DPERL_MOUNT_NOSUID,
+-DMS_NOEXEC,
+-DMS_NOSUID,
+-DM_NOEXEC,
+-DM_NOSUID,
+-DST_NOEXEC=XXX
+</example>
+</flag>
+
+<flag name="DMSG_DONTWAIT" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DMULTIARCH" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="multiplicity" class="forbidden" regexp="[-/]-DMULTIPLICI?TY\b">
+<example>
+-DMULTIPLICITY,
+-DMULTIPLICTY
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="more_thread_stuff" class="forbidden" regexp="[-/]D(?:MUTEX_(?:DESTROY|INIT|INIT_CALLS_MALLOC|INIT_NEEDS_MUTEX_ZEROED|LOCK|UNLOCK)|MY_CXT_(?:CLONE|KEY)|JOIN|START_MY_CXT|_REENTRANT)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DMUTEX_DESTROY=XXX,
+-DMUTEX_INIT=XXX,
+-DMUTEX_INIT_CALLS_MALLOC=XXX,
+-DMUTEX_INIT_NEEDS_MUTEX_ZEROED=XXX,
+-DMUTEX_LOCK=XXX,
+-DMUTEX_UNLOCK=XXX,
+-DMY_CXT_CLONE=XXX,
+-DMY_CXT_KEY=XXX,
+-DSTART_MY_CXT=XXX,
+-D_REENTRANT,
+-DJOIN=XXX
+</example>
+</flag>
+
+<flag name="DMYMALLOC" class="forbidden">
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DMkdir" class="portability" regexp="[-/]DMkdir=\S+\b">
+This flag can be used to define the equivalent of the mkdir() function.
+<example>
+-DMkdir=XXX
+</example>
+</flag>
+
+<flag name="DStat" class="portability" regexp="[-/]DStat=\S+\b">
+This flag can be used to define the equivalent of the stat() function.
+<example>
+-DStat=XXX
+</example>
+</flag>
+
+<flag name="api_funcs" class="forbidden" regexp="[-/]DMoveD(?:=\S*)?\b">
+<example>
+-DMoveD=XXX
+</example>
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DNATIVE_HINTS" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DNATIVE_TO_ASCII" class="forbidden">
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DNBBY" class="forbidden" regexp="[-/]DNBBY(?:=\S*)?\b">
+<example>
+-DNBBY=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="need_unused_protos" class="forbidden" regexp="[-/]DNEED_(?:GETPID|TELLDIR)_PROTO\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DNEED_GETPID_PROTO,
+-DNEED_TELLDIR_PROTO
+</example>
+</flag>
+
+<flag name="need_api_funcs" class="forbidden" regexp="[-/]DNEED_(?:eval_pv|grok_(?:bin|hex|number|numeric_radix|oct)|new(?:CONSTSUB|RV_noinc)|sv_2pv(?:_nolen|byte)|sv_(?:cat|set)pvf_mg(?:_nocontext)?|vnewSVpvf)(?:_GLOBAL)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DNEED_eval_pv,
+-DNEED_eval_pv_GLOBAL,
+-DNEED_grok_bin,
+-DNEED_grok_bin_GLOBAL,
+-DNEED_grok_hex,
+-DNEED_grok_hex_GLOBAL,
+-DNEED_grok_number,
+-DNEED_grok_number_GLOBAL,
+-DNEED_grok_numeric_radix,
+-DNEED_grok_numeric_radix_GLOBAL,
+-DNEED_grok_oct,
+-DNEED_grok_oct_GLOBAL,
+-DNEED_newCONSTSUB,
+-DNEED_newCONSTSUB_GLOBAL,
+-DNEED_newRV_noinc,
+-DNEED_newRV_noinc_GLOBAL,
+-DNEED_sv_2pv_nolen,
+-DNEED_sv_2pv_nolen_GLOBAL,
+-DNEED_sv_2pvbyte,
+-DNEED_sv_2pvbyte_GLOBAL,
+-DNEED_sv_catpvf_mg,
+-DNEED_sv_catpvf_mg_GLOBAL,
+-DNEED_sv_catpvf_mg_nocontext,
+-DNEED_sv_catpvf_mg_nocontext_GLOBAL,
+-DNEED_sv_setpvf_mg,
+-DNEED_sv_setpvf_mg_GLOBAL,
+-DNEED_sv_setpvf_mg_nocontext,
+-DNEED_sv_setpvf_mg_nocontext_GLOBAL,
+-DNEED_vnewSVpvf,
+-DNEED_vnewSVpvf_GLOBAL
+</example>
+</flag>
+
+<flag name="DNETDB_R_OBSOLETE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DNEXT30_NO_ATTRIBUTE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNFDBITS" class="forbidden" regexp="[-/]DNFDBITS(?:=\S*)?\b">
+<example>
+-DNFDBITS=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DNGROUPS" class="forbidden" regexp="[-/]DNGROUPS(?:=\S*)?\b">
+<example>
+-DNGROUPS=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DNODEFAULT_SHAREKEYS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DNOFILE" class="forbidden" regexp="[-/]DNOFILE(?:=\S*)?\b">
+<example>
+-DNOFILE=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DNOOP" class="forbidden" regexp="[-/]DNOOP(?:=\S*)?\b">
+<example>
+-DNOOP=XXX
+</example>
+This macro defines the contents of one of Perl's internal functions.
+Setting it to a non-default value is forbidden.
+</flag>
+
+<flag name="DNOSTAT_ONE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DNOTYET" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="default_settings" class="portability" regexp="[-/]DNO_(?:56_INTERWORK_KLUDGE|64_BIT_RAWIO|64_BIT_STDIO|EFF_ONLY_OK|ENVIRON_ARRAY|HASH_SEED|LOCALE_COLLATE|LOCALE_CTYPE|LOCALE_NUMERIC|NOSUID_CHECK|PERL_PRESERVE_IVUV|UNARY_PLUS|XSLOCKS)\b">
+This flag un-does the effect of its non-NO counterpart.  These are ALL the
+defaults, so there's no reason to use one.
+<example>
+-DNO_56_INTERWORK_KLUDGE,
+-DNO_64_BIT_RAWIO,
+-DNO_64_BIT_STDIO,
+-DNO_EFF_ONLY_OK,
+-DNO_ENVIRON_ARRAY,
+-DNO_HASH_SEED,
+-DNO_LOCALE_COLLATE,
+-DNO_LOCALE_CTYPE,
+-DNO_LOCALE_NUMERIC,
+-DNO_NOSUID_CHECK,
+-DNO_PERL_PRESERVE_IVUV,
+-DNO_UNARY_PLUS,
+-DNO_XSLOCKS
+</example>
+</flag>
+
+<flag name="DNX_CURRENT_COMPILER_RELEASE" class="forbidden" regexp="[-/]DNX_CURRENT_COMPILER_RELEASE(?:=\S*)?\b">
+<example>
+-DNX_CURRENT_COMPILER_RELEASE=XXX
+</example>
+This constant should be supplied by your system header files.  It
+may not be set directly.
+</flag>
+
+<flag name="DOP_IN_REGISTER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DOPpENTERSUB_HASTARG" class="forbidden" regexp="[-/]DOPpENTERSUB_HASTARG(?:=\S*)?\b">
+<example>
+-DOPpENTERSUB_HASTARG=XXX
+</example>
+This macro defines the contents of one of Perl's internal constants.
+Setting it to a non-default value is forbidden.
+</flag>
+
+<flag name="override_defines" class="forbidden" regexp="[-/]DOVER_L?DBL_DIG(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DOVR_DBL_DIG=XXX,
+-DOVR_LDBL_DIG=XXX
+</example>
+</flag>
+
+<flag name="DOutputStream" class="forbidden" regexp="[-/]DOutputStream(?:=\S*)?\b">
+<example>
+-DOutputStream=XXX
+</example>
+This macro defines the contents of one of Perl's internal types.
+Setting it to a non-default value is forbidden.
+</flag>
+
+<flag name="DPACKED_IS_OCTETS" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPAGESIZE" class="forbidden" regexp="[-/]DPAGESIZE(?:=\S*)?\b">
+<example>
+-DPAGESIZE=XXX
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPARAM_NEEDS_TYPES" class="portability">
+This flag can be used if sys/types.h should be included before sys/param.h.
+</flag>
+
+<flag name="DPATCHLEVEL" class="forbidden" regexp="[-/]DPATCHLEVEL(?:=\S*)?\b">
+<example>
+-DPATCHLEVEL=XXX
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="open_max" class="portability" regexp="[-/]D(?:(?:PERL_FFLUSH_ALL_FOPEN|FOPEN|OPEN)_MAX|_NFILE)(?:=\d*)?\b">
+In some cases, this flag may be used to set the maximum number of stdio
+FILE objects that will be fflush()ed when attempting to flush all
+streams.
+<example>
+-DPERL_FFLUSH_ALL_FOPEN_MAX=XXX,
+-DFOPEN_MAX=XXX,
+-DOPEN_MAX=XXX,
+-D_NFILE=XXX
+</example>
+</flag>
+
+<flag name="perl_internals" class="forbidden" regexp="[-/]D(?:PERLLIB_MANGLE|PERLIO_(?:IS_BINMODE_FD|IS_STDIO|LAYERS|NOT_STDIO|USING_CRLF)|PERL_(?:ALLOC_CHECK|ARENA_SIZE|ASYNC_CHECK|BLOCKSIG_ADD|BLOCKSIG_BLOCK|BLOCKSIG_UNBLOCK|BLOCK_SIGNALS|CALLCONV|CAPI|CR_FILTER|DARWIN|DECL_PROT|DISABLE_PMC|EFF_ACCESS_R_OK|EFF_ACCESS_W_OK|EFF_ACCESS_X_OK|EXT|EXTERNAL_GLOB|EXTMALLOC_DEF|EXT_IO|EXT_POSIX|EXT_RE_BUILD|EXT_RE_DEBUG|FD_SETSIZE|FLEXIBLE_EXCEPTIONS|FLUSHALL_FOR_CHILD|FOR_X2P|FPU_INIT|FPU_PRE_EXEC|FS_VER_FMT|GCC_BRACE_GROUPS_FORBIDDEN|GCC_PEDANTIC|GET_CONTEXT|GET_CONTEXT_DEFINED|GET_INTERP|GET_SIG_CONTEXT|GET_THX|GLOBAL_STRUCT|GPROF_CONTROL|HASH_INTERNAL_ACCESS|HASH_SEED|IMPLICIT_CONTEXT|IMPLICIT_SYS|INC_VERSION_LIST|IN_XSUB_RE|IRIX5_SELECT_TIMEVAL_VOID_CAST|MG_UFUNC|MICRO|MSVCRT_READFIX|NOCOMPAT|NO_DEV_RANDOM|NO_FORCE_LINK|NO_GET_CONTEXT|NO_SHORT_NAMES|NO_UTF16_FILTER|OBJECT|OTHERLIBDIRS|PACK_CAN_BYTEORDER|PACK_CAN_SHRIEKSIGN|PATCHLEVEL_H_IMPLICIT|POLLUTE|POLLUTE_MALLOC|PRESERVE_IVUV|RANDOM_DEVICE|REVISION|SCAN_ALLOW_UNDERSCORES|SCAN_DISALLOW_PREFIX|SCAN_GREATER_THAN_UV_MAX|SCAN_SILENT_ILLDIGIT|SCO|SCRIPT_MODE|SET_CONTEXT|SET_INTERP|SET_THX|SLAB_SIZE|STACK_OVERFLOW_CHECK|STATIC_SYMS|STRICT_CR|SUBVERSION|SYNC_FORK|SYS_INIT|SYS_INIT3|SYS_TERM|TEXTMODE_SCRIPTS|TRY_UV_DIVIDE|USE_SAFE_PUTENV|USE_THREADS|UTF8_CACHE_ASSERT|VERSION|WAIT_FOR_CHILDREN|WRITE_MSG_TO_CONSOLE|XSUB_OLDSTYLE|Y2KWARN)|SUBVERSION|MEMBER_TO_FPTR)(?:=\S*)?\b">
+This macro is used internally by Perl.  Setting it explicitly is not allowed.
+<example>
+-DPERL_ALLOC_CHECK,
+-DPERL_ARENA_SIZE,
+-DPERL_ASYNC_CHECK,
+-DPERL_BLOCKSIG_ADD,
+-DPERL_BLOCKSIG_BLOCK,
+-DPERL_BLOCKSIG_UNBLOCK,
+-DPERL_BLOCK_SIGNALS,
+-DPERL_CALLCONV,
+-DPERL_CAPI,
+-DPERL_CR_FILTER,
+-DPERL_DARWIN,
+-DPERL_DECL_PROT,
+-DPERL_DISABLE_PMC,
+-DPERL_EFF_ACCESS_R_OK,
+-DPERL_EFF_ACCESS_W_OK,
+-DPERL_EFF_ACCESS_X_OK,
+-DPERL_EXT,
+-DPERL_EXTERNAL_GLOB,
+-DPERL_EXTMALLOC_DEF,
+-DPERL_EXT_IO,
+-DPERL_EXT_POSIX,
+-DPERL_EXT_RE_BUILD,
+-DPERL_EXT_RE_DEBUG,
+-DPERL_FD_SETSIZE,
+-DPERLIO_IS_BINMODE_FD,
+-DPERLIO_IS_STDIO,
+-DPERLIO_LAYERS,
+-DPERLIO_NOT_STDIO,
+-DPERLIO_USING_CRLF,
+-DPERLLIB_MANGLE,
+-DPERL_FLEXIBLE_EXCEPTIONS,
+-DPERL_FLUSHALL_FOR_CHILD,
+-DPERL_FOR_X2P,
+-DPERL_FPU_INIT,
+-DPERL_FPU_PRE_EXEC,
+-DPERL_FS_VER_FMT,
+-DPERL_GCC_BRACE_GROUPS_FORBIDDEN,
+-DPERL_GCC_PEDANTIC,
+-DPERL_GET_CONTEXT,
+-DPERL_GET_CONTEXT_DEFINED,
+-DPERL_GET_INTERP,
+-DPERL_GET_SIG_CONTEXT,
+-DPERL_GET_THX,
+-DPERL_GLOBAL_STRUCT,
+-DPERL_GPROF_CONTROL,
+-DPERL_HASH_INTERNAL_ACCESS,
+-DPERL_HASH_SEED,
+-DPERL_IMPLICIT_CONTEXT,
+-DPERL_IMPLICIT_SYS,
+-DPERL_INC_VERSION_LIST,
+-DPERL_IN_XSUB_RE,
+-DPERL_IRIX5_SELECT_TIMEVAL_VOID_CAST,
+-DPERL_MG_UFUNC,
+-DPERL_MICRO,
+-DPERL_MSVCRT_READFIX,
+-DPERL_NOCOMPAT,
+-DPERL_NO_DEV_RANDOM,
+-DPERL_NO_FORCE_LINK,
+-DPERL_NO_GET_CONTEXT,
+-DPERL_NO_SHORT_NAMES,
+-DPERL_NO_UTF16_FILTER,
+-DPERL_OBJECT,
+-DPERL_OTHERLIBDIRS,
+-DPERL_PACK_CAN_BYTEORDER,
+-DPERL_PACK_CAN_SHRIEKSIGN,
+-DPERL_PATCHLEVEL_H_IMPLICIT,
+-DPERL_POLLUTE,
+-DPERL_POLLUTE_MALLOC,
+-DPERL_PRESERVE_IVUV,
+-DPERL_RANDOM_DEVICE,
+-DPERL_REVISION,
+-DPERL_SCAN_ALLOW_UNDERSCORES,
+-DPERL_SCAN_DISALLOW_PREFIX,
+-DPERL_SCAN_GREATER_THAN_UV_MAX,
+-DPERL_SCAN_SILENT_ILLDIGIT,
+-DPERL_SCO,
+-DPERL_SCRIPT_MODE,
+-DPERL_SET_CONTEXT,
+-DPERL_SET_INTERP,
+-DPERL_SET_THX,
+-DPERL_SLAB_SIZE,
+-DPERL_STACK_OVERFLOW_CHECK,
+-DPERL_STATIC_SYMS,
+-DPERL_STRICT_CR,
+-DPERL_SUBVERSION,
+-DSUBVERSION,
+-DPERL_SYNC_FORK,
+-DPERL_SYS_INIT,
+-DPERL_SYS_INIT3,
+-DPERL_SYS_TERM,
+-DPERL_TEXTMODE_SCRIPTS,
+-DPERL_TRY_UV_DIVIDE,
+-DPERL_USE_SAFE_PUTENV,
+-DPERL_USE_THREADS,
+-DPERL_UTF8_CACHE_ASSERT,
+-DPERL_VERSION,
+-DPERL_WAIT_FOR_CHILDREN,
+-DPERL_WRITE_MSG_TO_CONSOLE,
+-DPERL_XSUB_OLDSTYLE,
+-DPERL_Y2KWARN,
+-DMEMBER_TO_FPTR=XXX
+</example>
+</flag>
+
+<flag name="perl_in_foo" class="forbidden" regexp="[-/]DPERL_IN_(?:AV|DEB|DOOP|DUMP|GV|HV|LOCALE|MG|NUMERIC|OP|PAD|PERL|PP|PP|PP_HOT|PP_PACK|PP_SYS|REGCOMP|REGEXEC|SCOPE|SV|TOKE|UNIVERSAL|UTIL)_C\b">
+These macros are used to indicate that a particular module is being compiled.
+Setting them explicitly is not allowed.
+<example>
+-DPERL_IN_AV_C,
+-DPERL_IN_DEB_C,
+-DPERL_IN_DOOP_C,
+-DPERL_IN_DUMP_C,
+-DPERL_IN_GV_C,
+-DPERL_IN_HV_C,
+-DPERL_IN_LOCALE_C,
+-DPERL_IN_MG_C,
+-DPERL_IN_NUMERIC_C,
+-DPERL_IN_OP_C,
+-DPERL_IN_PAD_C,
+-DPERL_IN_PERL_C,
+-DPERL_IN_PP_C,
+-DPERL_IN_PP_CTL_C,
+-DPERL_IN_PP_HOT_C,
+-DPERL_IN_PP_PACK_C,
+-DPERL_IN_PP_SYS_C,
+-DPERL_IN_REGCOMP_C,
+-DPERL_IN_REGEXEC_C,
+-DPERL_IN_SCOPE_C,
+-DPERL_IN_SV_C,
+-DPERL_IN_TOKE_C,
+-DPERL_IN_UNIVERSAL_C,
+-DPERL_IN_UTIL_C
+</example>
+</flag>
+
+<flag name="perl_magic_values" class="forbidden" regexp="[-/]DPERL_MAGIC_(?:arylen|backref|bm|collxfrm|dbfile|dbline|defelem|env|envelem|ext|fm|glob|isa|isaelem|mutex|nkeys|overload|overload_elem|overload_table|pos|qr|regdata|regdatum|regex_global|shared|shared_scalar|sig|sigelem|substr|sv|taint|tied|tiedelem|tiedscalar|utf8|uvar|uvar_elem|vec|vstring)(?:=\S*)?\b">
+These macros contain values that are "special" to Perl.  They may not be
+changed.
+<example>
+-DPERL_MAGIC_arylen=XXX,
+-DPERL_MAGIC_backref=XXX,
+-DPERL_MAGIC_bm=XXX,
+-DPERL_MAGIC_collxfrm=XXX,
+-DPERL_MAGIC_dbfile=XXX,
+-DPERL_MAGIC_dbline=XXX,
+-DPERL_MAGIC_defelem=XXX,
+-DPERL_MAGIC_env=XXX,
+-DPERL_MAGIC_envelem=XXX,
+-DPERL_MAGIC_ext=XXX,
+-DPERL_MAGIC_fm=XXX,
+-DPERL_MAGIC_glob=XXX,
+-DPERL_MAGIC_isa=XXX,
+-DPERL_MAGIC_isaelem=XXX,
+-DPERL_MAGIC_mutex=XXX,
+-DPERL_MAGIC_nkeys=XXX,
+-DPERL_MAGIC_overload=XXX,
+-DPERL_MAGIC_overload_elem=XXX,
+-DPERL_MAGIC_overload_table=XXX,
+-DPERL_MAGIC_pos=XXX,
+-DPERL_MAGIC_qr=XXX,
+-DPERL_MAGIC_regdata=XXX,
+-DPERL_MAGIC_regdatum=XXX,
+-DPERL_MAGIC_regex_global=XXX,
+-DPERL_MAGIC_shared=XXX,
+-DPERL_MAGIC_shared_scalar=XXX,
+-DPERL_MAGIC_sig=XXX,
+-DPERL_MAGIC_sigelem=XXX,
+-DPERL_MAGIC_substr=XXX,
+-DPERL_MAGIC_sv=XXX,
+-DPERL_MAGIC_taint=XXX,
+-DPERL_MAGIC_tied=XXX,
+-DPERL_MAGIC_tiedelem=XXX,
+-DPERL_MAGIC_tiedscalar=XXX,
+-DPERL_MAGIC_utf8=XXX,
+-DPERL_MAGIC_uvar=XXX,
+-DPERL_MAGIC_uvar_elem=XXX,
+-DPERL_MAGIC_vec=XXX,
+-DPERL_MAGIC_vstring=XXX,
+</example>
+</flag>
+
+<flag name="perl_need_my_foo" class="portability" regexp="[-/]DPERL_NEED_MY_(BETOH16|BETOH32|BETOH64|BETOHI|BETOHL|BETOHS|HTOBE16|HTOBE32|HTOBE64|HTOBEI|HTOBEL|HTOBES|HTOLE16|HTOLE32|HTOLE64|HTOLEI|HTOLEL|HTOLES|LETOH16|LETOH32|LETOH64|LETOHI|LETOHL|LETOHS)\b">
+This flag can be used to indicate that the $1 (this should be in lower case)
+function is not available, and that Perl's internal replacement should be
+used instead.
+<ex_replacement>betoh16() (or htobe16(), etc; there are quite a few)</ex_replacement>
+<example>
+-DPERL_NEED_MY_BETOH16,
+-DPERL_NEED_MY_BETOH32,
+-DPERL_NEED_MY_BETOH64,
+-DPERL_NEED_MY_BETOHI,
+-DPERL_NEED_MY_BETOHL,
+-DPERL_NEED_MY_BETOHS,
+-DPERL_NEED_MY_HTOBE16,
+-DPERL_NEED_MY_HTOBE32,
+-DPERL_NEED_MY_HTOBE64,
+-DPERL_NEED_MY_HTOBEI,
+-DPERL_NEED_MY_HTOBEL,
+-DPERL_NEED_MY_HTOBES,
+-DPERL_NEED_MY_HTOLE16,
+-DPERL_NEED_MY_HTOLE32,
+-DPERL_NEED_MY_HTOLE64,
+-DPERL_NEED_MY_HTOLEI,
+-DPERL_NEED_MY_HTOLEL,
+-DPERL_NEED_MY_HTOLES,
+-DPERL_NEED_MY_LETOH16,
+-DPERL_NEED_MY_LETOH32,
+-DPERL_NEED_MY_LETOH64,
+-DPERL_NEED_MY_LETOHI,
+-DPERL_NEED_MY_LETOHL,
+-DPERL_NEED_MY_LETOHS
+</example>
+</flag>
+
+<flag name="DPLAIN_MALLOC" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DPL_OP_SLAB_ALLOC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="perl_funcs" class="forbidden" regexp="[-/]D(?:PL_(?:dowarn|hexdigit|numeric_radix_sv|sv_undef)|PerlIO|PerlIO_(?:apply_layers|binmode|canset_cnt|clearerr|eof|error|exportFILE|fast_gets|fdopen|fdupopen|findFILE|get_base|get_bufsiz|get_cnt|get_ptr|getc|getname|getpos|has_base|has_cntptr|importFILE|init|isutf8|modestr|open|openn|printf|putc|puts|read|releaseFILE|rewind|seek|set_cnt|set_ptrcnt|setlinebuf|setpos|sprintf|stderr|stdin|stdout|stdoutf|tell|tmpfile|ungetc|unread|vprintf|vsprintf|write)|DPerl_(?:debug_log|error_log|fp_class|fp_class_finite|fp_class_inf|fp_class_nan|isfinite|isinf|isnan))(?:=\S*)?\b">
+This macro is used to hold the name of a Perl internal function.  It may not
+be set explicitly.
+<example>
+-DPL_dowarn=XXX,
+-DPL_hexdigit=XXX,
+-DPL_numeric_radix_sv=XXX,
+-DPL_sv_undef=XXX,
+-DPerlIO=XXX,
+-DPerlIO_apply_layers=XXX,
+-DPerlIO_binmode=XXX,
+-DPerlIO_canset_cnt=XXX,
+-DPerlIO_clearerr=XXX,
+-DPerlIO_eof=XXX,
+-DPerlIO_error=XXX,
+-DPerlIO_exportFILE=XXX,
+-DPerlIO_fast_gets=XXX,
+-DPerlIO_fdopen=XXX,
+-DPerlIO_fdupopen=XXX,
+-DPerlIO_findFILE=XXX,
+-DPerlIO_get_base=XXX,
+-DPerlIO_get_bufsiz=XXX,
+-DPerlIO_get_cnt=XXX,
+-DPerlIO_get_ptr=XXX,
+-DPerlIO_getc=XXX,
+-DPerlIO_getname=XXX,
+-DPerlIO_getpos=XXX,
+-DPerlIO_has_base=XXX,
+-DPerlIO_has_cntptr=XXX,
+-DPerlIO_importFILE=XXX,
+-DPerlIO_init=XXX,
+-DPerlIO_isutf8=XXX,
+-DPerlIO_modestr=XXX,
+-DPerlIO_open=XXX,
+-DPerlIO_openn=XXX,
+-DPerlIO_printf=XXX,
+-DPerlIO_putc=XXX,
+-DPerlIO_puts=XXX,
+-DPerlIO_read=XXX,
+-DPerlIO_releaseFILE=XXX,
+-DPerlIO_rewind=XXX,
+-DPerlIO_seek=XXX,
+-DPerlIO_set_cnt=XXX,
+-DPerlIO_set_ptrcnt=XXX,
+-DPerlIO_setlinebuf=XXX,
+-DPerlIO_setpos=XXX,
+-DPerlIO_sprintf=XXX,
+-DPerlIO_stderr=XXX,
+-DPerlIO_stdin=XXX,
+-DPerlIO_stdout=XXX,
+-DPerlIO_stdoutf=XXX,
+-DPerlIO_tell=XXX,
+-DPerlIO_tmpfile=XXX,
+-DPerlIO_ungetc=XXX,
+-DPerlIO_unread=XXX,
+-DPerlIO_vprintf=XXX,
+-DPerlIO_vsprintf=XXX,
+-DPerlIO_write=XXX,
+-DPerl_debug_log=XXX,
+-DPerl_error_log=XXX,
+-DPerl_fp_class=XXX,
+-DPerl_fp_class_finite=XXX,
+-DPerl_fp_class_inf=XXX,
+-DPerl_fp_class_nan=XXX,
+-DPerl_isfinite=XXX,
+-DPerl_isinf=XXX,
+-DPerl_isnan=XXX
+</example>
+</flag>
+
+<flag name="io_poll_consts" class="forbidden" regexp="[-/]D(?:POLL(?:ERR|HUP|IN|NORM|NVAL|OUT|PRI|RDBAND|RDNORM|WRBAND|WRNORM)|_IO[FLN]BF)\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DPOLLERR,
+-DPOLLHUP,
+-DPOLLIN,
+-DPOLLNORM,
+-DPOLLNVAL,
+-DPOLLOUT,
+-DPOLLPRI,
+-DPOLLRDBAND,
+-DPOLLRDNORM,
+-DPOLLWRBAND,
+-DPOLLWRNORM,
+-D_IOFBF,
+-D_IOLBF,
+-D_IONBF
+</example>
+</flag>
+
+<flag name="procarch_flags" class="forbidden" regexp="[-/]DPROCESSOR_ARCHITECTURE_(?:ALPHA64|AMD64|ARM|IA32_ON_WIN64|IA64|MSIL|SHX|UNKNOWN)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DPROCESSOR_ARCHITECTURE_ALPHA64,
+-DPROCESSOR_ARCHITECTURE_AMD64,
+-DPROCESSOR_ARCHITECTURE_ARM,
+-DPROCESSOR_ARCHITECTURE_IA32_ON_WIN64,
+-DPROCESSOR_ARCHITECTURE_IA64,
+-DPROCESSOR_ARCHITECTURE_MSIL,
+-DPROCESSOR_ARCHITECTURE_SHX,
+-DPROCESSOR_ARCHITECTURE_UNKNOWN
+</example>
+</flag>
+
+<flag name="DPROCSELFEXE_PATH" class="forbidden" regexp="[-/]DPROCSELFEXE_PATH(?:=\S*)?\b">
+<example>
+-DPROCSELFEXE_PATH=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DPSHIFT" class="forbidden" regexp="[-/]DPSHIFT(?:=\S*)?\b">
+<example>
+-DPSHIFT=XXX
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DPSTAT_SETCMD" class="forbidden" regexp="[-/]DPSTAT_SETCMD(?:=\S*)?\b">
+<example>
+-DPSTAT_SETCMD=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DPURIFY" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="pw_fields" class="forbidden" regexp="[-/]DPW(?:AGE|CHANGE|CLASS|COMMENT|EXPIRE|GECOS|PASSWD|QUOTA)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DPWAGE,
+-DPWCHANGE,
+-DPWCLASS,
+-DPWCOMMENT,
+-DPWEXPIRE,
+-DPWGECOS,
+-DPWPASSWD,
+-DPWQUOTA
+</example>
+</flag>
+
+<flag name="DPerlProc_pause" class="forbidden" regexp="[-/]DPerlProc_pause(?:=\S*)?\b">
+<example>
+-DPerlProc_pause=XXX
+</example>
+This macro defines the contents of one of Perl's internal functions.
+Setting it to a non-default value is forbidden.
+</flag>
+
+<flag name="DPerlSIO_fast_gets" class="forbidden">
+This symbol is set automatically and may not be set explicitly.
+</flag>
+
+
+<flag name="DPoison" class="forbidden" regexp="[-/]DPoison(?:=\S*)?\b">
+<example>
+-DPoison=XXX
+</example>
+This macro defines the contents of one of Perl's internal functions.
+Setting it to a non-default value is forbidden.
+</flag>
+
+<flag name="qsort_controls" class="forbidden" regexp="[-/]DQSORT_(?:BREAK_EVEN|DEBUG|MAX_STACK|ORDER_GUESS|PLAY_SAFE)(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DQSORT_BREAK_EVEN,
+-DQSORT_DEBUG,
+-DQSORT_MAX_STACK,
+-DQSORT_ORDER_GUESS,
+-DQSORT_PLAY_SAFE
+</example>
+</flag>
+
+<flag name="DQUAD_IS_INT64_T" class="portability">
+Use this flag if _int64t is the quad data type available.
+</flag>
+
+<flag name="DQUAD_IS_LONG" class="portability">
+Use this flag if long is the quad data type available.
+</flag>
+
+<flag name="DQUAD_IS_LONG_LONG" class="portability">
+Use this flag if long long is the quad data type available.
+</flag>
+
+<flag name="DRANDBITS" class="forbidden" regexp="[-/]DRANDBITS=\S+\b">
+<example>
+-DRANDBITS=32
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DRD_NODATA" class="portability" regexp="[-/]DRD_NODATA=\S+\b">
+This flag can be used to indicate the return code from read() when no data is
+present on the non-blocking file descriptor.
+<example>
+-DRD_NODATA=XXX
+</example>
+</flag>
+
+<flag name="reentrant_protos" class="forbidden" regexp="[-/]DREENTRANT_PROTO_(?:B_(?:B|BI|BW|CCD|CCS|IBI|IBW|SB|SBI)|I_(?:BI|BW|CCSBWR|CCSD|CII|CIISD|CSBI|CSBIR|CSBWR|CSBWRE|CSD|CWISBWRE|CWISD|D|H|IBI|IBW|ICBI|ICSBWR|ICSD|ID|IISD|ISBWR|ISD|LISBI|LISD|LS|SB|SBI|SBIE|SBIH|SBIR|SBWR|SBWRE|SD|ST|St|TISD|TS|TSBI|TSBIR|TSBWR|TSR|TsISBWRE|UISBWRE|iS|lS|uISBWRE)|S_(?:CBI|CCSBI|CIISBIE|CSBI|CSBIE|CWISBIE|CWISBWIE|ICSBI|ISBI|LISBI|SBI|SBIE|SBW|TISBI|TS|TSBI|TSBIE|TWISBIE)|V_(?:D|H|ID))(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DREENTRANT_PROTO_B_B=XXX,
+-DREENTRANT_PROTO_B_BI=XXX,
+-DREENTRANT_PROTO_B_BW=XXX,
+-DREENTRANT_PROTO_B_CCD=XXX,
+-DREENTRANT_PROTO_B_CCS=XXX,
+-DREENTRANT_PROTO_B_IBI=XXX,
+-DREENTRANT_PROTO_B_IBW=XXX,
+-DREENTRANT_PROTO_B_SB=XXX,
+-DREENTRANT_PROTO_B_SBI=XXX,
+-DREENTRANT_PROTO_I_BI=XXX,
+-DREENTRANT_PROTO_I_BW=XXX,
+-DREENTRANT_PROTO_I_CCSBWR=XXX,
+-DREENTRANT_PROTO_I_CCSD=XXX,
+-DREENTRANT_PROTO_I_CII=XXX,
+-DREENTRANT_PROTO_I_CIISD=XXX,
+-DREENTRANT_PROTO_I_CSBI=XXX,
+-DREENTRANT_PROTO_I_CSBIR=XXX,
+-DREENTRANT_PROTO_I_CSBWR=XXX,
+-DREENTRANT_PROTO_I_CSBWRE=XXX,
+-DREENTRANT_PROTO_I_CSD=XXX,
+-DREENTRANT_PROTO_I_CWISBWRE=XXX,
+-DREENTRANT_PROTO_I_CWISD=XXX,
+-DREENTRANT_PROTO_I_D=XXX,
+-DREENTRANT_PROTO_I_H=XXX,
+-DREENTRANT_PROTO_I_IBI=XXX,
+-DREENTRANT_PROTO_I_IBW=XXX,
+-DREENTRANT_PROTO_I_ICBI=XXX,
+-DREENTRANT_PROTO_I_ICSBWR=XXX,
+-DREENTRANT_PROTO_I_ICSD=XXX,
+-DREENTRANT_PROTO_I_ID=XXX,
+-DREENTRANT_PROTO_I_IISD=XXX,
+-DREENTRANT_PROTO_I_ISBWR=XXX,
+-DREENTRANT_PROTO_I_ISD=XXX,
+-DREENTRANT_PROTO_I_LISBI=XXX,
+-DREENTRANT_PROTO_I_LISD=XXX,
+-DREENTRANT_PROTO_I_LS=XXX,
+-DREENTRANT_PROTO_I_SB=XXX,
+-DREENTRANT_PROTO_I_SBI=XXX,
+-DREENTRANT_PROTO_I_SBIE=XXX,
+-DREENTRANT_PROTO_I_SBIH=XXX,
+-DREENTRANT_PROTO_I_SBIR=XXX,
+-DREENTRANT_PROTO_I_SBWR=XXX,
+-DREENTRANT_PROTO_I_SBWRE=XXX,
+-DREENTRANT_PROTO_I_SD=XXX,
+-DREENTRANT_PROTO_I_ST=XXX,
+-DREENTRANT_PROTO_I_St=XXX,
+-DREENTRANT_PROTO_I_TISD=XXX,
+-DREENTRANT_PROTO_I_TS=XXX,
+-DREENTRANT_PROTO_I_TSBI=XXX,
+-DREENTRANT_PROTO_I_TSBIR=XXX,
+-DREENTRANT_PROTO_I_TSBWR=XXX,
+-DREENTRANT_PROTO_I_TSR=XXX,
+-DREENTRANT_PROTO_I_TsISBWRE=XXX,
+-DREENTRANT_PROTO_I_UISBWRE=XXX,
+-DREENTRANT_PROTO_I_iS=XXX,
+-DREENTRANT_PROTO_I_lS=XXX,
+-DREENTRANT_PROTO_I_uISBWRE=XXX,
+-DREENTRANT_PROTO_S_CBI=XXX,
+-DREENTRANT_PROTO_S_CCSBI=XXX,
+-DREENTRANT_PROTO_S_CIISBIE=XXX,
+-DREENTRANT_PROTO_S_CSBI=XXX,
+-DREENTRANT_PROTO_S_CSBIE=XXX,
+-DREENTRANT_PROTO_S_CWISBIE=XXX,
+-DREENTRANT_PROTO_S_CWISBWIE=XXX,
+-DREENTRANT_PROTO_S_ICSBI=XXX,
+-DREENTRANT_PROTO_S_ISBI=XXX,
+-DREENTRANT_PROTO_S_LISBI=XXX,
+-DREENTRANT_PROTO_S_SBI=XXX,
+-DREENTRANT_PROTO_S_SBIE=XXX,
+-DREENTRANT_PROTO_S_SBW=XXX,
+-DREENTRANT_PROTO_S_TISBI=XXX,
+-DREENTRANT_PROTO_S_TS=XXX,
+-DREENTRANT_PROTO_S_TSBI=XXX,
+-DREENTRANT_PROTO_S_TSBIE=XXX,
+-DREENTRANT_PROTO_S_TWISBIE=XXX,
+-DREENTRANT_PROTO_V_D=XXX,
+-DREENTRANT_PROTO_V_H=XXX,
+-DREENTRANT_PROTO_V_ID=XXX
+</example>
+</flag>
+
+<flag name="DREG_COMP_C" class="forbidden">
+This symbol is set automatically and may not be set explicitly.
+</flag>
+
+<flag name="DREG_INFTY" class="forbidden" regexp="[-/]DREG_INFTY(?:=\S*)?\b">
+<example>
+-DREG_INFTY=XXX
+</example>
+This macro defines a limit on various pattern matching operations to limit
+stack growth and to avoid "infinite" recursions.  It may not be changed.
+</flag>
+
+<flag name="DRTL_USES_UTC" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSAVE_DEFSV" class="forbidden" regexp="[-/]DSAVE_DEFSV(?:=\S*)?\b">
+<example>
+-DSAVE_DEFSV=XXX
+</example>
+This macro defines the contents of one of Perl's internal functions.
+Setting it to a non-default value is forbidden.
+</flag>
+
+<flag name="signal_stuff" class="forbidden" regexp="[-/]D(?:SA_(?:NOCLDWAIT|RESTART)|SCOPE_SAVES_SIGNAL_MASK)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DSA_NOCLDWAIT=XXX,
+-DSA_RESTART=XXX,
+-DSCOPE_SAVES_SIGNAL_MASK
+</example>
+</flag>
+
+<flag name="DSEARCH_EXTS" class="forbidden" regexp="[-/]DSEARCH_EXTS(?:=\S*)?\b">
+<example>
+-DSEARCH_EXTS=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSECURE_INTERNAL_GETENV" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="seek_consts" class="portability" regexp="[-/]DSEEK_(?:CUR|END|SET)(?:=\S*)?\b">
+This macro contains the constants for use with seek calls.  It should be
+supplied by system header files, but in case it is not, you can specify it
+using this flag.
+<example>
+-DSEEK_CUR=0,
+-DSEEK_END=1,
+-DSEEK_SET=2
+</example>
+</flag>
+
+<flag name="DSELECT_IS_BROKEN" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSETERRNO" class="forbidden" regexp="[-/]DSETERRNO(?:=\S*)?\b">
+<example>
+-DSETERRNO=XXX
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSETUID_SCRIPTS_ARE_SECURE_NOW" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSFIO_VERSION" class="forbidden" regexp="[-/]DSFIO_VERSION(?:=\S*)?\b">
+<example>
+-DSFIO_VERSION=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSF_APPEND" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSIG_SIZE" class="forbidden" regexp="[-/]DSIG_SIZE(?:=\S*)?\b">
+<example>
+-DSIG_SIZE=XXX
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSIOCATMARK" class="forbidden" regexp="[-/]DSIOCATMARK(?:=\S*)?\b">
+<example>
+-DSIOCATMARK=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSIZE16" class="forbidden" regexp="[-/]DSIZE(?:16|32)(?:=\S*)?\b">
+<example>
+-DSIZE16=XXX,
+-DSIZE32=XXX
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSKIP_DEBUGGING" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSLOPPYDIVIDE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSMALLSORT" class="forbidden" regexp="[-/]DSMALLSORT(?:=\S*)?\b">
+<example>
+-DSMALLSORT=XXX
+</example>
+This flag sets the size for the stack in the sort routines.
+</flag>
+
+<flag name="DSPACE" class="forbidden" regexp="[-/]DSPACE(?:=\S*)?\b">
+<example>
+-DSPACE=XXX
+</example>
+This symbol is set automatically and may not be set explicitly.
+</flag>
+
+<flag name="DSPARC64_GCC_WORKAROUND" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSPEC_CPU" class="mandatory">
+This flag indicates that the benchmark is being built with the SPEC CPU2006
+harness.
+</flag>
+
+<flag name="DSPEC_CPU_NEED_TIME_H" class="portability">
+This flag should be used to indicate that the "time.h" header file should
+be included.
+</flag>
+
+<flag name="DSPRINTF_E_BUG" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSPSTART" class="forbidden" regexp="[-/]DSPSTART(?:=\S*)?\b">
+<example>
+-DSPSTART=XXX
+</example>
+This symbol is set automatically and may not be set explicitly.
+</flag>
+
+<flag name="DSTANDARD_C" class="forbidden">
+The benchmark MUST be built with an ANSI C compiler which will define
+this constant by default.
+</flag>
+
+<flag name="DSTART_EXTERN_C" class="portability" regexp="[-/]DSTART_EXTERN_C(?:=\S*)?\b">
+This flag can be used to define the text necessary to begin marking a block
+of C code as C when building with a C++ compiler.
+<example>
+-DSTART_EXTERN_C=XXX
+</example>
+</flag>
+
+<flag name="DEND_EXTERN_C" class="portability" regexp="[-/]DEND_EXTERN_C(?:=\S*)?\b">
+This flag can be used to define the text necessary to end marking a block
+of C code as C when building with a C++ compiler.
+<example>
+-DEND_EXTERN_C=XXX
+</example>
+</flag>
+
+<flag name="DEXTERN_C" class="portability" regexp="[-/]DEXTERN_C(?:=\S*)?\b">
+This flag can be used to define the text necessary to mark a function
+prototype as "extern C" when building with a C++ compiler.
+<example>
+-DEXTERN_C=XXX
+</example>
+</flag>
+
+<flag name="DSTATIC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTDIO_BUFFER_WRITABLE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTDIO_CNT_LVALUE" class="portability">
+Use this flag if the FILE_cnt macro can be used as an lvalue.
+</flag>
+
+<flag name="DSTDIO_PTR_LVALUE" class="portability">
+Use this flag if the FILE_ptr macro can be used as an lvalue.
+</flag>
+
+<flag name="DSTDIO_PTR_LVAL_NOCHANGE_CNT" class="portability">
+This symbol is defined if using the FILE_ptr macro as an lvalue leaves
+File_cnt(fp) unchanged.
+</flag>
+
+<flag name="DSTDIO_PTR_LVAL_SETS_CNT" class="portability">
+This symbol is defined if using the FILE_ptr macro as an lvalue to increase
+the pointer by n causes File_cnt(fp) to be decreased by n.
+</flag>
+
+<flag name="stmt_markers" class="forbidden" regexp="[-/]DSTMT_(?:START|END)(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DSTMT_END=XXX,
+-DSTMT_START=XXX
+</example>
+</flag>
+
+<flag name="DSTRANGE_MALLOC" class="forbidden">
+This flag will cause Perl to use realloc() when possible, instead of an
+allocate/copy/free cycle.
+</flag>
+
+<flag name="DSTRESS_REALLOC" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DSTRUCT_MGVTBL_DEFINITION" class="forbidden" regexp="[-/]DSTRUCT_MGVTBL_DEFINITION(?:=\S*)?\b">
+<example>
+-DSTRUCT_MGVTBL_DEFINITION=XXX
+</example>
+This symbol is set automatically and may not be set explicitly.
+</flag>
+
+<flag name="DSTRUCT_TM_HASZONE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DSURPRISINGLY_SLOWER" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="sv_cwd_stuff" class="forbidden" regexp="[-/]DSV_CWD_(?:ISDOT|RETURN_UNDEF)(?:=\S*)\b">
+This macro defines the contents of one of Perl's internal functions.
+Setting it to a non-default value is forbidden.
+<example>
+-DSV_CWD_ISDOT=XXX,
+-DSV_CWD_RETURN_UNDEF=XXX
+</example>
+</flag>
+
+<flag name="sv_flags" class="forbidden" regexp="[-/]D(?:SVf(?:256|32|_IVisUV|_precision)?|UVf|VDf)(?:=\S*)?\b">
+This macro defines a Perl internal data flag.
+Setting it to a non-default value is forbidden.
+<example>
+-DVDf=XXX,
+-DUVf=XXX,
+-DSVf=XXX,
+-DSVf256=XXX,
+-DSVf32=XXX,
+-DSVf_IVisUV=XXX,
+-DSVf_precision=XXX
+</example>
+</flag>
+
+<flag name="DSYS_NMLN" class="portability" regexp="[-/]DSYS_NMLN=\d+\b">
+<example>
+-DSYS_NMLN=2048
+</example>
+This flag can be used to set the buffer size for some name length fields on
+Windows.  These fields are probably never used.
+</flag>
+
+<flag name="sys_consts" class="forbidden" regexp="[-/]D(?:_?S_I(?:EXEC|FBLK|FIFO|FLNK|FMT|FSOCK|READ|RGRP|ROTH|RUSR|RWXG|RWXO|RWXU|SBLK|SCHR|SDIR|SFIFO|SGID|SLNK|SREG|SSOCK|SUID|SVTX|WRITE)|O_(?:ACCMODE|APPEND|BINARY|EXCL|LARGEFILE|NDELAY|NONBLOCK|RDONLY|TEXT|TRUNC)|SIG(?:CHLD|CLD|FPE|_ERR|_IGN))(?:=\S*)?\b">
+This constant, if defined, must be defined by a system header file.  Setting
+it explicitly is not allowed.
+<example>
+-DS_IEXEC=XXX,
+-DS_IFBLK=XXX,
+-DS_IFIFO=XXX,
+-DS_IFLNK=XXX,
+-DS_IFMT=XXX,
+-DS_IFSOCK=XXX,
+-DS_IREAD=XXX,
+-DS_IRGRP=XXX,
+-DS_IROTH=XXX,
+-DS_IRUSR=XXX,
+-DS_IRWXG=XXX,
+-DS_IRWXO=XXX,
+-DS_IRWXU=XXX,
+-DS_ISBLK=XXX,
+-DS_ISCHR=XXX,
+-DS_ISDIR=XXX,
+-DS_ISFIFO=XXX,
+-DS_ISGID=XXX,
+-DS_ISLNK=XXX,
+-DS_ISREG=XXX,
+-DS_ISSOCK=XXX,
+-DS_ISUID=XXX,
+-DS_ISVTX=XXX,
+-DS_IWRITE=XXX,
+-D_S_IFLNK=XXX,
+-D_S_IFMT=XXX,
+-D_S_IFSOCK=XXX,
+-D_S_ISLNK=XXX,
+-D_S_ISSOCK=XXX,
+-DO_ACCMODE=XXX,
+-DO_APPEND=XXX,
+-DO_BINARY=XXX,
+-DO_EXCL=XXX,
+-DO_LARGEFILE=XXX,
+-DO_NDELAY=XXX,
+-DO_NONBLOCK=XXX,
+-DO_RDONLY=XXX,
+-DO_TEXT=XXX,
+-DO_TRUNC=XXX,
+-DSIGCHLD,
+-DSIGCLD,
+-DSIGFPE,
+-DSIG_ERR,
+-DSIG_IGN
+</example>
+</flag>
+
+<flag name="DSemctl" class="forbidden" regexp="[-/]DSemctl(?:=\S*)?\b">
+<example>
+-DSemctl=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DTHREADS_HAVE_PIDS" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DTHREAD_RET_TYPE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DTIME_HIRES_NANOSLEEP" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DTLS_OUT_OF_INDEXES" class="forbidden" regexp="[-/]DTLS_OUT_OF_INDEXES(?:=\S*)?\b">
+<example>
+-DTLS_OUT_OF_INDEXES=XXX
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DTOP_CLONE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DTRUNCATE_U32" class="portability">
+If your system has no integral type of exactly 32 bits, this flag MAY help
+mitigate the problem.  (The benchmark will probably still not work, though.)
+</flag>
+
+<flag name="DUINT64_C" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DULTRIX_STDIO_BOTCH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNDERBAR" class="forbidden" regexp="[-/]DUNDERBAR(?:=\S*)?\b">
+<example>
+-DUNDERBAR=XXX
+</example>
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNDER_CE" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="DUNEXEC" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DUNICODE_HTML_PARSER" class="forbidden">
+This symbol is set automatically and may not be set explicitly.
+</flag>
+
+<flag name="DUNION_ANY_DEFINITION" class="forbidden" regexp="[-/]DUNION_ANY_DEFINITION(?:=\S*)?\b">
+<example>
+-DUNION_ANY_DEFINITION=XXX
+</example>
+This symbol is set automatically and may not be set explicitly.
+</flag>
+
+<flag name="DUNLINK_ALL_VERSIONS" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DUV" class="forbidden" regexp="[-/]DUV(?:=\S*)?\b">
+<example>
+-DUV=XXX
+</example>
+This symbol is set automatically and may not be set explicitly.
+</flag>
+
+<flag name="Uid_t_size" class="portability" regexp="-DUid_t_size=\d+">
+This symbol holds the number of bytes used by the type specified by Uid_t.
+<example>
+-DUid_t_size=XXX
+</example>
+</flag>
+
+<flag name="retvals" class="forbidden" regexp="[-/]DVAL_(?:EAGAIN|O_NONBLOCK)(?:=\S*)?\b">
+It is forbidden to set this macro to a value other than its default.
+<example>
+-DVAL_EAGAIN=XXX,
+-DVAL_O_NONBLOCK=XXX
+</example>
+</flag>
+
+<flag name="DVER_PLATFORM_WIN32_WINDOWS" class="forbidden" regexp="[-/]DVER_PLATFORM_WIN32_WINDOWS(?:=\S*)?\b">
+<example>
+-DDVER_PLATFORM_WIN32_WINDOWS=XXX
+</example>
+This constant should be supplied by your system header files.  It
+may not be set directly.
+</flag>
+
+<flag name="vms_flags" class="forbidden" regexp="[-/]D(?:VMS(?:ISH_STATUS|ISH_TIME)|KILL_BY_SIGPRC)(?:=\S*)\b">
+These macros are for use on VMS systems.  CPU2006 is not ported to VMS.
+<example>
+-DVMS,
+-DVMSISH_STATUS,
+-DVMSISH_TIME,
+-DKILL_BY_SIGPRC
+</example>
+</flag>
+
+<flag name="DVOID_CLOSEDIR" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DWIN32IO_IS_STDIO" class="forbidden">
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DWIN32SCK_IS_STDSCK" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DWIN32_LEAN_AND_MEAN" class="forbidden">
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DWIN95FIX" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DWITH_STATIC" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="DWNOHANG" class="portability" regexp="[-/]DWNOHANG(?:=\S*)?\b">
+<example>
+-DWNOHANG=1
+</example>
+This macro contains the value of the WNOHANG constants for use with wait calls.
+It should be supplied by system header files, but in case it is not, you can
+specify it using this flag.
+</flag>
+
+<flag name="DWORD_ALIGN" class="forbidden" regexp="[-/]DWORD_ALIGN(?:=\S*)?\b">
+It is forbidden to set this macro to a value other than its default.
+<example>
+-DWORD_ALIGN=XXX
+</example>
+</flag>
+
+<flag name="winsock_consts" class="forbidden" regexp="[-/]DWSAE(?:AFNOSUPPORT|CONNABORTED|CONNRESET)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-DWSAEAFNOSUPPORT=XXX,
+-DWSAECONNABORTED=XXX,
+-DWSAECONNRESET=XXX
+</example>
+</flag>
+
+<flag name="access_mode_bits" class="forbidden" regexp="[-/]D[RWXF]_OK(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DR_OK=X,
+-DW_OK=X,
+-DX_OK=X,
+-DF_OK=X
+</example>
+</flag>
+
+<flag name="yacc_barf" class="forbidden" regexp="[-/]D(?:yyparse|YYDEBUG|YYMAXDEPTH|YYMAXLEVEL|YYSTACKSIZE)(?:=\S*)?\b">
+This symbol is set automatically and may not be set explicitly.
+<example>
+-Dyyparse=XXX,
+-DYYDEBUG=XXX,
+-DYYMAXDEPTH=XXX,
+-DYYMAXLEVEL=XXX,
+-DYYSTACKSIZE=XXX
+</example>
+</flag>
+
+<flag name="DZeroD" class="forbidden" regexp="[-/]DZeroD(?:=\S*)?\b">
+<example>
+-DZeroD=XXX
+</example>
+This macro defines the contents of one of Perl's internal functions.
+Setting it to a non-default value is forbidden.
+</flag>
+
+<flag name="D_ANONYMOUS_UNION" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_DEBUG_MEM" class="forbidden">
+This flag enables some memory debugging on Windows platforms.  Its use is
+prohibited.
+</flag>
+
+<flag name="D_DLL" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="D_FASTMATH" class="forbidden">
+Setting this macro to a value other than its default is forbidden.
+</flag>
+
+<flag name="D_FILE_OFFSET_BITS" class="forbidden" regexp="[-/]D_FILE_OFFSET_BITS(?:=\S*)?\b">
+<example>
+-D_FILE_OFFSET_BITS=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="D_INTPTR_T_DEFINED" class="portability">
+Your compiler SHOULD define this symbol if the intptr_t type is available.
+If the type is available but the symbol is not set, you may avoid a
+redefinition error by using this flag.
+</flag>
+
+<flag name="D_IOCTL_" class="forbidden">
+This constant should be supplied by your system header files.  They
+may not be set directly.
+</flag>
+
+<flag name="D_IOSTRG" class="forbidden" regexp="[-/]D_IOSTRG(?:=\S*)?\b">
+<example>
+-D_IOSTRG=XXX
+</example>
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="D_LP64" class="forbidden">
+This constant should be supplied by your system header files.  They
+may not be set directly.
+</flag>
+
+<flag name="D_M_IX86" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="mingw_consts" class="forbidden" regexp="[-/]D_(?:NO_OLDNAMES|O_NOINHERIT)(?:=\S*)?\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-D_NO_OLDNAMES,
+-D_O_NOINHERIT=XXX,
+</example>
+</flag>
+
+<flag name="sysconf_stuff" class="forbidden" regexp="[-/]D_SC_(?:CLK_TCK|OPEN_MAX|PAGESIZE|PAGE_SIZE)(?:=\S*)\b">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+<example>
+-D_SC_CLK_TCK=XXX,
+-D_SC_OPEN_MAX=XXX,
+-D_SC_PAGESIZE=XXX,
+-D_SC_PAGE_SIZE=XXX
+</example>
+</flag>
+
+<flag name="D_STDIO_H" class="forbidden">
+This constant should be supplied by your system header files.  They
+may not be set directly.
+</flag>
+
+<flag name="D_STDIO_INCLUDED" class="forbidden">
+This constant should be supplied by your system header files.  They
+may not be set directly.
+</flag>
+
+<flag name="D_THREAD_SAFE" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="D_TYPES_" class="forbidden">
+This constant should be supplied by your system header files.  They
+may not be set directly.
+</flag>
+
+<flag name="D_UINTPTR_T_DEFINED" class="portability">
+This flag may be used to indicate that there is a type definition for
+uintptr_t.
+</flag>
+
+<flag name="windows_default_flags" class="forbidden" regexp="[-/]D_USE_(?:LINKED_LIST|MSVCRT_MEM_ALLOC|BUDDY_BLOCKS)\b">
+This symbol is set automatically and may not be set explicitly.
+<example>
+-D_USE_LINKED_LIST,
+-D_USE_MSVCRT_MEM_ALLOC
+</example>
+</flag>
+
+<flag name="D_WIN32_WINNT" class="forbidden" regexp="[-/]D_WIN32_WINNT(?:=\S*)?\b">
+This constant should be supplied by your system header files.  They
+may not be set directly.
+<example>
+-D_WIN32_WINNT=XXX
+</example>
+</flag>
+
+<flag name="D__THROW" class="forbidden">
+This macro has no function in the benchmark version of the source; its use is
+forbidden.
+</flag>
+
+<flag name="sv_funcs" class="forbidden" regexp="[-/]D(?:sv_(?:2pv_nolen|2pvbyte|2pvbyte_nolen|2uv|catpv_mg|catpvf_mg|catpvn_mg|catpvn_nomg|catsv_mg|catsv_nomg|dup|flags|pvn|pvn_force|pvn_nomg|setiv_mg|setnv_mg|setpv_mg|setpvf_mg|setpvn_mg|setsv_mg|setsv_nomg|setuv|setuv_mg|usepvn_mg|uv)|Sv(?:GETMAGIC|IV_nomg|PV_force_nomg|PV_nolen|PV_nomg|PVbyte|UTF8_on|UV|UVX|UVXx|UV_nomg|UVx)|new(?:CONSTSUB|RV_inc|RV_noinc|SVpvn|SVuv))(?:=\S*)\b">
+This macro defines the contents of one of Perl's internal functions.
+Setting it to a non-default value is forbidden.
+<example>
+-Dsv_2pv_nolen=XXX,
+-Dsv_2pvbyte=XXX,
+-Dsv_2pvbyte_nolen=XXX,
+-Dsv_2uv=XXX,
+-Dsv_catpv_mg=XXX,
+-Dsv_catpvf_mg=XXX,
+-Dsv_catpvn_mg=XXX,
+-Dsv_catpvn_nomg=XXX,
+-Dsv_catsv_mg=XXX,
+-Dsv_catsv_nomg=XXX,
+-Dsv_dup=XXX,
+-Dsv_flags=XXX,
+-Dsv_pvn=XXX,
+-Dsv_pvn_force=XXX,
+-Dsv_pvn_nomg=XXX,
+-Dsv_setiv_mg=XXX,
+-Dsv_setnv_mg=XXX,
+-Dsv_setpv_mg=XXX,
+-Dsv_setpvf_mg=XXX,
+-Dsv_setpvn_mg=XXX,
+-Dsv_setsv_mg=XXX,
+-Dsv_setsv_nomg=XXX,
+-Dsv_setuv=XXX,
+-Dsv_setuv_mg=XXX,
+-Dsv_usepvn_mg=XXX,
+-Dsv_uv=XXX,
+-DSvGETMAGIC=XXX,
+-DSvIV_nomg=XXX,
+-DSvPV_force_nomg=XXX,
+-DSvPV_nolen=XXX,
+-DSvPV_nomg=XXX,
+-DSvPVbyte=XXX,
+-DSvUTF8_on=XXX,
+-DSvUV=XXX,
+-DSvUVX=XXX,
+-DSvUVXx=XXX,
+-DSvUV_nomg=XXX,
+-DSvUVx=XXX,
+-DnewCONSTSUB=XXX,
+-DnewRV_inc=XXX,
+-DnewRV_noinc=XXX,
+-DnewSVpvn=XXX,
+-DnewSVuv=XXX
+</example>
+</flag>
+
+<flag name="DSPEC_CPU_NO_STAT64" class="portability">
+SPEC_CPU_NO_STAT64 may be set for Windows64 systems where there is no _stat64 structure.
+</flag>
+
+<flag name="comp_implicit" class="forbidden" regexp="[-/]D(?:_AIX|_AIX43|_ALPHA_|_CRAYMPP|_CRTIMP|_GNU_SOURCE|_MSC_VER|_UNICOS|__ALPHA|__BEOS__|__BIG_ENDIAN__|__BORLANDC__|__BORLAND__|__CRTL_VER|__CYGWIN__|__DECC|__DECC_VER|__DGUX|__DYNAMIC__|__EMX__|__FreeBSD__|__FreeBSD_version|__GLIBC__|__GNUC_MINOR__|__GNUC__|__GNUG__|__GNU_LIBRARY__|__IEEE_FP|__INTEL_COMPILER|__LITTLE_ENDIAN__|__Lynx__|__MINGW32_MAJOR_VERSION|__MINGW32__|__MINT__|__NeXT|__NeXT__|__NetBSD__|__OPEN_VM|__OpenBSD__|__POSIX_SOURCE|__QNXNTO__|__QNX__|__SCO_VERSION__|__SC__|__STDC__|__STRICT_ANSI__|__SVR4|__UCLIBC__|__VAX|__VMS|__VMS_VER|__VOS__|__alpha|__attribute__|__attribute__format__|__bsdi__|__cplusplus|__hpux|__hpux__|__int64|__osf__|__sgi|__sparc64__|__stdc__|__sun|__sun__|__svr4__|__ux_version|_cplusplus|apollo|atarist|convex|cray|i860|lint|m88k|mc300|mc500|mc6000|mc700|mips|sun|ultrix|uts|_SVID3|hp9000s500|PLAN9|pyr|vax11c|gould|hcx|UTS|NeXT|OEMVS|OS2|NETWARE|POSIX_BC)(?:=\S*)?\b">
+These flags are set implicitly by the compilation system and may not be
+set explicitly.
+<example>
+-D_AIX=XXX,
+-D_AIX43=XXX,
+-D_ALPHA_=XXX,
+-D_CRAYMPP=XXX,
+-D_CRTIMP=XXX,
+-D_GNU_SOURCE=XXX,
+-D_MSC_VER=XXX,
+-D_UNICOS=XXX,
+-D__ALPHA=XXX,
+-D__BEOS__=XXX,
+-D__BIG_ENDIAN__=XXX,
+-D__BORLANDC__=XXX,
+-D__BORLAND__=XXX,
+-D__CRTL_VER=XXX,
+-D__CYGWIN__=XXX,
+-D__DECC=XXX,
+-D__DECC_VER=XXX,
+-D__DGUX=XXX,
+-D__DYNAMIC__=XXX,
+-D__EMX__=XXX,
+-D__FreeBSD__=XXX,
+-D__FreeBSD_version=XXX,
+-D__GLIBC__=XXX,
+-D__GNUC_MINOR__=XXX,
+-D__GNUC__=XXX,
+-D__GNUG__=XXX,
+-D__GNU_LIBRARY__=XXX,
+-D__IEEE_FP=XXX,
+-D__INTEL_COMPILER=XXX,
+-D__LITTLE_ENDIAN__=XXX,
+-D__Lynx__=XXX,
+-D__MINGW32_MAJOR_VERSION=XXX,
+-D__MINGW32__=XXX,
+-D__MINT__=XXX,
+-D__NeXT=XXX,
+-D__NeXT__=XXX,
+-D__NetBSD__=XXX,
+-D__OPEN_VM=XXX,
+-D__OpenBSD__=XXX,
+-D__POSIX_SOURCE=XXX,
+-D__QNXNTO__=XXX,
+-D__QNX__=XXX,
+-D__SCO_VERSION__=XXX,
+-D__SC__=XXX,
+-D__STDC__=XXX,
+-D__STRICT_ANSI__=XXX,
+-D__SVR4=XXX,
+-D__UCLIBC__=XXX,
+-D__VAX=XXX,
+-D__VMS=XXX,
+-D__VMS_VER=XXX,
+-D__VOS__=XXX,
+-D__alpha=XXX,
+-D__attribute__=XXX,
+-D__attribute__format__=XXX,
+-D__bsdi__=XXX,
+-D__cplusplus=XXX,
+-D__hpux=XXX,
+-D__hpux__=XXX,
+-D__int64=XXX,
+-D__osf__=XXX,
+-D__sgi=XXX,
+-D__sparc64__=XXX,
+-D__stdc__=XXX,
+-D__sun=XXX,
+-D__sun__=XXX,
+-D__svr4__=XXX,
+-D__ux_version=XXX,
+-D_cplusplus=XXX,
+-Dapollo=XXX,
+-Datarist=XXX,
+-Dconvex=XXX,
+-Dcray=XXX,
+-Di860=XXX,
+-Dlint=XXX,
+-Dm88k=XXX,
+-Dmc300=XXX,
+-Dmc500=XXX,
+-Dmc6000=XXX,
+-Dmc700=XXX,
+-Dmips=XXX,
+-Dsun=XXX,
+-Dultrix=XXX,
+-Duts=XXX,
+-D_SVID3=XXX,
+-Dhp9000s500=XXX,
+-DPLAN9=XXX,
+-Dpyr=XXX,
+-Dgould=XXX,
+-Dhcx=XXX,
+-DUTS=XXX,
+-DNeXT=XXX,
+-DOEMVS=XXX,
+-DOS2=XXX,
+-DNETWARE=XXX,
+-DPOSIX_BC,
+-Dvax11c=XXX
+</example>
+</flag>
+
+<flag name="perl_thread_stuff" class="forbidden" regexp="[-/]D(?:pTHX|pTHX_|pTHXo|pTHXx|dAX|dITEMS|dJMPENV|dNOOP|dTHR|dTHX|dTHXa|dTHXoa|dUNDERBAR|dXSTARG|aTHX|aTHX_)(?:=\S*)?\b">
+This macro defines the contents of one of Perl's internal functions.
+Setting it to a non-default value is forbidden.
+<example>
+-DpTHX=XXX,
+-DpTHX_=XXX,
+-DpTHXo=XXX,
+-DpTHXx=XXX,
+-DdAX=XXX,
+-DdITEMS=XXX,
+-DdJMPENV=XXX,
+-DdNOOP=XXX,
+-DdTHR=XXX,
+-DdTHX=XXX,
+-DdTHXa=XXX,
+-DdTHXoa=XXX,
+-DdUNDERBAR=XXX,
+-DdXSTARG=XXX,
+-DaTHX=XXX,
+-DaTHX_=XXX
+</example>
+</flag>
+
+<flag name="xs_stuff" class="forbidden" regexp="[-/]DX(?:PUSH(?:mortal|u)|SRETURN_UV|ST_mUV|S_VERSION|SprePUSH|SubPPtmpAAA[A-G])(?:=\S*)?\b">
+Setting this macro to a value other than its default is forbidden.
+<example>
+-DXPUSHmortal=XXX,
+-DXPUSHu=XXX,
+-DXSRETURN_UV=XXX,
+-DXST_mUV=XXX,
+-DXS_VERSION=XXX,
+-DXSprePUSH=XXX,
+-DXSubPPtmpAAAA=XXX,
+-DXSubPPtmpAAAB=XXX,
+-DXSubPPtmpAAAC=XXX,
+-DXSubPPtmpAAAD=XXX,
+-DXSubPPtmpAAAE=XXX,
+-DXSubPPtmpAAAF=XXX,
+-DXSubPPtmpAAAG=XXX
+</example>
+</flag>
+
+<flag name="more_perl_funcs" class="forbidden" regexp="[-/]D(?:call_(?:argv|method|pv|sv)|eval_[ps]v|get_[achs]v|grok_(?:bin|hex|number|numeric_radix|oct)|gv_stashpvn|mX?PUSH[inpu]|vnewSVpvf)(?:=\S*)?\b">
+This macro is used to hold the name of a Perl internal function.  It may not
+be set explicitly.
+<example>
+-Dcall_argv=XXX,
+-Dcall_method=XXX,
+-Dcall_pv=XXX,
+-Dcall_sv=XXX,
+-Deval_pv=XXX,
+-Deval_sv=XXX,
+-Dget_av=XXX,
+-Dget_cv=XXX,
+-Dget_hv=XXX,
+-Dget_sv=XXX,
+-Dgrok_bin=XXX,
+-Dgrok_hex=XXX,
+-Dgrok_number=XXX,
+-Dgrok_numeric_radix=XXX,
+-Dgrok_oct=XXX,
+-Dgv_stashpvn=XXX,
+-DmPUSHi=XXX,
+-DmPUSHn=XXX,
+-DmPUSHp=XXX,
+-DmPUSHu=XXX,
+-DmXPUSHi=XXX,
+-DmXPUSHn=XXX,
+-DmXPUSHp=XXX,
+-DmXPUSHu=XXX,
+-DvnewSVpvf=XXX
+</example>
+</flag>
+
+<flag name="perl_tests" class="forbidden" regexp="[-/]D(?:__va_copy|_environ|asctime|assert|atan2|atof|bcmp|cos|crypt|ctermid|ctime|drand48|endgrent|endhostent|endnetent|endprotoent|endpwent|endservent|errno|exp|ff_next|fputs|fwrite1|getcwd_sv|getenv|getgrent|getgrgid|getgrnam|gethostbyaddr|gethostbyname|gethostent|getlogin|getnetbyaddr|getnetbyname|getnetent|getprotobyname|getprotobynumber|getprotoent|getpwent|getpwnam|getpwuid|getservbyname|getservbyport|getservent|getspnam|ghs|gmtime|h_addr|h_errno|htonl|htons|htovl|htovs|isXDIGIT|isascii|jmp_buf|localtime|log|major|memEQ|memNE|memchr|memcmp|memcpy|memmove|memset|memzero|my_betohn|my_chsize|my_htoben|my_htolen|my_letohn|ntohl|ntohs|poll|pow|random|readdir|readdir64|register|rewinddir|seekdir|setgrent|sethostent|setlocale|setnetent|setprotoent|setpwent|setservent|sin|sqrt|srand48|srandom|strchr|strerror|telldir|tmpnam|ttyname|va_copy|vtohl|vtohs)(?:=\S*)?\b">
+This macro, if defined, may not be defined explicitly.
+<example>
+-D__va_copy=XXX,
+-D_environ=XXX,
+-Dasctime=XXX,
+-Dassert=XXX,
+-Datan2=XXX,
+-Datof=XXX,
+-Dbcmp=XXX,
+-Dcos=XXX,
+-Dcrypt=XXX,
+-Dctermid=XXX,
+-Dctime=XXX,
+-Ddrand48=XXX,
+-Dendgrent=XXX,
+-Dendhostent=XXX,
+-Dendnetent=XXX,
+-Dendprotoent=XXX,
+-Dendpwent=XXX,
+-Dendservent=XXX,
+-Derrno=XXX,
+-Dexp=XXX,
+-Dff_next=XXX,
+-Dfputs=XXX,
+-Dfwrite1=XXX,
+-Dgetcwd_sv=XXX,
+-Dgetenv=XXX,
+-Dgetgrent=XXX,
+-Dgetgrgid=XXX,
+-Dgetgrnam=XXX,
+-Dgethostbyaddr=XXX,
+-Dgethostbyname=XXX,
+-Dgethostent=XXX,
+-Dgetlogin=XXX,
+-Dgetnetbyaddr=XXX,
+-Dgetnetbyname=XXX,
+-Dgetnetent=XXX,
+-Dgetprotobyname=XXX,
+-Dgetprotobynumber=XXX,
+-Dgetprotoent=XXX,
+-Dgetpwent=XXX,
+-Dgetpwnam=XXX,
+-Dgetpwuid=XXX,
+-Dgetservbyname=XXX,
+-Dgetservbyport=XXX,
+-Dgetservent=XXX,
+-Dgetspnam=XXX,
+-Dghs=XXX,
+-Dgmtime=XXX,
+-Dh_addr=XXX,
+-Dh_errno=XXX,
+-Dhtonl=XXX,
+-Dhtons=XXX,
+-Dhtovl=XXX,
+-Dhtovs=XXX,
+-DisXDIGIT=XXX,
+-Disascii=XXX,
+-Djmp_buf=XXX,
+-Dlocaltime=XXX,
+-Dlog=XXX,
+-Dmajor=XXX,
+-DmemEQ=XXX,
+-DmemNE=XXX,
+-Dmemchr=XXX,
+-Dmemcmp=XXX,
+-Dmemcpy=XXX,
+-Dmemmove=XXX,
+-Dmemset=XXX,
+-Dmemzero=XXX,
+-Dmy_betohn=XXX,
+-Dmy_chsize=XXX,
+-Dmy_htoben=XXX,
+-Dmy_htolen=XXX,
+-Dmy_letohn=XXX,
+-Dntohl=XXX,
+-Dntohs=XXX,
+-Dpoll=XXX,
+-Dpow=XXX,
+-Drandom=XXX,
+-Dreaddir=XXX,
+-Dreaddir64=XXX,
+-Dregister=XXX,
+-Drewinddir=XXX,
+-Dseekdir=XXX,
+-Dsetgrent=XXX,
+-Dsethostent=XXX,
+-Dsetlocale=XXX,
+-Dsetnetent=XXX,
+-Dsetprotoent=XXX,
+-Dsetpwent=XXX,
+-Dsetservent=XXX,
+-Dsin=XXX,
+-Dsqrt=XXX,
+-Dsrand48=XXX,
+-Dsrandom=XXX,
+-Dstrchr=XXX,
+-Dstrerror=XXX,
+-Dtelldir=XXX,
+-Dtmpnam=XXX,
+-Dttyname=XXX,
+-Dva_copy=XXX,
+-Dvtohl=XXX,
+-Dvtohs=XXX
+</example>
+</flag>
+
+<flag name="various_minmax" class="forbidden" regexp="[-/]D(?:IV_MAX|IV_MIN|NV_INF|NV_MAX_10_EXP|NV_NAN|UV_MAX|UV_MIN)(?:=\S*)\b">
+This symbol is set automatically and may not be set explicitly.
+<example>
+-DIV_MAX=XXX,
+-DIV_MIN=XXX,
+-DNV_INF=XXX,
+-DNV_MAX_10_EXP=XXX,
+-DNV_NAN=XXX,
+-DUV_MAX=XXX,
+-DUV_MIN=XXX
+</example>
+</flag>
+
+<flag name="DStat_t" class="portability" regexp="[-/]DStat_t(?:=\S*)?\b">
+<example>
+-DStat_t=XXX
+</example>
+This macro contains the type that should be used when a 'struct stat' would be called for.
+</flag>
+
+<flag name="DTimeval" class="portability" regexp="[-/]DTimeval(?:=\S*)?\b">
+<example>
+-DTimeval=XXX
+</example>
+This macro contains the type that should be used when a 'struct timeval' would be called for.
+</flag>
+
+<flag name="type_flags" class="portability" regexp="[-/]D((?:Uid|Time|Size|Mode)_t)(?:=\S*)?\b">
+<example>
+-DUid_t=uid_t,
+-DTime_t=time_t,
+-DSize_t=size_t,
+-DMode_t=mode_t
+</example>
+This flag can be used to define what type should be used in place of the
+standard $1 (this should be in lower case).
+<ex_replacement>uid_t (or time_t, size_t, or mode_t)</ex_replacement>
+</flag>
+
+<flag name="DSighandler_t" class="forbidden" regexp="[-/]DSighandler_t(?:=\S*)?\b">
+<example>
+-DSighandler_t=XXX
+</example>
+It is forbidden to set this macro to a value other than its default.
+</flag>
+
+<flag name="DSignal_t" class="portability" regexp="[-/]DSignal_t=\S+\b">
+This macro holds the return type of a signal handler.
+<example>
+-DSignal_t=XXX
+</example>
+</flag>
+
+<flag name="DMalloc_t" class="portability" regexp="[-/]DMalloc_t=\S+\b">
+This macro holds the return type of malloc() and the type of the argument to
+free().
+<example>
+-DMalloc_t=XXX
+</example>
+</flag>
+
+<flag name="use_forbidden" class="forbidden" regexp="[-/]DUSE_?(?:5005THREADS|56_INTERWORK_KLUDGE|64_BIT_ALL|64_BIT_RAWIO|ATTRIBUTES_FOR_PERLIO|BIGBLOCK_ALLOC|BROKEN_PAD_RESET|BSDPGRP|BSD_GETPGRP|BSD_SETPGRP|CHAR_VSPRINTF|CROSS_COMPILE|DECLSPEC_THREAD|ENVIRON_ARRAY|FIXED_OSFHANDLE|GETHOSTENT_ERRNO|GETNETENT_ERRNO|GRENT_FPTR|GRENT_PTR|HASH_SEED|HASH_SEED_EXPLICIT|HOSTENT_ERRNO|HOSTENT_PTR|ITHREADS|LOCKF64|HEAPINSTEADOFSTACK|IMPORTLIB|MYBINMODE|NETENT_ERRNO|NETENT_PTR|NEXT_CTYPE|PERLIO|PERL_ATOF|PERL_SBRK|PFUNC|PROTOENT_ERRNO|PROTOENT_PTR|PURE_BISON|PWENT_FPTR|PWENT_PTR|REENTRANT|REENTRANT_API|RTL_POPEN|RTL_SPAWNVP|RTL_THREAD_API|SEMCTL_SEMID_DS|SEMCTL_SEMUN|SERVENT_ERRNO|SERVENT_PTR|SFIO|SPENT_FPTR|SPENT_PTR|STAT_BLOCKS|STDIO|THREADS|UTF8_SCRIPTS)\b">
+This flag either has no function in the benchmark version of the source,
+or must not be changed from its default value.
+<example>
+-DUSE_5005THREADS,
+-DUSE_56_INTERWORK_KLUDGE,
+-DUSE_64_BIT_ALL,
+-DUSE_64_BIT_RAWIO,
+-DUSE_ATTRIBUTES_FOR_PERLIO,
+-DUSE_BIGBLOCK_ALLOC,
+-DUSE_BROKEN_PAD_RESET,
+-DUSE_BSDPGRP,
+-DUSE_BSD_GETPGRP,
+-DUSE_BSD_SETPGRP,
+-DUSE_CHAR_VSPRINTF,
+-DUSE_CROSS_COMPILE,
+-DUSE_DECLSPEC_THREAD,
+-DUSE_ENVIRON_ARRAY,
+-DUSE_FIXED_OSFHANDLE,
+-DUSE_GETHOSTENT_ERRNO,
+-DUSE_GETNETENT_ERRNO,
+-DUSE_GRENT_FPTR,
+-DUSE_GRENT_PTR,
+-DUSE_HASH_SEED,
+-DUSE_HASH_SEED_EXPLICIT,
+-DUSE_HOSTENT_ERRNO,
+-DUSE_HOSTENT_PTR,
+-DUSE_ITHREADS,
+-DUSE_LOCKF64,
+-DUSEHEAPINSTEADOFSTACK,
+-DUSEIMPORTLIB,
+-DUSEMYBINMODE,
+-DUSE_NETENT_ERRNO,
+-DUSE_NETENT_PTR,
+-DUSE_NEXT_CTYPE,
+-DUSE_PERLIO,
+-DUSE_PERL_ATOF,
+-DUSE_PERL_SBRK,
+-DUSE_PFUNC,
+-DUSE_PROTOENT_ERRNO,
+-DUSE_PROTOENT_PTR,
+-DUSE_PURE_BISON,
+-DUSE_PWENT_FPTR,
+-DUSE_PWENT_PTR,
+-DUSE_REENTRANT,
+-DUSE_REENTRANT_API,
+-DUSE_RTL_POPEN,
+-DUSE_RTL_SPAWNVP,
+-DUSE_RTL_THREAD_API,
+-DUSE_SEMCTL_SEMID_DS,
+-DUSE_SEMCTL_SEMUN,
+-DUSE_SERVENT_ERRNO,
+-DUSE_SERVENT_PTR,
+-DUSE_SFIO,
+-DUSE_SPENT_FPTR,
+-DUSE_SPENT_PTR,
+-DUSE_STAT_BLOCKS,
+-DUSE_STDIO,
+-DUSE_THREADS,
+-DUSE_UTF8_SCRIPTS
+</example>
+</flag>
+
+<flag name="use_more_bits" class="portability" regexp="[-/]DUSE_(?:64_BIT_STDIO|FCNTL64|FGETPOS64|FLOCK64|FOPEN64|FREOPEN64|FSEEK64|FSETPOS64|FSTAT64|FTELL64|FTRUNCATE64|LARGE_FILES|LLSEEK|LSEEK64|LSTAT64|MORE_BITS|OPEN64|STAT64|TMPFILE64|TRUNCATE64|LONG_DOUBLE)\b">
+The benchmark does not use large files or highly precise floating point
+numbers, but you may use these flags to try it out anyway.
+<example>
+-DUSE_64_BIT_STDIO,
+-DUSE_FCNTL64,
+-DUSE_FGETPOS64,
+-DUSE_FLOCK64,
+-DUSE_FOPEN64,
+-DUSE_FREOPEN64,
+-DUSE_FSEEK64,
+-DUSE_FSETPOS64,
+-DUSE_FSTAT64,
+-DUSE_FTELL64,
+-DUSE_FTRUNCATE64,
+-DUSE_LARGE_FILES,
+-DUSE_LLSEEK,
+-DUSE_LSEEK64,
+-DUSE_LSTAT64,
+-DUSE_OPEN64,
+-DUSE_STAT64,
+-DUSE_TMPFILE64,
+-DUSE_TRUNCATE64,
+-DUSE_MORE_BITS,
+-DUSE_LONG_DOUBLE
+</example>
+</flag>
+
+<flag name="use_locale" class="portability" regexp="[-/]DUSE_LOCALE(?:_COLLATE|_CTYPE|_NUMERIC)?\b">
+Using a locale other than "C" will most likely cause the benchmark to
+miscompare, but you're still welcome to try.
+<example>
+-DUSE_LOCALE,
+-DUSE_LOCALE_COLLATE,
+-DUSE_LOCALE_CTYPE,
+-DUSE_LOCALE_NUMERIC
+</example>
+</flag>
+
+<flag name="DSPEC_CPU_CONST64_LL" class="portability">
+If your compiler requires 64-bit integer constants to be noted with an "LL"
+suffix instead of "i64", use this flag.
+</flag>
+
+</flagsdescription>
+

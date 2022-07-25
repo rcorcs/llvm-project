@@ -1,0 +1,284 @@
+#
+# Definitions to be customized by 'configure'
+#
+CXX=@CXX@
+AR=@AR@
+SHLIB_LD=@SHLIB_LD@
+RANLIB=@RANLIB@
+MAKEDEPEND=@MAKEDEPEND@
+
+OMNETPP_INCL_DIR=@OMNETPP_INCL_DIR@
+OMNETPP_LIB_DIR=@OMNETPP_LIB_DIR@
+OMNETPP_VERSION=@OMNETPP_VERSION@
+
+CFLAGS=@CFLAGS@
+AKAROA_CFLAGS=@AKAROA_CFLAGS@
+
+# LIB_SUFFIX is either A_LIB_SUFFIX or SO_LIB_SUFFIX
+LIB_SUFFIX=@LIB_SUFFIX@
+
+A_LIB_SUFFIX=@A_LIB_SUFFIX@
+SO_LIB_SUFFIX=@SO_LIB_SUFFIX@
+
+HAVE_DLOPEN=@HAVE_DLOPEN@
+
+#
+# Local definitions
+#
+COPTS=$(CFLAGS) $(AKAROA_CFLAGS) -I$(OMNETPP_INCL_DIR) -DBUILDING_ENVIR -DHAVE_DLOPEN=$(HAVE_DLOPEN)
+
+OBJS=args.o cenvir.o cinifile.o main.o omnetapp.o slaveapp.o seeds.o \
+     patmatch.o platdep.o speedmtr.o filemgrs.o akoutvectormgr.o
+
+#
+# Targets
+#
+all : libenvir$(LIB_SUFFIX)
+
+libenvir$(A_LIB_SUFFIX) : $(OBJS)
+	$(AR) libenvir$(A_LIB_SUFFIX) $(OBJS)
+	$(RANLIB) libenvir$(A_LIB_SUFFIX)
+	../utils/install-lib libenvir$(A_LIB_SUFFIX).$(OMNETPP_VERSION) $(OMNETPP_LIB_DIR) libenvir$(A_LIB_SUFFIX)
+
+libenvir$(SO_LIB_SUFFIX) : $(OBJS)
+	$(SHLIB_LD) -o libenvir$(SO_LIB_SUFFIX) $(OBJS)
+	../utils/install-lib libenvir$(SO_LIB_SUFFIX).$(OMNETPP_VERSION) $(OMNETPP_LIB_DIR) libenvir$(SO_LIB_SUFFIX)
+
+args.o : args.cc args.h
+	$(CXX) -c $(COPTS) args.cc
+
+cenvir.o : cenvir.cc
+	$(CXX) -c $(COPTS) cenvir.cc
+
+cinifile.o : cinifile.cc
+	$(CXX) -c $(COPTS) cinifile.cc
+
+main.o : main.cc
+	$(CXX) -c $(COPTS) main.cc
+
+omnetapp.o : omnetapp.cc
+	$(CXX) -c $(COPTS) omnetapp.cc
+
+slaveapp.o : slaveapp.cc
+	$(CXX) -c $(COPTS) slaveapp.cc
+
+seeds.o : seeds.cc
+	$(CXX) -c $(COPTS) seeds.cc
+
+patmatch.o : patmatch.cc
+	$(CXX) -c $(COPTS) patmatch.cc
+
+platdep.o : platdep.cc
+	$(CXX) -c $(COPTS) platdep.cc
+
+speedmtr.o : speedmtr.cc
+	$(CXX) -c $(COPTS) speedmtr.cc
+
+filemgrs.o : filemgrs.cc
+	$(CXX) -c $(COPTS) filemgrs.cc
+
+akoutvectormgr.o : akoutvectormgr.cc
+	$(CXX) -c $(COPTS) akoutvectormgr.cc
+
+depend:
+	$(MAKEDEPEND) -I. -I../../include -- *.cc
+	$(MAKEDEPEND) -I. -I../../include -fMakefile.in -- *.cc
+
+clean:
+	rm -f *.o libenvir$(A_LIB_SUFFIX) libenvir$(SO_LIB_SUFFIX)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+akoutvectormgr.o: akoutvectormgr.cc \
+  ../../include/cenvir.h \
+  omnetapp.h \
+  cinifile.h \
+  ../../include/csimul.h \
+  ../../include/cmodule.h \
+  ../../include/cstat.h \
+  ../../include/macros.h \
+  akoutvectormgr.h \
+  ../../include/defs.h \
+  ../../include/cpar.h \
+  ../../include/cobject.h \
+  ../../include/util.h \
+  ../../include/cexception.h \
+  ../../include/carray.h \
+  ../../include/chead.h \
+  args.h \
+  envdefs.h \
+  ../../include/envirext.h \
+  ../../include/errmsg.h \
+  ../../include/cmsgheap.h \
+  ../../include/ccoroutine.h \
+  ../../include/coutvect.h \
+  ../../include/cqueue.h \
+  ../../include/cgate.h \
+  ../../include/onstartup.h \
+  ../../include/ctypes.h \
+  filemgrs.h
+args.o: args.cc \
+  args.h \
+  envdefs.h \
+  ../../include/defs.h
+cenvir.o: cenvir.cc \
+  args.h \
+  ../../include/distrib.h \
+  cinifile.h \
+  ../../include/cenvir.h \
+  omnetapp.h \
+  appreg.h \
+  ../../include/cmodule.h \
+  ../../include/cnetmod.h \
+  slaveapp.h \
+  speedmtr.h \
+  filemgrs.h \
+  envdefs.h \
+  ../../include/defs.h \
+  ../../include/random.h \
+  ../../include/cpar.h \
+  ../../include/cobject.h \
+  ../../include/util.h \
+  ../../include/cexception.h \
+  ../../include/carray.h \
+  ../../include/chead.h \
+  ../../include/envirext.h \
+  ../../include/onstartup.h \
+  ../../include/ccoroutine.h \
+  ../../include/cqueue.h \
+  ../../include/cgate.h \
+  ../../include/csimul.h \
+  ../../include/errmsg.h \
+  ../../include/cmsgheap.h \
+  ../../include/coutvect.h
+cinifile.o: cinifile.cc \
+  ../../include/cenvir.h \
+  ../../include/util.h \
+  cinifile.h \
+  patmatch.h \
+  ../../include/defs.h \
+  ../../include/cpar.h \
+  ../../include/cobject.h \
+  ../../include/cexception.h \
+  envdefs.h
+filemgrs.o: filemgrs.cc \
+  ../../include/defs.h \
+  ../../include/cenvir.h \
+  cinifile.h \
+  omnetapp.h \
+  ../../include/csimul.h \
+  ../../include/cmodule.h \
+  ../../include/cstat.h \
+  ../../include/macros.h \
+  filemgrs.h \
+  ../../include/cpar.h \
+  ../../include/cobject.h \
+  ../../include/util.h \
+  ../../include/cexception.h \
+  envdefs.h \
+  ../../include/carray.h \
+  ../../include/chead.h \
+  args.h \
+  ../../include/envirext.h \
+  ../../include/errmsg.h \
+  ../../include/cmsgheap.h \
+  ../../include/ccoroutine.h \
+  ../../include/coutvect.h \
+  ../../include/cqueue.h \
+  ../../include/cgate.h \
+  ../../include/onstartup.h \
+  ../../include/ctypes.h
+main.o: main.cc \
+  ../../include/cobject.h \
+  ../../include/csimul.h \
+  ../../include/random.h \
+  ../../include/cenvir.h \
+  ../../include/onstartup.h \
+  ../../include/util.h \
+  ../../include/cexception.h \
+  ../../include/defs.h \
+  ../../include/errmsg.h \
+  ../../include/chead.h \
+  ../../include/cmsgheap.h \
+  ../../include/ccoroutine.h \
+  ../../include/coutvect.h \
+  ../../include/cpar.h
+omnetapp.o: omnetapp.cc \
+  args.h \
+  omnetapp.h \
+  cinifile.h \
+  patmatch.h \
+  ../../include/ctypes.h \
+  ../../include/ccoroutine.h \
+  ../../include/csimul.h \
+  ../../include/cpar.h \
+  ../../include/cnetmod.h \
+  ../../include/random.h \
+  envdefs.h \
+  ../../include/defs.h \
+  ../../include/carray.h \
+  ../../include/chead.h \
+  ../../include/cenvir.h \
+  ../../include/cexception.h \
+  ../../include/envirext.h \
+  ../../include/cobject.h \
+  ../../include/util.h \
+  ../../include/errmsg.h \
+  ../../include/cmsgheap.h \
+  ../../include/coutvect.h \
+  ../../include/cmodule.h \
+  ../../include/cqueue.h \
+  ../../include/cgate.h
+patmatch.o: patmatch.cc \
+  patmatch.h \
+  ../../include/defs.h \
+  envdefs.h
+platdep.o: platdep.cc \
+  ../../include/defs.h \
+  ../../include/util.h \
+  ../../include/cexception.h \
+  ../../include/cenvir.h \
+  ../../include/cpar.h \
+  ../../include/cobject.h
+seeds.o: seeds.cc \
+  omnetapp.h \
+  ../../include/carray.h \
+  ../../include/chead.h \
+  ../../include/cenvir.h \
+  ../../include/cexception.h \
+  args.h \
+  envdefs.h \
+  ../../include/envirext.h \
+  ../../include/cobject.h \
+  ../../include/util.h \
+  ../../include/defs.h \
+  ../../include/cpar.h
+slaveapp.o: slaveapp.cc \
+  slaveapp.h \
+  cinifile.h \
+  ../../include/csimul.h \
+  ../../include/cnetmod.h \
+  appreg.h \
+  envdefs.h \
+  omnetapp.h \
+  ../../include/defs.h \
+  ../../include/carray.h \
+  ../../include/chead.h \
+  ../../include/cenvir.h \
+  ../../include/cexception.h \
+  args.h \
+  ../../include/envirext.h \
+  ../../include/cobject.h \
+  ../../include/util.h \
+  ../../include/cpar.h \
+  ../../include/errmsg.h \
+  ../../include/cmsgheap.h \
+  ../../include/ccoroutine.h \
+  ../../include/coutvect.h \
+  ../../include/cmodule.h \
+  ../../include/cqueue.h \
+  ../../include/cgate.h \
+  ../../include/onstartup.h
+speedmtr.o: speedmtr.cc \
+  speedmtr.h \
+  ../../include/defs.h \
+  envdefs.h

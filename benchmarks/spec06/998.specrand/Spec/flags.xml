@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<!DOCTYPE flagsdescription SYSTEM
+       "http://www.spec.org/dtd/cpuflags1.dtd">
+
+<!-- This file defines flags that appear in the sources for 998.specrand.
+
+  Copyright (C) 2005-2006 Standard Performance Evaluation Corporation
+
+  $Revision: 4091 $
+  $Date: 2006-04-04 18:55:12 -0400 (Tue, 04 Apr 2006) $
+-->
+<flagsdescription>
+
+<!-- Normal flags file should suggest a name for themselves -->
+<filename>998.specrand.flags</filename>
+
+<title>998.specrand Flags</title>
+
+<header>
+<![CDATA[
+<p>There are a few preprocessor macros used in 998.specrand.
+Because they control the workings of the PRNG, attempting to change them is
+not allowed.</p>
+]]>
+</header>
+
+<flag name="D_A_MULTIPLIER" class="forbidden">
+Attempting to redefine _A_MULTIPLIER is forbidden.
+</flag>
+
+<flag name="U_A_MULTIPLIER" class="forbidden">
+Attempting to undefine _A_MULTIPLIER is forbidden.  It would break the code
+anyway.
+</flag>
+
+<flag name="D_M_MODULUS" class="forbidden">
+Attempting to redefine _M_MODULUS is forbidden.
+</flag>
+
+<flag name="U_M_MODULUS" class="forbidden">
+Attempting to undefine _M_MODULUS is forbidden.  It would break the code
+anyway.
+</flag>
+
+<flag name="D_Q_QUOTIENT" class="forbidden">
+Attempting to redefine _Q_QUOTIENT is forbidden.
+</flag>
+
+<flag name="U_Q_QUOTIENT" class="forbidden">
+Attempting to undefine _Q_QUOTIENT is forbidden.  It would break the code
+anyway.
+</flag>
+
+<flag name="D_R_REMAINDER" class="forbidden">
+Attempting to redefine _R_REMAINDER is forbidden.
+</flag>
+
+<flag name="U_R_REMAINDER" class="forbidden">
+Attempting to undefine _R_REMAINDER is forbidden.  It would break the code
+anyway.
+</flag>
+
+</flagsdescription>

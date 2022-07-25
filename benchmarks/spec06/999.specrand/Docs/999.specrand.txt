@@ -1,0 +1,77 @@
+                                  999.specrand
+                       SPEC CPU2006 Benchmark Description
+
+Benchmark Name
+
+   999.specrand
+
+     ----------------------------------------------------------------------
+
+Benchmark Author
+
+   Cloyce D. Spradling <cloyce+specrand [at] headgear.org>
+
+     ----------------------------------------------------------------------
+
+Benchmark Program General Category
+
+   Mine Canary
+
+     ----------------------------------------------------------------------
+
+Benchmark Description
+
+   999.specrand is a small harness for the algorithm presented in "Random
+   Number Generators: Good Ones Are Hard To Find" by Park and Miller. The
+   datatypes used have been modified so that the algorithm will work properly
+   on systems with 64-bit longs.
+
+   The benchmark simply generates a sequence of pseudorandom numbers starting
+   with a known seed. This benchmark is not a timed component of CPU2006;
+   rather, it's there as an indicator of larger problems. Several of the
+   other benchmarks use the specrand code as their PRNG. Thus, a failure in
+   999.specrand would point out a source of error in those codes as well.
+   This is cheap (in both time and space) insurance.
+
+     ----------------------------------------------------------------------
+
+Input Description
+
+   999.specrand's input consists of two numbers: a seed value for the PRNG,
+   and a count of the numbers to generate.
+
+     ----------------------------------------------------------------------
+
+Output Description
+
+   The specified number of random numbers are generated and output twice. The
+   first set is unscaled output from the PRNG output as a standard floating
+   point number with no size or precision modifiers (printf '%f' format). The
+   second set is scaled to between 1 and 2048000, and is output as a standard
+   integer with no size modifiers (printf '%d' format). The PRNG is not
+   re-seeded between sequences, so actually count*2 numbers are generated.
+
+     ----------------------------------------------------------------------
+
+Programming Language
+
+   ANSI C
+
+     ----------------------------------------------------------------------
+
+Known portability issues
+
+   This code probably will not work on a system where the standard 'int' type
+   is 64-bits wide.
+
+     ----------------------------------------------------------------------
+
+References
+
+     * S. K. Park and K. W. Miller: "Random number generators: good ones are
+       hard to find" October 1988. Communications of the ACM vol. 31 #10.
+       http://doi.acm.org/10.1145/63039.63042
+
+     ----------------------------------------------------------------------
+
+   Last updated: 6 February 2006

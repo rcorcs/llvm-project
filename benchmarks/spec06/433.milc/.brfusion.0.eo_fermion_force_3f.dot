@@ -1,0 +1,798 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then378:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %23, %struct.half_wilson_vector* %21, i32 %50, double* nonnull %arrayidx) #14</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %21, %struct.half_wilson_vector* %29, i32 %75) #14</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %25, %struct.half_wilson_vector* %29, i32 %50, double* nonnull %arrayidx6) #14</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %25, %struct.half_wilson_vector* %29, i32 %50) #14</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %29, %struct.half_wilson_vector* %21, i32 %50, double* nonnull %arrayidx4) #14</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %for.inc400</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left"> </td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %21, %struct.half_wilson_vector* %29, i32 %75) #14</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %29, %struct.half_wilson_vector* %25, i32 %75, double* nonnull %arrayidx4) #14</td></tr>
+<tr><td bgcolor="#e8765c70" align="left">  br label %for.inc400</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %DirectLinks = alloca [8 x i32], align 16</td></tr>
+<tr><td align="left">  %OneLink = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %Lepage = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %Naik = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %FiveSt = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %ThreeSt = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %SevenSt = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %mNaik = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %mLepage = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %mFiveSt = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %mThreeSt = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %mSevenSt = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %hwvec = alloca [8 x %struct.half_wilson_vector*], align 16</td></tr>
+<tr><td align="left">  %0 = bitcast [8 x i32]* %DirectLinks to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 32, i8* nonnull %0) #12</td></tr>
+<tr><td align="left">  %1 = bitcast [2 x double]* %OneLink to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %1) #12</td></tr>
+<tr><td align="left">  %2 = bitcast [2 x double]* %Lepage to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %2) #12</td></tr>
+<tr><td align="left">  %3 = bitcast [2 x double]* %Naik to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %3) #12</td></tr>
+<tr><td align="left">  %4 = bitcast [2 x double]* %FiveSt to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %4) #12</td></tr>
+<tr><td align="left">  %5 = bitcast [2 x double]* %ThreeSt to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %5) #12</td></tr>
+<tr><td align="left">  %6 = bitcast [2 x double]* %SevenSt to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %6) #12</td></tr>
+<tr><td align="left">  %7 = bitcast [2 x double]* %mNaik to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %7) #12</td></tr>
+<tr><td align="left">  %8 = bitcast [2 x double]* %mLepage to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %8) #12</td></tr>
+<tr><td align="left">  %9 = bitcast [2 x double]* %mFiveSt to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %9) #12</td></tr>
+<tr><td align="left">  %10 = bitcast [2 x double]* %mThreeSt to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %10) #12</td></tr>
+<tr><td align="left">  %11 = bitcast [2 x double]* %mSevenSt to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %11) #12</td></tr>
+<tr><td align="left">  %12 = bitcast [8 x %struct.half_wilson_vector*]* %hwvec to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 64, i8* nonnull %12) #12</td></tr>
+<tr><td align="left">  %conv = sitofp i32 %nflav1 to double</td></tr>
+<tr><td align="left">  %div = fmul double %conv, 2.500000e-01</td></tr>
+<tr><td align="left">  %mul = fmul double %div, 2.000000e+00</td></tr>
+<tr><td align="left">  %mul1 = fmul double %mul, %eps</td></tr>
+<tr><td align="left">  %13 = load double, double* getelementptr inbounds ([6 x double], [6 x double]* @act_path_coeff, i64 0, i64 0), align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %mul2 = fmul double %mul1, %13</td></tr>
+<tr><td align="left">  %arrayidx = getelementptr inbounds [2 x double], [2 x double]* %OneLink, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %mul2, double* %arrayidx, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %14 = load double, double* getelementptr inbounds ([6 x double], [6 x double]* @act_path_coeff, i64 0, i64 1), align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %mul3 = fmul double %mul1, %14</td></tr>
+<tr><td align="left">  %arrayidx4 = getelementptr inbounds [2 x double], [2 x double]* %Naik, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %mul3, double* %arrayidx4, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg = fneg double %mul3</td></tr>
+<tr><td align="left">  %arrayidx6 = getelementptr inbounds [2 x double], [2 x double]* %mNaik, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %fneg, double* %arrayidx6, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %15 = load double, double* getelementptr inbounds ([6 x double], [6 x double]* @act_path_coeff, i64 0, i64 2), align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %mul7 = fmul double %mul1, %15</td></tr>
+<tr><td align="left">  %arrayidx8 = getelementptr inbounds [2 x double], [2 x double]* %ThreeSt, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %mul7, double* %arrayidx8, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg10 = fneg double %mul7</td></tr>
+<tr><td align="left">  %arrayidx11 = getelementptr inbounds [2 x double], [2 x double]* %mThreeSt, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %fneg10, double* %arrayidx11, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %16 = load double, double* getelementptr inbounds ([6 x double], [6 x double]* @act_path_coeff, i64 0, i64 3), align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %mul12 = fmul double %mul1, %16</td></tr>
+<tr><td align="left">  %arrayidx13 = getelementptr inbounds [2 x double], [2 x double]* %FiveSt, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %mul12, double* %arrayidx13, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg15 = fneg double %mul12</td></tr>
+<tr><td align="left">  %arrayidx16 = getelementptr inbounds [2 x double], [2 x double]* %mFiveSt, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %fneg15, double* %arrayidx16, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %17 = load double, double* getelementptr inbounds ([6 x double], [6 x double]* @act_path_coeff, i64 0, i64 4), align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %mul17 = fmul double %mul1, %17</td></tr>
+<tr><td align="left">  %arrayidx18 = getelementptr inbounds [2 x double], [2 x double]* %SevenSt, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %mul17, double* %arrayidx18, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg20 = fneg double %mul17</td></tr>
+<tr><td align="left">  %arrayidx21 = getelementptr inbounds [2 x double], [2 x double]* %mSevenSt, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %fneg20, double* %arrayidx21, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %18 = load double, double* getelementptr inbounds ([6 x double], [6 x double]* @act_path_coeff, i64 0, i64 5), align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %mul22 = fmul double %mul1, %18</td></tr>
+<tr><td align="left">  %arrayidx23 = getelementptr inbounds [2 x double], [2 x double]* %Lepage, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %mul22, double* %arrayidx23, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg25 = fneg double %mul22</td></tr>
+<tr><td align="left">  %arrayidx26 = getelementptr inbounds [2 x double], [2 x double]* %mLepage, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %fneg25, double* %arrayidx26, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %conv27 = sitofp i32 %nflav2 to double</td></tr>
+<tr><td align="left">  %div28 = fmul double %conv27, 2.500000e-01</td></tr>
+<tr><td align="left">  %mul29 = fmul double %div28, 2.000000e+00</td></tr>
+<tr><td align="left">  %mul30 = fmul double %mul29, %eps</td></tr>
+<tr><td align="left">  %mul31 = fmul double %mul30, %13</td></tr>
+<tr><td align="left">  %arrayidx32 = getelementptr inbounds [2 x double], [2 x double]* %OneLink, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %mul31, double* %arrayidx32, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %mul33 = fmul double %mul30, %14</td></tr>
+<tr><td align="left">  %arrayidx34 = getelementptr inbounds [2 x double], [2 x double]* %Naik, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %mul33, double* %arrayidx34, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg36 = fneg double %mul33</td></tr>
+<tr><td align="left">  %arrayidx37 = getelementptr inbounds [2 x double], [2 x double]* %mNaik, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %fneg36, double* %arrayidx37, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %mul38 = fmul double %mul30, %15</td></tr>
+<tr><td align="left">  %arrayidx39 = getelementptr inbounds [2 x double], [2 x double]* %ThreeSt, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %mul38, double* %arrayidx39, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg41 = fneg double %mul38</td></tr>
+<tr><td align="left">  %arrayidx42 = getelementptr inbounds [2 x double], [2 x double]* %mThreeSt, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %fneg41, double* %arrayidx42, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %mul43 = fmul double %mul30, %16</td></tr>
+<tr><td align="left">  %arrayidx44 = getelementptr inbounds [2 x double], [2 x double]* %FiveSt, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %mul43, double* %arrayidx44, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg46 = fneg double %mul43</td></tr>
+<tr><td align="left">  %arrayidx47 = getelementptr inbounds [2 x double], [2 x double]* %mFiveSt, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %fneg46, double* %arrayidx47, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %mul48 = fmul double %mul30, %17</td></tr>
+<tr><td align="left">  %arrayidx49 = getelementptr inbounds [2 x double], [2 x double]* %SevenSt, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %mul48, double* %arrayidx49, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg51 = fneg double %mul48</td></tr>
+<tr><td align="left">  %arrayidx52 = getelementptr inbounds [2 x double], [2 x double]* %mSevenSt, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %fneg51, double* %arrayidx52, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %mul53 = fmul double %mul30, %18</td></tr>
+<tr><td align="left">  %arrayidx54 = getelementptr inbounds [2 x double], [2 x double]* %Lepage, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %mul53, double* %arrayidx54, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg56 = fneg double %mul53</td></tr>
+<tr><td align="left">  %arrayidx57 = getelementptr inbounds [2 x double], [2 x double]* %mLepage, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %fneg56, double* %arrayidx57, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  br label %for.cond</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond:</td></tr>
+<tr><td align="left">  %indvars.iv = phi i64 [ %indvars.iv.next, %for.body ], [ 0, %entry ]</td></tr>
+<tr><td align="left">  %exitcond.not = icmp eq i64 %indvars.iv, 8</td></tr>
+<tr><td align="left">  br i1 %exitcond.not, label %for.cond60.preheader, label %for.body</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb2 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond60.preheader:</td></tr>
+<tr><td align="left">  %19 = load i32, i32* @sites_on_node, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %conv64 = sext i32 %19 to i64</td></tr>
+<tr><td align="left">  br label %for.cond60</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb3 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body:</td></tr>
+<tr><td align="left">  %arrayidx59 = getelementptr inbounds [8 x i32], [8 x i32]* %DirectLinks, i64 0, i64 %indvars.iv</td></tr>
+<tr><td align="left">  store i32 0, i32* %arrayidx59, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %indvars.iv.next = add nuw nsw i64 %indvars.iv, 1</td></tr>
+<tr><td align="left">  br label %for.cond, !llvm.loop !86</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb4 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond60:</td></tr>
+<tr><td align="left">  %indvars.iv565 = phi i64 [ 0, %for.cond60.preheader ], [ %indvars.iv.next566, %for.body63 ]</td></tr>
+<tr><td align="left">  %exitcond567.not = icmp eq i64 %indvars.iv565, 8</td></tr>
+<tr><td align="left">  %call71 = tail call noalias align 16 i8* @calloc(i64 %conv64, i64 96) #13</td></tr>
+<tr><td align="left">  br i1 %exitcond567.not, label %for.end69, label %for.body63</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb5 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body63:</td></tr>
+<tr><td align="left">  %arrayidx66 = getelementptr inbounds [8 x %struct.half_wilson_vector*], [8 x %struct.half_wilson_vector*]* %hwvec, i64 0, i64 %indvars.iv565</td></tr>
+<tr><td align="left">  %20 = bitcast %struct.half_wilson_vector** %arrayidx66 to i8**</td></tr>
+<tr><td align="left">  store i8* %call71, i8** %20, align 8, !tbaa !28</td></tr>
+<tr><td align="left">  %indvars.iv.next566 = add nuw nsw i64 %indvars.iv565, 1</td></tr>
+<tr><td align="left">  br label %for.cond60, !llvm.loop !87</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb6 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end69:</td></tr>
+<tr><td align="left">  %21 = bitcast i8* %call71 to %struct.half_wilson_vector*</td></tr>
+<tr><td align="left">  %22 = load %struct.site*, %struct.site** @lattice, align 8, !tbaa !28</td></tr>
+<tr><td align="left">  %idx.ext = sext i32 %x1_off to i64</td></tr>
+<tr><td align="left">  %idx.ext83 = sext i32 %x2_off to i64</td></tr>
+<tr><td align="left">  %smax = call i32 @llvm.smax.i32(i32 %19, i32 0)</td></tr>
+<tr><td align="left">  %wide.trip.count = zext i32 %smax to i64</td></tr>
+<tr><td align="left">  br label %for.cond72</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb7 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond72:</td></tr>
+<tr><td align="left">  %indvars.iv568 = phi i64 [ %indvars.iv.next569, %for.body75 ], [ 0, %for.end69 ]</td></tr>
+<tr><td align="left">  %s.0 = phi %struct.site* [ %incdec.ptr, %for.body75 ], [ %22, %for.end69 ]</td></tr>
+<tr><td align="left">  %exitcond570.not = icmp eq i64 %indvars.iv568, %wide.trip.count</td></tr>
+<tr><td align="left">  br i1 %exitcond570.not, label %for.cond88.preheader, label %for.body75</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb8 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond88.preheader:</td></tr>
+<tr><td align="left">  %arrayidx100 = getelementptr inbounds [8 x %struct.half_wilson_vector*], [8 x %struct.half_wilson_vector*]* %hwvec, i64 0, i64 0</td></tr>
+<tr><td align="left">  %23 = load %struct.half_wilson_vector*, %struct.half_wilson_vector** %arrayidx100, align 16</td></tr>
+<tr><td align="left">  %arrayidx103 = getelementptr inbounds [8 x %struct.half_wilson_vector*], [8 x %struct.half_wilson_vector*]* %hwvec, i64 0, i64 7</td></tr>
+<tr><td align="left">  %24 = load %struct.half_wilson_vector*, %struct.half_wilson_vector** %arrayidx103, align 8</td></tr>
+<tr><td align="left">  %arrayidx128 = getelementptr inbounds [8 x %struct.half_wilson_vector*], [8 x %struct.half_wilson_vector*]* %hwvec, i64 0, i64 1</td></tr>
+<tr><td align="left">  %25 = load %struct.half_wilson_vector*, %struct.half_wilson_vector** %arrayidx128, align 8</td></tr>
+<tr><td align="left">  %arrayidx131 = getelementptr inbounds [8 x %struct.half_wilson_vector*], [8 x %struct.half_wilson_vector*]* %hwvec, i64 0, i64 6</td></tr>
+<tr><td align="left">  %26 = load %struct.half_wilson_vector*, %struct.half_wilson_vector** %arrayidx131, align 16</td></tr>
+<tr><td align="left">  %arrayidx165 = getelementptr inbounds [8 x %struct.half_wilson_vector*], [8 x %struct.half_wilson_vector*]* %hwvec, i64 0, i64 2</td></tr>
+<tr><td align="left">  %27 = load %struct.half_wilson_vector*, %struct.half_wilson_vector** %arrayidx165, align 16</td></tr>
+<tr><td align="left">  %arrayidx168 = getelementptr inbounds [8 x %struct.half_wilson_vector*], [8 x %struct.half_wilson_vector*]* %hwvec, i64 0, i64 3</td></tr>
+<tr><td align="left">  %28 = load %struct.half_wilson_vector*, %struct.half_wilson_vector** %arrayidx168, align 8</td></tr>
+<tr><td align="left">  %arrayidx177 = getelementptr inbounds [8 x %struct.half_wilson_vector*], [8 x %struct.half_wilson_vector*]* %hwvec, i64 0, i64 4</td></tr>
+<tr><td align="left">  %29 = load %struct.half_wilson_vector*, %struct.half_wilson_vector** %arrayidx177, align 16</td></tr>
+<tr><td align="left">  br label %for.cond88</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb9 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body75:</td></tr>
+<tr><td align="left">  %h = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %21, i64 %indvars.iv568, i32 0</td></tr>
+<tr><td align="left">  %30 = bitcast %struct.site* %s.0 to i8*</td></tr>
+<tr><td align="left">  %add.ptr = getelementptr inbounds i8, i8* %30, i64 %idx.ext</td></tr>
+<tr><td align="left">  %31 = bitcast [2 x %struct.su3_vector]* %h to i8*</td></tr>
+<tr><td align="left">  tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* noundef nonnull align 16 dereferenceable(48) %31, i8* noundef nonnull align 8 dereferenceable(48) %add.ptr, i64 48, i1 false), !tbaa.struct !30</td></tr>
+<tr><td align="left">  %arrayidx82 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %21, i64 %indvars.iv568, i32 0, i64 1</td></tr>
+<tr><td align="left">  %add.ptr84 = getelementptr inbounds i8, i8* %30, i64 %idx.ext83</td></tr>
+<tr><td align="left">  %32 = bitcast %struct.su3_vector* %arrayidx82 to i8*</td></tr>
+<tr><td align="left">  tail call void @llvm.memcpy.p0i8.p0i8.i64(i8* noundef nonnull align 16 dereferenceable(48) %32, i8* noundef nonnull align 8 dereferenceable(48) %add.ptr84, i64 48, i1 false), !tbaa.struct !30</td></tr>
+<tr><td align="left">  %indvars.iv.next569 = add nuw nsw i64 %indvars.iv568, 1</td></tr>
+<tr><td align="left">  %incdec.ptr = getelementptr inbounds %struct.site, %struct.site* %s.0, i64 1</td></tr>
+<tr><td align="left">  br label %for.cond72, !llvm.loop !88</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb10 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond88:</td></tr>
+<tr><td align="left">  %33 = phi double [ %mul43, %for.cond88.preheader ], [ %43, %for.inc403 ]</td></tr>
+<tr><td align="left">  %34 = phi double [ %mul12, %for.cond88.preheader ], [ %44, %for.inc403 ]</td></tr>
+<tr><td align="left">  %35 = phi double [ %mul43, %for.cond88.preheader ], [ %45, %for.inc403 ]</td></tr>
+<tr><td align="left">  %36 = phi double [ %mul12, %for.cond88.preheader ], [ %46, %for.inc403 ]</td></tr>
+<tr><td align="left">  %37 = phi double [ %mul53, %for.cond88.preheader ], [ %47, %for.inc403 ]</td></tr>
+<tr><td align="left">  %38 = phi double [ %mul22, %for.cond88.preheader ], [ %48, %for.inc403 ]</td></tr>
+<tr><td align="left">  %indvars.iv583 = phi i64 [ 0, %for.cond88.preheader ], [ %indvars.iv.next584, %for.inc403 ]</td></tr>
+<tr><td align="left">  %exitcond586.not = icmp eq i64 %indvars.iv583, 8</td></tr>
+<tr><td align="left">  br i1 %exitcond586.not, label %for.end405, label %for.cond92.preheader</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb11 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.cond92.preheader:</td></tr>
+<tr><td align="left">  %cmp104 = icmp ult i64 %indvars.iv583, 4</td></tr>
+<tr><td align="left">  %39 = trunc i64 %indvars.iv583 to i32</td></tr>
+<tr><td align="left">  %40 = sub i32 7, %39</td></tr>
+<tr><td align="left">  %41 = zext i32 %40 to i64</td></tr>
+<tr><td align="left">  %42 = trunc i64 %indvars.iv583 to i32</td></tr>
+<tr><td align="left">  br label %for.cond92</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb12 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond92:</td></tr>
+<tr><td align="left">  %43 = phi double [ %33, %for.cond92.preheader ], [ %79, %for.inc400 ]</td></tr>
+<tr><td align="left">  %44 = phi double [ %34, %for.cond92.preheader ], [ %80, %for.inc400 ]</td></tr>
+<tr><td align="left">  %45 = phi double [ %35, %for.cond92.preheader ], [ %81, %for.inc400 ]</td></tr>
+<tr><td align="left">  %46 = phi double [ %36, %for.cond92.preheader ], [ %82, %for.inc400 ]</td></tr>
+<tr><td align="left">  %47 = phi double [ %37, %for.cond92.preheader ], [ %83, %for.inc400 ]</td></tr>
+<tr><td align="left">  %48 = phi double [ %38, %for.cond92.preheader ], [ %84, %for.inc400 ]</td></tr>
+<tr><td align="left">  %indvars.iv579 = phi i64 [ 0, %for.cond92.preheader ], [ %indvars.iv.next580, %for.inc400 ]</td></tr>
+<tr><td align="left">  %exitcond582.not = icmp eq i64 %indvars.iv579, 8</td></tr>
+<tr><td align="left">  br i1 %exitcond582.not, label %for.inc403, label %for.body95</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb13 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body95:</td></tr>
+<tr><td align="left">  %cmp96.not = icmp eq i64 %indvars.iv579, %indvars.iv583</td></tr>
+<tr><td align="left">  %cmp98.not = icmp eq i64 %indvars.iv579, %41</td></tr>
+<tr><td align="left">  %or.cond = select i1 %cmp96.not, i1 true, i1 %cmp98.not</td></tr>
+<tr><td align="left">  br i1 %or.cond, label %for.inc400, label %if.then</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb14 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td align="left">  %49 = sub nuw nsw i64 7, %indvars.iv579</td></tr>
+<tr><td align="left">  %50 = trunc i64 %49 to i32</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %21, %struct.half_wilson_vector* %23, i32 %50) #14</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %23, %struct.half_wilson_vector* %24, i32 %42) #14</td></tr>
+<tr><td align="left">  br i1 %cmp104, label %if.then106, label %if.end</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb15 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then106:</td></tr>
+<tr><td align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %24, %struct.half_wilson_vector* %23, i32 %42, double* nonnull %arrayidx11) #14</td></tr>
+<tr><td align="left">  br label %if.end</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb16 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end:</td></tr>
+<tr><td align="left">  %51 = load double, double* %arrayidx8, align 16</td></tr>
+<tr><td align="left">  %52 = load double, double* %arrayidx39, align 8</td></tr>
+<tr><td align="left">  br label %for.cond109</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb17 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond109:</td></tr>
+<tr><td align="left">  %53 = phi double [ %43, %if.end ], [ %69, %for.inc291 ]</td></tr>
+<tr><td align="left">  %54 = phi double [ %44, %if.end ], [ %70, %for.inc291 ]</td></tr>
+<tr><td align="left">  %55 = phi double [ %45, %if.end ], [ %71, %for.inc291 ]</td></tr>
+<tr><td align="left">  %56 = phi double [ %46, %if.end ], [ %72, %for.inc291 ]</td></tr>
+<tr><td align="left">  %nu.0 = phi i32 [ 0, %if.end ], [ %inc292, %for.inc291 ]</td></tr>
+<tr><td align="left">  %exitcond576.not = icmp eq i32 %nu.0, 8</td></tr>
+<tr><td align="left">  br i1 %exitcond576.not, label %for.end293, label %for.body112</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb18 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body112:</td></tr>
+<tr><td align="left">  %57 = zext i32 %nu.0 to i64</td></tr>
+<tr><td align="left">  %cmp113.not = icmp eq i64 %indvars.iv579, %57</td></tr>
+<tr><td align="left">  %cmp117.not = icmp eq i64 %49, %57</td></tr>
+<tr><td align="left">  %or.cond557 = select i1 %cmp113.not, i1 true, i1 %cmp117.not</td></tr>
+<tr><td align="left">  %cmp120.not = icmp eq i64 %indvars.iv583, %57</td></tr>
+<tr><td align="left">  %or.cond558 = select i1 %or.cond557, i1 true, i1 %cmp120.not</td></tr>
+<tr><td align="left">  %cmp124.not = icmp eq i32 %nu.0, %40</td></tr>
+<tr><td align="left">  %or.cond559 = select i1 %or.cond558, i1 true, i1 %cmp124.not</td></tr>
+<tr><td align="left">  br i1 %or.cond559, label %for.inc291, label %if.then126</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb19 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then126:</td></tr>
+<tr><td align="left">  %sub129 = sub nuw nsw i32 7, %nu.0</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %23, %struct.half_wilson_vector* %25, i32 %sub129) #14</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %25, %struct.half_wilson_vector* %26, i32 %42) #14</td></tr>
+<tr><td align="left">  br i1 %cmp104, label %if.then134, label %if.end138</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb20 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then134:</td></tr>
+<tr><td align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %26, %struct.half_wilson_vector* %25, i32 %42, double* nonnull %arrayidx13) #14</td></tr>
+<tr><td align="left">  %.pre591 = load double, double* %arrayidx13, align 16</td></tr>
+<tr><td align="left">  %.pre592 = load double, double* %arrayidx44, align 8</td></tr>
+<tr><td align="left">  br label %if.end138</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb21 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end138:</td></tr>
+<tr><td align="left">  %58 = phi double [ %.pre592, %if.then134 ], [ %53, %if.then126 ]</td></tr>
+<tr><td align="left">  %59 = phi double [ %.pre591, %if.then134 ], [ %54, %if.then126 ]</td></tr>
+<tr><td align="left">  %60 = phi double [ %.pre592, %if.then134 ], [ %55, %if.then126 ]</td></tr>
+<tr><td align="left">  %61 = phi double [ %.pre591, %if.then134 ], [ %56, %if.then126 ]</td></tr>
+<tr><td align="left">  br label %for.cond139</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb22 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond139:</td></tr>
+<tr><td align="left">  %rho.0 = phi i32 [ 0, %if.end138 ], [ %inc233, %for.inc232 ]</td></tr>
+<tr><td align="left">  %exitcond573.not = icmp eq i32 %rho.0, 8</td></tr>
+<tr><td align="left">  br i1 %exitcond573.not, label %for.end234, label %for.body142</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb23 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.body142:</td></tr>
+<tr><td align="left">  %62 = zext i32 %rho.0 to i64</td></tr>
+<tr><td align="left">  %cmp143.not = icmp eq i64 %indvars.iv579, %62</td></tr>
+<tr><td align="left">  %cmp147.not = icmp eq i64 %49, %62</td></tr>
+<tr><td align="left">  %or.cond560 = select i1 %cmp143.not, i1 true, i1 %cmp147.not</td></tr>
+<tr><td align="left">  %cmp150.not = icmp eq i32 %rho.0, %nu.0</td></tr>
+<tr><td align="left">  %or.cond561 = select i1 %or.cond560, i1 true, i1 %cmp150.not</td></tr>
+<tr><td align="left">  %cmp154.not = icmp eq i32 %rho.0, %sub129</td></tr>
+<tr><td align="left">  %or.cond562 = select i1 %or.cond561, i1 true, i1 %cmp154.not</td></tr>
+<tr><td align="left">  %cmp157.not = icmp eq i64 %indvars.iv583, %62</td></tr>
+<tr><td align="left">  %or.cond563 = select i1 %or.cond562, i1 true, i1 %cmp157.not</td></tr>
+<tr><td align="left">  %cmp161.not = icmp eq i32 %rho.0, %40</td></tr>
+<tr><td align="left">  %or.cond564 = select i1 %or.cond563, i1 true, i1 %cmp161.not</td></tr>
+<tr><td align="left">  br i1 %or.cond564, label %for.inc232, label %if.then163</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb24 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then163:</td></tr>
+<tr><td align="left">  %sub166 = sub nuw nsw i32 7, %rho.0</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %25, %struct.half_wilson_vector* %27, i32 %sub166) #14</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %27, %struct.half_wilson_vector* %28, i32 %42) #14</td></tr>
+<tr><td align="left">  br i1 %cmp104, label %if.then171, label %if.end175</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb25 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then171:</td></tr>
+<tr><td align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %28, %struct.half_wilson_vector* %27, i32 %42, double* nonnull %arrayidx21) #14</td></tr>
+<tr><td align="left">  br label %if.end175</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb26 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end175:</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %28, %struct.half_wilson_vector* %29, i32 %rho.0) #14</td></tr>
+<tr><td align="left">  call void @side_link_3f_force(i32 %rho.0, i32 %42, double* nonnull %arrayidx18, %struct.half_wilson_vector* %25, %struct.half_wilson_vector* %28, %struct.half_wilson_vector* %27, %struct.half_wilson_vector* %29) #14</td></tr>
+<tr><td align="left">  %63 = load double, double* %arrayidx18, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %div185 = fdiv double %63, %61</td></tr>
+<tr><td align="left">  %64 = load double, double* %arrayidx49, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %div189 = fdiv double %64, %60</td></tr>
+<tr><td align="left">  br label %for.cond191</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb27 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond191:</td></tr>
+<tr><td align="left">  %indvars.iv571 = phi i64 [ %indvars.iv.next572, %for.body194 ], [ 0, %if.end175 ]</td></tr>
+<tr><td align="left">  %65 = load i32, i32* @sites_on_node, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %66 = sext i32 %65 to i64</td></tr>
+<tr><td align="left">  %cmp192 = icmp slt i64 %indvars.iv571, %66</td></tr>
+<tr><td align="left">  br i1 %cmp192, label %for.body194, label %for.inc232</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb28 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body194:</td></tr>
+<tr><td align="left">  %arrayidx199 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %26, i64 %indvars.iv571, i32 0, i64 0</td></tr>
+<tr><td align="left">  %arrayidx204 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %29, i64 %indvars.iv571, i32 0, i64 0</td></tr>
+<tr><td align="left">  tail call void @scalar_mult_add_su3_vector(%struct.su3_vector* %arrayidx199, %struct.su3_vector* %arrayidx204, double %div185, %struct.su3_vector* %arrayidx199) #13</td></tr>
+<tr><td align="left">  %arrayidx215 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %26, i64 %indvars.iv571, i32 0, i64 1</td></tr>
+<tr><td align="left">  %arrayidx220 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %29, i64 %indvars.iv571, i32 0, i64 1</td></tr>
+<tr><td align="left">  tail call void @scalar_mult_add_su3_vector(%struct.su3_vector* nonnull %arrayidx215, %struct.su3_vector* nonnull %arrayidx220, double %div189, %struct.su3_vector* nonnull %arrayidx215) #13</td></tr>
+<tr><td align="left">  %indvars.iv.next572 = add nuw nsw i64 %indvars.iv571, 1</td></tr>
+<tr><td align="left">  br label %for.cond191, !llvm.loop !89</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb29 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc232:</td></tr>
+<tr><td align="left">  %inc233 = add nuw nsw i32 %rho.0, 1</td></tr>
+<tr><td align="left">  br label %for.cond139, !llvm.loop !90</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb30 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end234:</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %26, %struct.half_wilson_vector* %28, i32 %nu.0) #14</td></tr>
+<tr><td align="left">  call void @side_link_3f_force(i32 %nu.0, i32 %42, double* nonnull %arrayidx16, %struct.half_wilson_vector* %23, %struct.half_wilson_vector* %26, %struct.half_wilson_vector* %25, %struct.half_wilson_vector* %28) #14</td></tr>
+<tr><td align="left">  %div244 = fdiv double %59, %51</td></tr>
+<tr><td align="left">  %div248 = fdiv double %58, %52</td></tr>
+<tr><td align="left">  br label %for.cond250</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb31 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond250:</td></tr>
+<tr><td align="left">  %indvars.iv574 = phi i64 [ %indvars.iv.next575, %for.body253 ], [ 0, %for.end234 ]</td></tr>
+<tr><td align="left">  %67 = load i32, i32* @sites_on_node, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %68 = sext i32 %67 to i64</td></tr>
+<tr><td align="left">  %cmp251 = icmp slt i64 %indvars.iv574, %68</td></tr>
+<tr><td align="left">  br i1 %cmp251, label %for.body253, label %for.inc291</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb32 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body253:</td></tr>
+<tr><td align="left">  %arrayidx258 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %24, i64 %indvars.iv574, i32 0, i64 0</td></tr>
+<tr><td align="left">  %arrayidx263 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %28, i64 %indvars.iv574, i32 0, i64 0</td></tr>
+<tr><td align="left">  tail call void @scalar_mult_add_su3_vector(%struct.su3_vector* %arrayidx258, %struct.su3_vector* %arrayidx263, double %div244, %struct.su3_vector* %arrayidx258) #13</td></tr>
+<tr><td align="left">  %arrayidx274 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %24, i64 %indvars.iv574, i32 0, i64 1</td></tr>
+<tr><td align="left">  %arrayidx279 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %28, i64 %indvars.iv574, i32 0, i64 1</td></tr>
+<tr><td align="left">  tail call void @scalar_mult_add_su3_vector(%struct.su3_vector* nonnull %arrayidx274, %struct.su3_vector* nonnull %arrayidx279, double %div248, %struct.su3_vector* nonnull %arrayidx274) #13</td></tr>
+<tr><td align="left">  %indvars.iv.next575 = add nuw nsw i64 %indvars.iv574, 1</td></tr>
+<tr><td align="left">  br label %for.cond250, !llvm.loop !91</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb33 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc291:</td></tr>
+<tr><td align="left">  %69 = phi double [ %53, %for.body112 ], [ %58, %for.cond250 ]</td></tr>
+<tr><td align="left">  %70 = phi double [ %54, %for.body112 ], [ %59, %for.cond250 ]</td></tr>
+<tr><td align="left">  %71 = phi double [ %55, %for.body112 ], [ %58, %for.cond250 ]</td></tr>
+<tr><td align="left">  %72 = phi double [ %56, %for.body112 ], [ %59, %for.cond250 ]</td></tr>
+<tr><td align="left">  %inc292 = add nuw nsw i32 %nu.0, 1</td></tr>
+<tr><td align="left">  br label %for.cond109, !llvm.loop !92</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb34 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end293:</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %23, %struct.half_wilson_vector* %25, i32 %50) #14</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %25, %struct.half_wilson_vector* %26, i32 %42) #14</td></tr>
+<tr><td align="left">  br i1 %cmp104, label %if.then301, label %if.end305</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb35 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then301:</td></tr>
+<tr><td align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %26, %struct.half_wilson_vector* %25, i32 %42, double* nonnull %arrayidx23) #14</td></tr>
+<tr><td align="left">  %.pre = load double, double* %arrayidx23, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %.pre590 = load double, double* %arrayidx54, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  br label %if.end305</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb36 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end305:</td></tr>
+<tr><td align="left">  %73 = phi double [ %.pre590, %if.then301 ], [ %47, %for.end293 ]</td></tr>
+<tr><td align="left">  %74 = phi double [ %.pre, %if.then301 ], [ %48, %for.end293 ]</td></tr>
+<tr><td align="left">  %75 = trunc i64 %indvars.iv579 to i32</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %26, %struct.half_wilson_vector* %28, i32 %75) #14</td></tr>
+<tr><td align="left">  call void @side_link_3f_force(i32 %75, i32 %42, double* nonnull %arrayidx26, %struct.half_wilson_vector* %23, %struct.half_wilson_vector* %26, %struct.half_wilson_vector* %25, %struct.half_wilson_vector* %28) #14</td></tr>
+<tr><td align="left">  %div315 = fdiv double %74, %51</td></tr>
+<tr><td align="left">  %div319 = fdiv double %73, %52</td></tr>
+<tr><td align="left">  br label %for.cond321</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb37 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond321:</td></tr>
+<tr><td align="left">  %indvars.iv577 = phi i64 [ %indvars.iv.next578, %for.body324 ], [ 0, %if.end305 ]</td></tr>
+<tr><td align="left">  %76 = load i32, i32* @sites_on_node, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %77 = sext i32 %76 to i64</td></tr>
+<tr><td align="left">  %cmp322 = icmp slt i64 %indvars.iv577, %77</td></tr>
+<tr><td align="left">  br i1 %cmp322, label %for.body324, label %for.end360</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb38 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body324:</td></tr>
+<tr><td align="left">  %arrayidx329 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %24, i64 %indvars.iv577, i32 0, i64 0</td></tr>
+<tr><td align="left">  %arrayidx334 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %28, i64 %indvars.iv577, i32 0, i64 0</td></tr>
+<tr><td align="left">  tail call void @scalar_mult_add_su3_vector(%struct.su3_vector* %arrayidx329, %struct.su3_vector* %arrayidx334, double %div315, %struct.su3_vector* %arrayidx329) #13</td></tr>
+<tr><td align="left">  %arrayidx345 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %24, i64 %indvars.iv577, i32 0, i64 1</td></tr>
+<tr><td align="left">  %arrayidx350 = getelementptr inbounds %struct.half_wilson_vector, %struct.half_wilson_vector* %28, i64 %indvars.iv577, i32 0, i64 1</td></tr>
+<tr><td align="left">  tail call void @scalar_mult_add_su3_vector(%struct.su3_vector* nonnull %arrayidx345, %struct.su3_vector* nonnull %arrayidx350, double %div319, %struct.su3_vector* nonnull %arrayidx345) #13</td></tr>
+<tr><td align="left">  %indvars.iv.next578 = add nuw nsw i64 %indvars.iv577, 1</td></tr>
+<tr><td align="left">  br label %for.cond321, !llvm.loop !93</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb39 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.end360:</td></tr>
+<tr><td align="left">  %cmp361 = icmp ult i64 %indvars.iv579, 4</td></tr>
+<tr><td align="left">  br i1 %cmp361, label %if.then363, label %if.end366</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb40 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.then363:</td></tr>
+<tr><td align="left">  tail call void @u_shift_hw_fermion(%struct.half_wilson_vector* %24, %struct.half_wilson_vector* %28, i32 %75) #14</td></tr>
+<tr><td align="left">  br label %if.end366</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb41 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.end366:</td></tr>
+<tr><td align="left">  call void @side_link_3f_force(i32 %75, i32 %42, double* nonnull %arrayidx8, %struct.half_wilson_vector* %21, %struct.half_wilson_vector* %24, %struct.half_wilson_vector* %23, %struct.half_wilson_vector* %28) #14</td></tr>
+<tr><td align="left">  %arrayidx372 = getelementptr inbounds [8 x i32], [8 x i32]* %DirectLinks, i64 0, i64 %indvars.iv579</td></tr>
+<tr><td align="left">  %78 = load i32, i32* %arrayidx372, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %tobool.not = icmp eq i32 %78, 0</td></tr>
+<tr><td align="left">  br i1 %tobool.not, label %if.then373, label %for.inc400</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb42 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">if.then373:</td></tr>
+<tr><td align="left">  store i32 1, i32* %arrayidx372, align 4, !tbaa !3</td></tr>
+<tr><td align="left">  %cmp376 = icmp ugt i64 %indvars.iv579, 3</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp376, label %if.then378, label %if.else</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb43 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc400:</td></tr>
+<tr><td align="left">  %79 = phi double [ %43, %for.body95 ], [ %53, %if.then378 ], [ %53, %if.else ], [ %53, %if.end366 ]</td></tr>
+<tr><td align="left">  %80 = phi double [ %44, %for.body95 ], [ %54, %if.then378 ], [ %54, %if.else ], [ %54, %if.end366 ]</td></tr>
+<tr><td align="left">  %81 = phi double [ %45, %for.body95 ], [ %55, %if.then378 ], [ %55, %if.else ], [ %55, %if.end366 ]</td></tr>
+<tr><td align="left">  %82 = phi double [ %46, %for.body95 ], [ %56, %if.then378 ], [ %56, %if.else ], [ %56, %if.end366 ]</td></tr>
+<tr><td align="left">  %83 = phi double [ %47, %for.body95 ], [ %73, %if.then378 ], [ %73, %if.else ], [ %73, %if.end366 ]</td></tr>
+<tr><td align="left">  %84 = phi double [ %48, %for.body95 ], [ %74, %if.then378 ], [ %74, %if.else ], [ %74, %if.end366 ]</td></tr>
+<tr><td align="left">  %indvars.iv.next580 = add nuw nsw i64 %indvars.iv579, 1</td></tr>
+<tr><td align="left">  br label %for.cond92, !llvm.loop !94</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb44 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.inc403:</td></tr>
+<tr><td align="left">  %indvars.iv.next584 = add nuw nsw i64 %indvars.iv583, 1</td></tr>
+<tr><td align="left">  br label %for.cond88, !llvm.loop !95</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb45 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end405:</td></tr>
+<tr><td align="left">  tail call void @free(i8* %call71) #13</td></tr>
+<tr><td align="left">  br label %for.cond406</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb46 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">for.cond406:</td></tr>
+<tr><td align="left">  %indvars.iv587 = phi i64 [ %indvars.iv.next588, %for.body409 ], [ 0, %for.end405 ]</td></tr>
+<tr><td align="left">  %exitcond589.not = icmp eq i64 %indvars.iv587, 8</td></tr>
+<tr><td align="left">  br i1 %exitcond589.not, label %for.end414, label %for.body409</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb47 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.body409:</td></tr>
+<tr><td align="left">  %arrayidx411 = getelementptr inbounds [8 x %struct.half_wilson_vector*], [8 x %struct.half_wilson_vector*]* %hwvec, i64 0, i64 %indvars.iv587</td></tr>
+<tr><td align="left">  %85 = bitcast %struct.half_wilson_vector** %arrayidx411 to i8**</td></tr>
+<tr><td align="left">  %86 = load i8*, i8** %85, align 8, !tbaa !28</td></tr>
+<tr><td align="left">  tail call void @free(i8* %86) #13</td></tr>
+<tr><td align="left">  %indvars.iv.next588 = add nuw nsw i64 %indvars.iv587, 1</td></tr>
+<tr><td align="left">  br label %for.cond406, !llvm.loop !96</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb48 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">for.end414:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 64, i8* nonnull %12) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %11) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %10) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %9) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %8) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %7) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %6) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %5) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %4) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %3) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %2) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %1) #12</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 32, i8* nonnull %0) #12</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:f -> f_bb1:f
+f_bb1:fT -> f_bb2:f
+f_bb1:fF -> f_bb3:f
+f_bb2:f -> f_bb4:f
+f_bb3:f -> f_bb1:f
+f_bb4:fT -> f_bb6:f
+f_bb4:fF -> f_bb5:f
+f_bb5:f -> f_bb4:f
+f_bb6:f -> f_bb7:f
+f_bb7:fT -> f_bb8:f
+f_bb7:fF -> f_bb9:f
+f_bb8:f -> f_bb10:f
+f_bb9:f -> f_bb7:f
+f_bb10:fT -> f_bb45:f
+f_bb10:fF -> f_bb11:f
+f_bb11:f -> f_bb12:f
+f_bb12:fT -> f_bb44:f
+f_bb12:fF -> f_bb13:f
+f_bb13:fT -> f_bb43:f
+f_bb13:fF -> f_bb14:f
+f_bb14:fT -> f_bb15:f
+f_bb14:fF -> f_bb16:f
+f_bb15:f -> f_bb16:f
+f_bb16:f -> f_bb17:f
+f_bb17:fT -> f_bb34:f
+f_bb17:fF -> f_bb18:f
+f_bb18:fT -> f_bb33:f
+f_bb18:fF -> f_bb19:f
+f_bb19:fT -> f_bb20:f
+f_bb19:fF -> f_bb21:f
+f_bb20:f -> f_bb21:f
+f_bb21:f -> f_bb22:f
+f_bb22:fT -> f_bb30:f
+f_bb22:fF -> f_bb23:f
+f_bb23:fT -> f_bb29:f
+f_bb23:fF -> f_bb24:f
+f_bb24:fT -> f_bb25:f
+f_bb24:fF -> f_bb26:f
+f_bb25:f -> f_bb26:f
+f_bb26:f -> f_bb27:f
+f_bb27:fT -> f_bb28:f
+f_bb27:fF -> f_bb29:f
+f_bb28:f -> f_bb27:f
+f_bb29:f -> f_bb22:f
+f_bb30:f -> f_bb31:f
+f_bb31:fT -> f_bb32:f
+f_bb31:fF -> f_bb33:f
+f_bb32:f -> f_bb31:f
+f_bb33:f -> f_bb17:f
+f_bb34:fT -> f_bb35:f
+f_bb34:fF -> f_bb36:f
+f_bb35:f -> f_bb36:f
+f_bb36:f -> f_bb37:f
+f_bb37:fT -> f_bb38:f
+f_bb37:fF -> f_bb39:f
+f_bb38:f -> f_bb37:f
+f_bb39:fT -> f_bb40:f
+f_bb39:fF -> f_bb41:f
+f_bb40:f -> f_bb41:f
+f_bb41:fT -> f_bb42:f
+f_bb41:fF -> f_bb43:f
+f_bb42:fT -> m_bb0:f1
+f_bb42:fF -> m_bb0:f2
+m_bb0:f1 -> f_bb43:f
+m_bb0:f2 -> f_bb43:f
+f_bb43:f -> f_bb12:f
+f_bb44:f -> f_bb10:f
+f_bb45:f -> f_bb46:f
+f_bb46:fT -> f_bb48:f
+f_bb46:fF -> f_bb47:f
+f_bb47:f -> f_bb46:f
+}
+

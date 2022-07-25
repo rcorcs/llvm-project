@@ -1,0 +1,162 @@
+ A C++ Standards Issue Raised by cpu2006 Benchmark 447.dealII
+ ------------------------------------------------------------
+
+  This discussion of C++ standards issues and the method for building
+447.deal (triple build or single build) is taken from internal email
+written by Michael Wong of IBM during the development of cpu2006.
+
+1. The C++ Standard reference with regards to this problem and the linkage
+with DealII
+
+For the following discussion use case:
+------------------------------
+/*  1 */  template <typename T> struct A {
+/*  2 */      typedef int type;
+/*  3 */      virtual void foo ();
+/*  4 */  };
+/*  5 */
+/*  6 */  template <typename T> void A<T>::foo () {
+/*  7 */    T().compilation_yields_an_error();
+/*  8 */  }
+/*  9 */
+/* 10 */  template <typename T> struct Unrelated {
+/* 11 */      void foo (const typename A<T>::type) const;
+/* 12 */  };
+/* 13 */
+/* 14 */  template <> void Unrelated<int>::foo (const A<int>::type) const;
+-------------------------------
+
+Line 14 is an explicit specialization of function template "Unrelated"
+with template parameter int using call parameters "const A<int>::type".
+
+This causes an implicit instantiation of the type "A<int>::type". Now C++
+implicit instantiation is based on lazy instantiation, meaning the language
+only instantiates what it has to and leave as much as possible
+uninstantiated until there is no choice. Furthermore, the above explicit
+specialization triggers an implicit instantiation of the "A<int>::type"
+class template member which of course triggers an implicit instantiation of
+class template A.
+
+When a class template is implicitly instantiated, each declaration of its
+members is instantiated as well, but the corresponding definitions are not.
+There are a few exceptions to this. First, if the class template contains
+an anonymous union, the members of that union's definition are also
+instantiated. There is also something tricky with default functional call
+argument which I will not go into. The other exception occurs with virtual
+member functions.  Their definitions may or may not be instantiated as a
+result of instantiating a class template. Many implementations will, in
+fact, instantiate the definition because the internal structure that
+enables the virtual call mechanism requires the virtual functions actually
+to exist as linkable entities. This last point is where we have the
+allowable divergence between compilers based on the internal Straw Poll of
+18 September 2004.
+
+Specifically, Paragraph 9 of 14.7.1, reads:
+
+   An implementation shall not implicitly instantiate a function
+   template, a member template, a non-virtual member function, a 
+   member class or a static data member of a class template that 
+   does not require instantiation. It is unspecified whether or 
+   not an implementation implicitly instantiates a virtual member 
+   function of a class template if the virtual member function 
+   would not otherwise be instantiated. [...]
+
+This was the clause that I found which convinced Dr. Bangerth to alter the
+compilation based on Standard compliance. This is in fact a fairly bad
+implication from the Standard, but I surmise the Standard Committee had no
+choice in this matter. By the time they found the need to put this
+paragraph to words, there remain some implementation which can and will
+instantiate the virtual member function. So in order to not break with
+previous legacy implementation, and since there seems to be no real
+difference either way, they felt there was no need to specifically further
+restrict this paragraph.  (However, one could argue that the point of this
+paragraph may indeed break with the spirit of generic programming and since
+I am the C++ Standard rep, I intend to feel out the committee's sense of
+this issue and see if it can be changed even though it would force IBM
+compiler to change. But I expect resistance in this matter from other
+compiler vendors who do not really want the change to occur in the
+language, but rather allow the platform linker to remove the unresolved
+references).
+
+The code in the internal Straw Poll specifically tests the above case in
+the first test. If the compiler look inside line 7, it is instantiating the
+virtual member function by compiling its definition. The result will be a
+compile time error message because I put garbage text inside the body. If
+the compiler never look inside the definition, then it will not give any
+error message despite the garbage text. But both cases conform to
+Paragraph 9 because the Std. saids it is unspecified.
+
+For deal.II, it is a clever template program that supports finite element
+computations at 1d, 2d, and 3d. The elegance of generic programming allows
+you to write the functions for 1d and build specialization for 2d, 3d, ...
+nd where needed and reuse the code from the generic case. This allows you
+to test it to as high a dimension (and as precise an answer) as your memory
+hardware permits. Each dimension is in fact a type in C++ template and this
+is the really clever part.
+
+The generic code looks like this:
+
+ template <int dim> class Triangulation {
+   typedef int local_type;
+   void foo (local_type);
+   virtual void bar ();
+ };
+
+The SPEC benchmark only does it for 3d, but necessarily places declarations
+of explicit specialization everywhere in the code for the 1d and 2d case.
+
+ template <> void Triangulation<1>::foo (Triangulation<1>::local_type);
+
+These explicit specialization are like redeclaration, and for function
+template with partial ordering, in fact forms a kind of overloaded set of
+functions differing only in the dimension and definition. The problem is
+that these explicit specialization contain template parameters which
+triggers 14.7.1/p9 of the Standard, where the compiler tries to instantiate
+local_type in class template Triangulation. Following the rule, we see that
+we don't need the definition for local_type or foo, but we may or may not
+need the definition for the virtual function bar because the compiler may
+or may not need to build up the entire virtual function table. Inside the
+virtual function table are references to these virtual functions, and those
+are going to need function bodies to satisfy them.
+
+These function bodies are defined in DealII using preprocessor #if based
+on the dimension case:
+
+ #if deal_II_dimension == 1
+   template <>
+   void Triangulation<1>::bar() { do_something(); }
+ #else
+   template <int dim>
+   void Triangulation<dim>::bar () { do_something_else(); }
+ #endif
+
+This means that when we normally build for 3d or 2d, you can't find the
+definition for the 1d case and Dr. Bangerth originally assume you wouldn't
+need to and that is why he macro guarded them . This is what is missing if
+the compiler chooses to instantiate the virtual function bar() and build up
+this virtual function table. So when we compile for 3d or 2d (at least in
+the above example code, but there may be 2d function missing too), a "U"
+for undefined is placed into the object for the 1d case because no
+functions can be found to satisfy them. This leads to unresolved
+references.
+
+There are in fact two solutions to this problem if we accept the fact that
+all compilers are behaving according to the C++ Standard:
+
+1. alter all of dealII to remove the #if. The disadvantage would be a
+tremendous amount of editing
+
+2. Set the DIM to 1, then 2, then 3, and recompile each time so that the
+unresolved references can be satisfied by the Explicit Specialization
+machinery.  But as you can see, no 1d or 2d function definition is ever
+called.
+
+Both solutions net out to the same effect.
+
+We chose solution 2 because it was fast and it elegantly tested our theory
+so that it in fact works for all the compiler out there. The problem of
+course is that whenever you change the compilation system, it is likely
+that you will meet new and unseen before compiler bugs and this is likely
+what SGI is running into and I can understand their interest in wanting the
+triple compilation to change.
+

@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>444.namd: SPEC CPU2006 Benchmark Description</title>
+</head>
+<body>
+<div style="text-align: center">
+<h1>444.namd<br />
+SPEC CPU2006 Benchmark Description</h1>
+</div>
+
+<h2>Benchmark Name</h2>
+
+<p>444.namd</p>
+
+<hr />
+
+<h2>Benchmark Author</h2>
+
+<p>Jim Phillips &lt;jim &#x5b;at&#x5d; ks.uiuc.edu&gt;<br /> 
+Theoretical and Computational Biophysics Group<br />
+University of Illinois<br />
+Urbana-Champaign</p>
+
+<hr />
+
+<h2>Benchmark Program General Category</h2>
+
+<p>Scientific, Structural Biology, Classical Molecular Dynamics
+Simulation</p>
+
+<hr />
+
+<h2>Benchmark Description</h2>
+
+<p>The 444.namd benchmark is derived from the data layout and inner
+loop of NAMD, a parallel program for the simulation of large
+biomolecular systems.</p>
+
+<p>Although NAMD was a winner of a 2002 Gordon Bell
+award for parallel scalability, serial performance is equally
+important to the over 10,000 users who have downloaded the program
+over the past several years. Almost all of the runtime is
+spent calculating inter-atomic interactions in a small set of
+functions.  This set was separated from the bulk of the code to form
+a compact benchmark for CPU2006. This computational core achieves
+good performance on a wide range of machines, but contains no
+platform-specific optimizations.</p>
+
+<hr />
+
+<h2>Input Description</h2>
+
+<p>The file <tt>namd.input</tt> is a 92224 atom simulation of apolipoprotein
+A-I and is used as a standard NAMD benchmark. This particular file
+format is created by NAMD 2.5 using the "dumpbench" command, and
+eliminates the need for file readers and other setup code from the
+benchmark. Test, train and ref read from the same input file, but run
+the code for different number of iterations. For ref the code is run
+for 38 iterations.</p>
+
+<hr />
+
+<h2>Output Description</h2>
+
+<p>CPU2006 uses the "<tt>--output namd.out</tt>" command-line option
+to produce an output file, <tt>namd.out</tt>,
+containing various checksums on the force calculations. These should
+be consistent across platforms, within roundoff error, and it is used for
+validation. </p>
+
+
+<hr />
+
+<h2>Programming Language</h2>
+
+<p>C++</p>
+
+<hr />
+
+<h2>Known portability issues</h2>
+
+<p>The benchmark is written in conservative C++, is quite portable,
+and the inner loop code (module <tt>ComputeNonbondedUtil.C</tt>) contains no
+aliasing. The erfc() function is required for startup. On Windows,
+<span style="white-space:nowrap; font-family:monospace;">-DWIN32ERFC</span> 
+is defined during compilation to build a version
+of erfc() for little-endian, 32-bit and 64-bit platforms. This is only
+needed for startup, and should not affect overall performance.</p>
+
+<hr />
+
+<h2>References</h2>
+
+<ul>
+<li><a href=
+"http://www.ks.uiuc.edu/Research/namd/">http://www.ks.uiuc.edu/Research/namd/</a>
+</li>
+
+<li>Laxmikant Kale, Robert Skeel, Milind Bhandarkar, Robert
+Brunner, Attila Gursoy, Neal Krawetz, James Phillips, Aritomo
+Shinozaki, Krishnan Varadarajan, and Klaus Schulten. NAMD2: Greater
+scalability for parallel molecular dynamics. <em>Journal of
+Computational Physics</em>, <strong>151:283-312,
+1999.</strong></li>
+</ul>
+
+<hr />
+
+<p>Last updated: 27 June 2006</p>
+</body>
+</html>

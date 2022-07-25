@@ -1,0 +1,1961 @@
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta name="generator" content="SPEC CPU2006 Tools  (flags v4553)" />
+<style type="text/css" id="internalScreen" media="screen">
+<!--
+body {
+  margin:  1em;
+  border:  0;
+  padding: 0;
+  background: white;
+  color:      black;
+  font-family: "Times Roman", times, serif;
+}
+
+.tt {
+  font-family: monospace;
+}
+
+div.flagClass > h2 {
+  border-bottom: 1px dotted black;
+  width: 80%;
+  font-family: sans-serif;
+}
+
+div.flagDesc {
+  clear: both;
+  background-color: rgb(255, 245, 220);
+  border: 1px solid blue; /* XXX This is for debugging */ 
+  margin: 0 auto;
+  width: 90%;
+}
+
+li.flagName {
+  font-weight: bold;
+  width: 100%;
+  border-bottom: 1px solid black;
+  display: block;
+  margin: 0.5em 0 0.5em 0;
+  font-size: 125%;
+}
+
+/* (presumably short) informationals all get grouped together near the top
+ * of the flag description block.
+ */
+.flagOrigin, .flagDescClass, .flagDescCompiler, .flagDescRE, .flagVar {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  float: left;
+  padding: 0.25em;
+  margin: 0 0 0.25em 0;
+}
+
+.flagDescClass::before {
+  content: "Flag Class: ";
+}
+.flagDescCompiler::before {
+  content: "Compilers that recognize this flag: ";
+}
+.flagDescRE::before {
+  content: "Regular Expression: ";
+}
+.flagVar::before {
+  content: "Found In: ";
+}
+
+span.flagDescInc {
+  border-bottom: 1px solid black;
+}
+
+/* The description text stands alone. */
+.descText {
+  clear: both;
+  padding: 0.5em 1em 0.5em 1em;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin: 0.5em 0 0.5em 0;
+}
+
+/* This is a separate class so that in the print style sheet it can
+ * be ignored.
+ * Also, 'style="clear:both;"' is longer than 'class="clear"'
+ */
+.clear {
+  clear: both;
+}
+
+/* This is really for the link _to_ the flag report */
+li.unknown > a:link, a:visited { text-decoration: none; }
+
+.monospace {
+  font-family: Courier, "Courier New", monospace;
+}
+
+ul.flagDescList {
+  clear: both;
+  list-style-type: none;
+}
+
+/* Arrange for each flag description to have some headroom. */
+ul.flagDescList > li {
+  margin: 2em 0 0 0;
+}
+
+ul.flagDesc {
+  list-style-type: none;
+}
+
+div.flagTOC {
+  border: 1px solid white;
+  padding: 0.5em 1em;
+  margin: 0 auto;
+  width: 80%;
+}
+
+ul.flagTOC {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.flagTOC > li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+  margin: 0;
+  padding: 0.25em 0 0.25em 0;
+  float: left;
+  display: inline-block; /* Fix IE bug; compliant browsers will ignore this */
+  width: 24.3%;
+  min-height: 1.5em;
+  overflow: hidden; /* If the table gets squeezed too much, don't let the
+                     * text overlap
+                     */
+}
+
+ul.SubMenu li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+}
+
+ul.SubMenu {
+  display: none;
+  position: absolute;
+  list-style-type: none;
+  border: 1px solid black;
+  background-color: white;
+  margin: 0 0 0 2em;
+  padding: 0.25em 5em 0.25em 0.5em;
+  white-space: nowrap;
+}
+
+li:hover > ul.SubMenu, ul.SubMenu:hover {
+  display: block;
+}
+
+ul.SubMenu > li:hover, ul.flagTOC > li:hover {
+  background-color: rgb(176, 196, 238); /* lightsteelgray... almost */
+  border: 1px solid rgb(128, 128, 128);
+}
+
+
+.resultpage a:link, .resultpage a:visited {
+  text-decoration: none;
+  border-bottom: 1px dashed black;
+  color: inherit;
+}
+
+.resultpage {
+  margin: auto;
+  padding: 0;
+  width: 800px;
+}
+
+.logo {
+  float: left;
+}
+
+.titlebarcontainer, .resultstable {
+  border: solid 1px;
+  width: 100%;
+  float: left;
+}
+
+div.logo > img {
+  vertical-align: 50%;
+  margin: auto;
+}
+
+.titlebar {
+  float: left;
+  padding: 0em 1em 0em 1em;
+  text-align: center;
+  width: 92%;
+}
+
+div.titlebar > h1, div.titlebar > p {
+  margin: 0 1em 0 1em;
+}
+
+.systembar {
+  float: left;
+  width: 65%;
+  font-size: 150%;
+  margin: 0;
+  padding: 0.1em;
+  border-right: solid 1px black;
+}
+
+.metricbar {
+  padding: 0.1em;
+  margin: 0;
+  float: right;
+  width: 33%;
+  height: 50%;
+  font-size: 120%;
+}
+
+.metricbar#base {
+  background-color: #c8c8c8;
+  color: black;
+}
+
+.metricbar#peak {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+}
+
+.metricbar p {
+  margin: 0;
+  padding: 0.2em;
+}
+
+.datebar p, .systembar p {
+  margin: 0;
+  padding: 0;
+}
+
+.datebar p {
+  float: left;
+  border-left: solid 1px black;
+}
+
+span.item {
+  float: left;
+  margin: 0;
+  padding: 0 0 0 0.1em;
+}
+
+span.value {
+  float: right;
+  padding: 0 0.1em 0 0;
+}
+
+.datebar {
+  width: 100%;
+  float: left;
+  font-size: 50%;
+  min-height: 100%;
+  border: solid 1px black;
+}
+
+p#test_sponsor {
+  width: 31%;
+}
+
+p#license_num {
+  width: 16%;
+}
+
+p#test_date {
+  width: 15%;
+}
+
+p#hw_avail, p#sw_avail {
+  width: 18%;
+}
+
+div.graph {
+  margin: auto;
+}
+
+div.infobox {
+  float: left;
+  width: 100%;
+  padding: 0;
+  border: solid 1px black;
+}
+
+div.infobox table {
+  width: 49%;
+  float: left;
+}
+
+div.infobox table tr {
+  vertical-align: top;
+}
+
+div.infobox table#Hardware {
+  width: 50%;
+  border-right: 1px solid black;
+}
+
+div.infobox thead th {
+  font-size: 200%;
+}
+
+div.infobox tbody th {
+  text-align: left;
+}
+
+.resultstable h2, div.notes h2 {
+  text-align: center;
+  margin: 0.1em;
+}
+
+div.notes h3 {
+  margin: 0.1em;
+}
+
+div.notes dd {
+  margin-bottom: 1em;
+}
+
+.resultstable table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.resultstable th.basecol, .resultstable th.peakcol {
+  padding: 0.1em;
+  font-size: 90%;
+}
+
+.resultstable th {
+  border: solid 2px black;
+}
+
+.resultstable td {
+  border: solid 1px #b8b8b8;
+}
+
+td.bm, th.bm { 
+  border-right: solid 2px black;
+  border-left: solid 2px black;
+}
+
+td.secs { 
+  border-left: solid 2px black;
+}
+
+td.ratio { 
+  border-right: solid 2px black;
+}
+
+.resultstable tfoot td {
+  text-align: center;
+  border: solid 2px black;
+}
+
+th.basecol {
+  background-color: #c8c8c8;
+  color: black;
+}
+td.basecol {
+  text-align: right;
+  background-color: transparent;
+  color: black;
+}
+
+th.peakcol {
+  text-align: center;
+}
+
+.peakcol {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+  text-align: right;
+}
+
+td.bm {
+  /* Basically, the benchmark name and copies columns */
+  background-color: #c8c8c8;
+  color: black;
+}
+
+span.selected {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+div.notes {
+  width: 100%;
+  float: left;
+  border: solid 1px black;
+}
+
+div.flagfooter {
+  text-align: center;
+}
+
+div.errors {
+  border: solid 2px red;
+}
+div.errors h2 {
+  background-color: transparent;
+  color: red;
+}
+
+div.footer {
+  border: none;
+}
+
+/* People find the "double underline" confusing.  And Safari 1.3 doesn't deal
+ * well with attempting to disable the border for userflag links.  So just
+ * give up and don't decorate user flags specially.
+********************
+span.userflag {
+  text-decoration: underline;
+}
+
+.userflag a:link {
+  border-bottom: 0;
+}
+********************
+*/
+/* Most of the screen-specific CSS is also the common CSS */
+
+/* Style for the non-image W3C marking at the bottom of the page, courtesy of
+ * Marek Prokop (http://www.sovavsiti.cz/css/w3c_buttons.html)
+ */
+.w3cbutton3 {
+  margin: 1em 1em 0 0;
+  width: 9em;
+  border: 1px solid #ccc;
+  font-family: helvetica,arial,sans-serif;
+  font-size: 70%;
+  font-weight: bold;
+  float: left;
+}
+.w3cbutton3 a {
+  display: block;
+  width: 100%;
+}
+.w3cbutton3 a:link,
+.w3cbutton3 a:visited,
+.w3cbutton3 a:hover {
+  background-color: #fc6;
+  color: #000;
+  text-decoration: none;
+  border-bottom: none;
+}
+.w3cbutton3 span.w3c {
+  padding: 0 0.4em;
+  background-color: #fff;
+  color: #0c479d;
+}
+
+-->
+</style>
+<style type="text/css" id="internalPrint" media="print">
+<!--
+body {
+  margin:  1em;
+  border:  0;
+  padding: 0;
+  background: white;
+  color:      black;
+  font-family: "Times Roman", times, serif;
+}
+
+.tt {
+  font-family: monospace;
+}
+
+div.flagClass > h2 {
+  border-bottom: 1px dotted black;
+  width: 80%;
+  font-family: sans-serif;
+}
+
+div.flagDesc {
+  clear: both;
+  background-color: rgb(255, 245, 220);
+  border: 1px solid blue; /* XXX This is for debugging */ 
+  margin: 0 auto;
+  width: 90%;
+}
+
+li.flagName {
+  font-weight: bold;
+  width: 100%;
+  border-bottom: 1px solid black;
+  display: block;
+  margin: 0.5em 0 0.5em 0;
+  font-size: 125%;
+}
+
+/* (presumably short) informationals all get grouped together near the top
+ * of the flag description block.
+ */
+.flagOrigin, .flagDescClass, .flagDescCompiler, .flagDescRE, .flagVar {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  float: left;
+  padding: 0.25em;
+  margin: 0 0 0.25em 0;
+}
+
+.flagDescClass::before {
+  content: "Flag Class: ";
+}
+.flagDescCompiler::before {
+  content: "Compilers that recognize this flag: ";
+}
+.flagDescRE::before {
+  content: "Regular Expression: ";
+}
+.flagVar::before {
+  content: "Found In: ";
+}
+
+span.flagDescInc {
+  border-bottom: 1px solid black;
+}
+
+/* The description text stands alone. */
+.descText {
+  clear: both;
+  padding: 0.5em 1em 0.5em 1em;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  margin: 0.5em 0 0.5em 0;
+}
+
+/* This is a separate class so that in the print style sheet it can
+ * be ignored.
+ * Also, 'style="clear:both;"' is longer than 'class="clear"'
+ */
+.clear {
+  clear: both;
+}
+
+/* This is really for the link _to_ the flag report */
+li.unknown > a:link, a:visited { text-decoration: none; }
+
+.monospace {
+  font-family: Courier, "Courier New", monospace;
+}
+
+ul.flagDescList {
+  clear: both;
+  list-style-type: none;
+}
+
+/* Arrange for each flag description to have some headroom. */
+ul.flagDescList > li {
+  margin: 2em 0 0 0;
+}
+
+ul.flagDesc {
+  list-style-type: none;
+}
+
+div.flagTOC {
+  border: 1px solid white;
+  padding: 0.5em 1em;
+  margin: 0 auto;
+  width: 80%;
+}
+
+ul.flagTOC {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.flagTOC > li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+  margin: 0;
+  padding: 0.25em 0 0.25em 0;
+  float: left;
+  display: inline-block; /* Fix IE bug; compliant browsers will ignore this */
+  width: 24.3%;
+  min-height: 1.5em;
+  overflow: hidden; /* If the table gets squeezed too much, don't let the
+                     * text overlap
+                     */
+}
+
+ul.SubMenu li {
+  border: 1px solid white; /* rgb(211, 211, 211); */
+}
+
+ul.SubMenu {
+  display: none;
+  position: absolute;
+  list-style-type: none;
+  border: 1px solid black;
+  background-color: white;
+  margin: 0 0 0 2em;
+  padding: 0.25em 5em 0.25em 0.5em;
+  white-space: nowrap;
+}
+
+li:hover > ul.SubMenu, ul.SubMenu:hover {
+  display: block;
+}
+
+ul.SubMenu > li:hover, ul.flagTOC > li:hover {
+  background-color: rgb(176, 196, 238); /* lightsteelgray... almost */
+  border: 1px solid rgb(128, 128, 128);
+}
+
+
+.resultpage a:link, .resultpage a:visited {
+  text-decoration: none;
+  border-bottom: 1px dashed black;
+  color: inherit;
+}
+
+.resultpage {
+  margin: auto;
+  padding: 0;
+  width: 800px;
+}
+
+.logo {
+  float: left;
+}
+
+.titlebarcontainer, .resultstable {
+  border: solid 1px;
+  width: 100%;
+  float: left;
+}
+
+div.logo > img {
+  vertical-align: 50%;
+  margin: auto;
+}
+
+.titlebar {
+  float: left;
+  padding: 0em 1em 0em 1em;
+  text-align: center;
+  width: 92%;
+}
+
+div.titlebar > h1, div.titlebar > p {
+  margin: 0 1em 0 1em;
+}
+
+.systembar {
+  float: left;
+  width: 65%;
+  font-size: 150%;
+  margin: 0;
+  padding: 0.1em;
+  border-right: solid 1px black;
+}
+
+.metricbar {
+  padding: 0.1em;
+  margin: 0;
+  float: right;
+  width: 33%;
+  height: 50%;
+  font-size: 120%;
+}
+
+.metricbar#base {
+  background-color: #c8c8c8;
+  color: black;
+}
+
+.metricbar#peak {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+}
+
+.metricbar p {
+  margin: 0;
+  padding: 0.2em;
+}
+
+.datebar p, .systembar p {
+  margin: 0;
+  padding: 0;
+}
+
+.datebar p {
+  float: left;
+  border-left: solid 1px black;
+}
+
+span.item {
+  float: left;
+  margin: 0;
+  padding: 0 0 0 0.1em;
+}
+
+span.value {
+  float: right;
+  padding: 0 0.1em 0 0;
+}
+
+.datebar {
+  width: 100%;
+  float: left;
+  font-size: 50%;
+  min-height: 100%;
+  border: solid 1px black;
+}
+
+p#test_sponsor {
+  width: 31%;
+}
+
+p#license_num {
+  width: 16%;
+}
+
+p#test_date {
+  width: 15%;
+}
+
+p#hw_avail, p#sw_avail {
+  width: 18%;
+}
+
+div.graph {
+  margin: auto;
+}
+
+div.infobox {
+  float: left;
+  width: 100%;
+  padding: 0;
+  border: solid 1px black;
+}
+
+div.infobox table {
+  width: 49%;
+  float: left;
+}
+
+div.infobox table tr {
+  vertical-align: top;
+}
+
+div.infobox table#Hardware {
+  width: 50%;
+  border-right: 1px solid black;
+}
+
+div.infobox thead th {
+  font-size: 200%;
+}
+
+div.infobox tbody th {
+  text-align: left;
+}
+
+.resultstable h2, div.notes h2 {
+  text-align: center;
+  margin: 0.1em;
+}
+
+div.notes h3 {
+  margin: 0.1em;
+}
+
+div.notes dd {
+  margin-bottom: 1em;
+}
+
+.resultstable table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.resultstable th.basecol, .resultstable th.peakcol {
+  padding: 0.1em;
+  font-size: 90%;
+}
+
+.resultstable th {
+  border: solid 2px black;
+}
+
+.resultstable td {
+  border: solid 1px #b8b8b8;
+}
+
+td.bm, th.bm { 
+  border-right: solid 2px black;
+  border-left: solid 2px black;
+}
+
+td.secs { 
+  border-left: solid 2px black;
+}
+
+td.ratio { 
+  border-right: solid 2px black;
+}
+
+.resultstable tfoot td {
+  text-align: center;
+  border: solid 2px black;
+}
+
+th.basecol {
+  background-color: #c8c8c8;
+  color: black;
+}
+td.basecol {
+  text-align: right;
+  background-color: transparent;
+  color: black;
+}
+
+th.peakcol {
+  text-align: center;
+}
+
+.peakcol {
+  background-color: transparent;
+  color: #2626b3;       /* peak blue */
+  text-align: right;
+}
+
+td.bm {
+  /* Basically, the benchmark name and copies columns */
+  background-color: #c8c8c8;
+  color: black;
+}
+
+span.selected {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+div.notes {
+  width: 100%;
+  float: left;
+  border: solid 1px black;
+}
+
+div.flagfooter {
+  text-align: center;
+}
+
+div.errors {
+  border: solid 2px red;
+}
+div.errors h2 {
+  background-color: transparent;
+  color: red;
+}
+
+div.footer {
+  border: none;
+}
+
+/* People find the "double underline" confusing.  And Safari 1.3 doesn't deal
+ * well with attempting to disable the border for userflag links.  So just
+ * give up and don't decorate user flags specially.
+********************
+span.userflag {
+  text-decoration: underline;
+}
+
+.userflag a:link {
+  border-bottom: 0;
+}
+********************
+*/
+/* Classes that contain links - useless on paper */
+.flagTOC, .SubMenu, .NoPrint {
+  display: none;
+}
+
+/* Don't decorate links - they're not clickable */
+a {
+  text-decoration: none;
+  background: inherit;
+  color: inherit;
+}
+
+.resultpage {
+  width: 100%;
+}
+
+.w3cbutton3 {
+  display: none;
+}
+-->
+</style>
+<title>464.h264avc Flags</title>
+</head><body>
+<h1>464.h264avc Flags</h1>
+
+
+<p>These are flags that appear in the benchmark sources, categorized as to
+whether they are portability candidates, mandatory, or forbidden.
+</p>
+
+<div class="NoPrint">
+<h3>Sections</h3>
+<p>Selecting one of the following will take you directly to that section:</p>
+<ul>
+<li><a href="#Section_portability">Portability Flags</a></li>
+<li><a href="#Section_mandatory">Mandatory Flags</a></li>
+<li><a href="#Section_forbidden">Forbidden Flags</a></li>
+</ul>
+</div>
+
+<hr />
+
+<div class="flagClass" id="portability">
+<h2><a name="Section_portability" id="Section_portability">Portability Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b464.h264ref_DSPEC_CPU_AIX">-DSPEC_CPU_AIX</a></li>
+ <li><a href="#b464.h264ref_DSPEC_CPU_NO_INTTYPES">-DSPEC_CPU_NO_INTTYPES</a></li>
+ <li><a href="#b464.h264ref_DWIN32">-DWIN32</a></li>
+ <li><a href="#b464.h264ref_D__GNUC__">-D__GNUC__</a></li>
+ <li><a href="#b464.h264ref_DSPEC_CPU_NEED_MINMAX">-DSPEC_CPU_NEED_MINMAX</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DSPEC_CPU_AIX" id="b464.h264ref_DSPEC_CPU_AIX">-DSPEC_CPU_AIX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_AIX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag allow correct compilation and execution of 464.h264avc on 
+the AIX platform.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DSPEC_CPU_NO_INTTYPES" id="b464.h264ref_DSPEC_CPU_NO_INTTYPES">-DSPEC_CPU_NO_INTTYPES</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_NO_INTTYPES(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag can be used as a portability flag on systems which do not have
+the standard header file "stdint.h". Inclusion of this flag defines the
+value of INT64_MIN (if it is not defined) and sets the "int64" type (if
+it is not set already)
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DWIN32" id="b464.h264ref_DWIN32">-DWIN32</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DWIN32(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is set when building 464.h264avc on Windows systems.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D__GNUC__" id="b464.h264ref_D__GNUC__">-D__GNUC__</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D__GNUC__(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is defined at two locations. At both locations, it is used
+in conjunction with the WIN32 flag to distinguish non-Windows 
+environment.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DSPEC_CPU_NEED_MINMAX" id="b464.h264ref_DSPEC_CPU_NEED_MINMAX">-DSPEC_CPU_NEED_MINMAX</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU_NEED_MINMAX(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+If your platform does not provide min() and max() functions (or macros), use
+this flag.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+<div class="flagClass" id="mandatory">
+<h2><a name="Section_mandatory" id="Section_mandatory">Mandatory Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b464.h264ref_DSPEC_CPU">-DSPEC_CPU</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DSPEC_CPU" id="b464.h264ref_DSPEC_CPU">-DSPEC_CPU</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSPEC_CPU(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This preprocessor macro is always defined when compiling any benchmark
+in CPU2006. All platforms get the source lines enclosed within this 
+macro block.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+<div class="flagClass" id="forbidden">
+<h2><a name="Section_forbidden" id="Section_forbidden">Forbidden Flags</a></h2>
+<div class="flagTOC">
+<ul class="flagTOC">
+ <li><a href="#b464.h264ref_DBEST_NZ_COEFF">-DBEST_NZ_COEFF</a></li>
+ <li><a href="#b464.h264ref_DBI_PREDICTION">-DBI_PREDICTION</a></li>
+ <li><a href="#b464.h264ref_DCONTEXT_INI_C">-DCONTEXT_INI_C</a></li>
+ <li><a href="#b464.h264ref_DINCLUDED_BY_CONFIGFILE_C">-DINCLUDED_BY_CONFIGFILE_C</a></li>
+ <li><a href="#b464.h264ref_DINT64_MIN">-DINT64_MIN</a></li>
+ <li><a href="#b464.h264ref_DKS_MV">-DKS_MV</a></li>
+ <li><a href="#b464.h264ref_DPMVFAST">-DPMVFAST</a></li>
+ <li><a href="#b464.h264ref_DPRINT_FMO_MAPS">-DPRINT_FMO_MAPS</a></li>
+ <li><a href="#b464.h264ref_DPRINT_PAN_SCAN_RECT">-DPRINT_PAN_SCAN_RECT</a></li>
+ <li><a href="#b464.h264ref_DPRINT_RANDOM_ACCESS">-DPRINT_RANDOM_ACCESS</a></li>
+ <li><a href="#b464.h264ref_DPRINT_USER_DATA_REGISTERED_ITU_T_T35_INFO">-DPRINT_USER_DATA_REGISTERED_ITU_T_T35_INFO</a></li>
+ <li><a href="#b464.h264ref_DPRINT_USER_DATA_UNREGISTERED_INFO">-DPRINT_USER_DATA_UNREGISTERED_INFO</a></li>
+ <li><a href="#b464.h264ref_DSEI_H">-DSEI_H</a></li>
+ <li><a href="#b464.h264ref_DTRACE">-DTRACE</a></li>
+ <li><a href="#b464.h264ref_DWRITE_MAP_IMAGE">-DWRITE_MAP_IMAGE</a></li>
+ <li><a href="#b464.h264ref_DZEROSNR">-DZEROSNR</a></li>
+ <li><a href="#b464.h264ref_D_ADAPT_LAST_GROUP_">-D_ADAPT_LAST_GROUP_</a></li>
+ <li><a href="#b464.h264ref_D_ANNEXB_H_">-D_ANNEXB_H_</a></li>
+ <li><a href="#b464.h264ref_D_BIARIENCOD_H_">-D_BIARIENCOD_H_</a></li>
+ <li><a href="#b464.h264ref_D_BLOCK_H_">-D_BLOCK_H_</a></li>
+ <li><a href="#b464.h264ref_D_CABAC_H_">-D_CABAC_H_</a></li>
+ <li><a href="#b464.h264ref_D_CHANGE_QP_">-D_CHANGE_QP_</a></li>
+ <li><a href="#b464.h264ref_D_CONFIGFILE_H_">-D_CONFIGFILE_H_</a></li>
+ <li><a href="#b464.h264ref_D_CONTEXT_INI_">-D_CONTEXT_INI_</a></li>
+ <li><a href="#b464.h264ref_D_DEBUG">-D_DEBUG</a></li>
+ <li><a href="#b464.h264ref_D_DEFINES_H_">-D_DEFINES_H_</a></li>
+ <li><a href="#b464.h264ref_D_ELEMENTS_H_">-D_ELEMENTS_H_</a></li>
+ <li><a href="#b464.h264ref_D_EXPLICIT_GOP_H_">-D_EXPLICIT_GOP_H_</a></li>
+ <li><a href="#b464.h264ref_D_FAST_FULL_ME_">-D_FAST_FULL_ME_</a></li>
+ <li><a href="#b464.h264ref_D_FAST_ME_H_">-D_FAST_ME_H_</a></li>
+ <li><a href="#b464.h264ref_D_FMO_H_">-D_FMO_H_</a></li>
+ <li><a href="#b464.h264ref_D_FULL_SEARCH_RANGE_">-D_FULL_SEARCH_RANGE_</a></li>
+ <li><a href="#b464.h264ref_D_GLOBAL_H_">-D_GLOBAL_H_</a></li>
+ <li><a href="#b464.h264ref_D_HEADER_H_">-D_HEADER_H_</a></li>
+ <li><a href="#b464.h264ref_D_IMAGE_H_">-D_IMAGE_H_</a></li>
+ <li><a href="#b464.h264ref_D_INTRAREFRESH_H_">-D_INTRAREFRESH_H_</a></li>
+ <li><a href="#b464.h264ref_D_LEAKYBUCKET_">-D_LEAKYBUCKET_</a></li>
+ <li><a href="#b464.h264ref_D_LEAKY_BUCKET_H_">-D_LEAKY_BUCKET_H_</a></li>
+ <li><a href="#b464.h264ref_D_MACROBLOCK_H_">-D_MACROBLOCK_H_</a></li>
+ <li><a href="#b464.h264ref_D_MBUFFER_H_">-D_MBUFFER_H_</a></li>
+ <li><a href="#b464.h264ref_D_MB_ACCESS_H_">-D_MB_ACCESS_H_</a></li>
+ <li><a href="#b464.h264ref_D_MEMALLOC_H_">-D_MEMALLOC_H_</a></li>
+ <li><a href="#b464.h264ref_D_MINMAX_">-D_MINMAX_</a></li>
+ <li><a href="#b464.h264ref_D_MV_SEARCH_H_">-D_MV_SEARCH_H_</a></li>
+ <li><a href="#b464.h264ref_D_NALUCOMMON_H_">-D_NALUCOMMON_H_</a></li>
+ <li><a href="#b464.h264ref_D_NALU_H_">-D_NALU_H_</a></li>
+ <li><a href="#b464.h264ref_D_OUTPUT_H_">-D_OUTPUT_H_</a></li>
+ <li><a href="#b464.h264ref_D_PARSETCOMMON_H_">-D_PARSETCOMMON_H_</a></li>
+ <li><a href="#b464.h264ref_D_PARSET_H_">-D_PARSET_H_</a></li>
+ <li><a href="#b464.h264ref_D_Q_MATRIX_H_">-D_Q_MATRIX_H_</a></li>
+ <li><a href="#b464.h264ref_D_Q_OFFSETS_H_">-D_Q_OFFSETS_H_</a></li>
+ <li><a href="#b464.h264ref_D_RATE_CTL_H_">-D_RATE_CTL_H_</a></li>
+ <li><a href="#b464.h264ref_D_RD_OPT_CS_H_">-D_RD_OPT_CS_H_</a></li>
+ <li><a href="#b464.h264ref_D_REBUF_H_">-D_REBUF_H_</a></li>
+ <li><a href="#b464.h264ref_D_RTP_H_">-D_RTP_H_</a></li>
+ <li><a href="#b464.h264ref_D_TRANSFORM8X8_H_">-D_TRANSFORM8X8_H_</a></li>
+ <li><a href="#b464.h264ref_D_VLC_H_">-D_VLC_H_</a></li>
+</ul>
+<div class="clear"></div>
+</div>
+
+<ul class="flagDescList">
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DBEST_NZ_COEFF" id="b464.h264ref_DBEST_NZ_COEFF">-DBEST_NZ_COEFF</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DBEST_NZ_COEFF(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Use of this flag is forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DBI_PREDICTION" id="b464.h264ref_DBI_PREDICTION">-DBI_PREDICTION</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DBI_PREDICTION(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+BI_PREDICTION is explicitly set in "defines.h". This flag is therefore 
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DCONTEXT_INI_C" id="b464.h264ref_DCONTEXT_INI_C">-DCONTEXT_INI_C</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DCONTEXT_INI_C(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is explicitly declared in "context_ini.c" file to indicate
+presence of CABAC context initialization. This flag is therefore
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DINCLUDED_BY_CONFIGFILE_C" id="b464.h264ref_DINCLUDED_BY_CONFIGFILE_C">-DINCLUDED_BY_CONFIGFILE_C</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DINCLUDED_BY_CONFIGFILE_C(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is explicitly declared in "configfile.c" file to indicate
+that the parameters must be read from a config file. This flag is therefore
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DINT64_MIN" id="b464.h264ref_DINT64_MIN">-DINT64_MIN</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DINT64_MIN(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Defines the value of INT64_MIN if is not defined. This flag is protected 
+by SPEC_CPU_NO_INTTYPES flag. C99 standards suggests that INT64_MIN
+be defined in "stdint.h". If you have defined flag SPEC_CPU_NO_INTTYPES
+and no definition is found for INT64_MIN, the program explicitly assigns
+value to INT64_MIN to (-9223372036854775807LL - 1LL).
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DKS_MV" id="b464.h264ref_DKS_MV">-DKS_MV</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DKS_MV(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is explicitly declared in "rdopt.c" file. This flag is therefore
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DPMVFAST" id="b464.h264ref_DPMVFAST">-DPMVFAST</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPMVFAST(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Sets variable "mvblocktype" which is actually NOT used in the program. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DPRINT_FMO_MAPS" id="b464.h264ref_DPRINT_FMO_MAPS">-DPRINT_FMO_MAPS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPRINT_FMO_MAPS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Prints FMO maps to stdout. Setting this flag will generate invalid output
+resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DPRINT_PAN_SCAN_RECT" id="b464.h264ref_DPRINT_PAN_SCAN_RECT">-DPRINT_PAN_SCAN_RECT</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPRINT_PAN_SCAN_RECT(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Prints Pan Scan data to stdout. Setting this flag will generate invalid output
+resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DPRINT_RANDOM_ACCESS" id="b464.h264ref_DPRINT_RANDOM_ACCESS">-DPRINT_RANDOM_ACCESS</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPRINT_RANDOM_ACCESS(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Prints recovery point data to stdout. Setting this flag will 
+generate invalid output resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DPRINT_USER_DATA_REGISTERED_ITU_T_T35_INFO" id="b464.h264ref_DPRINT_USER_DATA_REGISTERED_ITU_T_T35_INFO">-DPRINT_USER_DATA_REGISTERED_ITU_T_T35_INFO</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPRINT_USER_DATA_REGISTERED_ITU_T_T35_INFO(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Prints ITU_T_T35_COUNTRTY_CODE to stdout. Setting this flag will 
+generate invalid output resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DPRINT_USER_DATA_UNREGISTERED_INFO" id="b464.h264ref_DPRINT_USER_DATA_UNREGISTERED_INFO">-DPRINT_USER_DATA_UNREGISTERED_INFO</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DPRINT_USER_DATA_UNREGISTERED_INFO(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Prints user data unregistered information to stdout. Setting this flag will 
+generate invalid output resulting in verification error. Setting this flag
+on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DSEI_H" id="b464.h264ref_DSEI_H">-DSEI_H</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DSEI_H(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"sei.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DTRACE" id="b464.h264ref_DTRACE">-DTRACE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DTRACE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This is a flag to turn on tracing. Primarily used for debugging purposes. 
+Setting this flag will generate invalid output resulting in verification 
+error at runtime. Setting this flag on the 
+command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DWRITE_MAP_IMAGE" id="b464.h264ref_DWRITE_MAP_IMAGE">-DWRITE_MAP_IMAGE</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DWRITE_MAP_IMAGE(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Writes map image to file. Used for debugging purposes. Setting this 
+flag will generate invalid output resulting in verification
+error at runtime. Setting this flag on the 
+command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_DZEROSNR" id="b464.h264ref_DZEROSNR">-DZEROSNR</a></li>
+<li class="flagDescRE"><span class="tt">[-/]DZEROSNR(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+ZEROSNR is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_ADAPT_LAST_GROUP_" id="b464.h264ref_D_ADAPT_LAST_GROUP_">-D_ADAPT_LAST_GROUP_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_ADAPT_LAST_GROUP_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+_ADAPT_LAST_GROUP_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_ANNEXB_H_" id="b464.h264ref_D_ANNEXB_H_">-D_ANNEXB_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_ANNEXB_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"annexb.h". Explicitly defining this flag will not build the benchmark.
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_BIARIENCOD_H_" id="b464.h264ref_D_BIARIENCOD_H_">-D_BIARIENCOD_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_BIARIENCOD_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"biariencode.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_BLOCK_H_" id="b464.h264ref_D_BLOCK_H_">-D_BLOCK_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_BLOCK_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"block.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_CABAC_H_" id="b464.h264ref_D_CABAC_H_">-D_CABAC_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_CABAC_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"cabac.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_CHANGE_QP_" id="b464.h264ref_D_CHANGE_QP_">-D_CHANGE_QP_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_CHANGE_QP_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+_CHANGE_QP_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_CONFIGFILE_H_" id="b464.h264ref_D_CONFIGFILE_H_">-D_CONFIGFILE_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_CONFIGFILE_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"configfile.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_CONTEXT_INI_" id="b464.h264ref_D_CONTEXT_INI_">-D_CONTEXT_INI_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_CONTEXT_INI_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"context_ini.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_DEBUG" id="b464.h264ref_D_DEBUG">-D_DEBUG</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_DEBUG(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+Setting this flag turns ON tracing.  Setting this 
+flag will generate invalid output resulting in verification
+error at runtime. Setting this flag on the
+command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_DEFINES_H_" id="b464.h264ref_D_DEFINES_H_">-D_DEFINES_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_DEFINES_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"defines.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_ELEMENTS_H_" id="b464.h264ref_D_ELEMENTS_H_">-D_ELEMENTS_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_ELEMENTS_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"elements.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_EXPLICIT_GOP_H_" id="b464.h264ref_D_EXPLICIT_GOP_H_">-D_EXPLICIT_GOP_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_EXPLICIT_GOP_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"explicit_gop.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_FAST_FULL_ME_" id="b464.h264ref_D_FAST_FULL_ME_">-D_FAST_FULL_ME_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_FAST_FULL_ME_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+_FAST_FULL_ME_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_FAST_ME_H_" id="b464.h264ref_D_FAST_ME_H_">-D_FAST_ME_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_FAST_ME_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"fast_me.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_FMO_H_" id="b464.h264ref_D_FMO_H_">-D_FMO_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_FMO_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"fmo.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_FULL_SEARCH_RANGE_" id="b464.h264ref_D_FULL_SEARCH_RANGE_">-D_FULL_SEARCH_RANGE_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_FULL_SEARCH_RANGE_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+_FULL_SEARCH_RANGE_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_GLOBAL_H_" id="b464.h264ref_D_GLOBAL_H_">-D_GLOBAL_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_GLOBAL_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"global.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_HEADER_H_" id="b464.h264ref_D_HEADER_H_">-D_HEADER_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_HEADER_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"header.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_IMAGE_H_" id="b464.h264ref_D_IMAGE_H_">-D_IMAGE_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_IMAGE_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"image.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_INTRAREFRESH_H_" id="b464.h264ref_D_INTRAREFRESH_H_">-D_INTRAREFRESH_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_INTRAREFRESH_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"intrarefresh.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_LEAKYBUCKET_" id="b464.h264ref_D_LEAKYBUCKET_">-D_LEAKYBUCKET_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_LEAKYBUCKET_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+_LEAKYBUCKET_ is explicitly defined in "defines.h". This flag is therefore
+not permitted on the command-line.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_LEAKY_BUCKET_H_" id="b464.h264ref_D_LEAKY_BUCKET_H_">-D_LEAKY_BUCKET_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_LEAKY_BUCKET_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"leaky_bucket.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_MACROBLOCK_H_" id="b464.h264ref_D_MACROBLOCK_H_">-D_MACROBLOCK_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_MACROBLOCK_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"macroblock.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_MBUFFER_H_" id="b464.h264ref_D_MBUFFER_H_">-D_MBUFFER_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_MBUFFER_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"mbuffer.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_MB_ACCESS_H_" id="b464.h264ref_D_MB_ACCESS_H_">-D_MB_ACCESS_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_MB_ACCESS_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"mb_access.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_MEMALLOC_H_" id="b464.h264ref_D_MEMALLOC_H_">-D_MEMALLOC_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_MEMALLOC_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"memalloc.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_MINMAX_" id="b464.h264ref_D_MINMAX_">-D_MINMAX_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_MINMAX_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"minmax.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_MV_SEARCH_H_" id="b464.h264ref_D_MV_SEARCH_H_">-D_MV_SEARCH_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_MV_SEARCH_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"mv-search.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_NALUCOMMON_H_" id="b464.h264ref_D_NALUCOMMON_H_">-D_NALUCOMMON_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_NALUCOMMON_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"nalucommon.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_NALU_H_" id="b464.h264ref_D_NALU_H_">-D_NALU_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_NALU_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"nalu.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_OUTPUT_H_" id="b464.h264ref_D_OUTPUT_H_">-D_OUTPUT_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_OUTPUT_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"output.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_PARSETCOMMON_H_" id="b464.h264ref_D_PARSETCOMMON_H_">-D_PARSETCOMMON_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_PARSETCOMMON_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"parsetcommon.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_PARSET_H_" id="b464.h264ref_D_PARSET_H_">-D_PARSET_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_PARSET_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"parset.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_Q_MATRIX_H_" id="b464.h264ref_D_Q_MATRIX_H_">-D_Q_MATRIX_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_Q_MATRIX_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"q_matrix.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_Q_OFFSETS_H_" id="b464.h264ref_D_Q_OFFSETS_H_">-D_Q_OFFSETS_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_Q_OFFSETS_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"q_offsets.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_RATE_CTL_H_" id="b464.h264ref_D_RATE_CTL_H_">-D_RATE_CTL_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_RATE_CTL_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"ratectl.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_RD_OPT_CS_H_" id="b464.h264ref_D_RD_OPT_CS_H_">-D_RD_OPT_CS_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_RD_OPT_CS_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"rdopt_coding_state.h". Explicitly defining this flag will not build
+the benchmark. Setting this flag on the command-line during 
+compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_REBUF_H_" id="b464.h264ref_D_REBUF_H_">-D_REBUF_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_REBUF_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file
+"refbuf.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_RTP_H_" id="b464.h264ref_D_RTP_H_">-D_RTP_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_RTP_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file 
+"rtp.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_TRANSFORM8X8_H_" id="b464.h264ref_D_TRANSFORM8X8_H_">-D_TRANSFORM8X8_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_TRANSFORM8X8_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file 
+"transform8x8.h". Explicitly defining this flag will not build the benchmark. 
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<div class="flagDesc">
+<ul class="flagDesc">
+<li class="flagName"><a name="b464.h264ref_D_VLC_H_" id="b464.h264ref_D_VLC_H_">-D_VLC_H_</a></li>
+<li class="flagDescRE"><span class="tt">[-/]D_VLC_H_(?:=\S*)?\b</span></li>
+<li class="descText">
+<p>
+This flag is used to prohibit multiple includes of header file 
+"vlc.h". Explicitly defining this flag will not build the benchmark.  
+Setting this flag on the command-line during compile is therefore forbidden.
+</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+
+</div>
+<hr />
+</body>
+</html>

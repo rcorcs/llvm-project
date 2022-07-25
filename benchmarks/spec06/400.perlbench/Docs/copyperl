@@ -1,0 +1,409 @@
+#!/bin/sh
+
+# Copy new perl bits over from a new (but completely built) tree.
+# Don't forget to patch it up and comment out #line directives!
+# Also don't forget to remove the perl_ from perl_get_* and perl_call_*
+
+# this was mostly made with the following:
+# for i in `find . \( -name .svn -prune \) -o \( -type f -print \) | sed 's/^\.\///'`; do
+#   echo
+#   echo "# $i"
+#   (f=$(find ~/perl-5.8.7 -name $(basename $i))
+#    c=`echo $f | wc -w`
+#    if [ $c -eq 1 ]; then
+#        echo "cp $f $i"
+#    else
+#        for k in $f; do
+#            echo "ls -l $k"
+#        done
+#        echo "ls -l $i"
+#    fi)
+# done 2>/tmp/foo | tee ../Docs/copyperl
+# That is, for each file in the source directory, find a copy in the perl-5.8.7
+# tree.  If there's more than one, just list them, otherwise copy it.
+#
+# The list below has been edited
+
+# attrs.c
+cp /Users/cloyce/perl-5.8.7/ext/attrs/attrs.c attrs.c
+
+# av.c
+cp /Users/cloyce/perl-5.8.7/av.c av.c
+
+# av.h
+cp /Users/cloyce/perl-5.8.7/av.h av.h
+
+# Base64.c
+cp /Users/cloyce/perl-5.8.7/ext/MIME/Base64/Base64.c Base64.c
+
+# cc_runtime.h
+cp /Users/cloyce/perl-5.8.7/cc_runtime.h cc_runtime.h
+
+# config.h
+cp /Users/cloyce/perl-5.8.7/config.h config.h
+
+# const-c.inc
+cp /Users/cloyce/perl-5.8.7/ext/Time/HiRes/const-c.inc const-c.inc
+
+# cop.h
+cp /Users/cloyce/perl-5.8.7/cop.h cop.h
+
+# cv.h
+cp /Users/cloyce/perl-5.8.7/cv.h cv.h
+
+# Cwd.c
+cp /Users/cloyce/perl-5.8.7/ext/Cwd/Cwd.c Cwd.c
+
+# deb.c
+cp /Users/cloyce/perl-5.8.7/deb.c deb.c
+
+# doio.c
+cp /Users/cloyce/perl-5.8.7/doio.c doio.c
+
+# doop.c
+cp /Users/cloyce/perl-5.8.7/doop.c doop.c
+
+# dump.c
+cp /Users/cloyce/perl-5.8.7/dump.c dump.c
+
+# Dumper.c
+cp /Users/cloyce/perl-5.8.7/ext/Data/Dumper/Dumper.c Dumper.c
+
+# DynaLoader.c
+cp /Users/cloyce/perl-5.8.7/ext/DynaLoader/DynaLoader.c DynaLoader.c
+
+# embed.h
+cp /Users/cloyce/perl-5.8.7/embed.h embed.h
+
+# embedvar.h
+cp /Users/cloyce/perl-5.8.7/embedvar.h embedvar.h
+
+# EXTERN.h
+cp /Users/cloyce/perl-5.8.7/EXTERN.h EXTERN.h
+
+# fakesdio.h
+cp /Users/cloyce/perl-5.8.7/fakesdio.h fakesdio.h
+
+# fakethr.h
+cp /Users/cloyce/perl-5.8.7/fakethr.h fakethr.h
+
+# form.h
+cp /Users/cloyce/perl-5.8.7/form.h form.h
+
+# globals.c
+cp /Users/cloyce/perl-5.8.7/globals.c globals.c
+
+# gv.c
+cp /Users/cloyce/perl-5.8.7/gv.c gv.c
+
+# gv.h
+cp /Users/cloyce/perl-5.8.7/gv.h gv.h
+
+# handy.h
+cp /Users/cloyce/perl-5.8.7/handy.h handy.h
+
+# hctype.h (this comes from HTTP::Parser module)
+ls -l hctype.h
+
+# HiRes.c
+cp /Users/cloyce/perl-5.8.7/ext/Time/HiRes/HiRes.c HiRes.c
+
+# Hostname.c
+cp /Users/cloyce/perl-5.8.7/ext/Sys/Hostname/Hostname.c Hostname.c
+
+# hparser.c (this comes from HTTP::Parser module)
+ls -l hparser.c
+
+# hparser.h (this comes from HTTP::Parser module)
+ls -l hparser.h
+
+# hv.c
+cp /Users/cloyce/perl-5.8.7/hv.c hv.c
+
+# hv.h
+cp /Users/cloyce/perl-5.8.7/hv.h hv.h
+
+# INTERN.h
+cp /Users/cloyce/perl-5.8.7/INTERN.h INTERN.h
+
+# intrpvar.h
+cp /Users/cloyce/perl-5.8.7/intrpvar.h intrpvar.h
+
+# IO.c
+cp /Users/cloyce/perl-5.8.7/ext/IO/IO.c IO.c
+
+# iperlsys.h
+cp /Users/cloyce/perl-5.8.7/iperlsys.h iperlsys.h
+
+# keywords.h
+cp /Users/cloyce/perl-5.8.7/keywords.h keywords.h
+
+# locale.c
+cp /Users/cloyce/perl-5.8.7/locale.c locale.c
+
+# MD5.c
+cp /Users/cloyce/perl-5.8.7/ext/Digest/MD5/MD5.c MD5.c
+
+# mg.c
+cp /Users/cloyce/perl-5.8.7/mg.c mg.c
+
+# mg.h
+cp /Users/cloyce/perl-5.8.7/mg.h mg.h
+
+# miniperlmain.c
+cp /Users/cloyce/perl-5.8.7/miniperlmain.c miniperlmain.c
+
+# nostdio.h
+cp /Users/cloyce/perl-5.8.7/nostdio.h nostdio.h
+
+# numeric.c
+cp /Users/cloyce/perl-5.8.7/numeric.c numeric.c
+
+# op.c
+cp /Users/cloyce/perl-5.8.7/op.c op.c
+
+# op.h
+cp /Users/cloyce/perl-5.8.7/op.h op.h
+
+# Opcode.c
+cp /Users/cloyce/perl-5.8.7/ext/Opcode/Opcode.c Opcode.c
+
+# opcode.h
+cp /Users/cloyce/perl-5.8.7/opcode.h opcode.h
+
+# opnames.h
+cp /Users/cloyce/perl-5.8.7/opnames.h opnames.h
+
+# pad.c
+cp /Users/cloyce/perl-5.8.7/pad.c pad.c
+
+# pad.h
+cp /Users/cloyce/perl-5.8.7/pad.h pad.h
+
+# parser-util.c (this is util.c from HTTP::Parser module)
+ls -l parser-util.c
+
+# Parser.c (this is from HTTP::Parser module)
+ls -l Parser.c
+
+# patchlevel.h
+cp /Users/cloyce/perl-5.8.7/patchlevel.h patchlevel.h
+
+# Peek.c
+cp /Users/cloyce/perl-5.8.7/ext/Devel/Peek/Peek.c Peek.c
+
+# perl.c
+cp /Users/cloyce/perl-5.8.7/perl.c perl.c
+
+# perl.h
+cp /Users/cloyce/perl-5.8.7/perl.h perl.h
+
+# perlapi.c
+cp /Users/cloyce/perl-5.8.7/perlapi.c perlapi.c
+
+# perlapi.h
+cp /Users/cloyce/perl-5.8.7/perlapi.h perlapi.h
+
+# perlhost.h
+cp /Users/cloyce/perl-5.8.7/win32/perlhost.h perlhost.h
+
+# perlio.c
+cp /Users/cloyce/perl-5.8.7/perlio.c perlio.c
+
+# perlio.h
+cp /Users/cloyce/perl-5.8.7/perlio.h perlio.h
+
+# perliol.h
+cp /Users/cloyce/perl-5.8.7/perliol.h perliol.h
+
+# perllib.c
+cp /Users/cloyce/perl-5.8.7/win32/perllib.c perllib.c
+
+# perlmain.c
+cp /Users/cloyce/perl-5.8.7/perlmain.c perlmain.c
+
+# perlsdio.h
+cp /Users/cloyce/perl-5.8.7/perlsdio.h perlsdio.h
+
+# perlsfio.h
+cp /Users/cloyce/perl-5.8.7/perlsfio.h perlsfio.h
+
+# perlvars.h
+cp /Users/cloyce/perl-5.8.7/perlvars.h perlvars.h
+
+# perly.c
+cp /Users/cloyce/perl-5.8.7/perly.c perly.c
+
+# perly.h
+cp /Users/cloyce/perl-5.8.7/perly.h perly.h
+
+# pfunc.h (part of HTTP::Parser module)
+ls -l pfunc.h
+
+# poll.c
+cp /Users/cloyce/perl-5.8.7/ext/IO/poll.c poll.c
+
+# poll.h
+cp /Users/cloyce/perl-5.8.7/ext/IO/poll.h poll.h
+
+# pp.c
+cp /Users/cloyce/perl-5.8.7/pp.c pp.c
+
+# pp.h
+cp /Users/cloyce/perl-5.8.7/pp.h pp.h
+
+# pp_ctl.c
+cp /Users/cloyce/perl-5.8.7/pp_ctl.c pp_ctl.c
+
+# pp_hot.c
+cp /Users/cloyce/perl-5.8.7/pp_hot.c pp_hot.c
+
+# pp_pack.c
+cp /Users/cloyce/perl-5.8.7/pp_pack.c pp_pack.c
+
+# pp_proto.h
+cp /Users/cloyce/perl-5.8.7/pp_proto.h pp_proto.h
+
+# pp_sort.c
+cp /Users/cloyce/perl-5.8.7/pp_sort.c pp_sort.c
+
+# pp_sys.c
+cp /Users/cloyce/perl-5.8.7/pp_sys.c pp_sys.c
+
+# ppport.h
+cp /Users/cloyce/perl-5.8.7/ext/Devel/PPPort/ppport.h ppport.h
+
+# proto.h
+cp    /Users/cloyce/perl-5.8.7/proto.h proto.h
+
+# reentr.h
+cp /Users/cloyce/perl-5.8.7/reentr.h reentr.h
+
+# reentr.inc
+cp /Users/cloyce/perl-5.8.7/reentr.inc reentr.inc
+
+# regcomp.c
+cp /Users/cloyce/perl-5.8.7/regcomp.c regcomp.c
+
+# regcomp.h
+cp /Users/cloyce/perl-5.8.7/regcomp.h regcomp.h
+
+# regexec.c
+cp /Users/cloyce/perl-5.8.7/regexec.c regexec.c
+
+# regexp.h
+cp /Users/cloyce/perl-5.8.7/regexp.h regexp.h
+
+# regnodes.h
+cp /Users/cloyce/perl-5.8.7/regnodes.h regnodes.h
+
+# run.c
+cp /Users/cloyce/perl-5.8.7/run.c run.c
+
+# scope.c
+cp /Users/cloyce/perl-5.8.7/scope.c scope.c
+
+# scope.h
+cp /Users/cloyce/perl-5.8.7/scope.h scope.h
+
+# spec_config.h (SPEC CPU hacked-up version of config.h)
+ls -l spec_config.h
+
+# specrand.c (SPEC CPU PRNG)
+ls -l specrand.c
+
+# specrand.h (SPEC CPU PRNG)
+ls -l specrand.h
+
+# stdio.c
+cp /Users/cloyce/perl-5.8.7/ext/XS/Typemap/stdio.c stdio.c
+
+# Storable.c
+cp /Users/cloyce/perl-5.8.7/ext/Storable/Storable.c Storable.c
+
+# support/perly.y
+cp /Users/cloyce/perl-5.8.7/perly.y support/perly.y
+
+# sv.c
+cp /Users/cloyce/perl-5.8.7/sv.c sv.c
+
+# sv.h
+cp /Users/cloyce/perl-5.8.7/sv.h sv.h
+
+# taint.c
+cp /Users/cloyce/perl-5.8.7/taint.c taint.c
+
+# thrdvar.h
+cp /Users/cloyce/perl-5.8.7/thrdvar.h thrdvar.h
+
+# thread.h
+cp /Users/cloyce/perl-5.8.7/thread.h thread.h
+
+# toke.c
+cp /Users/cloyce/perl-5.8.7/toke.c toke.c
+
+# tokenpos.h (part of HTTP::Parser module)
+ls -l tokenpos.h
+
+# universal.c
+cp /Users/cloyce/perl-5.8.7/universal.c universal.c
+
+# utf8.c
+cp /Users/cloyce/perl-5.8.7/utf8.c utf8.c
+
+# utf8.h
+cp /Users/cloyce/perl-5.8.7/utf8.h utf8.h
+
+# utfebcdic.h
+cp /Users/cloyce/perl-5.8.7/utfebcdic.h utfebcdic.h
+
+# util.c
+cp    /Users/cloyce/perl-5.8.7/util.c util.c
+
+# util.h
+cp    /Users/cloyce/perl-5.8.7/util.h util.h
+
+# vdir.h
+cp /Users/cloyce/perl-5.8.7/win32/vdir.h vdir.h
+
+# vmem.h
+cp /Users/cloyce/perl-5.8.7/win32/vmem.h vmem.h
+
+# warnings.h
+cp /Users/cloyce/perl-5.8.7/warnings.h warnings.h
+
+# win32/dirent.h
+cp /Users/cloyce/perl-5.8.7/win32/include/dirent.h win32/dirent.h
+
+# win32/netdb.h
+cp /Users/cloyce/perl-5.8.7/win32/include/netdb.h win32/netdb.h
+
+# win32/sys/socket.h
+cp /Users/cloyce/perl-5.8.7/win32/include/sys/socket.h win32/sys/socket.h
+
+# win32.c
+cp /Users/cloyce/perl-5.8.7/win32/win32.c win32.c
+
+# win32.h
+cp /Users/cloyce/perl-5.8.7/win32/win32.h win32.h
+
+# win32io.c
+cp /Users/cloyce/perl-5.8.7/win32/win32io.c win32io.c
+
+# win32iop.h
+cp /Users/cloyce/perl-5.8.7/win32/win32iop.h win32iop.h
+
+# win32sck.c
+cp /Users/cloyce/perl-5.8.7/win32/win32sck.c win32sck.c
+
+# win32thread.c
+cp /Users/cloyce/perl-5.8.7/win32/win32thread.c win32thread.c
+
+# win32thread.h
+cp /Users/cloyce/perl-5.8.7/win32/win32thread.h win32thread.h
+
+# XSUB.h
+cp /Users/cloyce/perl-5.8.7/XSUB.h XSUB.h
+
+# xsutils.c
+cp /Users/cloyce/perl-5.8.7/xsutils.c xsutils.c

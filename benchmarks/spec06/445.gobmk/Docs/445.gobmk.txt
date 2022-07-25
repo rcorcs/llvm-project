@@ -1,0 +1,70 @@
+                                   445.gobmk
+                       SPEC CPU2006 Benchmark Description
+
+Benchmark Name
+
+   445.gobmk
+
+     ----------------------------------------------------------------------
+
+Benchmark Author
+
+   GNU Go authors (in chronological order of contribution) are Man Lung Li,
+   Wayne Iba, Daniel Bump, David Denholm, Gunnar Farneba:ck, Nils Lohner,
+   Jerome Dumonteil, Tommy Thorn, Nicklas Ekstrand, Inge Wallin, Thomas
+   Traber, Douglas Ridgway, Teun Burgers, Tanguy Urvoy, Thien-Thi Nguyen,
+   Heikki Levanto, Mark Vytlacil, Adriaan van Kessel, Wolfgang Manner, Jens
+   Yllman, Don Dailey, Mans Ullerstam, Arend Bayer, Trevor Morris, Evan
+   Berggren Daniel, Fernando Portela, Paul Pogonyshev, S.P. Lee, Stephane
+   Nicolet and Martin Holters.
+   (List taken from development page at
+   http://www.gnu.org/software/gnugo/devel.html)
+
+     ----------------------------------------------------------------------
+
+Benchmark Program General Category
+
+   Artificial intelligence - game playing.
+
+Benchmark Description
+
+   The program plays Go and executes a set of commands to analyze Go
+   positions.
+
+     ----------------------------------------------------------------------
+
+Input Description
+
+   Most input is in "SmartGo Format" (.sgf), a widely used de facto standard
+   representation of Go games. A typical test involves reading in a game to a
+   certain point, then executing a command to analyze the position.
+
+     ----------------------------------------------------------------------
+
+Output Description
+
+   Output is typically an ascii description of a sequence of Go moves.
+
+     ----------------------------------------------------------------------
+
+Programming Language
+
+   C
+
+     ----------------------------------------------------------------------
+
+Known portability issues
+
+   There are no known portability problems remaining as of this writing (May
+   2005). The last portability problem fixed dealt was the nonstandard
+   assumption of signed characters.
+
+     ----------------------------------------------------------------------
+
+References
+
+     * http://www.gnu.org/software/gnugo/devel.html
+
+     ----------------------------------------------------------------------
+
+   Last updated: 7 March 2006

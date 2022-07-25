@@ -1,0 +1,88 @@
+digraph {
+m_bb0 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp5, label %if.then6, label %if.else</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else7:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br i1 %cmp5, label %if.then9, label %if.else11</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="f1T">T</td><td border="1" port="f1F">F</td>
+<td border="1" port="f2T">T</td><td border="1" port="f2F">F</td>
+</tr>
+</table>> ]
+m_bb1 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.then6:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @add_3f_force_to_mom(%struct.half_wilson_vector* %Path_numu, %struct.half_wilson_vector* %Path, i32 %mu, double* nonnull %coeff) #13</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end14</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.then9:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %Path_nu, %struct.half_wilson_vector* %Path_mu, i32 %mu, double* nonnull %arrayidx1) #13</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end14</td></tr>
+</table>
+</td></tr>
+</table>> ]
+m_bb2 [shape = none, label  = <<table border="0" cellspacing="0">
+<tr><td port="f1" border="1" colspan="2"><table bgcolor="LightYellow" border="0">
+<tr><td align="left">if.else:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub = sub nsw i32 7, %mu</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  call void @add_3f_force_to_mom(%struct.half_wilson_vector* %Path, %struct.half_wilson_vector* %Path_numu, i32 %sub, double* nonnull %arrayidx1) #13</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end14</td></tr>
+</table>
+</td>
+<td port="f2" border="1" colspan="2"><table bgcolor="LightCyan" border="0">
+<tr><td align="left">if.else11:</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  %sub12 = sub nsw i32 7, %mu</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  tail call void @add_3f_force_to_mom(%struct.half_wilson_vector* %Path_mu, %struct.half_wilson_vector* %Path_nu, i32 %sub12, double* nonnull %coeff) #13</td></tr>
+<tr><td bgcolor="lightgreen" align="left">  br label %if.end14</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1" colspan="2"><table border="0">
+<tr><td align="left">entry:</td></tr>
+<tr><td align="left">  %m_coeff = alloca [2 x double], align 16</td></tr>
+<tr><td align="left">  %0 = bitcast [2 x double]* %m_coeff to i8*</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.start.p0i8(i64 16, i8* nonnull %0) #12</td></tr>
+<tr><td align="left">  %1 = load double, double* %coeff, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg = fneg double %1</td></tr>
+<tr><td align="left">  %arrayidx1 = getelementptr inbounds [2 x double], [2 x double]* %m_coeff, i64 0, i64 0</td></tr>
+<tr><td align="left">  store double %fneg, double* %arrayidx1, align 16, !tbaa !7</td></tr>
+<tr><td align="left">  %arrayidx2 = getelementptr inbounds double, double* %coeff, i64 1</td></tr>
+<tr><td align="left">  %2 = load double, double* %arrayidx2, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %fneg3 = fneg double %2</td></tr>
+<tr><td align="left">  %arrayidx4 = getelementptr inbounds [2 x double], [2 x double]* %m_coeff, i64 0, i64 1</td></tr>
+<tr><td align="left">  store double %fneg3, double* %arrayidx4, align 8, !tbaa !7</td></tr>
+<tr><td align="left">  %cmp = icmp slt i32 %mu, 4</td></tr>
+<tr><td align="left">  %cmp5 = icmp slt i32 %nu, 4</td></tr>
+<tr><td bgcolor="yellow" align="left">  br i1 %cmp, label %if.then, label %if.else7</td></tr>
+</table>
+</td></tr>
+<tr><td border="1" port="fT">T</td><td border="1" port="fF">F</td></tr>
+</table>> ]
+f_bb1 [shape = none, label  = <<table  border="0" cellspacing="0">
+<tr><td port="f" border="1"><table border="0">
+<tr><td align="left">if.end14:</td></tr>
+<tr><td align="left">  call void @llvm.lifetime.end.p0i8(i64 16, i8* nonnull %0) #12</td></tr>
+<tr><td align="left">  ret void</td></tr>
+</table>
+</td></tr>
+</table>> ]
+f_bb0:fT -> m_bb0:f1
+f_bb0:fF -> m_bb0:f2
+m_bb0:f1T -> m_bb1:f1
+m_bb0:f1F -> m_bb2:f1
+m_bb1:f1 -> f_bb1:f
+m_bb2:f1 -> f_bb1:f
+m_bb0:f2T -> m_bb1:f2
+m_bb0:f2F -> m_bb2:f2
+m_bb1:f2 -> f_bb1:f
+m_bb2:f2 -> f_bb1:f
+}
+

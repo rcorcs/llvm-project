@@ -1,0 +1,16 @@
+#!/bin/sh
+
+if [ "x$1" = "x" -o ! -d "$1" ]; then
+  echo please specify a directory to process
+  exit 1
+fi
+cd $1
+
+for i in config.sh-*; do
+  ( export CONFIG_SH=$i;
+    export CONFIG_H=../config.h`echo $i | sed 's/config.sh//'`;
+    export PERL_CONFIG_SH=foo;
+    cat $i ./config_h.SH > tmpcfg.sh;
+    sh tmpcfg.sh;
+    rm tmpcfg.sh )
+done

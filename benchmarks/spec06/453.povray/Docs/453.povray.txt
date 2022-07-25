@@ -1,0 +1,105 @@
+                                   453.povray
+                       SPEC CPU2006 Benchmark Description
+
+Benchmark Name
+
+   453.povray
+
+     ----------------------------------------------------------------------
+
+Benchmark Author
+
+   POV-Team, contact Thorsten Fro:hlich ( thorsten [at] povray [dot] org )
+
+     ----------------------------------------------------------------------
+
+Benchmark Program General Category
+
+   Computer Visualization
+
+     ----------------------------------------------------------------------
+
+Benchmark Description
+
+   POV-Ray is a ray-tracer. Ray-tracing is a rendering technique that
+   calculates an image of a scene by simulating the way rays of light travel
+   in the real world but it does so backwards. In the real world, rays of
+   light are emitted from a light source and illuminate objects. The light
+   reflects off of the objects or passes through transparent objects. This
+   reflected light hits the human eye or a camera lens. As the vast majority
+   of rays never hit an observer, it would take forever to trace a scene.
+   Thus, ray-tracers like POV-Ray start with their simulated camera and trace
+   rays backwards out into the scene. The user specifies the location of the
+   camera, light sources, and objects as well as the surface textures and
+   their interiors.
+
+   For every pixel rays are shot from the camera into the scene to see if it
+   intersects with any of the objects in the scene. Every time an object is
+   hit, the color of the surface at that point is calculated. For this
+   purpose rays are sent to each light source to determine the amount of
+   light coming from it or if the object is in shadow. For reflective or
+   refractive objects more rays are traced in order to determine the
+   contribution of the reflected and refracted light to the final surface
+   color.
+
+   Geometry objects are represented in POV-Ray by their mathematical form and
+   a transformation. For example spheres are represented by a radius, planes
+   by a normal vector and distance from the origin and tori by their inner
+   and outer radii. In total POV-Ray supports 30 different geometric objects
+   including blobs, quadrics, spheres, cylinders, polygons, meshes,
+   isosurfaces and constructive solid geometry. Intersections of rays with
+   geometry objects are computed by solving complex mathematical equations
+   directly or by numeric approximation algorithms. All these algorithms are
+   sensitive to floating-point accuracy.
+
+     ----------------------------------------------------------------------
+
+Input Description
+
+   453.povray renders a 400x400 pixel anti-aliased image of a chessboard with
+   all the pieces in the starting position. The objects were selected to show
+   the various geometry objects available POV-Ray. The input file also
+   generates a height field out of a simple fractal function. In addition,
+   the input file provides the function for an isosurface object. All objects
+   in the scene have procedural textures that determine their surface
+   texture. Many of these textures make use of a variant of the Perlin noise
+   function. Further, some objects refract light, others are highly
+   reflective and these surface attributes are procedurally defined, too.
+
+     ----------------------------------------------------------------------
+
+Output Description
+
+   The output files are the rendered image and a log containing statistical
+   information about the intersection tests performed and other related
+   information. These statistics are output after every line rendered.
+   Normally POV-Ray would only output these statistics once after rendering
+   the whole image. This modified output is provided only to verify the
+   workload of the benchmark.
+
+     ----------------------------------------------------------------------
+
+Programming Language
+
+   ISO C++
+
+     ----------------------------------------------------------------------
+
+Known portability issues
+
+   mathimf.h included for Intel compiler with the preprocessor define
+   SPEC_CPU_WINDOWS_ICL. All other portability automatically invoked for the
+   Windows operating systems.
+
+     ----------------------------------------------------------------------
+
+References
+
+     * POV-Ray (Persistence of Vision Raytracer) available at
+       http://www.povray.org
+     * Andrew S. Glassner: An Introduction to Ray tracing. Academic Press
+       1989, ISBN 0-12-286160-4.
+
+     ----------------------------------------------------------------------
+
+   Last updated: 7 March 2006
