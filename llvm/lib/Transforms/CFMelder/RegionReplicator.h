@@ -2,6 +2,7 @@
 #define LLVM_LIB_TRANSFORMS_REGION_REPLICATOR_H
 
 #include "RegionAnalyzer.h"
+#include "llvm/Analysis/MemorySSAUpdater.h"
 
 namespace llvm {
 
@@ -16,9 +17,9 @@ private:
   // replicate RegionToReplicate and returns replicated entry and exit
   pair<BasicBlock *, BasicBlock *> replicateCFG(BasicBlock *ExpandedBlock, BasicBlock *MatchedBlock,
                            Region *RegionToReplicate);
-  void addPhiNodes(BasicBlock *ExpandedBlock, Region *ReplicatedRegion);
+  void addPhiNodes(BasicBlock *ExpandedBlock, Region *ReplicatedRegion, ValueToValueMapTy &PHIMap);
   void concretizeBranchConditions(BasicBlock *ExpandedBlock,
-                                  Region *ReplicatedRegion);
+                                  Region *ReplicatedRegion, ValueToValueMapTy &PHIMap);
   void fullPredicateStores(Region *RToReplicate,
                                               BasicBlock *MatchedBlock);
 

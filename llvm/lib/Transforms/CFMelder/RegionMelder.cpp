@@ -594,8 +594,8 @@ Region *RegionMelder::getRegionToReplicate(BasicBlock *MatchedBlock,
 
 void RegionMelder::merge(unsigned Index) {
 
-  static int Count = 0;
-  Utils::writeCFGToDotFile(*MA.getParentFunction(), std::to_string(Count++) + ".cfmelder.");
+  // static int Count = 0;
+  // Utils::writeCFGToDotFile(*MA.getParentFunction(), std::to_string(Count++) + ".cfmelder.");
 
   bool RegionAlreadySimplified = false;
 
@@ -721,7 +721,7 @@ void RegionMelder::merge(unsigned Index) {
   }
   // run pre merge passes
   runPreMergePasses(RegionAlreadySimplified);
-  Utils::writeCFGToDotFile(*MA.getParentFunction(), std::to_string(Count++) + ".cfmelder.");
+  // Utils::writeCFGToDotFile(*MA.getParentFunction(), std::to_string(Count++) + ".cfmelder.");
 
   if (!DisableMelding) {
     // parentFunc->print(errs());
@@ -760,10 +760,10 @@ void RegionMelder::merge(unsigned Index) {
       runUnpredicationPass();
   }
   NumMeldings++;
-  Utils::writeCFGToDotFile(*MA.getParentFunction(), std::to_string(Count++) + ".cfmelder.");
+  // Utils::writeCFGToDotFile(*MA.getParentFunction(), std::to_string(Count++) + ".cfmelder.");
   // verify the function
-  assert(!verifyFunction(*MA.getParentFunction(), &errs()) &&
-         "function verification failed!");
+  // assert(!verifyFunction(*MA.getParentFunction(), &errs()) &&
+  //        "function verification failed!");
 }
 
 void RegionMelder::linearizeBb(BasicBlock *BB,

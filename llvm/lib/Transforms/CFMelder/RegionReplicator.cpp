@@ -1,7 +1,13 @@
 #include "RegionReplicator.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/iterator_range.h"
+#include "llvm/Analysis/MemorySSAUpdater.h"
+#include "llvm/Analysis/PostDominators.h"
+#include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/Dominators.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -27,11 +33,12 @@ Region *RegionReplicator::replicate(BasicBlock *ExpandedBlock,
       *RI, RepEntryExitPair.first, RepEntryExitPair.second);
   // errs() << "place PHI nodes in the replicated region for correct def-use\n";
   // place PHI nodes in the replicated region for correct def-use
-  addPhiNodes(ExpandedBlock, ReplicatedR);
+  ValueToValueMapTy PHIMap;
+  addPhiNodes(ExpandedBlock, ReplicatedR, PHIMap);
 
-  // errs() << "concretize the branch conditions within the replicated region\n";
-  // concretize the branch conditions within the replicated region
-  concretizeBranchConditions(ExpandedBlock, ReplicatedR);
+  // errs() << "concretize the branch conditions within the replicated
+  // region\n"; concretize the branch conditions within the replicated region
+  concretizeBranchConditions(ExpandedBlock, ReplicatedR, PHIMap);
 
   // errs() << "finalizing replication\n";
   if (EnableFullPredication) {
@@ -247,18 +254,19 @@ void RegionReplicator::fullPredicateStores(Region *RToReplicate,
 }
 
 void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
-                                   Region *ReplicatedRegion) {
+                                   Region *ReplicatedRegion,
+                                   ValueToValueMapTy &PHIMap) {
 
   // users of defs in expanded block are only replaced if the user is
   // outside the replicated region
-  auto ShouldReplaceUse = [&] (Use &U) -> bool {
-    Instruction* User = dyn_cast<Instruction>(U.getUser());
-    if (User->getParent() == ReplicatedRegion->getExit()) return false;
-    for (auto * BB : ReplicatedRegion->blocks()){
-      if (User->getParent() == BB) return false;
-    }
-    return true;
-  };
+  // auto ShouldReplaceUse = [&] (Use &U) -> bool {
+  //   Instruction* User = dyn_cast<Instruction>(U.getUser());
+  //   if (User->getParent() == ReplicatedRegion->getExit()) return false;
+  //   for (auto * BB : ReplicatedRegion->blocks()){
+  //     if (User->getParent() == BB) return false;
+  //   }
+  //   return true;
+  // };
   // errs() << "computing DF\n";
   // compute DF
   DominatorTree &DT = MA.getCFGInfo().getDomTree();
@@ -273,8 +281,9 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
     for (Use &Use : I.uses()) {
       Instruction *User = cast<Instruction>(Use.getUser());
       if (User->getParent() != ExpandedBlock) {
-        errs() << "instruction has users outside expanded block\n";
-        I.print(errs()); errs() << "\n";
+        // errs() << "instruction has users outside expanded block\n";
+        // I.print(errs());
+        // errs() << "\n";
         InstrsWithOutsideUses.insert(&I);
         break;
       }
@@ -289,12 +298,12 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
     Instruction *I = *WorkList.begin();
     WorkList.erase(I);
 
-    errs() << "processing instruction : \n";
-    I->print(errs()); errs() << "\n";
-
+    // errs() << "processing instruction : \n";
+    // I->print(errs());
+    // errs() << "\n";
 
     // if (Visited.count(I)) {
-	  //   errs() << "repeting:"; I->dump();
+    //   errs() << "repeting:"; I->dump();
     // }
     Visited.insert(I);
 
@@ -309,7 +318,7 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
       // includes loops header ignore it
       if (BB == I->getParent())
         continue;
-      errs() << "processing frontier at " << BB->getNameOrAsOperand() << "\n";
+      // errs() << "processing frontier at " << BB->getNameOrAsOperand() << "\n";
       // add a phi node only if DF is within the replicated region
       if (ReplicatedRegion->contains(BB) || ReplicatedRegion->getExit() == BB) {
         PHINode *NewPHI =
@@ -322,10 +331,25 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
             NewPHI->addIncoming(llvm::UndefValue::get(I->getType()), Pred);
           }
         }
-        I->replaceUsesWithIf(NewPHI, ShouldReplaceUse);
+        // I->replaceUsesWithIf(NewPHI, ShouldReplaceUse);
+        // figure out what instruction in expanded block NewPHI points to
+        // this is neede for RAUW later
+        Value *DefInExpandedBlock = I;
+        while (PHIMap.count(DefInExpandedBlock) > 0) {
+          DefInExpandedBlock = PHIMap[DefInExpandedBlock];
+        }
+
+        // check the found def is really in expanded block
+        assert(dyn_cast<Instruction>(DefInExpandedBlock)->getParent() ==
+                   ExpandedBlock &&
+               "found definition is not in expanded block!");
+
+        // update the PHI map
+        PHIMap.insert(std::pair<Value *, Value *>(NewPHI, DefInExpandedBlock));
         // this phi must be furthur processed using its DF
-        errs() << "new PHI node : \n";
-        NewPHI->print(errs()); errs() << "\n";
+        // errs() << "new PHI node : \n";
+        // NewPHI->print(errs());
+        // errs() << "\n";
         WorkList.insert(NewPHI);
       }
     }
@@ -360,10 +384,11 @@ static void visitDFS(BasicBlock *From, BasicBlock *To,
     }
   }
   Visited.erase(From);
-};
+}
 
 void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
-                                                  Region *ReplicatedRegion) {
+                                                  Region *ReplicatedRegion,
+                                                  ValueToValueMapTy &PHIMap) {
 
   BasicBlock *Entry = ReplicatedRegion->getEntry();
   BasicBlock *Exit = ReplicatedRegion->getExit();
@@ -372,7 +397,7 @@ void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
   DenseSet<BasicBlock *> Visited;
   SmallVector<BasicBlock *> CurrPath;
 
-  // use DFS to enumerate all paths from entry to exit 
+  // use DFS to enumerate all paths from entry to exit
   visitDFS(Entry, Exit, CurrPath, Visited, Paths);
 
   int BestPathIndex = -1;
@@ -414,6 +439,53 @@ void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
     if (BI->isConditional()) {
       Value *Cond = (BI->getSuccessor(0) == BBNext) ? TrueV : FalseV;
       BI->setCondition(Cond);
+    }
+  }
+
+  // now we need to fix the broken def-use chains using the PHIMap
+  // find broken def-use chains for all defs in expanded block
+  BasicBlock *BestPathSecondExit = BestPath[BestPath.size() - 2];
+  SmallVector<std::pair<Instruction *, Instruction *>> BrokenDefUsers;
+  DominatorTree &DT = MA.getCFGInfo().getDomTree();
+  PostDominatorTree &PDT = MA.getCFGInfo().getPostDomTree();
+
+  auto IsInsideReplicatedRegion = [&](Instruction *I) -> bool {
+    BasicBlock *Parent = I->getParent();
+    return DT.dominates(Entry, Parent) && PDT.dominates(Exit, Parent);
+  };
+
+  for (Instruction &Def : *ExpandedBlock) {
+    for (Use &U : Def.uses()) {
+      Instruction *User = dyn_cast<Instruction>(U.getUser());
+      if (!DT.dominates(&Def, User) && !IsInsideReplicatedRegion(User)) {
+        DEBUG << "Def-Use chain is broken for definition "
+              << Def.getNameOrAsOperand() << " and user "
+              << User->getNameOrAsOperand() << "\n";
+
+        BrokenDefUsers.push_back(
+            std::pair<Instruction *, Instruction *>(&Def, User));
+      }
+    }
+  }
+
+  if (BrokenDefUsers.size()) {
+    assert(isa<PHINode>(*Exit->begin()) &&
+           "there are broken def-use to fix but replicated exit does not "
+           "contain PHI nodes!");
+  }
+
+  for (auto &DefUser : BrokenDefUsers) {
+    Instruction *Def = DefUser.first;
+    Instruction *User = DefUser.second;
+    for (auto &PHI : Exit->phis()) {
+
+      Value *PHIVal = dyn_cast<Value>(&PHI);
+
+      if (PHIMap[PHIVal] == dyn_cast<Value>(Def) &&
+          PHI.getIncomingValueForBlock(BestPathSecondExit) !=
+              llvm::UndefValue::get(PHI.getType())) {
+        User->replaceUsesOfWith(Def, PHIVal);
+      }
     }
   }
 }
