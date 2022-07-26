@@ -449,11 +449,14 @@ void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
   DominatorTree &DT = MA.getCFGInfo().getDomTree();
   PostDominatorTree &PDT = MA.getCFGInfo().getPostDomTree();
 
+  // checks if a given instruction is inside replicated region
   auto IsInsideReplicatedRegion = [&](Instruction *I) -> bool {
     BasicBlock *Parent = I->getParent();
     return DT.dominates(Entry, Parent) && PDT.dominates(Exit, Parent);
   };
 
+  // find broken def-user. Defs are inside the expanded block.
+  // users are outside the replicated region
   for (Instruction &Def : *ExpandedBlock) {
     for (Use &U : Def.uses()) {
       Instruction *User = dyn_cast<Instruction>(U.getUser());
@@ -468,12 +471,17 @@ void RegionReplicator::concretizeBranchConditions(BasicBlock *ExpandedBlock,
     }
   }
 
+  // if broken def-uses are there we must have PHI nodes in the replicated exit
+  // added by addPhiNodes step
   if (BrokenDefUsers.size()) {
     assert(isa<PHINode>(*Exit->begin()) &&
            "there are broken def-use to fix but replicated exit does not "
            "contain PHI nodes!");
   }
 
+  // RAUW phase : for each broken user we find the corresponding defining PHI node 
+  // in the region exit. this PHI node must have non-undef value for the incoming path
+  // selected in concretizeBranchCinditions
   for (auto &DefUser : BrokenDefUsers) {
     Instruction *Def = DefUser.first;
     Instruction *User = DefUser.second;
