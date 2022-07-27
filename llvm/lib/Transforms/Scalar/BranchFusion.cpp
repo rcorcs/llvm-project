@@ -122,7 +122,8 @@ class BranchFusion {
   unsigned CountChanges;
 
   bool merge(Function &F, BranchInst *BI, DominatorTree &DT,
-           TargetTransformInfo &TTI, std::list<BranchInst *> &ListBIs);
+           TargetTransformInfo &TTI, std::list<BranchInst *> &ListBIs,
+           std::unordered_set<std::string> &PreviousBlocks);
 public:
   BranchFusion() : CountChanges(0) {}
   bool runImpl(Function &F);
@@ -526,18 +527,13 @@ public:
 
 
 bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
-           TargetTransformInfo &TTI, std::list<BranchInst *> &ListBIs) {
+           TargetTransformInfo &TTI, std::list<BranchInst *> &ListBIs,
+           std::unordered_set<std::string> &PreviousBlocks) {
   if (Debug) {
     errs() << "Original version\n";
     F.dump();
     errs() << "Select branch for merging\n";
     BI->dump();
-  }
-
-
-  std::set<std::string> PreviousBlocks;
-  for (BasicBlock &BB : F) {
-    PreviousBlocks.insert(BB.getName().str());
   }
 
   BasicBlock *BBT = BI->getSuccessor(0);
@@ -976,10 +972,17 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
     errs() << "Computing size...\n";
   }
   for (Instruction *I : CG) {
+    //if (auto *BI = dyn_cast<BranchInst>(I))
+    //  if (BI->isUnconditional() || 
+    //      (BI->getNumSuccessors() == 2 && (BI->getSuccessor(0) == BI->getSuccessor(1))))
+    //    if (BI->getSuccessor(0)->getUniquePredecessor() != nullptr)
+    //      continue;
+
     auto cost = TTI.getInstructionCost(
         I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
     MergedSize += cost.getValue().getValue();
   }
+
 
   if (Debug) {
     errs() << "SizeLeft: " << SizeLeft << "\n";
@@ -1171,11 +1174,19 @@ bool BranchFusion::runImpl(Function &F) {
   collectFusableBranches(F, ListBIs);
 
   bool Changed = false;
+  bool Last_changed = true;
+  DominatorTree DT;
+  std::unordered_set<std::string> PreviousBlocks;
   while (!ListBIs.empty()) {
     BranchInst *BI = ListBIs.front();
     ListBIs.pop_front();
-    DominatorTree DT(F);
-    Changed = Changed || merge(F, BI, DT, TTI, ListBIs);
+    if (Last_changed) {
+      DT = DominatorTree(F);
+      PreviousBlocks.clear();
+      std::transform(F.begin(), F.end(), std::inserter(PreviousBlocks, PreviousBlocks.begin()), [](BasicBlock& BB){return BB.getName().str();});
+    }
+    Last_changed = merge(F, BI, DT, TTI, ListBIs, PreviousBlocks);
+    Changed |= Last_changed;
   }
 
   if (Changed) {
