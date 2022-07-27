@@ -4949,7 +4949,8 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
         if (V == nullptr)
           errs() << "Null incoming value\n";
         if (auto *IV = dyn_cast<Instruction>(V)) {
-          if (BB->getTerminator() == nullptr) {
+          auto IncomingBlockTerm = BB->getTerminator();
+          if (IncomingBlockTerm == nullptr) {
             //if (Debug)
             errs() << "ERROR: Null terminator\n";
               // MergedFunc->eraseFromParent();
@@ -4958,10 +4959,16 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
 #endif
             return false;
           }
-          if (!DT.dominates(IV, BB->getTerminator())) {
-            if (OffendingInsts.count(IV) == 0) {
-              OffendingInsts.insert(IV);
-              LinearOffendingInsts.push_back(IV);
+          // If the instruction IV producing the incoming value is not
+          // dominated by the last instruction of the incoming block
+          // (or IS the last instruction of the incoming block),
+          // we will have to fix domination
+          if (IncomingBlockTerm != IV) {
+            if (!DT.dominates(IV, IncomingBlockTerm)) {
+              if (OffendingInsts.count(IV) == 0) {
+                OffendingInsts.insert(IV);
+                LinearOffendingInsts.push_back(IV);
+              }
             }
           }
         }

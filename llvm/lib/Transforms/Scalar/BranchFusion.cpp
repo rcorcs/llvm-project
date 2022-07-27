@@ -972,11 +972,11 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
     errs() << "Computing size...\n";
   }
   for (Instruction *I : CG) {
-    if (auto *BI = dyn_cast<BranchInst>(I))
-      if (BI->isUnconditional() || 
-          (BI->getNumSuccessors() == 2 && (BI->getSuccessor(0) == BI->getSuccessor(1))))
-        if (BI->getSuccessor(0)->getUniquePredecessor() != nullptr)
-          continue;
+    //if (auto *BI = dyn_cast<BranchInst>(I))
+    //  if (BI->isUnconditional() || 
+    //      (BI->getNumSuccessors() == 2 && (BI->getSuccessor(0) == BI->getSuccessor(1))))
+    //    if (BI->getSuccessor(0)->getUniquePredecessor() != nullptr)
+    //      continue;
 
     auto cost = TTI.getInstructionCost(
         I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
