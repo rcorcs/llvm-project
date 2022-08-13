@@ -14,10 +14,12 @@
 #ifndef LLVM_TRANSFORMS_SCALAR_BRANCHFUSION_H
 #define LLVM_TRANSFORMS_SCALAR_BRANCHFUSION_H
 
+#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/PassManager.h"
+#include "llvm/IR/Dominators.h"
 
 
 #include <map>
@@ -39,6 +41,8 @@ public:
 
 //ModulePass *createBranchFusionModulePass();
 
+bool MergeBranchRegions(Function &F, BranchInst *BI, DominatorTree &DT,
+           TargetTransformInfo &TTI);
 
 } // namespace llvm
 #endif

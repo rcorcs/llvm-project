@@ -36,6 +36,7 @@
 #include "llvm/IR/ModuleSlotTracker.h"
 #include "llvm/IR/Verifier.h"
 #include <llvm/IR/IRBuilder.h>
+#include "llvm/Analysis/TargetTransformInfo.h"
 
 #include "llvm/Support/Error.h"
 
@@ -1211,9 +1212,454 @@ FunctionPass *llvm::createBranchFusionPass() {
   return new BranchFusionLegacyPass();
 }
 
-
-
 // MODULE VERSION
+
+bool llvm::MergeBranchRegions(Function &F, BranchInst *BI, DominatorTree &DT,
+           TargetTransformInfo &TTI) {
+  BasicBlock *BBT = BI->getSuccessor(0);
+  BasicBlock *BBF = BI->getSuccessor(1);
+  Value *BrCond = BI->getCondition();
+
+  SEMERegion LeftR(BBT, DT);
+  SEMERegion RightR(BBF, DT);
+
+  if (Debug) {
+    errs() << "Select branch for merging\n";
+    BI->dump();
+    errs() << "LEFT REGION:\n";
+    for (BasicBlock &BB : LeftR) BB.dump();
+    errs() << "RIGHT REGION:\n";
+    for (BasicBlock &BB : RightR) BB.dump();
+  }
+
+  std::set<BasicBlock *> KnownBBs;
+  for (BasicBlock &BB : LeftR) {
+    KnownBBs.insert(&BB);
+
+    //predecessors must be within the same region or be the entry block
+    for (auto It = pred_begin(&BB), E = pred_end(&BB); It != E; It++) {
+      BasicBlock *PredBB = *It;
+      if (!LeftR.contains(PredBB) && PredBB != BI->getParent()) {
+        return false;
+      }
+    }
+
+  }
+  for (BasicBlock &BB : RightR) {
+    KnownBBs.insert(&BB);
+
+    //predecessors must be within the same region or be the entry block
+    for (auto It = pred_begin(&BB), E = pred_end(&BB); It != E; It++) {
+      BasicBlock *PredBB = *It;
+      if (!RightR.contains(PredBB) && PredBB != BI->getParent()) {
+        return false;
+      }
+    }
+
+  }
+
+  //TODO: fix issue with PHI-node assignment from Function Merging
+  if (BI->getSuccessor(0)->getUniquePredecessor()!=BI->getParent() ||
+      BI->getSuccessor(1)->getUniquePredecessor()!=BI->getParent()) {
+    return false;
+  }
+
+  //TODO: handle landingpad on exit blocks. This might break the link between the invoke and the landingpad.
+  for (BasicBlock &BB : LeftR.exits()) {
+    //errs() << "Left Exit: " << BB.getName().str() << "\n";
+    if (BB.isLandingPad()) return false;
+  }
+  for (BasicBlock &BB : RightR.exits()) {
+    //errs() << "Right Exit: " << BB.getName().str() << "\n";
+    if (BB.isLandingPad()) return false;
+  }
+
+
+  bool IsSingleExit = LeftR.getNumExitBlocks() == 1 &&
+                      RightR.getNumExitBlocks() == 1 &&
+                      LeftR.getUniqueExitBlock() == RightR.getUniqueExitBlock();
+
+  if (EnableSOA) {
+    bool IsSOA = LeftR.size() == 1 && RightR.size() == 1 && IsSingleExit;
+    if (!IsSOA) {
+      errs() << "Skipping NOT SOA\n";
+      return false;
+    }
+    errs() << "Processing SOA-valid Branch\n";
+  }
+
+
+
+  AlignmentStats TotalAlignmentStats;
+  AlignedSequence<Value *> AlignedInsts =
+      FunctionMerger::alignBlocks(LeftR, RightR, TotalAlignmentStats, (UseCostInFingerprint?(&TTI):nullptr) );
+
+  int CountMatchUsefullInsts = 0;
+  for (auto &Entry : AlignedInsts) {
+
+    if (Debug) {
+      errs() << "-----------------------------------------------------\n";
+      if (Entry.get(0)) {
+        if (isa<BasicBlock>(Entry.get(0)))
+          errs() << Entry.get(0)->getName() << "\n";
+        else
+          Entry.get(0)->dump();
+      } else
+        errs() << "\t-\n";
+      if (Entry.get(1)) {
+        if (isa<BasicBlock>(Entry.get(1)))
+          errs() << Entry.get(1)->getName() << "\n";
+        else
+          Entry.get(1)->dump();
+      } else {
+        errs() << "\t-\n";
+      }
+    }
+
+    if (Entry.match()) {
+      if (isa<BinaryOperator>(Entry.get(0)))
+        CountMatchUsefullInsts++;
+      if (isa<CallInst>(Entry.get(0)))
+        CountMatchUsefullInsts++;
+      if (isa<InvokeInst>(Entry.get(0)))
+        CountMatchUsefullInsts++;
+      if (isa<CmpInst>(Entry.get(0)))
+        CountMatchUsefullInsts++;
+      if (isa<CastInst>(Entry.get(0)))
+        CountMatchUsefullInsts++;
+      // if (isa<StoreInst>(Pair.first))
+      //   CountMatchUsefullInsts++;
+    }
+  }
+  
+  std::string DotStr;
+  if (WriteDotFile && (EnableHyFMNW || EnableHyFMPA)) {
+    DotPrinter DP(F, BI, LeftR, RightR, AlignedInsts);
+    DotStr = DP.Str;
+  }
+  LLVMContext &Context = F.getContext();
+  const DataLayout *DL = &F.getParent()->getDataLayout();
+  Type *IntPtrTy = DL->getIntPtrType(Context);
+
+  ValueToValueMapTy VMap;
+  // initialize VMap
+  for (Argument &Arg : F.args()) {
+    VMap[&Arg] = &Arg;
+  }
+
+  for (BasicBlock &BB : F) {
+    if (KnownBBs.count(&BB))
+      continue;
+    VMap[&BB] = &BB;
+    for (Instruction &I : BB) {
+      VMap[&I] = &I;
+    }
+  }
+
+  FunctionMergingOptions Options = FunctionMergingOptions()
+                                       .enableUnifiedReturnTypes(false)
+                                       .matchOnlyIdenticalTypes(true);
+
+  BasicBlock *EntryBB = BasicBlock::Create(Context, "", &F);
+
+  FunctionMerger::SALSSACodeGen CG(LeftR, RightR);
+  CG.setFunctionIdentifier(BrCond)
+      .setEntryPoints(BBT, BBF)
+      .setReturnTypes(F.getReturnType(), F.getReturnType())
+      .setMergedFunction(&F)
+      .setMergedEntryPoint(EntryBB)
+      .setMergedReturnType(F.getReturnType(), false)
+      .setContext(&Context)
+      .setIntPtrType(IntPtrTy);
+  if (!CG.generate(AlignedInsts, VMap, Options)) {
+    errs() << "ERROR: Failed to generate the fused branches!\n";
+    if (Debug) {
+      errs() << "Destroying generated code\n";
+      F.dump();
+    }
+    CG.destroyGeneratedCode();
+    if (Debug) {
+      errs() << "Generated code destroyed\n";
+    }
+    EntryBB->eraseFromParent();
+    if (Debug) {
+      errs() << "Branch fusion reversed\n";
+      F.dump();
+    }
+
+    return false;
+  }
+
+  /*
+   Update PHI nodes in the exit blocks from both left and right SEME regions.
+  */
+  std::map<PHINode *, PHINode *> ReplacedPHIs;
+
+  auto ProcessPHIs = [&](auto ExitSet,
+                         std::set<BasicBlock *> &VisitedBB) -> bool {
+    for (BasicBlock &BB : ExitSet) {
+      if (VisitedBB.count(&BB))
+        continue;
+      VisitedBB.insert(&BB);
+
+      auto PHIs = BB.phis();
+
+      for (auto It = PHIs.begin(), E = PHIs.end(); It != E;) {
+        PHINode *PHI = &*It;
+        It++;
+
+        if (Debug) {
+          errs() << "Solving PHI node:";
+          PHI->dump();
+        }
+
+        IRBuilder<> Builder(PHI);
+        PHINode *NewPHI = Builder.CreatePHI(PHI->getType(), 0);
+        CG.insert(NewPHI);
+        VMap[PHI] = NewPHI;
+        ReplacedPHIs[PHI] = NewPHI;
+
+
+        // Same block can be a predecessor multiple times and can have multiple incoming edges into BB
+        // To keep BB's predecessor information consistent with the phi incoming values,
+        // we need to keep track of the number of incoming edges from each predecessor block
+        //std::map<BasicBlock *, std::map<BasicBlock *, Value *>> NewEntries;
+        std::map<BasicBlock *, std::map<BasicBlock *, std::pair<Value *, int>>> NewEntries;
+        std::set<BasicBlock *> OldEntries;
+        for (unsigned i = 0; i < PHI->getNumIncomingValues(); i++) {
+          BasicBlock *InBB = PHI->getIncomingBlock(i);
+          if (KnownBBs.count(InBB)) {
+            Value *NewV = PHI->getIncomingValue(i);
+            auto Pair = CG.getNewEdge(InBB, &BB);
+            BasicBlock *NewBB = Pair.first;
+            if (Instruction *OpI =
+                    dyn_cast<Instruction>(PHI->getIncomingValue(i))) {
+              NewV = VMap[OpI];
+
+              if (NewV == nullptr) {
+                errs() << "ERROR: Null mapped value!\n";
+                return false;
+              }
+            }
+            auto result_pair = NewEntries[NewBB].insert({InBB, {NewV, 1}});
+            if (!result_pair.second)
+              result_pair.first->second.second++;
+            //NewEntries[NewBB][InBB] = NewV;
+            OldEntries.insert(InBB);
+          } else {
+            //simply copy incoming values from outside the two regions being merged
+            NewPHI->addIncoming(PHI->getIncomingValue(i),PHI->getIncomingBlock(i));
+          }
+        }
+
+        if (Debug) {
+          errs() << "Num entries: " << NewEntries.size() << "\n";
+          for (auto &Pair : NewEntries) {
+            errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
+            for (auto &Pair2 : Pair.second) {
+              errs() << "Block: " << Pair2.first->getName().str() << " -> "; Pair2.second.first->dump();
+            }
+          }
+        }
+
+        if (Debug) {
+          errs() << "Creating New PHI\n";
+          PHI->dump();
+        }
+        for (auto &Pair : NewEntries) {
+          if (Debug) {
+            errs() << "Incoming Block: " << Pair.first->getName().str() << "\n";
+          }
+          if (Pair.second.size() == 1) {
+            auto &InnerPair = *(Pair.second.begin());
+            Value *V = InnerPair.second.first;
+            int repeats = InnerPair.second.second;
+            for (int i = 0; i < repeats; ++i)
+              NewPHI->addIncoming(V, Pair.first);
+          } else if (Pair.second.size() == 2) {
+            /*
+            Values that were originally coming from different basic blocks that
+            have been merged must be properly handled. In this case, we add a
+            selection in the merged incomming block to produce the correct value
+            for the phi node.
+            */
+            if (Debug) {
+              errs() << "Found  PHI incoming from two different blocks\n";
+            }
+            Value *LeftV = nullptr;
+            Value *RightV = nullptr;
+            int repeats = 0;
+            for (auto &InnerPair : Pair.second) {
+              if (LeftR.contains(InnerPair.first)) {
+                if (Debug) {
+                  errs() << "Value coming from the Left block: "
+                       << GetValueName(InnerPair.first) << " : ";
+                  InnerPair.second.first->dump();
+                }
+                LeftV = InnerPair.second.first;
+              }
+              if (RightR.contains(InnerPair.first)) {
+                if (Debug) {
+                  errs() << "Value coming from the Right block: "
+                       << GetValueName(InnerPair.first) << " : ";
+                  InnerPair.second.first->dump();
+                }
+                RightV = InnerPair.second.first;
+              }
+              repeats = repeats > InnerPair.second.second ? repeats : InnerPair.second.second;
+            }
+
+            if (LeftV && RightV) {
+              Value *MergedV = LeftV;
+              if (LeftV != RightV) {
+                IRBuilder<> Builder(Pair.first->getTerminator());
+                // TODO: handle if one of the values is the terminator itself!
+                MergedV = Builder.CreateSelect(BrCond, LeftV, RightV);
+                if (SelectInst *SelI = dyn_cast<SelectInst>(MergedV))
+                  CG.insert(SelI);
+              }
+              for (int i = 0; i < repeats; ++i)
+                NewPHI->addIncoming(MergedV, Pair.first);
+            } else {
+              errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
+              return false;
+            }
+          } else {
+            errs() << "ERROR: THIS IS WEIRD! MAYBE IT SHOULD NOT BE HERE!\n";
+            return false;
+            /*
+            IRBuilder<> Builder(&*F.getEntryBlock().getFirstInsertionPt());
+            AllocaInst *Addr = Builder.CreateAlloca(PHI->getType());
+            CG.insert(Addr);
+
+            for (Value *V : Pair.second) {
+              if (Instruction *OpI = dyn_cast<Instruction>(V)) {
+                CG.StoreInstIntoAddr(OpI, Addr);
+              } else {
+                errs() << "ERROR: must also handle non-instruction values "
+                          "via a select\n";
+              }
+            }
+
+            Builder.SetInsertPoint(Pair.first->getTerminator());
+            Value *LI = Builder.CreateLoad(PHI->getType(), Addr);
+
+            PHI->addIncoming(LI, Pair.first);
+      */
+          }
+        }
+
+	/*
+	unsigned CountPreds = 0;
+        for (auto It = pred_begin(&BB), E = pred_end(&BB); It != E; It++) {
+          BasicBlock *PredBB = *It;
+
+	  if (!LeftR.contains(PredBB) && !RightR.contains(PredBB)) {
+		  CountPreds++;
+		  errs() << "+PredBB: " << PredBB->getName().str() << "\n";
+	  } else {
+		  errs() << "-PredBB: " << PredBB->getName().str() << "\n";
+	  }
+        }
+	if (CountPreds!=NewPHI->getNumIncomingValues()) {
+		errs() << "ERROR: unexpected number of predecessor\n";
+	}
+	*/
+
+        if (Debug) {
+          errs() << "Resulting PHI node:";
+          NewPHI->dump();
+        }
+      }
+    }
+    return true;
+  };
+
+  bool Error = false;
+
+  std::set<BasicBlock *> VisitedBB;
+  Error = Error || !ProcessPHIs(LeftR.exits(), VisitedBB);
+  Error = Error || !ProcessPHIs(RightR.exits(), VisitedBB);
+
+
+  if (Error) {
+    if (Debug) {
+      errs() << "Destroying generated code\n";
+    }
+
+    // F.dump();
+    CG.destroyGeneratedCode();
+    if (Debug) {
+      errs() << "Generated code destroyed\n";
+    }
+    EntryBB->eraseFromParent();
+    if (Debug) {
+      errs() << "Branch fusion reversed\n";
+      F.dump();
+    }
+
+    return false;
+  } else {
+    //float Profit = ((float)(SizeLeft + SizeRight) - MergedSize) /
+    //               ((float)SizeLeft + SizeRight);
+    //errs() << "Destroying original code: " << (SizeLeft + SizeRight) << " X "
+    //       << MergedSize << ": " << ((int)(Profit * 100.0)) << "% Reduction ["
+    //       << CountMatchUsefullInsts << "] : " << GetValueName(&F) << "\n";
+
+    // errs() << "Before binding the code\n";
+    // F.dump();
+
+    IRBuilder<> Builder(BI);
+    Instruction *NewBI = Builder.CreateBr(EntryBB);
+    BI->eraseFromParent();
+
+    std::vector<Instruction *> DeadInsts;
+
+    for (auto &Pair : ReplacedPHIs) {
+      Pair.first->replaceAllUsesWith(Pair.second);
+      Pair.first->dropAllReferences();
+      DeadInsts.push_back(Pair.first);
+    }
+
+    // errs() << "Before deleting the old code\n";
+    // F.dump();
+    for (BasicBlock *BB : KnownBBs) {
+      for (Instruction &I : *BB) {
+        I.replaceAllUsesWith(VMap[&I]);
+
+        I.dropAllReferences();
+        DeadInsts.push_back(&I);
+      }
+    }
+    for (Instruction *I : DeadInsts) {
+      //if (BranchInst *BI = dyn_cast<BranchInst>(I)) {
+      //  ListBIs.remove(BI);
+      //}
+      I->eraseFromParent();
+    }
+    for (BasicBlock *BB : KnownBBs) {
+      BB->eraseFromParent();
+    }
+
+    if (Debug) {
+      errs() << "After deleting the old code\n";
+      //F.dump();
+    }
+    if (!CG.commitChanges()) {
+      //F.dump();
+      errs() << "ERROR: committing final changes to the fused branches !!!!!!!\n";
+    }
+    if (Debug) {
+      errs() << "Final version\n";
+      F.dump();
+    }
+    
+    return true;
+  }
+
+  //utility function here
+}
+
 
 PreservedAnalyses BranchFusionModulePass::run(Module &M,
                                             ModuleAnalysisManager &MAM) {
