@@ -25,6 +25,7 @@
 #include "llvm/InitializePasses.h"
 #include "llvm/Transforms/Scalar/GVN.h"
 #include "llvm/Transforms/Scalar/BranchFusion.h"
+#include "llvm/Transforms/Scalar/HybridBranchFusion.h"
 #include "llvm/Transforms/Scalar/Scalarizer.h"
 #include "llvm/Transforms/Scalar/SimpleLoopUnswitch.h"
 #include "llvm/Transforms/Utils/UnifyFunctionExitNodes.h"
@@ -40,6 +41,7 @@ void llvm::initializeScalarOpts(PassRegistry &Registry) {
   initializeAlignmentFromAssumptionsPass(Registry);
   initializeBranchFusionLegacyPassPass(Registry);
   initializeBranchFusionLegacyModulePassPass(Registry);
+  initializeHybridBranchFusionLegacyPassPass(Registry);
   initializeCallSiteSplittingLegacyPassPass(Registry);
   initializeConstantHoistingLegacyPassPass(Registry);
   initializeConstraintEliminationPass(Registry);

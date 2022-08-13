@@ -83,6 +83,7 @@ FunctionPass *createAggressiveDCEPass();
 
 FunctionPass *createBranchFusionPass();
 ModulePass *createBranchFusionModulePass();
+ModulePass *createHybridBranchFusionModulePass();
 
 //===----------------------------------------------------------------------===//
 //
