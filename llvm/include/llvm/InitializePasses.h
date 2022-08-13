@@ -40,6 +40,8 @@ void initializeCFMelder(PassRegistry&);
 
 void initializeCFMelderCodeSize(PassRegistry&);
 
+void initializeHybridBranchFusion(PassRegistry&);
+
 /// Initialize all passes linked into the AggressiveInstCombine library.
 void initializeAggressiveInstCombine(PassRegistry&);
 
@@ -74,6 +76,7 @@ void initializeAddressSanitizerLegacyPassPass(PassRegistry &);
 void initializeAggressiveInstCombinerLegacyPassPass(PassRegistry&);
 void initializeCFMelderLegacyPassPass(PassRegistry &Registry);
 void initializeCFMelderCodeSizeLegacyPassPass(PassRegistry &Registry);
+void initializeHybridBranchFusionLegacyPassPass(PassRegistry &Registry);
 void initializeAliasSetPrinterPass(PassRegistry&);
 void initializeAlignmentFromAssumptionsPass(PassRegistry&);
 void initializeAlwaysInlinerLegacyPassPass(PassRegistry&);

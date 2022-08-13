@@ -4,6 +4,7 @@ add_llvm_component_library(LLVMScalarOpts
   AnnotationRemarks.cpp
   BDCE.cpp
   BranchFusion.cpp
+  HybridBranchFusion.cpp
   CallSiteSplitting.cpp
   ConstantHoisting.cpp
   ConstraintElimination.cpp

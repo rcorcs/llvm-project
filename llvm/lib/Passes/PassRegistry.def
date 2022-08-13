@@ -124,6 +124,7 @@ MODULE_PASS("memprof-module", ModuleMemProfilerPass())
 MODULE_PASS("poison-checking", PoisonCheckingPass())
 MODULE_PASS("pseudo-probe-update", PseudoProbeUpdatePass())
 MODULE_PASS("cfmelder-codesize", CFMelderCodeSizePass())
+MODULE_PASS("hybrid-brfusion", HybridBranchFusionModulePass())
 #undef MODULE_PASS
 
 #ifndef CGSCC_ANALYSIS
