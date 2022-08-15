@@ -104,7 +104,7 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
         errs() << "Branch fusion code reduction : " << BFProfit << "\n";
 
             // pick best one and run on original function if profitable
-            if (BFProfit > 0 || CFMProfit > 0) {
+        if (BFProfit > 0 || CFMProfit > 0) {
           if (BFProfit > CFMProfit) {
             errs() << "Apply branch fusion to orig function\n";
             MergeBranchRegions(*F, BI, DT, TTI);
