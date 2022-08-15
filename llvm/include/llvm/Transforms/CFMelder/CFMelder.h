@@ -1,6 +1,7 @@
 #ifndef LLVM_TRANSFORMS_CFMEGER_CFMERGER_H
 #define LLVM_TRANSFORMS_CFMEGER_CFMERGER_H
 
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
@@ -23,6 +24,10 @@ public:
 };
 
 ModulePass *createCFMelderCodeSizePass();
+
+SmallVector<unsigned> runCFM(BasicBlock *BB, DominatorTree &DT,
+                             PostDominatorTree &PDT, TargetTransformInfo &TTI,
+                             SmallVector<unsigned> &OnIdxs);
 
 } // namespace llvm
 

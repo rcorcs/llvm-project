@@ -12,35 +12,18 @@
 //===----------------------------------------------------------------------===//
 #include "llvm/Transforms/Scalar/HybridBranchFusion.h"
 #include "llvm/ADT/PostOrderIterator.h"
-#include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/AliasAnalysis.h"
-#include "llvm/Analysis/CGSCCPassManager.h"
-#include "llvm/Analysis/DivergenceAnalysis.h"
-#include "llvm/Analysis/DominanceFrontier.h"
-#include "llvm/Analysis/DominanceFrontierImpl.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/PostDominators.h"
-#include "llvm/Analysis/RegionInfo.h"
-#include "llvm/Analysis/RegionInfoImpl.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
-#include "llvm/Frontend/OpenMP/OMP.h.inc"
 #include "llvm/IR/Dominators.h"
-#include "llvm/IR/Function.h"
-#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/IR/InstIterator.h"
 #include "llvm/InitializePasses.h"
-#include "llvm/Pass.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/raw_ostream.h"
-#include "llvm/Transforms/Utils/BasicBlockUtils.h"
-#include "llvm/Transforms/Utils/Cloning.h"
-#include "llvm/Transforms/Utils/Local.h"
+#include "llvm/Transforms/CFMelder/CFMelder.h"
 #include "llvm/Transforms/Scalar.h"
-#include <algorithm>
-#include <cmath>
-#include <set>
-#include <sstream>
-#include <string>
+#include "llvm/Transforms/Scalar/BranchFusion.h"
+#include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/Transforms/Utils/ValueMapper.h"
 
 using namespace llvm;
 
@@ -71,12 +54,99 @@ public:
 
 } // namespace
 
-bool HybridBranchFusionLegacyPass::runOnModule(Module &M) {
-  return false;
+static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
+  int CodeSize = 0;
+  for (Instruction &I : instructions(*F)) {
+    CodeSize += TTI.getInstructionCost(
+                       &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize)
+                    .getValue()
+                    .getValue();
+  }
+  return CodeSize;
 }
 
-void HybridBranchFusionLegacyPass::getAnalysisUsage(
-    AnalysisUsage &AU) const {
+static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
+                    LoopInfo &LI, TargetTransformInfo &TTI) {
+  errs() << "Procesing function : " << F->getName() << "\n";
+  int CFMCount = 0, BFCount = 0;
+  bool LocalChange = false, Changed = false;
+
+  int OrigCodeSize = computeCodeSize(F, TTI);
+
+  do {
+    LocalChange = false;
+    for (BasicBlock *BB : post_order(&F->getEntryBlock())) {
+      BranchInst *BI = dyn_cast<BranchInst>(BB->getTerminator());
+      if (BI && BI->isConditional()) {
+        int BeforeSize = computeCodeSize(F, TTI);
+        // clone and run cfmelder
+        ValueToValueMapTy CFMVMap;
+        Function *CFMFunc = CloneFunction(F, CFMVMap);
+        DominatorTree CFMDT(*CFMFunc);
+        PostDominatorTree CFMPDT(*CFMFunc);
+        SmallVector<unsigned> EmptyIdxs; // run on all region matches
+        auto ProfitableIdxs = runCFM(dyn_cast<BasicBlock>(CFMVMap[BB]), CFMDT,
+                                     CFMPDT, TTI, EmptyIdxs);
+        // compute CFM code size reduction
+        int CFMProfit = BeforeSize - computeCodeSize(CFMFunc, TTI);
+        errs() << "CFM code reduction : " << CFMProfit << "\n";
+
+        // clone and run brfusion
+        ValueToValueMapTy BFVMap;
+        Function *BFFunc = CloneFunction(F, BFVMap);
+        DominatorTree BFDT(*BFFunc);
+        PostDominatorTree BFPDT(*BFFunc);
+        bool BFSuccess = MergeBranchRegions(
+            *BFFunc, dyn_cast<BranchInst>(BFVMap[BI]), BFDT, TTI);
+        // compute BF code size reduction
+        int BFProfit =
+            BFSuccess ? BeforeSize - computeCodeSize(BFFunc, TTI) : 0;
+        errs() << "Branch fusion code reduction : " << BFProfit << "\n";
+
+            // pick best one and run on original function if profitable
+            if (BFProfit > 0 || CFMProfit > 0) {
+          if (BFProfit > CFMProfit) {
+            errs() << "Apply branch fusion to orig function\n";
+            MergeBranchRegions(*F, BI, DT, TTI);
+            BFCount++;
+          } else {
+            // run on profitable idxs only
+            errs() << "Apply CFM to orig function\n";
+            runCFM(BB, DT, PDT, TTI, ProfitableIdxs);
+            CFMCount++;
+          }
+          LocalChange = true;
+        }
+
+        if (LocalChange) {
+          DT.recalculate(*F);
+          PDT.recalculate(*F);
+          break;
+        }
+      }
+    }
+    Changed |= LocalChange;
+  } while (LocalChange);
+
+  if (Changed) {
+
+    int FinalCodeSize = computeCodeSize(F, TTI);
+    double PercentReduction =
+        (OrigCodeSize - FinalCodeSize) * 100 / (double)OrigCodeSize;
+    errs() << "Size reduction for function " << F->getName() << ": "
+           << OrigCodeSize << " to  " << FinalCodeSize << " ("
+           << PercentReduction << "%)"
+           << "\n";
+    errs() << "Brach fusion applied " << BFCount << " times and CFM applied "
+           << CFMCount << " times\n";
+  }
+
+  return Changed;
+}
+
+bool HybridBranchFusionLegacyPass::runOnModule(Module &M) { return false; }
+
+void HybridBranchFusionLegacyPass::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addRequired<PostDominatorTreeWrapperPass>();
   AU.addRequired<DominatorTreeWrapperPass>();
   AU.addRequired<TargetTransformInfoWrapperPass>();
@@ -85,9 +155,27 @@ void HybridBranchFusionLegacyPass::getAnalysisUsage(
 
 PreservedAnalyses
 HybridBranchFusionModulePass::run(Module &M, ModuleAnalysisManager &MAM) {
-  errs() << "Hello Pass\n";
+  auto &FAM = MAM.getResult<FunctionAnalysisManagerModuleProxy>(M).getManager();
+  bool Changed = false;
+  SmallVector<Function *, 64> Funcs;
 
-  return PreservedAnalyses::all();
+  for (auto &F : M) {
+    if (F.isDeclaration())
+      continue;
+    Funcs.push_back(&F);
+  }
+
+  for (Function *F : Funcs) {
+    auto &DT = FAM.getResult<DominatorTreeAnalysis>(*F);
+    auto &PDT = FAM.getResult<PostDominatorTreeAnalysis>(*F);
+    auto &TTI = FAM.getResult<TargetIRAnalysis>(*F);
+    auto &LI = FAM.getResult<LoopAnalysis>(*F);
+    Changed |= runImpl(F, DT, PDT, LI, TTI);
+  }
+  if (!Changed)
+    return PreservedAnalyses::all();
+  PreservedAnalyses PA;
+  return PA;
 }
 
 char HybridBranchFusionLegacyPass::ID = 0;
@@ -97,14 +185,14 @@ INITIALIZE_PASS_BEGIN(HybridBranchFusionLegacyPass, "hybrid-brfusion",
 INITIALIZE_PASS_DEPENDENCY(PostDominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(TargetTransformInfoWrapperPass)
-INITIALIZE_PASS_END(HybridBranchFusionLegacyPass, "hybrid-brfusion", "Hybrid branch fusion for code size",
-                    false, false)
-
+INITIALIZE_PASS_END(HybridBranchFusionLegacyPass, "hybrid-brfusion",
+                    "Hybrid branch fusion for code size", false, false)
 
 // Initialization Routines
 void llvm::initializeHybridBranchFusion(PassRegistry &Registry) {
   initializeHybridBranchFusionLegacyPassPass(Registry);
 }
 
-ModulePass *llvm::createHybridBranchFusionModulePass() { return new HybridBranchFusionLegacyPass(); }
-
+ModulePass *llvm::createHybridBranchFusionModulePass() {
+  return new HybridBranchFusionLegacyPass();
+}

@@ -176,6 +176,54 @@ static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
   return CodeSize;
 }
 
+SmallVector<unsigned> llvm::runCFM(BasicBlock *BB, DominatorTree &DT,
+                                   PostDominatorTree &PDT,
+                                   TargetTransformInfo &TTI,
+                                   SmallVector<unsigned> &OnIdxs) {
+  bool LocalChange = false;
+  SmallVector<unsigned> ProfitableIdxs;
+  if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
+    Function *Func = BB->getParent();
+    ControlFlowGraphInfo CFGInfo(*Func, DT, PDT, TTI);
+    RegionAnalyzer RA(BB, CFGInfo);
+    RA.computeRegionMatch();
+
+    // if OnIdxs is non-empty apply melding to those indexes only
+    SmallVector<unsigned> IdxsToProcess;
+    if (!OnIdxs.empty()) {
+      for (unsigned I : OnIdxs)
+        IdxsToProcess.push_back(I);
+    } else {
+      for (unsigned I = 0; I < RA.regionMatchSize(); ++I)
+        IdxsToProcess.push_back(I);
+    }
+
+    if (RA.hasAnyProfitableMatch()) {
+
+      for (unsigned I : IdxsToProcess) {
+        if (!RA.isRegionMatchProfitable(I))
+          continue;
+
+        int SizeBefore = computeCodeSize(Func, TTI);
+        RegionMelder RM(RA);
+        RM.merge(I);
+        int SizeAfter = computeCodeSize(Func, TTI);
+
+        if (SizeBefore > SizeAfter) {
+          ProfitableIdxs.push_back(I);
+        }
+        LocalChange = true;
+      }
+
+      if (LocalChange) {
+        DT.recalculate(*Func);
+        PDT.recalculate(*Func);
+      }
+    }
+  }
+  return ProfitableIdxs;
+}
+
 static bool runImplCodeSize(Function &F, DominatorTree &DT,
                             PostDominatorTree &PDT, LoopInfo &LI,
                             TargetTransformInfo &TTI) {
@@ -224,9 +272,10 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
             ClonedRM.merge(I);
             int SizeAfter = computeCodeSize(ClonedFunc, TTI);
             DEBUG << "Size changed from " << SizeBefore << " to " << SizeAfter
-		  << " : " << (SizeBefore - SizeAfter) << " : " << ((SizeBefore > SizeAfter)?"Profitable":"Unprofitable")
-                  << " Branch Fusion! [" << F.getName().str()  << "] ";
-	    BB->getTerminator()->dump();
+                  << " : " << (SizeBefore - SizeAfter) << " : "
+                  << ((SizeBefore > SizeAfter) ? "Profitable" : "Unprofitable")
+                  << " Branch Fusion! [" << F.getName().str() << "] ";
+            BB->getTerminator()->dump();
             if (SizeBefore > SizeAfter) {
               Profitable.push_back(I);
             }
@@ -254,7 +303,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
     }
 
     Changed |= LocalChange;
-    
+
     if (RunMeldingOnce)
       break;
   } while (LocalChange); // && CountIter < MaxIterations);
