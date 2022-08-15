@@ -144,7 +144,10 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
   return Changed;
 }
 
-bool HybridBranchFusionLegacyPass::runOnModule(Module &M) { return false; }
+bool HybridBranchFusionLegacyPass::runOnModule(Module &M) { 
+  errs() << "HybridBranchFusionLegacyPass not implemented\n";
+  return false;
+}
 
 void HybridBranchFusionLegacyPass::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addRequired<PostDominatorTreeWrapperPass>();
