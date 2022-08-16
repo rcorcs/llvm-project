@@ -285,10 +285,11 @@ static cl::opt<bool> EnableO3NonTrivialUnswitching(
 static cl::opt<bool> EnableBranchFusion(
     "enable-brfusion", cl::init(false), cl::Hidden,
     cl::desc("enable brfusion"));
-
+/*
 static cl::opt<bool> EnableCFMelder(
     "enable-cfmelder", cl::init(false), cl::Hidden,
     cl::desc("enable cfmelder"));
+*/
 
 PipelineTuningOptions::PipelineTuningOptions() {
   LoopInterleaving = true;
@@ -1222,11 +1223,17 @@ PassBuilder::buildModuleSimplificationPipeline(OptimizationLevel Level,
     MPM.addPass(SyntheticCountsPropagation());
 
   MPM.addPass(buildInlinerPipeline(Level, Phase));
+  
+  /*
   if (EnableCFMelder) {
     MPM.addPass(CFMelderCodeSizePass());
   }
   if (EnableBranchFusion) {
     MPM.addPass(BranchFusionModulePass());
+  }
+  */
+  if (EnableBranchFusion) {
+    MPM.addPass(HybridBranchFusionModulePass());
   }
   
   if (EnableMemProfiler && Phase != ThinOrFullLTOPhase::ThinLTOPreLink) {

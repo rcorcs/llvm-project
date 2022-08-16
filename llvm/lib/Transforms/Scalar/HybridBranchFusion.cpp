@@ -79,30 +79,39 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
       BranchInst *BI = dyn_cast<BranchInst>(BB->getTerminator());
       if (BI && BI->isConditional()) {
         int BeforeSize = computeCodeSize(F, TTI);
-        // clone and run cfmelder
-        ValueToValueMapTy CFMVMap;
-        Function *CFMFunc = CloneFunction(F, CFMVMap);
-        DominatorTree CFMDT(*CFMFunc);
-        PostDominatorTree CFMPDT(*CFMFunc);
-        SmallVector<unsigned> EmptyIdxs; // run on all region matches
-        auto ProfitableIdxs = runCFM(dyn_cast<BasicBlock>(CFMVMap[BB]), CFMDT,
-                                     CFMPDT, TTI, EmptyIdxs);
-        // compute CFM code size reduction
-        int CFMProfit = BeforeSize - computeCodeSize(CFMFunc, TTI);
+
+	int CFMProfit = 0;
+        SmallVector<unsigned> ProfitableIdxs;
+        if (RunCFMOnly || !RunBFOnly) {
+          // clone and run cfmelder
+          ValueToValueMapTy CFMVMap;
+          Function *CFMFunc = CloneFunction(F, CFMVMap);
+          DominatorTree CFMDT(*CFMFunc);
+          PostDominatorTree CFMPDT(*CFMFunc);
+          SmallVector<unsigned> EmptyIdxs; // run on all region matches
+          ProfitableIdxs = runCFM(dyn_cast<BasicBlock>(CFMVMap[BB]), CFMDT,
+                                       CFMPDT, TTI, EmptyIdxs);
+          // compute CFM code size reduction
+          CFMProfit = BeforeSize - computeCodeSize(CFMFunc, TTI);
+	  CFMFunc->eraseFromParent();
+	}
         errs() << "CFM code reduction : " << CFMProfit << "\n";
 
-        // clone and run brfusion
-        ValueToValueMapTy BFVMap;
-        Function *BFFunc = CloneFunction(F, BFVMap);
-        DominatorTree BFDT(*BFFunc);
-        PostDominatorTree BFPDT(*BFFunc);
-        bool BFSuccess = MergeBranchRegions(
-            *BFFunc, dyn_cast<BranchInst>(BFVMap[BI]), BFDT, TTI);
-        // compute BF code size reduction
-        int BFProfit =
-            BFSuccess ? BeforeSize - computeCodeSize(BFFunc, TTI) : 0;
-        errs() << "Branch fusion code reduction : " << BFProfit << "\n";
-
+        int BFProfit = 0;
+        if (!RunCFMOnly || RunBFOnly) {
+          // clone and run brfusion
+          ValueToValueMapTy BFVMap;
+          Function *BFFunc = CloneFunction(F, BFVMap);
+          DominatorTree BFDT(*BFFunc);
+          PostDominatorTree BFPDT(*BFFunc);
+          bool BFSuccess = MergeBranchRegions(
+              *BFFunc, dyn_cast<BranchInst>(BFVMap[BI]), BFDT, TTI);
+          // compute BF code size reduction
+          BFProfit =
+              BFSuccess ? BeforeSize - computeCodeSize(BFFunc, TTI) : 0;
+          errs() << "Branch fusion code reduction : " << BFProfit << "\n";
+	  BFFunc->eraseFromParent();
+        }
             // pick best one and run on original function if profitable
         if (BFProfit > 0 || CFMProfit > 0) {
           if (BFProfit > CFMProfit) {

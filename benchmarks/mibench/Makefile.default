@@ -19,19 +19,23 @@ endif
 
 ifeq ($(ENABLE_BRFUSION),true)
 BRFUSION=true
+ATLEASTONE=true
 endif
 
 ifeq ($(ENABLE_SOA),true)
 SOA=true
 HYFMPA=false
 HYFMNW=true
+ATLEASTONE=true
 endif
 
 ifeq ($(ENABLE_CFMELDER),true)
 CFMELDER=true
+ATLEASTONE=true
 endif
 
-EXTRA_OPT := -mllvm -enable-brfusion=$(BRFUSION) -mllvm -brfusion-dot=false -mllvm -brfusion-soa=$(SOA)  -mllvm -func-merging-hyfm-nw=$(HYFMNW)  -mllvm -func-merging-hyfm-pa=$(HYFMPA) -mllvm -func-merging-debug=true -mllvm -func-merging-verbose=false -mllvm -enable-cfmelder=$(CFMELDER)
+
+EXTRA_OPT := -mllvm -enable-brfusion=$(ATLEASTONE) -mllvm -run-brfusion-only=$(BRFUSION) -mllvm -run-cfm-only=$(CFMELDER) -mllvm -brfusion-dot=false -mllvm -brfusion-soa=$(SOA)  -mllvm -func-merging-hyfm-nw=$(HYFMNW)  -mllvm -func-merging-hyfm-pa=$(HYFMPA) -mllvm -func-merging-debug=true -mllvm -func-merging-verbose=false
 
 %.o: %.cpp
 	$(CXX) $(OPT) -c $< -o $@ $(CFLAGS) $(PROFILING) $(EXTRA_OPT)
