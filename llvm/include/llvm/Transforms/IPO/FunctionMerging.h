@@ -391,7 +391,7 @@ public:
                           ValueToValueMapTy &VMap,
                           const FunctionMergingOptions &Options = {}) = 0;
 
-    virtual bool commitChanges() = 0;
+    virtual bool commitChanges(bool) = 0;
 
     void destroyGeneratedCode();
 
@@ -416,7 +416,7 @@ public:
     virtual bool generate(AlignedSequence<Value *> &AlignedSeq,
                           ValueToValueMapTy &VMap,
                           const FunctionMergingOptions &Options = {}) override;
-    virtual bool commitChanges() override;
+    virtual bool commitChanges(bool) override;
 
     void StoreInstIntoAddr(Instruction *IV, Value *Addr);
     AllocaInst *MemfyInst(std::set<Instruction *> &InstSet);

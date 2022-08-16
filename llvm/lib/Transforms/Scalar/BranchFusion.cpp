@@ -1072,7 +1072,7 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
       errs() << "After deleting the old code\n";
       //F.dump();
     }
-    if (!CG.commitChanges()) {
+    if (!CG.commitChanges(true)) {
       //F.dump();
       errs() << "ERROR: committing final changes to the fused branches !!!!!!!\n";
     }
@@ -1215,7 +1215,7 @@ FunctionPass *llvm::createBranchFusionPass() {
 // MODULE VERSION
 
 bool llvm::MergeBranchRegions(Function &F, BranchInst *BI, DominatorTree &DT,
-           TargetTransformInfo &TTI) {
+           TargetTransformInfo &TTI, bool RunCleanup) {
   BasicBlock *BBT = BI->getSuccessor(0);
   BasicBlock *BBF = BI->getSuccessor(1);
   Value *BrCond = BI->getCondition();
@@ -1645,7 +1645,7 @@ bool llvm::MergeBranchRegions(Function &F, BranchInst *BI, DominatorTree &DT,
       errs() << "After deleting the old code\n";
       //F.dump();
     }
-    if (!CG.commitChanges()) {
+    if (!CG.commitChanges(RunCleanup)) {
       //F.dump();
       errs() << "ERROR: committing final changes to the fused branches !!!!!!!\n";
     }

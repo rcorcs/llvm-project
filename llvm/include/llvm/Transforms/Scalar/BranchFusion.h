@@ -42,7 +42,7 @@ public:
 //ModulePass *createBranchFusionModulePass();
 
 bool MergeBranchRegions(Function &F, BranchInst *BI, DominatorTree &DT,
-           TargetTransformInfo &TTI);
+           TargetTransformInfo &TTI, bool RunCleanup);
 
 } // namespace llvm
 #endif

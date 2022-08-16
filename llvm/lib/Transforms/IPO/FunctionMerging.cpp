@@ -2682,7 +2682,7 @@ FunctionMerger::merge(Function *F1, Function *F2, std::string Name, const Functi
       MergedFunc = nullptr;
       if (Debug)
         errs() << "ERROR: Failed to generate the merged function!\n";
-    } else if (!CG.commitChanges()) {
+    } else if (!CG.commitChanges(true)) {
       // F1->dump();
       // F2->dump();
       // MergedFunc->dump();
@@ -4914,7 +4914,7 @@ AllocaInst *  FunctionMerger::SALSSACodeGen::MemfyInst(std::set<Instruction *> &
     return Addr;
 }
 
-bool FunctionMerger::SALSSACodeGen::commitChanges() {
+bool FunctionMerger::SALSSACodeGen::commitChanges(bool RunCleanup) {
 
 #ifdef TIME_STEPS_DEBUG
   TimeCodeGenFix.startTimer();
@@ -5160,7 +5160,9 @@ bool FunctionMerger::SALSSACodeGen::commitChanges() {
     if (Debug) {
       errs() << "PostProcessing\n";
     }
-    postProcessFunction(*MergedFunc);
+    if (RunCleanup) {
+      postProcessFunction(*MergedFunc);
+    }
 #ifdef TIME_STEPS_DEBUG
     TimePostOpt.stopTimer();
 #endif

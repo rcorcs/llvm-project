@@ -55,12 +55,18 @@ public:
 } // namespace
 
 static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
-  int CodeSize = 0;
+  float CodeSize = 0;
   for (Instruction &I : instructions(*F)) {
-    CodeSize += TTI.getInstructionCost(
+    switch(I.getOpcode()) {
+    case Instruction::PHI:
+      CodeSize += 0.2;
+      break;
+    default:
+      CodeSize += TTI.getInstructionCost(
                        &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize)
                     .getValue()
                     .getValue();
+    }
   }
   return CodeSize;
 }
@@ -105,7 +111,7 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
           DominatorTree BFDT(*BFFunc);
           PostDominatorTree BFPDT(*BFFunc);
           bool BFSuccess = MergeBranchRegions(
-              *BFFunc, dyn_cast<BranchInst>(BFVMap[BI]), BFDT, TTI);
+              *BFFunc, dyn_cast<BranchInst>(BFVMap[BI]), BFDT, TTI, false);
           // compute BF code size reduction
           BFProfit =
               BFSuccess ? BeforeSize - computeCodeSize(BFFunc, TTI) : 0;
@@ -115,12 +121,12 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
             // pick best one and run on original function if profitable
         if (BFProfit > 0 || CFMProfit > 0) {
           if (BFProfit > CFMProfit) {
-            errs() << "Apply branch fusion to orig function\n";
-            MergeBranchRegions(*F, BI, DT, TTI);
+            errs() << "Profitable Branch Fusion: SEME-brfusion\n";
+            MergeBranchRegions(*F, BI, DT, TTI, true);
             BFCount++;
-          } else {
+          } else if (CFMProfit > 0) {
             // run on profitable idxs only
-            errs() << "Apply CFM to orig function\n";
+            errs() << "Profitable Branch Fusion: CFMelder\n";
             runCFM(BB, DT, PDT, TTI, ProfitableIdxs);
             CFMCount++;
           }
