@@ -79,9 +79,13 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
 
   int OrigCodeSize = computeCodeSize(F, TTI);
 
+  std::set<BasicBlock*> VisitedBBs;
   do {
     LocalChange = false;
     for (BasicBlock *BB : post_order(&F->getEntryBlock())) {
+      if (VisitedBBs.count(BB)) continue;
+      VisitedBBs.insert(BB);
+
       BranchInst *BI = dyn_cast<BranchInst>(BB->getTerminator());
       if (BI && BI->isConditional()) {
         int BeforeSize = computeCodeSize(F, TTI);
@@ -121,12 +125,12 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
             // pick best one and run on original function if profitable
         if (BFProfit > 0 || CFMProfit > 0) {
           if (BFProfit > CFMProfit) {
-            errs() << "Profitable Branch Fusion: SEME-brfusion\n";
+            errs() << "Profitable Branch Fusion: SEME-brfusion " << BB->getName().str() << ": "; BI->dump();
             MergeBranchRegions(*F, BI, DT, TTI, true);
             BFCount++;
           } else if (CFMProfit > 0) {
             // run on profitable idxs only
-            errs() << "Profitable Branch Fusion: CFMelder\n";
+            errs() << "Profitable Branch Fusion: CFMelder " << BB->getName().str() << ": "; BI->dump();
             runCFM(BB, DT, PDT, TTI, ProfitableIdxs);
             CFMCount++;
           }

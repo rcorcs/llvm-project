@@ -7,6 +7,7 @@ HYFMPA=false
 HYFMNW=false
 CFMELDER=false
 
+ATLEASTONE=false
 
 ifeq ($(USE_HYFMPA),true)
 HYFMPA=true
