@@ -423,6 +423,8 @@ public:
   };
 };
 
+size_t EstimateFunctionSize(Function *F, TargetTransformInfo &TTI);
+
 FunctionMergeResult MergeFunctions(Function *F1, Function *F2,
                                    const FunctionMergingOptions &Options = {});
 

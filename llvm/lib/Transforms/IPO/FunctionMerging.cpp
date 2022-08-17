@@ -2957,7 +2957,7 @@ static int EstimateThunkOverhead(FunctionMergeResult &MFR,
   return RequiresOriginalInterfaces(F1, F2, AlwaysPreserved) * (2 + fParams);
 }*/
 
-static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
+size_t llvm::EstimateFunctionSize(Function *F, TargetTransformInfo &TTI) {
   float size = 0;
   for (Instruction &I : instructions(F)) {
     switch (I.getOpcode()) {
@@ -2969,7 +2969,7 @@ static size_t EstimateFunctionSize(Function *F, TargetTransformInfo *TTI) {
     //  size += 1.2;
     //  break;
     default:
-      auto cost = TTI->getInstructionCost(&I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
+      auto cost = TTI.getInstructionCost(&I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
     size += cost.getValue().getValue();
     }
   }
@@ -3414,7 +3414,7 @@ bool FunctionMerging::runImpl(
       continue;
     if (ignoreFunction(F))
       continue;
-    matcher->add_candidate(&F, EstimateFunctionSize(&F, GTTI(F)));
+    matcher->add_candidate(&F, EstimateFunctionSize(&F, *GTTI(F)));
     count++;
   }
 
@@ -3543,7 +3543,7 @@ bool FunctionMerging::runImpl(
         if (!match.Valid) {
           Result.getMergedFunction()->eraseFromParent();
         } else {
-          size_t MergedSize = EstimateFunctionSize(Result.getMergedFunction(), GTTI(*Result.getMergedFunction()));
+          size_t MergedSize = EstimateFunctionSize(Result.getMergedFunction(), *GTTI(*Result.getMergedFunction()));
           size_t Overhead = EstimateThunkOverhead(Result, AlwaysPreserved);
 
           size_t SizeF12 = MergedSize + Overhead;
@@ -3562,7 +3562,7 @@ bool FunctionMerging::runImpl(
               // feed new function back into the working lists
               matcher->add_candidate(
                   Result.getMergedFunction(),
-                  EstimateFunctionSize(Result.getMergedFunction(), GTTI(*Result.getMergedFunction())));
+                  EstimateFunctionSize(Result.getMergedFunction(), *GTTI(*Result.getMergedFunction())));
             }
           } else {
             Result.getMergedFunction()->eraseFromParent();

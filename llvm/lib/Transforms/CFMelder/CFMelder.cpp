@@ -34,6 +34,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/IPO/FunctionMerging.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -165,16 +166,24 @@ static bool simplifyFunction(Function &F, TargetTransformInfo &TTI,
   return Changed;
 }
 
+/*
 static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
-  int CodeSize = 0;
+  float CodeSize = 0;
   for (Instruction &I : instructions(*F)) {
-    CodeSize += TTI.getInstructionCost(
+    switch(I.getOpcode()) {
+    case Instruction::PHI:
+      CodeSize += 0.2;
+      break;
+    default:
+      CodeSize += TTI.getInstructionCost(
                        &I, TargetTransformInfo::TargetCostKind::TCK_CodeSize)
                     .getValue()
                     .getValue();
+    }
   }
   return CodeSize;
 }
+*/
 
 SmallVector<unsigned> llvm::runCFM(BasicBlock *BB, DominatorTree &DT,
                                    PostDominatorTree &PDT,
@@ -204,10 +213,10 @@ SmallVector<unsigned> llvm::runCFM(BasicBlock *BB, DominatorTree &DT,
         if (!RA.isRegionMatchProfitable(I))
           continue;
 
-        int SizeBefore = computeCodeSize(Func, TTI);
+        int SizeBefore = EstimateFunctionSize(Func, TTI);
         RegionMelder RM(RA);
         RM.merge(I);
-        int SizeAfter = computeCodeSize(Func, TTI);
+        int SizeAfter = EstimateFunctionSize(Func, TTI);
 
         if (SizeBefore > SizeAfter) {
           ProfitableIdxs.push_back(I);
@@ -231,7 +240,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
   Function *Func = &F;
   bool LocalChange = false, Changed = false;
 
-  int OrigCodeSize = computeCodeSize(&F, TTI);
+  int OrigCodeSize = EstimateFunctionSize(&F, TTI);
   unsigned CountIter = 0;
 
   do {
@@ -267,10 +276,10 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
             if (!ClonedRA.isRegionMatchProfitable(I))
               continue;
 
-            int SizeBefore = computeCodeSize(ClonedFunc, TTI);
+            int SizeBefore = EstimateFunctionSize(ClonedFunc, TTI);
             RegionMelder ClonedRM(ClonedRA);
             ClonedRM.merge(I);
-            int SizeAfter = computeCodeSize(ClonedFunc, TTI);
+            int SizeAfter = EstimateFunctionSize(ClonedFunc, TTI);
             DEBUG << "Size changed from " << SizeBefore << " to " << SizeAfter
                   << " : " << (SizeBefore - SizeAfter) << " : "
                   << ((SizeBefore > SizeAfter) ? "Profitable" : "Unprofitable")
@@ -313,7 +322,7 @@ static bool runImplCodeSize(Function &F, DominatorTree &DT,
     //             *Func, TTI,
     //             SimplifyCFGOptionsObj.setSimplifyCondBranch(false));
 
-    int FinalCodeSize = computeCodeSize(&F, TTI);
+    int FinalCodeSize = EstimateFunctionSize(&F, TTI);
     double PercentReduction =
         (OrigCodeSize - FinalCodeSize) * 100 / (double)OrigCodeSize;
     INFO << "Size reduction for function " << F.getName() << ": "

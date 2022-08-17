@@ -1,0 +1,76 @@
+rm: cannot remove '473.astar/build/*': No such file or directory
+473.astar
+rm: cannot remove '462.libquantum/build/*': No such file or directory
+462.libquantum
+rm: cannot remove '401.bzip2/build/*': No such file or directory
+401.bzip2
+rm: cannot remove '433.milc/build/*': No such file or directory
+433.milc
+rm: cannot remove '470.lbm/build/*': No such file or directory
+470.lbm
+rm: cannot remove '450.soplex/build/*': No such file or directory
+450.soplex
+rm: cannot remove '471.omnetpp/build/*': No such file or directory
+471.omnetpp
+rm: cannot remove '482.sphinx3/build/*': No such file or directory
+482.sphinx3
+rm: cannot remove '400.perlbench/build/*': No such file or directory
+400.perlbench
+rm: cannot remove '464.h264ref/build/*': No such file or directory
+464.h264ref
+rm: cannot remove '456.hmmer/build/*': No such file or directory
+456.hmmer
+rm: cannot remove '453.povray/build/*': No such file or directory
+453.povray
+rm: cannot remove '445.gobmk/build/*': No such file or directory
+445.gobmk
+rm: cannot remove '444.namd/build/*': No such file or directory
+444.namd
+rm: cannot remove '429.mcf/build/*': No such file or directory
+429.mcf
+rm: cannot remove '458.sjeng/build/*': No such file or directory
+458.sjeng
+rm: cannot remove '403.gcc/build/*': No such file or directory
+403.gcc
+rm: cannot remove '447.dealII/build/*': No such file or directory
+447.dealII
+rm: cannot remove '483.xalancbmk/build/*': No such file or directory
+483.xalancbmk
+rm: cannot remove '473.astar/build/*': No such file or directory
+473.astar
+rm: cannot remove '462.libquantum/build/*': No such file or directory
+462.libquantum
+rm: cannot remove '401.bzip2/build/*': No such file or directory
+401.bzip2
+rm: cannot remove '433.milc/build/*': No such file or directory
+433.milc
+rm: cannot remove '470.lbm/build/*': No such file or directory
+470.lbm
+rm: cannot remove '450.soplex/build/*': No such file or directory
+450.soplex
+rm: cannot remove '471.omnetpp/build/*': No such file or directory
+471.omnetpp
+rm: cannot remove '482.sphinx3/build/*': No such file or directory
+482.sphinx3
+rm: cannot remove '400.perlbench/build/*': No such file or directory
+400.perlbench
+rm: cannot remove '464.h264ref/build/*': No such file or directory
+464.h264ref
+rm: cannot remove '456.hmmer/build/*': No such file or directory
+456.hmmer
+rm: cannot remove '453.povray/build/*': No such file or directory
+453.povray
+rm: cannot remove '445.gobmk/build/*': No such file or directory
+445.gobmk
+rm: cannot remove '444.namd/build/*': No such file or directory
+444.namd
+rm: cannot remove '429.mcf/build/*': No such file or directory
+429.mcf
+rm: cannot remove '458.sjeng/build/*': No such file or directory
+458.sjeng
+rm: cannot remove '403.gcc/build/*': No such file or directory
+403.gcc
+rm: cannot remove '447.dealII/build/*': No such file or directory
+447.dealII
+rm: cannot remove '483.xalancbmk/build/*': No such file or directory
+483.xalancbmk
