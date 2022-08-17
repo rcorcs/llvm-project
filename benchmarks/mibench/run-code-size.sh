@@ -1,10 +1,11 @@
+LLVM_SIZE=../../build/release/bin/llvm-size
 DIR=$(dirname $0)
 cd ${DIR}
 
 BENCHMARKS=$(cat BenchNames)
 
 for BENCH in ${BENCHMARKS}; do
-  rm ${BENCH}/build/*
+  rm -f ${BENCH}/build/*
   mkdir -p ${BENCH}/build/
   cd ${BENCH}
   echo ${BENCH}
@@ -26,6 +27,6 @@ for BENCH in ${BENCHMARKS}; do
 
   #for VERSION in baseline soa brfusion-pa brfusion-nw cfmelder cfmelder-brfusion-pa cfmelder-brfusion-nw; do
   for VERSION in baseline soa brfusion-pa cfmelder cfmelder-brfusion-pa; do
-    python results.py ${BENCH} ../../build/release/bin/llvm-size ${VERSION} >> ./results.csv
+    python results.py ${BENCH} ${LLVM_SIZE} ${VERSION} >> ./results.csv
   done
 done
