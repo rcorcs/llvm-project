@@ -24,6 +24,7 @@
 #include "llvm/Transforms/Scalar/BranchFusion.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
+#include "llvm/Transforms/IPO/FunctionMerging.h"
 
 using namespace llvm;
 
@@ -54,6 +55,7 @@ public:
 
 } // namespace
 
+/*
 static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
   float CodeSize = 0;
   for (Instruction &I : instructions(*F)) {
@@ -70,6 +72,7 @@ static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
   }
   return CodeSize;
 }
+*/
 
 static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
                     LoopInfo &LI, TargetTransformInfo &TTI) {
@@ -77,7 +80,7 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
   int CFMCount = 0, BFCount = 0;
   bool LocalChange = false, Changed = false;
 
-  int OrigCodeSize = computeCodeSize(F, TTI);
+  int OrigCodeSize = EstimateFunctionSize(F, TTI);
 
   std::set<BasicBlock*> VisitedBBs;
   do {
@@ -88,7 +91,7 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
 
       BranchInst *BI = dyn_cast<BranchInst>(BB->getTerminator());
       if (BI && BI->isConditional()) {
-        int BeforeSize = computeCodeSize(F, TTI);
+        int BeforeSize = EstimateFunctionSize(F, TTI);
 
 	int CFMProfit = 0;
         SmallVector<unsigned> ProfitableIdxs;
@@ -102,7 +105,7 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
           ProfitableIdxs = runCFM(dyn_cast<BasicBlock>(CFMVMap[BB]), CFMDT,
                                        CFMPDT, TTI, EmptyIdxs);
           // compute CFM code size reduction
-          CFMProfit = BeforeSize - computeCodeSize(CFMFunc, TTI);
+          CFMProfit = BeforeSize - EstimateFunctionSize(CFMFunc, TTI);
 	  CFMFunc->eraseFromParent();
 	}
         errs() << "CFM code reduction : " << CFMProfit << "\n";
@@ -118,7 +121,7 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
               *BFFunc, dyn_cast<BranchInst>(BFVMap[BI]), BFDT, TTI, false);
           // compute BF code size reduction
           BFProfit =
-              BFSuccess ? BeforeSize - computeCodeSize(BFFunc, TTI) : 0;
+              BFSuccess ? BeforeSize - EstimateFunctionSize(BFFunc, TTI) : 0;
           errs() << "Branch fusion code reduction : " << BFProfit << "\n";
 	  BFFunc->eraseFromParent();
         }
@@ -149,7 +152,7 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
 
   if (Changed) {
 
-    int FinalCodeSize = computeCodeSize(F, TTI);
+    int FinalCodeSize = EstimateFunctionSize(F, TTI);
     double PercentReduction =
         (OrigCodeSize - FinalCodeSize) * 100 / (double)OrigCodeSize;
     errs() << "Size reduction for function " << F->getName() << ": "
