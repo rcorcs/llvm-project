@@ -530,6 +530,13 @@ public:
 bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
            TargetTransformInfo &TTI, std::list<BranchInst *> &ListBIs,
            std::unordered_set<std::string> &PreviousBlocks) {
+
+  // Check the instruction is not deleted
+  // This should not happen (we remove instructions we delete from ListBIs)
+  // but apparently some other piece of code might remove branches
+  if (BI->getParent() == nullptr)
+    return false;
+
   if (Debug) {
     errs() << "Original version\n";
     F.dump();
@@ -973,12 +980,6 @@ bool BranchFusion::merge(Function &F, BranchInst *BI, DominatorTree &DT,
     errs() << "Computing size...\n";
   }
   for (Instruction *I : CG) {
-    //if (auto *BI = dyn_cast<BranchInst>(I))
-    //  if (BI->isUnconditional() || 
-    //      (BI->getNumSuccessors() == 2 && (BI->getSuccessor(0) == BI->getSuccessor(1))))
-    //    if (BI->getSuccessor(0)->getUniquePredecessor() != nullptr)
-    //      continue;
-
     auto cost = TTI.getInstructionCost(
         I, TargetTransformInfo::TargetCostKind::TCK_CodeSize);
     MergedSize += cost.getValue().getValue();
