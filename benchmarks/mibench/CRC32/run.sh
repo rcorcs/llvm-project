@@ -1,5 +1,4 @@
 DIR=$(dirname $0)
-BENCH=cjpeg
+BENCH=CRC32
 FILENAME=$(basename $1)
-/usr/bin/time -f "${BENCH},${FILENAME},%E" sh -c "$1 -outfile /tmp/${BENCH}.${FILENAME}.out ${DIR}/data/data.ppm 1>/dev/null 2>&1"
-
+/usr/bin/time -f "${BENCH},${FILENAME},%E" sh -c "$1 ${DIR}/data/large.pcm > /tmp/${BENCH}.${FILENAME}.out 2>&1"
