@@ -74,6 +74,47 @@ static int computeCodeSize(Function *F, TargetTransformInfo &TTI) {
 }
 */
 
+class ClonedFunctionInfo {
+public:
+  Function* Original{nullptr};
+  Function* Cloned{nullptr};
+  DominatorTree DT;
+  PostDominatorTree PDT;
+  ValueToValueMapTy VMap;
+
+  ClonedFunctionInfo(Function* F) : Original(F) {
+    Reinitialize();
+  }
+
+  ~ClonedFunctionInfo() {
+    Invalidate();
+  }
+
+  void Reinitialize() {
+    if (Cloned == nullptr) {
+      VMap.clear();
+      Cloned = llvm::CloneFunction(Original, VMap);
+      DT = DominatorTree(*Cloned);
+      PDT = PostDominatorTree(*Cloned);
+    }
+  }
+
+  void Invalidate() {
+    if (Cloned != nullptr) {
+      Cloned->eraseFromParent();
+      Cloned = nullptr;
+    }
+  }
+
+  BasicBlock* getClonedBB(BasicBlock* BB) {
+    return llvm::dyn_cast<BasicBlock>(VMap[BB]);
+  }
+
+  BranchInst* getClonedBI(BranchInst* BI) {
+    return llvm::dyn_cast<BranchInst>(VMap[BI]);
+  }
+};
+
 static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
                     LoopInfo &LI, TargetTransformInfo &TTI) {
   errs() << "Procesing function : " << F->getName() << "\n";
@@ -83,8 +124,12 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
   int OrigCodeSize = EstimateFunctionSize(F, TTI);
 
   std::set<BasicBlock*> VisitedBBs;
+
   do {
     LocalChange = false;
+    ClonedFunctionInfo CFMFunc(F);
+    ClonedFunctionInfo BFFunc(F);
+
     for (BasicBlock *BB : post_order(&F->getEntryBlock())) {
       if (VisitedBBs.count(BB)) continue;
       VisitedBBs.insert(BB);
@@ -93,39 +138,36 @@ static bool runImpl(Function *F, DominatorTree &DT, PostDominatorTree &PDT,
       if (BI && BI->isConditional()) {
         int BeforeSize = EstimateFunctionSize(F, TTI);
 
-	int CFMProfit = 0;
+        int CFMProfit = 0;
         SmallVector<unsigned> ProfitableIdxs;
         if (RunCFMOnly || !RunBFOnly) {
           // clone and run cfmelder
-          ValueToValueMapTy CFMVMap;
-          Function *CFMFunc = CloneFunction(F, CFMVMap);
-          DominatorTree CFMDT(*CFMFunc);
-          PostDominatorTree CFMPDT(*CFMFunc);
+          CFMFunc.Reinitialize();
           SmallVector<unsigned> EmptyIdxs; // run on all region matches
-          ProfitableIdxs = runCFM(dyn_cast<BasicBlock>(CFMVMap[BB]), CFMDT,
-                                       CFMPDT, TTI, EmptyIdxs);
+          ProfitableIdxs = runCFM(CFMFunc.getClonedBB(BB), CFMFunc.DT,
+              CFMFunc.PDT, TTI, EmptyIdxs);
           // compute CFM code size reduction
-          CFMProfit = BeforeSize - EstimateFunctionSize(CFMFunc, TTI);
-	  CFMFunc->eraseFromParent();
-	}
+          CFMProfit = BeforeSize - EstimateFunctionSize(CFMFunc.Cloned, TTI);
+          if (ProfitableIdxs.size() > 0)
+            CFMFunc.Invalidate();
+        }
         errs() << "CFM code reduction : " << CFMProfit << "\n";
 
         int BFProfit = 0;
         if (!RunCFMOnly || RunBFOnly) {
           // clone and run brfusion
-          ValueToValueMapTy BFVMap;
-          Function *BFFunc = CloneFunction(F, BFVMap);
-          DominatorTree BFDT(*BFFunc);
-          PostDominatorTree BFPDT(*BFFunc);
-          bool BFSuccess = MergeBranchRegions(
-              *BFFunc, dyn_cast<BranchInst>(BFVMap[BI]), BFDT, TTI, false);
+          BFFunc.Reinitialize();
+          bool BFSuccess = MergeBranchRegions(*(BFFunc.Cloned),
+              BFFunc.getClonedBI(BI), BFFunc.DT, TTI, false);
           // compute BF code size reduction
           BFProfit =
-              BFSuccess ? BeforeSize - EstimateFunctionSize(BFFunc, TTI) : 0;
+              BFSuccess ? BeforeSize - EstimateFunctionSize(BFFunc.Cloned, TTI) : 0;
           errs() << "Branch fusion code reduction : " << BFProfit << "\n";
-	  BFFunc->eraseFromParent();
+          if (BFSuccess)
+            BFFunc.Invalidate();
         }
-            // pick best one and run on original function if profitable
+
+        // pick best one and run on original function if profitable
         if (BFProfit > 0 || CFMProfit > 0) {
           if (BFProfit > CFMProfit) {
             errs() << "Profitable Branch Fusion: SEME-brfusion " << BB->getName().str() << ": "; BI->dump();

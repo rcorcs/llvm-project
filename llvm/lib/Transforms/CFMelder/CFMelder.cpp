@@ -189,7 +189,7 @@ SmallVector<unsigned> llvm::runCFM(BasicBlock *BB, DominatorTree &DT,
                                    PostDominatorTree &PDT,
                                    TargetTransformInfo &TTI,
                                    SmallVector<unsigned> &OnIdxs) {
-  bool LocalChange = false;
+  bool LocalChange = false, AnyChange = false;
   SmallVector<unsigned> ProfitableIdxs;
   if (Utils::isValidMergeLocation(*BB, DT, PDT)) {
     Function *Func = BB->getParent();
@@ -227,9 +227,18 @@ SmallVector<unsigned> llvm::runCFM(BasicBlock *BB, DominatorTree &DT,
       if (LocalChange) {
         DT.recalculate(*Func);
         PDT.recalculate(*Func);
+        AnyChange = true;
+        LocalChange = false;
       }
     }
   }
+
+  // PP: What I really want is to return whether this call modified Func
+  // Could pass-by-ref a bool for that but I am lazy so I add garbage to
+  // ProfitableIdxs to make sure that it's always non-empty when Func was
+  // modified
+  if (AnyChange && ProfitableIdxs.size() == 0)
+    ProfitableIdxs.push_back(UINT_MAX);
   return ProfitableIdxs;
 }
 
