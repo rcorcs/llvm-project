@@ -122,6 +122,8 @@ add_llvm_component_library(LLVMAnalysis
   ProfileSummaryInfo.cpp
   PtrUseVisitor.cpp
   RegionInfo.cpp
+  ControlDependenceGraph.cpp
+  SEMERegionInfo.cpp
   RegionPass.cpp
   RegionPrinter.cpp
   ReleaseModeModelRunner.cpp
