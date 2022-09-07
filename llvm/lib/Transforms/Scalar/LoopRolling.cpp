@@ -3,10 +3,14 @@
 #include "llvm/Transforms/Scalar.h"
 
 #include "llvm/Analysis/AssumptionCache.h"
+#include "llvm/Analysis/DominanceFrontier.h"
+#include "llvm/Analysis/DominanceFrontierImpl.h"
+#include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/OptimizationRemarkEmitter.h"
 #include "llvm/Analysis/ScalarEvolution.h"
+#include "llvm/Analysis/RegionInfo.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Constants.h"
@@ -1107,6 +1111,95 @@ private:
   SeedGroups Seeds;
 };
 
+class RegionRoller {
+public:
+  RegionRoller(Function &F) : F(F) {}
+
+  bool run();
+private:
+  Function &F;
+};
+
+bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBlock *ExitBB2, std::set<BasicBlock*> &Visited) {
+  if (BB1==ExitBB1 && BB2==ExitBB2) return true;
+  if (BB1==ExitBB1 || BB2==ExitBB2) return false;
+  if (Visited.count(BB1) && Visited.count(BB2)) return true;
+  if (Visited.count(BB1) || Visited.count(BB2)) return false;
+  Visited.insert(BB1);
+  Visited.insert(BB2);
+
+  BranchInst *Br1 = dyn_cast<BranchInst>(BB1->getTerminator());
+  BranchInst *Br2 = dyn_cast<BranchInst>(BB2->getTerminator());
+
+  if (Br1 && Br2 && Br1->getNumSuccessors() && Br2->getNumSuccessors()) {
+    bool Isomorphic = true;
+    for (unsigned i = 0; i<Br1->getNumSuccessors(); i++) {
+      Isomorphic = Isomorphic && IsIsomorphic(Br1->getSuccessor(i), ExitBB1, Br2->getSuccessor(i), ExitBB2, Visited);
+    }
+    return Isomorphic;
+  }
+
+  return false;
+}
+
+bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBlock *ExitBB2) {
+  std::set<BasicBlock*> Visited;
+  return IsIsomorphic(BB1, ExitBB1, BB2, ExitBB2, Visited);
+}
+
+bool RegionRoller::run() {
+
+  DominatorTree DT(F);
+  PostDominatorTree PDT(F);
+  //DT.recalculate(F);
+  //PDT.recalculate(F);
+
+  /// calculate regions
+  DominanceFrontier DF;
+  DF.analyze(DT);
+  RegionInfo RI;
+  RI.recalculate(F, &DT, &PDT, &DF);
+
+  std::map<BasicBlock *, std::vector<BasicBlock *> > RegionsByEntry;
+  auto *TopRegion = RI.getTopLevelRegion();
+  errs() << "Top Region:\n";
+  TopRegion->dump();
+  if (TopRegion->getExit())
+    RegionsByEntry[TopRegion->getEntry()].push_back(TopRegion->getExit());
+
+  //for (auto Region : *TopRegion) {
+  for (auto It = TopRegion->begin(); It!=TopRegion->end(); It++) {
+    errs() << "Sub Region:\n";
+    (*It)->dump();
+    if ((*It)->getExit())
+      RegionsByEntry[(*It)->getEntry()].push_back( (*It)->getExit() );
+  }
+
+  for (auto It = TopRegion->begin(); It!=TopRegion->end(); It++) {
+    errs() << "Reference Region:\n";
+    (*It)->dump();
+
+    BasicBlock *LinkBlock = (*It)->getExit();
+    errs() << "Link: " << LinkBlock->getName().str() << "\n";
+    while (LinkBlock) {
+      BasicBlock *NextLB = nullptr;
+      for (BasicBlock *ExitBB : RegionsByEntry[LinkBlock]) {
+	//errs() << "Evaluating Region: " << LinkBlock->getName().str() << " => " << ExitBB->getName().str() << "\n";
+	//auto *Region = RI.getCommonRegion(LinkBlock, ExitBB);
+	//Region->dump();
+	if (IsIsomorphic((*It)->getEntry(), (*It)->getExit(), LinkBlock, ExitBB)) {
+          errs() << "Found Isomorphic:" << LinkBlock->getName().str() << " => " << ExitBB->getName().str() << "\n";
+          NextLB = ExitBB;
+	}
+      }
+      LinkBlock = NextLB;
+    }
+
+  }
+
+
+  return false;
+}
 
 template<typename ValueT>
 Node *AlignedGraph::find(std::vector<ValueT *> &Vs) {
@@ -3307,6 +3400,9 @@ bool LoopRoller::run() {
 }
 
 bool LoopRolling::runImpl(Function &F, ScalarEvolution *SE) {
+  RegionRoller RR(F);
+  RR.run();
+
   LoopRoller RL(F, SE);
   return RL.run();
 }
