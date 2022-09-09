@@ -219,10 +219,10 @@ private:
   std::vector<Value*> Values;
   std::vector<Node *> Children;
 public:
-  Node(NodeType NT, BasicBlock &BB, Node *Parent=nullptr) : BBPtr(&BB), Parent(Parent), NType(NT) {}
+  Node(NodeType NT, BasicBlock *BB, Node *Parent=nullptr) : BBPtr(BB), Parent(Parent), NType(NT) {}
 
   template<typename ValueT>
-  Node(NodeType NT, std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent=nullptr) : BBPtr(&BB), Parent(Parent), NType(NT) {
+  Node(NodeType NT, std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent=nullptr) : BBPtr(BB), Parent(Parent), NType(NT) {
     for (auto *V : Vs) Values.push_back(V);
   }
 
@@ -267,7 +267,7 @@ class MultiNode : public Node {
 public:
   std::vector< std::vector<Instruction *> > Groups;
 
-  MultiNode(BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::MULTI,BB,Parent) {}
+  MultiNode(BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::MULTI,BB,Parent) {}
 
   Instruction *getValidInstruction(unsigned i) {
     return nullptr;
@@ -287,7 +287,7 @@ public:
 class MatchingNode : public Node {
 public:
   template<typename ValueT>
-  MatchingNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::MATCH,Vs,BB,Parent) {}
+  MatchingNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::MATCH,Vs,BB,Parent) {}
 
   Instruction *getValidInstruction(unsigned i) {
     return dyn_cast<Instruction>(getValue(i));
@@ -327,7 +327,7 @@ public:
 class ConstantExprNode : public Node {
 public:
   template<typename ValueT>
-  ConstantExprNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::CONSTEXPR,Vs,BB,Parent) {}
+  ConstantExprNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::CONSTEXPR,Vs,BB,Parent) {}
 
   Instruction *getValidInstruction(unsigned i) {
     return nullptr;
@@ -350,7 +350,7 @@ public:
 class MismatchingNode : public Node {
 public:
   template<typename ValueT>
-  MismatchingNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::MISMATCH,Vs,BB,Parent) {}
+  MismatchingNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::MISMATCH,Vs,BB,Parent) {}
 
   Instruction *getValidInstruction(unsigned i) {
     return nullptr;
@@ -381,7 +381,7 @@ public:
 class IdenticalNode : public Node {
 public:
   template<typename ValueT>
-  IdenticalNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::IDENTICAL,Vs,BB,Parent) {}
+  IdenticalNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::IDENTICAL,Vs,BB,Parent) {}
 
   Instruction *getValidInstruction(unsigned i) {
     return nullptr;
@@ -423,7 +423,7 @@ private:
   Value *Step;
 public:
   template<typename ValueT>
-  IntSequenceNode(std::vector<ValueT *> &Vs, Value *Step, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::INTSEQ,Vs,BB,Parent), Step(Step) {}
+  IntSequenceNode(std::vector<ValueT *> &Vs, Value *Step, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::INTSEQ,Vs,BB,Parent), Step(Step) {}
 
   Value *getStart() { return getValue(0); }
   Value *getEnd() { return getValue(size()-1); }
@@ -451,7 +451,7 @@ private:
   Value *Second;
 public:
   template<typename ValueT>
-  AlternatingSequenceNode(std::vector<ValueT *> &Vs, Value *First, Value *Second, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::ALTSEQ,Vs,BB,Parent), First(First), Second(Second) {}
+  AlternatingSequenceNode(std::vector<ValueT *> &Vs, Value *First, Value *Second, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::ALTSEQ,Vs,BB,Parent), First(First), Second(Second) {}
 
   Value *getFirst() { return First; }
   Value *getSecond() { return Second; }
@@ -478,7 +478,7 @@ private:
   std::vector<Value*> Indices;
 public:
   template<typename ValueT>
-  GEPSequenceNode(std::vector<ValueT *> &Vs, GetElementPtrInst *RefGEP, Value *Ptr, std::vector<Value*> &Indices, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::GEPSEQ,Vs,BB,Parent), RefGEP(RefGEP), Ptr(Ptr), Indices(Indices) {}
+  GEPSequenceNode(std::vector<ValueT *> &Vs, GetElementPtrInst *RefGEP, Value *Ptr, std::vector<Value*> &Indices, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::GEPSEQ,Vs,BB,Parent), RefGEP(RefGEP), Ptr(Ptr), Indices(Indices) {}
 
   Value *getPointerOperand() { return Ptr; }
   std::vector<Value *> &getIndices() { return Indices; }
@@ -513,7 +513,7 @@ private:
   std::vector<Value *> RightOperands;
 public:
   template<typename ValueT>
-  BinOpSequenceNode(std::vector<ValueT *> &Vs, BinaryOperator *BinOpRef, std::vector<Value *> &LeftOperands, std::vector<Value *> &RightOperands, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::BINOP,Vs,BB,Parent), BinOpRef(BinOpRef), LeftOperands(LeftOperands), RightOperands(RightOperands) {}
+  BinOpSequenceNode(std::vector<ValueT *> &Vs, BinaryOperator *BinOpRef, std::vector<Value *> &LeftOperands, std::vector<Value *> &RightOperands, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::BINOP,Vs,BB,Parent), BinOpRef(BinOpRef), LeftOperands(LeftOperands), RightOperands(RightOperands) {}
 
   BinaryOperator *getReference() { return BinOpRef; }
   std::vector<Value *> &getLeftOperands() { return LeftOperands; }
@@ -539,7 +539,7 @@ private:
   Value *StartValue;
 public:
   template<typename ValueT>
-  RecurrenceNode(std::vector<ValueT *> &Vs, Value *StartValue, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::RECURRENCE,Vs,BB,Parent), StartValue(StartValue) {}
+  RecurrenceNode(std::vector<ValueT *> &Vs, Value *StartValue, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::RECURRENCE,Vs,BB,Parent), StartValue(StartValue) {}
   Value *getStartValue() { return StartValue; }
 
   Instruction *getValidInstruction(unsigned i) {
@@ -562,7 +562,7 @@ private:
   std::vector<Value *> Vs;
 public:
 
-  ReductionNode(BinaryOperator *BinOp, PHINode *Start, std::vector<BinaryOperator*> &BOs, std::vector<Value*> &Vs, BasicBlock &BB, Node *Parent=nullptr) : Node(NodeType::REDUCTION,BOs,BB,Parent), BinOpRef(BinOp), Start(Start), Vs(Vs) {}
+  ReductionNode(BinaryOperator *BinOp, PHINode *Start, std::vector<BinaryOperator*> &BOs, std::vector<Value*> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::REDUCTION,BOs,BB,Parent), BinOpRef(BinOp), Start(Start), Vs(Vs) {}
 
   BinaryOperator *getBinaryOperator() { return BinOpRef; }
   std::vector<Value *> &getOperands() { return Vs; }
@@ -791,7 +791,7 @@ public:
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
 
-  AlignedGraph(Node *N, BasicBlock &BB, ScalarEvolution *SE=nullptr) : BB(&BB), SE(SE) {
+  AlignedGraph(Node *N, BasicBlock *BB, ScalarEvolution *SE=nullptr) : BB(BB), SE(SE) {
     Root = N;
     if (Root) {
       addNode(Root);
@@ -800,7 +800,7 @@ public:
     }
   }
 
-  AlignedGraph(BinaryOperator *BO, Instruction *U, BasicBlock &BB, ScalarEvolution *SE=nullptr) : BB(&BB), SE(SE) {
+  AlignedGraph(BinaryOperator *BO, Instruction *U, BasicBlock *BB, ScalarEvolution *SE=nullptr) : BB(BB), SE(SE) {
     Root = buildReduction(BO,U,BB,nullptr);
     if (Root) {
       addNode(Root);
@@ -810,7 +810,7 @@ public:
   }
 
   template<typename ValueT>
-  AlignedGraph(std::vector<ValueT*> &Vs, BasicBlock &BB, ScalarEvolution *SE=nullptr) : BB(&BB), SE(SE) {
+  AlignedGraph(std::vector<ValueT*> &Vs, BasicBlock *BB, ScalarEvolution *SE=nullptr) : BB(BB), SE(SE) {
     Root = createNode(Vs,BB);
     addNode(Root);
     std::set<Node*> Visited;
@@ -976,24 +976,24 @@ public:
 
   std::set<User*> Users;
 private:
-  void growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited);
+  void growGraph(Node *N, BasicBlock *BB, std::set<Node*> &Visited);
 
   template<typename ValueT>
-  Node *buildReduction(ValueT *V, Instruction *, BasicBlock &BB, Node *Parent);
+  Node *buildReduction(ValueT *V, Instruction *, BasicBlock *BB, Node *Parent);
   template<typename ValueT>
-  Node *buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  Node *buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent);
   template<typename ValueT>
-  Node *buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  Node *buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent);
   template<typename ValueT>
-  Node *buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  Node *buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent);
   template<typename ValueT>
-  Node *buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  Node *buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent);
   template<typename ValueT>
-  Node *buildRecurrenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  Node *buildRecurrenceNode(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent);
   template<typename ValueT>
-  Node *buildConstExprNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent);
+  Node *buildConstExprNode(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent);
   template<typename ValueT>
-  Node *createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent=nullptr);
+  Node *createNode(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Parent=nullptr);
 };
 
 /*
@@ -1111,6 +1111,42 @@ private:
   SeedGroups Seeds;
 };
 
+class RegionEntry {
+public:
+  RegionEntry(BasicBlock *Entry, BasicBlock *Exit) : Entry(Entry), Exit(Exit) {}
+  BasicBlock *getEntry() { return Entry; }
+  BasicBlock *getExit() { return Exit; }
+private:
+  BasicBlock *Entry;
+  BasicBlock *Exit;
+};
+
+class AlignedBlock {
+public:
+  AlignedBlock() {}
+  void pushBlock(BasicBlock *BB) { Blocks.push_back(BB); }
+  AlignedBlock *getSuccessor(int i) { return Successors[i]; }
+  void addSuccessor(AlignedBlock *AB) { Successors.push_back(AB); }
+
+
+
+private:
+  std::vector<BasicBlock*> Blocks;
+  std::vector<AlignedBlock*> Successors;
+};
+
+class AlignedRegion {
+public:
+  std::vector<AlignedBlock *> AlignedBlocks;
+  std::map<BasicBlock*, AlignedBlock *> BlockMap;
+
+  void releaseMemory() {
+    for (AlignedBlock *AB : AlignedBlocks) delete AB;
+    AlignedBlocks.clear();
+    BlockMap.clear();
+  }
+};
+
 class RegionRoller {
 public:
   RegionRoller(Function &F) : F(F) {}
@@ -1120,7 +1156,7 @@ private:
   Function &F;
 };
 
-bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBlock *ExitBB2, std::set<BasicBlock*> &Visited) {
+bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBlock *ExitBB2, AlignedBlock *AB, std::set<BasicBlock*> &Visited) {
   if (BB1==ExitBB1 && BB2==ExitBB2) return true;
   if (BB1==ExitBB1 || BB2==ExitBB2) return false;
   if (Visited.count(BB1) && Visited.count(BB2)) return true;
@@ -1131,10 +1167,11 @@ bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBl
   BranchInst *Br1 = dyn_cast<BranchInst>(BB1->getTerminator());
   BranchInst *Br2 = dyn_cast<BranchInst>(BB2->getTerminator());
 
-  if (Br1 && Br2 && Br1->getNumSuccessors() && Br2->getNumSuccessors()) {
+  if (Br1 && Br2 && Br1->getNumSuccessors()==Br2->getNumSuccessors()) {
     bool Isomorphic = true;
+    if (AB) AB->pushBlock(BB2);
     for (unsigned i = 0; i<Br1->getNumSuccessors(); i++) {
-      Isomorphic = Isomorphic && IsIsomorphic(Br1->getSuccessor(i), ExitBB1, Br2->getSuccessor(i), ExitBB2, Visited);
+      Isomorphic = Isomorphic && IsIsomorphic(Br1->getSuccessor(i), ExitBB1, Br2->getSuccessor(i), ExitBB2, AB?AB->getSuccessor(i):nullptr, Visited);
     }
     return Isomorphic;
   }
@@ -1142,9 +1179,36 @@ bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBl
   return false;
 }
 
-bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBlock *ExitBB2) {
+bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBlock *ExitBB2, AlignedBlock *AB) {
   std::set<BasicBlock*> Visited;
-  return IsIsomorphic(BB1, ExitBB1, BB2, ExitBB2, Visited);
+  return IsIsomorphic(BB1, ExitBB1, BB2, ExitBB2, AB, Visited);
+}
+
+AlignedBlock *initializeAlignedRegion(AlignedRegion *AR, BasicBlock *BB, BasicBlock *ExitBB, std::set<BasicBlock *> &Visited) {
+  if (BB==ExitBB) return nullptr;
+  if (Visited.count(BB)) return AR->BlockMap[BB];
+
+  Visited.insert(BB);
+
+  AlignedBlock *AB = new AlignedBlock;
+  AB->pushBlock(BB);
+  AR->AlignedBlocks.push_back(AB);
+  AR->BlockMap[BB] = AB;
+
+  BranchInst *Br = dyn_cast<BranchInst>(BB->getTerminator());
+  if (Br) {
+    for (unsigned i = 0; i<Br->getNumSuccessors(); i++) {
+      AlignedBlock *SuccAB = initializeAlignedRegion(AR, Br->getSuccessor(i), ExitBB, Visited);
+      AB->addSuccessor(SuccAB);
+    }
+  }
+
+  return AB;
+}
+
+void initializeAlignedRegion(AlignedRegion *AR, BasicBlock *BB, BasicBlock *ExitBB) {
+  std::set<BasicBlock*> Visited;
+  initializeAlignedRegion(AR, BB, ExitBB, Visited);
 }
 
 bool RegionRoller::run() {
@@ -1179,6 +1243,8 @@ bool RegionRoller::run() {
     errs() << "Reference Region:\n";
     (*It)->dump();
 
+    AlignedRegion AR;
+    initializeAlignedRegion(&AR, (*It)->getEntry(), (*It)->getExit());
     BasicBlock *LinkBlock = (*It)->getExit();
     errs() << "Link: " << LinkBlock->getName().str() << "\n";
     while (LinkBlock) {
@@ -1187,19 +1253,122 @@ bool RegionRoller::run() {
 	//errs() << "Evaluating Region: " << LinkBlock->getName().str() << " => " << ExitBB->getName().str() << "\n";
 	//auto *Region = RI.getCommonRegion(LinkBlock, ExitBB);
 	//Region->dump();
-	if (IsIsomorphic((*It)->getEntry(), (*It)->getExit(), LinkBlock, ExitBB)) {
+	if (IsIsomorphic((*It)->getEntry(), (*It)->getExit(), LinkBlock, ExitBB, nullptr)) {
           errs() << "Found Isomorphic:" << LinkBlock->getName().str() << " => " << ExitBB->getName().str() << "\n";
-          NextLB = ExitBB;
+          IsIsomorphic((*It)->getEntry(), (*It)->getExit(), LinkBlock, ExitBB, AR.AlignedBlocks[0]);
+	  NextLB = ExitBB;
 	}
       }
       LinkBlock = NextLB;
     }
 
+    AR.releaseMemory();
   }
-
 
   return false;
 }
+
+/*
+template<typename ValueT>
+Node *AlignedBlock::createNode(std::vector<ValueT*> Vs, Node *Parent) {
+  
+  errs() << "Creating Node\n";
+  //for (auto *V : Vs) {
+  //  if (isa<Function>(V)) errs() << "Function: " << V->getName() << "\n";
+  //  else V->dump();
+  //}
+  bool AllSame = true;
+  bool Matching = true;
+  bool HasSideEffect = false;
+  std::unordered_set<Value*> UniqueValues;
+  UniqueValues.insert(Vs[0]);
+  if (auto *I = dyn_cast<Instruction>(Vs[0])) {
+    if (I->getParent()!=Blocks[0]) Matching = false;
+    HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
+  }
+  for (unsigned i = 1; i<Vs.size(); i++) {
+    UniqueValues.insert(Vs[i]);
+    AllSame = AllSame && Vs[i]==Vs[0];
+    Matching = Matching && match(Vs[i-1],Vs[i]);
+    if (auto *I = dyn_cast<Instruction>(Vs[i])) {
+      if (I->getParent()!=Blocks[i]) Matching = false;
+      HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
+    }
+  }
+  errs() << "Match: " << Matching << "\n";
+  errs() << UniqueValues.size() << " x " << Vs.size() << "\n";
+
+  Matching = Matching && (UniqueValues.size()==Vs.size() || (!HasSideEffect));
+  errs() << "Final Match: " << Matching << "\n";
+
+  if (AllSame) {
+    errs() << "All the Same\n";
+    Inputs.insert(Vs[0]);
+    return new IdenticalNode(Vs,BB,Parent);
+  }
+  if (Matching) {
+    errs() << "Matching\n";
+    return new MatchingNode(Vs,BB,Parent);
+  }
+  if (Node *N = buildGEPSequence(Vs, BB, Parent)) {
+    errs() << "GEP Seq\n";
+    return N;
+  }
+  if (Node *N = buildGEPSequence2(Vs, BB, Parent)) {
+    errs() << "GEP Seq\n";
+    return N;
+  }
+
+  if (Node *N = buildBinOpSequenceNode(Vs, BB, Parent)) {
+    errs() << "BinOp Seq\n";
+    return N;
+  }
+  if (Node *N = buildRecurrenceNode(Vs, BB, Parent)) {
+    errs() << "Recurrence\n";
+    return N;
+  }
+
+  if (allConstant(Vs)) {
+    if (Value *Step = isConstantSequence(Vs)) {
+      errs() << "Int Seq\n";
+      return new IntSequenceNode(Vs, Step, BB, Parent);
+    }
+  }
+
+  if (Node *N = buildAlternatingSequenceNode(Vs, BB, Parent)) {
+    errs() << "Alt Seq\n";
+    return N;
+  }
+  if (Node *N = buildConstExprNode(Vs, BB, Parent)) {
+    errs() << "Const Expr\n";
+    return N;
+  }
+
+  std::vector<ValueT *> Seq1;
+  for (unsigned i = 0; i<Vs.size(); i+=2) {
+    Seq1.push_back(Vs[i]);
+  }
+
+  std::vector<ValueT *> Seq2;
+  for (unsigned i = 1; i<Vs.size(); i+=2) {
+    Seq2.push_back(Vs[i]);
+  }
+  if (tempMatching(Seq1, BB, Parent) && tempMatching(Seq2, BB, Parent)) {
+    errs() << "New Alternating Pattern:\n";
+    for (auto *V : Seq1) {
+      errs() << "1:"; V->dump();
+    }
+    for (auto *V : Seq2) {
+      errs() << "2:"; V->dump();
+    }
+    //BB.dump();
+  } 
+
+  errs() << "Mismatching\n";
+  for (auto *V : Vs) Inputs.insert(V);
+  return new MismatchingNode(Vs,BB,Parent);
+}
+*/
 
 template<typename ValueT>
 Node *AlignedGraph::find(std::vector<ValueT *> &Vs) {
@@ -1244,7 +1413,7 @@ Node *AlignedGraph::find(Instruction *I) {
   return Result;
 }
 
-static void ReorderOperands(std::vector<Value*> &Operands, BasicBlock &BB) {
+static void ReorderOperands(std::vector<Value*> &Operands, BasicBlock *BB) {
   std::unordered_map<const Value*,APInt> Ids;
   
   unsigned BitWidth = 64;
@@ -1252,7 +1421,7 @@ static void ReorderOperands(std::vector<Value*> &Operands, BasicBlock &BB) {
     BitWidth = Operands[0]->getType()->getIntegerBitWidth();
   }
   unsigned i = 0;
-  for (auto &I : BB) {
+  for (auto &I : *BB) {
     if (std::find(Operands.begin(),Operands.end(), &I)!=Operands.end())
       Ids[&I] = APInt(BitWidth,i);
     i++;
@@ -1286,14 +1455,14 @@ Every operand that is not part of the reduction node itself is an input value.
 
 */
 template<typename ValueT>
-Node *AlignedGraph::buildReduction(ValueT *V, Instruction *U, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildReduction(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent) {
   if (V==nullptr) return nullptr;
   BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
   errs() << "Building reduction\n";
   U->dump();
   BO->dump();
   if (BO==nullptr) return nullptr;
-  if (BO->getParent()!=&BB) return nullptr;
+  if (BO->getParent()!=BB) return nullptr;
   if (!ReductionNode::isValidOperation(BO)) return nullptr;
 
   PHINode *PHI = dyn_cast<PHINode>(U);
@@ -1335,7 +1504,7 @@ In LLVM, the indexing operation is represented using GetElementPtr (GEP).
 This special node tries to identify this pattern of GEP sequence.
 */
 template<typename ValueT>
-Node *AlignedGraph::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent) {
 
   if (!isa<PointerType>(VL[0]->getType())) return nullptr;
   //auto *Ptr = getUnderlyingObject(VL[0]);
@@ -1351,7 +1520,7 @@ Node *AlignedGraph::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, 
   Type *Ty = nullptr;
   for (unsigned i = 0; i<VL.size(); i++) {
     if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
-      if (GEP->getParent()!=(&BB)) return nullptr;
+      if (GEP->getParent()!=BB) return nullptr;
       //if (GEP->getPointerOperand()!=Ptr) return nullptr;
       if (GEP->getNumIndices()!=1) return nullptr; //strong restriction
       /*if (!GEP->hasIndices()) return nullptr;
@@ -1405,7 +1574,7 @@ Node *AlignedGraph::buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock &BB, 
 
 
 template<typename ValueT>
-Node *AlignedGraph::buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent) {
   errs() << "GEPSeq2\n";
   if (!isa<PointerType>(VL[0]->getType())) return nullptr;
   //auto *Ptr = getUnderlyingObject(VL[0]);
@@ -1490,7 +1659,7 @@ Node *AlignedGraph::buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock &BB,
  V0 and V1 must be loop invariant, after loop rolling, i.e., they must be input values to the aligned graph.
 */
 template<typename ValueT>
-Node *AlignedGraph::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildAlternatingSequenceNode(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent) {
   if (VL.size()<2) return nullptr;
 
   Value *First = VL[0];
@@ -1569,7 +1738,7 @@ It also allows binop sequences to contain mixed opcodes that are equivalent.
 For example, it may contain 'or' and 'add' -- an 'or' operation can be used if no carry is needed in the binary addition.
 */
 template<typename ValueT>
-Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent) {
   errs() << "BinOP?\n";
   VL[0]->dump();
 
@@ -1648,7 +1817,7 @@ Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock
 }
 
 template<typename ValueT>
-Node *AlignedGraph::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent) {
   if (Vs.size()<=1) return nullptr;
 
   //if (!this->Root) return nullptr;
@@ -1703,7 +1872,7 @@ a greater cost in terms of code size.
 Constant expressions are often used for computing indexes of global arrays, using GEPOperators.
 */
 template<typename ValueT>
-Node *AlignedGraph::buildConstExprNode(std::vector<ValueT *> &Vs, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::buildConstExprNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent) {
 
   ConstantExpr *CExpr = dyn_cast<ConstantExpr>(Vs[0]);
   if (CExpr==nullptr) return nullptr;
@@ -1737,20 +1906,20 @@ Node *AlignedGraph::buildConstExprNode(std::vector<ValueT *> &Vs, BasicBlock &BB
 
 
 template<typename ValueT>
-static bool tempMatching(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
+static bool tempMatching(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Parent) {
   bool AllSame = true;
   bool Matching = true;
   std::unordered_set<Value*> UniqueValues;
   UniqueValues.insert(Vs[0]);
   if (auto *I = dyn_cast<Instruction>(Vs[0])) {
-    if (I->getParent()!=(&BB)) Matching = false;
+    if (I->getParent()!=(BB)) Matching = false;
   }
   for (unsigned i = 1; i<Vs.size(); i++) {
     UniqueValues.insert(Vs[i]);
     AllSame = AllSame && Vs[i]==Vs[0];
     Matching = Matching && match(Vs[i-1],Vs[i]);
     if (auto *I = dyn_cast<Instruction>(Vs[i])) {
-      if (I->getParent()!=(&BB)) Matching = false;
+      if (I->getParent()!=(BB)) Matching = false;
     }
   }
   Matching = Matching && (UniqueValues.size()==Vs.size());
@@ -1759,7 +1928,7 @@ static bool tempMatching(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) 
 }
 
 template<typename ValueT>
-Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Parent) {
+Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Parent) {
   
   errs() << "Creating Node\n";
   //for (auto *V : Vs) {
@@ -1772,7 +1941,7 @@ Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Pa
   std::unordered_set<Value*> UniqueValues;
   UniqueValues.insert(Vs[0]);
   if (auto *I = dyn_cast<Instruction>(Vs[0])) {
-    if (I->getParent()!=(&BB)) Matching = false;
+    if (I->getParent()!=BB) Matching = false;
     HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
   }
   for (unsigned i = 1; i<Vs.size(); i++) {
@@ -1780,7 +1949,7 @@ Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Pa
     AllSame = AllSame && Vs[i]==Vs[0];
     Matching = Matching && match(Vs[i-1],Vs[i]);
     if (auto *I = dyn_cast<Instruction>(Vs[i])) {
-      if (I->getParent()!=(&BB)) Matching = false;
+      if (I->getParent()!=BB) Matching = false;
       HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
     }
   }
@@ -1858,11 +2027,11 @@ Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock &BB, Node *Pa
   return new MismatchingNode(Vs,BB,Parent);
 }
 
-void AlignedGraph::growGraph(Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
+void AlignedGraph::growGraph(Node *N, BasicBlock *BB, std::set<Node*> &Visited) {
   if (Visited.find(N)!=Visited.end()) return;
   Visited.insert(N);
 
-  auto growGraphNode = [&](auto &Vs, Node *N, BasicBlock &BB, std::set<Node*> &Visited) {
+  auto growGraphNode = [&](auto &Vs, Node *N, BasicBlock *BB, std::set<Node*> &Visited) {
        Node *Child = find(Vs);
        if (Child==nullptr) {
          Child = createNode(Vs, BB, N);
@@ -3178,7 +3347,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
       if (Valid && Pair.second.size()>1) {
 	//errs() << "Looking for groups\n";
 
-	MultiNode *MN = new MultiNode(BB);
+	MultiNode *MN = new MultiNode(&BB);
 	MN->addGroup(Pair.second);
 	Instruction *I = Pair.second[0];
 	I = I->getNextNode();
@@ -3204,7 +3373,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 	}
 
 	if (MN->getNumGroups()>1) {
-	  AlignedGraph G(MN,BB,SE);
+	  AlignedGraph G(MN,&BB,SE);
           if (G.isSchedulable(BB)) {
   	    NumAttempts++;
             CodeGenerator CG(F, BB, G);
@@ -3228,7 +3397,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
       }
       if (Valid && Pair.second.size()>1) {
 	//errs() << "Looking for groups\n";
-	MultiNode *MN = new MultiNode(BB);
+	MultiNode *MN = new MultiNode(&BB);
 	MN->addGroup(Pair.second);
 	Instruction *I = Pair.second[0];
 	I = I->getNextNode();
@@ -3254,7 +3423,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 	}
 
 	if (MN->getNumGroups()>1) {
-	  AlignedGraph G(MN,BB,SE);
+	  AlignedGraph G(MN,&BB,SE);
           if (G.isSchedulable(BB)) {
   	    NumAttempts++;
             CodeGenerator CG(F, BB, G);
@@ -3280,7 +3449,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
           Attempt = false;
 	  bool HasRolled = false;
           if (StoreInsts.size()>1) {
-            AlignedGraph G(StoreInsts, BB, SE);
+            AlignedGraph G(StoreInsts, &BB, SE);
 	    if (G.isSchedulable(BB)) {
 	      NumAttempts++;
 	      CodeGenerator CG(F, BB, G);
@@ -3327,7 +3496,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
     for (auto &Pair : Seeds.Reductions) {
       if (Pair.second==nullptr) continue;
       if (!Pair.second->isTerminator()) continue; //skip non-terminators
-      AlignedGraph G(Pair.first, Pair.second, BB, SE);
+      AlignedGraph G(Pair.first, Pair.second, &BB, SE);
       if (G.isSchedulable(BB)) {
 	NumAttempts++;
         CodeGenerator CG(F, BB, G);
@@ -3342,7 +3511,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
 #endif
     for (auto &Pair : Seeds.Calls) {
       if (Pair.second.size()>1) {
-        AlignedGraph G(Pair.second, BB, SE);
+        AlignedGraph G(Pair.second, &BB, SE);
 	if (G.isSchedulable(BB)) {
 	  NumAttempts++;
           CodeGenerator CG(F, BB, G);
@@ -3362,7 +3531,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
     for (auto &Pair : Seeds.Reductions) {
       if (Pair.second==nullptr) continue;
       if (Pair.second->isTerminator()) continue; //skip terminators
-      AlignedGraph G(Pair.first, Pair.second, BB, SE);
+      AlignedGraph G(Pair.first, Pair.second, &BB, SE);
       if (G.isSchedulable(BB)) {
 	NumAttempts++;
         CodeGenerator CG(F, BB, G);
