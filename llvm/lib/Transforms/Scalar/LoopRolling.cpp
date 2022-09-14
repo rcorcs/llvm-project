@@ -330,7 +330,7 @@ public:
     std::unordered_set<Value*> UniqueValues;
     UniqueValues.insert(Vs[0]);
     if (auto *I = dyn_cast<Instruction>(Vs[0])) {
-      if (I->getParent()!=BB) Matching = false;
+      //if (I->getParent()!=BB) Matching = false;
       HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
     }
     for (unsigned i = 1; i<Vs.size(); i++) {
@@ -341,11 +341,11 @@ public:
         HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
       }
     }
-    //errs() << "Match: " << Matching << "\n";
-    //errs() << UniqueValues.size() << " x " << Vs.size() << "\n";
+    errs() << "Match: " << Matching << "\n";
+    errs() << UniqueValues.size() << " x " << Vs.size() << "\n";
 
     Matching = Matching && (UniqueValues.size()==Vs.size() || (!HasSideEffect));
-    //errs() << "Final Match: " << Matching << "\n";
+    errs() << "Final Match: " << Matching << "\n";
 
     if (Matching) {
       //errs() << "Matching\n";
@@ -1205,6 +1205,43 @@ public:
   AlignedBlock *getSuccessor(int i) { return Successors[i]; }
   void addSuccessor(AlignedBlock *AB) { Successors.push_back(AB); }
 
+  void align(ScalarEvolution *SE);
+
+  template<typename ValueT>
+  Node *buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent);
+  template<typename ValueT>
+  Node *createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvolution *SE);
+
+  void addNode(Node *N) {
+    if (N) {
+      if (std::find(Nodes.begin(), Nodes.end(), N)==Nodes.end()) {
+        Nodes.push_back(N);
+	if (N->getNodeType()!=NodeType::MISMATCH && N->getNodeType()!=NodeType::MULTI && N->getNodeType()!=NodeType::IDENTICAL && N->getNodeType()!=NodeType::RECURRENCE) {
+          //for (auto *V : N->getValues()) {
+	  for (unsigned i = 0; i<N->size(); i++) {
+            Value *V = N->getValidInstruction(i);
+	    if (V) ValuesInNode.insert(V);
+            NodeMap2[V].insert(N);
+	  }
+	}
+	if (N->size()) NodeMap[N->getValue(0)].insert(N);
+      }
+    }
+  }
+  template<typename ValueT>
+  Node *find(std::vector<ValueT *> &Vs);
+  Node *find(Instruction *I);
+
+
+  void growGraph(Node *N, ScalarEvolution *SE, std::set<Node*> &Visited);
+
+
+  std::vector<Node*> Nodes;
+  std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap;
+  std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap2;
+  std::unordered_set<Value *> ValuesInNode;
+  std::unordered_set<Value *> Inputs;
+
 private:
   std::vector<BasicBlock*> Blocks;
   std::vector<AlignedBlock*> Successors;
@@ -1335,113 +1372,296 @@ bool RegionRoller::run() {
       LinkBlock = NextLB;
     }
 
+    for (auto *AB : AR.AlignedBlocks) {
+	AB->align(nullptr); //SE);
+    }
+
     AR.releaseMemory();
   }
 
   return false;
 }
 
-/*
+
+void AlignedBlock::align(ScalarEvolution *SE) {
+
+  errs() << "Aligning:\n";
+  std::vector<BasicBlock::reverse_iterator> Its;
+  for (BasicBlock *BB : Blocks) {
+    errs() << BB->getName().str() << "\n";
+    Its.push_back(BB->rbegin());
+  }
+
+  errs() << "starting...\n";
+
+  while (true) {
+    std::vector<Instruction *> Vs;
+
+    bool ContinueGrowth = true;
+    for (unsigned i = 0; i<Blocks.size(); i++) {
+      if (Its[i]==Blocks[i]->rend()) {
+        ContinueGrowth = false;
+	break;
+      }
+      Vs.push_back(&*Its[i]);
+    }
+
+    if (Vs.size() < Blocks.size()) break;
+
+    Node *N = createNode(Vs,nullptr,SE);
+    if (N) {
+      addNode(N);
+      std::set<Node*> Visited;
+      growGraph(N, SE, Visited);
+    }
+
+    errs() << "Skipping\n";
+    break;
+  }
+
+  errs() << "Done\n";
+}
+
 template<typename ValueT>
-Node *AlignedBlock::createNode(std::vector<ValueT*> Vs, Node *Parent) {
+Node *AlignedBlock::find(std::vector<ValueT *> &Vs) {
+  if (Vs.empty()) return nullptr;
+
+  //errs() << "Searching for:\n";
+  //for (auto *V : Vs) V->dump();
+
+  if (NodeMap.find(Vs[0])==NodeMap.end()) return nullptr;
+  
+  std::unordered_set<Node*> Result(NodeMap[Vs[0]]);
+  //errs() << "Set: " << Result.size() << "\n";
+  for (unsigned i = 1; i<Vs.size(); i++) {
+    //if (NodeMap.find(Vs[i])==NodeMap.end()) return nullptr;
+    //for (Node *N : NodeMap[Vs[i]]) Result.erase(N);
+    for (auto It = Result.begin(), E = Result.end(); It!=E; ) {
+      Node *N = *It;
+      It++;
+
+      if (N->getValue(i)!=Vs[i]) Result.erase(N);
+    }
+    //errs() << "Set: " << Result.size() << "\n";
+  }
+  //errs() << "Set: " << Result.size() << "\n";
+  
+  if (Result.empty()) return nullptr;
+  return *Result.begin();
+}
+
+Node *AlignedBlock::find(Instruction *I) {
+  Node *Result = nullptr;
+  auto It = NodeMap2.find(I);
+  if (It==NodeMap2.end()) return nullptr;
+  
+  for (Node *N : It->second) {
+    if (N!=nullptr && N->getNodeType()!=NodeType::MISMATCH) {
+      if (Result!=nullptr) return nullptr;
+      Result = N;
+    }
+  }
+
+  return Result;
+}
+
+template<typename ValueT>
+Node *AlignedBlock::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent) {
+//RecurrenceNode *RecurrenceNode::get(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent) {
+  if (Vs.size()<=1) return nullptr;
+
+  //if (!this->Root) return nullptr;
+  //if (Vs.size()!=this->Root->size()) return nullptr;
+  //if (this->Root->getNodeType()!=NodeType::MATCH) return nullptr;
+  //if (!isa<CallBase>(this->Root->getValue(0))) return nullptr;
+
+  if (NodeMap.find(Vs[1])==NodeMap.end()) return nullptr;
+  if (!isa<Instruction>(Vs[1])) return nullptr;
+  
+  std::unordered_set<Node*> Result(NodeMap[Vs[1]]);
+  for (unsigned i = 2; i<Vs.size(); i++) {
+    for (auto It = Result.begin(), E = Result.end(); It!=E; ) {
+      Node *N = *It;
+      It++;
+      if (N->getValidInstruction(i-1)!=Vs[i]) Result.erase(N);
+    }
+  }
+  if (Result.size()!=1) return nullptr;
+
+  Node *N = *Result.begin();
+
+  if (Vs.size()!=N->size()) return nullptr;
+  if (N->getNodeType()!=NodeType::MATCH) return nullptr;
+
+  for (unsigned i = 1; i<Vs.size(); i++) {
+    if (Vs[i]->getType()!=Vs[0]->getType()) return nullptr;
+    if (Vs[i]!=N->getValue(i-1)) return nullptr;
+  }
+
+  errs() << "Found possible recurrence! Init: "; Vs[0]->dump();
+  for (auto *V : N->getValues()) V->dump();
+
+  //Inputs.insert(Vs[0]);
+
+  auto *RN = new RecurrenceNode(Vs, Vs[0], BB, Parent);
+  RN->pushChild(N);
+
+  return RN;
+}
+
+template<typename ValueT>
+void printVs(std::vector<ValueT*> Vs) {
+  for (auto *V : Vs) {
+    if (BasicBlock *BB = dyn_cast<BasicBlock>(V)) 
+      errs() << "  BB: " << BB->getName().str() << "\n";
+    else V->dump();
+  }
+}
+
+template<typename ValueT>
+Node *AlignedBlock::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvolution *SE) {
   
   errs() << "Creating Node\n";
-  //for (auto *V : Vs) {
-  //  if (isa<Function>(V)) errs() << "Function: " << V->getName() << "\n";
-  //  else V->dump();
-  //}
-  bool AllSame = true;
-  bool Matching = true;
-  bool HasSideEffect = false;
-  std::unordered_set<Value*> UniqueValues;
-  UniqueValues.insert(Vs[0]);
-  if (auto *I = dyn_cast<Instruction>(Vs[0])) {
-    if (I->getParent()!=Blocks[0]) Matching = false;
-    HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
-  }
-  for (unsigned i = 1; i<Vs.size(); i++) {
-    UniqueValues.insert(Vs[i]);
-    AllSame = AllSame && Vs[i]==Vs[0];
-    Matching = Matching && match(Vs[i-1],Vs[i]);
+
+  bool ValidBlock = true;
+  for (unsigned i = 0; i<Vs.size(); i++) {
     if (auto *I = dyn_cast<Instruction>(Vs[i])) {
-      if (I->getParent()!=Blocks[i]) Matching = false;
-      HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
+      ValidBlock = ValidBlock && (I->getParent()==Blocks[i]);
     }
   }
-  errs() << "Match: " << Matching << "\n";
-  errs() << UniqueValues.size() << " x " << Vs.size() << "\n";
 
-  Matching = Matching && (UniqueValues.size()==Vs.size() || (!HasSideEffect));
-  errs() << "Final Match: " << Matching << "\n";
-
-  if (AllSame) {
+  if (Node *N = IdenticalNode::get(Vs, nullptr, Parent)) {
     errs() << "All the Same\n";
     Inputs.insert(Vs[0]);
-    return new IdenticalNode(Vs,BB,Parent);
-  }
-  if (Matching) {
-    errs() << "Matching\n";
-    return new MatchingNode(Vs,BB,Parent);
-  }
-  if (Node *N = buildGEPSequence(Vs, BB, Parent)) {
-    errs() << "GEP Seq\n";
     return N;
   }
-  if (Node *N = buildGEPSequence2(Vs, BB, Parent)) {
-    errs() << "GEP Seq\n";
-    return N;
-  }
-
-  if (Node *N = buildBinOpSequenceNode(Vs, BB, Parent)) {
-    errs() << "BinOp Seq\n";
-    return N;
-  }
-  if (Node *N = buildRecurrenceNode(Vs, BB, Parent)) {
-    errs() << "Recurrence\n";
-    return N;
-  }
-
-  if (allConstant(Vs)) {
-    if (Value *Step = isConstantSequence(Vs)) {
-      errs() << "Int Seq\n";
-      return new IntSequenceNode(Vs, Step, BB, Parent);
+  if (ValidBlock) {
+    errs() << "Valid blocks: testing match\n";
+    if (Node *N = MatchingNode::get(Vs, nullptr, Parent)) {
+      errs() << "Matching\n";
+      printVs(Vs);
+      return N;
     }
   }
-
-  if (Node *N = buildAlternatingSequenceNode(Vs, BB, Parent)) {
-    errs() << "Alt Seq\n";
+  if (GEPSequenceNode *N = GEPSequenceNode::get(Vs, nullptr, Parent)) {
+    if (N->getPointerOperand()) 
+      Inputs.insert(N->getPointerOperand());
+    else Inputs.insert(N->getReference()->getPointerOperand());
+    errs() << "GEP Seq\n";
+    printVs(Vs);
     return N;
   }
-  if (Node *N = buildConstExprNode(Vs, BB, Parent)) {
+
+  if (Node *N = BinOpSequenceNode::get(Vs, nullptr, Parent, SE)) {
+    errs() << "BinOp Seq\n";
+    printVs(Vs);
+    return N;
+  }
+  if (Node *N = buildRecurrenceNode(Vs, nullptr, Parent)) {
+    errs() << "Recurrence\n";
+    Inputs.insert(Vs[0]);
+    return N;
+  }
+
+  if (Node *N = IntSequenceNode::get(Vs, nullptr, Parent)) {
+    errs() << "Int Seq\n";
+    printVs(Vs);
+    return N;
+  }
+
+  if (AlternatingSequenceNode *N = AlternatingSequenceNode::get(Vs, nullptr, Parent)) {
+    errs() << "Alt Seq\n";
+    Inputs.insert(N->getFirst()); //Vs[0]);
+    Inputs.insert(N->getSecond()); //Vs[1]);
+    return N;
+  }
+  if (Node *N = ConstantExprNode::get(Vs, nullptr, Parent)) {
     errs() << "Const Expr\n";
     return N;
   }
 
-  std::vector<ValueT *> Seq1;
-  for (unsigned i = 0; i<Vs.size(); i+=2) {
-    Seq1.push_back(Vs[i]);
-  }
-
-  std::vector<ValueT *> Seq2;
-  for (unsigned i = 1; i<Vs.size(); i+=2) {
-    Seq2.push_back(Vs[i]);
-  }
-  if (tempMatching(Seq1, BB, Parent) && tempMatching(Seq2, BB, Parent)) {
-    errs() << "New Alternating Pattern:\n";
-    for (auto *V : Seq1) {
-      errs() << "1:"; V->dump();
-    }
-    for (auto *V : Seq2) {
-      errs() << "2:"; V->dump();
-    }
-    //BB.dump();
-  } 
-
   errs() << "Mismatching\n";
+  printVs(Vs);
+
   for (auto *V : Vs) Inputs.insert(V);
-  return new MismatchingNode(Vs,BB,Parent);
+  return new MismatchingNode(Vs,nullptr,Parent);
 }
-*/
+
+
+void AlignedBlock::growGraph(Node *N, ScalarEvolution *SE, std::set<Node*> &Visited) {
+  if (Visited.find(N)!=Visited.end()) return;
+  Visited.insert(N);
+
+  auto growGraphNode = [&](auto &Vs, Node *N, std::set<Node*> &Visited) {
+       Node *Child = find(Vs);
+       if (Child==nullptr) {
+         Child = createNode(Vs, N, SE);
+         this->addNode(Child);
+         N->pushChild(Child);
+         growGraph(Child, SE, Visited);
+       } else N->pushChild(Child);
+  };
+
+  switch(N->getNodeType()) {
+    case NodeType::MISMATCH: break;
+    case NodeType::IDENTICAL: break;
+    case NodeType::ALTSEQ: break;
+    case NodeType::INTSEQ: break;
+    case NodeType::RECURRENCE: break;
+    case NodeType::MULTI: {
+       MultiNode *MN = ((MultiNode*)N);
+       for (size_t i = 0; i<MN->getNumGroups(); i++) {
+         auto &Vs = MN->getGroup(i);
+         growGraphNode(Vs, N, Visited);
+       }
+    } break;
+    case NodeType::REDUCTION: {
+       auto &Vs = ((ReductionNode*)N)->getOperands();
+       growGraphNode(Vs, N, Visited);
+    } break;
+    case NodeType::GEPSEQ: {
+       auto &Vs = ((GEPSequenceNode*)N)->getIndices();
+       growGraphNode(Vs, N, Visited);
+    } break;
+    case NodeType::BINOP: {
+       auto &V0 = ((BinOpSequenceNode*)N)->getLeftOperands();
+       growGraphNode(V0, N, Visited);
+
+       auto &V1 = ((BinOpSequenceNode*)N)->getRightOperands();
+       growGraphNode(V1, N, Visited);
+    } break;
+    case NodeType::CONSTEXPR: {
+      auto *CE = dyn_cast<ConstantExpr>(N->getValue(0));
+      if (CE==nullptr) return;
+      for (unsigned i = 0; i<CE->getNumOperands(); i++) {
+        std::vector<Value*> Vs;
+        for (unsigned j = 0; j<N->size(); j++) {
+	  auto *IV = dyn_cast<ConstantExpr>(N->getValue(j));
+	  assert(IV && "ConstantExprNode expecting valid constant expression!");
+	  assert((i < IV->getNumOperands()) && "Invalid number of operands!");
+          Vs.push_back( IV->getOperand(i) );
+        }
+        growGraphNode(Vs, N, Visited);
+      }
+    } break;
+    case NodeType::MATCH: {
+      Instruction *I = dyn_cast<Instruction>(N->getValue(0));
+      if (I==nullptr) return;
+      for (unsigned i = 0; i<I->getNumOperands(); i++) {
+        std::vector<Value*> Vs;
+        for (unsigned j = 0; j<N->size(); j++) {
+	  Instruction *IV = N->getValidInstruction(j);
+	  assert(IV && "Matching node expecting valid instructions!");
+	  assert((i < IV->getNumOperands()) && "Invalid number of operands!");
+          Vs.push_back( IV->getOperand(i) );
+        }
+        growGraphNode(Vs, N, Visited);
+      }
+    } break;
+    default: break;
+  }
+}
+
 
 template<typename ValueT>
 Node *AlignedGraph::find(std::vector<ValueT *> &Vs) {
@@ -1657,7 +1877,7 @@ GEPSequenceNode *buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock *BB, Nod
 
 template<typename ValueT>
 GEPSequenceNode *buildGEPSequence2(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent) {
-  errs() << "GEPSeq2\n";
+  //errs() << "GEPSeq2\n";
   if (!isa<PointerType>(VL[0]->getType())) return nullptr;
   //auto *Ptr = getUnderlyingObject(VL[0]);
   Type *Ty = nullptr;
@@ -1834,8 +2054,8 @@ For example, it may contain 'or' and 'add' -- an 'or' operation can be used if n
 template<typename ValueT>
 BinOpSequenceNode *BinOpSequenceNode::get(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent, ScalarEvolution *SE) {
 //Node *AlignedGraph::buildBinOpSequenceNode(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent) {
-  errs() << "BinOP?\n";
-  VL[0]->dump();
+  //errs() << "BinOP?\n";
+  //VL[0]->dump();
 
   if (!isa<IntegerType>(VL[0]->getType())) return nullptr;
   std::map<unsigned, unsigned> OpcodeFreq;
@@ -2052,19 +2272,10 @@ Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Pa
       return N;
     }
   }
-  /*
-  if (Node *N = buildGEPSequence(Vs, BB, Parent)) {
-    errs() << "GEP Seq\n";
-    return N;
-  }
-  if (Node *N = buildGEPSequence2(Vs, BB, Parent)) {
-    errs() << "GEP Seq\n";
-    return N;
-  }
-  */
   if (GEPSequenceNode *N = GEPSequenceNode::get(Vs, BB, Parent)) {
     if (N->getPointerOperand()) 
-      Inputs.insert(N->getReference()->getPointerOperand());
+      Inputs.insert(N->getPointerOperand());
+    else Inputs.insert(N->getReference()->getPointerOperand());
     errs() << "GEP Seq\n";
     return N;
   }
@@ -2081,14 +2292,6 @@ Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Pa
     return N;
   }
 
-  /*
-  if (allConstant(Vs)) {
-    if (Value *Step = isConstantSequence(Vs)) {
-      errs() << "Int Seq\n";
-      return new IntSequenceNode(Vs, Step, BB, Parent);
-    }
-  }
-  */
   if (Node *N = IntSequenceNode::get(Vs, BB, Parent)) {
     errs() << "Int Seq\n";
     return N;
