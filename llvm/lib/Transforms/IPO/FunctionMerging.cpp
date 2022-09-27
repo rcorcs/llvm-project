@@ -428,14 +428,18 @@ static bool matchCallInsts(const CallBase *CI1, const CallBase *CI2) {
   if (CI1->isInlineAsm() || CI2->isInlineAsm())
     return false;
 
-  if (CI1->getCalledFunction() != CI2->getCalledFunction())
-    return false;
+  //if (CI1->getCalledFunction() != CI2->getCalledFunction())
+  //  return false;
 
-  if (Function *F = CI1->getCalledFunction()) {
-    if (F->isIntrinsic()) {
-      return false;
-    }
+  Function *F1 = CI1->getCalledFunction();
+  Function *F2 = CI2->getCalledFunction();
+  if (F1 && F1->isIntrinsic()) {
+    return false;
   }
+  if (F2 && F2->isIntrinsic()) {
+    return false;
+  }
+  
 
   return CI1->arg_size() == CI2->arg_size() &&
          CI1->getCallingConv() == CI2->getCallingConv() &&
@@ -1674,6 +1678,7 @@ bool CodeMerger::assignPHIOperandsInBlock(
 
         BasicBlock *NewPredBB = *ItP;
 
+	/* //BUG FIXED HERE
         Value *V = nullptr;
 
         if (BlocksReMap.find(NewPredBB) != BlocksReMap.end()) {
@@ -1688,6 +1693,26 @@ bool CodeMerger::assignPHIOperandsInBlock(
           V = UndefValue::get(NewPHI->getType());
 
         NewPHI->addIncoming(V, NewPredBB);
+        */
+	//NEW CODE START
+	if (BlocksReMap.find(NewPredBB) != BlocksReMap.end()) {
+	  for (unsigned Index = 0; Index < PHI->getNumIncomingValues(); Index++) {
+	    if (FoundIndices.count(Index)) continue;
+	    if (PHI->getIncomingBlock(Index)==BlocksReMap[NewPredBB]) {
+              Value *V = MapValue(PHI->getIncomingValue(Index), VMap);
+              FoundIndices.insert(Index);
+              if (V == nullptr)
+                V = UndefValue::get(NewPHI->getType());
+              NewPHI->addIncoming(V, NewPredBB);
+	    }
+	  }
+        } else {
+          Value *V = UndefValue::get(NewPHI->getType());
+          NewPHI->addIncoming(V, NewPredBB);
+	} 
+	//NEW CODE END
+
+
       }
       if (FoundIndices.size() != IncomingBlocks.size()) {
         BB->dump();
