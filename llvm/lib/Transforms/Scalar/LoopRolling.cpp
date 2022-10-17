@@ -551,7 +551,7 @@ public:
     if (I==nullptr) return nullptr;
     if (Ptr && getUnderlyingObject(I)!=Ptr) return nullptr;
     //if (I==nullptr || getUnderlyingObject(I)!=Ptr) return nullptr;
-    if (I->getParent()!=getBlock()) return nullptr;
+    //if (I->getParent()!=getBlock()) return nullptr;
     if (I->getOpcode()!=Instruction::GetElementPtr) return nullptr;
     if (I->getNumOperands()!=RefGEP->getNumOperands()) return nullptr;
 
@@ -1242,6 +1242,8 @@ public:
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
 
+  std::vector<Node*> ScheduledNodes;
+
 private:
   std::vector<BasicBlock*> Blocks;
   std::vector<AlignedBlock*> Successors;
@@ -1321,6 +1323,49 @@ void initializeAlignedRegion(AlignedRegion *AR, BasicBlock *BB, BasicBlock *Exit
   initializeAlignedRegion(AR, BB, ExitBB, Visited);
 }
 
+
+
+class RegionCodeGenerator {
+public:
+
+  RegionCodeGenerator(Function &F) : F(F) {}
+
+  void generate(AlignedRegion &AR);
+
+
+
+  Function &F;
+
+  std::unordered_map<Node*, Value *> NodeToValue;
+
+  BasicBlock *PreHeader;
+  BasicBlock *Header;
+  BasicBlock *Exit;
+  PHINode *IndVar;
+};
+
+void RegionCodeGenerator::generate(AlignedRegion &AR) {
+  LLVMContext &Context = F.getContext();
+
+  PreHeader = BasicBlock::Create(Context, "rolled.reg.pre", &F);
+
+  Header = BasicBlock::Create(Context, "rolled.reg.loop", &F);
+
+  IRBuilder<> Builder(Header);
+
+  Type *IndVarTy = IntegerType::get(Context, 8);
+
+  IndVar = Builder.CreatePHI(IndVarTy, 0);
+
+  Exit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
+
+  for (AlignedBlock *AB : AR.AlignedBlocks) {
+    BasicBlock *BB = BasicBlock::Create(Context, "rolled.reg.bb", &F);
+  }
+
+  F.dump();
+}
+
 bool RegionRoller::run() {
 
   DominatorTree DT(F);
@@ -1376,10 +1421,26 @@ bool RegionRoller::run() {
 	AB->align(nullptr); //SE);
     }
 
+
+    //RegionCodeGenerator RCG(F);
+    //RCG.generate(AR);
+
     AR.releaseMemory();
+    
+    errs() << "Skipping smaller regions\n";
+    break;
   }
 
   return false;
+}
+
+template<typename ValueT>
+void printVs(std::vector<ValueT*> Vs) {
+  for (auto *V : Vs) {
+    if (BasicBlock *BB = dyn_cast<BasicBlock>(V)) 
+      errs() << "  BB: " << BB->getName().str() << "\n";
+    else V->dump();
+  }
 }
 
 
@@ -1388,35 +1449,110 @@ void AlignedBlock::align(ScalarEvolution *SE) {
   errs() << "Aligning:\n";
   std::vector<BasicBlock::reverse_iterator> Its;
   for (BasicBlock *BB : Blocks) {
-    errs() << BB->getName().str() << "\n";
+    //errs() << BB->getName().str() << "\n";
+    BB->dump();
     Its.push_back(BB->rbegin());
   }
-
-  errs() << "starting...\n";
 
   while (true) {
     std::vector<Instruction *> Vs;
 
-    bool ContinueGrowth = true;
     for (unsigned i = 0; i<Blocks.size(); i++) {
-      if (Its[i]==Blocks[i]->rend()) {
-        ContinueGrowth = false;
-	break;
+      if (Its[i]!=Blocks[i]->rend()) {
+        Vs.push_back(&*Its[i]);
       }
-      Vs.push_back(&*Its[i]);
     }
 
-    if (Vs.size() < Blocks.size()) break;
+    if (Vs.size()==0)
+      break;
 
-    Node *N = createNode(Vs,nullptr,SE);
+
+    Node *N = nullptr;
+    if (Vs.size()==Blocks.size())
+      N = find(Vs);
+
     if (N) {
+      errs() << "Node found!\n";
+      printVs(Vs);
+
+      for (unsigned i = 0; i<Blocks.size(); i++) {
+        if (Its[i]!=Blocks[i]->rend()) {
+          Its[i]++;
+        }
+      }
+      
+      ScheduledNodes.push_back(N);
+
+      continue;
+    } else {
+      errs() << "Analyzing\n";
+      printVs(Vs);
+
+      bool ValidGEPNode = true;
+      GEPSequenceNode *RefGEPN = nullptr;
+      for (unsigned i = 0 ;i<Blocks.size(); i++) {
+        if (Its[i]==Blocks[i]->rend())
+          continue;
+
+        if (Node *N = find(&*Its[i])) {
+          if (N->getNodeType()==NodeType::GEPSEQ) {
+            GEPSequenceNode *GEPN = ((GEPSequenceNode*)N);
+            if (RefGEPN==nullptr) RefGEPN = GEPN;
+            else if (GEPN!=RefGEPN) {
+              ValidGEPNode = false;
+            }
+          }
+        }
+      }
+      if (RefGEPN!=nullptr) {
+	 errs() << "Found GEP node\n";
+      }
+      if (ValidGEPNode && RefGEPN!=nullptr) {
+        for (unsigned i = 0 ;i<Blocks.size(); i++) {
+          if (Its[i]==Blocks[i]->rend())
+            continue;
+          if (Node *N = find(&*Its[i])) {
+            if (N->getNodeType()==NodeType::GEPSEQ) {
+              Its[i]++;
+	    }
+	  }
+	}
+        ScheduledNodes.push_back(RefGEPN);
+        continue;
+      }
+    }
+
+    if (Vs.size()<Blocks.size()) {
+      errs() << "Ended with incomplete group of instruction\n";
+      printVs(Vs);
+      break;
+    }
+
+    errs() << "Creating new root node\n";
+    N = createNode(Vs,nullptr,SE);
+    if (N) {
+      ScheduledNodes.push_back(N);
       addNode(N);
       std::set<Node*> Visited;
       growGraph(N, SE, Visited);
-    }
 
-    errs() << "Skipping\n";
-    break;
+      for (unsigned i = 0; i<Blocks.size(); i++) {
+        if (Its[i]!=Blocks[i]->rend()) {
+          Its[i]++;
+        }
+      }
+
+    } else {
+      errs() << "Could not create node\n";
+      break;
+    }
+  }
+
+  std::reverse(ScheduledNodes.begin(), ScheduledNodes.end());
+
+  errs() << "Scheduled nodes:\n";
+  for (Node *N : ScheduledNodes) {
+    errs() << N->getString() << "\n";
   }
 
   errs() << "Done\n";
@@ -1510,15 +1646,6 @@ Node *AlignedBlock::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *B
 }
 
 template<typename ValueT>
-void printVs(std::vector<ValueT*> Vs) {
-  for (auto *V : Vs) {
-    if (BasicBlock *BB = dyn_cast<BasicBlock>(V)) 
-      errs() << "  BB: " << BB->getName().str() << "\n";
-    else V->dump();
-  }
-}
-
-template<typename ValueT>
 Node *AlignedBlock::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvolution *SE) {
   
   errs() << "Creating Node\n";
@@ -1585,6 +1712,7 @@ Node *AlignedBlock::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvol
 
   for (auto *V : Vs) Inputs.insert(V);
   return new MismatchingNode(Vs,nullptr,Parent);
+  //return nullptr;
 }
 
 
@@ -1822,7 +1950,7 @@ GEPSequenceNode *buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock *BB, Nod
   Type *Ty = nullptr;
   for (unsigned i = 0; i<VL.size(); i++) {
     if (auto *GEP = dyn_cast<GetElementPtrInst>(VL[i])) {
-      if (GEP->getParent()!=BB) return nullptr;
+      if (BB && GEP->getParent()!=BB) return nullptr;
       //if (GEP->getPointerOperand()!=Ptr) return nullptr;
       if (GEP->getNumIndices()!=1) return nullptr; //strong restriction
       /*if (!GEP->hasIndices()) return nullptr;
