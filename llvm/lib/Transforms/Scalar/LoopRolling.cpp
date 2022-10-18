@@ -1205,12 +1205,41 @@ public:
   AlignedBlock *getSuccessor(int i) { return Successors[i]; }
   void addSuccessor(AlignedBlock *AB) { Successors.push_back(AB); }
 
+  std::vector<Node*> ScheduledNodes;
+
+  std::vector<BasicBlock*> Blocks;
+private:
+  std::vector<AlignedBlock*> Successors;
+};
+
+class AlignedRegion {
+public:
+  void releaseMemory() {
+    for (AlignedBlock *AB : AlignedBlocks) delete AB;
+    AlignedBlocks.clear();
+    BlockMap.clear();
+  }
+
+  void growGraph(AlignedBlock *AB, Node *N, ScalarEvolution *SE, std::set<Node*> &Visited);
+  template<typename ValueT>
+  Node *find(std::vector<ValueT *> &Vs);
+  Node *find(Instruction *I);
+
+  std::vector<AlignedBlock *> AlignedBlocks;
+  std::map<BasicBlock*, AlignedBlock *> BlockMap;
+
+  std::vector<Node*> Nodes;
+  std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap;
+  std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap2;
+  std::unordered_set<Value *> ValuesInNode;
+  std::unordered_set<Value *> Inputs;
+
   void align(ScalarEvolution *SE);
 
   template<typename ValueT>
   Node *buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent);
   template<typename ValueT>
-  Node *createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvolution *SE);
+  Node *createNode(AlignedBlock *AB, std::vector<ValueT*> Vs, Node *Parent, ScalarEvolution *SE);
 
   void addNode(Node *N) {
     if (N) {
@@ -1228,36 +1257,7 @@ public:
       }
     }
   }
-  template<typename ValueT>
-  Node *find(std::vector<ValueT *> &Vs);
-  Node *find(Instruction *I);
 
-
-  void growGraph(Node *N, ScalarEvolution *SE, std::set<Node*> &Visited);
-
-
-  std::vector<Node*> Nodes;
-  std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap;
-  std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap2;
-  std::unordered_set<Value *> ValuesInNode;
-  std::unordered_set<Value *> Inputs;
-
-  std::vector<Node*> ScheduledNodes;
-
-private:
-  std::vector<BasicBlock*> Blocks;
-  std::vector<AlignedBlock*> Successors;
-};
-
-class AlignedRegion {
-public:
-  std::vector<AlignedBlock *> AlignedBlocks;
-  std::map<BasicBlock*, AlignedBlock *> BlockMap;
-  void releaseMemory() {
-    for (AlignedBlock *AB : AlignedBlocks) delete AB;
-    AlignedBlocks.clear();
-    BlockMap.clear();
-  }
 };
 
 class RegionRoller {
@@ -1386,7 +1386,7 @@ bool RegionRoller::run() {
   if (TopRegion->getExit())
     RegionsByEntry[TopRegion->getEntry()].push_back(TopRegion->getExit());
 
-  //for (auto Region : *TopRegion) {
+  //for (auto Region : *TopRegion) {a
   for (auto It = TopRegion->begin(); It!=TopRegion->end(); It++) {
     errs() << "Sub Region:\n";
     (*It)->dump();
@@ -1398,6 +1398,7 @@ bool RegionRoller::run() {
     errs() << "Reference Region:\n";
     (*It)->dump();
 
+    unsigned CountRegions = 1;
     AlignedRegion AR;
     initializeAlignedRegion(&AR, (*It)->getEntry(), (*It)->getExit());
     BasicBlock *LinkBlock = (*It)->getExit();
@@ -1412,14 +1413,20 @@ bool RegionRoller::run() {
           errs() << "Found Isomorphic:" << LinkBlock->getName().str() << " => " << ExitBB->getName().str() << "\n";
           IsIsomorphic((*It)->getEntry(), (*It)->getExit(), LinkBlock, ExitBB, AR.AlignedBlocks[0]);
 	  NextLB = ExitBB;
+	  CountRegions++;
 	}
       }
       LinkBlock = NextLB;
     }
 
+    if (AR.AlignedBlocks.size() > 1) {
+      errs() << "ISOMORPHIC REGIONS: " << CountRegions << " regions, " << AR.AlignedBlocks.size() << " blocks each!";
+    }
+    /*
     for (auto *AB : AR.AlignedBlocks) {
 	AB->align(nullptr); //SE);
-    }
+    }*/
+    AR.align(nullptr);
 
 
     //RegionCodeGenerator RCG(F);
@@ -1444,122 +1451,123 @@ void printVs(std::vector<ValueT*> Vs) {
 }
 
 
-void AlignedBlock::align(ScalarEvolution *SE) {
+void AlignedRegion::align(ScalarEvolution *SE) {
 
-  errs() << "Aligning:\n";
-  std::vector<BasicBlock::reverse_iterator> Its;
-  for (BasicBlock *BB : Blocks) {
-    //errs() << BB->getName().str() << "\n";
-    BB->dump();
-    Its.push_back(BB->rbegin());
-  }
-
-  while (true) {
-    std::vector<Instruction *> Vs;
-
-    for (unsigned i = 0; i<Blocks.size(); i++) {
-      if (Its[i]!=Blocks[i]->rend()) {
-        Vs.push_back(&*Its[i]);
-      }
+  for (auto *AB : AlignedBlocks) {
+    errs() << "Aligning:\n";
+    std::vector<BasicBlock::reverse_iterator> Its;
+    for (BasicBlock *BB : AB->Blocks) {
+      //errs() << BB->getName().str() << "\n";
+      BB->dump();
+      Its.push_back(BB->rbegin());
     }
 
-    if (Vs.size()==0)
-      break;
+    while (true) {
+      std::vector<Instruction *> Vs;
 
-
-    Node *N = nullptr;
-    if (Vs.size()==Blocks.size())
-      N = find(Vs);
-
-    if (N) {
-      errs() << "Node found!\n";
-      printVs(Vs);
-
-      for (unsigned i = 0; i<Blocks.size(); i++) {
-        if (Its[i]!=Blocks[i]->rend()) {
-          Its[i]++;
+      for (unsigned i = 0; i<AB->Blocks.size(); i++) {
+        if (Its[i]!=AB->Blocks[i]->rend()) {
+          Vs.push_back(&*Its[i]);
         }
       }
-      
-      ScheduledNodes.push_back(N);
 
-      continue;
-    } else {
-      errs() << "Analyzing\n";
-      printVs(Vs);
+      if (Vs.size()==0)
+        break;
 
-      bool ValidGEPNode = true;
-      GEPSequenceNode *RefGEPN = nullptr;
-      for (unsigned i = 0 ;i<Blocks.size(); i++) {
-        if (Its[i]==Blocks[i]->rend())
-          continue;
 
-        if (Node *N = find(&*Its[i])) {
-          if (N->getNodeType()==NodeType::GEPSEQ) {
-            GEPSequenceNode *GEPN = ((GEPSequenceNode*)N);
-            if (RefGEPN==nullptr) RefGEPN = GEPN;
-            else if (GEPN!=RefGEPN) {
-              ValidGEPNode = false;
+      Node *N = nullptr;
+      if (Vs.size()==AB->Blocks.size())
+        N = find(Vs);
+
+      if (N) {
+        errs() << "Node found!\n";
+        printVs(Vs);
+
+        for (unsigned i = 0; i<AB->Blocks.size(); i++) {
+          if (Its[i]!=AB->Blocks[i]->rend()) {
+            Its[i]++;
+          }
+        }
+        
+        AB->ScheduledNodes.push_back(N);
+
+        continue;
+      } else {
+        errs() << "Analyzing\n";
+        printVs(Vs);
+
+        bool ValidGEPNode = true;
+        GEPSequenceNode *RefGEPN = nullptr;
+        for (unsigned i = 0 ;i<AB->Blocks.size(); i++) {
+          if (Its[i]==AB->Blocks[i]->rend())
+            continue;
+
+          if (Node *N = find(&*Its[i])) {
+            if (N->getNodeType()==NodeType::GEPSEQ) {
+              GEPSequenceNode *GEPN = ((GEPSequenceNode*)N);
+              if (RefGEPN==nullptr) RefGEPN = GEPN;
+              else if (GEPN!=RefGEPN) {
+                ValidGEPNode = false;
+              }
             }
           }
         }
-      }
-      if (RefGEPN!=nullptr) {
-	 errs() << "Found GEP node\n";
-      }
-      if (ValidGEPNode && RefGEPN!=nullptr) {
-        for (unsigned i = 0 ;i<Blocks.size(); i++) {
-          if (Its[i]==Blocks[i]->rend())
-            continue;
-          if (Node *N = find(&*Its[i])) {
-            if (N->getNodeType()==NodeType::GEPSEQ) {
-              Its[i]++;
-	    }
-	  }
-	}
-        ScheduledNodes.push_back(RefGEPN);
-        continue;
-      }
-    }
-
-    if (Vs.size()<Blocks.size()) {
-      errs() << "Ended with incomplete group of instruction\n";
-      printVs(Vs);
-      break;
-    }
-
-    errs() << "Creating new root node\n";
-    N = createNode(Vs,nullptr,SE);
-    if (N) {
-      ScheduledNodes.push_back(N);
-      addNode(N);
-      std::set<Node*> Visited;
-      growGraph(N, SE, Visited);
-
-      for (unsigned i = 0; i<Blocks.size(); i++) {
-        if (Its[i]!=Blocks[i]->rend()) {
-          Its[i]++;
+        if (RefGEPN!=nullptr) {
+           errs() << "Found GEP node\n";
+        }
+        if (ValidGEPNode && RefGEPN!=nullptr) {
+          for (unsigned i = 0 ;i<AB->Blocks.size(); i++) {
+            if (Its[i]==AB->Blocks[i]->rend())
+              continue;
+            if (Node *N = find(&*Its[i])) {
+              if (N->getNodeType()==NodeType::GEPSEQ) {
+                Its[i]++;
+              }
+            }
+          }
+          AB->ScheduledNodes.push_back(RefGEPN);
+          continue;
         }
       }
 
-    } else {
-      errs() << "Could not create node\n";
-      break;
+      if (Vs.size()<AB->Blocks.size()) {
+        errs() << "Ended with incomplete group of instruction\n";
+        printVs(Vs);
+        break;
+      }
+
+      errs() << "Creating new root node\n";
+      N = createNode(AB,Vs,nullptr,SE);
+      if (N) {
+        AB->ScheduledNodes.push_back(N);
+        addNode(N);
+        std::set<Node*> Visited;
+        growGraph(AB, N, SE, Visited);
+
+        for (unsigned i = 0; i<AB->Blocks.size(); i++) {
+          if (Its[i]!=AB->Blocks[i]->rend()) {
+            Its[i]++;
+          }
+        }
+
+      } else {
+        errs() << "Could not create node\n";
+        break;
+      }
+    }
+
+    std::reverse(AB->ScheduledNodes.begin(), AB->ScheduledNodes.end());
+
+    errs() << "Scheduled nodes:\n";
+    for (Node *N : AB->ScheduledNodes) {
+      errs() << N->getString() << "\n";
     }
   }
-
-  std::reverse(ScheduledNodes.begin(), ScheduledNodes.end());
-
-  errs() << "Scheduled nodes:\n";
-  for (Node *N : ScheduledNodes) {
-    errs() << N->getString() << "\n";
-  }
-
   errs() << "Done\n";
 }
 
 template<typename ValueT>
-Node *AlignedBlock::find(std::vector<ValueT *> &Vs) {
+Node *AlignedRegion::find(std::vector<ValueT *> &Vs) {
   if (Vs.empty()) return nullptr;
 
   //errs() << "Searching for:\n";
@@ -1586,7 +1594,7 @@ Node *AlignedBlock::find(std::vector<ValueT *> &Vs) {
   return *Result.begin();
 }
 
-Node *AlignedBlock::find(Instruction *I) {
+Node *AlignedRegion::find(Instruction *I) {
   Node *Result = nullptr;
   auto It = NodeMap2.find(I);
   if (It==NodeMap2.end()) return nullptr;
@@ -1602,7 +1610,7 @@ Node *AlignedBlock::find(Instruction *I) {
 }
 
 template<typename ValueT>
-Node *AlignedBlock::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent) {
+Node *AlignedRegion::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent) {
 //RecurrenceNode *RecurrenceNode::get(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent) {
   if (Vs.size()<=1) return nullptr;
 
@@ -1646,14 +1654,14 @@ Node *AlignedBlock::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *B
 }
 
 template<typename ValueT>
-Node *AlignedBlock::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvolution *SE) {
+Node *AlignedRegion::createNode(AlignedBlock *AB, std::vector<ValueT*> Vs, Node *Parent, ScalarEvolution *SE) {
   
   errs() << "Creating Node\n";
 
   bool ValidBlock = true;
   for (unsigned i = 0; i<Vs.size(); i++) {
     if (auto *I = dyn_cast<Instruction>(Vs[i])) {
-      ValidBlock = ValidBlock && (I->getParent()==Blocks[i]);
+      ValidBlock = ValidBlock && (I->getParent()==AB->Blocks[i]);
     }
   }
 
@@ -1716,17 +1724,17 @@ Node *AlignedBlock::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvol
 }
 
 
-void AlignedBlock::growGraph(Node *N, ScalarEvolution *SE, std::set<Node*> &Visited) {
+void AlignedRegion::growGraph(AlignedBlock *AB, Node *N, ScalarEvolution *SE, std::set<Node*> &Visited) {
   if (Visited.find(N)!=Visited.end()) return;
   Visited.insert(N);
 
   auto growGraphNode = [&](auto &Vs, Node *N, std::set<Node*> &Visited) {
        Node *Child = find(Vs);
        if (Child==nullptr) {
-         Child = createNode(Vs, N, SE);
+         Child = createNode(AB, Vs, N, SE);
          this->addNode(Child);
          N->pushChild(Child);
-         growGraph(Child, SE, Visited);
+         growGraph(AB,Child, SE, Visited);
        } else N->pushChild(Child);
   };
 
