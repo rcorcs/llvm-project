@@ -1411,7 +1411,6 @@ void initializeAlignedRegion(AlignedRegion *AR, BasicBlock *BB, BasicBlock *Exit
 }
 
 
-
 class RegionCodeGenerator {
 public:
 
@@ -1429,8 +1428,13 @@ public:
   std::unordered_map<Node*, Value *> NodeToValue;
   std::unordered_map<GlobalVariable*, Instruction *> GlobalLoad;
 
+  std::unordered_set<Instruction *> Garbage;
+  std::vector<Value *> CreatedCode;
+
+
   BasicBlock *PreHeader;
   BasicBlock *Header;
+  BasicBlock *Latch;
   BasicBlock *Exit;
   PHINode *IndVar;
 };
@@ -1617,7 +1621,6 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
         errs() << "Generated: "; NewI->dump();
 #endif
 
-	/*
         for (unsigned i = 0; i<N->size(); i++) {
           if (auto *I = N->getValidInstruction(i)) {
             //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) Garbage.push_back(I);
@@ -1625,6 +1628,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 	  }
 	}
         
+	/*
         generateExtract(N, NewI, Builder);
         */
 #ifdef TEST_DEBUG
@@ -1673,13 +1677,13 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
           NewI->setOperand(i,Operands[i]);
         }
 
-	/*
         for (unsigned i = 0; i<N->size(); i++) {
           if (auto *I = N->getValidInstruction(i)) {
 	    Garbage.insert(I);
 	  }
 	}
         
+	/*
         generateExtract(N, NewI, Builder);
         */
 
@@ -1757,7 +1761,6 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       NodeToValue[N] = NewI;
       //CreatedCode.push_back(NewI);
 
-      /*
       for (unsigned i = 0; i<BON->size(); i++) {
         if (auto *I = BON->getValidInstruction(i)) {
 	  Garbage.insert(I);
@@ -1766,7 +1769,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 	  //}
         }
       }
-      */
+
       NewI->setOperand(0,Op0);
       NewI->setOperand(1,Op1);
 
@@ -2455,14 +2458,12 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
         errs() << "Generated: "; NewI->dump();
 #endif
 
-	/*
         for (unsigned i = 0; i<N->size(); i++) {
           if (auto *I = N->getValidInstruction(i)) {
             //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) Garbage.push_back(I);
 	    Garbage.insert(I);
 	  }
 	}
-	*/
         
         //generateExtract(N, NewI, Builder);
 
@@ -2507,13 +2508,13 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
         }
 	*/
 
-	/*
         for (unsigned i = 0; i<N->size(); i++) {
           if (auto *I = N->getValidInstruction(i)) {
 	    Garbage.insert(I);
 	  }
 	}
         
+	/*
         generateExtract(N, NewI, Builder);
         */
 
@@ -2559,7 +2560,6 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
       //CreatedCode.push_back(GEP);
       NodeToValue[N] = GEP;
 
-      /*
       for (unsigned i = 0; i<GN->size(); i++) {
         if (auto *I = GN->getValidInstruction(i)) {
 	  Garbage.insert(I);
@@ -2569,6 +2569,7 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
         }
       }
 
+      /*
       generateExtract(N, GEP, Builder);
       */
 
@@ -2598,7 +2599,6 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
       NodeToValue[N] = NewI;
       //CreatedCode.push_back(NewI);
 
-      /*
       for (unsigned i = 0; i<BON->size(); i++) {
         if (auto *I = BON->getValidInstruction(i)) {
 	  Garbage.insert(I);
@@ -2608,6 +2608,7 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
         }
       }
 
+      /*
       NewI->setOperand(0,Op0);
       NewI->setOperand(1,Op1);
       
@@ -2927,10 +2928,6 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
 
   IndVar = Builder.CreatePHI(IndVarTy, 0);
 
-  Exit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
-  
-  NodeToValue[AR.ExitLabelNode] = Exit;
-
   std::map<AlignedBlock*, BasicBlock*> ABToBlock;
   for (AlignedBlock *AB : AR.AlignedBlocks) {
     BasicBlock *BB = BasicBlock::Create(Context, "rolled.reg.bb", &F);
@@ -2941,6 +2938,11 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
     NodeToValue[ LN ] = BB; 
     ABToBlock[AB] = BB;
   }
+
+  Latch = BasicBlock::Create(Context, "rolled.reg.latch", &F);
+  NodeToValue[AR.ExitLabelNode] = Latch;
+
+  Exit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
 
   for (AlignedBlock *AB : AR.AlignedBlocks) {
     BasicBlock *BB = ABToBlock[AB];
@@ -2960,7 +2962,7 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
 
   F.dump();
 
-  Builder.SetInsertPoint(Exit);
+  Builder.SetInsertPoint(Latch);
 
   auto *Add = Builder.CreateAdd(IndVar, ConstantInt::get(IndVarTy, 1));
   //CreatedCode.push_back(Add);
@@ -2975,9 +2977,13 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
     Cond = CondI;
   //}
 
-  //if Profitable
+
+  F.dump();
+  bool Profitable = false;
+
+  if (Profitable) {
     IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
-    IndVar->addIncoming(Add,Header);
+    IndVar->addIncoming(Add,Latch);
 
     auto *Br = Builder.CreateCondBr(Cond,Header,Exit);
     //CreatedCode.push_back(Br);
@@ -2995,8 +3001,80 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
     BasicBlock *EntryBB = dyn_cast<BasicBlock>(NodeToValue[N]);
     Builder.CreateBr(EntryBB);
 
+
   F.dump();
 
+    errs() << "Erasing old instructions\n";
+    for (Instruction *I : Garbage) {
+      for (Use &OpU : I->operands()) {
+        Value *OpV = OpU.get();
+        OpU.set(nullptr);
+      }
+    }
+    /*
+    for (Instruction *I : Garbage) {
+      I->replaceAllUsesWith(nullptr);
+    }
+    */
+    for (Instruction *I : Garbage) {
+      I->eraseFromParent();
+    }
+
+    std::set<BasicBlock *> DeleteBlocks;
+    for (AlignedBlock *AB : AR.AlignedBlocks) {
+      for (BasicBlock *BB : AB->Blocks) {
+	      DeleteBlocks.insert(BB);
+      }
+    }
+
+    BasicBlock *FirstEntry = AR.EntryBlocks[0];
+    BasicBlock *LastExit = AR.ExitBlocks[AR.ExitBlocks.size()-1];
+
+    DeleteBlocks.erase(FirstEntry);
+    DeleteBlocks.erase(LastExit);
+
+    for (BasicBlock *BB : DeleteBlocks) BB->eraseFromParent();
+
+    Builder.SetInsertPoint(FirstEntry);
+    Builder.CreateBr(PreHeader);
+
+    Builder.SetInsertPoint(Exit);
+    Builder.CreateBr(LastExit);
+
+  } else {
+    std::set<BasicBlock *> DeleteBlocks;
+ 
+
+    DeleteBlocks.insert(PreHeader);
+    DeleteBlocks.insert(Header);
+    DeleteBlocks.insert(Latch);
+    DeleteBlocks.insert(Exit);
+
+    for (auto &Pair : ABToBlock) {
+      DeleteBlocks.insert(Pair.second);
+    }
+
+    std::set<Instruction*> DeleteInsts;
+    for (BasicBlock *BB : DeleteBlocks) {
+      for (Instruction &I : *BB) {
+	DeleteInsts.insert(&I);
+        for (Use &OpU : I.operands()) {
+          Value *OpV = OpU.get();
+          OpU.set(nullptr);
+        }
+      }
+    }
+
+    for (Instruction *I : DeleteInsts) {
+      I->eraseFromParent();
+    }
+    for (BasicBlock *BB : DeleteBlocks) {
+      BB->eraseFromParent();
+    }
+
+  }
+
+  F.dump();
 }
 
 bool RegionRoller::run() {
