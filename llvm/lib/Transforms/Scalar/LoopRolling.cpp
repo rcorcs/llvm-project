@@ -2914,8 +2914,6 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
   }
 }
 
-
-
 void RegionCodeGenerator::generate(AlignedRegion &AR) {
   LLVMContext &Context = F.getContext();
 
@@ -2932,7 +2930,6 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
   Exit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
   
   NodeToValue[AR.ExitLabelNode] = Exit;
-
 
   std::map<AlignedBlock*, BasicBlock*> ABToBlock;
   for (AlignedBlock *AB : AR.AlignedBlocks) {
@@ -2962,6 +2959,44 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
   }
 
   F.dump();
+
+  Builder.SetInsertPoint(Exit);
+
+  auto *Add = Builder.CreateAdd(IndVar, ConstantInt::get(IndVarTy, 1));
+  //CreatedCode.push_back(Add);
+
+  Value *Cond = nullptr;
+  //if (AltSeqCmp && G.Root->size()==2) {
+  //  Cond = AltSeqCmp;
+  //} else {
+    auto *CondI = Builder.CreateICmpNE(Add, ConstantInt::get(IndVarTy, AR.AlignedBlocks.size()));
+    //CreatedCode.push_back(CondI);
+
+    Cond = CondI;
+  //}
+
+  //if Profitable
+    IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
+    IndVar->addIncoming(Add,Header);
+
+    auto *Br = Builder.CreateCondBr(Cond,Header,Exit);
+    //CreatedCode.push_back(Br);
+
+    Builder.SetInsertPoint(PreHeader);
+    Builder.CreateBr(Header);
+
+
+    Builder.SetInsertPoint(Header);
+
+    Node *N = AR.find(AR.EntryBlocks);
+    if (N==nullptr) {
+      errs() << "ERROR: could not map to entry block\n";
+    }
+    BasicBlock *EntryBB = dyn_cast<BasicBlock>(NodeToValue[N]);
+    Builder.CreateBr(EntryBB);
+
+  F.dump();
+
 }
 
 bool RegionRoller::run() {
