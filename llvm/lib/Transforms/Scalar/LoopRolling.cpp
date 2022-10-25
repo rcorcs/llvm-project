@@ -62,6 +62,18 @@ static std::string demangle(const char* name) {
   return (status == 0) ? res.get() : std::string(name);
 }
 
+template<typename ValueT>
+void printVs(std::vector<ValueT*> Vs) {
+  for (auto *V : Vs) {
+    if (BasicBlock *BB = dyn_cast<BasicBlock>(V)) 
+      errs() << "  BB: " << BB->getName().str() << "\n";
+    else V->dump();
+  }
+}
+
+
+
+
 /// \returns True if all of the values in \p VL are constants (but not
 /// globals/constant expressions).
 template<typename ValueT>
@@ -208,7 +220,7 @@ static bool match(Value *V1, Value *V2) {
 }
 
 enum NodeType {
-  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, REDUCTION, RECURRENCE, MISMATCH, MULTI
+  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, REDUCTION, RECURRENCE, MISMATCH, MULTI, LABEL
 };
 
 class Node {
@@ -413,6 +425,34 @@ public:
     return "mismatch";
   }
 };
+
+class LabelNode : public Node {
+public:
+  template<typename ValueT>
+  LabelNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::LABEL,Vs,BB,Parent) {}
+
+  Instruction *getValidInstruction(unsigned i) {
+    return nullptr;
+  }
+
+  std::string getString() {
+    return "label";
+  }
+
+  template<typename ValueT>
+  static LabelNode *get(std::vector<ValueT*> &Vs, BasicBlock *BB=nullptr, Node *Parent=nullptr) {
+    bool AllBlocks = true;
+    for (unsigned i = 0; i<Vs.size(); i++) {
+      AllBlocks = AllBlocks && isa<BasicBlock>(Vs[i]);
+    }
+    if (AllBlocks) {
+      return new LabelNode(Vs,BB,Parent);
+    }
+    return nullptr;
+  }
+};
+
+
 
 class IdenticalNode : public Node {
 public:
@@ -1233,7 +1273,46 @@ public:
     return nullptr;
   }
 
+  template<typename ValueT>
+  AlignedBlock *getAlignedBlock(std::vector<ValueT *> &Vs) {
+    std::set<AlignedBlock*> FoundAlignedBlocks;
+    bool AllBlocks = true;
+    for (unsigned i = 0; i<Vs.size(); i++) {
+      if (auto *BB = dyn_cast<BasicBlock>(Vs[i])) {
+        if (AlignedBlock *ABX = getAlignedBlock(BB))
+          FoundAlignedBlocks.insert(ABX);
+      } else AllBlocks = false;
+    }
+
+    bool ValidBlock = false;
+    if (AllBlocks && FoundAlignedBlocks.size()==1) {
+      ValidBlock = true;
+      AlignedBlock *AB = *FoundAlignedBlocks.begin();
+      for (unsigned i = 0; i<Vs.size(); i++) {
+        if (auto *BB = dyn_cast<BasicBlock>(Vs[i])) {
+          ValidBlock = ValidBlock && (BB==AB->Blocks[i]);
+        }
+      }
+      if (ValidBlock) return AB;
+    }
+    return nullptr;
+  }
+
+
+  Node *getLabelNode(AlignedBlock *AB) {
+    if (ABToNode.find(AB)!=ABToNode.end()) return ABToNode[AB];
+    return nullptr;
+  }
+
+
+  std::vector<BasicBlock*> EntryBlocks;
+  std::vector<BasicBlock*> ExitBlocks;
+  
+  Node *ExitLabelNode;
+
+
   std::vector<AlignedBlock *> AlignedBlocks;
+  std::map<AlignedBlock*, Node*> ABToNode;
   std::map<BasicBlock*, AlignedBlock *> BlockMap;
 
   std::vector<Node*> Nodes;
@@ -1338,19 +1417,1504 @@ public:
 
   RegionCodeGenerator(Function &F) : F(F) {}
 
+  Value *cloneGraph(Node *N, IRBuilder<> &Builder);
+  void setNodeOperands(Node *N);
+  Value *generateMismatchingCode(std::vector<Value *> &VL, IRBuilder<> &Builder);
+  void generateNode(Node *N, IRBuilder<> &Builder);
   void generate(AlignedRegion &AR);
-
 
 
   Function &F;
 
   std::unordered_map<Node*, Value *> NodeToValue;
+  std::unordered_map<GlobalVariable*, Instruction *> GlobalLoad;
 
   BasicBlock *PreHeader;
   BasicBlock *Header;
   BasicBlock *Exit;
   PHINode *IndVar;
 };
+
+Value *RegionCodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilder<> &Builder) {
+  Module *M = F.getParent();
+  LLVMContext &Context = F.getContext();
+
+  bool AllSame = true;
+  for (unsigned i = 0; i<VL.size(); i++) {
+    AllSame = AllSame && VL[i]==VL[0];
+  }
+  if (AllSame) return VL[0];
+
+  if (allConstant(VL)) {
+    errs() << "All constants\n";
+
+    auto *ArrTy = ArrayType::get(VL[0]->getType(), VL.size());
+
+    SmallVector<Constant*,8> Consts;
+    for (auto *V : VL) Consts.push_back(dyn_cast<Constant>(V));
+
+    Value *IndexedValue = nullptr;
+    for (auto &Pair : GlobalLoad) {
+      auto *GA = Pair.first;
+
+      if (GA->hasInitializer()) {
+        auto *C = GA->getInitializer();
+        auto *GArrTy = dyn_cast<ArrayType>(C->getType());
+        if (GArrTy==nullptr) continue;
+	if (ArrTy!=GArrTy) continue;
+        if (GArrTy->getNumElements()!=Consts.size()) continue;
+        for (unsigned i = 0; i<Consts.size(); i++) {
+          if (C->getAggregateElement(i)!=Consts[i]) continue;
+        }
+        //Found Array
+        errs() << "Found Array: "; GA->dump();
+        IndexedValue = Pair.second;
+        break;
+      }
+    }
+    if (IndexedValue==nullptr) {
+      auto *ConstArray = ConstantArray::get(ArrTy, Consts);
+      GlobalVariable *GArray = new GlobalVariable(*M, ArrTy,true,GlobalValue::LinkageTypes::PrivateLinkage,ConstArray);
+      //CreatedCode.push_back(GArray);
+      //GArray->setInitializer(ConstArray);
+      SmallVector<Value*,8> Indices;
+      Type *IndVarTy = IntegerType::get(Context, 8);
+      Indices.push_back(ConstantInt::get(IndVarTy, 0));
+      Indices.push_back(IndVar);
+
+      errs() << "Created array: "; GArray->dump();
+
+      auto *GEP = Builder.CreateGEP(GArray, Indices);
+      //CreatedCode.push_back(GEP);
+
+      auto *Load = Builder.CreateLoad(VL[0]->getType(), GEP);
+      //CreatedCode.push_back(Load);
+
+      GlobalLoad[GArray] = Load;
+      IndexedValue = Load;
+    }
+    return IndexedValue;
+  } else {
+    errs() << "Non constants\n";
+
+    errs() << "Array Type: " << VL.size() << ":"; VL[0]->getType()->dump();
+
+    //BasicBlock &Entry = F->getEntryBlock();
+    //IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
+    IRBuilder<> ArrBuilder(PreHeader);
+
+    Type *IndVarTy = IntegerType::get(Context, 8);
+    Value *ArrPtr = ArrBuilder.CreateAlloca(VL[0]->getType(), ConstantInt::get(IndVarTy, VL.size()));
+    //CreatedCode.push_back(ArrPtr);
+    
+    errs() << "Created array: "; ArrPtr->dump();
+
+    //ArrBuilder.SetInsertPoint(PreHeaderPt);
+    for (unsigned i = 0; i<VL.size(); i++) {
+      auto *GEP = ArrBuilder.CreateGEP(ArrPtr, ConstantInt::get(IndVarTy, i));
+      //CreatedCode.push_back(GEP);
+      auto *Store = ArrBuilder.CreateStore(VL[i], GEP);
+      //CreatedCode.push_back(Store);
+    }
+
+    auto *GEP = Builder.CreateGEP(ArrPtr, IndVar);
+    //CreatedCode.push_back(GEP);
+
+    auto *Load = Builder.CreateLoad(VL[0]->getType(), GEP);
+    //CreatedCode.push_back(Load);
+    
+    return Load;
+  }
+  return VL[0]; //TODO: return nullptr?
+}
+
+
+Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
+  if(N->getNodeType()==NodeType::LABEL) {
+	  errs() << "Getting Label operand\n";
+	  printVs(N->getValues());
+  }
+
+  if (NodeToValue.find(N)!=NodeToValue.end()) {
+	  errs() << "Found Label operand\n";
+	  if (NodeToValue[N]==nullptr) errs() << "block is null\n";
+	  //else  NodeToValue[N]->dump();
+
+	  return NodeToValue[N];
+  }
+
+  errs() << "Here?? need to generate node value\n";
+  switch(N->getNodeType()) {
+    case NodeType::IDENTICAL: {
+#ifdef TEST_DEBUG
+      errs() << "Generating IDENTICAL\n";
+#endif
+      return N->getValue(0);
+    }
+    case NodeType::MULTI: {
+#ifdef TEST_DEBUG
+      errs() << "Generating MULTI\n";
+#endif
+      for (unsigned i = 0; i<N->getNumChildren(); i++) {
+        cloneGraph(N->getChild(i), Builder);
+      }
+      return nullptr; //there is no single value to return
+    }
+    case NodeType::MATCH: {
+#ifdef TEST_DEBUG
+      errs() << "Generating MATCH\n";
+#endif
+
+#ifdef TEST_DEBUG
+      errs() << "Match: "; 
+      if (isa<Function>(N->getValue(0))) {
+        errs() << N->getValue(0)->getName() << "\n";
+      } else {
+        errs() << "\n";
+        for (auto *V : N->getValues()) V->dump();
+      }
+#endif
+      Instruction *I = dyn_cast<Instruction>(N->getValue(0));
+      if (I) {
+        Instruction *NewI = I->clone();
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,nullptr);
+        }
+        NodeToValue[N] = NewI;
+
+        std::vector<Value*> Operands;
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          Operands.push_back(cloneGraph(N->getChild(i), Builder));
+        }
+
+#ifdef TEST_DEBUG
+        errs() << "Operands done!\n";
+#endif
+
+        SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
+        NewI->getAllMetadata(MDs);
+        for (std::pair<unsigned, MDNode *> MDPair : MDs) {
+          NewI->setMetadata(MDPair.first, nullptr);
+        }
+
+	if (!MatchAlignment) {
+          if (auto *LI = dyn_cast<LoadInst>(NewI)) {
+            LI->setAlignment(Align());
+	  }
+	  else if (auto *SI = dyn_cast<StoreInst>(NewI)) {
+            SI->setAlignment(Align());
+	  }
+	}
+	
+
+        Builder.Insert(NewI);
+        //CreatedCode.push_back(NewI);
+
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,Operands[i]);
+        }
+#ifdef TEST_DEBUG
+        errs() << "Generated: "; NewI->dump();
+#endif
+
+	/*
+        for (unsigned i = 0; i<N->size(); i++) {
+          if (auto *I = N->getValidInstruction(i)) {
+            //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) Garbage.push_back(I);
+	    Garbage.insert(I);
+	  }
+	}
+        
+        generateExtract(N, NewI, Builder);
+        */
+#ifdef TEST_DEBUG
+	errs() << "Gen: "; NewI->dump();
+#endif
+        return NewI;
+      } else return N->getValue(0); //TODO: maybe an assert false
+    }
+    case NodeType::CONSTEXPR: {
+#ifdef TEST_DEBUG
+      errs() << "Generating CONSTEXPR\n";
+#endif
+
+#ifdef TEST_DEBUG
+      errs() << "Matching ConstExpr: "; 
+      if (isa<Function>(N->getValue(0))) {
+        errs() << N->getValue(0)->getName() << "\n";
+      } else {
+        errs() << "\n";
+        for (auto *V : N->getValues()) V->dump();
+      }
+#endif
+      auto *I = dyn_cast<ConstantExpr>(N->getValue(0));
+      if (I) {
+        Instruction *NewI = I->getAsInstruction();
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,nullptr);
+        }
+        NodeToValue[N] = NewI;
+
+        std::vector<Value*> Operands;
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          Operands.push_back(cloneGraph(N->getChild(i), Builder));
+        }
+
+        SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
+        NewI->getAllMetadata(MDs);
+        for (std::pair<unsigned, MDNode *> MDPair : MDs) {
+          NewI->setMetadata(MDPair.first, nullptr);
+        }
+
+        Builder.Insert(NewI);
+        //CreatedCode.push_back(NewI);
+
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,Operands[i]);
+        }
+
+	/*
+        for (unsigned i = 0; i<N->size(); i++) {
+          if (auto *I = N->getValidInstruction(i)) {
+	    Garbage.insert(I);
+	  }
+	}
+        
+        generateExtract(N, NewI, Builder);
+        */
+
+#ifdef TEST_DEBUG
+        errs() << "Generated: "; NewI->dump();
+#endif
+
+        return NewI;
+      } else return N->getValue(0); //TODO: maybe an assert false
+    }
+    case NodeType::GEPSEQ: {
+#ifdef TEST_DEBUG
+      errs() << "Generating GEPSEQ\n";
+#endif
+      return nullptr;
+      /*
+      auto *GN = (GEPSequenceNode*)N;
+
+      Value *Ptr = GN->getPointerOperand();
+      if (Ptr==nullptr) {
+        IRBuilder<> PreHeaderBuilder(PreHeader);
+        auto *GEP = GN->getReference()->clone();
+        auto *IdxTy = GN->getReference()->getOperand(GN->getReference()->getNumOperands()-1)->getType();
+        auto *Zero = ConstantInt::get(IdxTy, 0);
+        GEP->setOperand(GN->getReference()->getNumOperands()-1, Zero);
+        PreHeaderBuilder.Insert(GEP);
+        Ptr = GEP;
+      }
+
+      assert(GN->getNumChildren() && "Expected child with indices!");
+      Value *IndVarIdx = cloneGraph(GN->getChild(0), Builder);
+#ifdef TEST_DEBUG
+      errs() << "Closing GEPSEQ\n";
+#endif
+      //auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(GN->getPointerOperand(), IndVarIdx));
+      auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(Ptr, IndVarIdx));
+      //CreatedCode.push_back(GEP);
+      NodeToValue[N] = GEP;
+
+      for (unsigned i = 0; i<GN->size(); i++) {
+        if (auto *I = GN->getValidInstruction(i)) {
+	  Garbage.insert(I);
+          //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
+          //  Garbage.push_back(I);
+	  //}
+        }
+      }
+
+      generateExtract(N, GEP, Builder);
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; GEP->dump();
+#endif
+      return GEP;
+      */
+    }
+    case NodeType::BINOP: {
+#ifdef TEST_DEBUG
+      errs() << "Generating BINOP\n";
+#endif
+      auto *BON = (BinOpSequenceNode*)N;
+
+      assert(BON->getNumChildren() && "Expected child with varying operands!");
+      Value *Op0 = cloneGraph(BON->getChild(0), Builder);
+      Value *Op1 = cloneGraph(BON->getChild(1), Builder);
+
+#ifdef TEST_DEBUG
+      errs() << "Closing BINOP\n";
+#endif
+      Instruction *NewI = BON->getReference()->clone();
+      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+        NewI->setOperand(i,nullptr);
+      }
+      Builder.Insert(NewI);
+      NodeToValue[N] = NewI;
+      //CreatedCode.push_back(NewI);
+
+      /*
+      for (unsigned i = 0; i<BON->size(); i++) {
+        if (auto *I = BON->getValidInstruction(i)) {
+	  Garbage.insert(I);
+          //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
+          //  Garbage.push_back(I);
+	  //}
+        }
+      }
+      */
+      NewI->setOperand(0,Op0);
+      NewI->setOperand(1,Op1);
+
+      //generateExtract(N, NewI, Builder);
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewI->dump();
+#endif
+      return NewI;
+    }
+    /*
+    case NodeType::RECURRENCE: {
+#ifdef TEST_DEBUG
+      errs() << "Generating RECURRENCE\n";
+#endif
+      auto *RN = (RecurrenceNode*)N;
+          
+      PHINode *PHI = nullptr;
+      if (Header->getFirstNonPHI()) {
+        IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+        PHI = PHIBuilder.CreatePHI(RN->getStartValue()->getType(),0);
+      } else {
+        PHI = Builder.CreatePHI(RN->getStartValue()->getType(),0);
+      }
+      CreatedCode.push_back(PHI);
+      PHI->addIncoming(RN->getStartValue(),PreHeader);
+      NodeToValue[N] = PHI;
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; PHI->dump();
+#endif
+      
+      return PHI;
+    }
+    case NodeType::REDUCTION: {
+#ifdef TEST_DEBUG
+      errs() << "Generating REDUCTION\n";
+#endif
+      auto *RN = (ReductionNode*)N;
+
+      assert(RN->getNumChildren() && "Expected child with varying operands!");
+      Value *Op = cloneGraph(RN->getChild(0), Builder);
+#ifdef TEST_DEBUG
+      errs() << "Closing REDUCTION\n";
+#endif
+      Instruction *NewI = RN->getBinaryOperator()->clone();
+      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+        NewI->setOperand(i,nullptr);
+      }
+      Builder.Insert(NewI);
+      CreatedCode.push_back(NewI);
+      NodeToValue[N] = NewI;
+
+      for (unsigned i = 0; i<RN->size(); i++) {
+        if (auto *I = RN->getValidInstruction(i)) {
+	  Garbage.insert(I);
+        }
+      }
+
+      PHINode *PHI = nullptr;
+      if (Header->getFirstNonPHI()) {
+        IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+        PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      } else {
+        PHI = Builder.CreatePHI(NewI->getType(),2);
+      }
+      //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
+      //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      CreatedCode.push_back(PHI);
+      PHI->addIncoming(NewI,Header);
+      PHI->addIncoming(RN->getStartValue(),PreHeader);
+      NewI->setOperand(0,PHI);
+      NewI->setOperand(1,Op);
+
+      Extracted[RN->getBinaryOperator()] = NewI;//PHI;
+      generateExtract(N, NewI, Builder);
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewI->dump();
+#endif
+      return NewI;
+    }
+    */
+    case NodeType::INTSEQ: {
+#ifdef TEST_DEBUG
+      errs() << "Generating INTSEQ\n";
+#endif
+
+      Value *NewV = nullptr;
+
+      auto *ISN = (IntSequenceNode*)N;
+      auto *StartValue = dyn_cast<ConstantInt>(ISN->getStart());
+      auto *StepValue = dyn_cast<ConstantInt>(ISN->getStep());
+      Value *CastIndVar = IndVar;
+      //if (CachedCastIndVar.find(StartValue->getType())!=CachedCastIndVar.end()) {
+      //  CastIndVar = CachedCastIndVar[StartValue->getType()];
+      //} else {
+	auto *CIndVarI = Builder.CreateIntCast(IndVar, StartValue->getType(), false);
+	if (CIndVarI!=IndVar) {
+          //CreatedCode.push_back(CastIndVar);
+          //CachedCastIndVar[StartValue->getType()] = CIndVarI;
+          CastIndVar = CIndVarI;
+	}
+      //}
+      if (StartValue->isZero() && StepValue->isOne()){
+        NewV = CastIndVar;
+      } else if (StepValue->isZero()){
+        NewV = StartValue;
+      } else {
+	Value *Factor = CastIndVar;
+	if (!StepValue->isOne()) {
+          auto *Mul = Builder.CreateMul(CastIndVar, StepValue);
+          //CreatedCode.push_back(Mul);
+	  Factor = Mul;
+	}
+	auto *Add = Builder.CreateAdd(Factor, StartValue);
+        //CreatedCode.push_back(Add);
+	NewV = Add;
+      }
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewV->dump();
+#endif
+      NodeToValue[N] = NewV;
+      return NewV;
+    }
+    /*
+    case NodeType::ALTSEQ: {
+#ifdef TEST_DEBUG
+      errs() << "Generating ALTSEQ\n";
+#endif
+
+      auto *ASN = (AlternatingSequenceNode*)N;
+
+      auto *SeqTy = ASN->getFirst()->getType();
+
+      errs() << "Values:\n";
+      for (unsigned i = 0; i<N->size(); i++) N->getValue(i)->dump();
+
+      Value *NewV = nullptr;
+
+      auto IsNegatedInt = [](const APInt &V1, const APInt &V2) -> bool {
+	APInt NegV1(V1);
+        NegV1.negate(); //in place
+	return V1.eq(V2);
+      };
+
+      auto *CInt1 = dyn_cast<ConstantInt>(ASN->getFirst());
+      auto *CInt2 = dyn_cast<ConstantInt>(ASN->getSecond());
+      if (CInt1 && CInt2 && CInt1->isZero() && CInt2->isOne()) {
+        errs() << "Generated Version 1:\n";
+	
+	if (CachedRem2.find(SeqTy)!=CachedRem2.end()) {
+          NewV = CachedRem2[SeqTy];
+	} else {
+
+        Value *CastIndVar = IndVar;
+        if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
+          CastIndVar = CachedCastIndVar[SeqTy];
+        } else {
+          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+          if (CIndVarI!=IndVar) {
+            CreatedCode.push_back(CastIndVar);
+            CachedCastIndVar[SeqTy] = CIndVarI;
+            CastIndVar = CIndVarI;
+          }
+        }
+
+        auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
+        if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+          CreatedCode.push_back(Rem2I);
+        Rem2->dump();
+
+        CachedRem2[SeqTy] = Rem2;
+
+        NewV = Rem2;
+	}
+      } else if (CInt1 && CInt2 && IsNegatedInt(CInt1->getValue(), CInt2->getValue()) ) {
+        errs() << "Generated Version 2:\n";
+        PHINode *PHI = nullptr;
+        if (Header->getFirstNonPHI()) {
+          IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+          PHI = PHIBuilder.CreatePHI(SeqTy,2);
+        } else {
+          PHI = Builder.CreatePHI(SeqTy,2);
+        }
+        //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
+        //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+        CreatedCode.push_back(PHI);
+        PHI->addIncoming(CInt1,PreHeader);
+
+	auto Neg = Builder.CreateNeg(PHI);
+        PHI->addIncoming(Neg,Header);
+
+        if (auto *NegI = dyn_cast<Instruction>(Neg))
+          CreatedCode.push_back(NegI);
+
+	PHI->dump();
+	Neg->dump();
+
+	NewV = PHI;
+      } else if (CInt1 && CInt2) {
+        errs() << "Generated Version 3:\n";
+
+        Value *Rem2 = nullptr;
+	if (CachedRem2.find(SeqTy)!=CachedRem2.end()) {
+          Rem2 = CachedRem2[SeqTy];
+	} else {
+	
+          Value *CastIndVar = IndVar;
+          if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
+            CastIndVar = CachedCastIndVar[SeqTy];
+          } else {
+            auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+            if (CIndVarI!=IndVar) {
+              CreatedCode.push_back(CastIndVar);
+              CachedCastIndVar[SeqTy] = CIndVarI;
+              CastIndVar = CIndVarI;
+            }
+          }
+
+	  Rem2 = CastIndVar;
+	  if (G.Root->size()>2){
+            Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
+            if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+              CreatedCode.push_back(Rem2I);
+            Rem2->dump();
+	  }
+
+
+          CachedRem2[SeqTy] = Rem2;
+
+	}
+	APInt Diff(CInt2->getValue());
+	Diff -= CInt1->getValue();
+
+	auto *Mul = Builder.CreateMul(Rem2, ConstantInt::get(SeqTy, Diff));
+        if (auto *MulI = dyn_cast<Instruction>(Mul))
+          CreatedCode.push_back(MulI);
+        Mul->dump();
+
+	auto *Add = Builder.CreateAdd(Mul, ASN->getFirst());
+        if (auto *AddI = dyn_cast<Instruction>(Add))
+          CreatedCode.push_back(AddI);
+
+	Add->dump();
+
+	NewV = Add;
+        
+      } else {
+        errs() << "Generated Version 4:\n";
+
+	if (AltSeqCmp==nullptr) {
+
+	Value *Rem2 = IndVar;
+
+	if (CachedRem2.find(IndVar->getType())!=CachedRem2.end()) {
+          Rem2 = CachedRem2[IndVar->getType()];
+	} else {
+	
+	if (G.Root->size()>2){
+          Rem2 = Builder.CreateURem(IndVar, ConstantInt::get(IndVar->getType(), 2));
+          if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+            CreatedCode.push_back(Rem2I);
+          Rem2->dump();
+
+          CachedRem2[IndVar->getType()] = Rem2;
+	}
+
+	}
+
+        Value *Cond = Builder.CreateICmpEQ(Rem2, ConstantInt::get(IndVar->getType(), 0));
+        if (auto *CondI = dyn_cast<Instruction>(Cond))
+          CreatedCode.push_back(CondI);
+        Cond->dump();
+        
+	  AltSeqCmp = Cond;
+	}
+        auto *Sel = Builder.CreateSelect(AltSeqCmp, ASN->getFirst(), ASN->getSecond());
+        if (auto *SelI = dyn_cast<Instruction>(Sel))
+          CreatedCode.push_back(SelI);
+
+        Sel->dump();
+
+	NewV = Sel;
+      }
+      if (NewV) NodeToValue[N] = NewV;
+      return NewV;
+    }
+    */
+    case NodeType::MISMATCH: {
+      errs() << "What should we do here?\n";
+      return nullptr;
+      /*
+      Value *NewV = generateMismatchingCode(N->getValues(), Builder);
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewV->dump();
+#endif
+      NodeToValue[N] = NewV;
+      return NewV;
+      */
+    }
+    default:
+      assert(true && "Unknown node type!");
+  }
+}
+
+void RegionCodeGenerator::setNodeOperands(Node *N) {
+  //if (NodeToValue.find(N)!=NodeToValue.end()) return NodeToValue[N];
+
+  switch(N->getNodeType()) {
+    case NodeType::IDENTICAL: {
+#ifdef TEST_DEBUG
+      errs() << "Setting operands IDENTICAL\n";
+#endif
+      break;
+    }
+    case NodeType::MATCH: {
+#ifdef TEST_DEBUG
+      errs() << "Setting operands MATCH\n";
+#endif
+
+      Instruction *I = dyn_cast<Instruction>(N->getValue(0));
+      if (I) {
+  
+        Instruction *NewI = dyn_cast<Instruction>(NodeToValue[N]);
+        IRBuilder<> Builder(NewI);
+
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          NewI->setOperand(i,cloneGraph(N->getChild(i), Builder));
+        }
+
+      }
+      break;
+    }
+    case NodeType::CONSTEXPR: {
+#ifdef TEST_DEBUG
+      errs() << "Setting operands CONSTEXPR\n";
+#endif
+
+      auto *I = dyn_cast<ConstantExpr>(N->getValue(0));
+      if (I) {
+        Instruction *NewI = dyn_cast<Instruction>(NodeToValue[N]);
+        IRBuilder<> Builder(NewI);
+
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          NewI->setOperand(i,cloneGraph(N->getChild(i), Builder));
+        }
+
+      }
+      break;
+    }
+    case NodeType::GEPSEQ: {
+      errs() << "setting operands GEPSEQ\n";
+      auto *GN = (GEPSequenceNode*)N;
+        
+      Instruction *NewI = dyn_cast<Instruction>(NodeToValue[N]);
+      IRBuilder<> Builder(NewI);
+
+      Value *IndVarIdx = cloneGraph(GN->getChild(0), Builder);
+      NewI->setOperand(NewI->getNumOperands()-1, IndVarIdx);
+
+      break;
+    }
+    case NodeType::BINOP: {
+#ifdef TEST_DEBUG
+      errs() << "Generating BINOP\n";
+#endif
+      auto *BON = (BinOpSequenceNode*)N;
+      Instruction *NewI = dyn_cast<Instruction>(NodeToValue[BON]);
+      IRBuilder<> Builder(NewI);
+
+      assert(BON->getNumChildren() && "Expected child with varying operands!");
+      Value *Op0 = cloneGraph(BON->getChild(0), Builder);
+      Value *Op1 = cloneGraph(BON->getChild(1), Builder);
+
+#ifdef TEST_DEBUG
+      errs() << "Closing BINOP\n";
+#endif
+      NewI->setOperand(0,Op0);
+      NewI->setOperand(1,Op1);
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewI->dump();
+#endif
+      break;
+    }
+    /*
+    case NodeType::RECURRENCE: {
+#ifdef TEST_DEBUG
+      errs() << "Setting operands RECURRENCE\n";
+#endif
+      auto *RN = (RecurrenceNode*)N;
+          
+      PHINode *PHI = nullptr;
+      if (Header->getFirstNonPHI()) {
+        IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+        PHI = PHIBuilder.CreatePHI(RN->getStartValue()->getType(),0);
+      } else {
+        PHI = Builder.CreatePHI(RN->getStartValue()->getType(),0);
+      }
+      CreatedCode.push_back(PHI);
+      PHI->addIncoming(RN->getStartValue(),PreHeader);
+      NodeToValue[N] = PHI;
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; PHI->dump();
+#endif
+      
+      break;
+    }
+    case NodeType::REDUCTION: {
+#ifdef TEST_DEBUG
+      errs() << "Setting operands REDUCTION\n";
+#endif
+      auto *RN = (ReductionNode*)N;
+
+      assert(RN->getNumChildren() && "Expected child with varying operands!");
+      Value *Op = cloneGraph(RN->getChild(0), Builder);
+#ifdef TEST_DEBUG
+      errs() << "Closing REDUCTION\n";
+#endif
+      Instruction *NewI = RN->getBinaryOperator()->clone();
+      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+        NewI->setOperand(i,nullptr);
+      }
+      Builder.Insert(NewI);
+      CreatedCode.push_back(NewI);
+      NodeToValue[N] = NewI;
+
+      for (unsigned i = 0; i<RN->size(); i++) {
+        if (auto *I = RN->getValidInstruction(i)) {
+	  Garbage.insert(I);
+        }
+      }
+
+      PHINode *PHI = nullptr;
+      if (Header->getFirstNonPHI()) {
+        IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+        PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      } else {
+        PHI = Builder.CreatePHI(NewI->getType(),2);
+      }
+      //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
+      //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      CreatedCode.push_back(PHI);
+      PHI->addIncoming(NewI,Header);
+      PHI->addIncoming(RN->getStartValue(),PreHeader);
+      NewI->setOperand(0,PHI);
+      NewI->setOperand(1,Op);
+
+      Extracted[RN->getBinaryOperator()] = NewI;//PHI;
+      generateExtract(N, NewI, Builder);
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewI->dump();
+#endif
+      break;
+    }
+    */
+    case NodeType::INTSEQ: {
+#ifdef TEST_DEBUG
+      errs() << "Setting operands INTSEQ\n";
+#endif
+      break;
+    }
+    /*
+    case NodeType::ALTSEQ: {
+#ifdef TEST_DEBUG
+      errs() << "Setting operands ALTSEQ\n";
+#endif
+
+      auto *ASN = (AlternatingSequenceNode*)N;
+
+      auto *SeqTy = ASN->getFirst()->getType();
+
+      errs() << "Values:\n";
+      for (unsigned i = 0; i<N->size(); i++) N->getValue(i)->dump();
+
+      Value *NewV = nullptr;
+
+      auto IsNegatedInt = [](const APInt &V1, const APInt &V2) -> bool {
+	APInt NegV1(V1);
+        NegV1.negate(); //in place
+	return V1.eq(V2);
+      };
+
+      auto *CInt1 = dyn_cast<ConstantInt>(ASN->getFirst());
+      auto *CInt2 = dyn_cast<ConstantInt>(ASN->getSecond());
+      if (CInt1 && CInt2 && CInt1->isZero() && CInt2->isOne()) {
+        errs() << "Generated Version 1:\n";
+	
+	if (CachedRem2.find(SeqTy)!=CachedRem2.end()) {
+          NewV = CachedRem2[SeqTy];
+	} else {
+
+        Value *CastIndVar = IndVar;
+        if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
+          CastIndVar = CachedCastIndVar[SeqTy];
+        } else {
+          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+          if (CIndVarI!=IndVar) {
+            CreatedCode.push_back(CastIndVar);
+            CachedCastIndVar[SeqTy] = CIndVarI;
+            CastIndVar = CIndVarI;
+          }
+        }
+
+        auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
+        if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+          CreatedCode.push_back(Rem2I);
+        Rem2->dump();
+
+        CachedRem2[SeqTy] = Rem2;
+
+        NewV = Rem2;
+	}
+      } else if (CInt1 && CInt2 && IsNegatedInt(CInt1->getValue(), CInt2->getValue()) ) {
+        errs() << "Generated Version 2:\n";
+        PHINode *PHI = nullptr;
+        if (Header->getFirstNonPHI()) {
+          IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+          PHI = PHIBuilder.CreatePHI(SeqTy,2);
+        } else {
+          PHI = Builder.CreatePHI(SeqTy,2);
+        }
+        //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
+        //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+        CreatedCode.push_back(PHI);
+        PHI->addIncoming(CInt1,PreHeader);
+
+	auto Neg = Builder.CreateNeg(PHI);
+        PHI->addIncoming(Neg,Header);
+
+        if (auto *NegI = dyn_cast<Instruction>(Neg))
+          CreatedCode.push_back(NegI);
+
+	PHI->dump();
+	Neg->dump();
+
+	NewV = PHI;
+      } else if (CInt1 && CInt2) {
+        errs() << "Generated Version 3:\n";
+
+        Value *Rem2 = nullptr;
+	if (CachedRem2.find(SeqTy)!=CachedRem2.end()) {
+          Rem2 = CachedRem2[SeqTy];
+	} else {
+	
+          Value *CastIndVar = IndVar;
+          if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
+            CastIndVar = CachedCastIndVar[SeqTy];
+          } else {
+            auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+            if (CIndVarI!=IndVar) {
+              CreatedCode.push_back(CastIndVar);
+              CachedCastIndVar[SeqTy] = CIndVarI;
+              CastIndVar = CIndVarI;
+            }
+          }
+
+	  Rem2 = CastIndVar;
+	  if (G.Root->size()>2){
+            Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
+            if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+              CreatedCode.push_back(Rem2I);
+            Rem2->dump();
+	  }
+
+
+          CachedRem2[SeqTy] = Rem2;
+
+	}
+	APInt Diff(CInt2->getValue());
+	Diff -= CInt1->getValue();
+
+	auto *Mul = Builder.CreateMul(Rem2, ConstantInt::get(SeqTy, Diff));
+        if (auto *MulI = dyn_cast<Instruction>(Mul))
+          CreatedCode.push_back(MulI);
+        Mul->dump();
+
+	auto *Add = Builder.CreateAdd(Mul, ASN->getFirst());
+        if (auto *AddI = dyn_cast<Instruction>(Add))
+          CreatedCode.push_back(AddI);
+
+	Add->dump();
+
+	NewV = Add;
+        
+      } else {
+        errs() << "Generated Version 4:\n";
+
+	if (AltSeqCmp==nullptr) {
+
+	Value *Rem2 = IndVar;
+
+	if (CachedRem2.find(IndVar->getType())!=CachedRem2.end()) {
+          Rem2 = CachedRem2[IndVar->getType()];
+	} else {
+	
+	if (G.Root->size()>2){
+          Rem2 = Builder.CreateURem(IndVar, ConstantInt::get(IndVar->getType(), 2));
+          if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+            CreatedCode.push_back(Rem2I);
+          Rem2->dump();
+
+          CachedRem2[IndVar->getType()] = Rem2;
+	}
+
+	}
+
+        Value *Cond = Builder.CreateICmpEQ(Rem2, ConstantInt::get(IndVar->getType(), 0));
+        if (auto *CondI = dyn_cast<Instruction>(Cond))
+          CreatedCode.push_back(CondI);
+        Cond->dump();
+        
+	  AltSeqCmp = Cond;
+	}
+        auto *Sel = Builder.CreateSelect(AltSeqCmp, ASN->getFirst(), ASN->getSecond());
+        if (auto *SelI = dyn_cast<Instruction>(Sel))
+          CreatedCode.push_back(SelI);
+
+        Sel->dump();
+
+	NewV = Sel;
+      }
+      if (NewV) NodeToValue[N] = NewV;
+      break;
+    }
+    */
+    case NodeType::MISMATCH: {
+      errs() << "Setting operands Mismatch\n";
+      break;
+    }
+    default:
+      assert(true && "Unknown node type!");
+  }
+}
+
+void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
+  switch(N->getNodeType()) {
+    case NodeType::IDENTICAL: {
+#ifdef TEST_DEBUG
+      errs() << "Generating IDENTICAL\n";
+#endif
+      break;
+    }
+    case NodeType::MATCH: {
+#ifdef TEST_DEBUG
+      errs() << "Generating MATCH\n";
+#endif
+
+      Instruction *I = dyn_cast<Instruction>(N->getValue(0));
+      if (I) {
+        Instruction *NewI = I->clone();
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,nullptr);
+        }
+        NodeToValue[N] = NewI;
+
+#ifdef TEST_DEBUG
+        errs() << "Operands done!\n";
+#endif
+
+        SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
+        NewI->getAllMetadata(MDs);
+        for (std::pair<unsigned, MDNode *> MDPair : MDs) {
+          NewI->setMetadata(MDPair.first, nullptr);
+        }
+
+	/*
+	if (!MatchAlignment) {
+          if (auto *LI = dyn_cast<LoadInst>(NewI)) {
+            LI->setAlignment(Align());
+	  }
+	  else if (auto *SI = dyn_cast<StoreInst>(NewI)) {
+            SI->setAlignment(Align());
+	  }
+	}
+        */
+
+        Builder.Insert(NewI);
+        //CreatedCode.push_back(NewI);
+
+#ifdef TEST_DEBUG
+        errs() << "Generated: "; NewI->dump();
+#endif
+
+	/*
+        for (unsigned i = 0; i<N->size(); i++) {
+          if (auto *I = N->getValidInstruction(i)) {
+            //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) Garbage.push_back(I);
+	    Garbage.insert(I);
+	  }
+	}
+	*/
+        
+        //generateExtract(N, NewI, Builder);
+
+#ifdef TEST_DEBUG
+	errs() << "Gen: "; NewI->dump();
+#endif
+      }
+      break;
+    }
+    case NodeType::CONSTEXPR: {
+#ifdef TEST_DEBUG
+      errs() << "Generating CONSTEXPR\n";
+#endif
+
+      auto *I = dyn_cast<ConstantExpr>(N->getValue(0));
+      if (I) {
+        Instruction *NewI = I->getAsInstruction();
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,nullptr);
+        }
+        NodeToValue[N] = NewI;
+
+	/*
+        std::vector<Value*> Operands;
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          Operands.push_back(cloneGraph(N->getChild(i), Builder));
+        }
+	*/
+
+        SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
+        NewI->getAllMetadata(MDs);
+        for (std::pair<unsigned, MDNode *> MDPair : MDs) {
+          NewI->setMetadata(MDPair.first, nullptr);
+        }
+
+        Builder.Insert(NewI);
+        //CreatedCode.push_back(NewI);
+
+	/*
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,Operands[i]);
+        }
+	*/
+
+	/*
+        for (unsigned i = 0; i<N->size(); i++) {
+          if (auto *I = N->getValidInstruction(i)) {
+	    Garbage.insert(I);
+	  }
+	}
+        
+        generateExtract(N, NewI, Builder);
+        */
+
+#ifdef TEST_DEBUG
+        errs() << "Generated: "; NewI->dump();
+#endif
+
+      }
+      break;
+    }
+    case NodeType::GEPSEQ: {
+#ifdef TEST_DEBUG
+      errs() << "Generating GEPSEQ\n";
+#endif
+      auto *GN = (GEPSequenceNode*)N;
+
+      Value *Ptr = GN->getPointerOperand();
+      if (Ptr==nullptr) {
+        IRBuilder<> PreHeaderBuilder(PreHeader);
+        auto *GEP = GN->getReference()->clone();
+        auto *IdxTy = GN->getReference()->getOperand(GN->getReference()->getNumOperands()-1)->getType();
+        auto *Zero = ConstantInt::get(IdxTy, 0);
+        GEP->setOperand(GN->getReference()->getNumOperands()-1, Zero);
+        PreHeaderBuilder.Insert(GEP);
+        Ptr = GEP;
+      }
+
+      assert(GN->getNumChildren() && "Expected child with indices!");
+      //Value *IndVarIdx = nullptr; //cloneGraph(GN->getChild(0), Builder);
+      Value *PlaceHolder = ConstantInt::get(GN->getChild(0)->getType(), 0);
+#ifdef TEST_DEBUG
+      errs() << "Closing GEPSEQ\n";
+#endif
+      //auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(GN->getPointerOperand(), IndVarIdx));
+      auto *GEP = dyn_cast<Instruction>(Builder.CreateGEP(Ptr, PlaceHolder));
+      /*
+      auto *GEP = GN->getReference()->clone();
+      GEP->setOperand(0, GN->getPointerOperand());
+      GEP->setOperand(GN->getReference()->getNumOperands()-1, IndVarIdx);
+      Builder.Insert(GEP);
+      */
+
+      //CreatedCode.push_back(GEP);
+      NodeToValue[N] = GEP;
+
+      /*
+      for (unsigned i = 0; i<GN->size(); i++) {
+        if (auto *I = GN->getValidInstruction(i)) {
+	  Garbage.insert(I);
+          //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
+          //  Garbage.push_back(I);
+	  //}
+        }
+      }
+
+      generateExtract(N, GEP, Builder);
+      */
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; GEP->dump();
+#endif
+      break;
+    }
+    case NodeType::BINOP: {
+#ifdef TEST_DEBUG
+      errs() << "Generating BINOP\n";
+#endif
+      auto *BON = (BinOpSequenceNode*)N;
+
+      assert(BON->getNumChildren() && "Expected child with varying operands!");
+      //Value *Op0 = cloneGraph(BON->getChild(0), Builder);
+      //Value *Op1 = cloneGraph(BON->getChild(1), Builder);
+
+#ifdef TEST_DEBUG
+      errs() << "Closing BINOP\n";
+#endif
+      Instruction *NewI = BON->getReference()->clone();
+      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+        NewI->setOperand(i,nullptr);
+      }
+      Builder.Insert(NewI);
+      NodeToValue[N] = NewI;
+      //CreatedCode.push_back(NewI);
+
+      /*
+      for (unsigned i = 0; i<BON->size(); i++) {
+        if (auto *I = BON->getValidInstruction(i)) {
+	  Garbage.insert(I);
+          //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
+          //  Garbage.push_back(I);
+	  //}
+        }
+      }
+
+      NewI->setOperand(0,Op0);
+      NewI->setOperand(1,Op1);
+      
+      generateExtract(N, NewI, Builder);
+      */
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewI->dump();
+#endif
+      break;
+    }
+    /*
+    case NodeType::RECURRENCE: {
+#ifdef TEST_DEBUG
+      errs() << "Generating RECURRENCE\n";
+#endif
+      auto *RN = (RecurrenceNode*)N;
+          
+      PHINode *PHI = nullptr;
+      if (Header->getFirstNonPHI()) {
+        IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+        PHI = PHIBuilder.CreatePHI(RN->getStartValue()->getType(),0);
+      } else {
+        PHI = Builder.CreatePHI(RN->getStartValue()->getType(),0);
+      }
+      CreatedCode.push_back(PHI);
+      PHI->addIncoming(RN->getStartValue(),PreHeader);
+      NodeToValue[N] = PHI;
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; PHI->dump();
+#endif
+      
+      break;
+    }
+    case NodeType::REDUCTION: {
+#ifdef TEST_DEBUG
+      errs() << "Generating REDUCTION\n";
+#endif
+      auto *RN = (ReductionNode*)N;
+
+      assert(RN->getNumChildren() && "Expected child with varying operands!");
+      Value *Op = cloneGraph(RN->getChild(0), Builder);
+#ifdef TEST_DEBUG
+      errs() << "Closing REDUCTION\n";
+#endif
+      Instruction *NewI = RN->getBinaryOperator()->clone();
+      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+        NewI->setOperand(i,nullptr);
+      }
+      Builder.Insert(NewI);
+      CreatedCode.push_back(NewI);
+      NodeToValue[N] = NewI;
+
+      for (unsigned i = 0; i<RN->size(); i++) {
+        if (auto *I = RN->getValidInstruction(i)) {
+	  Garbage.insert(I);
+        }
+      }
+
+      PHINode *PHI = nullptr;
+      if (Header->getFirstNonPHI()) {
+        IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+        PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      } else {
+        PHI = Builder.CreatePHI(NewI->getType(),2);
+      }
+      //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
+      //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      CreatedCode.push_back(PHI);
+      PHI->addIncoming(NewI,Header);
+      PHI->addIncoming(RN->getStartValue(),PreHeader);
+      NewI->setOperand(0,PHI);
+      NewI->setOperand(1,Op);
+
+      Extracted[RN->getBinaryOperator()] = NewI;//PHI;
+      generateExtract(N, NewI, Builder);
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewI->dump();
+#endif
+      break;
+    }
+    */
+    case NodeType::INTSEQ: {
+#ifdef TEST_DEBUG
+      errs() << "Generating INTSEQ\n";
+#endif
+
+      Value *NewV = nullptr;
+
+      auto *ISN = (IntSequenceNode*)N;
+      auto *StartValue = dyn_cast<ConstantInt>(ISN->getStart());
+      auto *StepValue = dyn_cast<ConstantInt>(ISN->getStep());
+      Value *CastIndVar = IndVar;
+      //if (CachedCastIndVar.find(StartValue->getType())!=CachedCastIndVar.end()) {
+      //  CastIndVar = CachedCastIndVar[StartValue->getType()];
+      //} else {
+	auto *CIndVarI = Builder.CreateIntCast(IndVar, StartValue->getType(), false);
+	if (CIndVarI!=IndVar) {
+          //CreatedCode.push_back(CastIndVar);
+          //CachedCastIndVar[StartValue->getType()] = CIndVarI;
+          CastIndVar = CIndVarI;
+	}
+      //}
+      if (StartValue->isZero() && StepValue->isOne()){
+        NewV = CastIndVar;
+      } else if (StepValue->isZero()){
+        NewV = StartValue;
+      } else {
+	Value *Factor = CastIndVar;
+	if (!StepValue->isOne()) {
+          auto *Mul = Builder.CreateMul(CastIndVar, StepValue);
+          //CreatedCode.push_back(Mul);
+	  Factor = Mul;
+	}
+	auto *Add = Builder.CreateAdd(Factor, StartValue);
+        //CreatedCode.push_back(Add);
+	NewV = Add;
+      }
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewV->dump();
+#endif
+      NodeToValue[N] = NewV;
+      break;
+    }
+    /*
+    case NodeType::ALTSEQ: {
+#ifdef TEST_DEBUG
+      errs() << "Generating ALTSEQ\n";
+#endif
+
+      auto *ASN = (AlternatingSequenceNode*)N;
+
+      auto *SeqTy = ASN->getFirst()->getType();
+
+      errs() << "Values:\n";
+      for (unsigned i = 0; i<N->size(); i++) N->getValue(i)->dump();
+
+      Value *NewV = nullptr;
+
+      auto IsNegatedInt = [](const APInt &V1, const APInt &V2) -> bool {
+	APInt NegV1(V1);
+        NegV1.negate(); //in place
+	return V1.eq(V2);
+      };
+
+      auto *CInt1 = dyn_cast<ConstantInt>(ASN->getFirst());
+      auto *CInt2 = dyn_cast<ConstantInt>(ASN->getSecond());
+      if (CInt1 && CInt2 && CInt1->isZero() && CInt2->isOne()) {
+        errs() << "Generated Version 1:\n";
+	
+	if (CachedRem2.find(SeqTy)!=CachedRem2.end()) {
+          NewV = CachedRem2[SeqTy];
+	} else {
+
+        Value *CastIndVar = IndVar;
+        if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
+          CastIndVar = CachedCastIndVar[SeqTy];
+        } else {
+          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+          if (CIndVarI!=IndVar) {
+            CreatedCode.push_back(CastIndVar);
+            CachedCastIndVar[SeqTy] = CIndVarI;
+            CastIndVar = CIndVarI;
+          }
+        }
+
+        auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
+        if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+          CreatedCode.push_back(Rem2I);
+        Rem2->dump();
+
+        CachedRem2[SeqTy] = Rem2;
+
+        NewV = Rem2;
+	}
+      } else if (CInt1 && CInt2 && IsNegatedInt(CInt1->getValue(), CInt2->getValue()) ) {
+        errs() << "Generated Version 2:\n";
+        PHINode *PHI = nullptr;
+        if (Header->getFirstNonPHI()) {
+          IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+          PHI = PHIBuilder.CreatePHI(SeqTy,2);
+        } else {
+          PHI = Builder.CreatePHI(SeqTy,2);
+        }
+        //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
+        //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+        CreatedCode.push_back(PHI);
+        PHI->addIncoming(CInt1,PreHeader);
+
+	auto Neg = Builder.CreateNeg(PHI);
+        PHI->addIncoming(Neg,Header);
+
+        if (auto *NegI = dyn_cast<Instruction>(Neg))
+          CreatedCode.push_back(NegI);
+
+	PHI->dump();
+	Neg->dump();
+
+	NewV = PHI;
+      } else if (CInt1 && CInt2) {
+        errs() << "Generated Version 3:\n";
+
+        Value *Rem2 = nullptr;
+	if (CachedRem2.find(SeqTy)!=CachedRem2.end()) {
+          Rem2 = CachedRem2[SeqTy];
+	} else {
+	
+          Value *CastIndVar = IndVar;
+          if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
+            CastIndVar = CachedCastIndVar[SeqTy];
+          } else {
+            auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+            if (CIndVarI!=IndVar) {
+              CreatedCode.push_back(CastIndVar);
+              CachedCastIndVar[SeqTy] = CIndVarI;
+              CastIndVar = CIndVarI;
+            }
+          }
+
+	  Rem2 = CastIndVar;
+	  if (G.Root->size()>2){
+            Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
+            if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+              CreatedCode.push_back(Rem2I);
+            Rem2->dump();
+	  }
+
+
+          CachedRem2[SeqTy] = Rem2;
+
+	}
+	APInt Diff(CInt2->getValue());
+	Diff -= CInt1->getValue();
+
+	auto *Mul = Builder.CreateMul(Rem2, ConstantInt::get(SeqTy, Diff));
+        if (auto *MulI = dyn_cast<Instruction>(Mul))
+          CreatedCode.push_back(MulI);
+        Mul->dump();
+
+	auto *Add = Builder.CreateAdd(Mul, ASN->getFirst());
+        if (auto *AddI = dyn_cast<Instruction>(Add))
+          CreatedCode.push_back(AddI);
+
+	Add->dump();
+
+	NewV = Add;
+        
+      } else {
+        errs() << "Generated Version 4:\n";
+
+	if (AltSeqCmp==nullptr) {
+
+	Value *Rem2 = IndVar;
+
+	if (CachedRem2.find(IndVar->getType())!=CachedRem2.end()) {
+          Rem2 = CachedRem2[IndVar->getType()];
+	} else {
+	
+	if (G.Root->size()>2){
+          Rem2 = Builder.CreateURem(IndVar, ConstantInt::get(IndVar->getType(), 2));
+          if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+            CreatedCode.push_back(Rem2I);
+          Rem2->dump();
+
+          CachedRem2[IndVar->getType()] = Rem2;
+	}
+
+	}
+
+        Value *Cond = Builder.CreateICmpEQ(Rem2, ConstantInt::get(IndVar->getType(), 0));
+        if (auto *CondI = dyn_cast<Instruction>(Cond))
+          CreatedCode.push_back(CondI);
+        Cond->dump();
+        
+	  AltSeqCmp = Cond;
+	}
+        auto *Sel = Builder.CreateSelect(AltSeqCmp, ASN->getFirst(), ASN->getSecond());
+        if (auto *SelI = dyn_cast<Instruction>(Sel))
+          CreatedCode.push_back(SelI);
+
+        Sel->dump();
+
+	NewV = Sel;
+      }
+      if (NewV) NodeToValue[N] = NewV;
+      break;
+    }
+    */
+    case NodeType::MISMATCH: {
+#ifdef TEST_DEBUG
+      errs() << "Generating Mismatch\n";
+#endif
+      Value *NewV = generateMismatchingCode(N->getValues(), Builder);
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewV->dump();
+#endif
+      NodeToValue[N] = NewV;
+      break;
+    }
+    default:
+      assert(true && "Unknown node type!");
+  }
+}
+
+
 
 void RegionCodeGenerator::generate(AlignedRegion &AR) {
   LLVMContext &Context = F.getContext();
@@ -1366,9 +2930,35 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
   IndVar = Builder.CreatePHI(IndVarTy, 0);
 
   Exit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
+  
+  NodeToValue[AR.ExitLabelNode] = Exit;
 
+
+  std::map<AlignedBlock*, BasicBlock*> ABToBlock;
   for (AlignedBlock *AB : AR.AlignedBlocks) {
     BasicBlock *BB = BasicBlock::Create(Context, "rolled.reg.bb", &F);
+    Node *LN = AR.getLabelNode(AB);
+    if (LN==nullptr) {
+      errs() << "ERROR: could not find LabelNode\n";
+    }
+    NodeToValue[ LN ] = BB; 
+    ABToBlock[AB] = BB;
+  }
+
+  for (AlignedBlock *AB : AR.AlignedBlocks) {
+    BasicBlock *BB = ABToBlock[AB];
+    for (Node *N : AB->ScheduledNodes) {
+      IRBuilder<> Builder(BB);
+      generateNode(N, Builder);
+    }
+  }
+
+  F.dump();
+
+  for (AlignedBlock *AB : AR.AlignedBlocks) {
+    for (Node *N : AB->ScheduledNodes) {
+      setNodeOperands(N);
+    }
   }
 
   F.dump();
@@ -1409,6 +2999,9 @@ bool RegionRoller::run() {
     unsigned CountRegions = 1;
     AlignedRegion AR;
     initializeAlignedRegion(&AR, (*It)->getEntry(), (*It)->getExit());
+    AR.EntryBlocks.push_back((*It)->getEntry());
+    AR.ExitBlocks.push_back((*It)->getExit());
+
     BasicBlock *LinkBlock = (*It)->getExit();
     errs() << "Link: " << LinkBlock->getName().str() << "\n";
     while (LinkBlock) {
@@ -1420,6 +3013,8 @@ bool RegionRoller::run() {
 	if (IsIsomorphic((*It)->getEntry(), (*It)->getExit(), LinkBlock, ExitBB, nullptr)) {
           errs() << "Found Isomorphic:" << LinkBlock->getName().str() << " => " << ExitBB->getName().str() << "\n";
           IsIsomorphic((*It)->getEntry(), (*It)->getExit(), LinkBlock, ExitBB, AR.AlignedBlocks[0]);
+          AR.EntryBlocks.push_back(LinkBlock);
+          AR.ExitBlocks.push_back(ExitBB);
 	  NextLB = ExitBB;
 	  CountRegions++;
 	}
@@ -1427,18 +3022,17 @@ bool RegionRoller::run() {
       LinkBlock = NextLB;
     }
 
-    if (AR.AlignedBlocks.size() > 1) {
-      errs() << "ISOMORPHIC REGIONS: " << CountRegions << " regions, " << AR.AlignedBlocks.size() << " blocks each!";
+    if (CountRegions>1 && AR.AlignedBlocks.size() > 1) {
+      
+      AR.align(nullptr);
+      errs() << " ISOMORPHIC REGIONS: " << CountRegions << " regions, " << AR.AlignedBlocks.size() << " blocks each!\n";
+
+      RegionCodeGenerator RCG(F);
+      RCG.generate(AR);
+
     }
-    /*
-    for (auto *AB : AR.AlignedBlocks) {
-	AB->align(nullptr); //SE);
-    }*/
-    AR.align(nullptr);
 
 
-    //RegionCodeGenerator RCG(F);
-    //RCG.generate(AR);
 
     AR.releaseMemory();
     
@@ -1449,20 +3043,20 @@ bool RegionRoller::run() {
   return false;
 }
 
-template<typename ValueT>
-void printVs(std::vector<ValueT*> Vs) {
-  for (auto *V : Vs) {
-    if (BasicBlock *BB = dyn_cast<BasicBlock>(V)) 
-      errs() << "  BB: " << BB->getName().str() << "\n";
-    else V->dump();
-  }
-}
-
-
 void AlignedRegion::align(ScalarEvolution *SE) {
 
   unsigned CountMismatchings = 0;
   unsigned CountTotal = 0;
+
+  for (auto *AB : AlignedBlocks) {
+    errs() << "Creating AlignedBlock Node\n";
+    Node *N = createNode(AB->Blocks,nullptr,SE);
+    addNode(N);
+    ABToNode[AB] = N;
+  }
+
+  ExitLabelNode = createNode(ExitBlocks,nullptr,SE);
+  addNode(ExitLabelNode);
 
   for (auto *AB : AlignedBlocks) {
     errs() << "Aligning:\n";
@@ -1484,7 +3078,6 @@ void AlignedRegion::align(ScalarEvolution *SE) {
 
       if (Vs.size()==0)
         break;
-
 
       Node *N = nullptr;
       if (Vs.size()==AB->Blocks.size())
@@ -1577,8 +3170,9 @@ void AlignedRegion::align(ScalarEvolution *SE) {
         CountMismatchings++;
     }
   }
-  errs() << "ALIGNMENT: " << CountMismatchings << "/" << CountTotal << "\n"; 
   errs() << "Done\n";
+
+  errs() << "ALIGNMENT: " << CountMismatchings << "/" << CountTotal << ((CountMismatchings==0)?"(PROFITABLE)":"") <<  " "; 
 }
 
 template<typename ValueT>
@@ -1642,7 +3236,7 @@ Node *AlignedRegion::buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *
     for (auto It = Result.begin(), E = Result.end(); It!=E; ) {
       Node *N = *It;
       It++;
-      if (N->getValidInstruction(i-1)!=Vs[i]) Result.erase(N);
+      if ((Value*)N->getValidInstruction(i-1)!=(Value*)Vs[i]) Result.erase(N);
     }
   }
   if (Result.size()!=1) return nullptr;
@@ -1701,12 +3295,19 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
   }
 
   errs() << "ValidBlock: " << ValidBlock << "\n";
-
+  
   if (Node *N = IdenticalNode::get(Vs, nullptr, Parent)) {
     errs() << "All the Same\n";
     Inputs.insert(Vs[0]);
     return N;
   }
+
+  if (Node *N = LabelNode::get(Vs, nullptr, Parent)) {
+    errs() << "Creating LABEL Node\n";
+    printVs(Vs);
+    return N;
+  }
+
   if (ValidBlock) {
     errs() << "Valid blocks: testing match\n";
     if (Node *N = MatchingNode::get(Vs, nullptr, Parent)) {
@@ -1729,6 +3330,9 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
     printVs(Vs);
     return N;
   }
+
+  errs() << "HERE???\n";
+  printVs(Vs);
   if (Node *N = buildRecurrenceNode(Vs, nullptr, Parent)) {
     errs() << "Recurrence\n";
     Inputs.insert(Vs[0]);
