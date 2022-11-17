@@ -32,7 +32,7 @@
 
 #include <unordered_set>
 #include <unordered_map>
-#include <algorithm>    // std::find
+#include <algorithm>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -81,7 +81,7 @@ static bool allConstant(const std::vector<ValueT *> VL) {
   // Constant expressions and globals can't be vectorized like normal integer/FP
   // constants.
   for (ValueT *i : VL)
-    if (!isa<Constant>(i) || isa<ConstantExpr>(i) || isa<GlobalValue>(i))
+    if (!(isa<Constant>(i) || isa<ConstantExpr>(i) || isa<GlobalValue>(i)))
       return false;
   return true;
 }
@@ -190,9 +190,13 @@ static bool match(Value *V1, Value *V2) {
     case Instruction::Call: {
       CallInst *CI1 = dyn_cast<CallInst>(I1);
       CallInst *CI2 = dyn_cast<CallInst>(I2);
+      errs() << "Call1\n";
       if (CI1->getCalledFunction()==nullptr || CI2->getCalledFunction()==nullptr) return false;
+      errs() << "Call2\n";
       if (CI1->getCalledFunction()!=CI2->getCalledFunction()) return false;
-      if (CI1->getCalledFunction()->isVarArg()) return false;
+      errs() << "Call3\n";
+      //if (CI1->getCalledFunction()->isVarArg()) return false;
+      //errs() << "Call4\n";
       return true;
     }
     case Instruction::Load: {
@@ -338,25 +342,26 @@ public:
   template<typename ValueT>
   static MatchingNode *get(std::vector<ValueT*> &Vs, BasicBlock *BB=nullptr, Node *Parent=nullptr) {
     bool Matching = true;
-    bool HasSideEffect = false;
+    //bool HasSideEffect = false;
     std::unordered_set<Value*> UniqueValues;
     UniqueValues.insert(Vs[0]);
     if (auto *I = dyn_cast<Instruction>(Vs[0])) {
       //if (I->getParent()!=BB) Matching = false;
-      HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
+      //HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
     }
     for (unsigned i = 1; i<Vs.size(); i++) {
       UniqueValues.insert(Vs[i]);
       Matching = Matching && match(Vs[i-1],Vs[i]);
       if (auto *I = dyn_cast<Instruction>(Vs[i])) {
         //if (I->getParent()!=BB) Matching = false;
-        HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
+       // HasSideEffect = HasSideEffect || I->mayHaveSideEffects();
       }
     }
     errs() << "Match: " << Matching << "\n";
     errs() << UniqueValues.size() << " x " << Vs.size() << "\n";
 
-    Matching = Matching && (UniqueValues.size()==Vs.size() || (!HasSideEffect));
+    //Matching = Matching && (UniqueValues.size()==Vs.size() || (!HasSideEffect));
+    Matching = Matching && UniqueValues.size()==Vs.size();
     errs() << "Final Match: " << Matching << "\n";
 
     if (Matching) {
@@ -1597,10 +1602,12 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 
         SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
         NewI->getAllMetadata(MDs);
+	errs() << "HERE........ 1\n";
         for (std::pair<unsigned, MDNode *> MDPair : MDs) {
           NewI->setMetadata(MDPair.first, nullptr);
         }
 
+	errs() << "HERE........ 2\n";
 	if (!MatchAlignment) {
           if (auto *LI = dyn_cast<LoadInst>(NewI)) {
             LI->setAlignment(Align());
@@ -2434,11 +2441,16 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
         errs() << "Operands done!\n";
 #endif
 
+
+        errs() << "generateNode 1\n";
         SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
+        errs() << "generateNode 2\n";
         NewI->getAllMetadata(MDs);
+        errs() << "generateNode 3\n";
         for (std::pair<unsigned, MDNode *> MDPair : MDs) {
           NewI->setMetadata(MDPair.first, nullptr);
         }
+        errs() << "generateNode 4\n";
 
 	/*
 	if (!MatchAlignment) {
@@ -2453,9 +2465,10 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
 
         Builder.Insert(NewI);
         //CreatedCode.push_back(NewI);
+        errs() << "generateNode 5\n";
 
 #ifdef TEST_DEBUG
-        errs() << "Generated: "; NewI->dump();
+        //errs() << "Generated: "; NewI->dump();
 #endif
 
         for (unsigned i = 0; i<N->size(); i++) {
@@ -2465,10 +2478,11 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
 	  }
 	}
         
+        errs() << "generateNode 6\n";
         //generateExtract(N, NewI, Builder);
 
 #ifdef TEST_DEBUG
-	errs() << "Gen: "; NewI->dump();
+	//errs() << "Gen: "; NewI->dump();
 #endif
       }
       break;
@@ -2948,11 +2962,13 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
     BasicBlock *BB = ABToBlock[AB];
     for (Node *N : AB->ScheduledNodes) {
       IRBuilder<> Builder(BB);
+      errs() << "generateNode: " << N->getString() <<"\n";
       generateNode(N, Builder);
+      errs() << "generateNode: DONE\n";
     }
   }
 
-  F.dump();
+  //F.dump();
 
   for (AlignedBlock *AB : AR.AlignedBlocks) {
     for (Node *N : AB->ScheduledNodes) {
@@ -2981,7 +2997,7 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
   F.dump();
   bool Profitable = false;
 
-  if (Profitable) {
+  if (AlwaysRoll || Profitable) {
     IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
     IndVar->addIncoming(Add,Latch);
 
