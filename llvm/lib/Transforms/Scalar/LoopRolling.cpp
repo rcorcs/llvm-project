@@ -1245,7 +1245,7 @@ private:
 
 class AlignedBlock {
 public:
-  AlignedBlock() {}
+  AlignedBlock(bool isEntry, bool isExit) : isEntryNode(isEntry), isExitNode(isExit) {}
   void pushBlock(BasicBlock *BB) { Blocks.push_back(BB); }
   AlignedBlock *getSuccessor(int i) { return Successors[i]; }
   void addSuccessor(AlignedBlock *AB) { Successors.push_back(AB); }
@@ -1253,8 +1253,15 @@ public:
   std::vector<Node*> ScheduledNodes;
 
   std::vector<BasicBlock*> Blocks;
+
+
+  bool isEntry() { return isEntryNode; }
+  bool isExit() { return isExitNode; }
+
 private:
   std::vector<AlignedBlock*> Successors;
+  bool isEntryNode;
+  bool isExitNode;
 };
 
 class AlignedRegion {
@@ -1326,7 +1333,8 @@ public:
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
 
-  void align(ScalarEvolution *SE);
+  bool align(ScalarEvolution *SE);
+  bool validateAlignment();
 
   template<typename ValueT>
   Node *buildRecurrenceNode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent);
@@ -1360,22 +1368,28 @@ private:
   Function &F;
 };
 
-bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBlock *ExitBB2, AlignedBlock *AB, std::set<BasicBlock*> &Visited) {
-  if (BB1==ExitBB1 && BB2==ExitBB2) return true;
-  if (BB1==ExitBB1 || BB2==ExitBB2) return false;
-  if (Visited.count(BB1) && Visited.count(BB2)) return true;
-  if (Visited.count(BB1) || Visited.count(BB2)) return false;
-  Visited.insert(BB1);
-  Visited.insert(BB2);
+bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBlock *ExitBB2, AlignedBlock *AB, std::set<BasicBlock*> &Visited1, std::set<BasicBlock*> &Visited2) {
+
+  if (Visited1.count(BB1) && Visited2.count(BB2)) return true;
+  if (Visited1.count(BB1) || Visited2.count(BB2)) return false;
+
+  Visited1.insert(BB1);
+  Visited2.insert(BB2);
+
+  if (AB) AB->pushBlock(BB2);
+
+  if (BB1==ExitBB1 && BB2==ExitBB2)
+    return true;
+  if (BB1==ExitBB1 || BB2==ExitBB2)
+    return false;
 
   BranchInst *Br1 = dyn_cast<BranchInst>(BB1->getTerminator());
   BranchInst *Br2 = dyn_cast<BranchInst>(BB2->getTerminator());
 
   if (Br1 && Br2 && Br1->getNumSuccessors()==Br2->getNumSuccessors()) {
     bool Isomorphic = true;
-    if (AB) AB->pushBlock(BB2);
     for (unsigned i = 0; i<Br1->getNumSuccessors(); i++) {
-      Isomorphic = Isomorphic && IsIsomorphic(Br1->getSuccessor(i), ExitBB1, Br2->getSuccessor(i), ExitBB2, AB?AB->getSuccessor(i):nullptr, Visited);
+      Isomorphic = Isomorphic && IsIsomorphic(Br1->getSuccessor(i), ExitBB1, Br2->getSuccessor(i), ExitBB2, AB?AB->getSuccessor(i):nullptr, Visited1, Visited2);
     }
     return Isomorphic;
   }
@@ -1384,23 +1398,24 @@ bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBl
 }
 
 bool IsIsomorphic(BasicBlock *BB1, BasicBlock *ExitBB1, BasicBlock *BB2, BasicBlock *ExitBB2, AlignedBlock *AB) {
-  std::set<BasicBlock*> Visited;
-  return IsIsomorphic(BB1, ExitBB1, BB2, ExitBB2, AB, Visited);
+  std::set<BasicBlock*> Visited1, Visited2;
+  return IsIsomorphic(BB1, ExitBB1, BB2, ExitBB2, AB, Visited1, Visited2);
 }
 
 AlignedBlock *initializeAlignedRegion(AlignedRegion *AR, BasicBlock *BB, BasicBlock *ExitBB, std::set<BasicBlock *> &Visited) {
-  if (BB==ExitBB) return nullptr;
+  //if (BB==ExitBB) return nullptr;
   if (Visited.count(BB)) return AR->BlockMap[BB];
+
+  AlignedBlock *AB = new AlignedBlock(Visited.empty(), BB==ExitBB);
 
   Visited.insert(BB);
 
-  AlignedBlock *AB = new AlignedBlock;
   AB->pushBlock(BB);
   AR->AlignedBlocks.push_back(AB);
   AR->BlockMap[BB] = AB;
 
   BranchInst *Br = dyn_cast<BranchInst>(BB->getTerminator());
-  if (Br) {
+  if (Br && BB!=ExitBB) {
     for (unsigned i = 0; i<Br->getNumSuccessors(); i++) {
       AlignedBlock *SuccAB = initializeAlignedRegion(AR, Br->getSuccessor(i), ExitBB, Visited);
       AB->addSuccessor(SuccAB);
@@ -2944,6 +2959,7 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
 
   std::map<AlignedBlock*, BasicBlock*> ABToBlock;
   for (AlignedBlock *AB : AR.AlignedBlocks) {
+    if (AB->isExit()) continue;
     BasicBlock *BB = BasicBlock::Create(Context, "rolled.reg.bb", &F);
     Node *LN = AR.getLabelNode(AB);
     if (LN==nullptr) {
@@ -2958,8 +2974,15 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
 
   Exit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
 
+
   for (AlignedBlock *AB : AR.AlignedBlocks) {
+    errs() << "Generating code for AB\n";
+    if (AB->isExit()) {
+	    errs() << "skipping exit node\n";
+	    continue;
+    }
     BasicBlock *BB = ABToBlock[AB];
+    errs() << "Generating code in: " << BB->getName().str() <<  "\n";
     for (Node *N : AB->ScheduledNodes) {
       IRBuilder<> Builder(BB);
       errs() << "generateNode: " << N->getString() <<"\n";
@@ -2971,6 +2994,7 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
   //F.dump();
 
   for (AlignedBlock *AB : AR.AlignedBlocks) {
+    if (AB->isExit()) continue;
     for (Node *N : AB->ScheduledNodes) {
       setNodeOperands(N);
     }
@@ -3038,6 +3062,7 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
 
     std::set<BasicBlock *> DeleteBlocks;
     for (AlignedBlock *AB : AR.AlignedBlocks) {
+      //if (AB->isExit()) continue;
       for (BasicBlock *BB : AB->Blocks) {
 	      DeleteBlocks.insert(BB);
       }
@@ -3151,17 +3176,28 @@ bool RegionRoller::run() {
       LinkBlock = NextLB;
     }
 
-    if (CountRegions>1 && AR.AlignedBlocks.size() > 1) {
-      
-      AR.align(nullptr);
-      errs() << " ISOMORPHIC REGIONS: " << CountRegions << " regions, " << AR.AlignedBlocks.size() << " blocks each!\n";
+    errs() << "Final Isomorphic Graph:\n";
+    for (auto *AB : AR.AlignedBlocks) {
+      if (AB->isEntry()) errs() << "ENTRY ";
+      if (AB->isExit()) errs() << "EXIT ";
+      errs() << "Blocks:\n";
 
-      RegionCodeGenerator RCG(F);
-      RCG.generate(AR);
+      for (BasicBlock *BB : AB->Blocks) {
+        errs() << "   " << BB->getName().str() << "\n";
+      }
+    }
+    errs() << "-----\n";
+
+    if (CountRegions>1 && AR.AlignedBlocks.size() > 1) {
+      errs() << "Let's do it\n";  
+      if (AR.align(nullptr)) {
+        errs() << " ISOMORPHIC REGIONS: " << CountRegions << " regions, " << AR.AlignedBlocks.size() << " blocks each!\n";
+
+        RegionCodeGenerator RCG(F);
+        RCG.generate(AR);
+      }
 
     }
-
-
 
     AR.releaseMemory();
     
@@ -3172,7 +3208,32 @@ bool RegionRoller::run() {
   return false;
 }
 
-void AlignedRegion::align(ScalarEvolution *SE) {
+bool AlignedRegion::validateAlignment() {
+  std::set<BasicBlock *> Visited;
+  Visited.insert(EntryBlocks[0]);
+  Visited.insert(ExitBlocks[ExitBlocks.size()-1]);
+
+  for (auto *AB : AlignedBlocks) {
+    if (AB->isExit()) continue;
+    for (BasicBlock *BB : AB->Blocks) {
+
+      if (Visited.count(BB)) continue;
+      Visited.insert(BB);
+
+      for (Instruction &I : *BB) {
+        if (find(&I)==nullptr) {
+          errs() << "ERROR: Instruction not aligned in block: " << BB->getName().str() <<"\n";
+	  I.dump();
+          return false;
+	}
+      }
+    }
+  }
+
+  return true;
+}
+
+bool AlignedRegion::align(ScalarEvolution *SE) {
 
   unsigned CountMismatchings = 0;
   unsigned CountTotal = 0;
@@ -3182,13 +3243,23 @@ void AlignedRegion::align(ScalarEvolution *SE) {
     Node *N = createNode(AB->Blocks,nullptr,SE);
     addNode(N);
     ABToNode[AB] = N;
+    if (AB->isExit()) {
+     ExitLabelNode = N;
+    }
   }
 
-  ExitLabelNode = createNode(ExitBlocks,nullptr,SE);
-  addNode(ExitLabelNode);
+  //ExitLabelNode = createNode(ExitBlocks,nullptr,SE);
+  //addNode(ExitLabelNode);
 
   for (auto *AB : AlignedBlocks) {
     errs() << "Aligning:\n";
+    if (AB->isEntry()) {
+	    errs() << "Entry Node\n";
+    }
+    if (AB->isExit()) {
+	    errs() << "Exit Node\n";
+	    continue;
+    }
     std::vector<BasicBlock::reverse_iterator> Its;
     for (BasicBlock *BB : AB->Blocks) {
       //errs() << BB->getName().str() << "\n";
@@ -3215,6 +3286,7 @@ void AlignedRegion::align(ScalarEvolution *SE) {
       if (N) {
         errs() << "Node found!\n";
         printVs(Vs);
+	  errs() << "NodeTracker:Found: " << N->getString() << "\n";
 
         for (unsigned i = 0; i<AB->Blocks.size(); i++) {
           if (Its[i]!=AB->Blocks[i]->rend()) {
@@ -3259,6 +3331,7 @@ void AlignedRegion::align(ScalarEvolution *SE) {
             }
           }
           AB->ScheduledNodes.push_back(RefGEPN);
+	  errs() << "NodeTracker:Found:GEP: " << RefGEPN->getString() << "\n";
           continue;
         }
       }
@@ -3272,6 +3345,7 @@ void AlignedRegion::align(ScalarEvolution *SE) {
       errs() << "Creating new root node\n";
       N = createNode(Vs,nullptr,SE);
       if (N) {
+	errs() << "NodeTracker:Created: " << N->getString() << "\n";
         AB->ScheduledNodes.push_back(N);
         addNode(N);
         std::set<Node*> Visited;
@@ -3302,6 +3376,7 @@ void AlignedRegion::align(ScalarEvolution *SE) {
   errs() << "Done\n";
 
   errs() << "ALIGNMENT: " << CountMismatchings << "/" << CountTotal << ((CountMismatchings==0)?"(PROFITABLE)":"") <<  " "; 
+  return validateAlignment();
 }
 
 template<typename ValueT>
