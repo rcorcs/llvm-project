@@ -405,7 +405,7 @@ void CallMatching::writeDotFile() {
   std::string FileName = PrefixName + std::string(".dot");
 
   std::error_code ec;
-  raw_fd_ostream os (FileName, ec, sys::fs::F_Text);
+  raw_fd_ostream os (FileName, ec); /, sys::fs::F_Text);
 
   os << "digraph VTree {\nrankdir=BT\n";
   std::map<Node*, int> NodeId;

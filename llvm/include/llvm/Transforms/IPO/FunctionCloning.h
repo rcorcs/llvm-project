@@ -24,6 +24,8 @@
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/PassManager.h"
+
+#include "llvm/InitializePasses.h"
 #include <llvm/Analysis/DependenceAnalysis.h>
 
 #include "llvm/IR/BasicBlock.h"
