@@ -56,6 +56,10 @@ static cl::opt<bool>
 MatchAlignment("loop-rolling-match-alignment", cl::init(false), cl::Hidden,
                  cl::desc("Consider alignment while matching instructions"));
 
+static cl::opt<bool>
+EnableExtensions("loop-rolling-extensions", cl::init(false), cl::Hidden,
+                 cl::desc("Enable loop rolling extensions"));
+
 static std::string demangle(const char* name) {
   int status = -1;
   std::unique_ptr<char, void(*)(void*)> res { abi::__cxa_demangle(name, NULL, NULL, &status), std::free };
@@ -172,9 +176,11 @@ static bool match(Value *V1, Value *V2) {
   Instruction *I1 = dyn_cast<Instruction>(V1);
   Instruction *I2 = dyn_cast<Instruction>(V2);
   
+  errs() << "match analysis\n";
   if (V1->getType()!=V2->getType()) return false;
 
   if(I1 && I2) {
+    errs() << "comparing two instructions for matching\n";
     //return I1->isSameOperationAs(I2);
     if (I1->getOpcode()!=I2->getOpcode()) return false;
     if (I1->getNumOperands()!=I2->getNumOperands()) return false;
@@ -193,6 +199,8 @@ static bool match(Value *V1, Value *V2) {
       errs() << "Call1\n";
       if (CI1->getCalledFunction()==nullptr || CI2->getCalledFunction()==nullptr) return false;
       errs() << "Call2\n";
+      CI1->getCalledFunction()->dump();
+      CI2->getCalledFunction()->dump();
       if (CI1->getCalledFunction()!=CI2->getCalledFunction()) return false;
       errs() << "Call3\n";
       //if (CI1->getCalledFunction()->isVarArg()) return false;
@@ -218,6 +226,30 @@ static bool match(Value *V1, Value *V2) {
     default:
       return true;
     }
+  }
+
+  ConstantExpr *CExpr1 = dyn_cast<ConstantExpr>(V1);
+  ConstantExpr *CExpr2 = dyn_cast<ConstantExpr>(V2);
+  if (CExpr1 && CExpr2 && EnableExtensions) {
+    errs() << "comparing two constant expressions for matching\n";
+    CExpr1->dump();
+    CExpr2->dump();
+    //return I1->isSameOperationAs(I2);
+    if (CExpr1->getOpcode()!=CExpr2->getOpcode()) return false;
+    if (CExpr1->getNumOperands()!=CExpr2->getNumOperands()) return false;
+
+    for (unsigned i = 0; i<CExpr1->getNumOperands(); i++)
+      if (CExpr1->getOperand(i)->getType()!=CExpr2->getOperand(i)->getType()) return false;
+    
+    bool Matched = true;
+    for (unsigned i = 0; i<CExpr1->getNumOperands(); i++)
+      Matched = Matched && match(CExpr1->getOperand(i), CExpr2->getOperand(i));
+
+    // switch (CExpr1->getOpcode()) { 
+    // default:
+    //   return true;
+    // }
+    return Matched;
   }
 
   return V1==V2;
@@ -3222,10 +3254,10 @@ bool AlignedRegion::validateAlignment() {
 
       for (Instruction &I : *BB) {
         if (find(&I)==nullptr) {
-          errs() << "ERROR: Instruction not aligned in block: " << BB->getName().str() <<"\n";
+          errs() << "\nERROR: Instruction not aligned in block: " << BB->getName().str() <<"\n";
 	  I.dump();
           return false;
-	}
+	      }
       }
     }
   }
@@ -3258,13 +3290,71 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
     }
     if (AB->isExit()) {
 	    errs() << "Exit Node\n";
-	    continue;
+	    //continue;
     }
     std::vector<BasicBlock::reverse_iterator> Its;
     for (BasicBlock *BB : AB->Blocks) {
       //errs() << BB->getName().str() << "\n";
       BB->dump();
       Its.push_back(BB->rbegin());
+    }
+
+    if (AB->isExit()) { 
+      bool ValidExit = true;
+      
+        errs() << "Processing Exit Blocks\n";
+
+        for (unsigned i = 0; i<AB->Blocks.size()-1; i++) {
+          while (Its[i]!=AB->Blocks[i]->rend() && find(&*Its[i])) {
+            Its[i]++;
+          }
+          if (Its[i]==AB->Blocks[i]->rend()) {
+            ValidExit = false;
+            break;
+          }
+        }
+        
+        if (!ValidExit) continue;
+
+        errs() << "Searching for instruction in last exit block\n";
+        const int Last = AB->Blocks.size()-1;
+        while (Its[Last]!=AB->Blocks[Last]->rend()) {
+          std::vector<Instruction *> Vs;
+
+          for (unsigned i = 0; i<AB->Blocks.size(); i++) {
+            if (Its[i]!=AB->Blocks[i]->rend()) {
+              Vs.push_back(&*Its[i]);
+            }
+          }
+
+          //TODO skip instructions  in last exit block untill we find the matching point,
+          //otherwise loop rolling is invalid
+
+          Node *N = createNode(Vs,nullptr,SE);
+          if (N) {
+  	        errs() << "NodeTracker:Created: " << N->getString() << "\n";
+            auto NodeTy = N->getNodeType();
+            //delete N;
+
+            if (NodeTy!=NodeType::MISMATCH) {
+              errs() << "Found good match\n";
+              break;
+            }
+          }
+
+          errs() << "next instruction\n";
+          Its[Last]++;
+
+        }
+
+        ValidExit = ValidExit && (Its[Last]!=AB->Blocks[Last]->rend());
+        errs() << "Done searching: " << (Its[Last]!=AB->Blocks[Last]->rend()) << "\n";
+        if (!ValidExit) continue;
+
+        errs() << "Exit block alignment starts with:\n";
+        for (unsigned i = 0; i<AB->Blocks.size(); i++) {
+           (&*Its[i])->dump();
+        }
     }
 
     while (true) {
@@ -3286,7 +3376,7 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
       if (N) {
         errs() << "Node found!\n";
         printVs(Vs);
-	  errs() << "NodeTracker:Found: " << N->getString() << "\n";
+	      errs() << "NodeTracker:Found: " << N->getString() << "\n";
 
         for (unsigned i = 0; i<AB->Blocks.size(); i++) {
           if (Its[i]!=AB->Blocks[i]->rend()) {
@@ -3331,7 +3421,7 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
             }
           }
           AB->ScheduledNodes.push_back(RefGEPN);
-	  errs() << "NodeTracker:Found:GEP: " << RefGEPN->getString() << "\n";
+          errs() << "NodeTracker:Found:GEP: " << RefGEPN->getString() << "\n";
           continue;
         }
       }
@@ -3345,7 +3435,13 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
       errs() << "Creating new root node\n";
       N = createNode(Vs,nullptr,SE);
       if (N) {
-	errs() << "NodeTracker:Created: " << N->getString() << "\n";
+  	    errs() << "NodeTracker:Created: " << N->getString() << "\n";
+        if (N->getNodeType()==NodeType::MISMATCH) {
+           errs() << "Here X1\n";
+           //delete N;
+           errs() << "Here X2\n";
+           break;
+        }
         AB->ScheduledNodes.push_back(N);
         addNode(N);
         std::set<Node*> Visited;
@@ -3473,6 +3569,8 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
 
   std::set<AlignedBlock*> FoundAlignedBlocks;
 
+  printVs(Vs);
+  
   //bool ValidBlock = true;
   bool HasInstruction = false;
   for (unsigned i = 0; i<Vs.size(); i++) {
@@ -5859,8 +5957,10 @@ bool LoopRoller::run() {
 }
 
 bool LoopRolling::runImpl(Function &F, ScalarEvolution *SE) {
-  RegionRoller RR(F);
-  RR.run();
+  if (EnableExtensions) {
+    RegionRoller RR(F);
+    RR.run();
+  }
 
   LoopRoller RL(F, SE);
   return RL.run();
