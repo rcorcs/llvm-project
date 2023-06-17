@@ -38,6 +38,7 @@ add_llvm_component_library(LLVMScalarOpts
   LoopPredication.cpp
   LoopRerollPass.cpp
   LoopRolling.cpp
+  RegionRolling.cpp
   LoopRotation.cpp
   LoopSimplifyCFG.cpp
   LoopStrengthReduce.cpp
