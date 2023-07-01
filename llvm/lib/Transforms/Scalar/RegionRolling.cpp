@@ -1813,7 +1813,7 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
   //if (AltSeqCmp && G.Root->size()==2) {
   //  Cond = AltSeqCmp;
   //} else {
-    auto *CondI = Builder.CreateICmpNE(Add, ConstantInt::get(IndVarTy, AR.AlignedBlocks.size()));
+    auto *CondI = Builder.CreateICmpNE(Add, ConstantInt::get(IndVarTy, AR.AlignedBlocks.size()+1));
     //CreatedCode.push_back(CondI);
 
     Cond = CondI;
@@ -1868,8 +1868,7 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
     BasicBlock *EntryBB = dyn_cast<BasicBlock>(NodeToValue[N]);
     Builder.CreateBr(EntryBB);
 
-
-  F.dump();
+    //F.dump();
 
     errs() << "Erasing old instructions\n";
     for (Instruction *I : Garbage) {
@@ -1908,7 +1907,7 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
 
     Builder.SetInsertPoint(Exit);
     Builder.CreateBr(LastExit);
-
+    
   } else {
     std::set<BasicBlock *> DeleteBlocks;
  
