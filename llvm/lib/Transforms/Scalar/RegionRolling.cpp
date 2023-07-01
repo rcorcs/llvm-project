@@ -1821,7 +1821,32 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
 
 
   F.dump();
-  bool Profitable = false;
+  
+  auto &DL = F.getParent()->getDataLayout();
+  TargetTransformInfo TTI(DL);
+  unsigned CostOld = EstimateSize(Garbage, DL, &TTI);
+
+  std::set<BasicBlock *> CreatedBlocks;
+
+  CreatedBlocks.insert(PreHeader);
+  CreatedBlocks.insert(Header);
+  CreatedBlocks.insert(Latch);
+  CreatedBlocks.insert(Exit);
+
+  for (auto &Pair : ABToBlock) {
+    CreatedBlocks.insert(Pair.second);
+  }
+  
+  unsigned CostNew = 0;
+  for (BasicBlock *BB : CreatedBlocks) {
+    CostNew += EstimateSize(BB, DL, &TTI);
+  }
+
+  bool Profitable = CostNew < CostOld;
+
+  errs() << "Cost Original: " << CostOld << ", ";
+  errs() << "Cost Rolled: " << CostNew << ", ";
+  errs() << (Profitable?"Profitable":"Unprofitable") << "\n";
 
   if (AlwaysRoll || Profitable) {
     IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);

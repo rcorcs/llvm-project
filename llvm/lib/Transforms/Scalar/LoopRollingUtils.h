@@ -1154,5 +1154,106 @@ ReductionNode *ReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Nod
 }
 
 
+template<typename ValueT>
+static size_t EstimateSize(ValueT *V, const DataLayout &DL, TargetTransformInfo *TTI) {
+  size_t size = 0;
+    if (V==nullptr) return 0;
+    //V->dump();
+    //size_t Cost = size;
+    if (auto *I = dyn_cast<Instruction>(V)) {
+  
+      switch(I->getOpcode()) {
+        case Instruction::PHI:
+        case Instruction::Alloca:
+          size += 0;
+          break;
+        case Instruction::ZExt:
+        case Instruction::SExt:
+        case Instruction::FPToUI:
+        case Instruction::FPToSI:
+        case Instruction::FPExt:
+        case Instruction::PtrToInt:
+        case Instruction::IntToPtr:
+        case Instruction::SIToFP:
+        case Instruction::UIToFP:
+        case Instruction::Trunc:
+        case Instruction::FPTrunc:
+        case Instruction::BitCast:
+          size += 1;
+          break;
+        case Instruction::Call:
+          size += 1 + dyn_cast<CallBase>(I)->getNumArgOperands();
+          break;
+        case Instruction::GetElementPtr: {
+	  Value *V = getUnderlyingObject(I);
+	  size += 1;
+	  if (V)
+            size += (isa<GlobalValue>(V))?1:0;
+          break;
+	}
+        case Instruction::Load: {
+          size += 2;
+          //auto *LI = dyn_cast<LoadInst>(I);
+          //if (isa<GlobalValue>(getUnderlyingObject(LI->getPointerOperand()))) {
+            //size += 1;
+          //}
+          break;
+        }
+        case Instruction::Store: {
+          size += 2;
+          //auto *SI = dyn_cast<StoreInst>(I);
+          //if (isa<GlobalValue>(getUnderlyingObject(SI->getPointerOperand()))) {
+            //size += 1;
+          //}
+          break;
+        }
+        default: {
+          size += 1;
+          BinaryOperator *BO = dyn_cast<BinaryOperator>(I);
+	  if (BO) {
+            if (isa<Constant>(BO->getOperand(0)) || isa<Constant>(BO->getOperand(1))) {
+	      unsigned BitWidth = 0;
+	      if (BO->getType()->isIntegerTy()) 
+	        BitWidth = BO->getType()->getIntegerBitWidth();
+	      if (BitWidth>=32) size += 1;
+	      if (BitWidth>=64) size += 1;
+	    }
+	  }
+	}
+      }
+    } else if (auto *GV = dyn_cast<GlobalVariable>(V)) {
+      size += 1;
+      //if (GV->hasInitializer()) {
+	//if (auto *ArrTy = dyn_cast<ArrayType>(GV->getInitializer()->getType())) {
+	   //size -= 1;
+	   //size_t Factor = 1; //DL.getTypeSizeInBits(ArrTy->getElementType())/8;
+	   //size += Factor*ArrTy->getNumElements();
+	//}
+      //}
+    }
+    //Cost = size - Cost;
+    //errs() << "Cost: " << Cost << "\n";
+    //
+  return size;
+}
+
+
+
+template<typename ValueListT>
+static size_t EstimateSize(ValueListT &Code, const DataLayout &DL, TargetTransformInfo *TTI) {
+  size_t size = 0;
+  for (auto *V : Code) {
+    size += EstimateSize(V,DL,TTI);
+  }
+  return size;
+}
+
+static size_t EstimateSize(BasicBlock *BB, const DataLayout &DL, TargetTransformInfo *TTI) {
+  size_t size = 0;
+  for (auto &I : *BB) {
+    size += EstimateSize(&I,DL,TTI);
+  }
+  return size;
+}
 
 #endif
