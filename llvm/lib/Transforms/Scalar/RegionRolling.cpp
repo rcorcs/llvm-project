@@ -86,6 +86,8 @@ public:
   Node *find(std::vector<ValueT *> &Vs);
   Node *find(Instruction *I);
 
+  bool contains(Value *V) { return ValuesInNode.count(V); }
+
   AlignedBlock *getAlignedBlock(BasicBlock *BB) {
     for (AlignedBlock *AB : AlignedBlocks) {
       if (std::find(AB->Blocks.begin(), AB->Blocks.end(), BB)!=AB->Blocks.end())
@@ -236,15 +238,16 @@ void initializeAlignedRegion(AlignedRegion *AR, BasicBlock *BB, BasicBlock *Exit
 class RegionCodeGenerator {
 public:
 
-  RegionCodeGenerator(Function &F) : F(F) {}
+  RegionCodeGenerator(Function &F, AlignedRegion &AR) : F(F), AR(AR) {}
 
   Value *cloneGraph(Node *N, IRBuilder<> &Builder);
   void setNodeOperands(Node *N);
   Value *generateMismatchingCode(std::vector<Value *> &VL, IRBuilder<> &Builder);
+  void generateExtract(Node *N, Instruction *NewI, IRBuilder<> &Builder);
   void generateNode(Node *N, IRBuilder<> &Builder);
   void generate(AlignedRegion &AR);
 
-
+  AlignedRegion &AR;
   Function &F;
 
   std::unordered_map<Node*, Value *> NodeToValue;
@@ -252,6 +255,7 @@ public:
 
   std::unordered_set<Instruction *> Garbage;
   std::vector<Value *> CreatedCode;
+  std::unordered_map<Instruction *, Instruction *> Extracted;
 
 
   BasicBlock *PreHeader;
@@ -355,6 +359,63 @@ Value *RegionCodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IR
 }
 
 
+void RegionCodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Builder) {
+  LLVMContext &Context = F.getContext();
+
+  std::set<unsigned> NeedExtract;
+
+  for (unsigned i = 0; i<N->size(); i++) {
+    auto *I = N->getValidInstruction(i);
+    if (I==nullptr) continue;
+    //if (I->getParent()!=(&BB)) continue; //TODO: what is the equivalent for RegionCodeGen? I->getParent() not corresponding exit block?
+    for (auto *U : I->users()) {
+      if (!AR.contains(U)) {
+#ifdef TEST_DEBUG
+	errs() << "Found use: " << i << ": "; U->dump();
+#endif
+        NeedExtract.insert(i);
+	break;
+      }
+    }
+  }
+
+  if (NeedExtract.empty()) return;
+
+#ifdef TEST_DEBUG
+  errs() << "Extracting: "; NewI->dump();
+#endif
+
+  if (NeedExtract.size()==1 && N->getNodeType()==NodeType::REDUCTION) {
+    ReductionNode *RN = (ReductionNode*)N;
+    if (RN->getBinaryOperator()==RN->getValidInstruction(*NeedExtract.begin())) {
+      return;
+    }
+  }
+
+  BasicBlock &Entry = F.getEntryBlock();
+  IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
+
+  Type *IndVarTy = IntegerType::get(Context, 8);
+  Value *ArrPtr = ArrBuilder.CreateAlloca(NewI->getType(), ConstantInt::get(IndVarTy, N->size()));
+  //CreatedCode.push_back(ArrPtr);
+
+  auto *GEP = Builder.CreateGEP(ArrPtr, IndVar);
+  //CreatedCode.push_back(GEP);
+  auto *Store = Builder.CreateStore(NewI, GEP);
+  //CreatedCode.push_back(Store);
+
+  IRBuilder<> ExitBuilder(Exit);
+  for (unsigned i : NeedExtract) {
+    Instruction *I = N->getValidInstruction(i);
+    auto *GEP = ExitBuilder.CreateGEP(ArrPtr, ConstantInt::get(IndVarTy, i));
+    //CreatedCode.push_back(GEP);
+    auto *Load = ExitBuilder.CreateLoad(GEP);
+    //CreatedCode.push_back(Load);
+    Extracted[I] = Load;
+  }
+
+}
+
 Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
   if(N->getNodeType()==NodeType::LABEL) {
 	  errs() << "Getting Label operand\n";
@@ -452,9 +513,9 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 	  }
 	}
         
-	/*
+	
         generateExtract(N, NewI, Builder);
-        */
+        
 #ifdef TEST_DEBUG
 	errs() << "Gen: "; NewI->dump();
 #endif
@@ -597,7 +658,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       NewI->setOperand(0,Op0);
       NewI->setOperand(1,Op1);
 
-      //generateExtract(N, NewI, Builder);
+      generateExtract(N, NewI, Builder);
 
 #ifdef TEST_DEBUG
       errs() << "Gen: "; NewI->dump();
@@ -885,16 +946,12 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
     }
     */
     case NodeType::MISMATCH: {
-      errs() << "What should we do here?\n";
-      return nullptr;
-      /*
       Value *NewV = generateMismatchingCode(N->getValues(), Builder);
 #ifdef TEST_DEBUG
       errs() << "Gen: "; NewV->dump();
 #endif
       NodeToValue[N] = NewV;
       return NewV;
-      */
     }
     default:
       assert(true && "Unknown node type!");
@@ -1824,8 +1881,11 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
   
   auto &DL = F.getParent()->getDataLayout();
   TargetTransformInfo TTI(DL);
+
+  errs() << "Computing size of original code\n";
   unsigned CostOld = EstimateSize(Garbage, DL, &TTI);
 
+  errs() << "Computing size of rolled code\n";
   std::set<BasicBlock *> CreatedBlocks;
 
   CreatedBlocks.insert(PreHeader);
@@ -1839,7 +1899,11 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
   
   unsigned CostNew = 0;
   for (BasicBlock *BB : CreatedBlocks) {
-    CostNew += EstimateSize(BB, DL, &TTI);
+    errs() << "Size of BB: " << BB->getName().str() << "\n";
+    BB->dump();
+    size_t size = EstimateSize(BB, DL, &TTI);
+    errs() << "size: " << size << "\n";
+    CostNew += size;
   }
 
   bool Profitable = CostNew < CostOld;
@@ -1868,7 +1932,11 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
     BasicBlock *EntryBB = dyn_cast<BasicBlock>(NodeToValue[N]);
     Builder.CreateBr(EntryBB);
 
-    //F.dump();
+    for (auto &Pair : Extracted) {
+      Pair.first->replaceAllUsesWith(Pair.second);
+    }
+
+    //F. ump();
 
     errs() << "Erasing old instructions\n";
     for (Instruction *I : Garbage) {
@@ -2019,7 +2087,7 @@ bool RegionRoller::run() {
       if (AR.align(nullptr)) {
         errs() << " ISOMORPHIC REGIONS: " << CountRegions << " regions, " << AR.AlignedBlocks.size() << " blocks each!\n";
 
-        RegionCodeGenerator RCG(F);
+        RegionCodeGenerator RCG(F, AR);
         RCG.generate(AR);
       }
 
