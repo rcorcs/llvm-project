@@ -1,4 +1,4 @@
-OPT="-Os -fno-vectorize -fno-slp-vectorize -fno-unroll-loops" 
+OPT="-Os -fno-vectorize -fno-slp-vectorize" 
 
 DIR=$(dirname $0)
 cd ${DIR}
@@ -7,12 +7,14 @@ LLPATH=../../build/release/bin/
 
 CC=${LLPATH}clang
 LLOPT=${LLPATH}opt
-#OBJDUMP=${LLPATH}llvm-objdump
+#OBJDUMP="${LLPATH}llvm-objdump -M intel"
 OBJDUMP="objdump -M intel "
 
 
-${CC} -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/ tsvc.original.c ${OPT} -emit-llvm -S -o tsvc.original.ll
-${CC} -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/ tsvc.unrolled.c ${OPT} -emit-llvm -S -o tsvc.unrolled.ll
+#${CC} -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/ tsvc.original.c ${OPT} -emit-llvm -S -o tsvc.original.ll
+#${CC} -I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/ tsvc.unrolled.c ${OPT} -emit-llvm -S -o tsvc.unrolled.ll
+${CC} tsvc.original.c ${OPT} -emit-llvm -S -o tsvc.original.ll
+${CC} tsvc.unrolled.c ${OPT} -emit-llvm -S -o tsvc.unrolled.ll
 
 ${LLOPT} -loop-reroll tsvc.unrolled.ll -o tsvc.reroll.ll -S 2>tsvc.reroll.txt
 ${LLOPT} -loop-rolling -loop-rolling-extensions=false -simplifycfg -loop-simplify -loop-flatten -licm tsvc.unrolled.ll -o tsvc.rolled.ll -S 2>tsvc.rolled.txt

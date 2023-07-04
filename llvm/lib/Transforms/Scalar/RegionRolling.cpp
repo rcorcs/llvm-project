@@ -2070,7 +2070,7 @@ bool RegionRoller::run() {
       LinkBlock = NextLB;
     }
 
-    errs() << "Final Isomorphic Graph:\n";
+    errs() << "Final Isomorphic Graph: " << CountRegions << ", " << AR.AlignedBlocks.size() << "\n";
     for (auto *AB : AR.AlignedBlocks) {
       if (AB->isEntry()) errs() << "ENTRY ";
       if (AB->isExit()) errs() << "EXIT ";
@@ -2096,7 +2096,7 @@ bool RegionRoller::run() {
     AR.releaseMemory();
     
     errs() << "Skipping smaller regions\n";
-    break;
+    //break;
   }
 
   return false;

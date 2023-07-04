@@ -35,8 +35,8 @@ with open(path) as f:
 
 #print data
 
-gorder = ['Oracle','RoLAG']
-BlueRedPallete = ['#79cb42','#ff6868']
+gorder = ['Oracle','region','RoLAG']
+BlueRedPallete = ['#79cb42','#ff6868','blue']
 
 ftype = ''
 
@@ -57,7 +57,7 @@ for k in data.keys():
 
 ys = {}
 #entries = list(sorted(list(pdata.keys()), key=lambda k: (pdata[k]['RoLAG'],pdata[k]['Oracle']) ))
-entries = list( sorted(list(pdata.keys()), key=lambda k: pdata[k]['RoLAG']) )
+entries = list( sorted(list(pdata.keys()), key=lambda k: (pdata[k]['region'],pdata[k]['RoLAG'])) )
 for k in entries:
   if not np.all([ ((ftype+name) in data[k].keys()) for name in gorder]):
     print('skipping',name)
