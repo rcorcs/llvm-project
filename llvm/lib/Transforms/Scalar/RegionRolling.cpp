@@ -245,7 +245,7 @@ public:
   Value *generateMismatchingCode(std::vector<Value *> &VL, IRBuilder<> &Builder);
   void generateExtract(Node *N, Instruction *NewI, IRBuilder<> &Builder);
   void generateNode(Node *N, IRBuilder<> &Builder);
-  void generate(AlignedRegion &AR);
+  bool generate(AlignedRegion &AR);
 
   AlignedRegion &AR;
   Function &F;
@@ -1803,7 +1803,7 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
   }
 }
 
-void RegionCodeGenerator::generate(AlignedRegion &AR) {
+bool RegionCodeGenerator::generate(AlignedRegion &AR) {
   LLVMContext &Context = F.getContext();
 
   PreHeader = BasicBlock::Create(Context, "rolled.reg.pre", &F);
@@ -1976,6 +1976,7 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
     Builder.SetInsertPoint(Exit);
     Builder.CreateBr(LastExit);
     
+    return true;
   } else {
     std::set<BasicBlock *> DeleteBlocks;
  
@@ -2008,11 +2009,12 @@ void RegionCodeGenerator::generate(AlignedRegion &AR) {
     }
 
   }
-
-  F.dump();
+  return false;
 }
 
 bool RegionRoller::run() {
+
+  errs() << "RegionRoller at function: " << F.getName().str() << "\n";
 
   DominatorTree DT(F);
   PostDominatorTree PDT(F);
@@ -2026,12 +2028,16 @@ bool RegionRoller::run() {
   RI.recalculate(F, &DT, &PDT, &DF);
 
   std::map<BasicBlock *, std::vector<BasicBlock *> > RegionsByEntry;
+  /*
   auto *TopRegion = RI.getTopLevelRegion();
   errs() << "Top Region:\n";
   TopRegion->dump();
   if (TopRegion->getExit())
     RegionsByEntry[TopRegion->getEntry()].push_back(TopRegion->getExit());
 
+  std::vector<Region> AllRegions;
+  AllRegions.push_back(
+  
   //for (auto Region : *TopRegion) {a
   for (auto It = TopRegion->begin(); It!=TopRegion->end(); It++) {
     errs() << "Sub Region:\n";
@@ -2039,18 +2045,45 @@ bool RegionRoller::run() {
     if ((*It)->getExit())
       RegionsByEntry[(*It)->getEntry()].push_back( (*It)->getExit() );
   }
+  */
+  for (BasicBlock &BB : F) {
+    /*auto *ExitBB = RI.getMaxRegionExit(&BB);
+    if (ExitBB && ExitBB!=(&BB)) {
+      auto *Region = RI.getCommonRegion(&BB, ExitBB);
+      //RegionsByEntry[&BB].push_back(ExitBB);
+      RegionsByEntry[Region->getEntry()].push_back(Region->getExit());
+    }*/
+    auto *R = RI.getRegionFor(&BB);
+      //RegionsByEntry[&BB].push_back(ExitBB);
+    if (R && R->getExit() && R->getExit()!=(&BB)) {
+      auto &Regions = RegionsByEntry[R->getEntry()];
+      if (std::find(Regions.begin(),Regions.end(),R->getExit())==Regions.end()) 
+        RegionsByEntry[R->getEntry()].push_back(R->getExit());
+    }
+    
+    
+  }
 
-  for (auto It = TopRegion->begin(); It!=TopRegion->end(); It++) {
-    errs() << "Reference Region:\n";
-    (*It)->dump();
+  //for (auto It = TopRegion->begin(); It!=TopRegion->end(); It++) {
+    //(*It)->dump();
+  for (auto &EEPair : RegionsByEntry) {
+
+    
+    BasicBlock *EntryRef = EEPair.first;
+    for (BasicBlock *ExitRef : EEPair.second) {
+    //BasicBlock *ExitRef = EEPair.second;
+    
+
+    errs() << "Reference Region: " << EntryRef->getName().str() << " -> " << ExitRef->getName().str() << "\n";
 
     unsigned CountRegions = 1;
-    AlignedRegion AR;
-    initializeAlignedRegion(&AR, (*It)->getEntry(), (*It)->getExit());
-    AR.EntryBlocks.push_back((*It)->getEntry());
-    AR.ExitBlocks.push_back((*It)->getExit());
 
-    BasicBlock *LinkBlock = (*It)->getExit();
+    AlignedRegion AR;
+    initializeAlignedRegion(&AR, EntryRef, ExitRef);
+    AR.EntryBlocks.push_back(EntryRef);
+    AR.ExitBlocks.push_back(ExitRef);
+
+    BasicBlock *LinkBlock = ExitRef;
     errs() << "Link: " << LinkBlock->getName().str() << "\n";
     while (LinkBlock) {
       BasicBlock *NextLB = nullptr;
@@ -2058,9 +2091,9 @@ bool RegionRoller::run() {
 	//errs() << "Evaluating Region: " << LinkBlock->getName().str() << " => " << ExitBB->getName().str() << "\n";
 	//auto *Region = RI.getCommonRegion(LinkBlock, ExitBB);
 	//Region->dump();
-	if (IsIsomorphic((*It)->getEntry(), (*It)->getExit(), LinkBlock, ExitBB, nullptr)) {
+	if (IsIsomorphic(EntryRef, ExitRef, LinkBlock, ExitBB, nullptr)) {
           errs() << "Found Isomorphic:" << LinkBlock->getName().str() << " => " << ExitBB->getName().str() << "\n";
-          IsIsomorphic((*It)->getEntry(), (*It)->getExit(), LinkBlock, ExitBB, AR.AlignedBlocks[0]);
+          IsIsomorphic(EntryRef, ExitRef, LinkBlock, ExitBB, AR.AlignedBlocks[0]);
           AR.EntryBlocks.push_back(LinkBlock);
           AR.ExitBlocks.push_back(ExitBB);
 	  NextLB = ExitBB;
@@ -2082,21 +2115,24 @@ bool RegionRoller::run() {
     }
     errs() << "-----\n";
 
+
+    bool Modified = false;
     if (CountRegions>1 && AR.AlignedBlocks.size() > 1) {
       errs() << "Let's do it\n";  
       if (AR.align(nullptr)) {
         errs() << " ISOMORPHIC REGIONS: " << CountRegions << " regions, " << AR.AlignedBlocks.size() << " blocks each!\n";
 
         RegionCodeGenerator RCG(F, AR);
-        RCG.generate(AR);
+        Modified = RCG.generate(AR);
       }
 
     }
 
     AR.releaseMemory();
-    
-    errs() << "Skipping smaller regions\n";
+    if (Modified) return true;    
+    //errs() << "Skipping smaller regions\n";
     //break;
+    }
   }
 
   return false;
