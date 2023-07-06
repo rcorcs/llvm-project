@@ -57,7 +57,7 @@ for k in data.keys():
 
 ys = {}
 #entries = list(sorted(list(pdata.keys()), key=lambda k: (pdata[k]['RoLAG'],pdata[k]['Oracle']) ))
-entries = list( sorted(list(pdata.keys()), key=lambda k: (pdata[k]['region'],pdata[k]['RoLAG'])) )
+entries = list( sorted(list(pdata.keys()), key=lambda k: (pdata[k]['RoLAG'],pdata[k]['region'])) )
 for k in entries:
   if not np.all([ ((ftype+name) in data[k].keys()) for name in gorder]):
     print('skipping',name)

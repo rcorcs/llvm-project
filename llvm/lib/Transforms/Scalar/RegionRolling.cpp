@@ -40,6 +40,9 @@
 #include <string>
 #include <cxxabi.h>
 
+
+#define TEST_DEBUG true
+
 using namespace llvm;
 
 class RegionEntry {
@@ -87,6 +90,15 @@ public:
   Node *find(Instruction *I);
 
   bool contains(Value *V) { return ValuesInNode.count(V); }
+
+  AlignedBlock *getAlignedBlock(Instruction *I) {
+    BasicBlock *BB = I->getParent();
+    for (AlignedBlock *AB : AlignedBlocks) {
+      if (std::find(AB->Blocks.begin(), AB->Blocks.end(), BB)!=AB->Blocks.end())
+        return AB;
+    }
+    return nullptr;
+  } 
 
   AlignedBlock *getAlignedBlock(BasicBlock *BB) {
     for (AlignedBlock *AB : AlignedBlocks) {
@@ -161,7 +173,7 @@ public:
 	  for (unsigned i = 0; i<N->size(); i++) {
             Value *V = N->getValidInstruction(i);
 	    if (V) ValuesInNode.insert(V);
-            NodeMap2[V].insert(N);
+            if (V) NodeMap2[V].insert(N);
 	  }
 	}
 	if (N->size()) NodeMap[N->getValue(0)].insert(N);
@@ -454,6 +466,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 
 #ifdef TEST_DEBUG
       errs() << "Match: "; 
+      
       if (isa<Function>(N->getValue(0))) {
         errs() << N->getValue(0)->getName() << "\n";
       } else {
@@ -462,7 +475,14 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       }
 #endif
       Instruction *I = dyn_cast<Instruction>(N->getValue(0));
-      if (I) {
+      if (I)  {
+
+        for (unsigned x = 0; x<N->size(); x++) {
+           if (N->getValidInstruction(x)) {
+              errs() << x << ": ";
+              N->getValidInstruction(x)->dump();
+           }
+        }
         Instruction *NewI = I->clone();
         for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
           NewI->setOperand(i,nullptr);
@@ -475,7 +495,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
         }
 
 #ifdef TEST_DEBUG
-        errs() << "Operands done!\n";
+        errs() << "Operands done: " << Operands.size() << " (" << NewI->getNumOperands() << ")\n";
 #endif
 
         SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
@@ -2115,7 +2135,6 @@ bool RegionRoller::run() {
     }
     errs() << "-----\n";
 
-
     bool Modified = false;
     if (CountRegions>1 && AR.AlignedBlocks.size() > 1) {
       errs() << "Let's do it\n";  
@@ -2125,7 +2144,6 @@ bool RegionRoller::run() {
         RegionCodeGenerator RCG(F, AR);
         Modified = RCG.generate(AR);
       }
-
     }
 
     AR.releaseMemory();
@@ -2366,6 +2384,39 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
       if (N->getNodeType()==NodeType::MISMATCH)
         CountMismatchings++;
     }
+    
+    for (Node *N : AB->ScheduledNodes) {
+      errs() << NodeTypeString(N->getNodeType()) << ":CHECK: " << N->getString() << " ";
+      bool InvalidType = false;
+      switch(N->getNodeType()) {
+      case NodeType::RECURRENCE:
+      case NodeType::REDUCTION:
+        InvalidType = true;
+      }
+      if (InvalidType) {
+        errs() << "InvalidType\n";
+        return false;
+      }
+        errs() << "children ";
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          errs() << "op[" << i << "]=" << NodeTypeString(N->getChild(i)->getNodeType()) << " ";
+        }
+        errs() << "\n";
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          bool InvalidType = false;
+          switch(N->getChild(i)->getNodeType()) {
+          case NodeType::RECURRENCE:
+          case NodeType::REDUCTION:
+            InvalidType = true;
+          }
+          if (InvalidType) {
+            errs() << "InvalidType: operand "<< i << "\n";
+            return false;
+          }
+        }
+    }
+    
+    
   }
   errs() << "Done\n";
 

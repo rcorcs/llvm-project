@@ -102,6 +102,23 @@ enum NodeType {
   MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, REDUCTION, RECURRENCE, MISMATCH, MULTI, LABEL
 };
 
+static std::string NodeTypeString(NodeType ty) {
+  switch(ty) {
+  case NodeType::MATCH: return "MATCH";
+  case NodeType::IDENTICAL: return "IDENTICAL";
+  case NodeType::BINOP: return "BINOP";
+  case NodeType::GEPSEQ: return "GEPSEQ";
+  case NodeType::INTSEQ: return "INTSEQ";
+  case NodeType::ALTSEQ: return "ALTSEQ";
+  case NodeType::CONSTEXPR: return "CONSTEXPR";
+  case NodeType::REDUCTION: return "REDUCTION";
+  case NodeType::RECURRENCE: return "RECURRENCE";
+  case NodeType::MULTI: return "MULTI";
+  case NodeType::LABEL: return "LABEL";
+  case NodeType::MISMATCH: return "MISMATCH";
+  }
+}
+
 class Node {
 private:
   BasicBlock *BBPtr;
