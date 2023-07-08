@@ -50,6 +50,7 @@ public:
   RegionEntry(BasicBlock *Entry, BasicBlock *Exit) : Entry(Entry), Exit(Exit) {}
   BasicBlock *getEntry() { return Entry; }
   BasicBlock *getExit() { return Exit; }
+  
 private:
   BasicBlock *Entry;
   BasicBlock *Exit;
@@ -2048,52 +2049,25 @@ bool RegionRoller::run() {
   RI.recalculate(F, &DT, &PDT, &DF);
 
   std::map<BasicBlock *, std::vector<BasicBlock *> > RegionsByEntry;
-  /*
-  auto *TopRegion = RI.getTopLevelRegion();
-  errs() << "Top Region:\n";
-  TopRegion->dump();
-  if (TopRegion->getExit())
-    RegionsByEntry[TopRegion->getEntry()].push_back(TopRegion->getExit());
+  std::vector<RegionEntry> OrderedRegions;
 
-  std::vector<Region> AllRegions;
-  AllRegions.push_back(
-  
-  //for (auto Region : *TopRegion) {a
-  for (auto It = TopRegion->begin(); It!=TopRegion->end(); It++) {
-    errs() << "Sub Region:\n";
-    (*It)->dump();
-    if ((*It)->getExit())
-      RegionsByEntry[(*It)->getEntry()].push_back( (*It)->getExit() );
-  }
-  */
   for (BasicBlock &BB : F) {
-    /*auto *ExitBB = RI.getMaxRegionExit(&BB);
-    if (ExitBB && ExitBB!=(&BB)) {
-      auto *Region = RI.getCommonRegion(&BB, ExitBB);
-      //RegionsByEntry[&BB].push_back(ExitBB);
-      RegionsByEntry[Region->getEntry()].push_back(Region->getExit());
-    }*/
     auto *R = RI.getRegionFor(&BB);
-      //RegionsByEntry[&BB].push_back(ExitBB);
     if (R && R->getExit() && R->getExit()!=(&BB)) {
       auto &Regions = RegionsByEntry[R->getEntry()];
-      if (std::find(Regions.begin(),Regions.end(),R->getExit())==Regions.end()) 
+      if (std::find(Regions.begin(),Regions.end(),R->getExit())==Regions.end()) {
         RegionsByEntry[R->getEntry()].push_back(R->getExit());
+        RegionEntry RE(R->getEntry(),R->getExit());
+        OrderedRegions.push_back(RE);
+      }
     }
-    
-    
   }
 
-  //for (auto It = TopRegion->begin(); It!=TopRegion->end(); It++) {
-    //(*It)->dump();
-  for (auto &EEPair : RegionsByEntry) {
-
+  for (RegionEntry &RE : OrderedRegions) {
     
-    BasicBlock *EntryRef = EEPair.first;
-    for (BasicBlock *ExitRef : EEPair.second) {
-    //BasicBlock *ExitRef = EEPair.second;
+    BasicBlock *EntryRef = RE.getEntry();
+    BasicBlock *ExitRef = RE.getExit();
     
-
     errs() << "Reference Region: " << EntryRef->getName().str() << " -> " << ExitRef->getName().str() << "\n";
 
     unsigned CountRegions = 1;
@@ -2150,7 +2124,6 @@ bool RegionRoller::run() {
     if (Modified) return true;    
     //errs() << "Skipping smaller regions\n";
     //break;
-    }
   }
 
   return false;
