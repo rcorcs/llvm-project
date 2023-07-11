@@ -1,0 +1,20 @@
+s482
+//    non-local goto's
+//    other loop exit with code before exit
+        #pragma clang loop unroll_count(UNROLL_COUNT)
+        for (int i = 0; i < LEN_1D; i++) {
+            a[i] += b[i] * c[i];
+            if (c[i] > b[i]) break;
+        }
+
+
+s481
+//    non-local goto's
+//    stop statement
+        #pragma clang loop unroll_count(UNROLL_COUNT)
+        for (int i = 0; i < LEN_1D; i++) {
+            if (d[i] < (real_t)0.) {
+                exit (0);
+            }
+            a[i] += b[i] * c[i];
+        }

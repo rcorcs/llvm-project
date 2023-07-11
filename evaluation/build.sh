@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DIR=$(dirname $(readlink -f $0))
+echo $DIR
 source $DIR/config
 
 ${LLVMDIR}clang $1 -Os -emit-llvm -S -o $1.ll -fno-vectorize -fno-slp-vectorize 

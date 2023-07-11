@@ -226,6 +226,14 @@ public:
       growGraph(Root,BB, Visited);
     }
   }
+  AlignedGraph(SelectInst *Sel, Instruction *U, BasicBlock *BB, ScalarEvolution *SE=nullptr) : BB(BB), SE(SE) {
+    Root = buildMinMaxReduction(Sel,U,BB,nullptr);
+    if (Root) {
+      addNode(Root);
+      std::set<Node*> Visited;
+      growGraph(Root,BB, Visited);
+    }
+  }
 
   template<typename ValueT>
   AlignedGraph(std::vector<ValueT*> &Vs, BasicBlock *BB, ScalarEvolution *SE=nullptr) : BB(BB), SE(SE) {
@@ -398,6 +406,9 @@ private:
 
   template<typename ValueT>
   Node *buildReduction(ValueT *V, Instruction *, BasicBlock *BB, Node *Parent);
+
+  template<typename ValueT>
+  Node *buildMinMaxReduction(ValueT *V, Instruction *, BasicBlock *BB, Node *Parent);
   //template<typename ValueT>
   //Node *buildGEPSequence(std::vector<ValueT *> &VL, BasicBlock *BB, Node *Parent);
   //template<typename ValueT>
@@ -438,11 +449,13 @@ public:
   std::unordered_map<Value *, std::vector<Instruction *> > Stores;
   std::unordered_map<Value *, std::vector<Instruction *> > Calls;
   std::unordered_map<BinaryOperator *, Instruction *> Reductions;
+  std::unordered_map<SelectInst *, Instruction *> MinMaxReductions;
 
   void clear() {
     Stores.clear();
     Calls.clear();
     Reductions.clear();
+    MinMaxReductions.clear();
   }
 
   void remove(Instruction *I) {
@@ -459,6 +472,12 @@ public:
     }
     for (auto &Pair : Reductions) {
       if (Pair.second==I) Reductions[Pair.first] = nullptr;
+    }
+    if (SelectInst *Sel = dyn_cast<SelectInst>(I)) {
+      if (MinMaxReductions.find(Sel)!=MinMaxReductions.end()) MinMaxReductions[Sel] = nullptr;
+    }
+    for (auto &Pair : MinMaxReductions) {
+      if (Pair.second==I) MinMaxReductions[Pair.first] = nullptr;
     }
   }
 
@@ -582,6 +601,15 @@ Node *AlignedGraph::buildReduction(ValueT *V, Instruction *U, BasicBlock *BB, No
   return N;
 }
 
+template<typename ValueT>
+Node *AlignedGraph::buildMinMaxReduction(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent) {
+  Node *N = MinMaxReductionNode::get(V, U, BB, Parent);
+  PHINode *PHI = dyn_cast<PHINode>(U);
+  if (N && PHI)
+    Inputs.insert(PHI);
+  return N;
+}
+
 
 
 template<typename ValueT>
@@ -650,6 +678,21 @@ static bool tempMatching(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Parent) 
   Matching = Matching && (UniqueValues.size()==Vs.size());
 
   return Matching;
+}
+
+template<typename ValueT>
+static bool buildMinMaxReduction(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Parent) {
+  errs() << "buildMinMaxReduction:\n";
+  printVs(Vs);
+  for (auto *V : Vs) {
+    if (SelectInst *Sel = dyn_cast<SelectInst>(V)) {
+       CmpInst *Cmp = dyn_cast<CmpInst>(Sel->getCondition());
+       if (Cmp) {
+         Sel->dump();
+         errs() << "SELECT: CMP: operands: " << Cmp->getNumOperands() << "\n";
+       }
+    }
+  }
 }
 
 template<typename ValueT>
@@ -1923,6 +1966,46 @@ static BinaryOperator *getPossibleReduction(Value *V) {
   return BO;
 }
 
+static SelectInst *getPossibleMinMaxReduction(Value *V) {
+  errs() << "getPossibleMinMaxReduction\n";
+  if (V==nullptr) return nullptr;
+  SelectInst *Sel = dyn_cast<SelectInst>(V);
+  if (Sel==nullptr) return nullptr;
+
+  SelectInst *SelT = dyn_cast<SelectInst>(Sel->getTrueValue());
+  SelectInst *SelF = dyn_cast<SelectInst>(Sel->getFalseValue());
+  SelectInst *RecSel = nullptr;
+  Value *Val = nullptr;
+  if (SelT) {
+    RecSel = SelT;
+    Val = Sel->getFalseValue();
+  }
+  if (SelF) {
+    RecSel = SelF;
+    Val = Sel->getTrueValue();
+  }
+  unsigned HasTwoConditions = 0;
+  CmpInst *Cmp = dyn_cast<CmpInst>(Sel->getCondition());
+  //if (Cmp && Cmp->isRelational()) {
+  if (Cmp && !Cmp->isEquality()) {
+    for (unsigned i = 0; i<Cmp->getNumOperands(); i++) {
+      Cmp->getOperand(i)->dump();
+      if (Cmp->getOperand(i)==RecSel) {
+        errs() << "i:" << i << " selection\n";
+        HasTwoConditions++;
+      }
+      if (Cmp->getOperand(i)==Val) {
+        errs() << "i:" << i << " matching value\n";
+        HasTwoConditions++;
+      }
+    }
+  }
+  if (HasTwoConditions!=2) return nullptr;
+
+  return Sel;
+  
+}
+
 void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
   // Initialize the collections. We will make a single pass over the block.
   Seeds.clear();
@@ -1981,6 +2064,10 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
 	  //BO->dump();
 #endif
           Seeds.Reductions[BO] = &I;
+        } else if (SelectInst *Sel = getPossibleMinMaxReduction(CI->getArgOperand(i))) {
+          errs() << "TODO: SELECTION : MINMAX\n";
+          Sel->dump();
+          Seeds.MinMaxReductions[Sel] = &I;
         }
       }
     }
@@ -1992,6 +2079,10 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
 	  //BO->dump();
 #endif
           Seeds.Reductions[BO] = &I;
+        } else if (SelectInst *Sel = getPossibleMinMaxReduction(CB->getArgOperand(i))) {
+          errs() << "TODO: SELECTION : MINMAX\n";
+          Sel->dump();
+          Seeds.MinMaxReductions[Sel] = &I;
         }
       }
     }
@@ -2003,6 +2094,10 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
 	  //BO->dump();
 #endif
           Seeds.Reductions[BO] = &I;
+        } else if (SelectInst *Sel = getPossibleMinMaxReduction(Br->getCondition())) {
+          errs() << "TODO: SELECTION : MINMAX\n";
+          Sel->dump();
+          Seeds.MinMaxReductions[Sel] = &I;
         }
       }
     }
@@ -2013,6 +2108,10 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
 	//BO->dump();
 #endif
         Seeds.Reductions[BO] = &I;
+      } else if (SelectInst *Sel = getPossibleMinMaxReduction(Ret->getReturnValue())) {
+        errs() << "TODO: SELECTION : MINMAX\n";
+        Sel->dump();
+        Seeds.MinMaxReductions[Sel] = &I;
       }
     }
     else if (auto *PHI = dyn_cast<PHINode>(&I)) {
@@ -2027,6 +2126,10 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
 	  BO->dump();
 #endif
           Seeds.Reductions[BO] = &I;
+        } else if (SelectInst *Sel = getPossibleMinMaxReduction(V)) {
+          errs() << "TODO: SELECTION : MINMAX\n";
+          Sel->dump();
+          Seeds.MinMaxReductions[Sel] = &I;
         }
       }
     }
@@ -2211,6 +2314,19 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
     //errs() << "reductions (terminators)\n";
 #endif
     for (auto &Pair : Seeds.Reductions) {
+      if (Pair.second==nullptr) continue;
+      if (!Pair.second->isTerminator()) continue; //skip non-terminators
+      AlignedGraph G(Pair.first, Pair.second, &BB, SE);
+      if (G.isSchedulable(BB)) {
+	NumAttempts++;
+        CodeGenerator CG(F, BB, G);
+	bool HasRolled = CG.generate(Seeds);
+        Changed = Changed || HasRolled;
+	if (HasRolled) NumRolledLoops++;
+      }
+      G.destroy();
+    }
+    for (auto &Pair : Seeds.MinMaxReductions) {
       if (Pair.second==nullptr) continue;
       if (!Pair.second->isTerminator()) continue; //skip non-terminators
       AlignedGraph G(Pair.first, Pair.second, &BB, SE);

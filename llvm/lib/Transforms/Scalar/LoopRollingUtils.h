@@ -647,6 +647,41 @@ public:
 
 };
 
+class MinMaxReductionNode : public Node {
+private:
+  SelectInst *SelRef;
+  Value *Start;
+  std::vector<Value *> Vs;
+public:
+
+  MinMaxReductionNode(SelectInst *Sel, PHINode *Start, std::vector<BinaryOperator*> &BOs, std::vector<Value*> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::REDUCTION,BOs,BB,Parent), SelRef(Sel), Start(Start), Vs(Vs) {}
+
+  SelectInst *getSelection() { return SelRef; }
+  std::vector<Value *> &getOperands() { return Vs; }
+  Value *getStartValue() { if (Start) return Start; else return getNeutralValue(); }
+
+  Instruction *getValidInstruction(unsigned i) {
+    auto *I = dyn_cast<SelectInst>(getValue(i));
+    return I;
+  }
+
+  std::string getString() {
+    std::string str;
+    raw_string_ostream labelStream(str);
+    labelStream << " min/max.";
+    return labelStream.str();
+  }
+
+  Value *getNeutralValue() {
+    return nullptr; //ConstantInt::get(Ty, 0);
+  }
+
+  template<typename ValueT>
+  static MinMaxReductionNode *get(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent);
+
+};
+
+
 static void ReorderOperands(std::vector<Value*> &Operands, BasicBlock *BB) {
   std::unordered_map<const Value*,APInt> Ids;
   
@@ -1135,10 +1170,12 @@ template<typename ValueT>
 ReductionNode *ReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent) {
   if (V==nullptr) return nullptr;
   BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
+  if (BO==nullptr) return nullptr;
+
   errs() << "Building reduction\n";
   U->dump();
   BO->dump();
-  if (BO==nullptr) return nullptr;
+
   if (BO->getParent()!=BB) return nullptr;
   if (!ReductionNode::isValidOperation(BO)) return nullptr;
 
@@ -1169,6 +1206,31 @@ ReductionNode *ReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Nod
 
   return new ReductionNode(BO, PHI, BOs, Vs, BB, Parent);
 }
+
+
+template<typename ValueT>
+MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent) {
+  if (V==nullptr) return nullptr;
+  SelectInst *Sel = dyn_cast<SelectInst>(V);
+  if (Sel==nullptr) return nullptr;
+
+  errs() << "Building min-max reduction\n";
+  U->dump();
+  Sel->dump();
+
+  if (Sel->getParent()!=BB) return nullptr;
+  //if (!ReductionNode::isValidOperation(BO)) return nullptr;
+
+  PHINode *PHI = dyn_cast<PHINode>(U);
+
+  //std::vector<BinaryOperator*> BOs;
+  //std::vector<Value*> Vs;
+  //ReductionNode::collectValues(BO,PHI,BOs,Vs);
+
+  //return new MinMaxReductionNode(BO, PHI, BOs, Vs, BB, Parent);
+  return nullptr;
+}
+
 
 
 template<typename ValueT>

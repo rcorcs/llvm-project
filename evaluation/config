@@ -1,1 +1,1 @@
-LLVMDIR=../build/release/bin/
+LLVMDIR=$(dirname $(readlink -f $0))/../build/release/bin/
