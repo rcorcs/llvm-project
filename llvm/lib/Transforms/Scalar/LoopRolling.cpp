@@ -1964,6 +1964,8 @@ static BinaryOperator *getPossibleReduction(Value *V) {
 }
 
 static SelectInst *getPossibleMinMaxReduction(Value *V) {
+  if (!EnableExtensions) return nullptr;
+
   errs() << "getPossibleMinMaxReduction\n";
   if (V==nullptr) return nullptr;
   SelectInst *Sel = dyn_cast<SelectInst>(V);
