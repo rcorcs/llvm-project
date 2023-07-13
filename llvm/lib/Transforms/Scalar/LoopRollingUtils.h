@@ -99,7 +99,7 @@ static Value *isConstantSequence(const std::vector<ValueT *> VL) {
 
 
 enum NodeType {
-  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, REDUCTION, RECURRENCE, MISMATCH, MULTI, LABEL
+  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, MINMAXREDUCTION, REDUCTION, RECURRENCE, MISMATCH, MULTI, LABEL
 };
 
 static std::string NodeTypeString(NodeType ty) {
@@ -648,13 +648,18 @@ public:
 };
 
 class MinMaxReductionNode : public Node {
+public:
+  enum OperationType {
+    MIN, MAX, NONE
+  };
 private:
   SelectInst *SelRef;
   Value *Start;
   std::vector<Value *> Vs;
+  OperationType Operation;
 public:
 
-  MinMaxReductionNode(SelectInst *Sel, PHINode *Start, std::vector<BinaryOperator*> &BOs, std::vector<Value*> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::REDUCTION,BOs,BB,Parent), SelRef(Sel), Start(Start), Vs(Vs) {}
+  MinMaxReductionNode(SelectInst *Sel, PHINode *Start, std::vector<SelectInst *> Sels, std::vector<Value*> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::MINMAXREDUCTION,Sels,BB,Parent), SelRef(Sel), Start(Start), Vs(Vs) {}
 
   SelectInst *getSelection() { return SelRef; }
   std::vector<Value *> &getOperands() { return Vs; }
@@ -675,6 +680,9 @@ public:
   Value *getNeutralValue() {
     return nullptr; //ConstantInt::get(Ty, 0);
   }
+
+  //static void collectValues(SelectInst *Sel, std::vector<SelectInst *> &Sels, std::vector<Value*> &Vs);
+
 
   template<typename ValueT>
   static MinMaxReductionNode *get(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent);
@@ -1207,6 +1215,92 @@ ReductionNode *ReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Nod
   return new ReductionNode(BO, PHI, BOs, Vs, BB, Parent);
 }
 
+static bool collectMinMaxReduction(SelectInst *Sel) {
+ 
+
+  SelectInst *NextSel = Sel;
+  Value *Val = nullptr;
+  MinMaxReductionNode::OperationType OperationRef = MinMaxReductionNode::OperationType::NONE;
+
+  do {
+    Sel = NextSel;
+    NextSel = nullptr;
+
+    CmpInst *Cmp = dyn_cast<CmpInst>(Sel->getCondition());
+    if (Cmp==nullptr) return false;
+
+    errs() << "Processing selection...\n";
+    Cmp->dump();
+    Sel->dump();
+
+    MinMaxReductionNode::OperationType Operation = MinMaxReductionNode::OperationType::NONE;
+    switch (Cmp->getPredicate()) {
+    case CmpInst::Predicate::ICMP_ULT:
+    case CmpInst::Predicate::ICMP_ULE:
+    case CmpInst::Predicate::ICMP_SLT:
+    case CmpInst::Predicate::ICMP_SLE:
+    case CmpInst::Predicate::FCMP_OLT:
+    case CmpInst::Predicate::FCMP_OLE:
+    case CmpInst::Predicate::FCMP_ULT:
+    case CmpInst::Predicate::FCMP_ULE:
+      if (Cmp->getOperand(0)==Sel->getTrueValue() && Cmp->getOperand(1)==Sel->getFalseValue()) {
+        Operation = MinMaxReductionNode::OperationType::MIN;
+        errs() << "Min operation found\n";
+      } else if (Cmp->getOperand(0)==Sel->getFalseValue() && Cmp->getOperand(1)==Sel->getTrueValue()) {
+        Operation = MinMaxReductionNode::OperationType::MAX;
+        errs() << "Max operation found\n";
+      } else {
+        errs() << "Invalid Cmp-Select pair\n";
+        return false;
+        //assert("Unexpected pattern");
+      }
+      break;
+    case CmpInst::Predicate::ICMP_UGT:
+    case CmpInst::Predicate::ICMP_UGE:
+    case CmpInst::Predicate::ICMP_SGT:
+    case CmpInst::Predicate::ICMP_SGE:
+    case CmpInst::Predicate::FCMP_OGT:
+    case CmpInst::Predicate::FCMP_OGE:
+    case CmpInst::Predicate::FCMP_UGT:
+    case CmpInst::Predicate::FCMP_UGE:
+      if (Cmp->getOperand(0)==Sel->getTrueValue() && Cmp->getOperand(1)==Sel->getFalseValue()) {
+        Operation = MinMaxReductionNode::OperationType::MAX;
+        errs() << "Max operation found\n";
+      } else if (Cmp->getOperand(0)==Sel->getFalseValue() && Cmp->getOperand(1)==Sel->getTrueValue()) {
+        Operation = MinMaxReductionNode::OperationType::MIN;
+        errs() << "Min operation found\n";
+      } else {
+        errs() << "Invalid Cmp-Select pair\n";
+        return false;
+        //assert("Unexpected pattern");
+      }
+      break;
+    default:
+      assert("Unexpected predicate");
+    }
+
+    if (Operation!=MinMaxReductionNode::OperationType::NONE) {
+      if (OperationRef==MinMaxReductionNode::OperationType::NONE)
+        OperationRef = Operation;
+      if (OperationRef!=Operation) {
+        errs() << "TODO: Invalid: differet reduction operation!\n";
+        break;
+      }
+      if (NextSel=dyn_cast<SelectInst>(Sel->getTrueValue())) {
+        Val = Sel->getFalseValue();
+      }
+      else if (NextSel=dyn_cast<SelectInst>(Sel->getFalseValue())) {
+        Val = Sel->getTrueValue();
+      } else {
+        errs() << "TODO: Something must be done here!\n";
+        break;
+      }
+    }
+  } while (NextSel);
+  errs() << "Done with collection of min/max\n";
+  return false;
+}
+
 
 template<typename ValueT>
 MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent) {
@@ -1226,6 +1320,7 @@ MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBl
   //std::vector<BinaryOperator*> BOs;
   //std::vector<Value*> Vs;
   //ReductionNode::collectValues(BO,PHI,BOs,Vs);
+  collectMinMaxReduction(Sel);
 
   //return new MinMaxReductionNode(BO, PHI, BOs, Vs, BB, Parent);
   return nullptr;

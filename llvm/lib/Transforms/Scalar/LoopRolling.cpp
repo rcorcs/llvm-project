@@ -63,9 +63,6 @@ static cl::opt<bool>
 EnableExtensions("loop-rolling-extensions", cl::init(false), cl::Hidden,
                  cl::desc("Enable loop rolling extensions"));
 
-
-
-
 bool match(Value *V1, Value *V2) {
   Instruction *I1 = dyn_cast<Instruction>(V1);
   Instruction *I2 = dyn_cast<Instruction>(V2);
