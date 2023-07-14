@@ -228,6 +228,7 @@ public:
     if (Root) {
       addNode(Root);
       std::set<Node*> Visited;
+      errs() << "Growing AlignedGraph: MinMaxReductionNode root\n";
       growGraph(Root,BB, Visited);
     }
   }
@@ -677,6 +678,7 @@ static bool tempMatching(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Parent) 
   return Matching;
 }
 
+/*
 template<typename ValueT>
 static bool buildMinMaxReduction(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Parent) {
   errs() << "buildMinMaxReduction:\n";
@@ -691,6 +693,7 @@ static bool buildMinMaxReduction(std::vector<ValueT*> Vs, BasicBlock *BB, Node *
     }
   }
 }
+*/
 
 template<typename ValueT>
 Node *AlignedGraph::createNode(std::vector<ValueT*> Vs, BasicBlock *BB, Node *Parent) {
@@ -814,6 +817,10 @@ void AlignedGraph::growGraph(Node *N, BasicBlock *BB, std::set<Node*> &Visited) 
     } break;
     case NodeType::REDUCTION: {
        auto &Vs = ((ReductionNode*)N)->getOperands();
+       growGraphNode(Vs, N, BB, Visited);
+    } break;
+    case NodeType::MINMAXREDUCTION: {
+       auto &Vs = ((MinMaxReductionNode*)N)->getOperands();
        growGraphNode(Vs, N, BB, Visited);
     } break;
     case NodeType::GEPSEQ: {
@@ -1491,6 +1498,93 @@ Value *CodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 #endif
       return NewI;
     }
+    case NodeType::MINMAXREDUCTION: {
+#ifdef TEST_DEBUG
+      errs() << "Generating MINMAXREDUCTION\n";
+#endif
+      auto *RN = (MinMaxReductionNode*)N;
+
+      assert(RN->getNumChildren() && "Expected child with varying operands!");
+      Value *Op = cloneGraph(RN->getChild(0), Builder);
+#ifdef TEST_DEBUG
+      errs() << "Closing MINMAXREDUCTION\n";
+#endif
+
+      
+      /*
+      Instruction *NewI = RN->getBinaryOperator()->clone();
+      for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+        NewI->setOperand(i,nullptr);
+      }
+      Builder.Insert(NewI);
+      CreatedCode.push_back(NewI);
+      NodeToValue[N] = NewI;
+      */
+      /*
+      for (int i = RN->size(); i>0; i--) {
+        if (auto *I = RN->getValidInstruction((int)i - 1)) {
+          if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) {
+            Garbage.push_back(I);
+	  }
+        }
+      }
+      */
+      
+      for (unsigned i = 0; i<RN->size(); i++) {
+        if (auto *I = RN->getValidInstruction(i)) {
+	  Garbage.insert(I);
+          SelectInst *Sel = dyn_cast<SelectInst>(I);
+	  Garbage.insert(dyn_cast<Instruction>(Sel->getCondition()));
+        }
+      }
+
+      PHINode *PHI = nullptr;
+      if (Header->getFirstNonPHI()) {
+        IRBuilder<> PHIBuilder(&*Header->getFirstInsertionPt());
+        PHI = PHIBuilder.CreatePHI(Op->getType(),2);
+      } else {
+        PHI = Builder.CreatePHI(Op->getType(),2);
+      }
+      //IRBuilder<> PHIBuilder(Header->getFirstNonPHI());
+      //PHINode *PHI = PHIBuilder.CreatePHI(NewI->getType(),2);
+      CreatedCode.push_back(PHI);
+
+      Value *Cond = nullptr;
+      if (RN->getOperation()==MinMaxReductionNode::OperationType::MIN) {
+        if (Op->getType()->isIntOrPtrTy()) {
+          Cond = Builder.CreateICmpSLT(Op, PHI);
+        } else if (Op->getType()->isFloatingPointTy()) {
+          Cond = Builder.CreateFCmpOLT(Op, PHI);
+        }
+      } else if (RN->getOperation()==MinMaxReductionNode::OperationType::MAX) {
+        if (Op->getType()->isIntOrPtrTy()) {
+          Cond = Builder.CreateICmpSGT(Op, PHI);
+        } else if (Op->getType()->isFloatingPointTy()) {
+          Cond = Builder.CreateFCmpOGT(Op, PHI);
+        }
+      }
+      if (Cond==nullptr) {
+        errs() << "ERROR: INVALID Cond==nullptr\n";
+        assert("What should I do? This is unexpected!");
+      }
+      Instruction *NewI = Builder.CreateSelect(Cond, Op, PHI)
+      Builder.(NewI);
+      CreatedCode.push_back(NewI);
+      NodeToValue[N] = NewI;
+
+      PHI->addIncoming(NewI,Header);
+      PHI->addIncoming(RN->getStartValue(),PreHeader);
+      NewI->setOperand(0,PHI);
+      NewI->setOperand(1,Op);
+
+      Extracted[RN->getSelection()] = NewI;//PHI;
+      generateExtract(N, NewI, Builder);
+
+#ifdef TEST_DEBUG
+      errs() << "Gen: "; NewI->dump();
+#endif
+      return NewI;
+    }
     case NodeType::INTSEQ: {
 #ifdef TEST_DEBUG
       errs() << "Generating INTSEQ\n";
@@ -1809,6 +1903,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 
   errs() << "Gains: " << SizeOriginal << " - " << SizeModified << " = " << ( ((int)SizeOriginal) - ((int)SizeModified) ) << "; ";
   errs() << "Width: " << G.Root->size() << "; ";
+  if (G.Root->getNodeType() == NodeType::MINMAXREDUCTION) errs() << "MinMaxReduction ";
   if (G.Root->getNodeType() == NodeType::REDUCTION) errs() << "Reduction ";
   if (HasRecurrence) errs() << "Recurrence ";
 
@@ -1925,6 +2020,7 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
     errs() << "INTSEQ: " << NodeFreq[NodeType::INTSEQ] << "\n";
     errs() << "ALTSEQ: " << NodeFreq[NodeType::ALTSEQ] << "\n";
     errs() << "GEPSEQ: " << NodeFreq[NodeType::GEPSEQ] << "\n";
+    errs() << "MINMAXREDUCTION: " << NodeFreq[NodeType::MINMAXREDUCTION] << "\n";
     errs() << "REDUCTION: " << NodeFreq[NodeType::REDUCTION] << "\n";
     errs() << "RECURRENCE: " << NodeFreq[NodeType::RECURRENCE] << "\n";
     errs() << "MULTI: " << NodeFreq[NodeType::MULTI] << "\n";
@@ -2330,6 +2426,7 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
       if (!Pair.second->isTerminator()) continue; //skip non-terminators
       AlignedGraph G(Pair.first, Pair.second, &BB, SE);
       if (G.isSchedulable(BB)) {
+        errs() << "GENERATING CODE FOR MIN MAX REDUCTION\n";
 	NumAttempts++;
         CodeGenerator CG(F, BB, G);
 	bool HasRolled = CG.generate(Seeds);

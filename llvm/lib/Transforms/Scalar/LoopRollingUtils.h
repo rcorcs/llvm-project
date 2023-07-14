@@ -659,11 +659,13 @@ private:
   OperationType Operation;
 public:
 
-  MinMaxReductionNode(SelectInst *Sel, PHINode *Start, std::vector<SelectInst *> Sels, std::vector<Value*> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::MINMAXREDUCTION,Sels,BB,Parent), SelRef(Sel), Start(Start), Vs(Vs) {}
+  MinMaxReductionNode(SelectInst *Sel, OperationType Op, Value *Start, std::vector<SelectInst *> Sels, std::vector<Value*> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::MINMAXREDUCTION,Sels,BB,Parent), SelRef(Sel), Operation(Op), Start(Start), Vs(Vs) {}
 
   SelectInst *getSelection() { return SelRef; }
   std::vector<Value *> &getOperands() { return Vs; }
   Value *getStartValue() { if (Start) return Start; else return getNeutralValue(); }
+  
+  OperationType getOperation() { return Operation; }
 
   Instruction *getValidInstruction(unsigned i) {
     auto *I = dyn_cast<SelectInst>(getValue(i));
@@ -673,7 +675,12 @@ public:
   std::string getString() {
     std::string str;
     raw_string_ostream labelStream(str);
-    labelStream << " min/max.";
+    if (getOperation()==OperationType::MIN)
+      labelStream << " min";
+    else if (getOperation()==OperationType::MAX)
+      labelStream << " max";
+    
+    labelStream << " red.";
     return labelStream.str();
   }
 
@@ -1215,19 +1222,38 @@ ReductionNode *ReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Nod
   return new ReductionNode(BO, PHI, BOs, Vs, BB, Parent);
 }
 
-static bool collectMinMaxReduction(SelectInst *Sel) {
- 
+template<typename ValueT>
+MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent) {
+  if (V==nullptr) return nullptr;
+  SelectInst *Sel = dyn_cast<SelectInst>(V);
+  if (Sel==nullptr) return nullptr;
+
+  errs() << "Building min-max reduction\n";
+  U->dump();
+  Sel->dump();
+
+  if (Sel->getParent()!=BB) return nullptr;
+  //if (!ReductionNode::isValidOperation(BO)) return nullptr;
+
+  PHINode *PHI = dyn_cast<PHINode>(U);
+  Value *Start = nullptr;
+  std::vector<SelectInst*> Sels;
+  std::vector<Value*> Vs;
+  //ReductionNode::collectValues(BO,PHI,BOs,Vs);
+  //collectMinMaxReduction(Sel);
 
   SelectInst *NextSel = Sel;
   Value *Val = nullptr;
   MinMaxReductionNode::OperationType OperationRef = MinMaxReductionNode::OperationType::NONE;
+  
+  int LastVal = -1;
 
   do {
     Sel = NextSel;
     NextSel = nullptr;
 
     CmpInst *Cmp = dyn_cast<CmpInst>(Sel->getCondition());
-    if (Cmp==nullptr) return false;
+    if (Cmp==nullptr) return nullptr;
 
     errs() << "Processing selection...\n";
     Cmp->dump();
@@ -1251,7 +1277,7 @@ static bool collectMinMaxReduction(SelectInst *Sel) {
         errs() << "Max operation found\n";
       } else {
         errs() << "Invalid Cmp-Select pair\n";
-        return false;
+        return nullptr;
         //assert("Unexpected pattern");
       }
       break;
@@ -1271,7 +1297,7 @@ static bool collectMinMaxReduction(SelectInst *Sel) {
         errs() << "Min operation found\n";
       } else {
         errs() << "Invalid Cmp-Select pair\n";
-        return false;
+        return nullptr;
         //assert("Unexpected pattern");
       }
       break;
@@ -1286,44 +1312,49 @@ static bool collectMinMaxReduction(SelectInst *Sel) {
         errs() << "TODO: Invalid: differet reduction operation!\n";
         break;
       }
+      Sels.push_back(Sel);
       if (NextSel=dyn_cast<SelectInst>(Sel->getTrueValue())) {
         Val = Sel->getFalseValue();
+        LastVal = 0;
+        Vs.push_back(Val);
       }
       else if (NextSel=dyn_cast<SelectInst>(Sel->getFalseValue())) {
         Val = Sel->getTrueValue();
+        LastVal = 1;
+        Vs.push_back(Val);
       } else {
         errs() << "TODO: Something must be done here!\n";
+        if (LastVal==1) {
+          Val = Sel->getTrueValue();
+          Start = Sel->getFalseValue();
+        } else {
+          Val = Sel->getFalseValue();
+          Start = Sel->getTrueValue();
+        }
+
+        Vs.push_back(Val);
         break;
       }
+
     }
   } while (NextSel);
   errs() << "Done with collection of min/max\n";
-  return false;
-}
 
+  if (Sels.size()<=1) return nullptr;
+  
+  errs() << "Created MinMaxReductionNode:\n";
+  if (OperationRef==MinMaxReductionNode::OperationType::MIN)
+  errs() << "MIN\n";
+  else if (OperationRef==MinMaxReductionNode::OperationType::MAX)
+  errs() << "MAX\n";
+  else errs() << "NONE\n";
+  errs() << "Start:";
+  if (Start) Start->dump();
+  else errs() << " none\n";
+  errs() << "Vals:\n";
+  printVs(Vs);
 
-template<typename ValueT>
-MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent) {
-  if (V==nullptr) return nullptr;
-  SelectInst *Sel = dyn_cast<SelectInst>(V);
-  if (Sel==nullptr) return nullptr;
-
-  errs() << "Building min-max reduction\n";
-  U->dump();
-  Sel->dump();
-
-  if (Sel->getParent()!=BB) return nullptr;
-  //if (!ReductionNode::isValidOperation(BO)) return nullptr;
-
-  PHINode *PHI = dyn_cast<PHINode>(U);
-
-  //std::vector<BinaryOperator*> BOs;
-  //std::vector<Value*> Vs;
-  //ReductionNode::collectValues(BO,PHI,BOs,Vs);
-  collectMinMaxReduction(Sel);
-
-  //return new MinMaxReductionNode(BO, PHI, BOs, Vs, BB, Parent);
-  return nullptr;
+  return new MinMaxReductionNode(Sel, OperationRef, Start, Sels, Vs, BB, Parent);
 }
 
 
