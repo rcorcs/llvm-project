@@ -1235,6 +1235,8 @@ MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBl
   if (Sel->getParent()!=BB) return nullptr;
   //if (!ReductionNode::isValidOperation(BO)) return nullptr;
 
+  SelectInst *SelRef = Sel;
+  if (Sel==nullptr) return nullptr;
   PHINode *PHI = dyn_cast<PHINode>(U);
   Value *Start = nullptr;
   std::vector<SelectInst*> Sels;
@@ -1354,7 +1356,7 @@ MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBl
   errs() << "Vals:\n";
   printVs(Vs);
 
-  return new MinMaxReductionNode(Sel, OperationRef, Start, Sels, Vs, BB, Parent);
+  return new MinMaxReductionNode(SelRef, OperationRef, Start, Sels, Vs, BB, Parent);
 }
 
 

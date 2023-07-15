@@ -262,6 +262,10 @@ public:
 	  for (unsigned i = 0; i<N->size(); i++) {
             Value *V = N->getValidInstruction(i);
 	    if (V) ValuesInNode.insert(V);
+            if (N->getNodeType()==NodeType::MINMAXREDUCTION) {
+              if (SelectInst *Sel = dyn_cast<SelectInst>(V))
+                ValuesInNode.insert(Sel->getCondition());
+            }
             NodeMap2[V].insert(N);
 	  }
 	}
@@ -1049,6 +1053,12 @@ void CodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder<> &Bu
       return;
     }
   }
+  if (NeedExtract.size()==1 && N->getNodeType()==NodeType::MINMAXREDUCTION) {
+    MinMaxReductionNode *RN = (MinMaxReductionNode*)N;
+    if (RN->getSelection()==RN->getValidInstruction(*NeedExtract.begin())) {
+      return;
+    }
+  }
 
   BasicBlock &Entry = F.getEntryBlock();
   IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
@@ -1567,15 +1577,12 @@ Value *CodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
         errs() << "ERROR: INVALID Cond==nullptr\n";
         assert("What should I do? This is unexpected!");
       }
-      Instruction *NewI = Builder.CreateSelect(Cond, Op, PHI)
-      Builder.(NewI);
+      Instruction *NewI = dyn_cast<Instruction>(Builder.CreateSelect(Cond, Op, PHI));
       CreatedCode.push_back(NewI);
       NodeToValue[N] = NewI;
 
       PHI->addIncoming(NewI,Header);
       PHI->addIncoming(RN->getStartValue(),PreHeader);
-      NewI->setOperand(0,PHI);
-      NewI->setOperand(1,Op);
 
       Extracted[RN->getSelection()] = NewI;//PHI;
       generateExtract(N, NewI, Builder);
@@ -1848,6 +1855,8 @@ bool CodeGenerator::generate(SeedGroups &Seeds) {
 #ifdef TEST_DEBUG
   errs() << "Graph code generated!\n";
 #endif
+  
+  BB.getParent()->dump();
  
   bool HasRecurrence = false;
   int HasMismatch = 0;
