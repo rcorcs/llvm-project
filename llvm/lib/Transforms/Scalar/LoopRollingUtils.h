@@ -692,7 +692,7 @@ public:
 
 
   template<typename ValueT>
-  static MinMaxReductionNode *get(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent);
+  static MinMaxReductionNode *get(ValueT *V, Instruction *U, BasicBlock *BB, unsigned Skip, Node *Parent);
 
 };
 
@@ -1223,7 +1223,7 @@ ReductionNode *ReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Nod
 }
 
 template<typename ValueT>
-MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, Node *Parent) {
+MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBlock *BB, unsigned Skip, Node *Parent) {
   if (V==nullptr) return nullptr;
   SelectInst *Sel = dyn_cast<SelectInst>(V);
   if (Sel==nullptr) return nullptr;
@@ -1315,15 +1315,16 @@ MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBl
         errs() << "TODO: Invalid: differet reduction operation!\n";
         break;
       }
-      Sels.push_back(Sel);
       if (NextSel=dyn_cast<SelectInst>(Sel->getTrueValue())) {
         Val = Sel->getFalseValue();
         LastVal = 0;
+        Sels.push_back(Sel);
         Vs.push_back(Val);
       }
       else if (NextSel=dyn_cast<SelectInst>(Sel->getFalseValue())) {
         Val = Sel->getTrueValue();
         LastVal = 1;
+        Sels.push_back(Sel);
         Vs.push_back(Val);
       } else {
         errs() << "TODO: Something must be done here!\n";
@@ -1335,6 +1336,7 @@ MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBl
           Start = Sel->getTrueValue();
         }
 
+        Sels.push_back(Sel);
         Vs.push_back(Val);
         break;
       }
@@ -1343,8 +1345,17 @@ MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBl
   } while (NextSel);
   errs() << "Done with collection of min/max\n";
 
+  if (Skip >= Sels.size()) return nullptr;
+  if (Skip) {
+    size_t n = Sels.size()-Skip;
+    Start = Sels[n];
+    Sels.resize(n);
+    Vs.resize(n);
+  }
+
   if (Sels.size()<=1) return nullptr;
-  
+  if (Start==nullptr) return nullptr;
+
   errs() << "Created MinMaxReductionNode:\n";
   if (OperationRef==MinMaxReductionNode::OperationType::MIN)
   errs() << "MIN\n";
