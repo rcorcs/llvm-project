@@ -1542,9 +1542,18 @@ Value *CodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       
       for (unsigned i = 0; i<RN->size(); i++) {
         if (auto *I = RN->getValidInstruction(i)) {
-	  Garbage.insert(I);
           SelectInst *Sel = dyn_cast<SelectInst>(I);
-	  Garbage.insert(dyn_cast<Instruction>(Sel->getCondition()));
+          Instruction *Cond = dyn_cast<Instruction>(Sel->getCondition());
+          if (Cond) {
+            if (std::find(Garbage.begin(), Garbage.end(), Cond)==Garbage.end())
+	      Garbage.insert(Cond);
+          }
+        }
+      }
+      for (unsigned i = 0; i<RN->size(); i++) {
+        if (auto *I = RN->getValidInstruction(i)) {
+          if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end())
+	    Garbage.insert(I);
         }
       }
 
@@ -1577,6 +1586,8 @@ Value *CodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
         errs() << "ERROR: INVALID Cond==nullptr\n";
         assert("What should I do? This is unexpected!");
       }
+      CreatedCode.push_back(Cond);
+
       Instruction *NewI = dyn_cast<Instruction>(Builder.CreateSelect(Cond, Op, PHI));
       CreatedCode.push_back(NewI);
       NodeToValue[N] = NewI;
@@ -2259,6 +2270,22 @@ void LoopRoller::collectSeedInstructions(BasicBlock &BB) {
 bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
     bool Changed = false;
     
+    for (auto &Pair : Seeds.MinMaxReductions) {
+      if (Pair.second==nullptr) continue;
+      if (!isa<PHINode>(Pair.second)) continue; //skip non-phi nodes
+      errs() << "Attempting alignment of min-max reduction starting with:";
+      Pair.first->dump();
+      AlignedGraph G(Pair.first, Pair.second, &BB, SE);
+      if (G.isSchedulable(BB)) {
+        errs() << "GENERATING CODE FOR MIN MAX REDUCTION\n";
+	NumAttempts++;
+        CodeGenerator CG(F, BB, G);
+	bool HasRolled = CG.generate(Seeds);
+        Changed = Changed || HasRolled;
+	if (HasRolled) NumRolledLoops++;
+      }
+      G.destroy();
+    }
     for (auto &Pair : Seeds.Stores) {
       bool Valid = true;
       errs() << "Attempting Group:\n";
@@ -2432,7 +2459,10 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
     }
     for (auto &Pair : Seeds.MinMaxReductions) {
       if (Pair.second==nullptr) continue;
+      if (isa<PHINode>(Pair.second)) continue; //skip phi-nodes
       if (!Pair.second->isTerminator()) continue; //skip non-terminators
+      errs() << "Attempting alignment of min-max reduction starting with:";
+      Pair.first->dump();
       AlignedGraph G(Pair.first, Pair.second, &BB, SE);
       if (G.isSchedulable(BB)) {
         errs() << "GENERATING CODE FOR MIN MAX REDUCTION\n";
@@ -2471,6 +2501,23 @@ bool LoopRoller::attemptRollingSeeds(BasicBlock &BB) {
       if (Pair.second->isTerminator()) continue; //skip terminators
       AlignedGraph G(Pair.first, Pair.second, &BB, SE);
       if (G.isSchedulable(BB)) {
+	NumAttempts++;
+        CodeGenerator CG(F, BB, G);
+	bool HasRolled = CG.generate(Seeds);
+        Changed = Changed || HasRolled;
+	if (HasRolled) NumRolledLoops++;
+      }
+      G.destroy();
+    }
+    for (auto &Pair : Seeds.MinMaxReductions) {
+      if (Pair.second==nullptr) continue;
+      if (isa<PHINode>(Pair.second)) continue; //skip phi-nodes
+      if (Pair.second->isTerminator()) continue; //skip terminators
+      errs() << "Attempting alignment of min-max reduction starting with:";
+      Pair.first->dump();
+      AlignedGraph G(Pair.first, Pair.second, &BB, SE);
+      if (G.isSchedulable(BB)) {
+        errs() << "GENERATING CODE FOR MIN MAX REDUCTION\n";
 	NumAttempts++;
         CodeGenerator CG(F, BB, G);
 	bool HasRolled = CG.generate(Seeds);

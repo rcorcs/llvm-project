@@ -1256,6 +1256,7 @@ MinMaxReductionNode *MinMaxReductionNode::get(ValueT *V, Instruction *U, BasicBl
 
     CmpInst *Cmp = dyn_cast<CmpInst>(Sel->getCondition());
     if (Cmp==nullptr) return nullptr;
+    if (Cmp->getNumUses()>1) return nullptr;
 
     errs() << "Processing selection...\n";
     Cmp->dump();
