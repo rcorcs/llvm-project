@@ -270,6 +270,10 @@ public:
   std::vector<Value *> CreatedCode;
   std::unordered_map<Instruction *, Instruction *> Extracted;
 
+  std::unordered_map<Type *, Value *> CachedCastIndVar;
+  
+  std::unordered_map<Type *, Value *> CachedRem2;
+  Value *AltSeqCmp{nullptr};
 
   BasicBlock *PreHeader;
   BasicBlock *Header;
@@ -489,7 +493,10 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
           NewI->setOperand(i,nullptr);
         }
         NodeToValue[N] = NewI;
-
+        errs() << "Generated Match for: "; I->dump();
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          errs() << "Operand: " << N->getChild(i)->getString() << "\n";
+        }
         std::vector<Value*> Operands;
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
           Operands.push_back(cloneGraph(N->getChild(i), Builder));
@@ -564,6 +571,10 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
           NewI->setOperand(i,nullptr);
         }
         NodeToValue[N] = NewI;
+        errs() << "Generated ConstExpr for: "; I->dump();
+        for (unsigned i = 0; i<N->getNumChildren(); i++) {
+          errs() << "Operand: " << N->getChild(i)->getString() << "\n";
+        }
 
         std::vector<Value*> Operands;
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
@@ -802,7 +813,6 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       NodeToValue[N] = NewV;
       return NewV;
     }
-    /*
     case NodeType::ALTSEQ: {
 #ifdef TEST_DEBUG
       errs() << "Generating ALTSEQ\n";
@@ -898,7 +908,8 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
           }
 
 	  Rem2 = CastIndVar;
-	  if (G.Root->size()>2){
+	  //if (G.Root->size()>2){
+	  if (N->size()>2){
             Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
             if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
               CreatedCode.push_back(Rem2I);
@@ -936,7 +947,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
           Rem2 = CachedRem2[IndVar->getType()];
 	} else {
 	
-	if (G.Root->size()>2){
+	if (N->size()>2){
           Rem2 = Builder.CreateURem(IndVar, ConstantInt::get(IndVar->getType(), 2));
           if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
             CreatedCode.push_back(Rem2I);
@@ -965,7 +976,6 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       if (NewV) NodeToValue[N] = NewV;
       return NewV;
     }
-    */
     case NodeType::MISMATCH: {
       Value *NewV = generateMismatchingCode(N->getValues(), Builder);
 #ifdef TEST_DEBUG
@@ -1861,6 +1871,11 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
 	    errs() << "skipping exit node\n";
 	    continue;
     }
+
+    CachedCastIndVar.clear();
+    CachedRem2.clear();
+    AltSeqCmp = nullptr;
+
     BasicBlock *BB = ABToBlock[AB];
     errs() << "Generating code in: " << BB->getName().str() <<  "\n";
     for (Node *N : AB->ScheduledNodes) {
@@ -1896,10 +1911,6 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
 
     Cond = CondI;
   //}
-
-
-  F.dump();
-  
   auto &DL = F.getParent()->getDataLayout();
   TargetTransformInfo TTI(DL);
 
@@ -1996,6 +2007,8 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
 
     Builder.SetInsertPoint(Exit);
     Builder.CreateBr(LastExit);
+
+    F.dump();
     
     return true;
   } else {
