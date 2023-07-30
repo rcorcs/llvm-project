@@ -44,6 +44,8 @@ pdata = {}
 for k in data.keys():
   if not np.all([ ((ftype+name) in data[k].keys()) for name in gorder]):
     continue
+  if data[k][ftype+'baseline']==data[k][ftype+'region'] and data[k][ftype+'Oracle']<data[k][ftype+'baseline']:
+    print('Investigate:',k)
   for name in gorder:
     if name=='Oracle':
       val = min([data[k][ftype+n] for n in gorder])

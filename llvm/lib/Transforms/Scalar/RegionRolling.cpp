@@ -60,6 +60,8 @@ class AlignedBlock {
 public:
   AlignedBlock(bool isEntry, bool isExit) : isEntryNode(isEntry), isExitNode(isExit) {}
   void pushBlock(BasicBlock *BB) { Blocks.push_back(BB); }
+
+  size_t getNumSuccessors() { return Successors.size(); }
   AlignedBlock *getSuccessor(int i) { return Successors[i]; }
   void addSuccessor(AlignedBlock *AB) { Successors.push_back(AB); }
 
@@ -148,14 +150,84 @@ public:
 
 
   std::vector<AlignedBlock *> AlignedBlocks;
-  std::map<AlignedBlock*, Node*> ABToNode;
   std::map<BasicBlock*, AlignedBlock *> BlockMap;
+
+  std::map<AlignedBlock*, Node*> ABToNode;
 
   std::vector<Node*> Nodes;
   std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap;
   std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap2;
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
+
+  AlignedRegion RemoveFirst(unsigned Skip) {
+    AlignedRegion NewAR;
+    if (Skip==0) return *this;
+    if (Skip >= EntryBlocks.size()) return NewAR;
+
+    size_t n = EntryBlocks.size()-Skip;
+
+    for (size_t i = Skip; i<EntryBlocks.size(); i++)
+      NewAR.EntryBlocks.push_back(EntryBlocks[i]);
+    for (size_t i = Skip; i<ExitBlocks.size(); i++)
+      NewAR.ExitBlocks.push_back(ExitBlocks[i]);
+   
+    std::map<AlignedBlock*,AlignedBlock*> Old2New;
+    for (auto *AB : AlignedBlocks) {
+      auto *NewAB = new AlignedBlock(AB->isEntry(), AB->isExit());
+      for (size_t i = Skip; i<AB->Blocks.size(); i++)
+        NewAB->Blocks.push_back(AB->Blocks[i]);
+      
+      Old2New[AB] = NewAB;
+      
+      NewAR.AlignedBlocks.push_back(NewAB);
+      for (BasicBlock *BB : NewAB->Blocks)
+        NewAR.BlockMap[BB] = NewAB;
+    }
+    for (auto *AB : AlignedBlocks) {
+      AlignedBlock *NewAB = Old2New[AB];
+      for (unsigned i = 0; i<AB->getNumSuccessors(); i++) {
+        NewAB->addSuccessor( Old2New[ AB->getSuccessor(i) ] );
+      }
+    }
+
+    return NewAR;
+  }
+
+
+  AlignedRegion RemoveLast(unsigned Skip) {
+    AlignedRegion NewAR;
+    if (Skip==0) return *this;
+    if (Skip >= EntryBlocks.size()) return NewAR;
+
+    size_t n = EntryBlocks.size()-Skip;
+
+    NewAR.EntryBlocks = EntryBlocks;
+    NewAR.EntryBlocks.resize(n);
+    NewAR.ExitBlocks = ExitBlocks;
+    NewAR.ExitBlocks.resize(n);
+   
+    std::map<AlignedBlock*,AlignedBlock*> Old2New;
+    for (auto *AB : AlignedBlocks) {
+      auto *NewAB = new AlignedBlock(AB->isEntry(), AB->isExit());
+      NewAB->Blocks = AB->Blocks;
+      NewAB->Blocks.resize(n);
+      
+      Old2New[AB] = NewAB;
+      
+      NewAR.AlignedBlocks.push_back(NewAB);
+      for (BasicBlock *BB : NewAB->Blocks)
+        NewAR.BlockMap[BB] = NewAB;
+    }
+    for (auto *AB : AlignedBlocks) {
+      AlignedBlock *NewAB = Old2New[AB];
+      for (unsigned i = 0; i<AB->getNumSuccessors(); i++) {
+        NewAB->addSuccessor( Old2New[ AB->getSuccessor(i) ] );
+      }
+    }
+
+    return NewAR;
+  }
 
   bool align(ScalarEvolution *SE);
   bool validateAlignment();
@@ -2131,6 +2203,40 @@ bool RegionRoller::run() {
         RegionCodeGenerator RCG(F, AR);
         Modified = RCG.generate(AR);
       }
+      if (!Modified) {
+        for (int Skip = 1; Skip<(((int)AR.AlignedBlocks.size())-1); Skip++) {
+          errs() << "Trying again for region remove last: " << Skip << "\n";
+          AlignedRegion NewAR = AR.RemoveLast(Skip);
+          if (NewAR.align(nullptr)) {
+            errs() << " ISOMORPHIC REGIONS: " << CountRegions << " regions, " << NewAR.AlignedBlocks.size() << " blocks each!\n";
+            RegionCodeGenerator RCG(F, NewAR);
+            Modified = RCG.generate(NewAR);
+          }
+
+          if (!Modified) {
+            for (int SkipF = 1; SkipF < (((int)NewAR.AlignedBlocks.size())-1); SkipF++) {
+              errs() << "Trying again for region remove front: " << SkipF << "\n";
+              AlignedRegion NewAR2 = NewAR.RemoveFirst(SkipF);
+              if (NewAR2.align(nullptr)) {
+                errs() << " ISOMORPHIC REGIONS: " << CountRegions << " regions, " << NewAR2.AlignedBlocks.size() << " blocks each!\n";
+                RegionCodeGenerator RCG(F, NewAR2);
+                Modified = RCG.generate(NewAR2);
+              }
+              NewAR2.releaseMemory();
+              if (Modified) {
+                errs() << "FOUND PROFITABLE WITH SKIP First" << SkipF << "\n";
+                break;
+              }
+            }
+          }
+
+          NewAR.releaseMemory();
+          if (Modified) {
+            errs() << "FOUND PROFITABLE WITH SKIP " << Skip << "\n";
+            break;
+          }
+        }
+      }
     }
 
     AR.releaseMemory();
@@ -2171,6 +2277,8 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
 
   unsigned CountMismatchings = 0;
   unsigned CountTotal = 0;
+
+  if (EntryBlocks.size()<=1) return false;
 
   for (auto *AB : AlignedBlocks) {
     errs() << "Creating AlignedBlock Node\n";
@@ -2393,6 +2501,7 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
           switch(N->getChild(i)->getNodeType()) {
           case NodeType::RECURRENCE:
           case NodeType::REDUCTION:
+          case NodeType::PHI: // TODO: PHI not hanlded yet
             InvalidType = true;
           }
           if (InvalidType) {
@@ -2568,8 +2677,6 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
     return N;
   }
 
-  errs() << "HERE???\n";
-  printVs(Vs);
   if (Node *N = buildRecurrenceNode(Vs, nullptr, Parent)) {
     errs() << "Recurrence\n";
     Inputs.insert(Vs[0]);
@@ -2590,6 +2697,10 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
   }
   if (Node *N = ConstantExprNode::get(Vs, nullptr, Parent)) {
     errs() << "Const Expr\n";
+    return N;
+  }
+  if (Node *N = MatchingPHINode::get(Vs, nullptr, Parent)) {
+    errs() << "All PHI nodes\n";
     return N;
   }
 
@@ -2618,6 +2729,7 @@ void AlignedRegion::growGraph(Node *N, ScalarEvolution *SE, std::set<Node*> &Vis
 
   switch(N->getNodeType()) {
     case NodeType::MISMATCH: break;
+    case NodeType::PHI: break;
     case NodeType::IDENTICAL: break;
     case NodeType::ALTSEQ: break;
     case NodeType::INTSEQ: break;

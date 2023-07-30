@@ -99,7 +99,7 @@ static Value *isConstantSequence(const std::vector<ValueT *> VL) {
 
 
 enum NodeType {
-  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, MINMAXREDUCTION, REDUCTION, RECURRENCE, MISMATCH, MULTI, LABEL
+  MATCH, IDENTICAL, BINOP, GEPSEQ, INTSEQ, ALTSEQ, CONSTEXPR, MINMAXREDUCTION, REDUCTION, RECURRENCE, MISMATCH, MULTI, LABEL, PHI
 };
 
 static std::string NodeTypeString(NodeType ty) {
@@ -115,6 +115,7 @@ static std::string NodeTypeString(NodeType ty) {
   case NodeType::RECURRENCE: return "RECURRENCE";
   case NodeType::MULTI: return "MULTI";
   case NodeType::LABEL: return "LABEL";
+  case NodeType::PHI: return "PHI";
   case NodeType::MISMATCH: return "MISMATCH";
   }
 }
@@ -322,6 +323,33 @@ public:
     return "mismatch";
   }
 };
+
+class MatchingPHINode : public Node {
+public:
+  template<typename ValueT>
+  MatchingPHINode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::PHI,Vs,BB,Parent) {}
+
+  Instruction *getValidInstruction(unsigned i) {
+    return dyn_cast<PHINode>(getValue(i));
+  }
+
+  std::string getString() {
+    return "phi";
+  }
+
+  template<typename ValueT>
+  static MatchingPHINode *get(std::vector<ValueT*> &Vs, BasicBlock *BB=nullptr, Node *Parent=nullptr) {
+    bool SameTypes = true;
+    bool AllPHIs = true;
+    for (auto *V : Vs) {
+      AllPHIs = AllPHIs && isa<PHINode>(V);
+      SameTypes = SameTypes && V->getType()==Vs[0]->getType();
+    }
+    if (SameTypes && AllPHIs) return new MatchingPHINode(Vs,BB,Parent);
+    return nullptr;
+  }
+};
+
 
 class LabelNode : public Node {
 public:
