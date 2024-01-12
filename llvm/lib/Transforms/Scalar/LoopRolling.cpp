@@ -2605,8 +2605,9 @@ bool LoopRolling::runImpl(Function &F, ScalarEvolution *SE) {
     RR.run();
   }
 
-  LoopRoller RL(F, SE);
-  return RL.run();
+  //LoopRoller RL(F, SE);
+  //return RL.run();
+  return true; //TODO: roll back the loop roller
 }
 
 PreservedAnalyses LoopRolling::run(Function &F, FunctionAnalysisManager &AM) {

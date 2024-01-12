@@ -1921,7 +1921,7 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
 
   std::map<AlignedBlock*, BasicBlock*> ABToBlock;
   for (AlignedBlock *AB : AR.AlignedBlocks) {
-    if (AB->isExit()) continue;
+    //if (AB->isExit()) continue;
     BasicBlock *BB = BasicBlock::Create(Context, "rolled.reg.bb", &F);
     Node *LN = AR.getLabelNode(AB);
     if (LN==nullptr) {
@@ -1929,20 +1929,21 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
     }
     NodeToValue[ LN ] = BB; 
     ABToBlock[AB] = BB;
+    if (AB->isExit()) Exit = BB;
   }
 
   Latch = BasicBlock::Create(Context, "rolled.reg.latch", &F);
   NodeToValue[AR.ExitLabelNode] = Latch;
 
-  Exit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
+  //Exit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
 
 
   for (AlignedBlock *AB : AR.AlignedBlocks) {
     errs() << "Generating code for AB\n";
-    if (AB->isExit()) {
-	    errs() << "skipping exit node\n";
-	    continue;
-    }
+    //if (AB->isExit()) {
+	   // errs() << "skipping exit node\n";
+	    //continue;
+    //}
 
     CachedCastIndVar.clear();
     CachedRem2.clear();
@@ -1961,7 +1962,7 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
   //F.dump();
 
   for (AlignedBlock *AB : AR.AlignedBlocks) {
-    if (AB->isExit()) continue;
+    //if (AB->isExit()) continue;
     for (Node *N : AB->ScheduledNodes) {
       setNodeOperands(N);
     }
@@ -2040,7 +2041,7 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
       Pair.first->replaceAllUsesWith(Pair.second);
     }
 
-    //F. ump();
+    F.dump();
 
     errs() << "Erasing old instructions\n";
     for (Instruction *I : Garbage) {
@@ -2203,6 +2204,9 @@ bool RegionRoller::run() {
         RegionCodeGenerator RCG(F, AR);
         Modified = RCG.generate(AR);
       }
+
+      //TODO: temporary removed this section to improve capabilities... bring it back later
+      /*
       if (!Modified) {
         for (int Skip = 1; Skip<(((int)AR.AlignedBlocks.size())-1); Skip++) {
           errs() << "Trying again for region remove last: " << Skip << "\n";
@@ -2237,12 +2241,15 @@ bool RegionRoller::run() {
           }
         }
       }
+      */
+
     }
 
     AR.releaseMemory();
     if (Modified) return true;    
-    //errs() << "Skipping smaller regions\n";
-    //break;
+
+    errs() << "Skipping smaller regions\n";
+    break; //TODO remove this later
   }
 
   return false;
@@ -2302,6 +2309,15 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
 	    errs() << "Exit Node\n";
 	    //continue;
     }
+    if (!AB->isEntry()) {
+      for (BasicBlock *BB : AB->Blocks) {
+        for (const PHINode &PHI : BB->phis()) {
+          //TODO: unsupported PHINode in graph
+          return false;
+        }
+      }
+    }
+
     std::vector<BasicBlock::reverse_iterator> Its;
     for (BasicBlock *BB : AB->Blocks) {
       //errs() << BB->getName().str() << "\n";
@@ -2313,6 +2329,10 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
       bool ValidExit = true;
       
         errs() << "Processing Exit Blocks\n";
+
+        for (unsigned i = 0; i<AB->Blocks.size(); i++) {
+          Its[i]++;
+        }
 
         for (unsigned i = 0; i<AB->Blocks.size()-1; i++) {
           while (Its[i]!=AB->Blocks[i]->rend() && find(&*Its[i])) {
@@ -2615,21 +2635,25 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
 
   printVs(Vs);
   
+  bool IsEntryOrExit = true;
+
   //bool ValidBlock = true;
   bool HasInstruction = false;
   for (unsigned i = 0; i<Vs.size(); i++) {
     if (auto *I = dyn_cast<Instruction>(Vs[i])) {
       //ValidBlock = ValidBlock && (I->getParent()==AB->Blocks[i]);
       HasInstruction = true;
-      if (AlignedBlock *ABX = getAlignedBlock(I->getParent()))
+      if (AlignedBlock *ABX = getAlignedBlock(I->getParent())) {
         FoundAlignedBlocks.insert(ABX);
+        IsEntryOrExit = IsEntryOrExit && (ABX->isEntry() || ABX->isExit());
+      }
     }
   }
 
   errs() << "Has instruction: " << HasInstruction << "\n";
   errs() << "Blocks Found: " << FoundAlignedBlocks.size() << "\n";
 
-  bool ValidBlock = !HasInstruction || FoundAlignedBlocks.size()==1;
+  bool ValidBlock = true; //!HasInstruction || FoundAlignedBlocks.size()==1 || IsEntryOrExit;
 
   if (ValidBlock && FoundAlignedBlocks.size()==1) {
     AlignedBlock *AB = *FoundAlignedBlocks.begin();
