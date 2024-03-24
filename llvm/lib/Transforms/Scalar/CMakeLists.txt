@@ -3,6 +3,7 @@ add_llvm_component_library(LLVMScalarOpts
   AlignmentFromAssumptions.cpp
   AnnotationRemarks.cpp
   BDCE.cpp
+  BranchFusion.cpp
   CallSiteSplitting.cpp
   ConstantHoisting.cpp
   ConstraintElimination.cpp
@@ -40,6 +41,8 @@ add_llvm_component_library(LLVMScalarOpts
   LoopPassManager.cpp
   LoopPredication.cpp
   LoopRerollPass.cpp
+  LoopRolling.cpp
+  RegionRolling.cpp
   LoopRotation.cpp
   LoopSimplifyCFG.cpp
   LoopStrengthReduce.cpp
