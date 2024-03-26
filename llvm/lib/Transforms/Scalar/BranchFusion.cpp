@@ -85,7 +85,7 @@ static cl::opt<bool> Debug("brfusion-debug", cl::init(false), cl::Hidden,
                            cl::desc("Enable debug information"));
 
 static cl::opt<bool>
-    EnableSOA("brfusion-soa", cl::init(true), cl::Hidden,
+    EnableSOA("brfusion-soa", cl::init(false), cl::Hidden,
               cl::desc("Enable the state-of-the-art brfusion technique"));
 
 static cl::opt<bool>
