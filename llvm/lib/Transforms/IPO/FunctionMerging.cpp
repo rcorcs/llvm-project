@@ -187,7 +187,7 @@ cl::opt<bool>
                  cl::desc("Enable HyFM with the Pairwise Alignment"));
 
 cl::opt<bool>
-    EnableHyFMNW("func-merging-hyfm-nw", cl::init(false), cl::Hidden,
+    EnableHyFMNW("func-merging-hyfm-nw", cl::init(true), cl::Hidden,
                  cl::desc("Enable HyFM with the Needleman-Wunsch alignment"));
 
 static cl::opt<bool> EnableSALSSACoalescing(

@@ -59,6 +59,7 @@
 #include "llvm/Transforms/IPO/LowerTypeTests.h"
 #include "llvm/Transforms/IPO/MemProfContextDisambiguation.h"
 #include "llvm/Transforms/IPO/MergeFunctions.h"
+#include "llvm/Transforms/IPO/FunctionMerging.h"
 #include "llvm/Transforms/IPO/ModuleInliner.h"
 #include "llvm/Transforms/IPO/OpenMPOpt.h"
 #include "llvm/Transforms/IPO/PartialInlining.h"
@@ -269,6 +270,10 @@ static cl::opt<AttributorRunOption> AttributorRun(
                           "enable call graph SCC attributor runs"),
                clEnumValN(AttributorRunOption::NONE, "none",
                           "disable attributor runs")));
+
+static cl::opt<bool>
+    EnableFuncMerging("enable-func-merging",
+                  cl::desc("Enable the function merging pass (default = off)"));
 
 cl::opt<bool> EnableMemProfContextDisambiguation(
     "enable-memprof-context-disambiguation", cl::init(false), cl::Hidden,
@@ -1417,6 +1422,10 @@ PassBuilder::buildModuleOptimizationPipeline(OptimizationLevel Level,
   // Merge functions if requested.
   if (PTO.MergeFunctions)
     MPM.addPass(MergeFunctionsPass());
+  if (EnableFuncMerging) {
+    MPM.addPass(MergeFunctionsPass());
+    MPM.addPass(FunctionMergingPass());
+  }
 
   // Now we need to do some global optimization transforms.
   // FIXME: It would seem like these should come first in the optimization
@@ -1909,6 +1918,10 @@ PassBuilder::buildLTODefaultPipeline(OptimizationLevel Level,
 
   if (PTO.MergeFunctions)
     MPM.addPass(MergeFunctionsPass());
+  //if (EnableFuncMerging) {
+    MPM.addPass(MergeFunctionsPass());
+    MPM.addPass(FunctionMergingPass());
+  //}
 
   if (PTO.CallGraphProfile)
     MPM.addPass(CGProfilePass());
@@ -1959,6 +1972,10 @@ ModulePassManager PassBuilder::buildO0DefaultPipeline(OptimizationLevel Level,
 
   if (PTO.MergeFunctions)
     MPM.addPass(MergeFunctionsPass());
+  if (EnableFuncMerging) {
+    MPM.addPass(MergeFunctionsPass());
+    MPM.addPass(FunctionMergingPass());
+  }
 
   if (EnableMatrix)
     MPM.addPass(
