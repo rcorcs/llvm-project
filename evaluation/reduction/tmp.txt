@@ -1,0 +1,3905 @@
+/home/rodrigo/regroll/evaluation
+clang-12: warning: argument unused during compilation: '-mthumb' [-Wunused-command-line-argument]
+LoopRolling
+RegionRoller at function: example
+Reference Region: entry -> if.end
+Link: if.end
+Found Isomorphic:if.end => if.end10
+Found Isomorphic:if.end10 => if.end19
+Found Isomorphic:if.end19 => if.end28
+Final Isomorphic Graph: 4, 4
+ENTRY Blocks:
+   entry
+   if.end
+   if.end10
+   if.end19
+Blocks:
+   if.then
+   if.then6
+   if.then15
+   if.then24
+EXIT Blocks:
+   if.end
+   if.end10
+   if.end19
+   if.end28
+Blocks:
+   entry.if.end_crit_edge
+   if.end.if.end10_crit_edge
+   if.end10.if.end19_crit_edge
+   if.end19.if.end28_crit_edge
+-----
+Let's do it
+Creating AlignedBlock Node
+Creating Node
+  BB: entry
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: entry
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+Creating AlignedBlock Node
+Creating Node
+  BB: if.then
+  BB: if.then6
+  BB: if.then15
+  BB: if.then24
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.then
+  BB: if.then6
+  BB: if.then15
+  BB: if.then24
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+  BB: if.end28
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+  BB: if.end28
+Creating AlignedBlock Node
+Creating Node
+  BB: entry.if.end_crit_edge
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+  BB: if.end19.if.end28_crit_edge
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: entry.if.end_crit_edge
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+  BB: if.end19.if.end28_crit_edge
+Aligning:
+Entry Node
+
+entry:
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+
+if.end19:                                         ; preds = %if.then15, %if.end10.if.end19_crit_edge
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+
+Analyzing
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+Creating new root node
+Creating Node
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+4 x 4
+Final Match: 1
+Matching
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+NodeTracker:Created: br
+Creating Node
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+4 x 4
+Final Match: 1
+Matching
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+Creating Node
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+4 x 4
+Final Match: 1
+Matching
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+Creating Node
+float* %B
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+4 x 4
+Final Match: 0
+Ptr: float* %B
+AllGEPs: 0
+GEP Seq
+GEP Seq
+float* %B
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+Creating Node
+i64 0
+i64 1
+i64 2
+i64 3
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+4 x 4
+Final Match: 0
+Int Seq
+i64 0
+i64 1
+i64 2
+i64 3
+Creating Node
+float 0.000000e+00
+float 0.000000e+00
+float 0.000000e+00
+float 0.000000e+00
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Node found!
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+NodeTracker:Found: fcmp
+Node found!
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+NodeTracker:Found: load
+Analyzing
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+Found GEP node
+NodeTracker:Found:GEP: GEP seq.
+Analyzing
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Ended with incomplete group of instruction
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Scheduled nodes:
+GEP seq.
+load
+fcmp
+br
+GEPSEQ:CHECK: GEP seq. children op[0]=INTSEQ 
+MATCH:CHECK: load children op[0]=GEPSEQ 
+MATCH:CHECK: fcmp children op[0]=MATCH op[1]=IDENTICAL 
+MATCH:CHECK: br children op[0]=MATCH op[1]=LABEL op[2]=LABEL 
+Aligning:
+
+if.then:                                          ; preds = %entry
+  %mul = fmul float %0, %factor
+  store float %mul, float* %A, align 4, !tbaa !6
+  br label %if.end
+
+
+if.then6:                                         ; preds = %if.end
+  %mul8 = fmul float %2, %factor
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  br label %if.end10
+
+
+if.then15:                                        ; preds = %if.end10
+  %mul17 = fmul float %4, %factor
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  br label %if.end19
+
+
+if.then24:                                        ; preds = %if.end19
+  %mul26 = fmul float %6, %factor
+  %arrayidx27 = getelementptr inbounds float, float* %A, i64 3
+  store float %mul26, float* %arrayidx27, align 4, !tbaa !6
+  br label %if.end28
+
+Analyzing
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+Creating new root node
+Creating Node
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+4 x 4
+Final Match: 1
+Matching
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+NodeTracker:Created: br
+Analyzing
+  store float %mul, float* %A, align 4, !tbaa !6
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  store float %mul26, float* %arrayidx27, align 4, !tbaa !6
+Creating new root node
+Creating Node
+  store float %mul, float* %A, align 4, !tbaa !6
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  store float %mul26, float* %arrayidx27, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+4 x 4
+Final Match: 1
+Matching
+  store float %mul, float* %A, align 4, !tbaa !6
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  store float %mul26, float* %arrayidx27, align 4, !tbaa !6
+NodeTracker:Created: store
+Creating Node
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+  %mul26 = fmul float %6, %factor
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+4 x 4
+Final Match: 1
+Matching
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+  %mul26 = fmul float %6, %factor
+Creating Node
+float %factor
+float %factor
+float %factor
+float %factor
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Creating Node
+float* %A
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx27 = getelementptr inbounds float, float* %A, i64 3
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+4 x 4
+Final Match: 0
+Ptr: float* %A
+AllGEPs: 0
+GEP Seq
+GEP Seq
+float* %A
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx27 = getelementptr inbounds float, float* %A, i64 3
+Analyzing
+  %mul = fmul float %0, %factor
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx27 = getelementptr inbounds float, float* %A, i64 3
+Found GEP node
+NodeTracker:Found:GEP: GEP seq.
+Node found!
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+  %mul26 = fmul float %6, %factor
+NodeTracker:Found: fmul
+Scheduled nodes:
+fmul
+GEP seq.
+store
+br
+MATCH:CHECK: fmul children op[0]=MATCH op[1]=IDENTICAL 
+GEPSEQ:CHECK: GEP seq. children op[0]=INTSEQ 
+MATCH:CHECK: store children op[0]=MATCH op[1]=GEPSEQ 
+MATCH:CHECK: br children op[0]=LABEL 
+Aligning:
+Exit Node
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+
+if.end19:                                         ; preds = %if.then15, %if.end10.if.end19_crit_edge
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+
+
+if.end28:                                         ; preds = %if.then24, %if.end19.if.end28_crit_edge
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+  %add = fadd float %1, %sum
+  %add12 = fadd float %add, %3
+  %add21 = fadd float %add12, %5
+  %add30 = fadd float %add21, %7
+  ret float %add30
+
+Processing Exit Blocks
+Searching for instruction in last exit block
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add30 = fadd float %add21, %7
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+4 x 4
+Final Match: 0
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add30 = fadd float %add21, %7
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add21 = fadd float %add12, %5
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+4 x 4
+Final Match: 0
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add21 = fadd float %add12, %5
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add12 = fadd float %add, %3
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+4 x 4
+Final Match: 0
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add12 = fadd float %add, %3
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add = fadd float %1, %sum
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+4 x 4
+Final Match: 0
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add = fadd float %1, %sum
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+4 x 4
+Final Match: 0
+All PHI nodes
+Looking for block: entry.if.end_crit_edge
+Looking for block: if.then
+Looking for block: if.end.if.end10_crit_edge
+Looking for block: if.then6
+Looking for block: if.end10.if.end19_crit_edge
+Looking for block: if.then15
+Looking for block: if.end19.if.end28_crit_edge
+Looking for block: if.then24
+NodeTracker:Created: phi
+Found good match
+Done searching: 1
+Exit block alignment starts with:
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Analyzing
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Creating new root node
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+4 x 4
+Final Match: 0
+All PHI nodes
+Looking for block: entry.if.end_crit_edge
+Looking for block: if.then
+Looking for block: if.end.if.end10_crit_edge
+Looking for block: if.then6
+Looking for block: if.end10.if.end19_crit_edge
+Looking for block: if.then15
+Looking for block: if.end19.if.end28_crit_edge
+Looking for block: if.then24
+NodeTracker:Created: phi
+Growing PHI Node:  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+Block: 0 : entry.if.end_crit_edge
+In-blocks:
+entry.if.end_crit_edge
+if.end.if.end10_crit_edge
+if.end10.if.end19_crit_edge
+if.end19.if.end28_crit_edge
+j: 0
+PHIV:   %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+j: 1
+PHIV:   %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+j: 2
+PHIV:   %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+j: 3
+PHIV:   %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Growing towards:
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+Creating Node
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+4 x 4
+Final Match: 1
+Matching
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+Creating Node
+float* %A
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx29.phi.trans.insert = getelementptr inbounds float, float* %A, i64 3
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+4 x 4
+Final Match: 0
+Ptr: float* %A
+AllGEPs: 0
+GEP Seq
+GEP Seq
+float* %A
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx29.phi.trans.insert = getelementptr inbounds float, float* %A, i64 3
+Block: 1 : if.then
+In-blocks:
+if.then
+if.then6
+if.then15
+if.then24
+j: 0
+PHIV:   %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+j: 1
+PHIV:   %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+j: 2
+PHIV:   %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+j: 3
+PHIV:   %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Growing towards:
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+  %mul26 = fmul float %6, %factor
+Scheduled nodes:
+phi
+PHI:CHECK: phi children op[0]=MATCH op[1]=MATCH 
+Aligning:
+
+entry.if.end_crit_edge:                           ; preds = %entry
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  br label %if.end
+
+
+if.end.if.end10_crit_edge:                        ; preds = %if.end
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end10
+
+
+if.end10.if.end19_crit_edge:                      ; preds = %if.end10
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end19
+
+
+if.end19.if.end28_crit_edge:                      ; preds = %if.end19
+  %arrayidx29.phi.trans.insert = getelementptr inbounds float, float* %A, i64 3
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end28
+
+Analyzing
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+Creating new root node
+Creating Node
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+4 x 4
+Final Match: 1
+Matching
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+NodeTracker:Created: br
+Node found!
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+NodeTracker:Found: load
+Analyzing
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx29.phi.trans.insert = getelementptr inbounds float, float* %A, i64 3
+Found GEP node
+NodeTracker:Found:GEP: GEP seq.
+Scheduled nodes:
+GEP seq.
+load
+br
+GEPSEQ:CHECK: GEP seq. children op[0]=INTSEQ 
+MATCH:CHECK: load children op[0]=GEPSEQ 
+MATCH:CHECK: br children op[0]=LABEL 
+Done
+ALIGNMENT: 0/12(PROFITABLE)  ISOMORPHIC REGIONS: 4 regions, 4 blocks each!
+Generating code for AB
+Generating code in: rolled.reg.bb
+generateNode: GEP seq.
+Generating GEPSEQ
+Closing GEPSEQ
+Gen:   %9 = getelementptr float, float* %B, i64 0
+generateNode: DONE
+generateNode: load
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: fcmp
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: br
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+Generating code for AB
+Generating code in: rolled.reg.bb1
+generateNode: fmul
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: GEP seq.
+Generating GEPSEQ
+Closing GEPSEQ
+Gen:   %13 = getelementptr float, float* %A, i64 0
+generateNode: DONE
+generateNode: store
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: br
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+Generating code for AB
+Generating code in: rolled.reg.bb2
+generateNode: phi
+generateNode: DONE
+Generating code for AB
+Generating code in: rolled.reg.bb3
+generateNode: GEP seq.
+Generating GEPSEQ
+Closing GEPSEQ
+Gen:   %14 = getelementptr float, float* %A, i64 0
+generateNode: DONE
+generateNode: load
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: br
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+setting operands GEPSEQ
+Here?? need to generate node value
+Generating INTSEQ
+Gen:   %9 = zext i8 %8 to i64
+Setting operands MATCH
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Here?? need to generate node value
+Generating IDENTICAL
+Setting operands MATCH
+Found Label operand
+Getting Label operand
+  BB: entry.if.end_crit_edge
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+  BB: if.end19.if.end28_crit_edge
+Found Label operand
+Getting Label operand
+  BB: if.then
+  BB: if.then6
+  BB: if.then15
+  BB: if.then24
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Here?? need to generate node value
+Generating IDENTICAL
+setting operands GEPSEQ
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Found Label operand
+Setting operands MATCH
+Getting Label operand
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+  BB: if.end28
+Found Label operand
+setting operands GEPSEQ
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Setting operands MATCH
+Getting Label operand
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+  BB: if.end28
+Found Label operand
+Updating PHI Node incoming values:
+ERROR: PHI node not generated?
+Computing size of original code
+Computing size of rolled code
+Size of BB: rolled.reg.loop
+
+rolled.reg.loop:                                  ; No predecessors!
+  %8 = phi i8 
+
+size: 0
+Size of BB: rolled.reg.bb
+
+rolled.reg.bb:                                    ; No predecessors!
+  %9 = zext i8 %8 to i64
+  %10 = getelementptr float, float* %B, i64 %9
+  %11 = load float, float* %10, align 4
+  %12 = fcmp ogt float %11, 0.000000e+00
+  br i1 %12, label %rolled.reg.bb1, label %rolled.reg.bb3
+
+size: 6
+Size of BB: rolled.reg.bb1
+
+rolled.reg.bb1:                                   ; preds = %rolled.reg.bb
+  %13 = fmul float %11, %factor
+  %14 = getelementptr float, float* %A, i64 %9
+  store float %13, float* %14, align 4
+  br label %rolled.reg.bb2
+
+size: 5
+Size of BB: rolled.reg.bb2
+
+rolled.reg.bb2:                                   ; preds = %rolled.reg.bb3, %rolled.reg.bb1
+
+size: 0
+Size of BB: rolled.reg.bb3
+
+rolled.reg.bb3:                                   ; preds = %rolled.reg.bb
+  %15 = getelementptr float, float* %A, i64 %9
+  %16 = load float, float* %15, align 4
+  br label %rolled.reg.bb2
+
+size: 4
+Size of BB: rolled.reg.latch
+
+rolled.reg.latch:                                 ; No predecessors!
+  %17 = add i8 %8, 1
+  %18 = icmp ne i8 %17, 5
+
+size: 2
+Cost Original: 53, Cost Rolled: 17, Region Profitable; example | NumRegions: 4 NumLabels: 4 GoodNodes: 15
+Trying again for region remove last: 1
+Creating AlignedBlock Node
+Creating Node
+  BB: entry
+  BB: if.end
+  BB: if.end10
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: entry
+  BB: if.end
+  BB: if.end10
+Creating AlignedBlock Node
+Creating Node
+  BB: if.then
+  BB: if.then6
+  BB: if.then15
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.then
+  BB: if.then6
+  BB: if.then15
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+Creating AlignedBlock Node
+Creating Node
+  BB: entry.if.end_crit_edge
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: entry.if.end_crit_edge
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+Aligning:
+Entry Node
+
+entry:
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+Analyzing
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+Creating new root node
+Creating Node
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+NodeTracker:Created: br
+Creating Node
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+Creating Node
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Creating Node
+float* %B
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+3 x 3
+Final Match: 0
+Ptr: float* %B
+AllGEPs: 0
+GEP Seq
+GEP Seq
+float* %B
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+Creating Node
+i64 0
+i64 1
+i64 2
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+3 x 3
+Final Match: 0
+Int Seq
+i64 0
+i64 1
+i64 2
+Creating Node
+float 0.000000e+00
+float 0.000000e+00
+float 0.000000e+00
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Node found!
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+NodeTracker:Found: fcmp
+Node found!
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+NodeTracker:Found: load
+Analyzing
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+Found GEP node
+NodeTracker:Found:GEP: GEP seq.
+Analyzing
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+Ended with incomplete group of instruction
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+Scheduled nodes:
+GEP seq.
+load
+fcmp
+br
+GEPSEQ:CHECK: GEP seq. children op[0]=INTSEQ 
+MATCH:CHECK: load children op[0]=GEPSEQ 
+MATCH:CHECK: fcmp children op[0]=MATCH op[1]=IDENTICAL 
+MATCH:CHECK: br children op[0]=MATCH op[1]=LABEL op[2]=LABEL 
+Aligning:
+
+if.then:                                          ; preds = %entry
+  %mul = fmul float %0, %factor
+  store float %mul, float* %A, align 4, !tbaa !6
+  br label %if.end
+
+
+if.then6:                                         ; preds = %if.end
+  %mul8 = fmul float %2, %factor
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  br label %if.end10
+
+
+if.then15:                                        ; preds = %if.end10
+  %mul17 = fmul float %4, %factor
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  br label %if.end19
+
+Analyzing
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+Creating new root node
+Creating Node
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+NodeTracker:Created: br
+Analyzing
+  store float %mul, float* %A, align 4, !tbaa !6
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+Creating new root node
+Creating Node
+  store float %mul, float* %A, align 4, !tbaa !6
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  store float %mul, float* %A, align 4, !tbaa !6
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+NodeTracker:Created: store
+Creating Node
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+Creating Node
+float %factor
+float %factor
+float %factor
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Creating Node
+float* %A
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+3 x 3
+Final Match: 0
+Ptr: float* %A
+AllGEPs: 0
+GEP Seq
+GEP Seq
+float* %A
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+Analyzing
+  %mul = fmul float %0, %factor
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+Found GEP node
+NodeTracker:Found:GEP: GEP seq.
+Node found!
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+NodeTracker:Found: fmul
+Scheduled nodes:
+fmul
+GEP seq.
+store
+br
+MATCH:CHECK: fmul children op[0]=MATCH op[1]=IDENTICAL 
+GEPSEQ:CHECK: GEP seq. children op[0]=INTSEQ 
+MATCH:CHECK: store children op[0]=MATCH op[1]=GEPSEQ 
+MATCH:CHECK: br children op[0]=LABEL 
+Aligning:
+Exit Node
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+
+if.end19:                                         ; preds = %if.then15, %if.end10.if.end19_crit_edge
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+
+Processing Exit Blocks
+Searching for instruction in last exit block
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+All PHI nodes
+Looking for block: entry.if.end_crit_edge
+Looking for block: if.then
+Looking for block: if.end.if.end10_crit_edge
+Looking for block: if.then6
+Looking for block: if.end10.if.end19_crit_edge
+Looking for block: if.then15
+NodeTracker:Created: phi
+Found good match
+Done searching: 1
+Exit block alignment starts with:
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Analyzing
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Creating new root node
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+All PHI nodes
+Looking for block: entry.if.end_crit_edge
+Looking for block: if.then
+Looking for block: if.end.if.end10_crit_edge
+Looking for block: if.then6
+Looking for block: if.end10.if.end19_crit_edge
+Looking for block: if.then15
+NodeTracker:Created: phi
+Growing PHI Node:  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+Block: 0 : entry.if.end_crit_edge
+In-blocks:
+entry.if.end_crit_edge
+if.end.if.end10_crit_edge
+if.end10.if.end19_crit_edge
+j: 0
+PHIV:   %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+j: 1
+PHIV:   %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+j: 2
+PHIV:   %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Growing towards:
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+Creating Node
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+Creating Node
+float* %A
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+3 x 3
+Final Match: 0
+Ptr: float* %A
+AllGEPs: 0
+GEP Seq
+GEP Seq
+float* %A
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+Block: 1 : if.then
+In-blocks:
+if.then
+if.then6
+if.then15
+j: 0
+PHIV:   %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+j: 1
+PHIV:   %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+j: 2
+PHIV:   %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Growing towards:
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+Scheduled nodes:
+phi
+PHI:CHECK: phi children op[0]=MATCH op[1]=MATCH 
+Aligning:
+
+entry.if.end_crit_edge:                           ; preds = %entry
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  br label %if.end
+
+
+if.end.if.end10_crit_edge:                        ; preds = %if.end
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end10
+
+
+if.end10.if.end19_crit_edge:                      ; preds = %if.end10
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end19
+
+Analyzing
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+Creating new root node
+Creating Node
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  br label %if.end
+  br label %if.end10
+  br label %if.end19
+NodeTracker:Created: br
+Node found!
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+NodeTracker:Found: load
+Analyzing
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+Found GEP node
+NodeTracker:Found:GEP: GEP seq.
+Scheduled nodes:
+GEP seq.
+load
+br
+GEPSEQ:CHECK: GEP seq. children op[0]=INTSEQ 
+MATCH:CHECK: load children op[0]=GEPSEQ 
+MATCH:CHECK: br children op[0]=LABEL 
+Done
+ALIGNMENT: 0/12(PROFITABLE)  ISOMORPHIC REGIONS: 4 regions, 4 blocks each!
+Generating code for AB
+Generating code in: rolled.reg.bb
+generateNode: GEP seq.
+Generating GEPSEQ
+Closing GEPSEQ
+Gen:   %9 = getelementptr float, float* %B, i64 0
+generateNode: DONE
+generateNode: load
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: fcmp
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: br
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+Generating code for AB
+Generating code in: rolled.reg.bb4
+generateNode: fmul
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: GEP seq.
+Generating GEPSEQ
+Closing GEPSEQ
+Gen:   %13 = getelementptr float, float* %A, i64 0
+generateNode: DONE
+generateNode: store
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: br
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+Generating code for AB
+Generating code in: rolled.reg.bb5
+generateNode: phi
+generateNode: DONE
+Generating code for AB
+Generating code in: rolled.reg.bb6
+generateNode: GEP seq.
+Generating GEPSEQ
+Closing GEPSEQ
+Gen:   %14 = getelementptr float, float* %A, i64 0
+generateNode: DONE
+generateNode: load
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: br
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+setting operands GEPSEQ
+Here?? need to generate node value
+Generating INTSEQ
+Gen:   %9 = zext i8 %8 to i64
+Setting operands MATCH
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Here?? need to generate node value
+Generating IDENTICAL
+Setting operands MATCH
+Found Label operand
+Getting Label operand
+  BB: entry.if.end_crit_edge
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+Found Label operand
+Getting Label operand
+  BB: if.then
+  BB: if.then6
+  BB: if.then15
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Here?? need to generate node value
+Generating IDENTICAL
+setting operands GEPSEQ
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Found Label operand
+Setting operands MATCH
+Getting Label operand
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+Found Label operand
+setting operands GEPSEQ
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Setting operands MATCH
+Getting Label operand
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+Found Label operand
+Updating PHI Node incoming values:
+ERROR: PHI node not generated?
+Computing size of original code
+Computing size of rolled code
+Size of BB: rolled.reg.loop
+
+rolled.reg.loop:                                  ; No predecessors!
+  %8 = phi i8 
+
+size: 0
+Size of BB: rolled.reg.bb
+
+rolled.reg.bb:                                    ; No predecessors!
+  %9 = zext i8 %8 to i64
+  %10 = getelementptr float, float* %B, i64 %9
+  %11 = load float, float* %10, align 4
+  %12 = fcmp ogt float %11, 0.000000e+00
+  br i1 %12, label %rolled.reg.bb4, label %rolled.reg.bb6
+
+size: 6
+Size of BB: rolled.reg.bb4
+
+rolled.reg.bb4:                                   ; preds = %rolled.reg.bb
+  %13 = fmul float %11, %factor
+  %14 = getelementptr float, float* %A, i64 %9
+  store float %13, float* %14, align 4
+  br label %rolled.reg.bb5
+
+size: 5
+Size of BB: rolled.reg.bb5
+
+rolled.reg.bb5:                                   ; preds = %rolled.reg.bb6, %rolled.reg.bb4
+
+size: 0
+Size of BB: rolled.reg.bb6
+
+rolled.reg.bb6:                                   ; preds = %rolled.reg.bb
+  %15 = getelementptr float, float* %A, i64 %9
+  %16 = load float, float* %15, align 4
+  br label %rolled.reg.bb5
+
+size: 4
+Size of BB: rolled.reg.latch
+
+rolled.reg.latch:                                 ; No predecessors!
+  %17 = add i8 %8, 1
+  %18 = icmp ne i8 %17, 5
+
+size: 2
+Cost Original: 39, Cost Rolled: 17, Region Profitable; example | NumRegions: 3 NumLabels: 4 GoodNodes: 15
+Trying again for region remove front: 1
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end
+  BB: if.end10
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end
+  BB: if.end10
+Creating AlignedBlock Node
+Creating Node
+  BB: if.then6
+  BB: if.then15
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.then6
+  BB: if.then15
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end10
+  BB: if.end19
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end10
+  BB: if.end19
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+Aligning:
+Entry Node
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+Analyzing
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+Creating new root node
+Creating Node
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+NodeTracker:Created: br
+Creating Node
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+Creating Node
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Creating Node
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+Creating Node
+float* %B
+float* %B
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Creating Node
+i64 1
+i64 2
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+2 x 2
+Final Match: 0
+Int Seq
+i64 1
+i64 2
+Creating Node
+float 0.000000e+00
+float 0.000000e+00
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Node found!
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+NodeTracker:Found: fcmp
+Node found!
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+NodeTracker:Found: load
+Node found!
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+NodeTracker:Found: getelementptr
+Analyzing
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+Creating new root node
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+2 x 2
+Final Match: 0
+Alt Seq
+NodeTracker:Created: alt: %1, %3
+Scheduled nodes:
+alt: %1, %3
+getelementptr
+load
+fcmp
+br
+ALTSEQ:CHECK: alt: %1, %3 InvalidType
+Trying again for region remove front: 2
+Trying again for region remove last: 2
+Creating AlignedBlock Node
+Creating Node
+  BB: entry
+  BB: if.end
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: entry
+  BB: if.end
+Creating AlignedBlock Node
+Creating Node
+  BB: if.then
+  BB: if.then6
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.then
+  BB: if.then6
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end
+  BB: if.end10
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end
+  BB: if.end10
+Creating AlignedBlock Node
+Creating Node
+  BB: entry.if.end_crit_edge
+  BB: if.end.if.end10_crit_edge
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: entry.if.end_crit_edge
+  BB: if.end.if.end10_crit_edge
+Aligning:
+Entry Node
+
+entry:
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+Analyzing
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+Creating new root node
+Creating Node
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+NodeTracker:Created: br
+Creating Node
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+Creating Node
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+Creating Node
+float* %B
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+2 x 2
+Final Match: 0
+Ptr: float* %B
+AllGEPs: 0
+GEP Seq
+GEP Seq
+float* %B
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+Creating Node
+i64 0
+i64 1
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+2 x 2
+Final Match: 0
+Int Seq
+i64 0
+i64 1
+Creating Node
+float 0.000000e+00
+float 0.000000e+00
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Node found!
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+NodeTracker:Found: fcmp
+Node found!
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+NodeTracker:Found: load
+Analyzing
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+Found GEP node
+NodeTracker:Found:GEP: GEP seq.
+Analyzing
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+Ended with incomplete group of instruction
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+Scheduled nodes:
+GEP seq.
+load
+fcmp
+br
+GEPSEQ:CHECK: GEP seq. children op[0]=INTSEQ 
+MATCH:CHECK: load children op[0]=GEPSEQ 
+MATCH:CHECK: fcmp children op[0]=MATCH op[1]=IDENTICAL 
+MATCH:CHECK: br children op[0]=MATCH op[1]=LABEL op[2]=LABEL 
+Aligning:
+
+if.then:                                          ; preds = %entry
+  %mul = fmul float %0, %factor
+  store float %mul, float* %A, align 4, !tbaa !6
+  br label %if.end
+
+
+if.then6:                                         ; preds = %if.end
+  %mul8 = fmul float %2, %factor
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  br label %if.end10
+
+Analyzing
+  br label %if.end
+  br label %if.end10
+Creating new root node
+Creating Node
+  br label %if.end
+  br label %if.end10
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  br label %if.end
+  br label %if.end10
+NodeTracker:Created: br
+Analyzing
+  store float %mul, float* %A, align 4, !tbaa !6
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+Creating new root node
+Creating Node
+  store float %mul, float* %A, align 4, !tbaa !6
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  store float %mul, float* %A, align 4, !tbaa !6
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+NodeTracker:Created: store
+Creating Node
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+Creating Node
+float %factor
+float %factor
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Creating Node
+float* %A
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+2 x 2
+Final Match: 0
+Ptr: float* %A
+AllGEPs: 0
+GEP Seq
+GEP Seq
+float* %A
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+Analyzing
+  %mul = fmul float %0, %factor
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+Found GEP node
+NodeTracker:Found:GEP: GEP seq.
+Node found!
+  %mul = fmul float %0, %factor
+  %mul8 = fmul float %2, %factor
+NodeTracker:Found: fmul
+Scheduled nodes:
+fmul
+GEP seq.
+store
+br
+MATCH:CHECK: fmul children op[0]=MATCH op[1]=IDENTICAL 
+GEPSEQ:CHECK: GEP seq. children op[0]=INTSEQ 
+MATCH:CHECK: store children op[0]=MATCH op[1]=GEPSEQ 
+MATCH:CHECK: br children op[0]=LABEL 
+Aligning:
+Exit Node
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+Processing Exit Blocks
+Searching for instruction in last exit block
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+2 x 2
+Final Match: 0
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+2 x 2
+Final Match: 0
+Alt Seq
+NodeTracker:Created: alt: %1, %4
+Found good match
+Done searching: 1
+Exit block alignment starts with:
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Analyzing
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Creating new root node
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+2 x 2
+Final Match: 0
+Alt Seq
+NodeTracker:Created: alt: %1, %4
+Analyzing
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+Ended with incomplete group of instruction
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+Scheduled nodes:
+alt: %1, %4
+ALTSEQ:CHECK: alt: %1, %4 InvalidType
+Trying again for region remove front: 1
+Trying again for region remove front: 2
+Reference Region: if.end -> if.end10
+Link: if.end10
+Found Isomorphic:if.end10 => if.end19
+Found Isomorphic:if.end19 => if.end28
+Final Isomorphic Graph: 3, 4
+ENTRY Blocks:
+   if.end
+   if.end10
+   if.end19
+Blocks:
+   if.then6
+   if.then15
+   if.then24
+EXIT Blocks:
+   if.end10
+   if.end19
+   if.end28
+Blocks:
+   if.end.if.end10_crit_edge
+   if.end10.if.end19_crit_edge
+   if.end19.if.end28_crit_edge
+-----
+Let's do it
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end
+  BB: if.end10
+  BB: if.end19
+Creating AlignedBlock Node
+Creating Node
+  BB: if.then6
+  BB: if.then15
+  BB: if.then24
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.then6
+  BB: if.then15
+  BB: if.then24
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end10
+  BB: if.end19
+  BB: if.end28
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end10
+  BB: if.end19
+  BB: if.end28
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+  BB: if.end19.if.end28_crit_edge
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+  BB: if.end19.if.end28_crit_edge
+Aligning:
+Entry Node
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+
+if.end19:                                         ; preds = %if.then15, %if.end10.if.end19_crit_edge
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+
+Analyzing
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+Creating new root node
+Creating Node
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+NodeTracker:Created: br
+Creating Node
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+Creating Node
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+Creating Node
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+Creating Node
+float* %B
+float* %B
+float* %B
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Creating Node
+i64 1
+i64 2
+i64 3
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+3 x 3
+Final Match: 0
+Int Seq
+i64 1
+i64 2
+i64 3
+Creating Node
+float 0.000000e+00
+float 0.000000e+00
+float 0.000000e+00
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Node found!
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+NodeTracker:Found: fcmp
+Node found!
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+NodeTracker:Found: load
+Node found!
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+NodeTracker:Found: getelementptr
+Analyzing
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Creating new root node
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+All PHI nodes
+Looking for block: entry.if.end_crit_edge
+Block not in alignment
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+NodeTracker:Created: mismatch
+Here X1
+Here X2
+Scheduled nodes:
+getelementptr
+load
+fcmp
+br
+MATCH:CHECK: getelementptr children op[0]=IDENTICAL op[1]=INTSEQ 
+MATCH:CHECK: load children op[0]=MATCH 
+MATCH:CHECK: fcmp children op[0]=MATCH op[1]=IDENTICAL 
+MATCH:CHECK: br children op[0]=MATCH op[1]=LABEL op[2]=LABEL 
+Aligning:
+
+if.then6:                                         ; preds = %if.end
+  %mul8 = fmul float %2, %factor
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  br label %if.end10
+
+
+if.then15:                                        ; preds = %if.end10
+  %mul17 = fmul float %4, %factor
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  br label %if.end19
+
+
+if.then24:                                        ; preds = %if.end19
+  %mul26 = fmul float %6, %factor
+  %arrayidx27 = getelementptr inbounds float, float* %A, i64 3
+  store float %mul26, float* %arrayidx27, align 4, !tbaa !6
+  br label %if.end28
+
+Analyzing
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+Creating new root node
+Creating Node
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+NodeTracker:Created: br
+Analyzing
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  store float %mul26, float* %arrayidx27, align 4, !tbaa !6
+Creating new root node
+Creating Node
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  store float %mul26, float* %arrayidx27, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  store float %mul26, float* %arrayidx27, align 4, !tbaa !6
+NodeTracker:Created: store
+Creating Node
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+  %mul26 = fmul float %6, %factor
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+  %mul26 = fmul float %6, %factor
+Creating Node
+float %factor
+float %factor
+float %factor
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Creating Node
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx27 = getelementptr inbounds float, float* %A, i64 3
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx27 = getelementptr inbounds float, float* %A, i64 3
+Creating Node
+float* %A
+float* %A
+float* %A
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Node found!
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx27 = getelementptr inbounds float, float* %A, i64 3
+NodeTracker:Found: getelementptr
+Node found!
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+  %mul26 = fmul float %6, %factor
+NodeTracker:Found: fmul
+Scheduled nodes:
+fmul
+getelementptr
+store
+br
+MATCH:CHECK: fmul children op[0]=MATCH op[1]=IDENTICAL 
+MATCH:CHECK: getelementptr children op[0]=IDENTICAL op[1]=INTSEQ 
+MATCH:CHECK: store children op[0]=MATCH op[1]=MATCH 
+MATCH:CHECK: br children op[0]=LABEL 
+Aligning:
+Exit Node
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+
+if.end19:                                         ; preds = %if.then15, %if.end10.if.end19_crit_edge
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+
+
+if.end28:                                         ; preds = %if.then24, %if.end19.if.end28_crit_edge
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+  %add = fadd float %1, %sum
+  %add12 = fadd float %add, %3
+  %add21 = fadd float %add12, %5
+  %add30 = fadd float %add21, %7
+  ret float %add30
+
+Processing Exit Blocks
+Searching for instruction in last exit block
+Creating Node
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add30 = fadd float %add21, %7
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+Mismatching
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add30 = fadd float %add21, %7
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add21 = fadd float %add12, %5
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+Mismatching
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add21 = fadd float %add12, %5
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add12 = fadd float %add, %3
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+Mismatching
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add12 = fadd float %add, %3
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add = fadd float %1, %sum
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+Mismatching
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %add = fadd float %1, %sum
+NodeTracker:Created: mismatch
+next instruction
+Creating Node
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+All PHI nodes
+Looking for block: if.end.if.end10_crit_edge
+Looking for block: if.then6
+Looking for block: if.end10.if.end19_crit_edge
+Looking for block: if.then15
+Looking for block: if.end19.if.end28_crit_edge
+Looking for block: if.then24
+NodeTracker:Created: phi
+Found good match
+Done searching: 1
+Exit block alignment starts with:
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Analyzing
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Creating new root node
+Creating Node
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Has instruction: 1
+Blocks Found: 2
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+3 x 3
+Final Match: 0
+All PHI nodes
+Looking for block: if.end.if.end10_crit_edge
+Looking for block: if.then6
+Looking for block: if.end10.if.end19_crit_edge
+Looking for block: if.then15
+Looking for block: if.end19.if.end28_crit_edge
+Looking for block: if.then24
+NodeTracker:Created: phi
+Growing PHI Node:  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+Block: 0 : if.end.if.end10_crit_edge
+In-blocks:
+if.end.if.end10_crit_edge
+if.end10.if.end19_crit_edge
+if.end19.if.end28_crit_edge
+j: 0
+PHIV:   %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+j: 1
+PHIV:   %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+j: 2
+PHIV:   %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Growing towards:
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+Creating Node
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+Creating Node
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx29.phi.trans.insert = getelementptr inbounds float, float* %A, i64 3
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx29.phi.trans.insert = getelementptr inbounds float, float* %A, i64 3
+Block: 1 : if.then6
+In-blocks:
+if.then6
+if.then15
+if.then24
+j: 0
+PHIV:   %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+j: 1
+PHIV:   %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+j: 2
+PHIV:   %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Growing towards:
+  %mul8 = fmul float %2, %factor
+  %mul17 = fmul float %4, %factor
+  %mul26 = fmul float %6, %factor
+Scheduled nodes:
+phi
+PHI:CHECK: phi children op[0]=MATCH op[1]=MATCH 
+Aligning:
+
+if.end.if.end10_crit_edge:                        ; preds = %if.end
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end10
+
+
+if.end10.if.end19_crit_edge:                      ; preds = %if.end10
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end19
+
+
+if.end19.if.end28_crit_edge:                      ; preds = %if.end19
+  %arrayidx29.phi.trans.insert = getelementptr inbounds float, float* %A, i64 3
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end28
+
+Analyzing
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+Creating new root node
+Creating Node
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+match analysis
+comparing two instructions for matching
+Match: 1
+3 x 3
+Final Match: 1
+Matching
+  br label %if.end10
+  br label %if.end19
+  br label %if.end28
+NodeTracker:Created: br
+Node found!
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+NodeTracker:Found: load
+Node found!
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %arrayidx29.phi.trans.insert = getelementptr inbounds float, float* %A, i64 3
+NodeTracker:Found: getelementptr
+Scheduled nodes:
+getelementptr
+load
+br
+MATCH:CHECK: getelementptr children op[0]=IDENTICAL op[1]=INTSEQ 
+MATCH:CHECK: load children op[0]=MATCH 
+MATCH:CHECK: br children op[0]=LABEL 
+Done
+ALIGNMENT: 0/12(PROFITABLE)  ISOMORPHIC REGIONS: 3 regions, 4 blocks each!
+Generating code for AB
+Generating code in: rolled.reg.bb
+generateNode: getelementptr
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: load
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: fcmp
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: br
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+Generating code for AB
+Generating code in: rolled.reg.bb7
+generateNode: fmul
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: getelementptr
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: store
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: br
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+Generating code for AB
+Generating code in: rolled.reg.bb8
+generateNode: phi
+generateNode: DONE
+Generating code for AB
+Generating code in: rolled.reg.bb9
+generateNode: getelementptr
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: load
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+generateNode: br
+Generating MATCH
+Operands done!
+generateNode 1
+generateNode 2
+generateNode 3
+generateNode 4
+generateNode 5
+generateNode 6
+generateNode: DONE
+Setting operands MATCH
+Here?? need to generate node value
+Generating IDENTICAL
+Here?? need to generate node value
+Generating INTSEQ
+Gen:   %10 = add i64 %9, 1
+Setting operands MATCH
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Here?? need to generate node value
+Generating IDENTICAL
+Setting operands MATCH
+Found Label operand
+Getting Label operand
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+  BB: if.end19.if.end28_crit_edge
+Found Label operand
+Getting Label operand
+  BB: if.then6
+  BB: if.then15
+  BB: if.then24
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Here?? need to generate node value
+Generating IDENTICAL
+Setting operands MATCH
+Here?? need to generate node value
+Generating IDENTICAL
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Found Label operand
+Setting operands MATCH
+Getting Label operand
+  BB: if.end10
+  BB: if.end19
+  BB: if.end28
+Found Label operand
+Setting operands MATCH
+Here?? need to generate node value
+Generating IDENTICAL
+Found Label operand
+Setting operands MATCH
+Found Label operand
+Setting operands MATCH
+Getting Label operand
+  BB: if.end10
+  BB: if.end19
+  BB: if.end28
+Found Label operand
+Updating PHI Node incoming values:
+ERROR: PHI node not generated?
+Computing size of original code
+Computing size of rolled code
+Size of BB: rolled.reg.bb8
+
+rolled.reg.bb8:                                   ; preds = %rolled.reg.bb9, %rolled.reg.bb7
+
+size: 0
+Size of BB: rolled.reg.bb7
+
+rolled.reg.bb7:                                   ; preds = %rolled.reg.bb
+  %14 = fmul float %12, %factor
+  %15 = getelementptr inbounds float, float* %A, i64 %10
+  store float %14, float* %15, align 4
+  br label %rolled.reg.bb8
+
+size: 5
+Size of BB: rolled.reg.bb9
+
+rolled.reg.bb9:                                   ; preds = %rolled.reg.bb
+  %16 = getelementptr inbounds float, float* %A, i64 %10
+  %17 = load float, float* %16, align 4
+  br label %rolled.reg.bb8
+
+size: 4
+Size of BB: rolled.reg.bb
+
+rolled.reg.bb:                                    ; No predecessors!
+  %9 = zext i8 %8 to i64
+  %10 = add i64 %9, 1
+  %11 = getelementptr inbounds float, float* %B, i64 %10
+  %12 = load float, float* %11, align 4
+  %13 = fcmp ogt float %12, 0.000000e+00
+  br i1 %13, label %rolled.reg.bb7, label %rolled.reg.bb9
+
+size: 9
+Size of BB: rolled.reg.loop
+
+rolled.reg.loop:                                  ; No predecessors!
+  %8 = phi i8 
+
+size: 0
+Size of BB: rolled.reg.latch
+
+rolled.reg.latch:                                 ; No predecessors!
+  %18 = add i8 %8, 1
+  %19 = icmp ne i8 %18, 5
+
+size: 2
+Cost Original: 42, Cost Rolled: 20, Region Profitable; example | NumRegions: 3 NumLabels: 4 GoodNodes: 17
+Trying again for region remove last: 1
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end
+  BB: if.end10
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end
+  BB: if.end10
+Creating AlignedBlock Node
+Creating Node
+  BB: if.then6
+  BB: if.then15
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.then6
+  BB: if.then15
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end10
+  BB: if.end19
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end10
+  BB: if.end19
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end.if.end10_crit_edge
+  BB: if.end10.if.end19_crit_edge
+Aligning:
+Entry Node
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+Analyzing
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+Creating new root node
+Creating Node
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+NodeTracker:Created: br
+Creating Node
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+Creating Node
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+Creating Node
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+Creating Node
+float* %B
+float* %B
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Creating Node
+i64 1
+i64 2
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+2 x 2
+Final Match: 0
+Int Seq
+i64 1
+i64 2
+Creating Node
+float 0.000000e+00
+float 0.000000e+00
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Node found!
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+NodeTracker:Found: fcmp
+Node found!
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+NodeTracker:Found: load
+Node found!
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+NodeTracker:Found: getelementptr
+Analyzing
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+Creating new root node
+Creating Node
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+2 x 2
+Final Match: 0
+Alt Seq
+NodeTracker:Created: alt: %1, %3
+Scheduled nodes:
+alt: %1, %3
+getelementptr
+load
+fcmp
+br
+ALTSEQ:CHECK: alt: %1, %3 InvalidType
+Trying again for region remove front: 1
+Trying again for region remove front: 2
+Trying again for region remove last: 2
+Trying again for region remove front: 1
+Trying again for region remove front: 2
+Reference Region: if.end10 -> if.end19
+Link: if.end19
+Found Isomorphic:if.end19 => if.end28
+Final Isomorphic Graph: 2, 4
+ENTRY Blocks:
+   if.end10
+   if.end19
+Blocks:
+   if.then15
+   if.then24
+EXIT Blocks:
+   if.end19
+   if.end28
+Blocks:
+   if.end10.if.end19_crit_edge
+   if.end19.if.end28_crit_edge
+-----
+Let's do it
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end10
+  BB: if.end19
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end10
+  BB: if.end19
+Creating AlignedBlock Node
+Creating Node
+  BB: if.then15
+  BB: if.then24
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.then15
+  BB: if.then24
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end19
+  BB: if.end28
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end19
+  BB: if.end28
+Creating AlignedBlock Node
+Creating Node
+  BB: if.end10.if.end19_crit_edge
+  BB: if.end19.if.end28_crit_edge
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Creating LABEL Node
+  BB: if.end10.if.end19_crit_edge
+  BB: if.end19.if.end28_crit_edge
+Aligning:
+Entry Node
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+
+if.end19:                                         ; preds = %if.then15, %if.end10.if.end19_crit_edge
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+
+Analyzing
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+Creating new root node
+Creating Node
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+NodeTracker:Created: br
+Creating Node
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+Creating Node
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+Creating Node
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 1
+2 x 2
+Final Match: 1
+Matching
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+Creating Node
+float* %B
+float* %B
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Creating Node
+i64 2
+i64 3
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+Match: 0
+2 x 2
+Final Match: 0
+Int Seq
+i64 2
+i64 3
+Creating Node
+float 0.000000e+00
+float 0.000000e+00
+Has instruction: 0
+Blocks Found: 0
+ValidBlock: 1
+All the Same
+Node found!
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+NodeTracker:Found: fcmp
+Node found!
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+NodeTracker:Found: load
+Node found!
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+NodeTracker:Found: getelementptr
+Analyzing
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Creating new root node
+Creating Node
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+Has instruction: 1
+Blocks Found: 1
+ValidBlock: 1
+Valid blocks: testing match
+match analysis
+comparing two instructions for matching
+Match: 0
+2 x 2
+Final Match: 0
+Alt Seq
+NodeTracker:Created: alt: %3, %5
+Scheduled nodes:
+alt: %3, %5
+getelementptr
+load
+fcmp
+br
+ALTSEQ:CHECK: alt: %3, %5 InvalidType
+Trying again for region remove last: 1
+Trying again for region remove front: 1
+Trying again for region remove front: 2
+Trying again for region remove last: 2
+Reference Region: if.end19 -> if.end28
+Link: if.end28
+Final Isomorphic Graph: 1, 4
+ENTRY Blocks:
+   if.end19
+Blocks:
+   if.then24
+EXIT Blocks:
+   if.end28
+Blocks:
+   if.end19.if.end28_crit_edge
+-----
+Optimizing: example
+BlockSize: 3
+getPossibleMinMaxReduction
+BlockSize: 2
+BlockSize: 3
+Attempting Group:
+BlockSize: 5
+collecting possible seeds from PHI Nodes
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %.pre = load float, float* %A, align 4, !tbaa !6
+getPossibleMinMaxReduction
+  %mul = fmul float %0, %factor
+getPossibleMinMaxReduction
+getPossibleMinMaxReduction
+BlockSize: 3
+BlockSize: 4
+Attempting Group:
+BlockSize: 5
+collecting possible seeds from PHI Nodes
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+getPossibleMinMaxReduction
+  %mul8 = fmul float %2, %factor
+getPossibleMinMaxReduction
+getPossibleMinMaxReduction
+BlockSize: 3
+BlockSize: 4
+Attempting Group:
+BlockSize: 5
+collecting possible seeds from PHI Nodes
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+getPossibleMinMaxReduction
+  %mul17 = fmul float %4, %factor
+getPossibleMinMaxReduction
+getPossibleMinMaxReduction
+BlockSize: 3
+BlockSize: 4
+Attempting Group:
+BlockSize: 6
+collecting possible seeds from PHI Nodes
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+getPossibleMinMaxReduction
+  %mul26 = fmul float %6, %factor
+getPossibleMinMaxReduction
+Building reduction
+  ret float %add30
+  %add30 = fadd float %add21, %7
+Creating Node
+Mismatching
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+float %sum
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Computing order of nodes for each lane
+Schedulable: 1
+Loop Rolling: example
+Generating tree
+Generating REDUCTION
+Generating Mismatch
+Mismatched Values:
+inst:   %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+arg: float %sum
+inst:   %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+inst:   %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+inst:   %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+Non constants
+Array Type: 5:float
+Created array:   %8 = alloca float, i8 5, align 4
+Gen:   %16 = load float, float* %15, align 4
+Closing REDUCTION
+Found use: 0:   ret float %add30
+Extracting:   %18 = fadd float %15, %17
+Gen:   %18 = fadd float %15, %17
+Graph code generated!
+; Function Attrs: nofree norecurse nounwind optsize
+define dso_local float @example(float* nocapture %A, float* nocapture readonly %B, float %factor, float %sum) local_unnamed_addr #0 {
+entry:
+  %0 = load float, float* %B, align 4, !tbaa !6
+  %cmp = fcmp ogt float %0, 0.000000e+00
+  br i1 %cmp, label %if.then, label %entry.if.end_crit_edge
+
+entry.if.end_crit_edge:                           ; preds = %entry
+  %.pre = load float, float* %A, align 4, !tbaa !6
+  br label %if.end
+
+if.then:                                          ; preds = %entry
+  %mul = fmul float %0, %factor
+  store float %mul, float* %A, align 4, !tbaa !6
+  br label %if.end
+
+if.end:                                           ; preds = %if.then, %entry.if.end_crit_edge
+  %1 = phi float [ %.pre, %entry.if.end_crit_edge ], [ %mul, %if.then ]
+  %arrayidx4 = getelementptr inbounds float, float* %B, i64 1
+  %2 = load float, float* %arrayidx4, align 4, !tbaa !6
+  %cmp5 = fcmp ogt float %2, 0.000000e+00
+  br i1 %cmp5, label %if.then6, label %if.end.if.end10_crit_edge
+
+if.end.if.end10_crit_edge:                        ; preds = %if.end
+  %arrayidx11.phi.trans.insert = getelementptr inbounds float, float* %A, i64 1
+  %.pre55 = load float, float* %arrayidx11.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end10
+
+if.then6:                                         ; preds = %if.end
+  %mul8 = fmul float %2, %factor
+  %arrayidx9 = getelementptr inbounds float, float* %A, i64 1
+  store float %mul8, float* %arrayidx9, align 4, !tbaa !6
+  br label %if.end10
+
+if.end10:                                         ; preds = %if.then6, %if.end.if.end10_crit_edge
+  %3 = phi float [ %.pre55, %if.end.if.end10_crit_edge ], [ %mul8, %if.then6 ]
+  %arrayidx13 = getelementptr inbounds float, float* %B, i64 2
+  %4 = load float, float* %arrayidx13, align 4, !tbaa !6
+  %cmp14 = fcmp ogt float %4, 0.000000e+00
+  br i1 %cmp14, label %if.then15, label %if.end10.if.end19_crit_edge
+
+if.end10.if.end19_crit_edge:                      ; preds = %if.end10
+  %arrayidx20.phi.trans.insert = getelementptr inbounds float, float* %A, i64 2
+  %.pre56 = load float, float* %arrayidx20.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end19
+
+if.then15:                                        ; preds = %if.end10
+  %mul17 = fmul float %4, %factor
+  %arrayidx18 = getelementptr inbounds float, float* %A, i64 2
+  store float %mul17, float* %arrayidx18, align 4, !tbaa !6
+  br label %if.end19
+
+if.end19:                                         ; preds = %if.then15, %if.end10.if.end19_crit_edge
+  %5 = phi float [ %.pre56, %if.end10.if.end19_crit_edge ], [ %mul17, %if.then15 ]
+  %arrayidx22 = getelementptr inbounds float, float* %B, i64 3
+  %6 = load float, float* %arrayidx22, align 4, !tbaa !6
+  %cmp23 = fcmp ogt float %6, 0.000000e+00
+  br i1 %cmp23, label %if.then24, label %if.end19.if.end28_crit_edge
+
+if.end19.if.end28_crit_edge:                      ; preds = %if.end19
+  %arrayidx29.phi.trans.insert = getelementptr inbounds float, float* %A, i64 3
+  %.pre57 = load float, float* %arrayidx29.phi.trans.insert, align 4, !tbaa !6
+  br label %if.end28
+
+if.then24:                                        ; preds = %if.end19
+  %mul26 = fmul float %6, %factor
+  %arrayidx27 = getelementptr inbounds float, float* %A, i64 3
+  store float %mul26, float* %arrayidx27, align 4, !tbaa !6
+  br label %if.end28
+
+if.end28:                                         ; preds = %if.then24, %if.end19.if.end28_crit_edge
+  %7 = phi float [ %.pre57, %if.end19.if.end28_crit_edge ], [ %mul26, %if.then24 ]
+  %add = fadd float %1, %sum
+  %add12 = fadd float %add, %3
+  %add21 = fadd float %add12, %5
+  %add30 = fadd float %add21, %7
+  ret float %add30
+
+rolled.pre:                                       ; No predecessors!
+  %8 = alloca float, i8 5, align 4
+  %9 = getelementptr float, float* %8, i8 0
+  store float %1, float* %9, align 4
+  %10 = getelementptr float, float* %8, i8 1
+  store float %sum, float* %10, align 4
+  %11 = getelementptr float, float* %8, i8 2
+  store float %3, float* %11, align 4
+  %12 = getelementptr float, float* %8, i8 3
+  store float %5, float* %12, align 4
+  %13 = getelementptr float, float* %8, i8 4
+  store float %7, float* %13, align 4
+
+rolled.loop:                                      ; No predecessors!
+  %14 = phi i8 
+  %15 = phi float [ %18, %rolled.loop ], [ 0.000000e+00, %rolled.pre ]
+  %16 = getelementptr float, float* %8, i8 %14
+  %17 = load float, float* %16, align 4
+  %18 = fadd float %15, %17
+
+rolled.exit:                                      ; No predecessors!
+}
+
+Root:
+  %add30 = fadd float %add21, %7
+  %add21 = fadd float %add12, %5
+  %add12 = fadd float %add, %3
+  %add = fadd float %1, %sum
+Root size: 4
+digraph VTree {
+0 [label="fadd red.", style="filled" , fillcolor="#8ae18a", shape=box];
+1 [label="mismatch", style="filled" , fillcolor="#ff6671", shape=box];
+1->0 
+2 [label="ret", style="filled" , fillcolor="#f2eb5c", shape=box];
+0->2
+}
+
+Gains: 4 - 66 = -62; Width: 4; Reduction Unprofitable; example
+Done Loop Roller: 0/1
+clang-12: warning: argument unused during compilation: '-mthumb' [-Wunused-command-line-argument]
+clang-12: warning: argument unused during compilation: '-mthumb' [-Wunused-command-line-argument]
+   text	   data	    bss	    dec	    hex	filename
+    132	      0	      0	    132	     84	example-3.c.o
+   text	   data	    bss	    dec	    hex	filename
+    132	      0	      0	    132	     84	example-3.c.opt.o

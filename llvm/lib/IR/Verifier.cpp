@@ -4255,15 +4255,17 @@ void Verifier::verifyDominatesUse(Instruction &I, unsigned i) {
     return;
 
   const Use &U = I.getOperandUse(i);
+  
   /*
   if (!DT.dominates(Op, U)) {
-    RDEBUG("ERROR: Domination Fail"); 
-    RDEBUG("Instruction:"); 
+    I.getParent()->getParent()->dump();
+    errs() << "ERROR: Domination Fail" << "\n"; 
+    errs() << "Instruction:"; 
     I.dump();
-    I.getParent()->dump();
-    RDEBUG("Operand:"); 
+    //I.getParent()->dump();
+    errs() << "Operand:"; 
     Op->dump();
-    Op->getParent()->dump();
+    //Op->getParent()->dump();
   }
   */
   Assert(DT.dominates(Op, U),

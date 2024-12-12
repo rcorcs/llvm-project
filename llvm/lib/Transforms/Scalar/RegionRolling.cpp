@@ -111,6 +111,15 @@ public:
     return nullptr;
   }
 
+  AlignedBlock *getAlignedBlock(BasicBlock *BB, unsigned i) {
+    for (AlignedBlock *AB : AlignedBlocks) {
+      if (AB->Blocks[i]==BB) 
+        return AB;
+    }
+    return nullptr;
+  }
+
+
   template<typename ValueT>
   AlignedBlock *getAlignedBlock(std::vector<ValueT *> &Vs) {
     std::set<AlignedBlock*> FoundAlignedBlocks;
@@ -159,6 +168,28 @@ public:
   std::unordered_map<Value*, std::unordered_set<Node*> > NodeMap2;
   std::unordered_set<Value *> ValuesInNode;
   std::unordered_set<Value *> Inputs;
+
+  unsigned getNumRegions() {
+    return EntryBlocks.size();
+  }
+
+  unsigned getNumLabelNodes() {
+    unsigned s = 0;
+    for (Node *N : Nodes) {
+      if (N->getNodeType()==NodeType::LABEL)
+        s++;
+    }
+    return s;
+  }
+
+  unsigned getNumGoodNodes() {
+    unsigned s = 0;
+    for (Node *N : Nodes) {
+      if (N->getNodeType()!=NodeType::LABEL && N->getNodeType()!=NodeType::MISMATCH)
+        s++;
+    }
+    return s;
+  }
 
   AlignedRegion RemoveFirst(unsigned Skip) {
     AlignedRegion NewAR;
@@ -342,15 +373,16 @@ public:
   std::vector<Value *> CreatedCode;
   std::unordered_map<Instruction *, Instruction *> Extracted;
 
-  std::unordered_map<Type *, Value *> CachedCastIndVar;
+  //std::unordered_map<Type *, Value *> CachedCastIndVar;
   
-  std::unordered_map<Type *, Value *> CachedRem2;
-  Value *AltSeqCmp{nullptr};
+  //std::unordered_map<Type *, Value *> CachedRem2;
+  //Value *AltSeqCmp{nullptr};
 
   BasicBlock *PreHeader;
   BasicBlock *Header;
   BasicBlock *Latch;
   BasicBlock *Exit;
+  BasicBlock *LoopExit;
   PHINode *IndVar;
 };
 
@@ -471,7 +503,7 @@ void RegionCodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder
   if (NeedExtract.empty()) return;
 
 #ifdef TEST_DEBUG
-  errs() << "Extracting: "; NewI->dump();
+  //errs() << "Extracting: "; NewI->dump();
 #endif
 
   if (NeedExtract.size()==1 && N->getNodeType()==NodeType::REDUCTION) {
@@ -481,8 +513,9 @@ void RegionCodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder
     }
   }
 
-  BasicBlock &Entry = F.getEntryBlock();
-  IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
+  //BasicBlock &Entry = F.getEntryBlock();
+  //IRBuilder<> ArrBuilder(&*Entry.getFirstInsertionPt());
+  IRBuilder<> ArrBuilder(PreHeader);
 
   Type *IndVarTy = IntegerType::get(Context, 8);
   Value *ArrPtr = ArrBuilder.CreateAlloca(NewI->getType(), ConstantInt::get(IndVarTy, N->size()));
@@ -493,7 +526,7 @@ void RegionCodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder
   auto *Store = Builder.CreateStore(NewI, GEP);
   //CreatedCode.push_back(Store);
 
-  IRBuilder<> ExitBuilder(Exit);
+  IRBuilder<> ExitBuilder(LoopExit);
   for (unsigned i : NeedExtract) {
     Instruction *I = N->getValidInstruction(i);
     auto *GEP = ExitBuilder.CreateGEP(ArrPtr, ConstantInt::get(IndVarTy, i));
@@ -536,6 +569,23 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       }
       return nullptr; //there is no single value to return
     }
+    case NodeType::PHI: {
+      errs() << "Generating PHI Node\n";
+      IRBuilder<> PHIBuilder(&*Builder.GetInsertBlock()->getFirstInsertionPt());
+      PHINode *NewPHI = PHIBuilder.CreatePHI(N->getType(), 0);
+      NodeToValue[N] = NewPHI;
+
+        for (unsigned i = 0; i<N->size(); i++) {
+          if (auto *I = N->getValidInstruction(i)) {
+            //if (std::find(Garbage.begin(), Garbage.end(), I)==Garbage.end()) Garbage.push_back(I);
+	    Garbage.insert(I);
+	  }
+	}
+
+      generateExtract(N, NewPHI, PHIBuilder);
+
+      return NewPHI;
+    }
     case NodeType::MATCH: {
 #ifdef TEST_DEBUG
       errs() << "Generating MATCH\n";
@@ -560,12 +610,8 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
               N->getValidInstruction(x)->dump();
            }
         }
-        Instruction *NewI = I->clone();
-        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
-          NewI->setOperand(i,nullptr);
-        }
-        NodeToValue[N] = NewI;
         errs() << "Generated Match for: "; I->dump();
+        errs() << "in block: " << Builder.GetInsertBlock()->getName() << "\n";
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
           errs() << "Operand: " << N->getChild(i)->getString() << "\n";
         }
@@ -573,6 +619,14 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
           Operands.push_back(cloneGraph(N->getChild(i), Builder));
         }
+        
+        errs() << "Cloning matching instruction\n";
+        errs() << "in block: " << Builder.GetInsertBlock()->getName() << "\n";
+        Instruction *NewI = I->clone();
+        for(unsigned i = 0; i<NewI->getNumOperands(); i++) {
+          NewI->setOperand(i,nullptr);
+        }
+        NodeToValue[N] = NewI;
 
 #ifdef TEST_DEBUG
         errs() << "Operands done: " << Operands.size() << " (" << NewI->getNumOperands() << ")\n";
@@ -603,7 +657,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
           NewI->setOperand(i,Operands[i]);
         }
 #ifdef TEST_DEBUG
-        errs() << "Generated: "; NewI->dump();
+        //errs() << "Generated: "; NewI->dump();
 #endif
 
         for (unsigned i = 0; i<N->size(); i++) {
@@ -612,12 +666,11 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 	    Garbage.insert(I);
 	  }
 	}
-        
 	
         generateExtract(N, NewI, Builder);
         
 #ifdef TEST_DEBUG
-	errs() << "Gen: "; NewI->dump();
+	//errs() << "Gen: "; NewI->dump();
 #endif
         return NewI;
       } else return N->getValue(0); //TODO: maybe an assert false
@@ -672,12 +725,12 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 	  }
 	}
         
-	/*
-        generateExtract(N, NewI, Builder);
-        */
+	
+        //generateExtract(N, NewI, Builder);
+        
 
 #ifdef TEST_DEBUG
-        errs() << "Generated: "; NewI->dump();
+        //errs() << "Generated: "; NewI->dump();
 #endif
 
         return NewI;
@@ -687,8 +740,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 #ifdef TEST_DEBUG
       errs() << "Generating GEPSEQ\n";
 #endif
-      return nullptr;
-      /*
+      //return nullptr;
       auto *GN = (GEPSequenceNode*)N;
 
       Value *Ptr = GN->getPointerOperand();
@@ -721,13 +773,13 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
         }
       }
 
+      //TODO
       generateExtract(N, GEP, Builder);
 
 #ifdef TEST_DEBUG
       errs() << "Gen: "; GEP->dump();
 #endif
       return GEP;
-      */
     }
     case NodeType::BINOP: {
 #ifdef TEST_DEBUG
@@ -765,7 +817,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       generateExtract(N, NewI, Builder);
 
 #ifdef TEST_DEBUG
-      errs() << "Gen: "; NewI->dump();
+      //errs() << "Gen: "; NewI->dump();
 #endif
       return NewI;
     }
@@ -889,6 +941,7 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 #ifdef TEST_DEBUG
       errs() << "Generating ALTSEQ\n";
 #endif
+      errs() << "in block: " << Builder.GetInsertBlock()->getName() << "\n";
 
       auto *ASN = (AlternatingSequenceNode*)N;
 
@@ -910,31 +963,33 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       if (CInt1 && CInt2 && CInt1->isZero() && CInt2->isOne()) {
         errs() << "Generated Version 1:\n";
 	
+        /*
 	if (CachedRem2.find(SeqTy)!=CachedRem2.end()) {
           NewV = CachedRem2[SeqTy];
 	} else {
-
+        */
         Value *CastIndVar = IndVar;
+        /*
         if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
           CastIndVar = CachedCastIndVar[SeqTy];
-        } else {
+        } else {*/
           auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
           if (CIndVarI!=IndVar) {
             CreatedCode.push_back(CastIndVar);
-            CachedCastIndVar[SeqTy] = CIndVarI;
+            //CachedCastIndVar[SeqTy] = CIndVarI;
             CastIndVar = CIndVarI;
           }
-        }
+        //}
 
         auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
         if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
           CreatedCode.push_back(Rem2I);
         Rem2->dump();
 
-        CachedRem2[SeqTy] = Rem2;
+        //CachedRem2[SeqTy] = Rem2;
 
         NewV = Rem2;
-	}
+	//}
       } else if (CInt1 && CInt2 && IsNegatedInt(CInt1->getValue(), CInt2->getValue()) ) {
         errs() << "Generated Version 2:\n";
         PHINode *PHI = nullptr;
@@ -961,8 +1016,9 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 	NewV = PHI;
       } else if (CInt1 && CInt2) {
         errs() << "Generated Version 3:\n";
-
+        
         Value *Rem2 = nullptr;
+        /*
 	if (CachedRem2.find(SeqTy)!=CachedRem2.end()) {
           Rem2 = CachedRem2[SeqTy];
 	} else {
@@ -988,10 +1044,19 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
             Rem2->dump();
 	  }
 
-
           CachedRem2[SeqTy] = Rem2;
 
 	}
+        */
+          Value *CastIndVar = IndVar;
+          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+	  Rem2 = CastIndVar;
+	  if (N->size()>2){
+            Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
+            if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+              CreatedCode.push_back(Rem2I);
+            Rem2->dump();
+	  }
 	APInt Diff(CInt2->getValue());
 	Diff -= CInt1->getValue();
 
@@ -1010,39 +1075,63 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
         
       } else {
         errs() << "Generated Version 4:\n";
-
-	if (AltSeqCmp==nullptr) {
+        /*
+        IRBuilder<> HeaderBuilder(Header);
+        if (Header->getTerminator()!=nullptr) {
+          HeaderBuilder.SetInsertPoint(&*Header->getFirstInsertionPt());
+        }
+        */
+        errs() << "Here0\n";
+        IRBuilder<> *TmpBuilder = &Builder;
+        if (ASN->getFirst() && ASN->getSecond()) {
+        //Instruction *I1 = dyn_cast<Instruction>(ASN->getFirst());
+        //Instruction *I2 = dyn_cast<Instruction>(ASN->getSecond());
+        //if ( !isa<Instruction>(ASN->getFirst()) && !isa<Instruction>(ASN->getSecond()) ) {
+        //  TmpBuilder = &HeaderBuilder;
+        //}
+        /* else if ( (I1==nullptr || AR.getAlignedBlock(I1)==nullptr) && (I2==nullptr || AR.getAlignedBlock(I2)==nullptr) ) {
+          TmpBuilder = &HeaderBuilder;
+        }*/
+        }
+        errs() << "Here1\n";
+        
+	//if (AltSeqCmp==nullptr) {
 
 	Value *Rem2 = IndVar;
-
+        /*
 	if (CachedRem2.find(IndVar->getType())!=CachedRem2.end()) {
           Rem2 = CachedRem2[IndVar->getType()];
 	} else {
 	
-	if (N->size()>2){
-          Rem2 = Builder.CreateURem(IndVar, ConstantInt::get(IndVar->getType(), 2));
-          if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
-            CreatedCode.push_back(Rem2I);
-          Rem2->dump();
+	  if (N->size()>2){
+        */
+        errs() << "Here2\n";
+            Rem2 = TmpBuilder->CreateURem(IndVar, ConstantInt::get(IndVar->getType(), 2));
+            if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
+              CreatedCode.push_back(Rem2I);
+            Rem2->dump();
+        /*
+            CachedRem2[IndVar->getType()] = Rem2;
+	  }
 
-          CachedRem2[IndVar->getType()] = Rem2;
 	}
-
-	}
-
-        Value *Cond = Builder.CreateICmpEQ(Rem2, ConstantInt::get(IndVar->getType(), 0));
+        */
+        errs() << "Here3\n";
+        Value *Cond = TmpBuilder->CreateICmpEQ(Rem2, ConstantInt::get(IndVar->getType(), 0));
         if (auto *CondI = dyn_cast<Instruction>(Cond))
           CreatedCode.push_back(CondI);
         Cond->dump();
         
-	  AltSeqCmp = Cond;
-	}
-        auto *Sel = Builder.CreateSelect(AltSeqCmp, ASN->getFirst(), ASN->getSecond());
+	  //AltSeqCmp = Cond;
+	//}
+        errs() << "Here4\n";
+        //auto *Sel = TmpBuilder->CreateSelect(AltSeqCmp, ASN->getFirst(), ASN->getSecond());
+        auto *Sel = TmpBuilder->CreateSelect(Cond, ASN->getFirst(), ASN->getSecond());
         if (auto *SelI = dyn_cast<Instruction>(Sel))
           CreatedCode.push_back(SelI);
 
         Sel->dump();
-
+        
 	NewV = Sel;
       }
       if (NewV) NodeToValue[N] = NewV;
@@ -1137,7 +1226,7 @@ void RegionCodeGenerator::setNodeOperands(Node *N) {
       NewI->setOperand(1,Op1);
 
 #ifdef TEST_DEBUG
-      errs() << "Gen: "; NewI->dump();
+      //errs() << "Gen: "; NewI->dump();
 #endif
       break;
     }
@@ -1456,7 +1545,7 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
 	}
         
         errs() << "generateNode 6\n";
-        //generateExtract(N, NewI, Builder);
+        generateExtract(N, NewI, Builder);
 
 #ifdef TEST_DEBUG
 	//errs() << "Gen: "; NewI->dump();
@@ -1505,12 +1594,10 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
 	  }
 	}
         
-	/*
-        generateExtract(N, NewI, Builder);
-        */
+        //generateExtract(N, NewI, Builder);
 
 #ifdef TEST_DEBUG
-        errs() << "Generated: "; NewI->dump();
+        //errs() << "Generated: "; NewI->dump();
 #endif
 
       }
@@ -1560,9 +1647,7 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
         }
       }
 
-      /*
       generateExtract(N, GEP, Builder);
-      */
 
 #ifdef TEST_DEBUG
       errs() << "Gen: "; GEP->dump();
@@ -1602,11 +1687,10 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
       /*
       NewI->setOperand(0,Op0);
       NewI->setOperand(1,Op1);
-      
-      generateExtract(N, NewI, Builder);
       */
+      generateExtract(N, NewI, Builder);
 #ifdef TEST_DEBUG
-      errs() << "Gen: "; NewI->dump();
+      //errs() << "Gen: "; NewI->dump();
 #endif
       break;
     }
@@ -1933,7 +2017,8 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
   }
 
   Latch = BasicBlock::Create(Context, "rolled.reg.latch", &F);
-  NodeToValue[AR.ExitLabelNode] = Latch;
+  LoopExit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
+  //NodeToValue[AR.ExitLabelNode] = Latch;
 
   //Exit = BasicBlock::Create(Context, "rolled.reg.exit", &F);
 
@@ -1945,9 +2030,9 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
 	    //continue;
     //}
 
-    CachedCastIndVar.clear();
-    CachedRem2.clear();
-    AltSeqCmp = nullptr;
+    //CachedCastIndVar.clear();
+    //CachedRem2.clear();
+    //AltSeqCmp = nullptr;
 
     BasicBlock *BB = ABToBlock[AB];
     errs() << "Generating code in: " << BB->getName().str() <<  "\n";
@@ -1968,7 +2053,42 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
     }
   }
 
-  F.dump();
+  bool Invalid = false;
+  errs() << "Updating PHI Node incoming values:\n";
+  for (AlignedBlock *AB : AR.AlignedBlocks) {
+    if (Invalid) break;
+
+    for (Node *N : AB->ScheduledNodes) {
+      if (N->getNodeType()==NodeType::PHI) {
+        MatchingPHINode *PN = (MatchingPHINode*)N;
+        if (NodeToValue[N]==nullptr) {
+          errs() << "ERROR: PHI node not generated?\n";
+          Invalid = true;
+          break;
+        }
+        PHINode *NewPHI = dyn_cast<PHINode>(NodeToValue[N]);
+        errs() << "Updating: "; NewPHI->dump();
+        errs() << "Children: " << PN->getNumChildren() << "\n";
+        for (unsigned i = 0; i<PN->getNumChildren(); i++) {
+          errs() << "i: " << i << "\n";
+          Node *Child = PN->getChild(i);
+          Node *Label = PN->Labels[i];
+          BasicBlock *InBB = dyn_cast<BasicBlock>( NodeToValue[Label] );
+          IRBuilder<> Builder(InBB);
+          if (InBB->getTerminator()) {
+            Builder.SetInsertPoint(InBB->getTerminator());
+          }
+          Value *InV = cloneGraph(Child, Builder);
+          NewPHI->addIncoming(InV, InBB);
+        }
+        errs() << "Updated PHI: ";
+        NewPHI->dump();
+      }
+
+    }
+  }
+
+  //F.dump();
 
   Builder.SetInsertPoint(Latch);
 
@@ -1993,10 +2113,11 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
   errs() << "Computing size of rolled code\n";
   std::set<BasicBlock *> CreatedBlocks;
 
-  CreatedBlocks.insert(PreHeader);
+  //CreatedBlocks.insert(PreHeader);
   CreatedBlocks.insert(Header);
   CreatedBlocks.insert(Latch);
   CreatedBlocks.insert(Exit);
+  //CreatedBlocks.insert(LoopExit);
 
   for (auto &Pair : ABToBlock) {
     CreatedBlocks.insert(Pair.second);
@@ -2011,21 +2132,32 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
     CostNew += size;
   }
 
-  bool Profitable = CostNew < CostOld;
+  CostNew += 4*EstimateSize(PreHeader,DL,&TTI); 
+  CostNew += 3*EstimateSize(LoopExit,DL,&TTI); 
+
+  bool Profitable = CostNew + 1 < CostOld;
 
   errs() << "Cost Original: " << CostOld << ", ";
-  errs() << "Cost Rolled: " << CostNew << ", ";
-  errs() << (Profitable?"Profitable":"Unprofitable") << "\n";
+  errs() << "Cost Rolled: " << CostNew << ", Region ";
+  errs() << (Profitable?"Profitable":"Unprofitable") << "; " << F.getName() << " | ";
+  errs() << "NumRegions: " << AR.getNumRegions() << " NumLabels: " << AR.getNumLabelNodes() << " GoodNodes: " << AR.getNumGoodNodes() << "\n";
 
-  if (AlwaysRoll || Profitable) {
+  if (!Invalid && (AlwaysRoll || Profitable) ) {
+
+    BasicBlock *FirstEntry = AR.EntryBlocks[0];
+    BasicBlock *LastExit = AR.ExitBlocks[AR.ExitBlocks.size()-1];
+
     IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
     IndVar->addIncoming(Add,Latch);
 
-    auto *Br = Builder.CreateCondBr(Cond,Header,Exit);
+    auto *Br = Builder.CreateCondBr(Cond,Header,LoopExit);
     //CreatedCode.push_back(Br);
 
     Builder.SetInsertPoint(PreHeader);
     Builder.CreateBr(Header);
+
+    Builder.SetInsertPoint(LoopExit);
+    Builder.CreateBr(LastExit);
 
 
     Builder.SetInsertPoint(Header);
@@ -2037,24 +2169,30 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
     BasicBlock *EntryBB = dyn_cast<BasicBlock>(NodeToValue[N]);
     Builder.CreateBr(EntryBB);
 
+    errs() << "Before Updating Extracted Values\n";
+   // F.dump();
+
     for (auto &Pair : Extracted) {
       Pair.first->replaceAllUsesWith(Pair.second);
     }
 
-    F.dump();
 
     errs() << "Erasing old instructions\n";
+    /*
     for (Instruction *I : Garbage) {
       for (Use &OpU : I->operands()) {
         Value *OpV = OpU.get();
         OpU.set(nullptr);
       }
     }
-    /*
     for (Instruction *I : Garbage) {
       I->replaceAllUsesWith(nullptr);
     }
     */
+    for (Instruction *I : Garbage) {
+      if (!I->getType()->isVoidTy())
+         I->replaceAllUsesWith(UndefValue::get(I->getType()));
+    }
     for (Instruction *I : Garbage) {
       I->eraseFromParent();
     }
@@ -2067,9 +2205,6 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
       }
     }
 
-    BasicBlock *FirstEntry = AR.EntryBlocks[0];
-    BasicBlock *LastExit = AR.ExitBlocks[AR.ExitBlocks.size()-1];
-
     DeleteBlocks.erase(FirstEntry);
     DeleteBlocks.erase(LastExit);
 
@@ -2079,9 +2214,10 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
     Builder.CreateBr(PreHeader);
 
     Builder.SetInsertPoint(Exit);
-    Builder.CreateBr(LastExit);
+    //Builder.CreateBr(LastExit);
+    Builder.CreateBr(Latch);
 
-    F.dump();
+    //F.dump();
     
     return true;
   } else {
@@ -2092,6 +2228,7 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
     DeleteBlocks.insert(Header);
     DeleteBlocks.insert(Latch);
     DeleteBlocks.insert(Exit);
+    DeleteBlocks.insert(LoopExit);
 
     for (auto &Pair : ABToBlock) {
       DeleteBlocks.insert(Pair.second);
@@ -2154,9 +2291,19 @@ bool RegionRoller::run() {
     BasicBlock *EntryRef = RE.getEntry();
     BasicBlock *ExitRef = RE.getExit();
     
+
     errs() << "Reference Region: " << EntryRef->getName().str() << " -> " << ExitRef->getName().str() << "\n";
 
     unsigned CountRegions = 1;
+
+    if (EntryRef->isEHPad()) {
+      errs() << "Skipping entry block with a landing pad\n";
+      continue;
+    }
+    if (isa<InvokeInst>(ExitRef->getTerminator())) {
+      errs() << "Skipping exit block with an invoke instruction\n";
+      continue;
+    }
 
     AlignedRegion AR;
     initializeAlignedRegion(&AR, EntryRef, ExitRef);
@@ -2203,10 +2350,16 @@ bool RegionRoller::run() {
 
         RegionCodeGenerator RCG(F, AR);
         Modified = RCG.generate(AR);
+        if (Modified) {
+          F.dump();
+          if (verifyFunction(F)) {
+            errs() << "ERROR: BROKEN FUNCTION\n";
+          }
+        }
       }
 
       //TODO: temporary removed this section to improve capabilities... bring it back later
-      /*
+      
       if (!Modified) {
         for (int Skip = 1; Skip<(((int)AR.AlignedBlocks.size())-1); Skip++) {
           errs() << "Trying again for region remove last: " << Skip << "\n";
@@ -2241,15 +2394,15 @@ bool RegionRoller::run() {
           }
         }
       }
-      */
+      
 
     }
 
     AR.releaseMemory();
     if (Modified) return true;    
 
-    errs() << "Skipping smaller regions\n";
-    break; //TODO remove this later
+    //errs() << "Skipping smaller regions\n";
+    //break; //TODO remove this later
   }
 
   return false;
@@ -2261,7 +2414,18 @@ bool AlignedRegion::validateAlignment() {
   Visited.insert(ExitBlocks[ExitBlocks.size()-1]);
 
   for (auto *AB : AlignedBlocks) {
-    if (AB->isExit()) continue;
+    if (AB->isExit()) {
+      //HERE22
+      BasicBlock *BB = AB->Blocks[AB->Blocks.size()-1];
+      for (PHINode &PHI : BB->phis()) {
+        if (find(&PHI)==nullptr) {
+          errs() << "\nERROR: Instruction not aligned in block: " << BB->getName().str() <<"\n";
+	  PHI.dump();
+          return false;
+	      }
+
+      }
+    }else {
     for (BasicBlock *BB : AB->Blocks) {
 
       if (Visited.count(BB)) continue;
@@ -2274,6 +2438,7 @@ bool AlignedRegion::validateAlignment() {
           return false;
 	      }
       }
+    }
     }
   }
 
@@ -2309,6 +2474,7 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
 	    errs() << "Exit Node\n";
 	    //continue;
     }
+    /*
     if (!AB->isEntry()) {
       for (BasicBlock *BB : AB->Blocks) {
         for (const PHINode &PHI : BB->phis()) {
@@ -2317,7 +2483,7 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
         }
       }
     }
-
+    */
     std::vector<BasicBlock::reverse_iterator> Its;
     for (BasicBlock *BB : AB->Blocks) {
       //errs() << BB->getName().str() << "\n";
@@ -2413,7 +2579,6 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
             Its[i]++;
           }
         }
-        
         AB->ScheduledNodes.push_back(N);
 
         continue;
@@ -2505,6 +2670,7 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
       switch(N->getNodeType()) {
       case NodeType::RECURRENCE:
       case NodeType::REDUCTION:
+      case NodeType::ALTSEQ:
         InvalidType = true;
       }
       if (InvalidType) {
@@ -2521,7 +2687,7 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
           switch(N->getChild(i)->getNodeType()) {
           case NodeType::RECURRENCE:
           case NodeType::REDUCTION:
-          case NodeType::PHI: // TODO: PHI not hanlded yet
+          //case NodeType::PHI: // TODO: PHI not hanlded yet
             InvalidType = true;
           }
           if (InvalidType) {
@@ -2536,6 +2702,20 @@ bool AlignedRegion::align(ScalarEvolution *SE) {
   errs() << "Done\n";
 
   errs() << "ALIGNMENT: " << CountMismatchings << "/" << CountTotal << ((CountMismatchings==0)?"(PROFITABLE)":"") <<  " "; 
+
+  for (Node *N : Nodes) {
+    if (N->getNodeType()==NodeType::MISMATCH) {
+      for (unsigned i = 0; i<N->size(); i++) {
+        if (Instruction *I = dyn_cast<Instruction>(N->getValue(i))) {
+          if (contains(I)) {
+            errs() << "ERROR: Mismatching input instruction is also a matching instruction\n";
+            I->dump();
+            return false;
+          }
+        }
+      }
+    }
+  }
   return validateAlignment();
 }
 
@@ -2690,9 +2870,29 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
     if (N->getPointerOperand()) 
       Inputs.insert(N->getPointerOperand());
     else Inputs.insert(N->getReference()->getPointerOperand());
+
+
     errs() << "GEP Seq\n";
     printVs(Vs);
-    return N;
+    bool Valid = true;
+    for (unsigned i = 0; i<Vs.size(); i++) {
+      if (!Valid) break;
+
+      Value *V = Vs[i];
+      Instruction *I = dyn_cast<GetElementPtrInst>(Vs[i]);
+      if (I!=nullptr && Inputs.count(I)==0) {
+        if (getAlignedBlock(I->getParent(),i) == nullptr) {
+          errs() << "Block not in alignment\n";
+          Valid = false;
+          break;
+        }
+      }
+    }
+    if (Valid)
+      return N;
+    else delete N;
+
+    //return N;
   }
 
   if (Node *N = BinOpSequenceNode::get(Vs, nullptr, Parent, SE)) {
@@ -2725,7 +2925,24 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
   }
   if (Node *N = MatchingPHINode::get(Vs, nullptr, Parent)) {
     errs() << "All PHI nodes\n";
-    return N;
+    bool ValidPHI = true;
+    for (unsigned i = 0; i<Vs.size(); i++) {
+      if (!ValidPHI) break;
+
+      Value *V = Vs[i];
+      PHINode *PHI = dyn_cast<PHINode>(V);
+      for (unsigned j = 0; j<PHI->getNumIncomingValues(); j++) {
+        errs() << "Looking for block: " << PHI->getIncomingBlock(j)->getName() << "\n";
+        if (getAlignedBlock(PHI->getIncomingBlock(j),i) == nullptr) {
+          errs() << "Block not in alignment\n";
+          ValidPHI = false;
+          break;
+        }
+      }
+    }
+    if (ValidPHI)
+      return N;
+    else delete N;
   }
 
   errs() << "Mismatching\n";
@@ -2743,17 +2960,18 @@ void AlignedRegion::growGraph(Node *N, ScalarEvolution *SE, std::set<Node*> &Vis
 
   auto growGraphNode = [&](auto &Vs, Node *N, std::set<Node*> &Visited) {
        Node *Child = find(Vs);
-       if (Child==nullptr) {
+       if (Child==nullptr || Child->getNodeType()==NodeType::ALTSEQ) {
          Child = createNode(Vs, N, SE);
          this->addNode(Child);
          N->pushChild(Child);
          growGraph(Child, SE, Visited);
-       } else N->pushChild(Child);
+       } else {
+         N->pushChild(Child);
+       }
   };
 
   switch(N->getNodeType()) {
     case NodeType::MISMATCH: break;
-    case NodeType::PHI: break;
     case NodeType::IDENTICAL: break;
     case NodeType::ALTSEQ: break;
     case NodeType::INTSEQ: break;
@@ -2806,6 +3024,46 @@ void AlignedRegion::growGraph(Node *N, ScalarEvolution *SE, std::set<Node*> &Vis
           Vs.push_back( IV->getOperand(i) );
         }
         growGraphNode(Vs, N, Visited);
+      }
+    } break;
+    case NodeType::PHI: {
+      PHINode *PHI = dyn_cast<PHINode>(N->getValue(0));
+      if (PHI==nullptr) return;
+      errs() << "Growing PHI Node:";
+      PHI->dump();
+      for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
+        std::vector<Value*> Vs;
+
+        errs() << "Block: " << i << " : " << PHI->getIncomingBlock(i)->getName() << "\n";
+        AlignedBlock *InAB = getAlignedBlock(PHI->getIncomingBlock(i), 0);
+        if (InAB==nullptr) {
+          errs() << "ERROR: Null InAB\n";
+        }
+        errs() << "In-blocks:\n";
+        for (BasicBlock *BB : InAB->Blocks) errs() << BB->getName() << "\n";
+
+        for (unsigned j = 0; j<N->size(); j++) {
+          errs() << "j: " << j << "\n";
+          PHINode *PHIV = dyn_cast<PHINode>(N->getValue(j));
+	  assert(PHIV && "Matching phi node expecting valid instructions!");
+          errs() << "PHIV: "; PHIV->dump();
+	  assert((i < PHIV->getNumIncomingValues()) && "Invalid number of operands!");
+	  assert((PHIV->getBasicBlockIndex(InAB->Blocks[j])>=0) && "Invalid number of operands!");
+          Vs.push_back( PHIV->getIncomingValueForBlock(InAB->Blocks[j]) );
+        }
+        errs() << "Growing towards:\n";
+        for (Value *V : Vs) V->dump();
+        Node *Child = find(Vs);
+        if (Child==nullptr) {
+          Child = createNode(Vs, N, SE);
+          this->addNode(Child);
+          N->pushChild(Child);
+          growGraph(Child, SE, Visited);
+        } else N->pushChild(Child);
+        
+        if (Node *LN = getLabelNode(InAB)) {
+          ((MatchingPHINode*)N)->pushLabel(LN);
+        } else errs() << "ERROR: No Label found\n";
       }
     } break;
     default: break;

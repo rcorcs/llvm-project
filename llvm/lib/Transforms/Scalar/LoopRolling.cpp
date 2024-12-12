@@ -87,16 +87,26 @@ bool match(Value *V1, Value *V2) {
     case Instruction::Call: {
       CallInst *CI1 = dyn_cast<CallInst>(I1);
       CallInst *CI2 = dyn_cast<CallInst>(I2);
-      errs() << "Call1\n";
-      if (CI1->getCalledFunction()==nullptr || CI2->getCalledFunction()==nullptr) return false;
-      errs() << "Call2\n";
-      CI1->getCalledFunction()->dump();
-      CI2->getCalledFunction()->dump();
-      if (CI1->getCalledFunction()!=CI2->getCalledFunction()) return false;
-      errs() << "Call3\n";
-      //if (CI1->getCalledFunction()->isVarArg()) return false;
-      //errs() << "Call4\n";
+      if (EnableExtensions) {
+        errs() << "Call1\n";
+        if (CI1->getCalledOperand()==nullptr || CI2->getCalledOperand()==nullptr) return false;
+        errs() << "Call2\n";
+        CI1->getCalledOperand()->dump();
+        CI2->getCalledOperand()->dump();
+        if (CI1->getCalledOperand()!=CI2->getCalledOperand()) return false;
+        errs() << "Call3\n";
+        //if (CI1->getCalledFunction()->isVarArg()) return false;
+        //errs() << "Call4\n";
       return true;
+      } else {
+        errs() << "Call1\n";
+        if (CI1->getCalledFunction()==nullptr || CI2->getCalledFunction()==nullptr) return false;
+        errs() << "Call2\n";
+        if (CI1->getCalledFunction()!=CI2->getCalledFunction()) return false;
+        errs() << "Call3\n";
+        //if (CI1->getCalledFunction()->isVarArg()) return false;
+        //errs() << "Call4\n";
+      }
     }
     case Instruction::Load: {
       auto *LI1 = dyn_cast<LoadInst>(I1);
@@ -2600,14 +2610,17 @@ bool LoopRoller::run() {
 }
 
 bool LoopRolling::runImpl(Function &F, ScalarEvolution *SE) {
+  bool Changed = false;
+
   if (EnableExtensions) {
     RegionRoller RR(F);
-    RR.run();
+    Changed = Changed || RR.run();
   }
 
-  //LoopRoller RL(F, SE);
-  //return RL.run();
-  return true; //TODO: roll back the loop roller
+  LoopRoller RL(F, SE);
+  Changed = Changed || RL.run();
+  
+  return Changed;
 }
 
 PreservedAnalyses LoopRolling::run(Function &F, FunctionAnalysisManager &AM) {

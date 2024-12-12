@@ -44,18 +44,25 @@ for k in data.keys():
       continue
     if data[k][ftype+'region']==data[k][ftype+'RoLAG']:
       continue
-    if k not in pdata.keys():
-      pdata[k] = {}
-    pdata[k][name] = float(data[k][ftype+'baseline']-val)/float(data[k][ftype+'baseline'])*100
-    if pdata[k][name]>0:
+    #key = k
+    key = k.split('/')[1]+'/'+k.split('.c_')[-1]
+    if key not in pdata.keys():
+      pdata[key] = {}
+    pdata[key][name] = float(data[k][ftype+'baseline']-val)/float(data[k][ftype+'baseline'])*100
+    if pdata[key][name]>0:
       if name not in countpos.keys():
         countpos[name] = 0
       countpos[name] += 1
     #if pdata[k][name]<0:
-    print(k, name, pdata[k][name])
+    print(key, name, pdata[key][name])
 
 print(countpos)
-entries = list(sorted(list(pdata.keys()), key=lambda k: pdata[k]['RoLAG']))
+entries = list(sorted(list(pdata.keys()), key=lambda k: pdata[k]['region']))
 #entries = list(sorted(list(pdata.keys()), key=lambda k: pdata[k]['LLVM']))
+#entries = [ x.split('/')[1]+'/'+x.split('.c_')[-1] for x in entries ]
+entries = entries[1:]
+
+for k in entries:
+  print(k,pdata[k]['region'])
 
 plts.bars(pdata,'Reduction (%)',groups=gorder,entries=entries,palette = BlueRedPallete,edgecolor='black',labelAverage=True,decimals=2,legendPosition='upper left',showXAxis=True, FilterDiffNum=0,filename='../results/angha-bars-code-reduction.pdf')

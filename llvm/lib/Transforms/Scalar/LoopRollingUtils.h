@@ -85,6 +85,7 @@ static Value *isConstantSequence(const std::vector<ValueT *> VL) {
   for(unsigned i = 1; i<VL.size(); i++) {
     if (VL[0]->getType()!=VL[i]->getType()) return nullptr;
     auto *CInt = dyn_cast<ConstantInt>(VL[i]);
+    if (CInt==nullptr) return nullptr;
     APInt Val = CInt->getValue();
     APInt StepInt(Val);
     StepInt -= Last;
@@ -324,33 +325,6 @@ public:
   }
 };
 
-class MatchingPHINode : public Node {
-public:
-  template<typename ValueT>
-  MatchingPHINode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::PHI,Vs,BB,Parent) {}
-
-  Instruction *getValidInstruction(unsigned i) {
-    return dyn_cast<PHINode>(getValue(i));
-  }
-
-  std::string getString() {
-    return "phi";
-  }
-
-  template<typename ValueT>
-  static MatchingPHINode *get(std::vector<ValueT*> &Vs, BasicBlock *BB=nullptr, Node *Parent=nullptr) {
-    bool SameTypes = true;
-    bool AllPHIs = true;
-    for (auto *V : Vs) {
-      AllPHIs = AllPHIs && isa<PHINode>(V);
-      SameTypes = SameTypes && V->getType()==Vs[0]->getType();
-    }
-    if (SameTypes && AllPHIs) return new MatchingPHINode(Vs,BB,Parent);
-    return nullptr;
-  }
-};
-
-
 class LabelNode : public Node {
 public:
   template<typename ValueT>
@@ -376,6 +350,39 @@ public:
     return nullptr;
   }
 };
+
+class MatchingPHINode : public Node {
+public:
+  template<typename ValueT>
+  MatchingPHINode(std::vector<ValueT *> &Vs, BasicBlock *BB, Node *Parent=nullptr) : Node(NodeType::PHI,Vs,BB,Parent) {}
+
+  std::vector<Node *> Labels;
+  
+  void pushLabel(Node *LN) {
+    Labels.push_back(LN);
+  }
+
+  Instruction *getValidInstruction(unsigned i) {
+    return dyn_cast<PHINode>(getValue(i));
+  }
+
+  std::string getString() {
+    return "phi";
+  }
+
+  template<typename ValueT>
+  static MatchingPHINode *get(std::vector<ValueT*> &Vs, BasicBlock *BB=nullptr, Node *Parent=nullptr) {
+    bool SameTypes = true;
+    bool AllPHIs = true;
+    for (auto *V : Vs) {
+      AllPHIs = AllPHIs && isa<PHINode>(V);
+      SameTypes = SameTypes && V->getType()==Vs[0]->getType();
+    }
+    if (SameTypes && AllPHIs) return new MatchingPHINode(Vs,BB,Parent);
+    return nullptr;
+  }
+};
+
 
 
 
