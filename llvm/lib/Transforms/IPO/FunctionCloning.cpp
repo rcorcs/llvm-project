@@ -22,10 +22,10 @@ using namespace llvm;
 
 
 static std::string demangle(const char* name) {
-        int status = -1; 
+  int status = -1; 
 
-        std::unique_ptr<char, void(*)(void*)> res { abi::__cxa_demangle(name, NULL, NULL, &status), std::free };
-        return (status == 0) ? res.get() : std::string(name);
+  std::unique_ptr<char, void(*)(void*)> res { abi::__cxa_demangle(name, NULL, NULL, &status), std::free };
+  return (status == 0) ? res.get() : std::string(name);
 }
 
 
@@ -248,6 +248,9 @@ public:
   }
 
   void writeDotFile();
+  Function *generateExpandedFunction(Module &M);
+  Value *generate(IRBuilder<> &Builder, Node *N, std::map<Node *, unsigned> &NodeToArgNo, std::vector<Argument *> &Args);
+
 };
 
 CallMatching::~CallMatching() {
@@ -393,6 +396,158 @@ void CallMatching::destroyNodesRec( Node *N ) {
   delete N;
 }
 
+
+Value *CallMatching::generate(IRBuilder<> &Builder, Node *N, std::map<Node *, unsigned> &NodeToArgNo, std::vector<Argument *> &Args) {
+
+  if (NodeToArgNo.find(N)!=NodeToArgNo.end()) {
+    unsigned ArgNo = NodeToArgNo[N];
+    errs() << "Node " << N->getString() << " mapped to ArgNo " << ArgNo << "\n";
+    Value *V = Args[ArgNo];
+    errs() << "Mismatching node mapped to argument "; V->dump();
+    return V;
+  }
+  if (CrossEdges.find(N->getValue())!=CrossEdges.end()) {
+    for (auto &CE : CrossEdges[N->getValue()]) {
+      if (CE.getNode()==N) {
+        Node *SrcN = CE.getSourceNode();
+        if (NodeToArgNo.find(SrcN)!=NodeToArgNo.end()) {
+          errs() << "SrcN value ";
+          SrcN->getValue()->dump();
+          unsigned ArgNo = NodeToArgNo[SrcN];
+          errs() << "Node " << SrcN->getString() << " mapped to ArgNo " << ArgNo << "\n";
+          Value *V = Args[ArgNo];
+          errs() << "Mismatching node mapped to argument "; V->dump();
+          return V;
+        }
+        errs() << "ERROR: Should reused a previously produced value?\n";
+      }
+    }
+  }
+  
+  if (isa<Constant>(N->getValue())) {
+    errs() << "Constant "; N->getValue()->dump();
+    return N->getValue();
+  }
+
+  if (Instruction *I = dyn_cast<Instruction>(N->getValue())) {
+    errs() << "Cloning: "; I->dump();
+    Instruction *NewI = I->clone();
+
+
+    auto &Children = N->getChildren();
+    for (unsigned i = 0; i<Children.size(); i++) {
+      Node *CN = Children[i];
+      if (CN==nullptr) {
+        errs() << "ERROR: null CN?\n";
+        break;
+      }
+      errs() << "CN: " << CN->getString() << "\n";
+      Value *NewV = generate(Builder, CN, NodeToArgNo, Args);
+      NewI->setOperand(i, NewV);
+    }
+
+    Builder.Insert(NewI);
+    errs() << "NewI: "; NewI->dump();
+    return NewI;
+  }
+
+  return nullptr;
+}
+
+Function *CallMatching::generateExpandedFunction(Module &M) {
+
+  std::vector<Type*> ArgTypes;
+  std::map<Node *, unsigned> NodeToArgNo;
+
+  for (Tree &T : Trees) {
+    //Nodes
+    for (Node *N : T.Nodes) {
+      if (N->isFunction()) continue;
+      bool Internalizable = N->getNumMatches()>0;
+      bool ReusedInput = false;
+      if (!Internalizable) {
+        if (CrossEdges.find(N->getValue())!=CrossEdges.end()) {
+          for (auto &CE : CrossEdges[N->getValue()]) {
+            if (CE.getNode()==N) {
+              //NodeToArgNo[N] = 
+              ReusedInput = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!Internalizable && !ReusedInput) {
+        errs() << "Arg:"; N->getValue()->dump();
+        NodeToArgNo[N] = ArgTypes.size();
+        ArgTypes.push_back(N->getValue()->getType());
+      }
+    }
+  }
+  errs() << "New function type:\n";
+  for (Type *T : ArgTypes) {
+    T->dump();
+  }
+
+  LLVMContext &Context = M.getContext();
+
+  Type *RetTy = Type::getVoidTy(Context);
+  //if (!RemoveReturnValue) {
+  //  RetTy = FTy->getReturnType();
+  //}
+  
+  FunctionType *NewFTy = FunctionType::get(RetTy, ArrayRef<Type *>(ArgTypes), false);
+
+  std::string Name = std::string("cloned"); // + std::string(F->getName().str());
+
+  Function *ClonedF = Function::Create(NewFTy, GlobalValue::LinkageTypes::InternalLinkage,
+                                       Twine(Name), M);
+
+  std::vector<Argument *> Args;
+  for (unsigned i = 0; i<ClonedF->arg_size(); i++) {
+    Args.push_back(ClonedF->getArg(i));
+  }
+
+  if (Args.size()!=ArgTypes.size()) errs() << "ERROR: Wrong number of arguments\n";
+
+  errs() << "Generating function code\n";
+  errs() << "Root: " << Root->getString() << "\n";
+  for (Node *CN : Root->getChildren()) {
+    errs() << "CN: " << CN->getString() << "\n";
+  }
+
+  BasicBlock *BB = BasicBlock::Create(Context, "", ClonedF);
+  IRBuilder<> Builder(BB);
+  Value *RootV = generate(Builder, Root, NodeToArgNo, Args);
+
+  if (RetTy->isVoidTy()) {
+    Builder.CreateRetVoid();
+  } else {
+    //Builder.CreateRet(CI);
+  }
+  BB->dump();
+  ClonedF->dump();
+  
+  std::vector<CallInst*> Calls;
+  for (Instruction &I : *BB) {
+    if (CallInst *CI = dyn_cast<CallInst>(&I)) {
+      Calls.push_back(CI);
+    }
+  }
+  for (CallInst *CI : Calls) {
+    InlineFunctionInfo IFI;
+    InlineFunction(*CI, IFI);
+  }
+  ClonedF->dump();
+  //ClonedF->eraseFromParent();
+
+  
+  //std::vector<CallInst *> &AllCIs;
+  for (CallInst *CI : AllCIs) {
+  
+  }
+  return ClonedF;
+}
+
 void CallMatching::writeDotFile() {
   std::string PrefixName = std::to_string(Cost) + std::string(".") + demangle(CI->getParent()->getParent()->getName().data());
 
@@ -405,7 +560,7 @@ void CallMatching::writeDotFile() {
   std::string FileName = PrefixName + std::string(".dot");
 
   std::error_code ec;
-  raw_fd_ostream os (FileName, ec); /, sys::fs::F_Text);
+  raw_fd_ostream os (FileName, ec); //, sys::fs::F_Text);
 
   os << "digraph VTree {\nrankdir=BT\n";
   std::map<Node*, int> NodeId;
@@ -516,6 +671,7 @@ bool FunctionCloning::runOnModule(Module &M) {
       if (CM.Cost>0) {
         errs() << "Cost: " << CM.Cost << "\n";
         CM.writeDotFile();
+        Function *NewF = CM.generateExpandedFunction(M);
       }
     }
     errs() << "\n";
