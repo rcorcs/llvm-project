@@ -1,4 +1,3 @@
-
 #include "llvm/Transforms/IPO/FunctionCloning.h"
 
 
@@ -55,6 +54,12 @@ private:
 
   public:
     Node(Value *V, Node *Parent=nullptr) : V(V), Parent(Parent) {}
+
+    std::vector< std::pair<Value*, CallInst*> > Values;
+
+    void addValue(Value *V, CallInst *CI) {
+      Values.push_back( std::pair<Value*, CallInst*>(V,CI) );
+    }
 
     void addMatch(Value *V, CallInst *CI) {
       MatchingValues.push_back( std::pair<Value*, CallInst*>(V,CI) );
@@ -277,9 +282,11 @@ void CallMatching::buildTrees() {
   Cost = 0;
   Root = new Node(CI);
   AllNodes.insert(Root);
+  Root->addValue(CI, CI);
   for (CallInst *OtherCI : AllCIs) {
     if (OtherCI==CI) continue;
     Root->addMatch(OtherCI, OtherCI);
+    Root->addValue(OtherCI, OtherCI);
   }
 
   for (unsigned i = 0; i<CI->getNumArgOperands(); i++) {
@@ -291,9 +298,11 @@ void CallMatching::buildTrees() {
     Trees.push_back(Tree(N));
 
     if (isInternalizable(V)) {
+      N->addValue(V, CI);
       for (CallInst *OtherCI : AllCIs) {
         if (OtherCI==CI) continue;
         Value *OtherV = OtherCI->getArgOperand(i);
+        N->addValue(OtherV, OtherCI);
         if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
       }
       Cost += growTreeNode(N, Trees[Trees.size()-1]);
@@ -375,9 +384,11 @@ unsigned CallMatching::growTreeNode( Node *N , Tree &T) {
       AllNodes.insert(ChildN);
       T.addNode(ChildN);
       if (isInternalizable(ChildV)) {
+        ChildN->addValue(ChildV, CI);
         for (auto &Pair : N->getMatchingValues()) {
           CallInst *OtherCI = Pair.second;
           Value *OtherV = dyn_cast<Instruction>(Pair.first)->getOperand(i);
+           ChildN->addValue(OtherV, OtherCI);
           if (match(ChildV, OtherV)) ChildN->addMatch(OtherV, OtherCI);
         }
         Cost += growTreeNode(ChildN, T);
@@ -457,6 +468,7 @@ Value *CallMatching::generate(IRBuilder<> &Builder, Node *N, std::map<Node *, un
 Function *CallMatching::generateExpandedFunction(Module &M) {
 
   std::vector<Type*> ArgTypes;
+  std::vector<Node*> ArgNodes;
   std::map<Node *, unsigned> NodeToArgNo;
 
   for (Tree &T : Trees) {
@@ -480,6 +492,7 @@ Function *CallMatching::generateExpandedFunction(Module &M) {
         errs() << "Arg:"; N->getValue()->dump();
         NodeToArgNo[N] = ArgTypes.size();
         ArgTypes.push_back(N->getValue()->getType());
+        ArgNodes.push_back(N);
       }
     }
   }
@@ -490,7 +503,7 @@ Function *CallMatching::generateExpandedFunction(Module &M) {
 
   LLVMContext &Context = M.getContext();
 
-  Type *RetTy = Type::getVoidTy(Context);
+  Type *RetTy = CI->getType(); //Type::getVoidTy(Context);
   //if (!RemoveReturnValue) {
   //  RetTy = FTy->getReturnType();
   //}
@@ -518,11 +531,15 @@ Function *CallMatching::generateExpandedFunction(Module &M) {
   BasicBlock *BB = BasicBlock::Create(Context, "", ClonedF);
   IRBuilder<> Builder(BB);
   Value *RootV = generate(Builder, Root, NodeToArgNo, Args);
-
+  
   if (RetTy->isVoidTy()) {
     Builder.CreateRetVoid();
+  } else if (RootV) {
+    Builder.CreateRet(RootV);
   } else {
-    //Builder.CreateRet(CI);
+    errs() << "ERROR: return value should not be null\n";
+    ClonedF->eraseFromParent();
+    return nullptr;
   }
   BB->dump();
   ClonedF->dump();
@@ -540,11 +557,36 @@ Function *CallMatching::generateExpandedFunction(Module &M) {
   ClonedF->dump();
   //ClonedF->eraseFromParent();
 
-  
   //std::vector<CallInst *> &AllCIs;
-  for (CallInst *CI : AllCIs) {
-  
+  //std::vector<Tree> Trees;
+  errs() << "Num CIs: " << AllCIs.size() << "\n";
+  //errs() << "Num Trees: " << Trees.size() << "\n";
+
+  std::map< CallInst *, std::vector<Value *> > ArgValues;
+
+  for (unsigned i = 0; i<ArgNodes.size(); i++) {
+    Node *N = ArgNodes[i];
+    errs() << "ArgNo " << i << "\n";
+    N->getValue()->dump();
+    for (auto &Pair : N->Values) {
+      Pair.first->dump();
+      ArgValues[Pair.second].push_back(Pair.first);
+    }
   }
+  for (CallInst *CI : AllCIs) {
+    errs() << "CI: "; CI->dump();
+    for (unsigned i = 0; i<ArgValues[CI].size(); i++) {
+      errs() << "arg " << i << ":";
+      ArgValues[CI][i]->dump();
+    }
+    IRBuilder<> Builder(CI);
+    Value *NewCI = Builder.CreateCall(NewFTy, ClonedF, ArgValues[CI]);
+    CI->replaceAllUsesWith(NewCI);
+    //TODO: delete instructions that have been internalized
+  }
+
+  
+
   return ClonedF;
 }
 
@@ -655,23 +697,31 @@ void CallMatching::writeDotFile() {
 bool FunctionCloning::runOnModule(Module &M) {
   for (Function &F : M) {
     if (F.isDeclaration() ||  F.isVarArg()) continue;
-    std::vector<CallInst*> Calls;
+    std::list<CallInst*> Calls;
     for (User *U : F.users()) {
       if (isa<CallInst>(U)) {
         Calls.push_back(dyn_cast<CallInst>(U));
       }
     }
     errs() << "*** Function: " << demangle(F.getName().data()) << "\n";
-    for (CallInst *CI : Calls) {
+    while (!Calls.empty()) {
+      std::vector<CallInst*> CallsVec;
+      for (CallInst *CI : Calls) CallsVec.push_back(CI);
+
+      CallInst *CI = Calls.front();
+
+      Calls.pop_front();
+
       errs() << "Call: ";
       CI->dump();
-      CallMatching CM(CI,Calls);
+      CallMatching CM(CI,CallsVec);
       CM.dump();
       errs() << "\n";
       if (CM.Cost>0) {
         errs() << "Cost: " << CM.Cost << "\n";
         CM.writeDotFile();
         Function *NewF = CM.generateExpandedFunction(M);
+        //TODO: remove Calls instructions that have been deleted 
       }
     }
     errs() << "\n";
