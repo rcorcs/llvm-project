@@ -253,8 +253,8 @@ public:
   }
 
   void writeDotFile();
-  Function *generateExpandedFunction(Module &M);
-  Value *generate(IRBuilder<> &Builder, Node *N, std::map<Node *, unsigned> &NodeToArgNo, std::vector<Argument *> &Args);
+  Function *generateExpandedFunction(Module &M, std::list<CallInst*> &WorklistCalls);
+  Value *generate(IRBuilder<> &Builder, Node *N, std::map<Node *, unsigned> &NodeToArgNo, std::vector<Argument *> &Args, std::vector<Instruction*> &Covered);
 
 };
 
@@ -408,7 +408,7 @@ void CallMatching::destroyNodesRec( Node *N ) {
 }
 
 
-Value *CallMatching::generate(IRBuilder<> &Builder, Node *N, std::map<Node *, unsigned> &NodeToArgNo, std::vector<Argument *> &Args) {
+Value *CallMatching::generate(IRBuilder<> &Builder, Node *N, std::map<Node *, unsigned> &NodeToArgNo, std::vector<Argument *> &Args, std::vector<Instruction*> &Covered) {
 
   if (NodeToArgNo.find(N)!=NodeToArgNo.end()) {
     unsigned ArgNo = NodeToArgNo[N];
@@ -444,6 +444,12 @@ Value *CallMatching::generate(IRBuilder<> &Builder, Node *N, std::map<Node *, un
     errs() << "Cloning: "; I->dump();
     Instruction *NewI = I->clone();
 
+    //Covered.push_back(I);
+    for (auto &Pair : N->Values) {
+      if (Instruction *CoveredI = dyn_cast<Instruction>(Pair.first)) {
+        Covered.push_back(CoveredI);
+      }
+    }
 
     auto &Children = N->getChildren();
     for (unsigned i = 0; i<Children.size(); i++) {
@@ -453,7 +459,7 @@ Value *CallMatching::generate(IRBuilder<> &Builder, Node *N, std::map<Node *, un
         break;
       }
       errs() << "CN: " << CN->getString() << "\n";
-      Value *NewV = generate(Builder, CN, NodeToArgNo, Args);
+      Value *NewV = generate(Builder, CN, NodeToArgNo, Args, Covered);
       NewI->setOperand(i, NewV);
     }
 
@@ -465,7 +471,7 @@ Value *CallMatching::generate(IRBuilder<> &Builder, Node *N, std::map<Node *, un
   return nullptr;
 }
 
-Function *CallMatching::generateExpandedFunction(Module &M) {
+Function *CallMatching::generateExpandedFunction(Module &M, std::list<CallInst*> &WorklistCalls) {
 
   std::vector<Type*> ArgTypes;
   std::vector<Node*> ArgNodes;
@@ -514,7 +520,7 @@ Function *CallMatching::generateExpandedFunction(Module &M) {
 
   Function *ClonedF = Function::Create(NewFTy, GlobalValue::LinkageTypes::InternalLinkage,
                                        Twine(Name), M);
-
+  ClonedF->addFnAttr(Attribute::NoInline);
   std::vector<Argument *> Args;
   for (unsigned i = 0; i<ClonedF->arg_size(); i++) {
     Args.push_back(ClonedF->getArg(i));
@@ -530,7 +536,9 @@ Function *CallMatching::generateExpandedFunction(Module &M) {
 
   BasicBlock *BB = BasicBlock::Create(Context, "", ClonedF);
   IRBuilder<> Builder(BB);
-  Value *RootV = generate(Builder, Root, NodeToArgNo, Args);
+  std::vector<Instruction*> Covered;
+  //Covered.push_back(CI);
+  Value *RootV = generate(Builder, Root, NodeToArgNo, Args, Covered);
   
   if (RetTy->isVoidTy()) {
     Builder.CreateRetVoid();
@@ -584,6 +592,18 @@ Function *CallMatching::generateExpandedFunction(Module &M) {
     CI->replaceAllUsesWith(NewCI);
     //TODO: delete instructions that have been internalized
   }
+
+  CI->getParent()->getParent()->dump();
+  errs() << "TO DELETE\n";
+  std::set<Instruction *> Deleted;
+  for (Instruction *I : Covered) {
+    if (Deleted.count(I)) continue;
+    I->dump();
+    if (CallInst *CI = dyn_cast<CallInst>(I)) WorklistCalls.remove(CI);
+    Deleted.insert(I);
+    I->eraseFromParent();
+  }
+  
 
   
 
@@ -720,7 +740,7 @@ bool FunctionCloning::runOnModule(Module &M) {
       if (CM.Cost>0) {
         errs() << "Cost: " << CM.Cost << "\n";
         CM.writeDotFile();
-        Function *NewF = CM.generateExpandedFunction(M);
+        Function *NewF = CM.generateExpandedFunction(M,Calls);
         //TODO: remove Calls instructions that have been deleted 
       }
     }
