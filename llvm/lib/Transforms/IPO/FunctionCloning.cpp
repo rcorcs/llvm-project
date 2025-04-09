@@ -253,7 +253,7 @@ public:
   }
 
   void writeDotFile();
-  Function *generateExpandedFunction(Module &M, std::list<CallInst*> &WorklistCalls);
+  Function *generateExpandedFunction(Module &M, std::list<Function *> &WorklistFns, std::list<CallInst*> &WorklistCalls);
   Value *generate(IRBuilder<> &Builder, Node *N, std::map<Node *, unsigned> &NodeToArgNo, std::vector<Argument *> &Args, std::vector<Instruction*> &Covered);
 
 };
@@ -471,7 +471,7 @@ Value *CallMatching::generate(IRBuilder<> &Builder, Node *N, std::map<Node *, un
   return nullptr;
 }
 
-Function *CallMatching::generateExpandedFunction(Module &M, std::list<CallInst*> &WorklistCalls) {
+Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *> &WorklistFns, std::list<CallInst*> &WorklistCalls) {
 
   std::vector<Type*> ArgTypes;
   std::vector<Node*> ArgNodes;
@@ -552,18 +552,6 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<CallInst*>
   BB->dump();
   ClonedF->dump();
   
-  std::vector<CallInst*> Calls;
-  for (Instruction &I : *BB) {
-    if (CallInst *CI = dyn_cast<CallInst>(&I)) {
-      Calls.push_back(CI);
-    }
-  }
-  for (CallInst *CI : Calls) {
-    InlineFunctionInfo IFI;
-    InlineFunction(*CI, IFI);
-  }
-  ClonedF->dump();
-  //ClonedF->eraseFromParent();
 
   //std::vector<CallInst *> &AllCIs;
   //std::vector<Tree> Trees;
@@ -604,7 +592,36 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<CallInst*>
     I->eraseFromParent();
   }
   
+  std::vector<CallInst*> Calls;
+  for (Instruction &I : *BB) {
+    if (CallInst *CI = dyn_cast<CallInst>(&I)) {
+      Calls.push_back(CI);
+    }
+  }
 
+  std::set<Function*> Fns;
+  //ClonedF->eraseFromParent();
+  for (CallInst *CI : Calls) {
+    if (CI==RootV) {
+      Function *Callee = CI->getCalledFunction();
+      if (Callee) Fns.insert(Callee);
+      InlineFunctionInfo IFI;
+      InlineFunction(*CI, IFI);
+    } else if (CI->getNumUses()==1) {
+      Function *Callee = CI->getCalledFunction();
+      if (Callee) Fns.insert(Callee);
+      InlineFunctionInfo IFI;
+      InlineFunction(*CI, IFI);
+    } //TODO: inline if function is small enough
+  }
+  ClonedF->dump();
+
+  for (auto *Callee : Fns) {
+    if (Callee->getNumUses()==0) {
+      WorklistFns.remove(Callee);
+      Callee->eraseFromParent();
+    }
+  }
   
 
   return ClonedF;
@@ -715,15 +732,21 @@ void CallMatching::writeDotFile() {
 }
 
 bool FunctionCloning::runOnModule(Module &M) {
+  std::list<Function *> Fns;
   for (Function &F : M) {
     if (F.isDeclaration() ||  F.isVarArg()) continue;
+    Fns.push_back(&F);
+  }
+  while (!Fns.empty()) {
+    Function *F = Fns.front();
+    Fns.pop_front();
     std::list<CallInst*> Calls;
-    for (User *U : F.users()) {
+    for (User *U : F->users()) {
       if (isa<CallInst>(U)) {
         Calls.push_back(dyn_cast<CallInst>(U));
       }
     }
-    errs() << "*** Function: " << demangle(F.getName().data()) << "\n";
+    errs() << "*** Function: " << demangle(F->getName().data()) << "\n";
     while (!Calls.empty()) {
       std::vector<CallInst*> CallsVec;
       for (CallInst *CI : Calls) CallsVec.push_back(CI);
@@ -740,7 +763,7 @@ bool FunctionCloning::runOnModule(Module &M) {
       if (CM.Cost>0) {
         errs() << "Cost: " << CM.Cost << "\n";
         CM.writeDotFile();
-        Function *NewF = CM.generateExpandedFunction(M,Calls);
+        Function *NewF = CM.generateExpandedFunction(M,Fns,Calls);
         //TODO: remove Calls instructions that have been deleted 
       }
     }

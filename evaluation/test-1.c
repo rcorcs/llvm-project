@@ -1,9 +1,10 @@
 
-
+//__attribute__((noinline)) 
 int addSqred(int a, int b) {
   return a*a + b*b;
 }
 
+//__attribute__((noinline)) 
 int divBy(int a, int b) {
   return a/b;
 }
