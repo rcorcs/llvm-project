@@ -28,6 +28,7 @@ static std::string demangle(const char* name) {
 }
 
 
+__attribute__((noinline))
 static bool match(Value *V1, Value *V2) {
   //if (V1==V2) return true;
   if (V1->getType()!=V2->getType()) return false;
@@ -58,6 +59,9 @@ private:
     std::vector< std::pair<Value*, CallInst*> > Values;
 
     void addValue(Value *V, CallInst *CI) {
+      errs() << "Adding value to node: " << getString() << "\n";
+      errs() << "value: "; V->dump();
+      errs() << "ci: "; CI->dump();
       Values.push_back( std::pair<Value*, CallInst*>(V,CI) );
     }
 
@@ -239,6 +243,19 @@ public:
   CallMatching(CallInst *CI, std::vector<CallInst *> &AllCIs) : CI(CI), AllCIs(AllCIs) { buildTrees(); }
   ~CallMatching();
   
+  int getWidth() { return Root->Values.size(); }
+
+  bool validate() {
+    int expectedWidth = getWidth();
+    bool Valid = true;
+    errs() << "Printing number of values in nodes\n";
+    for (Node *N : AllNodes) {
+      errs() << "Node: " << N->getString() << " => " << N->Values.size() << "\n";
+      Valid = Valid && N->Values.size()==expectedWidth;
+    }
+    errs() << "done!\n";
+    return Valid;
+  } 
 
   void dump() {
     unsigned ArgId = 0;
@@ -263,6 +280,7 @@ CallMatching::~CallMatching() {
   delete Root;
 }
 
+__attribute__((noinline))
 static bool isInternalizable(Value *V) {
   Instruction *I = dyn_cast<Instruction>(V);
   if (I) {
@@ -297,12 +315,16 @@ void CallMatching::buildTrees() {
     Root->pushChild(N);
     Trees.push_back(Tree(N));
 
+    N->addValue(V, CI);
+    for (CallInst *OtherCI : AllCIs) {
+      if (OtherCI==CI) continue;
+      Value *OtherV = OtherCI->getArgOperand(i);
+      N->addValue(OtherV, OtherCI);
+    }
     if (isInternalizable(V)) {
-      N->addValue(V, CI);
       for (CallInst *OtherCI : AllCIs) {
         if (OtherCI==CI) continue;
         Value *OtherV = OtherCI->getArgOperand(i);
-        N->addValue(OtherV, OtherCI);
         if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
       }
       Cost += growTreeNode(N, Trees[Trees.size()-1]);
@@ -371,7 +393,7 @@ unsigned CallMatching::growTreeNode( Node *N , Tree &T) {
     bool GrowOpcode = true;
     switch(I->getOpcode()) {
     case Instruction::PHI:
-    case Instruction::Load:
+    //case Instruction::Load:
     case Instruction::Invoke:
       GrowOpcode = false;
       break;
@@ -477,10 +499,13 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
   std::vector<Node*> ArgNodes;
   std::map<Node *, unsigned> NodeToArgNo;
 
+  errs() << "Generating expanded functions\n";
   for (Tree &T : Trees) {
     //Nodes
     for (Node *N : T.Nodes) {
       if (N->isFunction()) continue;
+      errs() << "Node: " << N->getString() << "\n";
+      for (auto &Pair : N->Values) Pair.first->dump();
       bool Internalizable = N->getNumMatches()>0;
       bool ReusedInput = false;
       if (!Internalizable) {
@@ -494,8 +519,12 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
           }
         }
       }
+      errs() << "Internalizable:" << Internalizable << "\n";
+      errs() << "ReusedInput:" << ReusedInput << "\n";
       if (!Internalizable && !ReusedInput) {
         errs() << "Arg:"; N->getValue()->dump();
+        errs() << "Num Values: " << N->Values.size() << "\n";
+        
         NodeToArgNo[N] = ArgTypes.size();
         ArgTypes.push_back(N->getValue()->getType());
         ArgNodes.push_back(N);
@@ -565,7 +594,8 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
     errs() << "ArgNo " << i << "\n";
     N->getValue()->dump();
     for (auto &Pair : N->Values) {
-      Pair.first->dump();
+      errs() << "for CI: "; Pair.second->dump();
+      errs() << "use arg: "; Pair.first->dump();
       ArgValues[Pair.second].push_back(Pair.first);
     }
   }
@@ -575,8 +605,15 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
       errs() << "arg " << i << ":";
       ArgValues[CI][i]->dump();
     }
+    errs() << "Here\n";
     IRBuilder<> Builder(CI);
+    NewFTy->dump();
+    ClonedF->dump();
+    errs() << "args size: " << ArgValues[CI].size() << "\n";
+    for (Value *V : ArgValues[CI]) V->dump();
+    errs() << "Creating call\n";
     Value *NewCI = Builder.CreateCall(NewFTy, ClonedF, ArgValues[CI]);
+    errs() << "Call created\n";
     CI->replaceAllUsesWith(NewCI);
     //TODO: delete instructions that have been internalized
   }
@@ -763,8 +800,14 @@ bool FunctionCloning::runOnModule(Module &M) {
       if (CM.Cost>0) {
         errs() << "Cost: " << CM.Cost << "\n";
         CM.writeDotFile();
-        Function *NewF = CM.generateExpandedFunction(M,Fns,Calls);
-        //TODO: remove Calls instructions that have been deleted 
+        errs() << "Number of uses: " << F->getNumUses() << "\n";
+        errs() << "Number of calls: " << Calls.size() << "\n";
+        if (F->getNumUses()!=CM.getWidth()) {
+          errs() << "Invalid width: " << CM.getWidth() << "; expected: " << F->getNumUses() << "\n";
+        } else if (CM.validate()) {
+          Function *NewF = CM.generateExpandedFunction(M,Fns,Calls);
+          //TODO: remove Calls instructions that have been deleted 
+        }
       }
     }
     errs() << "\n";
