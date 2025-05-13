@@ -751,6 +751,8 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
       ArgValues[Pair.second].push_back(Pair.first);
     }
   }
+
+  int NumCIs = AllCIs.size();
   for (CallInst *CI : AllCIs) {
     errs() << "OldCI: "; CI->dump();
     for (unsigned i = 0; i<ArgValues[CI].size(); i++) {
@@ -791,8 +793,31 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
       Calls.push_back(CI);
     }
   }
+  int NumMatches = 0;
+  int NumMismatches = 0;
+  int NumReuse = 0;
+  for (CallMatching::Node *N : AllNodes) {
+    //errs() << "Node: " << N->getString() << " : ";
+    if (N->getNodeType()==CallMatching::NodeType::Matching) {
+      NumMatches++;
+      //errs() << " match\n";
+    } else if (N->getNodeType()==CallMatching::NodeType::Mismatching) {
+      NumMismatches++;
+      //errs() << " mismatch\n";
+    } else if (N->getNodeType()==CallMatching::NodeType::Reuse) {
+      NumReuse++;
+      //errs() << " reuse\n";
+    }
+  }
 
-  errs() << "Specialized: #nodes " << AllNodes.size() << "; #args " << ArgNodes.size() << "; fsize " << ClonedF->getInstructionCount() << "; arg_size " << ClonedF->arg_size() << "\n";
+  errs() << "Specialized: #nodes " << AllNodes.size() <<
+            "; #matches " << NumMatches <<
+            "; #mismatches " << NumMismatches <<
+            "; #reuse " << NumReuse <<
+            "; #cs " << NumCIs <<
+            "; #args " << ArgNodes.size() <<
+            "; new_fsize " << ClonedF->getInstructionCount() << "; new_arg_size " << ClonedF->arg_size() <<
+            "; old_fsize " << CI->getCalledFunction()->getInstructionCount() << "; old_arg_size " << CI->getCalledFunction()->arg_size() << "\n";
   ClonedF->dump();
 
   std::set<Function*> Fns;
