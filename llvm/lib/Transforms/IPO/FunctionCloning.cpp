@@ -20,6 +20,10 @@ using namespace llvm;
 static cl::opt<bool> EnableConstantsOnly("funcspec-constants-only",
                                           cl::init(false), cl::Hidden);
 
+static cl::opt<bool> EnableDotFiles("funcexp-dot-files",
+                                          cl::init(false), cl::Hidden);
+
+
 static std::string demangle(const char* name) {
   int status = -1; 
 
@@ -1014,7 +1018,7 @@ bool FunctionCloning::runOnModule(Module &M) {
       //if ( ((!EnableConstantsOnly) && (NumMatches + NumReuse > 1)) || (EnableConstantsOnly && CM.NumMatches>0)) {
       if ( NumMatches + NumReuse > 1 || NumMismatches<CI->getCalledFunction()->arg_size()) {
         errs() << "Cost: " << CM.Cost << "\n";
-        CM.writeDotFile();
+        if (EnableDotFiles) CM.writeDotFile();
         errs() << "Number of uses: " << F->getNumUses() << "\n";
         errs() << "Number of calls: " << Calls.size() << "\n";
         if (F->getNumUses()!=CM.getWidth()) {
