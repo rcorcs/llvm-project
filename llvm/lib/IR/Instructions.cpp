@@ -445,14 +445,21 @@ void CallInst::init(FunctionType *FTy, Value *Func, ArrayRef<Value *> Args,
   setCalledOperand(Func);
 
 #ifndef NDEBUG
+  //errs() << "Args.size(): " << Args.size() << "\n";
+  //errs() << "FTy->getNumParams(): " << FTy->getNumParams() << "\n";
+  //errs() << "FTy->isVarArg(): " << FTy->isVarArg() << "\n";
   assert((Args.size() == FTy->getNumParams() ||
           (FTy->isVarArg() && Args.size() > FTy->getNumParams())) &&
          "Calling a function with bad signature!");
 
-  for (unsigned i = 0; i != Args.size(); ++i)
+  for (unsigned i = 0; i != Args.size(); ++i) {
+    //errs() << "i: " << i << "\n";
+    //errs() << "Args[i]->getType(): "; Args[i]->getType()->dump();
+    //errs() << "FTy->getParamType(i): "; FTy->getParamType(i)->dump();
     assert((i >= FTy->getNumParams() ||
             FTy->getParamType(i) == Args[i]->getType()) &&
            "Calling a function with a bad signature!");
+  }
 #endif
 
   llvm::copy(Args, op_begin());

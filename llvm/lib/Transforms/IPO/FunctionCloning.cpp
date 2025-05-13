@@ -1,17 +1,15 @@
 #include "llvm/Transforms/IPO/FunctionCloning.h"
 
-
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Instructions.h"
-
 
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Verifier.h"
 
 #include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/Support/CommandLine.h"
 
 #define DEBUG_TYPE "STATS_FUNCTION_CLONING"
-
 
 #include <memory>
 #include <string>
@@ -19,12 +17,69 @@
 
 using namespace llvm;
 
+static cl::opt<bool> EnableConstantsOnly("funcspec-constants-only",
+                                          cl::init(false), cl::Hidden);
 
 static std::string demangle(const char* name) {
   int status = -1; 
 
   std::unique_ptr<char, void(*)(void*)> res { abi::__cxa_demangle(name, NULL, NULL, &status), std::free };
   return (status == 0) ? res.get() : std::string(name);
+}
+
+void checkCall(FunctionType *FTy, Value *Func, ArrayRef<Value *> Args) {
+  errs() << "Args.size(): " << Args.size() << "\n";
+  errs() << "FTy->getNumParams(): " << FTy->getNumParams() << "\n";
+  errs() << "FTy->isVarArg(): " << FTy->isVarArg() << "\n";
+
+  for (unsigned i = 0; i != Args.size(); ++i) {
+    errs() << "i: " << i << "\n";
+    errs() << "Args[i]->getType(): "; Args[i]->getType()->dump();
+    errs() << "FTy->getParamType(i): "; FTy->getParamType(i)->dump();
+  }
+}
+
+void deleteInstructionsSafely(std::set<Instruction*>& toDeleteSet) {
+
+    // Step 2: Reorder instructions so that users are deleted before the instructions they use
+    std::vector<Instruction*> ordered;
+
+    std::set<Instruction*> visited;
+
+    std::function<void(Instruction*)> dfs = [&](Instruction* I) {
+        if (visited.count(I)) return;
+        visited.insert(I);
+
+        for (auto& use : I->uses()) {
+            if (Instruction* user = dyn_cast<Instruction>(use.getUser())) {
+                if (toDeleteSet.count(user))
+                    dfs(user);
+            }
+        }
+
+        ordered.push_back(I);
+    };
+
+    for (Instruction* I : toDeleteSet) {
+        dfs(I);
+    }
+
+    // Step 3: Delete in the safe order
+    for (Instruction* I : ordered) {
+        if (I->use_empty()) {
+            I->eraseFromParent();
+        } else {
+            // Optional: Replace uses with UndefValue to allow deletion
+            I->replaceAllUsesWith(UndefValue::get(I->getType()));
+            I->eraseFromParent();
+        }
+    }
+}
+
+void deleteInstructionsSafely(std::vector<Instruction*>& toDelete) {
+   // Step 1: Create a set for fast lookup
+   std::set<Instruction*> toDeleteSet(toDelete.begin(), toDelete.end());
+   deleteInstructionsSafely(toDeleteSet);
 }
 
 
@@ -44,17 +99,26 @@ static bool match(Value *V1, Value *V2) {
 }
 
 class CallMatching {
-private:
+//private:
+public:
+  enum NodeType {
+    None,
+    Matching,
+    Mismatching,
+    Reuse 
+  };
 
   class Node {
-  private:
+  //private:
+  public:
     Value *V;
     std::vector< std::pair<Value*, CallInst*> > MatchingValues;
     std::vector<Node *> Children;
     Node *Parent;
+    NodeType NT;
 
   public:
-    Node(Value *V, Node *Parent=nullptr) : V(V), Parent(Parent) {}
+    Node(Value *V, Node *Parent=nullptr) : V(V), Parent(Parent), NT(NodeType::None) {}
 
     std::vector< std::pair<Value*, CallInst*> > Values;
 
@@ -73,6 +137,11 @@ private:
       return MatchingValues.size();
     }
 
+    void setNodeType( NodeType NTy ) { NT = NTy; }
+
+    NodeType getNodeType() {
+      return NT;
+    }
 
     Node *getParent() { return Parent; }
 
@@ -235,12 +304,13 @@ private:
 
   void destroyNodesRec( Node *N );
   unsigned growTreeNode( Node *N , Tree &T);
-  void buildTrees();
+  void buildTrees(bool);
 
 public:
   unsigned Cost;
+  //unsigned NumMatches;
 
-  CallMatching(CallInst *CI, std::vector<CallInst *> &AllCIs) : CI(CI), AllCIs(AllCIs) { buildTrees(); }
+  CallMatching(CallInst *CI, std::vector<CallInst *> &AllCIs, bool ConstantsOnly=false) : CI(CI), AllCIs(AllCIs) { buildTrees(ConstantsOnly); }
   ~CallMatching();
   
   int getWidth() { return Root->Values.size(); }
@@ -248,12 +318,18 @@ public:
   bool validate() {
     int expectedWidth = getWidth();
     bool Valid = true;
+    errs() << "Expected width: " << expectedWidth << "\n";
     errs() << "Printing number of values in nodes\n";
     for (Node *N : AllNodes) {
       errs() << "Node: " << N->getString() << " => " << N->Values.size() << "\n";
-      Valid = Valid && N->Values.size()==expectedWidth;
+      //if (N->getNodeType()
+      //Valid = Valid && N->Values.size()==expectedWidth;
+      for (auto &Pair : N->Values) {
+        Valid = Valid && Pair.first->getType()==N->Values[0].first->getType();
+      }
     }
     errs() << "done!\n";
+    errs() << "Valid? " << Valid << "\n";
     return Valid;
   } 
 
@@ -296,8 +372,9 @@ static bool isInternalizable(Value *V) {
   return true;
 }
 
-void CallMatching::buildTrees() {
+void CallMatching::buildTrees(bool ConstantsOnly) {
   Cost = 0;
+  //NumMatches = 0;
   Root = new Node(CI);
   AllNodes.insert(Root);
   Root->addValue(CI, CI);
@@ -306,11 +383,15 @@ void CallMatching::buildTrees() {
     Root->addMatch(OtherCI, OtherCI);
     Root->addValue(OtherCI, OtherCI);
   }
+  Root->setNodeType( NodeType::Matching );
+
+  //errs() << "Root numMatches: " << Root->getNumMatches() << "\n";
 
   for (unsigned i = 0; i<CI->getNumArgOperands(); i++) {
     Value *V = CI->getArgOperand(i);
 
     Node *N = new Node(V,Root);
+    errs() << "Creating node: " << N->getString() << ": value "; V->dump();
     AllNodes.insert(N);
     Root->pushChild(N);
     Trees.push_back(Tree(N));
@@ -321,15 +402,48 @@ void CallMatching::buildTrees() {
       Value *OtherV = OtherCI->getArgOperand(i);
       N->addValue(OtherV, OtherCI);
     }
-    if (isInternalizable(V)) {
-      for (CallInst *OtherCI : AllCIs) {
-        if (OtherCI==CI) continue;
-        Value *OtherV = OtherCI->getArgOperand(i);
-        if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
+    N->setNodeType(NodeType::Mismatching);
+    if (ConstantsOnly) {
+      if (isa<Constant>(V)) {
+        errs() << "matching arg " << i << ": value "; V->dump();
+        for (CallInst *OtherCI : AllCIs) {
+          if (OtherCI==CI) continue;
+          Value *OtherV = OtherCI->getArgOperand(i);
+          if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
+        }
+        
+        errs() << "numMatches: " << N->getNumMatches() << "\n";
+        //if (N->getNumMatches()==Root->getNumMatches()) {
+        //  NumMatches += 1;
+        //}
+        //if (N->getNumMatches()>0) NumMatches += 1;
+        //if (N->getNumMatches()>0) { //TODO: check condition
+        if ((N->Values.size()>1 && N->getNumMatches()==Root->getNumMatches())
+           || (N->Values.size()==1 && isa<Constant>(N->getValue()))) { //TODO: check condition
+          N->setNodeType(NodeType::Matching);
+          Cost += growTreeNode(N, Trees[Trees.size()-1]);
+        } else N->MatchingValues.clear();
       }
-      Cost += growTreeNode(N, Trees[Trees.size()-1]);
+    } else {
+      if (isInternalizable(V)) {
+        for (CallInst *OtherCI : AllCIs) {
+          if (OtherCI==CI) continue;
+          Value *OtherV = OtherCI->getArgOperand(i);
+          if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
+        }
+        //if (N->getNumMatches()>0) { //TODO: check condition
+        //if (N->getNumMatches()==Root->getNumMatches()) { //TODO: check condition
+        if ((N->Values.size()>1 && N->getNumMatches()==Root->getNumMatches())
+           || (N->Values.size()==1 && isa<Constant>(N->getValue()))) { //TODO: check condition
+          N->setNodeType(NodeType::Matching);
+          Cost += growTreeNode(N, Trees[Trees.size()-1]);
+        } else N->MatchingValues.clear();
+      }
     }
   }
+
+  //ConstantsOnly does not include arg reuse optimization
+  if (ConstantsOnly) return; 
 
   std::map<Value*, Node*> FirstInstanceNode;
   for (unsigned i = 0; i<CI->getNumArgOperands(); i++) {
@@ -377,6 +491,7 @@ void CallMatching::buildTrees() {
             }
           }
         }
+        N->setNodeType(NodeType::Reuse);
         CrossEdges[N->getValue()].push_back( CE );
         Cost += CE.getNumMatches();
       }
@@ -386,7 +501,7 @@ void CallMatching::buildTrees() {
 }
 
 unsigned CallMatching::growTreeNode( Node *N , Tree &T) {
-  unsigned Cost = N->getNumMatches();
+  unsigned Cost = N->Values.size(); //N->getNumMatches();
   Value *V = N->getValue();
   if (N->getNumMatches()==0) return Cost;
   if (Instruction *I = dyn_cast<Instruction>(V)) {
@@ -403,17 +518,30 @@ unsigned CallMatching::growTreeNode( Node *N , Tree &T) {
     for (unsigned i = 0; i<I->getNumOperands(); i++) {
       Value *ChildV = I->getOperand(i);
       Node *ChildN = new Node(ChildV, N);
+      ChildN->setNodeType(NodeType::Mismatching);
+      errs() << "Creating node: " << ChildN->getString() << ": value "; ChildV->dump();
       AllNodes.insert(ChildN);
       T.addNode(ChildN);
+      ChildN->addValue(ChildV, CI);
+      for (auto &Pair : N->getMatchingValues()) {
+        CallInst *OtherCI = Pair.second;
+        Value *OtherV = dyn_cast<Instruction>(Pair.first)->getOperand(i);
+        ChildN->addValue(OtherV, OtherCI);
+      }
       if (isInternalizable(ChildV)) {
-        ChildN->addValue(ChildV, CI);
         for (auto &Pair : N->getMatchingValues()) {
           CallInst *OtherCI = Pair.second;
           Value *OtherV = dyn_cast<Instruction>(Pair.first)->getOperand(i);
-           ChildN->addValue(OtherV, OtherCI);
+          //ChildN->addValue(OtherV, OtherCI);
           if (match(ChildV, OtherV)) ChildN->addMatch(OtherV, OtherCI);
         }
-        Cost += growTreeNode(ChildN, T);
+        //if (ChildN->getNumMatches()>0) { //TODO: check condition
+        //if (ChildN->getNumMatches()==Root->getNumMatches()) { //TODO: check condition
+        if ((ChildN->Values.size()>1 && ChildN->getNumMatches()==Root->getNumMatches())
+           || (ChildN->Values.size()==1 && isa<Constant>(ChildN->getValue()))) { //TODO: check condition
+          ChildN->setNodeType(NodeType::Matching);
+          Cost += growTreeNode(ChildN, T);
+        } else ChildN->MatchingValues.clear();
       }
       N->pushChild(ChildN);
     }
@@ -498,12 +626,26 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
   std::vector<Type*> ArgTypes;
   std::vector<Node*> ArgNodes;
   std::map<Node *, unsigned> NodeToArgNo;
+  
+  errs() << "generateExpandedFunction...\n";
+  for (Tree &T : Trees) errs() << T.getDotString() << "\n";
 
   errs() << "Generating expanded functions\n";
+  for (Node *N : AllNodes) {
+    if (N->getNodeType()==NodeType::Mismatching) {
+      errs() << "Arg:"; N->getValue()->dump();
+      errs() << "Num Values: " << N->Values.size() << "\n";
+      
+      NodeToArgNo[N] = ArgTypes.size();
+      ArgTypes.push_back(N->getValue()->getType());
+      ArgNodes.push_back(N);
+    }
+  }
+  /*
   for (Tree &T : Trees) {
     //Nodes
     for (Node *N : T.Nodes) {
-      if (N->isFunction()) continue;
+      //if (N->isFunction()) continue;
       errs() << "Node: " << N->getString() << "\n";
       for (auto &Pair : N->Values) Pair.first->dump();
       bool Internalizable = N->getNumMatches()>0;
@@ -521,7 +663,8 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
       }
       errs() << "Internalizable:" << Internalizable << "\n";
       errs() << "ReusedInput:" << ReusedInput << "\n";
-      if (!Internalizable && !ReusedInput) {
+      //if (!Internalizable && !ReusedInput) {
+      if (N->getNodeType()==NodeType::Mismatching) {
         errs() << "Arg:"; N->getValue()->dump();
         errs() << "Num Values: " << N->Values.size() << "\n";
         
@@ -531,6 +674,7 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
       }
     }
   }
+  */
   errs() << "New function type:\n";
   for (Type *T : ArgTypes) {
     T->dump();
@@ -545,11 +689,13 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
   
   FunctionType *NewFTy = FunctionType::get(RetTy, ArrayRef<Type *>(ArgTypes), false);
 
-  std::string Name = std::string("cloned"); // + std::string(F->getName().str());
+  std::string Name = std::string("c"); // + std::string(F->getName().str());
 
-  Function *ClonedF = Function::Create(NewFTy, GlobalValue::LinkageTypes::InternalLinkage,
+  //Function *ClonedF = Function::Create(NewFTy, GlobalValue::LinkageTypes::InternalLinkage,
+  Function *ClonedF = Function::Create(NewFTy, CI->getCalledFunction()->getLinkage(),
                                        Twine(Name), M);
-  ClonedF->addFnAttr(Attribute::NoInline);
+  //ClonedF->setCallingConv(CI->getCalledFunction()->getCallingConv());
+  //ClonedF->addFnAttr(Attribute::NoInline);
   std::vector<Argument *> Args;
   for (unsigned i = 0; i<ClonedF->arg_size(); i++) {
     Args.push_back(ClonedF->getArg(i));
@@ -580,6 +726,12 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
   }
   BB->dump();
   ClonedF->dump();
+    //verifyFunction(*ClonedF, &errs());
+  if (verifyFunction(*ClonedF,&errs())) {
+    errs() << "ERROR: generated broken function\n";
+    ClonedF->eraseFromParent();
+    return nullptr;
+  }
   
 
   //std::vector<CallInst *> &AllCIs;
@@ -600,7 +752,7 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
     }
   }
   for (CallInst *CI : AllCIs) {
-    errs() << "CI: "; CI->dump();
+    errs() << "OldCI: "; CI->dump();
     for (unsigned i = 0; i<ArgValues[CI].size(); i++) {
       errs() << "arg " << i << ":";
       ArgValues[CI][i]->dump();
@@ -612,22 +764,26 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
     errs() << "args size: " << ArgValues[CI].size() << "\n";
     for (Value *V : ArgValues[CI]) V->dump();
     errs() << "Creating call\n";
+    checkCall(NewFTy, ClonedF, ArgValues[CI]);
     Value *NewCI = Builder.CreateCall(NewFTy, ClonedF, ArgValues[CI]);
     errs() << "Call created\n";
+    errs() << "NewCI: "; NewCI->dump();
     CI->replaceAllUsesWith(NewCI);
     //TODO: delete instructions that have been internalized
   }
 
   CI->getParent()->getParent()->dump();
   errs() << "TO DELETE\n";
-  std::set<Instruction *> Deleted;
+  //std::set<Instruction *> Deleted;
+
   for (Instruction *I : Covered) {
-    if (Deleted.count(I)) continue;
+    //if (Deleted.count(I)) continue;
     I->dump();
     if (CallInst *CI = dyn_cast<CallInst>(I)) WorklistCalls.remove(CI);
-    Deleted.insert(I);
-    I->eraseFromParent();
+     //Deleted.insert(I);
+    //I->eraseFromParent();
   }
+  deleteInstructionsSafely(Covered);
   
   std::vector<CallInst*> Calls;
   for (Instruction &I : *BB) {
@@ -635,6 +791,9 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
       Calls.push_back(CI);
     }
   }
+
+  errs() << "Specialized: #nodes " << AllNodes.size() << "; #args " << ArgNodes.size() << "; fsize " << ClonedF->getInstructionCount() << "; arg_size " << ClonedF->arg_size() << "\n";
+  ClonedF->dump();
 
   std::set<Function*> Fns;
   //ClonedF->eraseFromParent();
@@ -771,19 +930,28 @@ void CallMatching::writeDotFile() {
 bool FunctionCloning::runOnModule(Module &M) {
   std::list<Function *> Fns;
   for (Function &F : M) {
-    if (F.isDeclaration() ||  F.isVarArg()) continue;
+    if (F.isDeclaration() || F.isVarArg()) continue;
     Fns.push_back(&F);
   }
   while (!Fns.empty()) {
     Function *F = Fns.front();
     Fns.pop_front();
     std::list<CallInst*> Calls;
+    bool SkipFn = false;
     for (User *U : F->users()) {
-      if (isa<CallInst>(U)) {
-        Calls.push_back(dyn_cast<CallInst>(U));
+      CallInst *CI = dyn_cast<CallInst>(U);
+      if (CI && CI->getCalledFunction()==F && !F->isVarArg()) {
+        Calls.push_back(CI);
+      } else {
+        SkipFn = true;
+        break;
       }
     }
     errs() << "*** Function: " << demangle(F->getName().data()) << "\n";
+    if (SkipFn) {
+      errs() << "Skipping\n";
+      continue;
+    }
     while (!Calls.empty()) {
       std::vector<CallInst*> CallsVec;
       for (CallInst *CI : Calls) CallsVec.push_back(CI);
@@ -794,10 +962,32 @@ bool FunctionCloning::runOnModule(Module &M) {
 
       errs() << "Call: ";
       CI->dump();
-      CallMatching CM(CI,CallsVec);
+      CallMatching CM(CI,CallsVec,EnableConstantsOnly);
       CM.dump();
       errs() << "\n";
-      if (CM.Cost>0) {
+      //errs() << "NumMatches: " << CM.NumMatches << "\n";
+      int NumMatches = 0;
+      int NumMismatches = 0;
+      int NumReuse = 0;
+      for (CallMatching::Node *N : CM.AllNodes) {
+        errs() << "Node: " << N->getString() << " : ";
+        if (N->getNodeType()==CallMatching::NodeType::Matching) {
+          NumMatches++;
+          errs() << " match\n";
+        } else if (N->getNodeType()==CallMatching::NodeType::Mismatching) {
+          NumMismatches++;
+          errs() << " mismatch\n";
+        } else if (N->getNodeType()==CallMatching::NodeType::Reuse) {
+          NumReuse++;
+          errs() << " reuse\n";
+        }
+      }
+      errs() << "NumMatches: " << NumMatches << "\n";
+      errs() << "NumMismatches: " << NumMismatches << "\n";
+      errs() << "NumReuse: " << NumReuse << "\n";
+      //if (CM.Cost>0 || (EnableConstantsOnly && CM.NumMatches>0)) {
+      //if ( ((!EnableConstantsOnly) && (NumMatches + NumReuse > 1)) || (EnableConstantsOnly && CM.NumMatches>0)) {
+      if ( NumMatches + NumReuse > 1 || NumMismatches<CI->getCalledFunction()->arg_size()) {
         errs() << "Cost: " << CM.Cost << "\n";
         CM.writeDotFile();
         errs() << "Number of uses: " << F->getNumUses() << "\n";
@@ -805,6 +995,7 @@ bool FunctionCloning::runOnModule(Module &M) {
         if (F->getNumUses()!=CM.getWidth()) {
           errs() << "Invalid width: " << CM.getWidth() << "; expected: " << F->getNumUses() << "\n";
         } else if (CM.validate()) {
+          errs() << "generating new function\n";
           Function *NewF = CM.generateExpandedFunction(M,Fns,Calls);
           //TODO: remove Calls instructions that have been deleted 
         }

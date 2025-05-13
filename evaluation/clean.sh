@@ -1,1 +1,1 @@
-rm -f *.dot *.o *.ll
+rm -f *.dot *.o *.ll *.out

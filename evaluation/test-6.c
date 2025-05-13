@@ -10,13 +10,16 @@ int divBy(int a, int b) {
   return a/b;
 }
 
-__attribute__((noinline)) 
-int foo(int a, int b, int x) {
+int a;
+int b;
+int x;
+
+int foo() {
   return divBy(addSqred(a,a) + b, 2) +
-  divBy(addSqred(x,x) + 4, 2);
+  divBy(addSqred(x,x) + 4, 2) + divBy(addSqred(x+1,2), 1);
 }
 
 int main() {
-  printf("%d\n",foo(1,2,3));
+  printf("%d\n",foo());
   return 0;
 }
