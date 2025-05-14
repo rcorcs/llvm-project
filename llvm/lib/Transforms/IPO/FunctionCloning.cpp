@@ -20,9 +20,20 @@ using namespace llvm;
 static cl::opt<bool> EnableConstantsOnly("funcspec-constants-only",
                                           cl::init(false), cl::Hidden);
 
-static cl::opt<bool> EnableDotFiles("funcexp-dot-files",
+static cl::opt<bool> EnableFEDotFiles("funcexp-dot-files",
                                           cl::init(false), cl::Hidden);
 
+static cl::opt<int> MinCallsites("funcexp-min-callsites",
+                                          cl::init(1), cl::Hidden);
+
+static cl::opt<int> MinMatches("funcexp-min-matches",
+                                          cl::init(1), cl::Hidden);
+
+static cl::opt<int> MaxMismatches("funcexp-max-mismatches",
+                                          cl::init(0), cl::Hidden);
+
+static cl::opt<int> MinTreeSize("funcexp-min-tree-size",
+                                          cl::init(2), cl::Hidden);
 
 static std::string demangle(const char* name) {
   int status = -1; 
@@ -1016,9 +1027,14 @@ bool FunctionCloning::runOnModule(Module &M) {
       errs() << "NumReuse: " << NumReuse << "\n";
       //if (CM.Cost>0 || (EnableConstantsOnly && CM.NumMatches>0)) {
       //if ( ((!EnableConstantsOnly) && (NumMatches + NumReuse > 1)) || (EnableConstantsOnly && CM.NumMatches>0)) {
-      if ( NumMatches + NumReuse > 1 || NumMismatches<CI->getCalledFunction()->arg_size()) {
+      //if ( NumMatches + NumReuse > 1 || NumMismatches<CI->getCalledFunction()->arg_size()) {
+      if (
+      NumMatches + NumReuse >= MinTreeSize &&
+      NumMatches >= MinMatches &&
+      (NumMismatches-CI->getCalledFunction()->arg_size()) <= MaxMismatches &&
+      Calls.size() >= MinCallsites) {
         errs() << "Cost: " << CM.Cost << "\n";
-        if (EnableDotFiles) CM.writeDotFile();
+        if (EnableFEDotFiles) CM.writeDotFile();
         errs() << "Number of uses: " << F->getNumUses() << "\n";
         errs() << "Number of calls: " << Calls.size() << "\n";
         if (F->getNumUses()!=CM.getWidth()) {
