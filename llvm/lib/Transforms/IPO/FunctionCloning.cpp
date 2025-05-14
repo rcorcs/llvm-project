@@ -30,7 +30,7 @@ static cl::opt<int> MinMatches("funcexp-min-matches",
                                           cl::init(1), cl::Hidden);
 
 static cl::opt<int> MaxMismatches("funcexp-max-mismatches",
-                                          cl::init(0), cl::Hidden);
+                                          cl::init(1), cl::Hidden);
 
 static cl::opt<int> MinTreeSize("funcexp-min-tree-size",
                                           cl::init(2), cl::Hidden);
@@ -328,6 +328,7 @@ public:
   CallMatching(CallInst *CI, std::vector<CallInst *> &AllCIs, bool ConstantsOnly=false) : CI(CI), AllCIs(AllCIs) { buildTrees(ConstantsOnly); }
   ~CallMatching();
   
+  int getNumCalls() { return AllCIs.size(); }
   int getWidth() { return Root->Values.size(); }
 
   bool validate() {
@@ -1025,13 +1026,19 @@ bool FunctionCloning::runOnModule(Module &M) {
       errs() << "NumMatches: " << NumMatches << "\n";
       errs() << "NumMismatches: " << NumMismatches << "\n";
       errs() << "NumReuse: " << NumReuse << "\n";
+
+      errs() << "Conditions:\n";
+      errs() << "NumMatches: " << NumMatches << " >= " << MinMatches << "? " << (NumMatches >= MinMatches) << "\n";
+      errs() << "TreeSize: " << (NumMatches + NumReuse) << " >= " << MinTreeSize << "? " << (NumMatches + NumReuse >= MinTreeSize) << "\n";
+      errs() << "NumMismatches: " << ((int)NumMismatches - ((int)CI->getCalledFunction()->arg_size())) << " <= " << MaxMismatches << "? " << (((int)NumMismatches - ((int)CI->getCalledFunction()->arg_size())) <= (int)MaxMismatches) << "\n";
+      errs() << "Callsites: " << CM.getNumCalls() << " >= " << MinCallsites << "? " << (CM.getNumCalls() >= MinCallsites) << "\n";
       //if (CM.Cost>0 || (EnableConstantsOnly && CM.NumMatches>0)) {
       //if ( ((!EnableConstantsOnly) && (NumMatches + NumReuse > 1)) || (EnableConstantsOnly && CM.NumMatches>0)) {
       //if ( NumMatches + NumReuse > 1 || NumMismatches<CI->getCalledFunction()->arg_size()) {
       if (
       NumMatches + NumReuse >= MinTreeSize &&
       NumMatches >= MinMatches &&
-      (NumMismatches-CI->getCalledFunction()->arg_size()) <= MaxMismatches &&
+      ((int)NumMismatches - ((int)CI->getCalledFunction()->arg_size())) <= (int)MaxMismatches &&
       Calls.size() >= MinCallsites) {
         errs() << "Cost: " << CM.Cost << "\n";
         if (EnableFEDotFiles) CM.writeDotFile();
