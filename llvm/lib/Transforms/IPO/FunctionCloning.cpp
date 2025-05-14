@@ -109,7 +109,7 @@ static bool match(Value *V1, Value *V2) {
     //default check
     return (I1->getOpcode()==I2->getOpcode() && I1->getNumOperands()==I2->getNumOperands());
   }
-  return (isa<Constant>(V1) && !isa<Function>(V1) && V1==V2);
+  return ((isa<Constant>(V1) || isa<GlobalValue>(V1)) && V1==V2);
   //return false;
 }
 
