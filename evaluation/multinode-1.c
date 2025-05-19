@@ -12,7 +12,7 @@ int divBy(int a, int b) {
 
 __attribute__((noinline)) 
 int foo(int a, int b, int x) {
-  return divBy(addSqred(a,a) + b, 2) +
+  return divBy(b + addSqred(a,a), 2) +
   divBy(addSqred(x,x) + 4, 2);
 }
 
