@@ -26,4 +26,5 @@ function run() {
 #run test-6
 
 #run multinode-1
-run legality-1
+#run legality-1
+run legality-2

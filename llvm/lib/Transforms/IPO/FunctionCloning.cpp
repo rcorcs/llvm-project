@@ -441,10 +441,10 @@ void CallMatching::buildTrees(bool ConstantsOnly) {
         for (CallInst *OtherCI : AllCIs) {
           if (OtherCI==CI) continue;
           Value *OtherV = OtherCI->getArgOperand(i);
-          Instruction *OtherI = dyn_cast<Instruction>(OtherV);
-          if (OtherI && OtherI->getParent()==OtherCI->getParent()) {
-            if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
-          }
+          //Instruction *OtherI = dyn_cast<Instruction>(OtherV);
+          //if (OtherI && OtherI->getParent()==OtherCI->getParent()) {
+          if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
+          //}
         }
         
         errs() << "numMatches: " << N->getNumMatches() << "\n";
@@ -464,11 +464,11 @@ void CallMatching::buildTrees(bool ConstantsOnly) {
         for (CallInst *OtherCI : AllCIs) {
           if (OtherCI==CI) continue;
           Value *OtherV = OtherCI->getArgOperand(i);
-          //if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
-          Instruction *OtherI = dyn_cast<Instruction>(OtherV);
-          if (OtherI && OtherI->getParent()==OtherCI->getParent()) {
-            if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
-          }
+          if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
+          //Instruction *OtherI = dyn_cast<Instruction>(OtherV);
+          //if (OtherI && OtherI->getParent()==OtherCI->getParent()) {
+          //  if (match(V, OtherV)) N->addMatch(OtherV, OtherCI);
+          //}
         }
         //if (N->getNumMatches()>0) { //TODO: check condition
         //if (N->getNumMatches()==Root->getNumMatches()) { //TODO: check condition
@@ -585,11 +585,11 @@ unsigned CallMatching::growTreeNode( Node *N , Tree &T) {
           CallInst *OtherCI = Pair.second;
           Value *OtherV = dyn_cast<Instruction>(Pair.first)->getOperand(i);
           //ChildN->addValue(OtherV, OtherCI);
-          //if (match(ChildV, OtherV)) ChildN->addMatch(OtherV, OtherCI);
-          Instruction *OtherI = dyn_cast<Instruction>(OtherV);
-          if (OtherI && OtherI->getParent()==OtherCI->getParent()) {
-            if (match(ChildV, OtherV)) ChildN->addMatch(OtherV, OtherCI);
-          }
+          if (match(ChildV, OtherV)) ChildN->addMatch(OtherV, OtherCI);
+          //Instruction *OtherI = dyn_cast<Instruction>(OtherV);
+          //if (OtherI && OtherI->getParent()==OtherCI->getParent()) {
+          //  if (match(ChildV, OtherV)) ChildN->addMatch(OtherV, OtherCI);
+          //}
         }
         //if (ChildN->getNumMatches()>0) { //TODO: check condition
         //if (ChildN->getNumMatches()==Root->getNumMatches()) { //TODO: check condition
@@ -923,33 +923,6 @@ void CallMatching::validityPruning() {
     if (N->getNodeType()==CallMatching::NodeType::Matching) Ordered.push_back(N);
   }
 
-  llvm::sort(Ordered, [](Node *A, Node *B) {
-    if (A==nullptr) return !true;
-    if (B==nullptr) return !false;
-    Instruction *AI = dyn_cast<Instruction>(A->getValue());
-    Instruction *BI = dyn_cast<Instruction>(B->getValue());
-    if (AI==nullptr) return !true;
-    if (BI==nullptr) return !false;
-    return !AI->comesBefore(BI);
-  });
-
-  /*
-  for (Node *N : Ordered) {
-    errs() << "Node: " << N->getString() << "\n";
-    for (auto Pair : N->Values) {
-      errs() << "- value:";
-      if (Function *VF = dyn_cast<Function>(Pair.first)) {
-        errs() << " " << VF->getName().str() << "\n";
-      } else {
-        Pair.first->dump();
-      }
-    }
-  }
-  */
-  //errs() << "first node is root? " << (Ordered[0]==Root) << "\n";
-  errs() << "computing scheduling validity...\n";
-
-  std::map<CallInst*, Instruction*> Position;
 
   std::map<CallInst*, Function*> Fns;
   std::map<Function*, DominatorTree> DTs;
@@ -967,7 +940,6 @@ void CallMatching::validityPruning() {
   TargetLibraryInfo TLI(TLII);
 
   for (auto Pair : Root->Values) {
-    Position[Pair.second] = dyn_cast<Instruction>(Pair.first);
     Function *F = Pair.second->getParent()->getParent();
     Fns[Pair.second] = F;
     DTs[F] = DominatorTree(*F);
@@ -987,6 +959,40 @@ void CallMatching::validityPruning() {
 
     DIs[F] = new DependenceInfo(F, AARs[F], SEs[F], &LIs[F]);
   }
+
+  llvm::sort(Ordered, [&](Node *A, Node *B) {
+    if (A==nullptr) return !true;
+    if (B==nullptr) return !false;
+    Instruction *AI = dyn_cast<Instruction>(A->getValue());
+    Instruction *BI = dyn_cast<Instruction>(B->getValue());
+    if (AI==nullptr) return !true;
+    if (BI==nullptr) return !false;
+    DominatorTree &DT = DTs[AI->getParent()->getParent()];
+    //return !AI->comesBefore(BI);
+    return !DT.dominates(AI, BI);
+  });
+
+  std::map<CallInst*, Instruction*> Position;
+
+  for (auto Pair : Root->Values) {
+    Position[Pair.second] = dyn_cast<Instruction>(Pair.first);
+  }
+
+  /*
+  for (Node *N : Ordered) {
+    errs() << "Node: " << N->getString() << "\n";
+    for (auto Pair : N->Values) {
+      errs() << "- value:";
+      if (Function *VF = dyn_cast<Function>(Pair.first)) {
+        errs() << " " << VF->getName().str() << "\n";
+      } else {
+        Pair.first->dump();
+      }
+    }
+  }
+  */
+  //errs() << "first node is root? " << (Ordered[0]==Root) << "\n";
+  errs() << "computing scheduling validity...\n";
   
   std::set<Node *> IgnoreNodes;
   unsigned NewMismatches = 0;
