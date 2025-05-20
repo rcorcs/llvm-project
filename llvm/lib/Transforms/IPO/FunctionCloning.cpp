@@ -878,8 +878,10 @@ Function *CallMatching::generateExpandedFunction(Module &M, std::list<Function *
             "; #p_matches " << PrunedMatches <<
             "; #cs " << NumCIs <<
             "; #args " << ArgNodes.size() <<
-            "; new_fsize " << ClonedF->getInstructionCount() << "; new_arg_size " << ClonedF->arg_size() <<
-            "; old_fsize " << CI->getCalledFunction()->getInstructionCount() << "; old_arg_size " << CI->getCalledFunction()->arg_size() << "\n";
+            //"; new_fsize " << ClonedF->getInstructionCount() << "; new_arg_size " << ClonedF->arg_size() <<
+            //"; old_fsize " << CI->getCalledFunction()->getInstructionCount() <<
+              // "; old_arg_size " << CI->getCalledFunction()->arg_size() <<
+                "\n";
   ClonedF->dump();
 
   std::set<Function*> Fns;
