@@ -11,7 +11,12 @@
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/CodeMoverUtils.h"
+
+#include "llvm/IR/PassManager.h"
+#include "llvm/Transforms/Scalar/SimplifyCFG.h"
+#include "llvm/Transforms/InstCombine/InstCombine.h"
 
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Transforms/Utils/Cloning.h"
@@ -26,21 +31,27 @@
 
 using namespace llvm;
 
-static cl::opt<bool> EnableConstantsOnly("funcspec-constants-only",
+static cl::opt<bool> EnableConstantsOnly("fe-constants-only",
                                          cl::init(false), cl::Hidden);
 
-static cl::opt<bool> EnableFEDotFiles("funcexp-dot-files", cl::init(false),
+static cl::opt<bool> EnableCloneAnalysis("fe-clone-validity",
+                                         cl::init(true), cl::Hidden);
+
+static cl::opt<bool> DisableAll("fe-disable-all",
+                                         cl::init(false), cl::Hidden);
+
+static cl::opt<bool> EnableDotFiles("fe-dot-files", cl::init(false),
                                       cl::Hidden);
 
-static cl::opt<int> MinCallsites("funcexp-min-callsites", cl::init(1),
+static cl::opt<int> MinCallsites("fe-min-callsites", cl::init(1),
                                  cl::Hidden);
 
-static cl::opt<int> MinMatches("funcexp-min-matches", cl::init(1), cl::Hidden);
+static cl::opt<int> MinMatches("fe-min-matches", cl::init(1), cl::Hidden);
 
-static cl::opt<int> MaxMismatches("funcexp-max-mismatches", cl::init(1),
+static cl::opt<int> MaxMismatches("fe-max-mismatches", cl::init(1),
                                   cl::Hidden);
 
-static cl::opt<int> MinTreeSize("funcexp-min-tree-size", cl::init(2),
+static cl::opt<int> MinTreeSize("fe-min-tree-size", cl::init(2),
                                 cl::Hidden);
 
 static std::string demangle(const char *name) {
@@ -49,6 +60,21 @@ static std::string demangle(const char *name) {
   std::unique_ptr<char, void (*)(void *)> res{
       abi::__cxa_demangle(name, NULL, NULL, &status), std::free};
   return (status == 0) ? res.get() : std::string(name);
+}
+
+
+static void simplifyFunction(Function &F) {
+  FunctionPassManager FPM;
+
+  // Add the desired passes
+  FPM.addPass(SimplifyCFGPass());
+  FPM.addPass(InstCombinePass());
+
+  // Run the passes
+  FunctionAnalysisManager FAM;
+  FAM.registerPass([] { return PassInstrumentationAnalysis(); });
+
+  FPM.run(F, FAM);
 }
 
 void checkCall(FunctionType *FTy, Value *Func, ArrayRef<Value *> Args) {
@@ -880,6 +906,28 @@ CallMatching::generateExpandedFunction(Module &M,
     return nullptr;
   }
 
+  /*
+  //New FUNCTION GENERATED; run profitability analysis
+  std::set<Function *> Fns;
+  // ClonedF->eraseFromParent();
+  for (CallInst *CI : Calls) {
+    if (CI == RootV) {
+      Function *Callee = CI->getCalledFunction();
+      if (Callee)
+        Fns.insert(Callee);
+      InlineFunctionInfo IFI;
+      InlineFunction(*CI, IFI);
+    } else {//if (CI->getNumUses() == 1) {
+      Function *Callee = CI->getCalledFunction();
+      if (Callee)
+        Fns.insert(Callee);
+      InlineFunctionInfo IFI;
+      InlineFunction(*CI, IFI);
+    } // TODO: inline if function is small enough
+  }
+  */
+
+
   // std::vector<CallInst *> &AllCIs;
   // std::vector<Tree> Trees;
   // errs() << "Num CIs: " << AllCIs.size() << "\n";
@@ -970,7 +1018,8 @@ CallMatching::generateExpandedFunction(Module &M,
 #ifdef PRINT_FUNCTION_CLONING
   ClonedF->dump();
 #endif
-
+  
+  unsigned InlinedFns = 0;
   std::set<Function *> Fns;
   // ClonedF->eraseFromParent();
   for (CallInst *CI : Calls) {
@@ -980,23 +1029,31 @@ CallMatching::generateExpandedFunction(Module &M,
         Fns.insert(Callee);
       InlineFunctionInfo IFI;
       InlineFunction(*CI, IFI);
-    } else if (CI->getNumUses() == 1) {
+      InlinedFns++;
+    } else {//if (CI->getNumUses() == 1) {
       Function *Callee = CI->getCalledFunction();
-      if (Callee)
+      if (Callee && Callee->getNumUses()==1) {
         Fns.insert(Callee);
-      InlineFunctionInfo IFI;
-      InlineFunction(*CI, IFI);
+        InlineFunctionInfo IFI;
+        InlineFunction(*CI, IFI);
+        InlinedFns++;
+      }
     } // TODO: inline if function is small enough
   }
+  
   // ClonedF->dump();
 
+  unsigned DeletedFns = 0;
   for (auto *Callee : Fns) {
     if (Callee->getNumUses() == 0) {
       WorklistFns.remove(Callee);
       Callee->eraseFromParent();
+      DeletedFns++;
     }
   }
-
+#ifdef PRINT_FUNCTION_CLONING
+  errs() << "Inlined: " << InlinedFns << " x Deleted: " << DeletedFns << "\n";
+#endif
   return ClonedF;
 }
 
@@ -1015,6 +1072,7 @@ void CallMatching::validityPruning() {
       Ordered.push_back(N);
   }
 
+  std::map<CallInst *, ValueToValueMapTy> VMaps;
   std::map<CallInst *, Function *> Fns;
   std::map<Function *, DominatorTree> DTs;
   std::map<Function *, PostDominatorTree> PDTs;
@@ -1029,9 +1087,16 @@ void CallMatching::validityPruning() {
 
   TargetLibraryInfoImpl TLII;
   TargetLibraryInfo TLI(TLII);
+  
+  std::set<Function*> ClonedFs;
 
   for (auto Pair : Root->Values) {
     Function *F = Pair.second->getParent()->getParent();
+    if (EnableCloneAnalysis) {
+      Function *ClonedF = CloneFunction(F, VMaps[Pair.second]);
+      ClonedFs.insert(ClonedF);
+      F = ClonedF;
+    }
     Fns[Pair.second] = F;
     DTs[F] = DominatorTree(*F);
     PDTs[F] = PostDominatorTree(*F);
@@ -1056,13 +1121,23 @@ void CallMatching::validityPruning() {
       return !true;
     if (B == nullptr)
       return !false;
-    Instruction *AI = dyn_cast<Instruction>(A->getValue());
-    Instruction *BI = dyn_cast<Instruction>(B->getValue());
+    auto &PairA = A->Values[0];
+    auto &PairB = B->Values[0];
+
+    Instruction *AI = nullptr;
+    Instruction *BI = nullptr;
+    if (EnableCloneAnalysis) {
+      AI = dyn_cast<Instruction>(VMaps[PairA.second][PairA.first]);
+      BI = dyn_cast<Instruction>(VMaps[PairB.second][PairB.first]);
+    } else {
+      AI = dyn_cast<Instruction>(PairA.first);
+      BI = dyn_cast<Instruction>(PairB.first);
+    }
     if (AI == nullptr)
       return !true;
     if (BI == nullptr)
       return !false;
-    DominatorTree &DT = DTs[AI->getParent()->getParent()];
+    DominatorTree &DT = DTs[Fns[PairA.second]];
     // return !AI->comesBefore(BI);
     return !DT.dominates(AI, BI);
   });
@@ -1070,7 +1145,11 @@ void CallMatching::validityPruning() {
   std::map<CallInst *, Instruction *> Position;
 
   for (auto Pair : Root->Values) {
-    Position[Pair.second] = dyn_cast<Instruction>(Pair.first);
+    if (EnableCloneAnalysis) {
+      Position[Pair.second] = dyn_cast<Instruction>(VMaps[Pair.second][Pair.first]);
+    } else {
+      Position[Pair.second] = dyn_cast<Instruction>(Pair.first);
+    }
   }
 
   /*
@@ -1101,7 +1180,13 @@ void CallMatching::validityPruning() {
     if (N->getNodeType() == CallMatching::NodeType::Matching) {
       bool AllSchedulable = true;
       for (auto Pair : N->Values) {
-        if (Instruction *I = dyn_cast<Instruction>(Pair.first)) {
+        Instruction *I;
+        if (EnableCloneAnalysis) {
+          I = dyn_cast<Instruction>(VMaps[Pair.second][Pair.first]);
+        } else {
+          I = dyn_cast<Instruction>(Pair.first);
+        }
+        if (I) {
           if (!isSafeToMoveBefore(
                   *I, *Position[Pair.second], DTs[Fns[Pair.second]],
                   &PDTs[Fns[Pair.second]], DIs[Fns[Pair.second]])) {
@@ -1115,7 +1200,13 @@ void CallMatching::validityPruning() {
       }
       if (AllSchedulable) {
         for (auto Pair : N->Values) {
-          if (Instruction *I = dyn_cast<Instruction>(Pair.first)) {
+          Instruction *I;
+          if (EnableCloneAnalysis) {
+            I = dyn_cast<Instruction>(VMaps[Pair.second][Pair.first]);
+          } else {
+            I = dyn_cast<Instruction>(Pair.first);
+          }
+          if (I) {
             I->moveBefore(Position[Pair.second]);
             Position[Pair.second] = I;
           }
@@ -1129,6 +1220,7 @@ void CallMatching::validityPruning() {
         for (Node *Child : N->getChildren()) {
           destroyNodesRec(Child, &IgnoreNodes);
         }
+        N->MatchingValues.clear();
         N->Children.clear();
         // errs() << "AllNodes after: " << AllNodes.size() << "\n";
         // for (Tree &T : Trees) errs() << "T size: " << T.Nodes.size() << "\n";
@@ -1158,6 +1250,10 @@ void CallMatching::validityPruning() {
   }
   for (auto Pair : DIs) {
     delete Pair.second;
+  }
+  
+  for (Function* CF : ClonedFs) {
+    CF->eraseFromParent();
   }
 }
 
@@ -1286,6 +1382,7 @@ void CallMatching::writeDotFile() {
 }
 
 bool FunctionCloning::runOnModule(Module &M) {
+  bool Modified = false;
   std::list<Function *> Fns;
   for (Function &F : M) {
     if (F.isDeclaration() || F.isVarArg())
@@ -1394,7 +1491,7 @@ bool FunctionCloning::runOnModule(Module &M) {
         errs() << "Cost: " << CM.Cost << "\n";
 #endif
 
-        if (EnableFEDotFiles)
+        if (EnableDotFiles)
           CM.writeDotFile();
 #ifdef PRINT_FUNCTION_CLONING
         errs() << "Number of uses: " << F->getNumUses() << "\n";
@@ -1407,11 +1504,13 @@ bool FunctionCloning::runOnModule(Module &M) {
                  << "; expected: " << F->getNumUses() << "\n";
 #endif
 
-        } else if (CM.validate()) {
+        } else if (CM.validate() && !DisableAll) {
 #ifdef PRINT_FUNCTION_CLONING
           errs() << "generating new function\n";
 #endif
+          //CM.validityPruning();
 
+          Modified = true;
           Function *NewF = CM.generateExpandedFunction(M, Fns, Calls);
           // TODO: remove Calls instructions that have been deleted
         }
@@ -1423,7 +1522,7 @@ bool FunctionCloning::runOnModule(Module &M) {
 #endif
   }
 
-  return false;
+  return Modified;
 }
 
 void FunctionCloning::getAnalysisUsage(AnalysisUsage &AU) const {}
