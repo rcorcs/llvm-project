@@ -14,6 +14,7 @@
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/CodeMoverUtils.h"
 
+#include "llvm/Passes/PassBuilder.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Transforms/Scalar/SimplifyCFG.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
@@ -29,6 +30,9 @@
 #include <memory>
 #include <string>
 
+//#include "llvm/IR/LegacyPassManager.h"
+//#include "llvm/Transforms/Scalar.h"
+
 using namespace llvm;
 
 static cl::opt<bool> EnableConstantsOnly("fe-constants-only",
@@ -42,6 +46,9 @@ static cl::opt<bool> DisableAll("fe-disable-all",
 
 static cl::opt<bool> EnableDotFiles("fe-dot-files", cl::init(false),
                                       cl::Hidden);
+
+static cl::opt<int> ProfitThreshold("fe-profit-threshold", cl::init(0),
+                                 cl::Hidden);
 
 static cl::opt<int> MinCallsites("fe-min-callsites", cl::init(1),
                                  cl::Hidden);
@@ -63,6 +70,15 @@ static std::string demangle(const char *name) {
 }
 
 
+/*
+static void simplifyFunctionLegacy(Function &F) {
+  llvm::legacy::FunctionPassManager FPM(F.getParent());
+  FPM.add(llvm::createSimplifyCFGPass());
+  FPM.add(llvm::createInstructionCombiningPass());
+  FPM.doInitialization();
+  FPM.run(F);
+  FPM.doFinalization();
+}
 static void simplifyFunction(Function &F) {
   FunctionPassManager FPM;
 
@@ -73,6 +89,22 @@ static void simplifyFunction(Function &F) {
   // Run the passes
   FunctionAnalysisManager FAM;
   FAM.registerPass([] { return PassInstrumentationAnalysis(); });
+
+  FPM.run(F, FAM);
+}
+*/
+
+static
+void simplifyWithPassBuilder(Function &F) {
+  PassBuilder PB;
+  FunctionPassManager FPM;
+
+  // Use PassBuilder to get standard analyses
+  FunctionAnalysisManager FAM;
+  PB.registerFunctionAnalyses(FAM);
+
+  FPM.addPass(SimplifyCFGPass());
+  //FPM.addPass(InstCombinePass());
 
   FPM.run(F, FAM);
 }
@@ -906,28 +938,74 @@ CallMatching::generateExpandedFunction(Module &M,
     return nullptr;
   }
 
-  /*
   //New FUNCTION GENERATED; run profitability analysis
-  std::set<Function *> Fns;
-  // ClonedF->eraseFromParent();
-  for (CallInst *CI : Calls) {
-    if (CI == RootV) {
-      Function *Callee = CI->getCalledFunction();
-      if (Callee)
-        Fns.insert(Callee);
-      InlineFunctionInfo IFI;
-      InlineFunction(*CI, IFI);
-    } else {//if (CI->getNumUses() == 1) {
-      Function *Callee = CI->getCalledFunction();
-      if (Callee)
-        Fns.insert(Callee);
-      InlineFunctionInfo IFI;
-      InlineFunction(*CI, IFI);
-    } // TODO: inline if function is small enough
+
+ unsigned CallSiteSize = ClonedF->getInstructionCount() - 1;
+
+  std::vector<CallInst *> Calls;
+  for (Instruction &I : *BB) {
+    if (CallInst *CI = dyn_cast<CallInst>(&I)) {
+      Calls.push_back(CI);
+    }
   }
-  */
 
+  bool Profitable;
+  int ProfitScore = 0;
+  {
+    ValueToValueMapTy VMap;
+    Function *CFn = CloneFunction(ClonedF, VMap);
 
+    std::set<Function *> Fns;
+    // ClonedF->eraseFromParent();
+    for (CallInst *CI : Calls) {
+      if (CI == RootV) {
+        Function *Callee = CI->getCalledFunction();
+        if (Callee)
+          Fns.insert(Callee);
+        InlineFunctionInfo IFI;
+        InlineFunction(*dyn_cast<CallInst>(VMap[CI]), IFI);
+      } else {
+        /*
+        Function *Callee = CI->getCalledFunction();
+        if (Callee) {
+          bool CanInline = true;
+          for (auto U : Callee->users()) {
+            if (U==CI) continue;
+            Instruction *UI = dyn_cast<Instruction>(U);
+            if (UI && std::find(Covered.begin(), Covered.end(), UI)!=Covered.end()) continue;
+            CanInline = false;
+          }
+          if (false && CanInline) {
+            
+            Fns.insert(Callee);
+            InlineFunctionInfo IFI;
+            InlineFunction(*CI, IFI);
+          }
+        }
+        */
+      } // TODO: inline if function is small enough
+    }
+    
+    unsigned TotalInstCount = 0;
+    for (Function *F : Fns) TotalInstCount += F->getInstructionCount();
+
+    //simplifyFunctionLegacy(*ClonedF);
+    simplifyWithPassBuilder(*CFn);
+    
+    ProfitScore = (int)(TotalInstCount + CallSiteSize*AllCIs.size()) - (int)(CFn->getInstructionCount()+AllCIs.size());
+    Profitable = ProfitScore  >  ProfitThreshold;
+#ifdef PRINT_FUNCTION_CLONING
+    errs() << "TotalInstCount: " << TotalInstCount << " + CallSiteSize: " << (CallSiteSize*AllCIs.size()) <<
+    " > ExpandedFunction: " << CFn->getInstructionCount() << " + NewCallSite: " << AllCIs.size() << "; Profitable: " <<
+    Profitable <<"\n";
+#endif
+    CFn->eraseFromParent();
+  }
+
+  if (!Profitable) {
+    ClonedF->eraseFromParent();
+    return nullptr;
+  } 
   // std::vector<CallInst *> &AllCIs;
   // std::vector<Tree> Trees;
   // errs() << "Num CIs: " << AllCIs.size() << "\n";
@@ -987,12 +1065,6 @@ CallMatching::generateExpandedFunction(Module &M,
   }
   deleteInstructionsSafely(Covered);
 
-  std::vector<CallInst *> Calls;
-  for (Instruction &I : *BB) {
-    if (CallInst *CI = dyn_cast<CallInst>(&I)) {
-      Calls.push_back(CI);
-    }
-  }
   int NumMatches = 0;
   int NumMismatches = 0;
   int NumReuse = 0;
@@ -1014,12 +1086,14 @@ CallMatching::generateExpandedFunction(Module &M,
          << NumMatches << "; #mismatches " << NumMismatches << "; #reuse "
          << NumReuse << "; #p_nodes " << PrunedNodes << "; #p_matches "
          << PrunedMatches << "; #cs " << NumCIs << "; #args " << ArgNodes.size()
+         << "; score " << ProfitScore
          << "\n";
 #ifdef PRINT_FUNCTION_CLONING
   ClonedF->dump();
 #endif
   
   unsigned InlinedFns = 0;
+  
   std::set<Function *> Fns;
   // ClonedF->eraseFromParent();
   for (CallInst *CI : Calls) {
@@ -1030,7 +1104,8 @@ CallMatching::generateExpandedFunction(Module &M,
       InlineFunctionInfo IFI;
       InlineFunction(*CI, IFI);
       InlinedFns++;
-    } else {//if (CI->getNumUses() == 1) {
+    } else {
+      /*
       Function *Callee = CI->getCalledFunction();
       if (Callee && Callee->getNumUses()==1) {
         Fns.insert(Callee);
@@ -1038,6 +1113,7 @@ CallMatching::generateExpandedFunction(Module &M,
         InlineFunction(*CI, IFI);
         InlinedFns++;
       }
+      */
     } // TODO: inline if function is small enough
   }
   
@@ -1045,10 +1121,23 @@ CallMatching::generateExpandedFunction(Module &M,
 
   unsigned DeletedFns = 0;
   for (auto *Callee : Fns) {
+#ifdef PRINT_FUNCTION_CLONING
+   errs() << "Fn: " << Callee->getName().str() << " uses: " << Callee->getNumUses() << "\n";
+#endif
     if (Callee->getNumUses() == 0) {
+#ifdef PRINT_FUNCTION_CLONING
+      errs() << "Deleting: " << Callee->getName().str() << "\n";
+#endif
       WorklistFns.remove(Callee);
       Callee->eraseFromParent();
       DeletedFns++;
+    } else {
+#ifdef PRINT_FUNCTION_CLONING
+      for (auto *U : Callee->users()) {
+        U->dump();
+        if (Instruction *I = dyn_cast<Instruction>(U)) I->getParent()->getParent()->dump();
+      }
+#endif
     }
   }
 #ifdef PRINT_FUNCTION_CLONING
@@ -1403,6 +1492,7 @@ bool FunctionCloning::runOnModule(Module &M) {
         break;
       }
     }
+    errs() << "*** Function: " << F->getName().str() << "\n";
 #ifdef PRINT_FUNCTION_CLONING
     errs() << "*** Function: " << demangle(F->getName().data()) << "\n";
 #endif
