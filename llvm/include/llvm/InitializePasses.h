@@ -126,6 +126,7 @@ void initializeGCMachineCodeAnalysisPass(PassRegistry &);
 void initializeGCModuleInfoPass(PassRegistry &);
 void initializeGVNLegacyPassPass(PassRegistry &);
 void initializeGlobalMergeFuncPassWrapperPass(PassRegistry &);
+void initializeFunctionCloningLegacyPassPass(PassRegistry &);
 void initializeGlobalMergePass(PassRegistry &);
 void initializeGlobalsAAWrapperPassPass(PassRegistry &);
 void initializeHardwareLoopsLegacyPass(PassRegistry &);
