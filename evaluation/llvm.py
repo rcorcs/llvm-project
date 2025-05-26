@@ -9,8 +9,9 @@ class LLVM:
         self.clang = [llvm_dir / 'bin' / 'clang']
         self.clangpp = [llvm_dir / 'bin' / 'clang++']
         if platform == 'darwin':
-            self.clang.append(f'-isysroot{os.popen('xcrun --show-sdk-path').read().strip()}')
-            self.clangpp.append(f'-isysroot{os.popen('xcrun --show-sdk-path').read().strip()}')
+            sysroot = os.popen("xcrun --show-sdk-path").read().strip()
+            self.clang.append(f'-isysroot{sysroot}')
+            self.clangpp.append(f'-isysroot{sysroot}')
         self.opt = [llvm_dir / 'bin' / 'opt']
         self.llc = [llvm_dir / 'bin' / 'llc']
         self.llvm_link = [llvm_dir / 'bin' / 'llvm-link']
@@ -24,7 +25,15 @@ class LLVM:
         if options is None:
             options = []
         assert ir_file.suffix == '.ll', f'Output file must have .ll extension, got {ir_file.suffix}'
-        flags = ['-Os', '-fno-vectorize', '-fno-slp-vectorize', '-fno-unroll-loops', '-fno-inline-functions', '-Wno-implicit-function-declaration', '-Wno-implicit-int']
+        flags = [
+            '-Os',
+            '-fno-vectorize',
+            '-fno-slp-vectorize',
+            '-fno-unroll-loops',
+            '-fno-inline-functions',
+            '-Wno-implicit-function-declaration',
+            '-Wno-implicit-int'
+        ]
         compiler = self.clang if src_file.suffix == '.c' else self.clangpp
         cmd = [str(s) for s in compiler] + flags + ['-S', '-emit-llvm'] + options + [str(src_file), '-o',
                                                                                      str(ir_file)]
