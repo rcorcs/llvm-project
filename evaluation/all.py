@@ -9,19 +9,20 @@ from benchmarks.mibench.automotive.basicmath.benchmark import benchmark as basic
 from benchmarks.mibench.automotive.bitcount.benchmark import benchmark as bitcount
 from benchmarks.mibench.automotive.qsort.benchmark import benchmark as qsort
 from benchmarks.mibench.automotive.susan.benchmark import benchmark as susan
-from benchmarks.mibench.consumer.jpeg.benchmark import cjpeg as cjpeg
-from benchmarks.mibench.consumer.jpeg.benchmark import djpeg as djpeg
+from benchmarks.mibench.consumer.jpeg.benchmark import cjpeg, djpeg
 from benchmarks.mibench.consumer.lame.benchmark import benchmark as lame
+from benchmarks.mibench.consumer.tiff.benchmark import tiff2bw, tiff2rgba, tiff2ps, fax2ps, fax2tiff, gif2tiff, pal2rgb, \
+    ppm2tiff, ras2tiff, rgb2ycbcr, tiffcmp, tiffcp, tiffdither, tiffdump, tiffinfo, tiffmedian, tiffsplit
 
-LLVM_DIR = Path(os.environ['LLVM_DIR'])
+from benchmarks.mibench.consumer.typeset.benchmark import benchmark as typeset
 
 
 def main():
-    llvm = LLVM(LLVM_DIR)
+    llvm_dir = Path(os.environ['LLVM_DIR'])
+    llvm = LLVM(llvm_dir)
 
     benchmarks = [
         sqlite,
-
         basicmath,
         bitcount,
         qsort,
@@ -29,6 +30,24 @@ def main():
         cjpeg,
         djpeg,
         lame,
+        tiff2bw,
+        tiff2rgba,
+        tiff2ps,
+        tiffcmp,
+        tiffcp,
+        tiffdither,
+        tiffdump,
+        tiffinfo,
+        tiffmedian,
+        tiffsplit,
+        fax2ps,
+        fax2tiff,
+        gif2tiff,
+        pal2rgb,
+        ppm2tiff,
+        ras2tiff,
+        rgb2ycbcr,
+        typeset
     ]
 
     sizes = []
@@ -60,11 +79,17 @@ def main():
 
         sizes.append((before_size, after_size))
 
-    # print like a table
     print(f'{"Benchmark":>15} {"constargs":>10} {"cloning":>10} {"diff(Bytes)":>12} {"diff(%)":>8}')
     for benchmark, (before_size, after_size) in zip(benchmarks, sizes):
         diff = -(after_size - before_size)
         print(f'{benchmark.name:>15} {before_size:>10} {after_size:>10} {diff :>12} {100 * diff / before_size:>8.2f}')
+
+    with open('sizes.csv', 'w') as f:
+        f.write('benchmark,before,after\n')
+        for benchmark, (before_size, after_size) in zip(benchmarks, sizes):
+            f.write(f'{benchmark.name},{before_size},{after_size}\n')
+
+    print('Sizes written to sizes.csv')
 
 
 if __name__ == '__main__':
