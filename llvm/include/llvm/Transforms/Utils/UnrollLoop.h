@@ -21,6 +21,9 @@
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/InstructionCost.h"
 
+#include <map>
+#include <set>
+
 namespace llvm {
 
 class AssumptionCache;
@@ -88,7 +91,8 @@ LLVM_ABI LoopUnrollResult UnrollLoop(Loop *L, UnrollLoopOptions ULO,
                                      OptimizationRemarkEmitter *ORE,
                                      bool PreserveLCSSA,
                                      Loop **RemainderLoop = nullptr,
-                                     AAResults *AA = nullptr);
+                                     AAResults *AA = nullptr,
+  std::map<const Instruction*, std::vector<Instruction*> * > *TrackCopiesPtr=nullptr);
 
 LLVM_ABI bool UnrollRuntimeLoopRemainder(
     Loop *L, unsigned Count, bool AllowExpensiveTripCount,

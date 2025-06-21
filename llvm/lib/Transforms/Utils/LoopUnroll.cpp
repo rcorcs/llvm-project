@@ -456,7 +456,9 @@ LoopUnrollResult
 llvm::UnrollLoop(Loop *L, UnrollLoopOptions ULO, LoopInfo *LI,
                  ScalarEvolution *SE, DominatorTree *DT, AssumptionCache *AC,
                  const TargetTransformInfo *TTI, OptimizationRemarkEmitter *ORE,
-                 bool PreserveLCSSA, Loop **RemainderLoop, AAResults *AA) {
+                 bool PreserveLCSSA, Loop **RemainderLoop, AAResults *AA,
+std::map<const Instruction*, std::vector<Instruction*> * > *TrackCopiesPtr
+) {
   assert(DT && "DomTree is required");
 
   if (!L->getLoopPreheader()) {
@@ -717,7 +719,15 @@ llvm::UnrollLoop(Loop *L, UnrollLoopOptions ULO, LoopInfo *LI,
 
     for (LoopBlocksDFS::RPOIterator BB = BlockBegin; BB != BlockEnd; ++BB) {
       ValueToValueMapTy VMap;
-      BasicBlock *New = CloneBasicBlock(*BB, VMap, "." + Twine(It));
+
+      BasicBlock *New; //= CloneBasicBlock(*BB, VMap, "." + Twine(It));
+
+      if (TrackCopiesPtr!=nullptr) {
+        New = CloneBasicBlockWithTracker(*BB, VMap, *TrackCopiesPtr, "." + Twine(It));
+      } else {
+        New = CloneBasicBlock(*BB, VMap, "." + Twine(It));
+      }
+
       Header->getParent()->insert(BlockInsertPt, New);
 
       assert((*BB != Header || LI->getLoopFor(*BB) == L) &&
@@ -737,6 +747,12 @@ llvm::UnrollLoop(Loop *L, UnrollLoopOptions ULO, LoopInfo *LI,
             if (It > 1 && L->contains(InValI))
               InVal = LastValueMap[InValI];
           VMap[OrigPHI] = InVal;
+          if (TrackCopiesPtr!=nullptr) {
+            if ((*TrackCopiesPtr).count(OrigPHI)) {
+              auto &Vec = *((*TrackCopiesPtr)[OrigPHI]);
+              Vec.erase(std::remove(Vec.begin(), Vec.end(), NewPHI), Vec.end());
+            }
+          }         
           NewPHI->eraseFromParent();
         }
 

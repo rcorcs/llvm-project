@@ -109,6 +109,55 @@ MetadataPredicate createIdentityMDPredicate(const Function &F,
 }
 } // namespace
 
+BasicBlock *llvm::CloneBasicBlockWithTracker(const BasicBlock *BB, ValueToValueMapTy &VMap,
+std::map<const Instruction*, std::vector<Instruction*> * > &TrackCopies,
+                                  const Twine &NameSuffix, Function *F,
+                                  ClonedCodeInfo *CodeInfo, bool MapAtoms) {
+  BasicBlock *NewBB = BasicBlock::Create(BB->getContext(), "", F);
+  NewBB->IsNewDbgInfoFormat = BB->IsNewDbgInfoFormat;
+  if (BB->hasName())
+    NewBB->setName(BB->getName() + NameSuffix);
+
+  bool hasCalls = false, hasDynamicAllocas = false, hasMemProfMetadata = false;
+
+  // Loop over all instructions, and copy them over.
+  for (const Instruction &I : *BB) {
+    Instruction *NewInst = I.clone();
+    if (I.hasName())
+      NewInst->setName(I.getName() + NameSuffix);
+
+    NewInst->insertBefore(*NewBB, NewBB->end());
+    NewInst->cloneDebugInfoFrom(&I);
+
+    VMap[&I] = NewInst; // Add instruction map to value.
+
+    auto It = TrackCopies.find(&I);
+    if (It!=TrackCopies.end()) It->second->push_back( NewInst );
+
+    if (MapAtoms) {
+      if (const DebugLoc &DL = NewInst->getDebugLoc())
+        mapAtomInstance(DL.get(), VMap);
+    }
+
+    if (isa<CallInst>(I) && !I.isDebugOrPseudoInst()) {
+      hasCalls = true;
+      hasMemProfMetadata |= I.hasMetadata(LLVMContext::MD_memprof);
+      hasMemProfMetadata |= I.hasMetadata(LLVMContext::MD_callsite);
+    }
+    if (const AllocaInst *AI = dyn_cast<AllocaInst>(&I)) {
+      if (!AI->isStaticAlloca()) {
+        hasDynamicAllocas = true;
+      }
+    }
+  }
+
+  if (CodeInfo) {
+    CodeInfo->ContainsCalls |= hasCalls;
+    CodeInfo->ContainsMemProfMetadata |= hasMemProfMetadata;
+    CodeInfo->ContainsDynamicAllocas |= hasDynamicAllocas;
+  }
+  return NewBB;
+}
 /// See comments in Cloning.h.
 BasicBlock *llvm::CloneBasicBlock(const BasicBlock *BB, ValueToValueMapTy &VMap,
                                   const Twine &NameSuffix, Function *F,

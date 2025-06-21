@@ -1,0 +1,1 @@
+clang-8: error: no input files

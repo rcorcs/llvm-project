@@ -90,12 +90,18 @@
 #include "llvm/Transforms/Utils/InjectTLIMappings.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/LoopUtils.h"
+#include "llvm/Transforms/Utils/UnrollLoop.h"
+#include "llvm/Transforms/Utils/LoopSimplify.h"
 #include "llvm/Transforms/Utils/ScalarEvolutionExpander.h"
+#include "llvm/Transforms/Vectorize.h"
+#include "llvm/Transforms/Vectorize/LoopVectorizationLegality.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <memory>
+#include <math.h>
 #include <optional>
 #include <set>
 #include <string>
@@ -109,6 +115,8 @@ using namespace std::placeholders;
 
 #define SV_NAME "slp-vectorizer"
 #define DEBUG_TYPE "SLP"
+
+#define VALU_DEBUG 1
 
 STATISTIC(NumVectorInstructions, "Number of vector instructions generated");
 
@@ -206,6 +214,18 @@ static cl::opt<bool> VectorizeNonPowerOf2(
     "slp-vectorize-non-power-of-2", cl::init(false), cl::Hidden,
     cl::desc("Try to vectorize with non-power-of-2 number of elements."));
 
+static cl::opt<bool> EnableSLPLoopUnrolling(
+    "slp-unroll-loops", cl::init(false), cl::Hidden,
+    cl::desc("Enable SLP-aware loop unrolling"));
+
+static cl::opt<bool> EnableSLPLoopRuntimeUnrolling(
+    "slp-unroll-runtime", cl::init(false), cl::Hidden,
+    cl::desc("Enable SLP-aware loop unrolling for runtime trip counts"));
+
+static cl::opt<bool> EnableVALUSeeds(
+    "slp-unrolled-seeds", cl::init(true), cl::Hidden,
+    cl::desc("Allow the loop unrolling to suggest seeds for SLP"));
+
 // Limit the number of alias checks. The limit is chosen so that
 // it has no negative effect on the llvm benchmarks.
 static const unsigned AliasedCheckLimit = 10;
@@ -225,6 +245,15 @@ static const int MinScheduleRegionSize = 16;
 
 /// Maximum allowed number of operands in the PHI nodes.
 static const unsigned MaxPHINumOperands = 128;
+
+static bool UseVALU = true;
+
+inline std::string demangle(const char* name) {
+  return std::string(name);
+        //int status = -1; 
+        //std::unique_ptr<char, void(*)(void*)> res { abi::__cxa_demangle(name, NULL, NULL, &status), std::free };
+        //return (status == 0) ? res.get() : std::string(name);
+}
 
 /// Predicate for the element types that the SLP vectorizer supports.
 ///
@@ -20755,6 +20784,1568 @@ void BoUpSLP::computeMinimumValueSizes() {
   }
 }
 
+
+static bool hasIrregularType(Type *Ty, const DataLayout &DL, unsigned VF) {
+  // Determine if an array of VF elements of type Ty is "bitcast compatible"
+  // with a <VF x Ty> vector.
+  if (VF > 1) {
+    auto *VectorTy = VectorType::get(Ty, VF, /*Scalable=*/false);
+    return VF * DL.getTypeAllocSize(Ty) != DL.getTypeStoreSize(VectorTy);
+  }
+
+  // If the vectorization factor is one, we just check if an array of type Ty
+  // requires padding between elements.
+  return DL.getTypeAllocSizeInBits(Ty) != DL.getTypeSizeInBits(Ty);
+}
+
+ 
+ /// A helper function that returns the type of loaded or stored value.
+ static Type *getMemInstValueType(Value *I) {
+   assert((isa<LoadInst>(I) || isa<StoreInst>(I)) &&
+          "Expected Load or Store instruction");
+   if (auto *LI = dyn_cast<LoadInst>(I))
+     return LI->getType();
+   return cast<StoreInst>(I)->getValueOperand()->getType();
+ }
+
+ /// A helper function for checking whether an integer division-related
+ /// instruction may divide by zero (in which case it must be predicated if
+ /// executed conditionally in the scalar code).
+ /// TODO: It may be worthwhile to generalize and check isKnownNonZero().
+ /// Non-zero divisors that are non compile-time constants will not be
+ /// converted into multiplication, so we will still end up scalarizing
+ /// the division, but can do so w/o predication.
+ static bool mayDivideByZero(Instruction &I) {
+   assert((I.getOpcode() == Instruction::UDiv ||
+           I.getOpcode() == Instruction::SDiv ||
+           I.getOpcode() == Instruction::URem ||
+           I.getOpcode() == Instruction::SRem) &&
+          "Unexpected instruction");
+   Value *Divisor = I.getOperand(1);
+   auto *CInt = dyn_cast<ConstantInt>(Divisor);
+   return !CInt || CInt->isZero();
+ }
+
+class SLPLoopValidator {
+  TargetTransformInfo &TTI;
+  LoopVectorizationLegality *Legal;
+
+public:
+  SLPLoopValidator(TargetTransformInfo &TTI,LoopVectorizationLegality *Legal) : TTI(TTI), Legal(Legal) {}
+
+  /// Returns true if the target machine supports masked store operation
+  /// for the given \p DataType and kind of access to \p Ptr.
+  bool isLegalMaskedStore(Type *DataType, Value *Ptr, Align Alignment) {
+    unsigned AS = dyn_cast<PointerType>(Ptr->getType())->getAddressSpace();
+    return Legal->isConsecutivePtr(DataType, Ptr) && TTI.isLegalMaskedStore(DataType, Alignment, AS);
+  }
+
+  /// Returns true if the target machine supports masked load operation
+  /// for the given \p DataType and kind of access to \p Ptr.
+  bool isLegalMaskedLoad(Type *DataType, Value *Ptr, Align Alignment) {
+    unsigned AS = dyn_cast<PointerType>(Ptr->getType())->getAddressSpace();
+    return Legal->isConsecutivePtr(DataType, Ptr) && TTI.isLegalMaskedLoad(DataType, Alignment, AS);
+  }
+
+  /// Returns true if the target machine supports masked scatter operation
+  /// for the given \p DataType.
+  bool isLegalMaskedScatter(Type *DataType, Value *Ptr, Align Alignment) {
+    //unsigned AS = dyn_cast<PointerType>(Ptr->getType())->getAddressSpace();
+    return TTI.isLegalMaskedScatter(DataType, Alignment);
+  }
+
+  /// Returns true if the target machine supports masked gather operation
+  /// for the given \p DataType.
+  bool isLegalMaskedGather(Type *DataType, Value *Ptr, Align Alignment) {
+    //unsigned AS = dyn_cast<PointerType>(Ptr->getType())->getAddressSpace();
+    return TTI.isLegalMaskedGather(DataType, Alignment);
+  }
+
+
+  bool isScalarWithPredication(Instruction *I);
+
+  /// Returns true if \p I is a memory instruction with consecutive memory
+  /// access that can be widened.
+  bool memoryInstructionCanBeWidened(Instruction *I, unsigned VF = 1);
+};
+
+bool SLPLoopValidator::isScalarWithPredication(Instruction *I) {
+  if (!Legal->blockNeedsPredication(I->getParent()))
+    return false;
+  switch(I->getOpcode()) {
+  default:
+    break;
+  case Instruction::Load:
+  case Instruction::Store: {
+    if (!Legal->isMaskRequired(I))
+      return false;
+    auto *Ptr = getLoadStorePointerOperand(I);
+    auto *Ty = getMemInstValueType(I);
+    Align Alignment;
+    if (LoadInst *LI = dyn_cast<LoadInst>(I)) Alignment = LI->getAlign();
+    if (StoreInst *SI = dyn_cast<StoreInst>(I)) Alignment = SI->getAlign();
+    return isa<LoadInst>(I) ?
+        !(isLegalMaskedLoad(Ty, Ptr, Alignment)  || isLegalMaskedGather(Ty, Ptr, Alignment))
+      : !(isLegalMaskedStore(Ty, Ptr, Alignment) || isLegalMaskedScatter(Ty, Ptr, Alignment));
+  }
+  case Instruction::UDiv:
+  case Instruction::SDiv:
+  case Instruction::SRem:
+  case Instruction::URem:
+    return mayDivideByZero(*I);
+  }
+  return false;
+}
+
+
+bool SLPLoopValidator::memoryInstructionCanBeWidened(Instruction *I,
+                                                               unsigned VF) {
+  // Get and ensure we have a valid memory instruction.
+  LoadInst *LI = dyn_cast<LoadInst>(I);
+  StoreInst *SI = dyn_cast<StoreInst>(I);
+  assert((LI || SI) && "Invalid memory instruction");
+
+  auto *Ptr = getLoadStorePointerOperand(I);
+  Type *DataTy = nullptr;
+  if (LI) DataTy = LI->getType();
+  if (SI) DataTy = SI->getValueOperand()->getType();
+ 
+  // In order to be widened, the pointer should be consecutive, first of all.
+  if (!Legal->isConsecutivePtr(DataTy, Ptr))
+    return false;
+
+  // If the instruction is a store located in a predicated block, it will be
+  // scalarized.
+  if (isScalarWithPredication(I))
+    return false;
+
+  // If the instruction's allocated size doesn't equal it's type size, it
+  // requires padding and will be scalarized.
+  auto &DL = I->getModule()->getDataLayout();
+  auto *ScalarTy = LI ? LI->getType() : SI->getValueOperand()->getType();
+  if (hasIrregularType(ScalarTy, DL, VF))
+    return false;
+
+  return true;
+}
+
+
+static unsigned getSmallestStoreSize(SmallVectorImpl<StoreInst*> &SL, unsigned MaxSize) {
+//  dbgs() << "SALU: Stors sizes\n";
+  for (auto * SI : SL) {
+    unsigned Size = SI->getValueOperand()->getType()->getScalarSizeInBits();
+//    dbgs() << "\t" << Size << "\n";
+    if (Size < MaxSize)
+      MaxSize = Size;
+  }
+  return MaxSize;
+}
+
+static void fetchStoreInstructions(BasicBlock *BB,
+                                   SLPLoopValidator *LV,
+                                   SmallVectorImpl<StoreInst*> &SL) {
+  for (auto &I : *BB)
+    if (auto *SI = dyn_cast<StoreInst>(&I))
+      if (SI->isSimple() &&
+          LV->memoryInstructionCanBeWidened(SI))
+        SL.push_back(SI);
+}
+
+static unsigned getOptimalUnrollCount(const Loop *L, 
+                                      SLPLoopValidator *LV,
+                                      const TargetTransformInfo *TTI) {
+  //unsigned MaxVecRegSize = TTI->getRegisterBitWidth(true);
+  unsigned MaxVecRegSize =
+          TTI->getRegisterBitWidth(TargetTransformInfo::RGK_FixedWidthVector)
+              .getFixedValue();
+  unsigned MinVecRegSize = TTI->getMinVectorRegisterBitWidth();
+/*
+  dbgs() << "SALU: MaxVecRegSize " << MaxVecRegSize
+         << " MinVecRegSize " << MinVecRegSize << "\n";
+*/
+  SmallVector<StoreInst*,8> SL;
+  for (auto BB : L->getBlocks())
+    fetchStoreInstructions(BB, LV, SL);
+
+  unsigned SmallestStoreSize = getSmallestStoreSize(SL, MaxVecRegSize);
+
+  if (SmallestStoreSize) {
+    int Count = (int)ceil(((float)MaxVecRegSize)/((float)SmallestStoreSize));
+    while ( Count && ! isPowerOf2_64(Count) ) Count--;
+    return Count;
+    
+  }
+  return 0;
+}
+
+static unsigned getMaxVectorWidth(Type *Ty, const TargetTransformInfo *TTI) {
+  unsigned MaxVecRegSize =
+          TTI->getRegisterBitWidth(TargetTransformInfo::RGK_FixedWidthVector)
+              .getFixedValue();
+  unsigned MinVecRegSize = TTI->getMinVectorRegisterBitWidth();
+  unsigned TySize = Ty->getScalarSizeInBits();
+  //errs() << "MaxVec: " << MaxVecRegSize << "\n";
+  //errs() << "TySize: " << TySize << "\n";
+  unsigned Count = (unsigned)ceil(((float)MaxVecRegSize)/((float)TySize));
+  //errs() << "Count Before: " << Count << "\n";
+  while ( Count && ! isPowerOf2_64(Count) ) Count--;
+  //errs() << "Count After: " << Count << "\n";
+  return Count;
+}
+
+static bool myUnrollLoop(Loop *L, unsigned Count,LoopInfo *LI, ScalarEvolution *SE,
+                         DominatorTree *DT) {
+
+  BasicBlock *Latch = L->getLoopLatch();
+  BasicBlock *Header = L->getHeader();
+  if (Latch==nullptr) return false;
+   
+  // Only unroll loops with a computable trip count, and the trip count needs
+  // to be an int value (allowing a pointer type is a TODO item).
+  // We calculate the backedge count by using getExitCount on the Latch block,
+  // which is proven to be the only exiting block in this loop. This is same as
+  // calculating getBackedgeTakenCount on the loop (which computes SCEV for all
+  // exiting blocks).
+  const SCEV *BECountSC = SE->getExitCount(L, Latch);
+  if (isa<SCEVCouldNotCompute>(BECountSC) ||
+      !BECountSC->getType()->isIntegerTy()) {
+    LLVM_DEBUG(dbgs() << "Could not compute exit block SCEV\n");
+    return false;
+  }
+  //errs() << "BECountSC: "; BECountSC->dump();
+  
+  unsigned BEWidth = cast<IntegerType>(BECountSC->getType())->getBitWidth();
+
+  // Add 1 since the backedge count doesn't include the first loop iteration.
+  const SCEV *TripCountSC =
+      SE->getAddExpr(BECountSC, SE->getConstant(BECountSC->getType(), 1));
+  //errs() << "TripCountSC: "; TripCountSC->dump();
+  if (isa<SCEVCouldNotCompute>(TripCountSC)) {
+    LLVM_DEBUG(dbgs() << "Could not compute trip count SCEV.\n");
+    return false;
+  }
+
+
+  return true;
+}
+
+class SeedTracker {
+public:
+  Instruction *Inst;
+  Instruction *Seed;
+  std::vector<Instruction*> Copies;
+  SeedTracker() : Inst(nullptr), Seed(nullptr) {}
+  SeedTracker(Instruction *Inst, Instruction *Seed) : Inst(Inst), Seed(Seed) {}
+};
+
+//LoopUnrollResult tryUnrollLoop(Loop *L, int UnrollFactor, LoopInfo *LI,
+//                               ScalarEvolution *SE, DominatorTree *DT,
+//                               AssumptionCache *AC, const TargetTransformInfo *TTI,
+//                               OptimizationRemarkEmitter *ORE,
+//                               Loop **RemainderLoopOut) {
+static LoopUnrollResult tryToUnrollLoop(unsigned Count, Loop *L, Function *F, LoopInfo *LI,
+                                 ScalarEvolution *SE, DominatorTree *DT,
+                                 TargetLibraryInfo *TLI, TargetTransformInfo *TTI, AssumptionCache *AC,
+                                 OptimizationRemarkEmitter *ORE, std::map<Instruction*, SeedTracker> &Tracker) {
+  Loop *RemainderLoopOut = nullptr;
+  UnrollLoopOptions ULO;
+  ULO.Count = Count;
+  ULO.Runtime = true;
+  ULO.UnrollRemainder = true;
+  ULO.AllowExpensiveTripCount = true;
+  ULO.Force = true;
+  ULO.SCEVExpansionBudget = 100;
+
+  std::map<const Instruction*, std::vector<Instruction*> *> VMapSet;
+  if (EnableVALUSeeds) {
+    for (auto &Pair : Tracker) {
+      VMapSet[Pair.second.Seed] = &Pair.second.Copies;
+      //Pair.second.Copies.push_back(Pair.second.Seed);
+    }
+  }
+
+  errs() << "Before\n";
+  L->dumpVerbose();
+  errs() << "Running UnrollLoop with Count: " << Count << "\n";
+  auto Result = llvm::UnrollLoop(L, ULO, LI, SE, DT, AC, TTI, ORE,
+                          /*PreserveLCSSA=*/true, &RemainderLoopOut,
+                          /*AAResults=*/nullptr, (EnableVALUSeeds?(&VMapSet):nullptr) );
+
+  if (Result == LoopUnrollResult::FullyUnrolled) {
+    errs() << "Fully unrolled loop\n";
+  }
+  if (Result == LoopUnrollResult::PartiallyUnrolled) {
+    errs() << "Partially unrolled loop\n";
+    //L->dump();
+    L->dumpVerbose();
+    L->setLoopAlreadyUnrolled();
+  }
+  if (RemainderLoopOut) {
+    RemainderLoopOut->setLoopAlreadyUnrolled();
+    errs() << "HasRemainder:\n";
+    RemainderLoopOut->dump();
+    //RemainderLoopOut->dumpVerbose();
+  }
+  //if (EnableVALUSeeds) {
+  //  errs() << "VMapSet\n";
+  //  for (auto Pair: Tracker) {
+  //    errs() << "Copies:\n";
+  //    for (Instruction *I : Pair.second.Copies) {
+  //      I->dump();
+  //    }
+  //  }
+  //  errs() << "Done\n";
+  //}
+  return Result;
+}
+
+static LoopUnrollResult tryToUnrollLoop2(unsigned Count, Loop *L, Function *F, LoopInfo *LI,
+                                 ScalarEvolution *SE, DominatorTree *DT,
+                                 TargetLibraryInfo *TLI, TargetTransformInfo *TTI, AssumptionCache *AC,
+                                 OptimizationRemarkEmitter *ORE, std::map<Instruction*, SeedTracker> &Tracker) {
+
+  std::string FName = demangle(F->getName().data());
+  //if (!EnableSLPLoopRuntimeUnrolling) return LoopUnrollResult::Unmodified;
+
+  bool preserveLCSSA = L->isLCSSAForm(*DT); 
+
+  auto Result = LoopUnrollResult::Unmodified;
+
+/*
+ llvm::UnrollRuntimeLoopRemainder(
+    Loop *L, unsigned Count, bool AllowExpensiveTripCount,
+    bool UseEpilogRemainder, bool UnrollRemainder, bool ForgetAllSCEV,
+    LoopInfo *LI, ScalarEvolution *SE, DominatorTree *DT, AssumptionCache *AC,
+    const TargetTransformInfo *TTI, bool PreserveLCSSA,
+    unsigned SCEVExpansionBudget, Loop **ResultLoop) {
+*/
+
+  unsigned SCEVExpansionBudget = 5;
+  Loop *UnrolledL;
+  Loop *RemainderL;
+
+  if (UnrollRuntimeLoopRemainder(L, Count, /*AllowExpensiveTripCount=*/true, /*UseEpilogRemainder=*/false, /*UnrollRemainder=*/false, /*ForgetAllSCEV=*/true, LI, SE, DT, AC, TTI, preserveLCSSA, SCEVExpansionBudget, &UnrolledL)) {
+    //errs() << "Unroll After Remainder: " << FName << ": " << Count << "\n";
+    unsigned TripCount = SE->getSmallConstantTripCount(L);
+
+    std::map<const Instruction*, std::vector<Instruction*> *> VMapSet;
+    if (EnableVALUSeeds) {
+      for (auto &Pair : Tracker) {
+        VMapSet[Pair.second.Seed] = &Pair.second.Copies;
+        //Pair.second.Copies.push_back(Pair.second.Seed);
+      }
+    }
+    UnrollLoopOptions ULO;
+    ULO.Count = Count;
+    
+    /*
+LoopUnrollResult 	llvm::UnrollLoop (Loop *L, UnrollLoopOptions ULO, LoopInfo *LI, ScalarEvolution *SE, DominatorTree *DT, AssumptionCache *AC, const llvm::TargetTransformInfo *TTI, OptimizationRemarkEmitter *ORE, bool PreserveLCSSA, Loop **RemainderLoop=nullptr, AAResults *AA=nullptr)
+    */
+    //Result = UnrollLoop(L, Count, TripCount, true, true, true, true, false,
+    //                    Count, 0, true, LI, SE, DT, AC, ORE,
+    //                    preserveLCSSA, (EnableVALUSeeds?(&VMapSet):nullptr) );
+
+    Result = UnrollLoop(L, ULO, LI, SE, DT, AC, TTI, ORE,
+                        preserveLCSSA, &RemainderL, /*AAResults=*/nullptr, (EnableVALUSeeds?(&VMapSet):nullptr) );
+
+//#ifdef VALU_DEBUG
+//    for (auto &Pair : VMapSet) {
+//      errs() << "Seed: "; Pair.first->dump();// << Pair.first->getName() << " mapped into:\n";
+//      for (auto *I: *Pair.second) {
+//        errs() << "Tracked copy: "; I->dump();
+//        //errs() << I->getName() << ";";
+//      }
+//      //errs() << "\n";
+//    }
+//#endif 
+
+
+  }
+  //errs() << "Unroll failed!\n";
+
+  //TODO: remove this and better understand how to handle vectorized loop
+  if (Result == LoopUnrollResult::PartiallyUnrolled)
+    L->setLoopAlreadyUnrolled();
+
+  return Result;
+}
+
+
+static bool CheckIncrementSCEV(const SCEVAddRecExpr *RecSCEV, const Loop *L, ScalarEvolution *SE) {
+  //assert( RecSCEV->getLoop()==L && "Loops should be the same!" );
+  if (RecSCEV->getLoop()!=L) return false; //perhaps we can improve this condition
+
+  //dumping some unnecessary info
+  //errs() << "is affine? " << RecSCEV->isAffine() << "\n";
+  /*
+  if (auto *StartConstSCEV = dyn_cast<SCEVConstant>(RecSCEV->getStart())) {
+    errs() << "const start:\n";
+     StartConstSCEV->getValue()->dump();
+    errs() << "is zero? " << StartConstSCEV->getValue()->isZero() << "\n"; 
+  }
+  */
+
+  if (auto *StepConstSCEV = dyn_cast<SCEVConstant>(RecSCEV->getStepRecurrence(*SE))) {
+    //errs() << "const step:\n";
+    //StepConstSCEV->getValue()->dump();
+    //errs() << "is one? " << StepConstSCEV->getValue()->isOne() << "\n"; 
+
+    if (StepConstSCEV->getValue()->isOne() ||
+        StepConstSCEV->getValue()->isMinusOne() ) return true; //valid SCEV
+    
+  }
+
+  return false;
+}
+
+
+static bool IsValidSCEVWithNoRec(const SCEVCommutativeExpr *CommSCEV, const Loop *L) {
+   //unsigned CountNonConstant = 0;
+   for (unsigned i = 0; i<CommSCEV->getNumOperands(); i++) {
+     const SCEV *OpSCEV = CommSCEV->getOperand(i);
+     while (isa<SCEVCastExpr>(OpSCEV)) {
+       OpSCEV = dyn_cast<SCEVCastExpr>(OpSCEV)->getOperand();
+     }
+     if (isa<SCEVConstant>(OpSCEV)) {
+       //it's fine
+     } else if (auto *VarSCEV = dyn_cast<SCEVUnknown>(OpSCEV)) {
+       if ( ! L->isLoopInvariant(VarSCEV->getValue()) ) {
+         //errs() << "Not Loop Invariant: "; VarSCEV->getValue()->dump();
+         return false;
+       }
+     } else if (auto *OtherCommSCEV = dyn_cast<SCEVCommutativeExpr>(OpSCEV)) {
+       if ( ! IsValidSCEVWithNoRec(OtherCommSCEV,L) ) return false;
+     } else if (auto *RecSCEV = dyn_cast<SCEVAddRecExpr>(OpSCEV)) {
+       if ( ! RecSCEV->getLoop()->contains(L) ) return false;
+     } else {
+       return false;
+     }
+   }
+   return true;
+}
+
+static bool GetAllRecSCEVs(const SCEVAddExpr *AddSCEV, const Loop *L, std::vector<const SCEVAddRecExpr*> &RecSCEVs) {
+   //unsigned CountNonConstant = 0;
+   //SCEVAddRecExpr *RecSCEV = nullptr;
+   for (unsigned i = 0; i<AddSCEV->getNumOperands(); i++) {
+     const SCEV *OpSCEV = AddSCEV->getOperand(i);
+     while (isa<SCEVCastExpr>(OpSCEV)) {
+       OpSCEV = dyn_cast<SCEVCastExpr>(OpSCEV)->getOperand();
+     }
+     if (isa<SCEVConstant>(OpSCEV)) {
+       //it's fine
+     } else if (auto *VarSCEV = dyn_cast<SCEVUnknown>(OpSCEV)) {
+       if ( ! L->isLoopInvariant(VarSCEV->getValue()) ) return false;
+     } else if (auto *OtherAddSCEV = dyn_cast<SCEVAddExpr>(OpSCEV)) {
+       if ( ! GetAllRecSCEVs(OtherAddSCEV,L,RecSCEVs) ) return false;
+     } else if (auto *RecSCEV = dyn_cast<SCEVAddRecExpr>(OpSCEV)) {
+       if (RecSCEV->getLoop()==L) {
+          RecSCEVs.push_back(RecSCEV);
+       } else if ( ! RecSCEV->getLoop()->contains(L) ) return false;
+     } else if (auto *CommSCEV = dyn_cast<SCEVCommutativeExpr>(OpSCEV)) {
+       if ( ! IsValidSCEVWithNoRec(CommSCEV, L) ) {
+          //errs() << "Invalid: "; CommSCEV->dump();
+          return false;
+       }
+     } else {
+       return false;
+     }
+   }
+   return true;
+}
+
+static bool CheckPossibleAdjacentMemoryAccess(const GetElementPtrInst *GEPI, const Loop *L, ScalarEvolution *SE) {
+  if (GEPI==nullptr) return false;
+ 
+  //errs() << "Num Ops: " << GEPI->getNumOperands() << "\n";
+  if (GEPI->getNumOperands()==3) {
+    ConstantInt *Op1 = dyn_cast<ConstantInt>(GEPI->getOperand(1));
+    Value *Op2 = GEPI->getOperand(2);
+   
+    //more unnecessary dumping of info
+    //if (Op1!=nullptr) errs() << "op1 is zero? " << Op1->isZero() << "\n";
+
+    if (Op1!=nullptr && Op1->isZero()) {
+      const SCEV *OpSCEV = SE->getSCEV(Op2);
+
+      //errs() << "op2: ";
+      //OpSCEV->dump();
+
+      while (isa<SCEVCastExpr>(OpSCEV)) {
+        OpSCEV = dyn_cast<SCEVCastExpr>(OpSCEV)->getOperand();
+      }
+
+      if (auto *AddSCEV = dyn_cast<SCEVAddExpr>(OpSCEV)) {
+        //unsigned CountNonConstant = 0;
+        std::vector<const SCEVAddRecExpr*> RecSCEVs;
+        GetAllRecSCEVs(AddSCEV,L,RecSCEVs);
+        if (RecSCEVs.size()!=1) return false;
+        const SCEVAddRecExpr *RecSCEV = RecSCEVs[0];
+        return CheckIncrementSCEV(RecSCEV,L,SE);
+      } else if (auto *RecSCEV = dyn_cast<SCEVAddRecExpr>(OpSCEV)) {
+        return CheckIncrementSCEV(RecSCEV,L,SE);
+      }
+    }
+  }
+
+  return false;
+}
+
+static InstructionCost GetScalarCost(Instruction *I, TargetTransformInfo *TTI, TargetLibraryInfo *TLI, LLVMContext &Context) {
+  
+  Type *ScalarTy = I->getType();
+  if (isa<StoreInst>(I)) {
+    ScalarTy = cast<StoreInst>(I)->getValueOperand()->getType();
+  } else if (isa<CmpInst>(I)) {
+    ScalarTy = cast<CmpInst>(I)->getOperand(0)->getType();
+  }
+
+  switch (I->getOpcode()) {
+    case Instruction::PHI:
+      return InstructionCost(0);
+    case Instruction::ZExt:
+    case Instruction::SExt:
+    case Instruction::FPToUI:
+    case Instruction::FPToSI:
+    case Instruction::FPExt:
+    case Instruction::PtrToInt:
+    case Instruction::IntToPtr:
+    case Instruction::SIToFP:
+    case Instruction::UIToFP:
+    case Instruction::Trunc:
+    case Instruction::FPTrunc:
+    case Instruction::BitCast: {
+      Type *SrcTy = I->getOperand(0)->getType();
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
+      return TTI->getCastInstrCost(I->getOpcode(), ScalarTy, SrcTy, TTI::CastContextHint::None, CostKind, I);
+
+    }
+    case Instruction::FCmp:
+    case Instruction::ICmp:
+    case Instruction::Select: {
+      // Calculate the cost of this instruction.
+      auto *CI = dyn_cast<CmpInst>(I);
+      if (CI) {
+        TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
+        return TTI->getCmpSelInstrCost(I->getOpcode(), ScalarTy,
+                                     IntegerType::get(Context,1),
+          CI->getPredicate(),
+          CostKind, {TTI::OK_AnyValue, TTI::OP_None},
+          {TTI::OK_AnyValue, TTI::OP_None}, CI);
+      } else return InstructionCost(1);
+    }
+    case Instruction::Add:
+    case Instruction::FAdd:
+    case Instruction::Sub:
+    case Instruction::FSub:
+    case Instruction::Mul:
+    case Instruction::FMul:
+    case Instruction::UDiv:
+    case Instruction::SDiv:
+    case Instruction::FDiv:
+    case Instruction::URem:
+    case Instruction::SRem:
+    case Instruction::FRem:
+    case Instruction::Shl:
+    case Instruction::LShr:
+    case Instruction::AShr:
+    case Instruction::And:
+    case Instruction::Or:
+    case Instruction::Xor: {
+      // Certain instructions can be cheaper to vectorize if they have a
+      // constant second vector operand.
+      TargetTransformInfo::OperandValueKind Op1VK =
+          TargetTransformInfo::OK_AnyValue;
+      TargetTransformInfo::OperandValueKind Op2VK =
+          TargetTransformInfo::OK_UniformConstantValue;
+      TargetTransformInfo::OperandValueProperties Op1VP =
+          TargetTransformInfo::OP_None;
+      TargetTransformInfo::OperandValueProperties Op2VP =
+          TargetTransformInfo::OP_PowerOf2;
+
+
+      ConstantInt *CInt = dyn_cast<ConstantInt>(I->getOperand(0));
+      if (!CInt) {
+        Op1VK = TargetTransformInfo::OK_AnyValue;
+        Op1VP = TargetTransformInfo::OP_None;
+      } else {
+        Op1VK = TargetTransformInfo::OK_UniformConstantValue;
+        if (CInt->getValue().isPowerOf2())
+          Op1VP = TargetTransformInfo::OP_PowerOf2;
+        else
+          Op1VP = TargetTransformInfo::OP_None;
+      }
+
+      CInt = dyn_cast<ConstantInt>(I->getOperand(1));
+      if (!CInt) {
+        Op2VK = TargetTransformInfo::OK_AnyValue;
+        Op2VP = TargetTransformInfo::OP_None;
+      } else {
+        Op2VK = TargetTransformInfo::OK_UniformConstantValue;
+        if (CInt->getValue().isPowerOf2())
+          Op2VP = TargetTransformInfo::OP_PowerOf2;
+        else
+          Op2VP = TargetTransformInfo::OP_None;
+      }
+
+      TTI::TargetCostKind CostKind=TTI::TCK_RecipThroughput;
+
+      SmallVector<const Value *, 4> Operands(I->operand_values());
+      return TTI->getArithmeticInstrCost(
+          I->getOpcode(), ScalarTy, CostKind, {Op1VK, Op1VP}, {Op2VK, Op2VP}, Operands);
+    }
+    case Instruction::GetElementPtr: {
+      TargetTransformInfo::OperandValueKind Op1VK =
+          TargetTransformInfo::OK_AnyValue;
+      TargetTransformInfo::OperandValueKind Op2VK =
+          TargetTransformInfo::OK_UniformConstantValue;
+
+      TTI::TargetCostKind CostKind=TTI::TCK_RecipThroughput;
+      return TTI->getArithmeticInstrCost(Instruction::Add, ScalarTy, CostKind, {Op1VK, TTI::OP_None}, {Op2VK, TTI::OP_None});
+    }
+    case Instruction::Load: {
+      // Cost of wide load - cost of scalar loads.
+      //unsigned alignment = cast<LoadInst>(I)->getAlignment();
+      auto alignment = cast<LoadInst>(I)->getAlign();
+      auto AS = cast<LoadInst>(I)->getPointerAddressSpace();
+      return TTI->getMemoryOpCost(Instruction::Load, ScalarTy, alignment, AS);//, I);
+    }
+    case Instruction::Store: {
+      // We know that we can merge the stores. Calculate the cost.
+      //unsigned alignment = cast<StoreInst>(I)->getAlignment();
+      auto alignment = cast<StoreInst>(I)->getAlign();
+      auto AS = cast<StoreInst>(I)->getPointerAddressSpace();
+      Type *SrcTy = cast<StoreInst>(I)->getValueOperand()->getType();
+      return TTI->getMemoryOpCost(Instruction::Store, SrcTy, alignment, AS);//, I);
+    }
+    case Instruction::Call: {
+      CallInst *CI = cast<CallInst>(I);
+      Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
+
+      // Calculate the cost of the scalar and vector calls.
+      SmallVector<Type *, 4> ScalarTys;
+      //for (unsigned op = 0, opc = CI->getNumArgOperands(); op != opc; ++op)
+      for (unsigned op = 0, opc = CI->arg_size(); op != opc; ++op)
+        ScalarTys.push_back(CI->getArgOperand(op)->getType());
+
+      FastMathFlags FMF;
+      if (auto *FPMO = dyn_cast<FPMathOperator>(CI))
+        FMF = FPMO->getFastMathFlags();
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
+      IntrinsicCostAttributes ICA(ID, ScalarTy, ScalarTys, FMF);
+      return TTI->getIntrinsicInstrCost(ICA,CostKind);
+    }
+    default:
+      return InstructionCost(0);
+  }
+}
+
+static InstructionCost GetVectorInsertCost(Value *V, unsigned Count, TargetTransformInfo *TTI, TargetLibraryInfo *TLI, LLVMContext &Context) {
+  Type *ScalarTy = V->getType();
+
+  if (!VectorType::isValidElementType(ScalarTy)) return InstructionCost(0);
+  VectorType *VecTy = VectorType::get(ScalarTy, Count, false);
+
+  //return InstructionCost(Count);
+  InstructionCost Cost(0);
+  TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
+  for (unsigned i = 0; i<Count; i++)
+    Cost += TTI->getVectorInstrCost(Instruction::InsertElement, VecTy, CostKind, i);
+  return Cost;
+  
+}
+
+static InstructionCost GetVectorExtractCost(Value *V, unsigned Count, TargetTransformInfo *TTI, TargetLibraryInfo *TLI, LLVMContext &Context) {
+  Type *ScalarTy = V->getType();
+
+  if (!VectorType::isValidElementType(ScalarTy)) return InstructionCost(0);
+  VectorType *VecTy = VectorType::get(ScalarTy, Count, false);
+  
+  //return InstructionCost(Count);
+  InstructionCost Cost(0);
+  TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
+  for (unsigned i = 0; i<Count; i++)
+    Cost += TTI->getVectorInstrCost(Instruction::ExtractElement, VecTy, CostKind, i);
+  return Cost;
+  
+}
+
+static InstructionCost GetVectorCost(Instruction *I, unsigned Count, TargetTransformInfo *TTI, TargetLibraryInfo *TLI, LLVMContext &Context) {
+//      return InstructionCost(0);
+//}
+
+  Type *ScalarTy = I->getType();
+  if (isa<StoreInst>(I)) {
+    ScalarTy = cast<StoreInst>(I)->getValueOperand()->getType();
+  } else if (isa<CmpInst>(I)) {
+    ScalarTy = cast<CmpInst>(I)->getOperand(0)->getType();
+  }
+
+  //if (!isValidElementType(ScalarTy)) return InstructionCost(0);
+
+  VectorType *VecTy = VectorType::get(ScalarTy, Count, false);
+
+  switch (I->getOpcode()) {
+    case Instruction::Store: {
+      // We know that we can merge the stores. Calculate the cost.
+      //unsigned alignment = cast<StoreInst>(I)->getAlignment();
+      //auto alignment = cast<StoreInst>(I)->getAlign();
+      //return TTI->getMemoryOpCost(Instruction::Store, VecTy, alignment, 0, I);
+      auto alignment = cast<StoreInst>(I)->getAlign();
+      auto AS = cast<StoreInst>(I)->getPointerAddressSpace();
+      //Type *SrcTy = cast<StoreInst>(I)->getValueOperand()->getType();
+      return TTI->getMemoryOpCost(Instruction::Store, VecTy, alignment, AS);//, I);
+    }
+    case Instruction::Load: {
+      // Cost of wide load - cost of scalar loads.
+      //unsigned alignment = cast<LoadInst>(I)->getAlignment();
+      //auto alignment = cast<LoadInst>(I)->getAlign();
+      //return TTI->getMemoryOpCost(Instruction::Load, VecTy, alignment, 0, I);
+      auto alignment = cast<LoadInst>(I)->getAlign();
+      auto AS = cast<LoadInst>(I)->getPointerAddressSpace();
+      return TTI->getMemoryOpCost(Instruction::Load, VecTy, alignment, AS);//, I);
+    }
+    case Instruction::PHI: {
+      return InstructionCost(0);
+    }
+    case Instruction::ZExt:
+    case Instruction::SExt:
+    case Instruction::FPToUI:
+    case Instruction::FPToSI:
+    case Instruction::FPExt:
+    case Instruction::PtrToInt:
+    case Instruction::IntToPtr:
+    case Instruction::SIToFP:
+    case Instruction::UIToFP:
+    case Instruction::Trunc:
+    case Instruction::FPTrunc:
+    case Instruction::BitCast: {
+      Type *SrcTy = I->getOperand(0)->getType();
+      VectorType *SrcVecTy = VectorType::get(SrcTy, Count, false);
+      InstructionCost Cost(0);
+      if (VecTy!=SrcVecTy) {
+       //Cost = TTI->getCastInstrCost(I->getOpcode(), VecTy, SrcVecTy, I);
+       TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
+       Cost = TTI->getCastInstrCost(I->getOpcode(), VecTy, SrcVecTy, TTI::CastContextHint::None, CostKind);//, I);
+      }
+      return Cost;
+    }
+    case Instruction::FCmp:
+    case Instruction::ICmp:
+    case Instruction::Select: {
+      //VectorType *MaskTy = VectorType::get(IntegerType::get(Context,1), Count, false);
+      //return TTI->getCmpSelInstrCost(I->getOpcode(), VecTy, MaskTy, I);
+      auto *CI = dyn_cast<CmpInst>(I);
+      if (CI) {
+        TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
+        return TTI->getCmpSelInstrCost(I->getOpcode(), VecTy,
+                                     IntegerType::get(Context,1),
+          CI->getPredicate(),
+          CostKind, {TTI::OK_AnyValue, TTI::OP_None},
+          {TTI::OK_AnyValue, TTI::OP_None});//, CI);
+      } else return InstructionCost(1);
+    }
+    case Instruction::Add:
+    case Instruction::FAdd:
+    case Instruction::Sub:
+    case Instruction::FSub:
+    case Instruction::Mul:
+    case Instruction::FMul:
+    case Instruction::UDiv:
+    case Instruction::SDiv:
+    case Instruction::FDiv:
+    case Instruction::URem:
+    case Instruction::SRem:
+    case Instruction::FRem:
+    case Instruction::Shl:
+    case Instruction::LShr:
+    case Instruction::AShr:
+    case Instruction::And:
+    case Instruction::Or:
+    case Instruction::Xor: {
+
+      TargetTransformInfo::OperandValueKind Op1VK =
+          TargetTransformInfo::OK_AnyValue;
+      TargetTransformInfo::OperandValueKind Op2VK =
+          TargetTransformInfo::OK_UniformConstantValue;
+      TargetTransformInfo::OperandValueProperties Op1VP =
+          TargetTransformInfo::OP_None;
+      TargetTransformInfo::OperandValueProperties Op2VP =
+          TargetTransformInfo::OP_PowerOf2;
+
+
+      ConstantInt *CInt = dyn_cast<ConstantInt>(I->getOperand(0));
+      if (!CInt) {
+        Op1VK = TargetTransformInfo::OK_AnyValue;
+        Op1VP = TargetTransformInfo::OP_None;
+      } else {
+        Op1VK = TargetTransformInfo::OK_UniformConstantValue;
+        if (CInt->getValue().isPowerOf2())
+          Op1VP = TargetTransformInfo::OP_PowerOf2;
+        else
+          Op1VP = TargetTransformInfo::OP_None;
+      }
+
+      CInt = dyn_cast<ConstantInt>(I->getOperand(1));
+      if (!CInt) {
+        Op2VK = TargetTransformInfo::OK_AnyValue;
+        Op2VP = TargetTransformInfo::OP_None;
+      } else {
+        Op2VK = TargetTransformInfo::OK_UniformConstantValue;
+        if (CInt->getValue().isPowerOf2())
+          Op2VP = TargetTransformInfo::OP_PowerOf2;
+        else
+          Op2VP = TargetTransformInfo::OP_None;
+      }
+      
+      SmallVector<const Value *, 4> Operands(I->operand_values());
+
+      TTI::TargetCostKind CostKind=TTI::TCK_RecipThroughput;
+      return TTI->getArithmeticInstrCost(
+          I->getOpcode(), VecTy, CostKind, {Op1VK, Op1VP}, {Op2VK, Op2VP}, Operands);
+      //return TTI->getArithmeticInstrCost(I->getOpcode(), VecTy, Op1VK,
+      //                                          Op2VK, Op1VP, Op2VP, Operands);
+    }
+    case Instruction::GetElementPtr: {
+      TargetTransformInfo::OperandValueKind Op1VK =
+          TargetTransformInfo::OK_AnyValue;
+      TargetTransformInfo::OperandValueKind Op2VK =
+          TargetTransformInfo::OK_UniformConstantValue;
+
+      TTI::TargetCostKind CostKind=TTI::TCK_RecipThroughput;
+      return TTI->getArithmeticInstrCost(Instruction::Add, VecTy, CostKind, {Op1VK, TTI::OP_None}, {Op2VK, TTI::OP_None});
+      //return TTI->getArithmeticInstrCost(Instruction::Add, VecTy, Op1VK, Op2VK);
+    }
+    case Instruction::Call: {
+      CallInst *CI = cast<CallInst>(I);
+      Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
+
+      // Calculate the cost of the scalar and vector calls.
+      SmallVector<Type *, 4> ScalarTys;
+      //for (unsigned op = 0, opc = CI->getNumArgOperands(); op != opc; ++op)
+      for (unsigned op = 0, opc = CI->arg_size(); op != opc; ++op)
+        ScalarTys.push_back(CI->getArgOperand(op)->getType());
+
+      FastMathFlags FMF;
+      if (auto *FPMO = dyn_cast<FPMathOperator>(CI))
+        FMF = FPMO->getFastMathFlags();
+
+      SmallVector<Value *, 4> Args(CI->args());
+
+      TTI::TargetCostKind CostKind = TTI::TCK_RecipThroughput;
+      IntrinsicCostAttributes ICA(ID, VecTy, ScalarTys, FMF);
+      return TTI->getIntrinsicInstrCost(ICA,CostKind);
+
+      //return TTI->getIntrinsicInstrCost(ID, CI->getType(), Args, FMF, Count);
+                                                  // VecTy->getNumElements());
+    }
+    default:
+      return InstructionCost(0);
+  }
+}
+
+class PotentialSLPGraph {
+public:
+  Instruction *Root;
+  unsigned Count;
+  Loop *L;
+  SLPLoopValidator *LV;
+  ScalarEvolution *SE;
+  TargetTransformInfo *TTI;
+  TargetLibraryInfo *TLI;
+  const DataLayout *DL;
+  LLVMContext &Context;
+
+  SmallVector<Instruction *, 8> Tree;
+  int Score;
+  int Height;
+
+  Instruction *Seed;
+
+  PotentialSLPGraph(Instruction *Root, unsigned Count, Loop *L, SLPLoopValidator *LV, ScalarEvolution *SE, TargetTransformInfo *TTI, TargetLibraryInfo *TLI, const DataLayout *DL, LLVMContext &Context) :
+  Root(Root), Count(Count), L(L), LV(LV), SE(SE), TTI(TTI), TLI(TLI), DL(DL), Context(Context) {
+    Score = 0;
+    Height = 0;
+    Seed=Root;
+    processTree(Root);
+  }
+
+  void processTree(Instruction *I) {
+    SmallSet<Value*,8> Visited;
+
+    Score = processTree(I, Visited, 1);
+
+    //compute extract cost
+    int ExtractCost = 0;
+    for (Instruction * TNode : Tree) {
+      bool NeedExtraction = false;
+      for (User *U : TNode->users()) {
+        bool FoundNode = false;
+        for (Instruction *AnotherNode : Tree) {
+          if (U==AnotherNode) FoundNode = true;
+        }
+        if (!FoundNode) NeedExtraction = true;
+      }
+      if (NeedExtraction) {
+        InstructionCost ExtractCostT = GetVectorExtractCost(TNode, Count, TTI, TLI, Context);
+        ExtractCost += ExtractCostT.isValid()?ExtractCostT.getValue():0;
+      }
+    }
+
+    //errs() << "ExtractCost: " << ExtractCost << "\n";
+    Score += ExtractCost;
+  }
+
+  int processTree(Value *V, SmallSet<Value *, 8> &Visited, int H) {
+    if (!isa<Instruction>(V)) return 0;
+
+    //check if it is a splat
+    if (Visited.find(V)!=Visited.end()) return 0;
+    Visited.insert(V);
+
+    Instruction *I = dyn_cast<Instruction>(V);
+    
+#ifdef VALU_DEBUG
+    errs() << "TII Cost: ";
+    I->dump();
+#endif    
+
+    InstructionCost ScalarCostT = GetScalarCost(I, TTI, TLI, Context);
+    int ScalarCost = ScalarCostT.isValid()?ScalarCostT.getValue():0;
+    //int ScalarCost = TTI->getInstructionCost(I, TargetTransformInfo::TargetCostKind::TCK_Latency)*((int)Count);
+    //int ScalarCost = TTI->getOperationCost(I->getOpcode(), I->getType())*((int)Count);
+    if (!L->contains(I)) {
+#ifdef VALU_DEBUG
+      errs() << ScalarCost << "\n";
+#endif
+      return ScalarCost;
+    } else ScalarCost *= int(Count);
+
+    int DefaultScore = ScalarCost;
+  
+
+    Type *ScalarTy = I->getType();
+    if (isa<StoreInst>(I)) {
+      ScalarTy = cast<StoreInst>(I)->getValueOperand()->getType();
+    } else if (isa<CmpInst>(I)) {
+      ScalarTy = cast<CmpInst>(I)->getOperand(0)->getType();
+    }
+
+
+    if (!isValidElementType(ScalarTy)) {
+      InstructionCost InsertCostT = GetVectorInsertCost(I, Count, TTI, TLI, Context);
+      int InsertCost = InsertCostT.isValid()?InsertCostT.getValue():0;
+#ifdef VALU_DEBUG
+      errs() << "ScalarCost: " << DefaultScore << "\n";
+      errs() << "InsertCost: " << InsertCost << "\n";
+      errs() << (DefaultScore + InsertCost) << "\n";
+#endif
+      return DefaultScore + InsertCost;
+    }
+
+    InstructionCost VectorCostT = GetVectorCost(I, Count, TTI, TLI, Context);
+    int VectorCost = VectorCostT.isValid()?VectorCostT.getValue():0;
+
+    int VecScore = VectorCost-ScalarCost;
+    if (StoreInst *SI = dyn_cast<StoreInst>(V)) {
+      GetElementPtrInst *GEPI = dyn_cast<GetElementPtrInst>(SI->getPointerOperand());
+/*
+      errs() << "Store Access: " <<
+        LV->memoryInstructionCanBeWidened(SI)
+        << " " <<
+        CheckPossibleAdjacentMemoryAccess(GEPI, L, SE)
+        << "\n";
+*/        
+      bool Vectorizable = SI->isSimple();
+      Vectorizable = Vectorizable && LV->memoryInstructionCanBeWidened(SI);
+      //if (CheckPossibleAdjacentMemoryAccess(GEPI, L, SE)) {
+      if (Vectorizable) {
+        Tree.push_back(SI);
+#ifdef VALU_DEBUG
+        errs() << "[Vectorizable]\n";
+        errs() << "ScalarCost: " << ScalarCost << "\n";
+        errs() << "VectorCost: " << VectorCost << "\n";
+        errs() << VecScore << "\n";
+#endif
+        return processTree(SI->getValueOperand(), Visited, H+1) + VecScore;
+      } else {
+        Seed = dyn_cast<Instruction>(SI->getValueOperand());
+        if (Seed!=nullptr)
+          return processTree(SI->getValueOperand(), Visited, H);
+      }
+    } else if (LoadInst *LI = dyn_cast<LoadInst>(V)) {
+      GetElementPtrInst *GEPI = dyn_cast<GetElementPtrInst>(LI->getPointerOperand());
+/*
+      errs() << "Load Access: " <<
+        LV->memoryInstructionCanBeWidened(LI)
+        << " " <<
+        CheckPossibleAdjacentMemoryAccess(GEPI, L, SE)
+        << "\n";
+*/
+      //SCEV dump
+      /*
+      auto *PtrOp = SE->getSCEV(LI->getPointerOperand());
+      if (PtrOp) PtrOp->dump();
+      if (GEPI) {
+        //GEPI->dump();
+        SmallVector<Value *, 8> Indices(GEPI->idx_begin(), GEPI->idx_end()); 
+        for (auto *Idx : Indices) {
+          auto *IdxSCEV = SE->getSCEV(Idx);
+          //Idx->dump();
+          //if (L->isLoopInvariant(Idx)) errs() << "Loop invariant index:\n";
+          //if (IdxSCEV) IdxSCEV->dump();
+          //else Idx->dump();
+        }
+      }
+      */
+      bool Vectorizable = LI->isSimple();
+      Vectorizable = Vectorizable && LV->memoryInstructionCanBeWidened(LI);
+      Type *ScalarTy = LI->getType();
+      Vectorizable = Vectorizable && (DL->getTypeSizeInBits(ScalarTy)==DL->getTypeAllocSizeInBits(ScalarTy));
+      //if (CheckPossibleAdjacentMemoryAccess(GEPI, L, SE)) {
+      if (Vectorizable) {
+        Tree.push_back(LI);
+        if (H>Height) Height = H;
+
+#ifdef VALU_DEBUG
+        errs() << "[Vectorizable]\n";
+        errs() << "ScalarCost: " << ScalarCost << "\n";
+        errs() << "VectorCost: " << VectorCost << "\n";
+        errs() << VecScore << "\n";
+#endif
+        return VecScore;
+      }
+
+      /*
+      OrdersType CurrentOrder;
+      // Check the order of pointer operands.
+      if (llvm::sortPtrAccesses(PointerOps, *DL, *SE, CurrentOrder)) {
+        Value *Ptr0;
+        Value *PtrN;
+        if (CurrentOrder.empty()) {
+          Ptr0 = PointerOps.front();
+          PtrN = PointerOps.back();
+        } else {
+          Ptr0 = PointerOps[CurrentOrder.front()];
+          PtrN = PointerOps[CurrentOrder.back()];
+        }
+        const SCEV *Scev0 = SE->getSCEV(Ptr0);
+        const SCEV *ScevN = SE->getSCEV(PtrN);
+        const auto *Diff =
+            dyn_cast<SCEVConstant>(SE->getMinusSCEV(ScevN, Scev0));
+        uint64_t Size = DL->getTypeAllocSize(ScalarTy);
+        // Check that the sorted loads are consecutive.
+        if (Diff && Diff->getAPInt().getZExtValue() == (VL.size() - 1) * Size) {
+          if (CurrentOrder.empty()) {
+            // Original loads are consecutive and does not require reordering.
+            ++NumOpsWantToKeepOriginalOrder;
+            newTreeEntry(VL, true, UserTreeIdx,
+                         ReuseShuffleIndicies);
+            LLVM_DEBUG(dbgs() << "SLP: added a vector of loads.\n");
+          } else {
+            // Need to reorder.
+            auto I = NumOpsWantToKeepOrder.try_emplace(CurrentOrder).first;
+            ++I->getSecond();
+            newTreeEntry(VL, true, UserTreeIdx,
+                         ReuseShuffleIndicies, I->getFirst());
+            LLVM_DEBUG(dbgs() << "SLP: added a vector of jumbled loads.\n");
+          }
+          return;
+        }
+      }
+      */
+
+
+    } else if (BinaryOperator *BO = dyn_cast<BinaryOperator>(V)) {
+      Tree.push_back(BO);
+      if (H>Height) Height = H;
+
+#ifdef VALU_DEBUG
+      errs() << "[Vectorizable]\n";
+      errs() << "ScalarCost: " << ScalarCost << "\n";
+      errs() << "VectorCost: " << VectorCost << "\n";
+      errs() << VecScore << "\n";
+#endif
+
+      int Score = VecScore;
+      for (unsigned i = 0; i<BO->getNumOperands(); i++) {
+        Score += processTree(BO->getOperand(i), Visited, H+1);
+      }
+      return Score;
+    } else if (CastInst *CI = dyn_cast<CastInst>(V)) {
+
+      if (isValidElementType(CI->getOperand(0)->getType())) {
+        Tree.push_back(CI);
+        if (H>Height) Height = H;
+  
+        
+#ifdef VALU_DEBUG
+        errs() << "[Vectorizable]\n";
+        errs() << "ScalarCost: " << ScalarCost << "\n";
+        errs() << "VectorCost: " << VectorCost << "\n";
+        errs() << VecScore << "\n";
+#endif
+        int Score = VecScore;
+        for (unsigned i = 0; i<CI->getNumOperands(); i++) {
+          Score += processTree(CI->getOperand(i), Visited, H+1);
+        }
+        return Score;
+      }
+    } else if (CmpInst *CI = dyn_cast<CmpInst>(V)) {
+      Tree.push_back(CI);
+      if (H>Height) Height = H;
+
+#ifdef VALU_DEBUG
+      errs() << "[Vectorizable]\n";
+      errs() << "ScalarCost: " << ScalarCost << "\n";
+      errs() << "VectorCost: " << VectorCost << "\n";
+      errs() << VecScore << "\n";
+#endif
+      int Score = VecScore;
+      for (unsigned i = 0; i<CI->getNumOperands(); i++) {
+        Score += processTree(CI->getOperand(i), Visited, H+1);
+      }
+      return Score;
+    }  else if (SelectInst *SI = dyn_cast<SelectInst>(V)) {
+      Tree.push_back(SI);
+      if (H>Height) Height = H;
+
+#ifdef VALU_DEBUG
+      errs() << "[Vectorizable]\n";
+      errs() << "ScalarCost: " << ScalarCost << "\n";
+      errs() << "VectorCost: " << VectorCost << "\n";
+      errs() << VecScore << "\n";
+#endif
+
+      int Score = VecScore;
+      for (unsigned i = 0; i<SI->getNumOperands(); i++) {
+        Score += processTree(SI->getOperand(i), Visited, H+1);
+      }
+      return Score;
+    } else if (GetElementPtrInst *GEP = dyn_cast<GetElementPtrInst>(V)) {
+      //TODO: these conditions are limitations of the current SLP implementation.
+      if (GEP->getNumOperands()==2 && isa<ConstantInt>(GEP->getOperand(1))) {
+        Tree.push_back(GEP);
+        if (H>Height) Height = H;
+
+        int Score = VecScore;
+        for (unsigned i = 0; i<GEP->getNumOperands(); i++) {
+          Score += processTree(GEP->getOperand(i), Visited, H+1);
+        }
+        return Score;
+      }
+    }
+    else if (PHINode *PHI = dyn_cast<PHINode>(V)) {
+      /*
+      bool Vectorizable = true;
+      for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
+        if (isa<TerminatorInst>(PHI->getIncomingValue(i))) {
+          Vectorizable = false;
+        }
+      }
+      if (Vectorizable) {
+        Tree.push_back(PHI);
+        if (H>Height) Height = H;
+
+        int Score = VecScore;
+        for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
+          Score += processTree(PHI->getIncomingValue(i), Visited, H+1);
+        }
+        return Score;
+      }
+      */
+      if (Tree.empty()) { //PHINode is root
+        Value *RecV = nullptr;
+        for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
+          Value *InV = PHI->getIncomingValue(i);
+          if (!L->isLoopInvariant(InV)) {
+            if (RecV) {
+              RecV = nullptr;
+              break;
+            } else RecV = InV;
+          }
+          if (RecV) {
+            int countUsersInLoop = 0;
+            for (auto *U : RecV->users()) {
+              auto *UI = dyn_cast<Instruction>(U);
+              if (UI!=PHI && L->contains(UI)) countUsersInLoop++;
+            }
+#ifdef VALU_DEBUG
+            errs() << "PHI PossibleReduction: GetNumUses: " << RecV->getNumUses() << "; " << countUsersInLoop << "\n";
+#endif
+            if (countUsersInLoop==0) {
+#ifdef VALU_DEBUG
+              errs() << "Valid reduction tree!\n";
+#endif
+              Tree.push_back(PHI);
+              if (H>Height) Height = H;
+
+              if (BinaryOperator *BO = dyn_cast<BinaryOperator>(RecV)) {
+                if (BO->getOperand(0)==PHI) Seed = dyn_cast<Instruction>(BO->getOperand(1));
+                if (BO->getOperand(1)==PHI) Seed = dyn_cast<Instruction>(BO->getOperand(0));
+              } else if (SelectInst *SI = dyn_cast<SelectInst>(RecV)) {
+                if (SI->getTrueValue()==PHI) Seed = dyn_cast<Instruction>(SI->getFalseValue());
+                if (SI->getFalseValue()==PHI) Seed = dyn_cast<Instruction>(SI->getTrueValue());
+              }
+
+              int Score = 0; //VecScore;
+              for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
+                Score += processTree(PHI->getIncomingValue(i), Visited, H+1);
+              }
+              return Score;
+            }
+          }
+        }
+      }
+    }
+    InstructionCost InsertCostT = GetVectorInsertCost(I, Count, TTI, TLI, Context);
+    int InsertCost = InsertCostT.isValid()?InsertCostT.getValue():0;
+
+#ifdef VALU_DEBUG
+    errs() << "ScalarCost: " << DefaultScore << "\n";
+    errs() << "InsertCost: " << InsertCost << "\n";
+    errs() << (DefaultScore + InsertCost) << "\n";
+#endif  
+    return DefaultScore + InsertCost;
+  }
+};
+
+
+static void CollectLoadsInsideLoop(Value *V, Loop *L, SmallVectorImpl<Instruction*> &Insts, SmallSet<Value*,8> &Visited) {
+  if (!isa<Instruction>(V)) return;
+
+  if (Visited.find(V)!=Visited.end()) return;
+  Visited.insert(V);
+
+  Instruction *I = dyn_cast<Instruction>(V);
+
+  if (!L->contains(I)) return;
+
+  if (LoadInst *LI = dyn_cast<LoadInst>(V)) {
+    Insts.push_back(LI);
+  } else {
+    for (unsigned i = 0; i<I->getNumOperands(); i++) {
+      CollectLoadsInsideLoop(I->getOperand(i), L, Insts, Visited);
+    }
+  }
+}
+
+static void CollectLoadsInsideLoop(StoreInst *SI, Loop *L, SmallVectorImpl<Instruction*> &Insts) {
+ SmallSet<Value*,8> Visited;
+ CollectLoadsInsideLoop(SI->getValueOperand(), L, Insts, Visited);
+}
+
+
+static unsigned isUnrollProfitableForSLP(Function *F, Loop *L, LoopInfo *LI,
+                                 SLPLoopValidator *LV,
+                                 ScalarEvolution *SE, DominatorTree *DT,
+                                 AssumptionCache *AC,
+      const LoopAccessInfo *LAI, //MemoryDepChecker *DepChecker,
+      AliasAnalysis *AA,
+      PredicatedScalarEvolution *PSE,
+      const DataLayout *DL, TargetTransformInfo *TTI, TargetLibraryInfo *TLI, LLVMContext &Context, std::map<Instruction*, SeedTracker> &Tracker) {
+
+    unsigned BestUnrollFactor = 0;
+    
+    std::set<StoreInst*> AllStores;
+#ifdef VALU_DEBUG
+    if (LAI->canVectorizeMemory()) {
+      errs() << "Can vectorize memory\n";
+    }
+#endif
+
+    /*
+    for (BasicBlock *BB : L->getBlocks()) {
+      for (Instruction &I : *BB) {
+        if (CallInst *CI = dyn_cast<CallInst>(&I)) {
+          // Check if this is an Intrinsic call or something that can be
+          // represented by an intrinsic call
+          Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
+          if (!isTriviallyVectorizable(ID)) {
+            //errs() << "Found a CallInst that will Prevent Grouping Instruction\n";
+            //I.dump();
+            return false;
+          }
+        }
+
+        if (I.getType()->isVectorTy()) {
+          //errs() << "Loop already vectorized!\n";
+          //I.dump();
+          return false;
+        }
+
+        if (isa<FenceInst>(&I)) {
+          //errs() << "Found a FenceInst that will Prevent Grouping Instruction\n";
+          //I.dump();
+          return false;
+        }
+ 
+        if (StoreInst *SI = dyn_cast<StoreInst>(&I)) //DepChecker->addAccess(SI);
+          AllStores.insert(SI);
+      }
+  }
+  */
+  std::set<Instruction*> VecInsts;
+  //bool FoundVectorizableTrees = false;
+  for (auto *BB : L->getBlocks()) {
+    if (LI->getLoopDepth(BB) != L->getLoopDepth()) continue;
+    for (Instruction &I : *BB) {
+
+        if (CallInst *CI = dyn_cast<CallInst>(&I)) {
+          // Check if this is an Intrinsic call or something that can be
+          // represented by an intrinsic call
+          Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
+          if (!isTriviallyVectorizable(ID)) {
+            //errs() << "Found a CallInst that will Prevent Grouping Instruction\n";
+            //I.dump();
+            return false;
+          }
+        }
+
+        if (I.getType()->isVectorTy()) {
+          //errs() << "Loop already vectorized!\n";
+          //I.dump();
+          return false;
+        }
+
+        if (isa<FenceInst>(&I)) {
+          //errs() << "Found a FenceInst that will Prevent Grouping Instruction\n";
+          //I.dump();
+          return false;
+        }
+
+      Instruction *SeedRoot = nullptr;
+      Type *Ty = I.getType();
+      if (isa<PHINode>(&I)) {
+        SeedRoot = &I;
+      } else if (StoreInst *SI = dyn_cast<StoreInst>(&I)) {
+        //dumping some unnecessary info
+        //auto *BaseV = GetUnderlyingObject(SI->getPointerOperand(), DL);
+        //errs() << "Store:\n";
+        //SI->getPointerOperand()->dump();
+
+        //if loop is not annotated as parallel, we need to check for loop-carried dependencies
+        if ( ! L->isAnnotatedParallel() && !LAI->canVectorizeMemory() ) {
+          //MemoryDepChecker DC(*PSE, L);
+          //for (StoreInst *DepSI : AllStores) DC.addAccess(DepSI);
+          /*
+          SmallVector<Instruction*,8> Insts;
+          for (StoreInst *DepSI : AllStores) Insts.push_back(DepSI);
+
+          
+          CollectLoadsInsideLoop(SI, L, Insts);
+
+          bool InvalidForSCEV = false;
+          for (Instruction *I : Insts) {
+            //I->dump();
+            const SCEV *SCEVed = nullptr;
+            if (LoadInst *LI = dyn_cast<LoadInst>(I)) {
+              SCEVed = SE->getSCEV(LI->getPointerOperand());
+            } else if(StoreInst *SI = dyn_cast<StoreInst>(I)) {
+              SCEVed = SE->getSCEV(SI->getPointerOperand());
+            }
+            if (SCEVed==nullptr || isa<SCEVCouldNotCompute>(SCEVed)) {
+              InvalidForSCEV = true;
+              break;
+            }
+            //SCEVed->dump();
+          }
+          if (InvalidForSCEV) {
+              //errs() << "Invalid! Possible Dependence Found! COULD NOT COMPUTE SCEV!\n";
+              continue;
+          }
+          */
+          bool CanVecMem = false;//CanVectorizeMemoryInstructions(Insts, L, SE, PSE, AA, LI, TLI, DT);
+          //errs() << "CanVectorizeInsts: " << CanVecMem << "\n";
+          if (!CanVecMem && false) {
+            //errs() << "Invalid! Possible Dependence Found!\n";
+            continue;
+          }
+        }
+        Ty = SI->getValueOperand()->getType();
+        SeedRoot = &I;
+      } else continue;
+
+        unsigned MaxVL = getMaxVectorWidth(Ty, TTI);
+        //errs() << "Construction PotentialSLP: " << MaxVL << "\n";
+        if (MaxVL==0) MaxVL = 2; //default VL
+          //continue; //skip this seed
+
+#ifdef VALU_DEBUG
+        errs() << "New Seed:\n";
+#endif
+        PotentialSLPGraph MaybeSLP(&I,MaxVL,L,LV, SE, TTI, TLI, DL, Context);
+        //int Score = CheckDefUseTreeScore(SI, Count, L, LV, SE, TTI, TLI, Context);
+#ifdef VALU_DEBUG
+        errs() << "Score: " << MaybeSLP.Score << "\n";
+        errs() << "Size: " << MaybeSLP.Tree.size() << "\n";
+        errs() << "VL: " << MaxVL << "\n";
+#endif
+        if (MaybeSLP.Score < -SLPCostThreshold) {// && MaybeSLP.Tree.size() >= MinTreeSize) {
+          SeedTracker &T = Tracker[MaybeSLP.Root];
+          T.Inst = MaybeSLP.Root;
+          T.Seed = MaybeSLP.Seed;
+          if (T.Copies.empty()) T.Copies.push_back(T.Seed);
+
+           for (Instruction *VecI: MaybeSLP.Tree) {
+             VecInsts.insert(VecI);
+           }
+           //TmpUnrolledVectorizableStores.insert(&I);
+#ifdef VALU_DEBUG
+           errs() << "PROFITABLE! " << F->getName() << "\n";
+#endif
+           //I.dump();
+           //FoundVectorizableTrees = true;
+           if (MaxVL>BestUnrollFactor) BestUnrollFactor = MaxVL;
+        }
+    }
+  }
+
+#ifdef VALU_DEBUG
+  //std::set<Instruction*> NonVecInsts;
+  unsigned CountNonVecInsts = 0;
+  if (BestUnrollFactor>0) {
+  size_t countAll = 0;
+  for (auto *BB : L->getBlocks()) {
+    //if (LI->getLoopDepth(BB) != L->getLoopDepth()) continue;
+    for (Instruction &I : *BB) {
+      countAll++;
+      if (VecInsts.find(&I)==VecInsts.end()) {
+        CountNonVecInsts++;
+        //NonVecInsts.insert(&I);
+        //run filtersa
+/*
+        if (isa<SelectInst>(&I)) {
+#ifdef VALU_DEBUG
+          errs() << "NonVec select found! Should NOT vectorize this one!\n";
+#endif
+        }
+*/
+      }
+    }
+  }
+  //errs() << "Count:NonVec: " << NonVecInsts.size() << "\n";
+  errs() << "Count:NonVec: " << CountNonVecInsts << "\n";
+  errs() << "Count:Vec: " << VecInsts.size() << "\n";
+  errs() << "Count:Ratio: " << ((float)VecInsts.size())/((float)countAll) << "\n";
+  }
+#endif
+  return BestUnrollFactor;
+}
+
+static void simplifyBinaryOperators(BasicBlock *BB) {
+  //errs() << "Simplifying: " << BB->getName() << "\n";
+  bool foundFixedPoint = false;
+  while (!foundFixedPoint) {
+    foundFixedPoint = true;
+    for (Instruction &I : *BB) {
+      if (!I.getType()->isIntegerTy()) continue;
+
+      if (BinaryOperator *BO = dyn_cast<BinaryOperator>(&I)) {
+        if (ConstantInt *ConstOp1 = dyn_cast<ConstantInt>(BO->getOperand(1))) {
+
+          Value *V = BO->getOperand(0);
+          if ( BinaryOperator *NextBO = dyn_cast<BinaryOperator>(V) ) {
+            if (BO->getOpcode()!=NextBO->getOpcode()) continue;
+            //make sure we are only messing up with the induction variable
+            if (!isa<PHINode>(NextBO->getOperand(0))) continue;
+            if (ConstantInt *ConstOp2 = dyn_cast<ConstantInt>(NextBO->getOperand(1))) {
+              //errs() << "Updating: ";
+              //BO->dump();
+              //errs() << "Op1: " << ConstOp1->getValue() << "\n";
+              //errs() << "Op2: " << ConstOp2->getValue() << "\n";
+              APInt Val = ConstOp1->getValue();
+
+              bool Updated = true;
+              switch (BO->getOpcode()) {
+              case Instruction::Add:
+                Val += ConstOp2->getValue();
+                break;
+              case Instruction::Mul:
+                Val *= ConstOp2->getValue();
+                break;
+              case Instruction::Or:
+                Val |= ConstOp2->getValue();
+                break;
+              case Instruction::And:
+                Val &= ConstOp2->getValue();
+                break;
+              case Instruction::Xor:
+                Val ^= ConstOp2->getValue();
+                break;
+              default:
+                Updated = false;
+              }
+              if (Updated) {
+                //errs() << "Sum: " << Val << "\n";
+                BO->setOperand(0,NextBO->getOperand(0));
+                BO->setOperand(1,Constant::getIntegerValue(BO->getType(),Val));
+                //BO->dump();
+
+                foundFixedPoint = false;
+                break;
+              }
+            }
+          }
+
+        }
+      }
+    }
+  }
+}
+
+/*
+static bool simplifyUnrolledCFG(BasicBlock *BB, LLVMContext &Context) {
+  BranchInst *Br = dyn_cast<BranchInst>(BB->getTerminator());
+  if (Br) {
+    if (Br->isUnconditional() && Br->getSuccessor(0)->getUniquePredecessor()==BB) {
+      BasicBlock *SuccBB = Br->getSuccessor(0);
+      SmallVector<Instruction *,8> WorkList;
+      for (Instruction &I : *SuccBB) {
+        WorkList.push_back(&I);
+      }
+      IRBuilder<> Builder(Br);
+      for (Instruction *I : WorkList) {
+        I->removeFromParent();
+        Builder.Insert(I);
+      }
+      Br->eraseFromParent();
+      SuccBB->eraseFromParent();
+      return true;
+    } else if (Br->isConditional() && isa<Constant>(Br->getCondition())){
+      BasicBlock *SuccBB = nullptr;
+      BasicBlock *DeadBB = nullptr;
+      if (Br->getCondition()==ConstantInt::getTrue(Context)) {
+        SuccBB = Br->getSuccessor(0);
+        DeadBB = Br->getSuccessor(1);
+      }
+      else if (Br->getCondition()==ConstantInt::getFalse(Context)) {
+        DeadBB = Br->getSuccessor(0);
+        SuccBB = Br->getSuccessor(1);
+      }
+      if (SuccBB && SuccBB->getUniquePredecessor()==BB) {
+        SmallVector<Instruction *,8> WorkList;
+        for (Instruction &I : *SuccBB) {
+          WorkList.push_back(&I);
+        }
+        IRBuilder<> Builder(Br);
+        for (Instruction *I : WorkList) {
+          I->removeFromParent();
+          Builder.Insert(I);
+        }
+        Br->eraseFromParent();
+        if (DeadBB->getUniquePredecessor()==BB) {
+          DeadBB->eraseFromParent();
+        }
+        SuccBB->eraseFromParent();
+        return true;
+      }
+    }
+  }
+  return false;
+}
+*/
+
 PreservedAnalyses SLPVectorizerPass::run(Function &F, FunctionAnalysisManager &AM) {
   auto *SE = &AM.getResult<ScalarEvolutionAnalysis>(F);
   auto *TTI = &AM.getResult<TargetIRAnalysis>(F);
@@ -20770,9 +22361,10 @@ PreservedAnalyses SLPVectorizerPass::run(Function &F, FunctionAnalysisManager &A
   if (!Changed)
     return PreservedAnalyses::all();
 
-  PreservedAnalyses PA;
-  PA.preserveSet<CFGAnalyses>();
-  return PA;
+  //PreservedAnalyses PA;
+  //PA.preserveSet<CFGAnalyses>();
+  //return PA;
+  return PreservedAnalyses::none();
 }
 
 bool SLPVectorizerPass::runImpl(Function &F, ScalarEvolution *SE_,
@@ -20811,9 +22403,269 @@ bool SLPVectorizerPass::runImpl(Function &F, ScalarEvolution *SE_,
 
   LLVM_DEBUG(dbgs() << "SLP: Analyzing blocks in " << F.getName() << ".\n");
 
+  //START HERE
+  std::map<Instruction*, SeedTracker> SeedSuggestion;
+
+  //if (EnableSLPLoopUnrolling){
+  if (UseVALU){
+    //SLP-aware Loop Unrolling
+
+/*
+bool llvm::simplifyLoop(Loop *L, DominatorTree *DT, LoopInfo *LI,
+                        ScalarEvolution *SE, AssumptionCache *AC,
+                        MemorySSAUpdater *MSSAU, bool PreserveLCSSA) 
+*/
+    //VALU: copied from LoopUnrollPass.
+    // The unroller requires loops to be in simplified form, and also needs LCSSA.
+    // Since simplification may add new inner loops, it has to run before the
+    // legality and profitability checks. This means running the loop unroller
+    // will simplify all loops, regardless of whether anything end up being
+    // unrolled.
+    for (auto &L : (*LI)) {
+      Changed |= simplifyLoop(L, DT, LI, SE, AC, /*MemorySSAUpdater=*/nullptr, /*PreserveLCSSA=*/false);
+      Changed |= formLCSSARecursively(*L, *DT, LI, SE);
+    }
+
+    std::vector<BasicBlock *> WorkList;
+   
+    for (Loop *L : LI->getLoopsInPreorder()) {
+      //if (!L->empty()) continue; //only unroll inner-most loops
+      if (!L->isInnermost()) continue; //only unroll inner-most loops
+      //Because we don't have a Regional SLP yet, we should only unroll single-BB loops
+      if (L->getNumBlocks()!=1) continue;
+
+      WorkList.push_back(L->getHeader());
+    }
+
+    //for (Loop *L : WorkList) {
+    for (BasicBlock *OldHeader : WorkList) {
+      
+      DominatorTree NewDT(F);
+      LoopInfo NewLI(NewDT);
+      ScalarEvolution NewSE(F, *TLI, *AC, NewDT, NewLI);
+      DT = &NewDT;
+      LI = &NewLI;
+      SE = &NewSE;
+
+      Loop *L = LI->getLoopFor(OldHeader);
+
+      LoopVectorizeHints LHints(L,true,*ORE_);
+      LoopVectorizationRequirements LReq;//(*ORE_);
+      PredicatedScalarEvolution PSE(*SE,*L);
+      //LoopVectorizationLegality Legal(L, PSE, DT,TLI,AA,&F,&GetLAA_,LI, ORE_, &LReq, &LHints, DB, AC);
+      LoopAccessInfo NewLAI(L, SE, TTI, TLI, AA, DT, LI);
+      const LoopAccessInfo *LAI = &NewLAI;
+      //LoopAccessInfoManager (ScalarEvolution &SE, AAResults &AA, DominatorTree &DT, LoopInfo &LI, TargetTransformInfo *TTI, const TargetLibraryInfo *TLI)
+      LoopAccessInfoManager LAIM(*SE, *AA, *DT, *LI, TTI, TLI);
+      //LoopVectorizationLegality Legal(L, PSE, DT, TTI, TLI, AA, &F, LAIM, LI, ORE_, &LReq, &LHints, DB, AC, nullptr, nullptr);
+      LoopVectorizationLegality Legal(L, PSE, DT, TTI, TLI, &F, LAIM, LI, ORE_, &LReq, &LHints, DB, AC, nullptr, nullptr);
+    /*
+    LoopVectorizationLegality (Loop *L, PredicatedScalarEvolution &PSE, DominatorTree *DT, TargetTransformInfo *TTI, TargetLibraryInfo *TLI, Function *F, LoopAccessInfoManager &LAIs, LoopInfo *LI, OptimizationRemarkEmitter *ORE, LoopVectorizationRequirements *R, LoopVectorizeHints *H, DemandedBits *DB, AssumptionCache *AC, BlockFrequencyInfo *BFI, ProfileSummaryInfo *PSI)
+
+:LoopVectorizationLegality(llvm::Loop*, llvm::PredicatedScalarEvolution&, llvm::DominatorTree*, llvm::TargetTransformInfo*, llvm::TargetLibraryInfo*, llvm::Function*, llvm::LoopAccessInfoManager&, llvm::LoopInfo*, llvm::OptimizationRemarkEmitter*, llvm::LoopVectorizationRequirements*, llvm::LoopVectorizeHints*, llvm::DemandedBits*, llvm::AssumptionCache*, llvm::BlockFrequencyInfo*, llvm::ProfileSummaryInfo*)’
+*/
+      SLPLoopValidator LV(*TTI,&Legal);
+
+      //unsigned Count = getOptimalUnrollCount(L, &LV, TTI);
+      //if (Count==0) continue;
+
+      unsigned Count = isUnrollProfitableForSLP(&F, L, LI, &LV, SE, DT, AC, LAI, AA, &PSE, DL, TTI, TLI, F.getContext(),SeedSuggestion);
+      //errs() << "Unrolling Factor: " << Count << "\n";
+      if (Count > 1) {
+        //L->getHeader()->dump();
+        auto *PreHeader = L->getLoopPreheader();
+        if (PreHeader==nullptr) PreHeader = L->getLoopPredecessor();
+
+        auto *Header = L->getHeader();
+        /*     
+        errs() << "Loop Before Unrolling:\n";
+        for (BasicBlock *BB : L->getBlocks()) {
+          BB->dump();
+        }
+        */
+        auto Result = tryToUnrollLoop(Count, L, &F, LI, SE, DT, TLI, TTI, AC, ORE_, SeedSuggestion);
+
+        switch(Result) {
+          case LoopUnrollResult::FullyUnrolled: {
+            Changed = true;
+            errs() << "FullyUnrolled\n";
+            // ideally we would simplify from preheader/predecessors up to exit block
+            BasicBlock *BB = Header;
+            if (PreHeader!=nullptr) {
+              //UnrolledBlocks.insert(PreHeader);
+              BB = PreHeader;
+            }
+
+            bool UpdatedCFG = true;
+            while (UpdatedCFG) {
+              //DomTreeUpdater DTU(DT, DomTreeUpdater::UpdateStrategy::Eager);
+              //UpdatedCFG = ConstantFoldTerminator(BB,true,TLI,&DTU);
+              UpdatedCFG = ConstantFoldTerminator(BB,true,TLI,nullptr);
+              BranchInst *Br = dyn_cast<BranchInst>(BB->getTerminator());
+              if (Br!=nullptr && Br->isUnconditional() && Br->getSuccessor(0)->getUniquePredecessor()==BB) {
+                BasicBlock *OldPred = BB;
+                BB = Br->getSuccessor(0);
+                //MergeBasicBlockIntoOnlyPred(BB,&DTU);
+                MergeBasicBlockIntoOnlyPred(BB,nullptr);
+                UpdatedCFG = UpdatedCFG || (OldPred!=BB->getUniquePredecessor());
+              }
+            }
+            
+            //UnrolledBlocks.insert(BB);
+
+            simplifyBinaryOperators(BB); 
+            //SimplifyInstructionsInBlock(BB); //not enough
+            //BB->dump();
+            /*
+            for (Instruction *I : TmpUnrolledVectorizableStores) {
+              UnrolledVectorizableStores.insert(I);
+            }
+            for (Instruction *I : TmpUnrolledStores) {
+              UnrolledStores.insert(I);
+            }*/
+            break;
+          }
+          case LoopUnrollResult::PartiallyUnrolled: {
+            Changed = true;
+            errs() << "PartiallyUnrolled\n";
+            for (BasicBlock *BB : L->getBlocks()) {
+              //UnrolledBlocks.insert(BB);
+              simplifyBinaryOperators(BB);
+              //SimplifyInstructionsInBlock(BB); //not enough
+              //BB->dump();
+            }
+            /*
+            for (Instruction *I : TmpUnrolledVectorizableStores) {
+              UnrolledVectorizableStores.insert(I);
+            }
+            for (Instruction *I : TmpUnrolledStores) {
+              UnrolledStores.insert(I);
+            }*/
+            break;
+          }
+          default: break;
+        }
+        /*
+        if (Result!=LoopUnrollResult::Unmodified) {
+          UnrolledBlocks.insert(Header);
+          for (StoreInst *SI : TmpUnrolledVectorizableStores) {
+            UnrolledVectorizableStores.insert(SI);
+          }
+          TmpUnrolledVectorizableStores.clear();
+          if (L==LI->getLoopFor(Header)) {
+            //L->getHeader()->dump();
+            //simplifyLoopAfterUnroll(L,true,LI,SE,DT,AC);
+            for (BasicBlock *BB : L->getBlocks()) {
+              UnrolledBlocks.insert(BB);
+              //SimplifyInstructionsInBlock(BB); //not enough
+              simplifyBinaryOperators(BB);
+            }
+            //L->getHeader()->dump();
+          } else  simplifyBinaryOperators(Header);
+        }
+        */
+      }
+    }
+  }
+
+  DominatorTree NewDT(F);
+  LoopInfo NewLI(NewDT);
+  ScalarEvolution NewSE(F, *TLI, *AC, NewDT, NewLI);
+  DT = &NewDT;
+  LI = &NewLI;
+  SE = &NewSE;
+
+  //END HERE
+
   // Use the bottom up slp vectorizer to construct chains that start with
   // store instructions.
   BoUpSLP R(&F, SE, TTI, TLI, AA, LI, DT, AC, DB, DL, ORE_);
+
+  //START HERE
+  if (EnableVALUSeeds) {
+//#ifdef VALU_DEBUG
+    errs() << "Handling suggested seeds!\n";
+//#endif
+    for (auto &Pair : SeedSuggestion) {
+      if ( isa<StoreInst>(Pair.first) && Pair.second.Copies.size() > 1 ) {
+        if (isa<StoreInst>(Pair.second.Copies[0])) {
+          errs() << "Suggesting: " << Pair.second.Copies.size() << "\n";
+          BoUpSLP::ValueList Operands;
+          for (Instruction * I : Pair.second.Copies) {
+            //I->dump();
+            Operands.push_back(I);
+          }
+          //bool Success = vectorizeStoreChain(Operands, R, R.getMaxVecRegSize());
+          unsigned TreeSize;
+          std::optional<bool> Res =
+             vectorizeStoreChain(Operands, R, 0, R.getMaxVecRegSize(), TreeSize);
+          bool Success = false;
+          if (Res.has_value()) Success = Res.value();
+          if (Success) {
+            errs() << "VECTORIZED\n";
+          }
+          Changed |= Success;
+          if (Success)
+          errs() << "VALU Suggestion: " << F.getName() << "\n";
+        } else {
+          errs() << "Extract: " << F.getName() << "\n";
+          errs() << "Non-vectorizable store:\n";
+          Pair.first->dump();
+          BoUpSLP::ValueList Operands;
+          for (Instruction * I : Pair.second.Copies) {
+            //I->dump();
+            Operands.push_back(I);
+          }
+          //bool Success = tryToVectorizeList(Operands, R, 0, true);
+          bool Success = tryToVectorizeList(Operands, R, true);
+          Changed |= Success;
+          if (Success)
+          errs() << "VALU Suggestion: " << F.getName() << "\n";
+
+        }
+
+        errs() << "Store seeds: " << Pair.second.Copies.size() << "\n";
+        //SmallVector<StoreInst*,8> Stores;
+        //for (Instruction * I : Pair.second.Copies) Stores.push_back(dyn_cast<StoreInst>(I));
+
+        //Changed |= vectorizeStores(ArrayRef<StoreInst *> (Stores),R);
+      }
+      else if ( isa<PHINode>(Pair.first) ) {
+        //errs() << "PHI seeds: " << Pair.second.Copies.size() << "\n";
+#ifdef VALU_DEBUG
+        errs() << "PHI: "; Pair.second.Inst->dump();
+        errs() << "Seed: "; Pair.second.Seed->dump();
+        errs() << "Suggestion:\n";
+        for (Instruction * I : Pair.second.Copies) I->dump();
+#endif
+
+        bool Success = tryToVectorizeReductionWithSeeds(R, dyn_cast<PHINode>(Pair.second.Inst),  Pair.second.Copies, DT, LI, TTI, SE, DL, TLI, AC);
+        if (Success) {
+          errs() << "VECTORIZED\n";
+        }
+        Changed |= Success;
+        if (Success)
+          errs() << "VALU Suggestion: " << F.getName() << "\n";
+      }
+      else {
+        /*
+        //TODO: handle cases where the store instructions are not vectorizable
+
+        //bool SLPVectorizerPass::tryToVectorizeList(ArrayRef<Value *> VL, BoUpSLP &R, int UserCost, bool AllowReorder)
+        BoUpSLP::ValueList Operands;
+        for (Instruction * I : Pair.second.Copies) {
+          //I->dump();
+          Operands.push_back(I);
+        }
+        bool Success = tryToVectorizeList(Operands, R, 0, true);
+        Changed |= Success;
+        if (Success)
+        errs() << "VALU Suggestion: " << F.getName() << "\n";
+        */
+      }
+    }
+  }
+  //END HERE
 
   // A general note: the vectorizer must use BoUpSLP::eraseInstruction() to
   // delete instructions.
@@ -20852,6 +22704,7 @@ bool SLPVectorizerPass::runImpl(Function &F, ScalarEvolution *SE_,
 
   if (Changed) {
     R.optimizeGatherSequence();
+    errs() << "SLP: vectorized \"" << F.getName() << "\"\n";
     LLVM_DEBUG(dbgs() << "SLP: vectorized \"" << F.getName() << "\"\n");
   }
   return Changed;
@@ -20934,8 +22787,10 @@ SLPVectorizerPass::vectorizeStoreChain(ArrayRef<Value *> Chain, BoUpSLP &R,
   InstructionCost Cost = R.getTreeCost();
 
   LLVM_DEBUG(dbgs() << "SLP: Found cost = " << Cost << " for VF=" << VF << "\n");
+  errs() << "SLP: Found cost = " << Cost << " for VF=" << VF << "\n";
   if (Cost < -SLPCostThreshold) {
     LLVM_DEBUG(dbgs() << "SLP: Decided to vectorize cost = " << Cost << "\n");
+    errs() << "SLP: Decided to vectorize cost = " << Cost << "\n";
 
     using namespace ore;
 
@@ -21571,10 +23426,13 @@ bool SLPVectorizerPass::tryToVectorizeList(ArrayRef<Value *> VL, BoUpSLP &R,
       CandidateFound = true;
       MinCost = std::min(MinCost, Cost);
 
+      errs() << "SLP: Found cost = " << Cost
+                        << " for VF=" << ActualVF << "\n";
       LLVM_DEBUG(dbgs() << "SLP: Found cost = " << Cost
                         << " for VF=" << ActualVF << "\n");
       if (Cost < -SLPCostThreshold) {
         LLVM_DEBUG(dbgs() << "SLP: Vectorizing list at cost:" << Cost << ".\n");
+        errs() << "SLP: Vectorizing list at cost:" << Cost << ".\n";
         R.getORE()->emit(OptimizationRemark(SV_NAME, "VectorizedList",
                                                     cast<Instruction>(Ops[0]))
                                  << "SLP vectorized with cost " << ore::NV("Cost", Cost)
@@ -22569,6 +24427,8 @@ public:
         InstructionCost Cost = V.getTreeCost(VL, ReductionCost);
         LLVM_DEBUG(dbgs() << "SLP: Found cost = " << Cost
                           << " for reduction\n");
+        errs() << "SLP: Found cost = " << Cost
+                          << " for reduction\n";
         if (!Cost.isValid())
           break;
         if (Cost >= -SLPCostThreshold) {
@@ -22601,6 +24461,8 @@ public:
           continue;
         }
 
+        errs() << "SLP: Vectorizing horizontal reduction at cost:"
+                          << Cost << ". (HorRdx)\n";
         LLVM_DEBUG(dbgs() << "SLP: Vectorizing horizontal reduction at cost:"
                           << Cost << ". (HorRdx)\n");
         V.getORE()->emit([&]() {
@@ -24584,3 +26446,38 @@ bool SLPVectorizerPass::vectorizeStoreChains(BoUpSLP &R) {
   }
   return Changed;
 }
+
+                                 
+bool SLPVectorizerPass::tryToVectorizeReductionWithSeeds(BoUpSLP &R, PHINode *PHI, std::vector<Instruction*> Operands, DominatorTree *DT, LoopInfo *LI, TargetTransformInfo *TTI, ScalarEvolution *SE, const DataLayout *DL, TargetLibraryInfo *TLI, AssumptionCache *AC) {
+         Instruction *Root = getReductionInstr(DT, PHI, PHI->getParent(), LI);
+         Value *V = Root;//getReductionValue(DT, PHI, PHI->getParent(), LI);
+
+         errs() << "Trying to vectorize the reduction\n";
+#ifdef VALU_DEBUG
+         if (V) V->dump();
+#endif
+         BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
+         SelectInst *SI = nullptr;//dyn_cast<SelectInst>(V);
+/*
+    HorizontalReduction HorRdx;
+    if (!HorRdx.matchAssociativeReduction(R, Inst, *SE, *DL, *TLI))
+      return nullptr;
+    return HorRdx.tryToReduce(R, *DL, TTI, *TLI, AC);
+*/
+         if (BO!=nullptr || SI!=nullptr) {
+           Instruction *B = (BO!=nullptr)?((Instruction*)BO):((Instruction*)SI);
+           HorizontalReduction HorRdx;
+           //if (HorRdx.matchAssociativeReduction(PHI, B, Operands)) {
+           if (HorRdx.matchAssociativeReduction(R, B, *SE, *DL, *TLI)) {
+             //if (HorRdx.tryToReduce(R, TTI)) {
+             if (HorRdx.tryToReduce(R, *DL, TTI, *TLI, AC)) {
+
+               errs() << "Successful Reduction from VALU Seeds!!!\n";
+               return true;
+             }
+           }
+         }
+  return false;
+}
+
+

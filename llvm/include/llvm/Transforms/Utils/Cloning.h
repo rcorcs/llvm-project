@@ -29,6 +29,8 @@
 #include <functional>
 #include <memory>
 #include <vector>
+#include <map>
+#include <set>
 
 namespace llvm {
 
@@ -131,6 +133,10 @@ struct ClonedCodeInfo {
 /// setting the parameter to false.
 LLVM_ABI BasicBlock *
 CloneBasicBlock(const BasicBlock *BB, ValueToValueMapTy &VMap,
+                const Twine &NameSuffix = "", Function *F = nullptr,
+                ClonedCodeInfo *CodeInfo = nullptr, bool MapAtoms = true);
+
+BasicBlock *CloneBasicBlockWithTracker(const BasicBlock *BB, ValueToValueMapTy &VMap, std::map<const Instruction*, std::vector<Instruction*> * > &TrackCopies, // std::map<const Value*,Value*> &VMap,
                 const Twine &NameSuffix = "", Function *F = nullptr,
                 ClonedCodeInfo *CodeInfo = nullptr, bool MapAtoms = true);
 

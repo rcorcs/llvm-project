@@ -162,6 +162,9 @@ private:
       DenseSet<std::tuple<Value *, Value *, Value *, Value *, unsigned>>
           &Visited);
 
+  bool tryToVectorizeReductionWithSeeds(slpvectorizer::BoUpSLP &R, PHINode *PHI, std::vector<Instruction*> Operands, DominatorTree *DT, LoopInfo *LI, TargetTransformInfo *TTI, ScalarEvolution *SE, const DataLayout *DL, TargetLibraryInfo *TLI, AssumptionCache *AC);
+
+
   /// The store instructions in a basic block organized by base pointer.
   StoreListMap Stores;
 
