@@ -21667,7 +21667,9 @@ public:
     Score = 0;
     Height = 0;
     Seed=Root;
+    errs() << "PotentialSLPGraph: root: "; Root->dump();
     processTree(Root);
+    errs() << "processed tree done\n";
   }
 
   void processTree(Instruction *I) {
@@ -21675,9 +21677,12 @@ public:
 
     Score = processTree(I, Visited, 1);
 
+    errs() << "Here done processing: " << Score << "\n";
+
     //compute extract cost
     int ExtractCost = 0;
     for (Instruction * TNode : Tree) {
+      errs() << "checking users\n"; TNode->dump();
       bool NeedExtraction = false;
       for (User *U : TNode->users()) {
         bool FoundNode = false;
@@ -21687,22 +21692,32 @@ public:
         if (!FoundNode) NeedExtraction = true;
       }
       if (NeedExtraction) {
+        errs() << "need extraction\n";
         InstructionCost ExtractCostT = GetVectorExtractCost(TNode, Count, TTI, TLI, Context);
         ExtractCost += ExtractCostT.isValid()?ExtractCostT.getValue():0;
       }
     }
 
-    //errs() << "ExtractCost: " << ExtractCost << "\n";
+    errs() << "ExtractCost: " << ExtractCost << "\n";
     Score += ExtractCost;
   }
 
   int processTree(Value *V, SmallSet<Value *, 8> &Visited, int H) {
+    errs() << "processTree 1\n";
+    V->dump();
     if (!isa<Instruction>(V)) return 0;
 
+    errs() << "processTree 2\n";
     //check if it is a splat
-    if (Visited.find(V)!=Visited.end()) return 0;
+    if (Visited.find(V)!=Visited.end()) {
+      errs() << "processTree 2: revisiting\n";
+      return 0;
+    }
     Visited.insert(V);
 
+    //if (isa<PHINode>(V)) return 0;
+
+    errs() << "processTree 3\n";
     Instruction *I = dyn_cast<Instruction>(V);
     
 #ifdef VALU_DEBUG
@@ -21732,6 +21747,7 @@ public:
     }
 
 
+    errs() << "processTree 4\n";
     if (!isValidElementType(ScalarTy)) {
       InstructionCost InsertCostT = GetVectorInsertCost(I, Count, TTI, TLI, Context);
       int InsertCost = InsertCostT.isValid()?InsertCostT.getValue():0;
@@ -21743,8 +21759,11 @@ public:
       return DefaultScore + InsertCost;
     }
 
+    errs() << "processTree 5\n";
     InstructionCost VectorCostT = GetVectorCost(I, Count, TTI, TLI, Context);
     int VectorCost = VectorCostT.isValid()?VectorCostT.getValue():0;
+
+    errs() << "processTree value:"; V->dump();
 
     int VecScore = VectorCost-ScalarCost;
     if (StoreInst *SI = dyn_cast<StoreInst>(V)) {
@@ -21922,6 +21941,27 @@ public:
         Score += processTree(SI->getOperand(i), Visited, H+1);
       }
       return Score;
+    } else if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(V)) {
+      Tree.push_back(II);
+      if (H>Height) Height = H;
+      
+      errs() << "Is IntrinsicInst: "; II->dump();
+      errs() << "is commutative? " << II->isCommutative() << "\n";
+      errs() << "is associative? " << II->isAssociative() << "\n";
+      errs() << "[Vectorizable]\n";
+      errs() << "ScalarCost: " << ScalarCost << "\n";
+      errs() << "VectorCost: " << VectorCost << "\n";
+      errs() << VecScore << "\n";
+
+      int Score = VecScore;
+      //for (unsigned i = 0; i<II->getNumOperands(); i++) {
+      errs() << "II arg size: " << II->arg_size() << "\n";
+      for (unsigned i = 0; i<II->arg_size(); i++) {
+        errs() << "II: i: " << i << "\n";
+        Score += processTree(II->getArgOperand(i), Visited, H+1);
+      }
+      errs() << "II: done\n";
+      return Score;
     } else if (GetElementPtrInst *GEP = dyn_cast<GetElementPtrInst>(V)) {
       //TODO: these conditions are limitations of the current SLP implementation.
       if (GEP->getNumOperands()==2 && isa<ConstantInt>(GEP->getOperand(1))) {
@@ -21954,7 +21994,9 @@ public:
         return Score;
       }
       */
+      errs() << "analyzing phi node\n";
       if (Tree.empty()) { //PHINode is root
+        errs() << "phi node is root\n";
         Value *RecV = nullptr;
         for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
           Value *InV = PHI->getIncomingValue(i);
@@ -21986,12 +22028,18 @@ public:
               } else if (SelectInst *SI = dyn_cast<SelectInst>(RecV)) {
                 if (SI->getTrueValue()==PHI) Seed = dyn_cast<Instruction>(SI->getFalseValue());
                 if (SI->getFalseValue()==PHI) Seed = dyn_cast<Instruction>(SI->getTrueValue());
+              } else if (IntrinsicInst *II = dyn_cast<IntrinsicInst>(RecV)) {
+                errs() << "Handling intrinsinc reduction: "; II->dump();
+                if (II->getArgOperand(0)==PHI) Seed = dyn_cast<Instruction>(II->getArgOperand(1));
+                if (II->getArgOperand(1)==PHI) Seed = dyn_cast<Instruction>(II->getArgOperand(0));
+                errs() << "Selected seed:"; Seed->dump();
               }
 
               int Score = 0; //VecScore;
               for (unsigned i = 0; i<PHI->getNumIncomingValues(); i++) {
                 Score += processTree(PHI->getIncomingValue(i), Visited, H+1);
               }
+              errs() << "reduction score: " << Score << "\n";
               return Score;
             }
           }
@@ -22048,12 +22096,15 @@ static unsigned isUnrollProfitableForSLP(Function *F, Loop *L, LoopInfo *LI,
     unsigned BestUnrollFactor = 0;
     
     std::set<StoreInst*> AllStores;
+
+    errs() << "Here1\n";
 #ifdef VALU_DEBUG
     if (LAI->canVectorizeMemory()) {
       errs() << "Can vectorize memory\n";
     }
 #endif
 
+    errs() << "Here2\n";
     /*
     for (BasicBlock *BB : L->getBlocks()) {
       for (Instruction &I : *BB) {
@@ -22088,37 +22139,47 @@ static unsigned isUnrollProfitableForSLP(Function *F, Loop *L, LoopInfo *LI,
   std::set<Instruction*> VecInsts;
   //bool FoundVectorizableTrees = false;
   for (auto *BB : L->getBlocks()) {
+    errs() << "here block: " << BB->getName().str() << "\n";
     if (LI->getLoopDepth(BB) != L->getLoopDepth()) continue;
+    errs() << "here block analyzing\n";
     for (Instruction &I : *BB) {
-
+  
+        errs() << "Here ..\n";
         if (CallInst *CI = dyn_cast<CallInst>(&I)) {
           // Check if this is an Intrinsic call or something that can be
           // represented by an intrinsic call
+          errs() << "Here is call\n";
           Intrinsic::ID ID = getVectorIntrinsicIDForCall(CI, TLI);
           if (!isTriviallyVectorizable(ID)) {
+            errs() << "Here not vectorizable intrinsic\n";
             //errs() << "Found a CallInst that will Prevent Grouping Instruction\n";
             //I.dump();
             return false;
+          } else {
+            errs() << "Here vectorizable intrinsic\n";
           }
         }
 
         if (I.getType()->isVectorTy()) {
-          //errs() << "Loop already vectorized!\n";
+          errs() << "Loop already vectorized!\n";
           //I.dump();
           return false;
         }
 
         if (isa<FenceInst>(&I)) {
-          //errs() << "Found a FenceInst that will Prevent Grouping Instruction\n";
+          errs() << "Found a FenceInst that will Prevent Grouping Instruction\n";
           //I.dump();
           return false;
         }
 
+      errs() << "Here selecting seed root\n";
       Instruction *SeedRoot = nullptr;
       Type *Ty = I.getType();
       if (isa<PHINode>(&I)) {
+        errs() << "Here selecting seed root phi\n";
         SeedRoot = &I;
       } else if (StoreInst *SI = dyn_cast<StoreInst>(&I)) {
+        errs() << "Here selecting seed root store\n";
         //dumping some unnecessary info
         //auto *BaseV = GetUnderlyingObject(SI->getPointerOperand(), DL);
         //errs() << "Store:\n";
@@ -22200,6 +22261,8 @@ static unsigned isUnrollProfitableForSLP(Function *F, Loop *L, LoopInfo *LI,
         }
     }
   }
+
+  errs() << "Here3\n";
 
 #ifdef VALU_DEBUG
   //std::set<Instruction*> NonVecInsts;
@@ -22470,7 +22533,7 @@ bool llvm::simplifyLoop(Loop *L, DominatorTree *DT, LoopInfo *LI,
       //if (Count==0) continue;
 
       unsigned Count = isUnrollProfitableForSLP(&F, L, LI, &LV, SE, DT, AC, LAI, AA, &PSE, DL, TTI, TLI, F.getContext(),SeedSuggestion);
-      //errs() << "Unrolling Factor: " << Count << "\n";
+      errs() << "Unrolling Factor: " << Count << "\n";
       if (Count > 1) {
         //L->getHeader()->dump();
         auto *PreHeader = L->getLoopPreheader();
@@ -26457,15 +26520,16 @@ bool SLPVectorizerPass::tryToVectorizeReductionWithSeeds(BoUpSLP &R, PHINode *PH
          if (V) V->dump();
 #endif
          BinaryOperator *BO = dyn_cast<BinaryOperator>(V);
-         SelectInst *SI = nullptr;//dyn_cast<SelectInst>(V);
+         SelectInst *SI = dyn_cast<SelectInst>(V);
+         IntrinsicInst *II = dyn_cast<IntrinsicInst>(V);
 /*
     HorizontalReduction HorRdx;
     if (!HorRdx.matchAssociativeReduction(R, Inst, *SE, *DL, *TLI))
       return nullptr;
     return HorRdx.tryToReduce(R, *DL, TTI, *TLI, AC);
 */
-         if (BO!=nullptr || SI!=nullptr) {
-           Instruction *B = (BO!=nullptr)?((Instruction*)BO):((Instruction*)SI);
+         if (BO!=nullptr || SI!=nullptr || II!=nullptr) {
+           Instruction *B = dyn_cast<Instruction>(V);//(BO!=nullptr)?((Instruction*)BO):((Instruction*)SI);
            HorizontalReduction HorRdx;
            //if (HorRdx.matchAssociativeReduction(PHI, B, Operands)) {
            if (HorRdx.matchAssociativeReduction(R, B, *SE, *DL, *TLI)) {
