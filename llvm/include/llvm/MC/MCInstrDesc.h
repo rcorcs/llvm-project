@@ -205,6 +205,10 @@ public:
   const MCPhysReg *ImplicitDefs; // Registers implicitly defined by this instr
   const MCOperandInfo *OpInfo;   // 'NumOperands' entries about operands
 
+  /// Feature names required for this instruction (from TableGen Predicates)
+  const char *const *FeatureNames = nullptr; // Null-terminated array of strings
+  unsigned NumFeatures = 0;                  // Number of features
+
   /// Returns the value of the specified operand constraint if
   /// it is present. Returns -1 if it is not present.
   int getOperandConstraint(unsigned OpNum,

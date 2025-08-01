@@ -494,6 +494,7 @@ public:
       IP.printInst(MI, Addr, "", STI, OS);
     } else
       OS << "\t<unknown>";
+
   }
 };
 PrettyPrinter PrettyPrinterInst;
@@ -1400,8 +1401,26 @@ static void disassembleObject(const Target *TheTarget, const ObjectFile *Obj,
               *IP, Disassembled ? &Inst : nullptr, Bytes.slice(Index, Size),
               {SectionAddr + Index + VMAAdjustment, Section.getIndex()}, FOS,
               "", *STI, &SP, Obj->getFileName(), &Rels, LVP);
+          
           FOS << CommentStream.str();
           Comments.clear();
+
+  std::unique_ptr<const MCInstrInfo> MII(TheTarget->createMCInstrInfo());
+  if (!MII)
+    reportError(Obj->getFileName(),
+                "no instruction info for target " + TripleName);
+// After printing the instruction mnemonic:
+//const MCInstrInfo &MII = IP->getInstrInfo();
+const MCInstrDesc &Desc = MII.get()->get(Inst.getOpcode());
+
+if (Desc.NumFeatures > 0 && Desc.FeatureNames && Desc.FeatureNames[0]) {
+    FOS << "\t# features: ";
+    for (unsigned f = 0; f < Desc.NumFeatures; ++f) {
+        if (f) FOS << ",";
+        FOS << Desc.FeatureNames[f];
+    }
+}
+//FOS << "\n";
 
           // If disassembly has failed, avoid analysing invalid/incomplete
           // instruction information. Otherwise, try to resolve the target

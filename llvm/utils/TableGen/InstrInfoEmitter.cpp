@@ -749,10 +749,34 @@ void InstrInfoEmitter::run(raw_ostream &OS) {
 
   // Emit all of the MCInstrDesc records in their ENUM ordering.
   //
-  Records.startTimer("Emit InstrDesc records");
-  OS << "\nextern const MCInstrDesc " << TargetName << "Insts[] = {\n";
   ArrayRef<const CodeGenInstruction*> NumberedInstructions =
     Target.getInstructionsByEnumValue();
+// Emit feature arrays for each instruction
+OS << "\n// Instruction feature arrays\n";
+for (unsigned i = 0; i < NumberedInstructions.size(); ++i) {
+  const CodeGenInstruction *Inst = NumberedInstructions[i];
+  if (!Inst) {
+    OS << "static const char *const Features_" << i << "[] = { nullptr };\n";
+    continue;
+  }
+
+  auto Predicates = Inst->TheDef->getValueAsListOfDefs("Predicates");
+  if (Predicates.empty()) {
+    OS << "static const char *const Features_" << i << "[] = { nullptr };\n";
+    continue;
+  }
+
+  OS << "static const char *const Features_" << i << "[] = {";
+  for (unsigned j = 0; j < Predicates.size(); ++j) {
+    if (j) OS << ", ";
+    OS << "\"" << Predicates[j]->getName() << "\"";
+  }
+  OS << ", nullptr };\n";
+}
+
+
+  Records.startTimer("Emit InstrDesc records");
+  OS << "\nextern const MCInstrDesc " << TargetName << "Insts[] = {\n";
 
   SequenceToOffsetTable<std::string> InstrNames;
   unsigned Num = 0;
@@ -1019,6 +1043,9 @@ void InstrInfoEmitter::emitRecord(const CodeGenInstruction &Inst, unsigned Num,
     OS << "nullptr";
   else
     OS << "OperandInfo" << OpInfo.find(OperandInfo)->second;
+
+  OS << ",   Features_" << Num << ", "
+   << Inst.TheDef->getValueAsListOfDefs("Predicates").size() << ",\n";
 
   OS << " },  // Inst #" << Num << " = " << Inst.TheDef->getName() << "\n";
 }
