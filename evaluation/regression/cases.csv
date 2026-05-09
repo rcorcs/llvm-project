@@ -1,0 +1,36 @@
+case,path,enabled,notes
+tr_light_setup_entity_lighting,cases/root/extr_tr_light.c_R_SetupEntityLighting.c,1,Angha/OpenArena lighting region that previously improved with RegionRolling
+extract_1,cases/root/extract-1.c,1,Extraction smoke test
+extract_2,cases/root/extract-2.c,1,Extraction smoke test
+phi_3,cases/phi/phi-3.c,1,PHI/region smoke test
+phi_4,cases/phi/phi-4.c,1,PHI/region smoke test
+phi_5,cases/phi/phi-5.c,1,PHI/region smoke test
+phi_region_2,cases/phi/region-2.c,1,PHI/region smoke test
+reduction_1,cases/reduction/example-1.c,1,Reduction smoke test
+reduction_2,cases/reduction/example-2.c,1,Reduction smoke test
+reduction_3,cases/reduction/example-3.c,1,Reduction smoke test
+region_0,cases/root/region-0.c,1,RegionRolling smoke test
+region_1,cases/root/region-1.c,1,RegionRolling smoke test
+region_2,cases/root/region-2.c,1,RegionRolling smoke test
+region_23,cases/root/region-23.c,1,RegionRolling smoke test
+region_3,cases/root/region-3.c,1,RegionRolling smoke test
+region_4,cases/root/region-4.c,1,RegionRolling smoke test
+region_before_1,cases/root/region-before-1.c,1,Region before/after smoke test
+region_before_2,cases/root/region-before-2.c,1,Region before/after smoke test
+region_before_3,cases/root/region-before-3.c,1,Region before/after smoke test
+region_extract_1,cases/root/region-extract-1.c,1,Region extraction smoke test
+region_mismatch_2,cases/root/region-mismatch-2.c,1,Region mismatch smoke test
+runnable_region_1,cases/runnables/region-1.c,1,Runnable region example
+runnable_region_2,cases/runnables/region-2.c,1,Runnable region example
+s122,cases/root/s122.c,1,TSVC-style scalar example
+s123,cases/root/s123.c,1,TSVC-style scalar example
+s124,cases/root/s124.c,1,TSVC-style scalar example
+tsvc_271,cases/root/tsvc-271.c,1,TSVC extracted example
+tsvc_273,cases/root/tsvc-273.c,1,TSVC extracted example
+angha_region_binop_type_mismatch,angha/binop_type_mismatch_server_socket.c,1,Angha repro: RegionRolling used to assert creating binary ops with mismatched operand types
+angha_region_phi_incoming,angha/phi_incoming_nvc0_ibus_intr.c,1,Angha repro: RegionRolling used to assert on missing aligned PHI incoming blocks
+angha_region_mismatch_store,angha/mismatch_store_c_regular.c,1,Angha repro: RegionRolling used to assert storing heterogeneous mismatch values
+angha_region_extract_dominance,angha/extract_dominance_htcp_record_rtt.c,1,Angha repro: RegionRolling extracted value used from a kept block and broke dominance
+angha_region_empty_phi,angha/empty_phi_xdr_encode_sattr.c,1,Angha repro: RegionRolling generated a PHI with no incoming values
+tsvc_original,../TSVC/tsvc.original.c,0,Large TSVC aggregate; enable manually when wanted
+tsvc_unrolled,../TSVC/tsvc.unrolled.c,0,Large TSVC aggregate; enable manually when wanted

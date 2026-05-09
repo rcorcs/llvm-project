@@ -4,8 +4,10 @@ DIR=$(dirname $(readlink -f $0))
 echo $DIR
 source $DIR/config
 
+LLVMDIR=../build/release/bin/
+
 #ARCHOPT="--target=riscv64 -march=rv64gc"
-ARCHOPT="--target=aarch64 -mthumb"
+#ARCHOPT="--target=aarch64 " #-mthumb"
 ${LLVMDIR}clang $1 -Os -emit-llvm -S -o $1.ll -fno-vectorize -fno-slp-vectorize  -fno-unroll-loops ${ARCHOPT}
 #../release/bin/opt -loop-reroll  $1.ll -o $1.bl.ll -S
 echo "LoopRolling"

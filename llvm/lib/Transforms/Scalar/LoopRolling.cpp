@@ -293,7 +293,6 @@ public:
   Node *find(Instruction *I);
 
   void destroy() {
-    for (Node *N : Nodes) delete N;
     Root = nullptr;
     Nodes.clear();
     NodeMap.clear();
@@ -925,6 +924,10 @@ bool AlignedGraph::invalidDependence(Value *V, std::unordered_set<Value*> &Visit
 bool AlignedGraph::isSchedulable(BasicBlock &BB) {
 
   if (Root==nullptr) return false;
+  if (Root->size() > 4) {
+    errs() << "Skipping wide aligned graph: " << Root->size() << " lanes\n";
+    return false;
+  }
   std::unordered_set<Value*> Visited;
   for (auto *V : Inputs) {
     if (invalidDependence(V,Visited)) {
@@ -2674,6 +2677,4 @@ INITIALIZE_PASS(LoopRollingLegacyPass, "loop-rolling", "Loop rolling over straig
 FunctionPass *llvm::createLoopRollingPass() {
   return new LoopRollingLegacyPass();
 }
-
-
 

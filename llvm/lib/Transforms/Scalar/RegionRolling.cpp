@@ -363,6 +363,71 @@ public:
   void generateNode(Node *N, IRBuilder<> &Builder);
   bool generate(AlignedRegion &AR);
 
+  bool isInAlignedRegion(Instruction *I) {
+    return I && AR.getAlignedBlock(I->getParent()) != nullptr;
+  }
+
+  bool hasInvalidGeneratedCode() const { return InvalidGeneratedCode; }
+
+  void invalidateGeneratedCode(StringRef Reason) {
+    errs() << "Invalid generated region code: " << Reason << "\n";
+    InvalidGeneratedCode = true;
+  }
+
+  bool generatedValueDominates(Value *V, BasicBlock *UseBB) {
+    Instruction *DefI = dyn_cast_or_null<Instruction>(V);
+    if (DefI == nullptr || UseBB == nullptr)
+      return true;
+
+    BasicBlock *DefBB = DefI->getParent();
+    if (DefBB == nullptr || DefBB == UseBB)
+      return true;
+
+    if (DefBB == PreHeader || DefBB == Header)
+      return true;
+
+    std::set<BasicBlock *> Visited;
+    SmallVector<BasicBlock *, 8> Worklist;
+    Worklist.push_back(GeneratedEntry ? GeneratedEntry : Header);
+    while (!Worklist.empty()) {
+      BasicBlock *BB = Worklist.pop_back_val();
+      if (!Visited.insert(BB).second)
+        continue;
+      if (BB == DefBB)
+        continue;
+      if (BB == UseBB)
+        return false;
+      for (BasicBlock *Succ : successors(BB))
+        Worklist.push_back(Succ);
+    }
+
+    return true;
+  }
+
+  bool generatedBlocksHaveValidDominance(const std::set<BasicBlock *> &Blocks) {
+    for (BasicBlock *BB : Blocks) {
+      for (Instruction &I : *BB) {
+        for (Value *Op : I.operands()) {
+          Instruction *DefI = dyn_cast_or_null<Instruction>(Op);
+          if (DefI == nullptr)
+            continue;
+          if (!Blocks.count(DefI->getParent()))
+            continue;
+          if (!generatedValueDominates(DefI, BB)) {
+            errs() << "Invalid generated region code: generated instruction does not dominate generated use\n";
+            errs() << "  def: ";
+            DefI->dump();
+            errs() << "  use: ";
+            I.dump();
+            InvalidGeneratedCode = true;
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
   AlignedRegion &AR;
   Function &F;
 
@@ -383,12 +448,17 @@ public:
   BasicBlock *Latch;
   BasicBlock *Exit;
   BasicBlock *LoopExit;
+  BasicBlock *GeneratedEntry{nullptr};
   PHINode *IndVar;
+  bool InvalidGeneratedCode{false};
 };
 
 Value *RegionCodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IRBuilder<> &Builder) {
   Module *M = F.getParent();
   LLVMContext &Context = F.getContext();
+
+  if (VL.empty())
+    return nullptr;
 
   bool AllSame = true;
   for (unsigned i = 0; i<VL.size(); i++) {
@@ -396,13 +466,28 @@ Value *RegionCodeGenerator::generateMismatchingCode(std::vector<Value *> &VL, IR
   }
   if (AllSame) return VL[0];
 
+  Type *ValueTy = VL[0]->getType();
+  for (Value *V : VL) {
+    if (V == nullptr || V->getType() != ValueTy) {
+      invalidateGeneratedCode("mismatching values have different types");
+      return UndefValue::get(ValueTy);
+    }
+  }
+
   if (allConstant(VL)) {
     errs() << "All constants\n";
 
     auto *ArrTy = ArrayType::get(VL[0]->getType(), VL.size());
 
     SmallVector<Constant*,8> Consts;
-    for (auto *V : VL) Consts.push_back(dyn_cast<Constant>(V));
+    for (auto *V : VL) {
+      auto *C = dyn_cast<Constant>(V);
+      if (C == nullptr) {
+        invalidateGeneratedCode("constant mismatch node contains non-constant");
+        return UndefValue::get(ValueTy);
+      }
+      Consts.push_back(C);
+    }
 
     Value *IndexedValue = nullptr;
     for (auto &Pair : GlobalLoad) {
@@ -488,14 +573,37 @@ void RegionCodeGenerator::generateExtract(Node *N, Instruction * NewI, IRBuilder
   for (unsigned i = 0; i<N->size(); i++) {
     auto *I = N->getValidInstruction(i);
     if (I==nullptr) continue;
+    if (!isInAlignedRegion(I)) continue;
     //if (I->getParent()!=(&BB)) continue; //TODO: what is the equivalent for RegionCodeGen? I->getParent() not corresponding exit block?
-    for (auto *U : I->users()) {
-      if (!AR.contains(U)) {
+	for (auto *U : I->users()) {
+	  if (!AR.contains(U)) {
+	    auto *UseI = dyn_cast<Instruction>(U);
+	    if (UseI == nullptr || isa<PHINode>(UseI)) {
+	      invalidateGeneratedCode("extract has unsupported external use");
+	      continue;
+	    }
+	    BasicBlock *UseBB = UseI->getParent();
+	    if (UseBB == nullptr) {
+	      invalidateGeneratedCode("extract has external use without block");
+	      continue;
+	    }
+	    if (AR.getAlignedBlock(UseBB) != nullptr) {
+	      invalidateGeneratedCode("extract has use in kept aligned block");
+	      continue;
+	    }
+	    for (BasicBlock *Pred : predecessors(UseBB)) {
+	      if (AR.getAlignedBlock(Pred) == nullptr) {
+	        invalidateGeneratedCode("extract would not dominate external use");
+	        break;
+	      }
+	    }
+	    if (hasInvalidGeneratedCode())
+	      continue;
 #ifdef TEST_DEBUG
-	errs() << "Found use: " << i << ": "; U->dump();
+		errs() << "Found use: " << i << ": "; U->dump();
 #endif
-        NeedExtract.insert(i);
-	break;
+	    NeedExtract.insert(i);
+	    break;
       }
     }
   }
@@ -548,6 +656,10 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 	  errs() << "Found Label operand\n";
 	  if (NodeToValue[N]==nullptr) errs() << "block is null\n";
 	  //else  NodeToValue[N]->dump();
+          if (!generatedValueDominates(NodeToValue[N], Builder.GetInsertBlock())) {
+            invalidateGeneratedCode("generated value does not dominate use block");
+            return nullptr;
+          }
 
 	  return NodeToValue[N];
   }
@@ -617,7 +729,12 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
         }
         std::vector<Value*> Operands;
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
-          Operands.push_back(cloneGraph(N->getChild(i), Builder));
+          Value *Op = cloneGraph(N->getChild(i), Builder);
+          if (Op == nullptr) {
+            invalidateGeneratedCode("MATCH child generated null operand");
+            return nullptr;
+          }
+          Operands.push_back(Op);
         }
         
         errs() << "Cloning matching instruction\n";
@@ -703,7 +820,12 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 
         std::vector<Value*> Operands;
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
-          Operands.push_back(cloneGraph(N->getChild(i), Builder));
+          Value *Op = cloneGraph(N->getChild(i), Builder);
+          if (Op == nullptr) {
+            invalidateGeneratedCode("CONSTEXPR child generated null operand");
+            return nullptr;
+          }
+          Operands.push_back(Op);
         }
 
         SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
@@ -756,6 +878,10 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 
       assert(GN->getNumChildren() && "Expected child with indices!");
       Value *IndVarIdx = cloneGraph(GN->getChild(0), Builder);
+      if (IndVarIdx == nullptr) {
+        invalidateGeneratedCode("GEPSEQ child generated null operand");
+        return nullptr;
+      }
 #ifdef TEST_DEBUG
       errs() << "Closing GEPSEQ\n";
 #endif
@@ -790,6 +916,10 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
       assert(BON->getNumChildren() && "Expected child with varying operands!");
       Value *Op0 = cloneGraph(BON->getChild(0), Builder);
       Value *Op1 = cloneGraph(BON->getChild(1), Builder);
+      if (Op0 == nullptr || Op1 == nullptr) {
+        invalidateGeneratedCode("BINOP child generated null operand");
+        return nullptr;
+      }
 
 #ifdef TEST_DEBUG
       errs() << "Closing BINOP\n";
@@ -1027,12 +1157,12 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
           if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
             CastIndVar = CachedCastIndVar[SeqTy];
           } else {
-            auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
-            if (CIndVarI!=IndVar) {
-              CreatedCode.push_back(CastIndVar);
-              CachedCastIndVar[SeqTy] = CIndVarI;
-              CastIndVar = CIndVarI;
-            }
+	      auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+	      if (CIndVarI!=IndVar) {
+	        CreatedCode.push_back(CIndVarI);
+	        CachedCastIndVar[SeqTy] = CIndVarI;
+	        CastIndVar = CIndVarI;
+	      }
           }
 
 	  Rem2 = CastIndVar;
@@ -1048,9 +1178,10 @@ Value *RegionCodeGenerator::cloneGraph(Node *N, IRBuilder<> &Builder) {
 
 	}
         */
-          Value *CastIndVar = IndVar;
-          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
-	  Rem2 = CastIndVar;
+	          Value *CastIndVar = Builder.CreateIntCast(IndVar, SeqTy, false);
+	          if (auto *CIndVarI = dyn_cast<Instruction>(CastIndVar))
+	            CreatedCode.push_back(CIndVarI);
+		  Rem2 = CastIndVar;
 	  if (N->size()>2){
             Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
             if (auto *Rem2I = dyn_cast<Instruction>(Rem2))
@@ -1169,10 +1300,26 @@ void RegionCodeGenerator::setNodeOperands(Node *N) {
       if (I) {
   
         Instruction *NewI = dyn_cast<Instruction>(NodeToValue[N]);
+        if (NewI == nullptr) {
+          invalidateGeneratedCode("missing generated MATCH instruction");
+          break;
+        }
+        if (N->getNumChildren() != NewI->getNumOperands()) {
+          invalidateGeneratedCode("MATCH operand count mismatch");
+          break;
+        }
         IRBuilder<> Builder(NewI);
 
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
-          NewI->setOperand(i,cloneGraph(N->getChild(i), Builder));
+          Value *Op = cloneGraph(N->getChild(i), Builder);
+          if (Op == nullptr) {
+            invalidateGeneratedCode("MATCH child generated null operand");
+            if (!I->getOperand(i)->getType()->isLabelTy())
+              Op = UndefValue::get(I->getOperand(i)->getType());
+            else
+              break;
+          }
+          NewI->setOperand(i, Op);
         }
 
       }
@@ -1186,10 +1333,26 @@ void RegionCodeGenerator::setNodeOperands(Node *N) {
       auto *I = dyn_cast<ConstantExpr>(N->getValue(0));
       if (I) {
         Instruction *NewI = dyn_cast<Instruction>(NodeToValue[N]);
+        if (NewI == nullptr) {
+          invalidateGeneratedCode("missing generated CONSTEXPR instruction");
+          break;
+        }
+        if (N->getNumChildren() != NewI->getNumOperands()) {
+          invalidateGeneratedCode("CONSTEXPR operand count mismatch");
+          break;
+        }
         IRBuilder<> Builder(NewI);
 
         for (unsigned i = 0; i<N->getNumChildren(); i++) {
-          NewI->setOperand(i,cloneGraph(N->getChild(i), Builder));
+          Value *Op = cloneGraph(N->getChild(i), Builder);
+          if (Op == nullptr) {
+            invalidateGeneratedCode("CONSTEXPR child generated null operand");
+            if (!I->getOperand(i)->getType()->isLabelTy())
+              Op = UndefValue::get(I->getOperand(i)->getType());
+            else
+              break;
+          }
+          NewI->setOperand(i, Op);
         }
 
       }
@@ -1200,9 +1363,17 @@ void RegionCodeGenerator::setNodeOperands(Node *N) {
       auto *GN = (GEPSequenceNode*)N;
         
       Instruction *NewI = dyn_cast<Instruction>(NodeToValue[N]);
+      if (NewI == nullptr) {
+        invalidateGeneratedCode("missing generated GEPSEQ instruction");
+        break;
+      }
       IRBuilder<> Builder(NewI);
 
       Value *IndVarIdx = cloneGraph(GN->getChild(0), Builder);
+      if (IndVarIdx == nullptr) {
+        invalidateGeneratedCode("GEPSEQ child generated null operand");
+        break;
+      }
       NewI->setOperand(NewI->getNumOperands()-1, IndVarIdx);
 
       break;
@@ -1213,11 +1384,19 @@ void RegionCodeGenerator::setNodeOperands(Node *N) {
 #endif
       auto *BON = (BinOpSequenceNode*)N;
       Instruction *NewI = dyn_cast<Instruction>(NodeToValue[BON]);
+      if (NewI == nullptr) {
+        invalidateGeneratedCode("missing generated BINOP instruction");
+        break;
+      }
       IRBuilder<> Builder(NewI);
 
       assert(BON->getNumChildren() && "Expected child with varying operands!");
       Value *Op0 = cloneGraph(BON->getChild(0), Builder);
       Value *Op1 = cloneGraph(BON->getChild(1), Builder);
+      if (Op0 == nullptr || Op1 == nullptr) {
+        invalidateGeneratedCode("BINOP child generated null operand");
+        break;
+      }
 
 #ifdef TEST_DEBUG
       errs() << "Closing BINOP\n";
@@ -1343,12 +1522,12 @@ void RegionCodeGenerator::setNodeOperands(Node *N) {
         if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
           CastIndVar = CachedCastIndVar[SeqTy];
         } else {
-          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
-          if (CIndVarI!=IndVar) {
-            CreatedCode.push_back(CastIndVar);
-            CachedCastIndVar[SeqTy] = CIndVarI;
-            CastIndVar = CIndVarI;
-          }
+	          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+	          if (CIndVarI!=IndVar) {
+	            CreatedCode.push_back(CIndVarI);
+	            CachedCastIndVar[SeqTy] = CIndVarI;
+	            CastIndVar = CIndVarI;
+	          }
         }
 
         auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
@@ -1396,12 +1575,12 @@ void RegionCodeGenerator::setNodeOperands(Node *N) {
           if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
             CastIndVar = CachedCastIndVar[SeqTy];
           } else {
-            auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
-            if (CIndVarI!=IndVar) {
-              CreatedCode.push_back(CastIndVar);
-              CachedCastIndVar[SeqTy] = CIndVarI;
-              CastIndVar = CIndVarI;
-            }
+	            auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+	            if (CIndVarI!=IndVar) {
+	              CreatedCode.push_back(CIndVarI);
+	              CachedCastIndVar[SeqTy] = CIndVarI;
+	              CastIndVar = CIndVarI;
+	            }
           }
 
 	  Rem2 = CastIndVar;
@@ -1844,12 +2023,12 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
         if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
           CastIndVar = CachedCastIndVar[SeqTy];
         } else {
-          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
-          if (CIndVarI!=IndVar) {
-            CreatedCode.push_back(CastIndVar);
-            CachedCastIndVar[SeqTy] = CIndVarI;
-            CastIndVar = CIndVarI;
-          }
+	          auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+	          if (CIndVarI!=IndVar) {
+	            CreatedCode.push_back(CIndVarI);
+	            CachedCastIndVar[SeqTy] = CIndVarI;
+	            CastIndVar = CIndVarI;
+	          }
         }
 
         auto *Rem2 = Builder.CreateURem(CastIndVar, ConstantInt::get(SeqTy, 2));
@@ -1897,12 +2076,12 @@ void RegionCodeGenerator::generateNode(Node *N, IRBuilder<> &Builder) {
           if (CachedCastIndVar.find(SeqTy)!=CachedCastIndVar.end()) {
             CastIndVar = CachedCastIndVar[SeqTy];
           } else {
-            auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
-            if (CIndVarI!=IndVar) {
-              CreatedCode.push_back(CastIndVar);
-              CachedCastIndVar[SeqTy] = CIndVarI;
-              CastIndVar = CIndVarI;
-            }
+	            auto *CIndVarI = Builder.CreateIntCast(IndVar, SeqTy, false);
+	            if (CIndVarI!=IndVar) {
+	              CreatedCode.push_back(CIndVarI);
+	              CachedCastIndVar[SeqTy] = CIndVarI;
+	              CastIndVar = CIndVarI;
+	            }
           }
 
 	  Rem2 = CastIndVar;
@@ -2053,7 +2232,7 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
     }
   }
 
-  bool Invalid = false;
+  bool Invalid = hasInvalidGeneratedCode();
   errs() << "Updating PHI Node incoming values:\n";
   for (AlignedBlock *AB : AR.AlignedBlocks) {
     if (Invalid) break;
@@ -2067,20 +2246,35 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
           break;
         }
         PHINode *NewPHI = dyn_cast<PHINode>(NodeToValue[N]);
-        errs() << "Updating: "; NewPHI->dump();
-        errs() << "Children: " << PN->getNumChildren() << "\n";
-        for (unsigned i = 0; i<PN->getNumChildren(); i++) {
-          errs() << "i: " << i << "\n";
-          Node *Child = PN->getChild(i);
-          Node *Label = PN->Labels[i];
-          BasicBlock *InBB = dyn_cast<BasicBlock>( NodeToValue[Label] );
-          IRBuilder<> Builder(InBB);
-          if (InBB->getTerminator()) {
-            Builder.SetInsertPoint(InBB->getTerminator());
-          }
-          Value *InV = cloneGraph(Child, Builder);
-          NewPHI->addIncoming(InV, InBB);
-        }
+	    errs() << "Updating: "; NewPHI->dump();
+	    errs() << "Children: " << PN->getNumChildren() << "\n";
+	    if (PN->getNumChildren() == 0) {
+	      invalidateGeneratedCode("generated PHI has no incoming values");
+	      Invalid = true;
+	      break;
+	    }
+	    for (unsigned i = 0; i<PN->getNumChildren(); i++) {
+	      errs() << "i: " << i << "\n";
+	      Node *Child = PN->getChild(i);
+	      Node *Label = PN->Labels[i];
+	      BasicBlock *InBB = dyn_cast<BasicBlock>( NodeToValue[Label] );
+	      if (Child == nullptr || InBB == nullptr) {
+	        invalidateGeneratedCode("generated PHI has missing incoming value or block");
+	        Invalid = true;
+	        break;
+	      }
+	      IRBuilder<> Builder(InBB);
+	      if (InBB->getTerminator()) {
+	        Builder.SetInsertPoint(InBB->getTerminator());
+	      }
+	      Value *InV = cloneGraph(Child, Builder);
+	      if (InV == nullptr) {
+	        invalidateGeneratedCode("generated PHI incoming value is null");
+	        Invalid = true;
+	        break;
+	      }
+	      NewPHI->addIncoming(InV, InBB);
+	    }
         errs() << "Updated PHI: ";
         NewPHI->dump();
       }
@@ -2104,13 +2298,6 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
 
     Cond = CondI;
   //}
-  auto &DL = F.getParent()->getDataLayout();
-  TargetTransformInfo TTI(DL);
-
-  errs() << "Computing size of original code\n";
-  unsigned CostOld = EstimateSize(Garbage, DL, &TTI);
-
-  errs() << "Computing size of rolled code\n";
   std::set<BasicBlock *> CreatedBlocks;
 
   //CreatedBlocks.insert(PreHeader);
@@ -2119,33 +2306,95 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
   CreatedBlocks.insert(Exit);
   //CreatedBlocks.insert(LoopExit);
 
-  for (auto &Pair : ABToBlock) {
-    CreatedBlocks.insert(Pair.second);
+	  for (auto &Pair : ABToBlock) {
+	    CreatedBlocks.insert(Pair.second);
+	  }
+
+	  if (!Invalid) {
+	    for (BasicBlock *BB : CreatedBlocks) {
+	      for (Instruction &I : *BB) {
+	        auto *PHI = dyn_cast<PHINode>(&I);
+	        if (PHI != nullptr && PHI != IndVar &&
+	            PHI->getNumIncomingValues() == 0) {
+	          invalidateGeneratedCode("generated PHI has no incoming values");
+	          Invalid = true;
+	          break;
+	        }
+	      }
+	      if (Invalid) break;
+	    }
+	  }
+
+	  Node *EntryNode = AR.find(AR.EntryBlocks);
+	  if (EntryNode == nullptr) {
+	    errs() << "ERROR: could not map to entry block\n";
+	    Invalid = true;
+  } else {
+    GeneratedEntry = dyn_cast<BasicBlock>(NodeToValue[EntryNode]);
   }
-  
+
+  if (!Invalid && !generatedBlocksHaveValidDominance(CreatedBlocks))
+    Invalid = true;
+
   unsigned CostNew = 0;
-  for (BasicBlock *BB : CreatedBlocks) {
-    errs() << "Size of BB: " << BB->getName().str() << "\n";
-    BB->dump();
-    size_t size = EstimateSize(BB, DL, &TTI);
-    errs() << "size: " << size << "\n";
-    CostNew += size;
+  unsigned CostOld = 0;
+  bool Profitable = false;
+
+  if (!Invalid) {
+    auto &DL = F.getParent()->getDataLayout();
+    TargetTransformInfo TTI(DL);
+
+    errs() << "Computing size of original code\n";
+    CostOld = EstimateSize(Garbage, DL, &TTI);
+
+    errs() << "Computing size of rolled code\n";
+    
+    for (BasicBlock *BB : CreatedBlocks) {
+      errs() << "Size of BB: " << BB->getName().str() << "\n";
+      BB->dump();
+      size_t size = EstimateSize(BB, DL, &TTI);
+      errs() << "size: " << size << "\n";
+      CostNew += size;
+    }
+
+    CostNew += 4*EstimateSize(PreHeader,DL,&TTI); 
+    CostNew += 3*EstimateSize(LoopExit,DL,&TTI); 
+
+    Profitable = CostNew + 1 < CostOld;
   }
-
-  CostNew += 4*EstimateSize(PreHeader,DL,&TTI); 
-  CostNew += 3*EstimateSize(LoopExit,DL,&TTI); 
-
-  bool Profitable = CostNew + 1 < CostOld;
 
   errs() << "Cost Original: " << CostOld << ", ";
   errs() << "Cost Rolled: " << CostNew << ", Region ";
   errs() << (Profitable?"Profitable":"Unprofitable") << "; " << F.getName() << " | ";
   errs() << "NumRegions: " << AR.getNumRegions() << " NumLabels: " << AR.getNumLabelNodes() << " GoodNodes: " << AR.getNumGoodNodes() << "\n";
 
-  if (!Invalid && (AlwaysRoll || Profitable) ) {
+  BasicBlock *FirstEntry = AR.EntryBlocks[0];
+  BasicBlock *LastExit = AR.ExitBlocks[AR.ExitBlocks.size()-1];
 
-    BasicBlock *FirstEntry = AR.EntryBlocks[0];
-    BasicBlock *LastExit = AR.ExitBlocks[AR.ExitBlocks.size()-1];
+  if (!Invalid && (AlwaysRoll || Profitable)) {
+    std::set<BasicBlock *> BlocksToDelete;
+    for (AlignedBlock *AB : AR.AlignedBlocks) {
+      for (BasicBlock *BB : AB->Blocks) {
+        BlocksToDelete.insert(BB);
+      }
+    }
+    BlocksToDelete.erase(FirstEntry);
+    BlocksToDelete.erase(LastExit);
+
+    for (BasicBlock *BB : BlocksToDelete) {
+      for (BasicBlock *Pred : predecessors(BB)) {
+        if (!BlocksToDelete.count(Pred) && Pred != FirstEntry) {
+          errs() << "Invalid generated region code: old block has external predecessor: "
+                 << BB->getName() << " <- " << Pred->getName() << "\n";
+          Invalid = true;
+          break;
+        }
+      }
+      if (Invalid) break;
+    }
+  }
+
+  if (!Invalid && (AlwaysRoll || Profitable) ) {
 
     IndVar->addIncoming(ConstantInt::get(IndVarTy, 0),PreHeader);
     IndVar->addIncoming(Add,Latch);
@@ -2162,19 +2411,23 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
 
     Builder.SetInsertPoint(Header);
 
-    Node *N = AR.find(AR.EntryBlocks);
-    if (N==nullptr) {
-      errs() << "ERROR: could not map to entry block\n";
-    }
-    BasicBlock *EntryBB = dyn_cast<BasicBlock>(NodeToValue[N]);
+    BasicBlock *EntryBB = GeneratedEntry;
     Builder.CreateBr(EntryBB);
 
     errs() << "Before Updating Extracted Values\n";
    // F.dump();
 
-    for (auto &Pair : Extracted) {
-      Pair.first->replaceAllUsesWith(Pair.second);
-    }
+	    for (auto &Pair : Extracted) {
+	      if (!isInAlignedRegion(Pair.first)) continue;
+	      for (auto UI = Pair.first->use_begin(), UE = Pair.first->use_end();
+	           UI != UE;) {
+	        Use &U = *UI++;
+	        auto *UserI = dyn_cast<Instruction>(U.getUser());
+	        if (UserI != nullptr && !AR.contains(UserI) &&
+	            AR.getAlignedBlock(UserI->getParent()) == nullptr)
+	          U.set(Pair.second);
+	      }
+	    }
 
 
     errs() << "Erasing old instructions\n";
@@ -2190,10 +2443,12 @@ bool RegionCodeGenerator::generate(AlignedRegion &AR) {
     }
     */
     for (Instruction *I : Garbage) {
+      if (!isInAlignedRegion(I)) continue;
       if (!I->getType()->isVoidTy())
          I->replaceAllUsesWith(UndefValue::get(I->getType()));
     }
     for (Instruction *I : Garbage) {
+      if (!isInAlignedRegion(I)) continue;
       I->eraseFromParent();
     }
 
@@ -2890,7 +3145,6 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
     }
     if (Valid)
       return N;
-    else delete N;
 
     //return N;
   }
@@ -2930,19 +3184,33 @@ Node *AlignedRegion::createNode(std::vector<ValueT*> Vs, Node *Parent, ScalarEvo
       if (!ValidPHI) break;
 
       Value *V = Vs[i];
-      PHINode *PHI = dyn_cast<PHINode>(V);
-      for (unsigned j = 0; j<PHI->getNumIncomingValues(); j++) {
-        errs() << "Looking for block: " << PHI->getIncomingBlock(j)->getName() << "\n";
-        if (getAlignedBlock(PHI->getIncomingBlock(j),i) == nullptr) {
-          errs() << "Block not in alignment\n";
-          ValidPHI = false;
-          break;
-        }
-      }
-    }
+	  PHINode *PHI = dyn_cast<PHINode>(V);
+	  for (unsigned j = 0; j<PHI->getNumIncomingValues(); j++) {
+	    errs() << "Looking for block: " << PHI->getIncomingBlock(j)->getName() << "\n";
+	    AlignedBlock *InAB = getAlignedBlock(PHI->getIncomingBlock(j),i);
+	    if (InAB == nullptr) {
+	      errs() << "Block not in alignment\n";
+	      ValidPHI = false;
+	      break;
+	    }
+	    if (InAB->Blocks.size() != Vs.size()) {
+	      errs() << "Aligned PHI incoming block size mismatch\n";
+	      ValidPHI = false;
+	      break;
+	    }
+	    for (unsigned k = 0; k<Vs.size(); k++) {
+	      PHINode *OtherPHI = dyn_cast<PHINode>(Vs[k]);
+	      if (OtherPHI == nullptr ||
+	          OtherPHI->getBasicBlockIndex(InAB->Blocks[k]) < 0) {
+	        errs() << "Aligned PHI missing incoming block\n";
+	        ValidPHI = false;
+	        break;
+	      }
+	    }
+	  }
+	}
     if (ValidPHI)
       return N;
-    else delete N;
   }
 
   errs() << "Mismatching\n";
@@ -3038,19 +3306,27 @@ void AlignedRegion::growGraph(Node *N, ScalarEvolution *SE, std::set<Node*> &Vis
         AlignedBlock *InAB = getAlignedBlock(PHI->getIncomingBlock(i), 0);
         if (InAB==nullptr) {
           errs() << "ERROR: Null InAB\n";
+          return;
         }
         errs() << "In-blocks:\n";
         for (BasicBlock *BB : InAB->Blocks) errs() << BB->getName() << "\n";
 
-        for (unsigned j = 0; j<N->size(); j++) {
-          errs() << "j: " << j << "\n";
-          PHINode *PHIV = dyn_cast<PHINode>(N->getValue(j));
-	  assert(PHIV && "Matching phi node expecting valid instructions!");
-          errs() << "PHIV: "; PHIV->dump();
-	  assert((i < PHIV->getNumIncomingValues()) && "Invalid number of operands!");
-	  assert((PHIV->getBasicBlockIndex(InAB->Blocks[j])>=0) && "Invalid number of operands!");
-          Vs.push_back( PHIV->getIncomingValueForBlock(InAB->Blocks[j]) );
-        }
+	  for (unsigned j = 0; j<N->size(); j++) {
+	    errs() << "j: " << j << "\n";
+	    PHINode *PHIV = dyn_cast<PHINode>(N->getValue(j));
+	    if (PHIV == nullptr) {
+	      errs() << "ERROR: Matching phi node expecting valid instructions!\n";
+	      return;
+	    }
+	    errs() << "PHIV: "; PHIV->dump();
+	    if (j >= InAB->Blocks.size() ||
+	        i >= PHIV->getNumIncomingValues() ||
+	        PHIV->getBasicBlockIndex(InAB->Blocks[j]) < 0) {
+	      errs() << "ERROR: Invalid phi incoming block in aligned region\n";
+	      return;
+	    }
+	    Vs.push_back( PHIV->getIncomingValueForBlock(InAB->Blocks[j]) );
+	  }
         errs() << "Growing towards:\n";
         for (Value *V : Vs) V->dump();
         Node *Child = find(Vs);
